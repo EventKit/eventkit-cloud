@@ -15,6 +15,8 @@ from ui.views import (
     about, create_error_view, help_create, help_exports, help_features,
     help_formats, help_main, help_presets
 )
+from osgeo_importer.urls import urlpatterns as importer_urlpatterns
+from tastypie.api import Api
 
 admin.autodiscover()
 
@@ -60,15 +62,23 @@ urlpatterns += patterns('api.views',
     url(r'^api/osm-data-model$', OSMDataModelView.as_view(), name='osm-data-model'),
 )
 
+
 # i18n for js
 js_info_dict = {
     'packages': ('hot_osm',),
 }
 
+importer_api = Api(api_name='importer-api')
+urlpatterns += importer_urlpatterns
+
 urlpatterns += patterns('',
     url(r'^jsi18n/$', javascript_catalog, js_info_dict),
     url(r'^i18n/', include('django.conf.urls.i18n')),
+    url(r'^djmp/', include('djmp.urls')),
+    url(r'^djmp/', include('djmp.urls')),
+    url(r'', include(importer_api.urls)),
 )
+
 
 # handler500 = 'ui.views.internal_error_view'
 

@@ -12,6 +12,8 @@ INSTALLED_APPS += (
     'utils',
 )
 
+INSTALLED_APPS += ("osgeo_importer","djmp","guardian")
+
 
 LOGIN_URL = '/login/'
 
