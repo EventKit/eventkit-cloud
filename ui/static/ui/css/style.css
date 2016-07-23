@@ -28,7 +28,7 @@ html, body {
 /* top banner */
 
 #banner {
-    background-color: #fff;
+    background-color: #000;
     color: #B02129;
     padding-left: 10px !important;
     padding-right: 10px !important;
@@ -41,8 +41,8 @@ html, body {
 }
 
 .logo {
-    width: 114px;
-    height: 75px;
+    width: 194px;
+    height: 50px;
     padding: 0px;
     float: left;
 }
