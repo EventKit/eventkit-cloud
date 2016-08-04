@@ -1,0 +1,10 @@
+Django>=1.8,<=1.9
+psycopg2
+djangorestframework
+django-filter
+djangorestframework-gis
+celery[librabbitmq]
+python-social-auth
+lxml
+#GDAL
+python-magic

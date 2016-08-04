@@ -1,0 +1,11 @@
+-r requirements.txt
+
+coverage
+django-nose
+mock>=1.0,<1.1
+nose
+transifex-client
+flake8
+isort
+autopep8
+django_extensions
