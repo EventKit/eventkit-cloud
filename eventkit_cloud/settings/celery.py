@@ -20,6 +20,8 @@ CELERY_TRACK_STARTED = True
 """
 CELERY_CHORD_PROPAGATES = False
 
+CELERYBEAT_SCHEDULER='djcelery.schedulers.DatabaseScheduler'
+CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
 # configure periodic task
 CELERYBEAT_SCHEDULE = {
     'purge-unpublished-exports': {

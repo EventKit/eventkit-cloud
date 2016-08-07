@@ -5,7 +5,7 @@ from .project import *  # NOQA
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['hot.geoweb.io']
+ALLOWED_HOSTS = ['cloud.eventkit.dev']
 
 # Comment if you are not running behind proxy
 USE_X_FORWARDED_HOST = True
@@ -24,13 +24,14 @@ DATABASES = {
         },
         'CONN_MAX_AGE': None,
         'USER': 'hot',
+        'PASSWORD': 'password',
     }
 }
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['oet2/api/templates/', 'oet2/ui/templates', 'oet2/ui/static/ui/js'],
+        'DIRS': ['api/templates/', 'ui/templates', 'ui/static/ui/js'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -51,7 +52,7 @@ TEMPLATES = [
 
 # session settings
 SESSION_COOKIE_NAME = 'hot_exports_sessionid'
-SESSION_COOKIE_DOMAIN = 'hot.geoweb.io'
+SESSION_COOKIE_DOMAIN = 'cloud.eventkit.dev'
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

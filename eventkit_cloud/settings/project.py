@@ -3,8 +3,6 @@ from __future__ import absolute_import
 
 from .celery import *  # NOQA
 
-from .secret import *
-
 # Project apps
 INSTALLED_APPS += (
     'oet2.jobs',
@@ -14,34 +12,41 @@ INSTALLED_APPS += (
     'oet2.utils',
 )
 
+INSTALLED_APPS += ("osgeo_importer", "djmp", "guardian")
+
+INSTALLED_APPS += ("djcelery", )
+import djcelery
+djcelery.setup_loader()
+
 LOGIN_URL = '/login/'
 
 EXPORT_TASKS = {
-    'shp': 'tasks.export_tasks.ShpExportTask',
-    'obf': 'tasks.export_tasks.ObfExportTask',
-    'sqlite': 'tasks.export_tasks.SqliteExportTask',
-    'kml': 'tasks.export_tasks.KmlExportTask',
-    'garmin': 'tasks.export_tasks.GarminExportTask',
-    'thematic': 'tasks.export_tasks.ThematicLayersExportTask'
+    'shp': 'oet2.tasks.export_tasks.ShpExportTask',
+    'obf': 'oet2.tasks.export_tasks.ObfExportTask',
+    'sqlite': 'oet2.tasks.export_tasks.SqliteExportTask',
+    'kml': 'oet2.tasks.export_tasks.KmlExportTask',
+    'garmin': 'oet2.tasks.export_tasks.GarminExportTask',
+    'thematic': 'oet2.tasks.export_tasks.ThematicLayersExportTask'
 }
 
 # where exports are staged for processing
-EXPORT_STAGING_ROOT = '/home/ubuntu/export_staging/'
+EXPORT_STAGING_ROOT = '/var/lib/eventkit/exports_stage/'
 
 # where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = '/home/ubuntu/export_downloads/'
+EXPORT_DOWNLOAD_ROOT = '/var/lib/eventkit/exports_download/'
 
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = '/downloads/'
 
 # home dir of the OSMAnd Map Creator
-OSMAND_MAP_CREATOR_DIR = '/home/ubuntu/osmand/OsmAndMapCreator'
+OSMAND_MAP_CREATOR_DIR = '/var/lib/eventkit/OsmAndMapCreator'
 
 # location of the garmin config file
-GARMIN_CONFIG = '/home/ubuntu/www/hotosm/utils/conf/garmin_config.xml'
+GARMIN_CONFIG = '/var/lib/eventkit/hotosm/eventkit-cloud/utils/conf/garmin_config.xml'
 
 # url to overpass api endpoint
-OVERPASS_API_URL = 'http://localhost/interpreter'
+OVERPASS_API_URL = 'http://localhost/overpass-api/interpreter'
+#OVERPASS_API_URL = 'http://api.openstreetmap.fr/oapi/interpreter'
 
 """
 Maximum extent of a Job
@@ -52,13 +57,16 @@ JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 5
 
-HOSTNAME = 'hot.geoweb.io'
+HOSTNAME = 'cloud.eventkit.dev'
+SITE_NAME = 'cloud.eventkit.dev'
+SITE_URL = 'http://cloud.eventkit.dev'
+SITE_ID = 1
 
 """
 Admin email address
 which receives task error notifications.
 """
-TASK_ERROR_EMAIL = 'export-tool@hotosm.org'
+TASK_ERROR_EMAIL = 'joseph.svrcek@rgi-corp.com'
 
 """
 Overpass Element limit
