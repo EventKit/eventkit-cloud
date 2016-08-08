@@ -83,20 +83,26 @@ sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zi
 sudo mv OsmAndMapCreator-main.zip /var/lib/eventkit/OsmAndMapCreator/
 unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 
-mkdir /var/lib/eventkit/oet2
-cd /var/lib/eventkit/oet2
-sudo git clone https://github.com/terranodo/osm-export-tool2.git ./
-touch __init__.py
-ln -s /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
-cd ~
+mkdir /var/lib/eventkit/tmp
+#cd /var/lib/eventkit/tmp
+#sudo git clone https://github.com/terranodo/osm-export-tool2.git
+#cd osm-export-tool2
+#sudo git checkout apps-refactor
+#cp -R * /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
+cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-cp -R * /var/lib/eventkit 
+git checkout initialVagrant
+#"cd /var/lib/eventkit/vagrant" is only while developing
+#cd /var/lib/eventkit/vagrant
+cp -R * /var/lib/eventkit
+cd /var/lib/eventkit
 sudo apt-get -y install libxml2-dev libxslt-dev
 export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+rm -rf /var/lib/eventkit/tmp
 
 
 sudo mkdir /var/lib/eventkit/exports_stage
@@ -113,6 +119,7 @@ sudo tar -zxvf osm-3s_v*.tar.gz
 cd osm-3s_v*
 ./configure CXXFLAGS="-O3" --prefix=$EXEC_DIR
 sudo make install
+cd $DB_DIR
 #sudo -u eventkit wget http://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 #sudo -u eventkit /usr/local/bin/osmconvert --out-osm brazil-latest.osm.pbf | /var/lib/eventkit/osm-3s*/bin/update_database --meta --db-dir=$DB_DIR --flush-size=1
 cd ~
@@ -168,7 +175,7 @@ stopsignal=INT
 
 [program:overpass-api]
 directory = /bin
-command = /bin/sh -c "rm -f /dev/shm/osm3s*osm_base && rm -f /var/lib/eventkit/db_dir/osm3s*osm_base && /osm/bin/bin/dispatcher --osm-base --meta --db-dir=/var/lib/eventkit/db_dir"
+command = /bin/sh -c "rm -f /dev/shm/osm3s*osm_base && rm -f /var/lib/eventkit/db_dir/osm3s*osm_base && /bin/bin/dispatcher --osm-base --meta --db-dir=/var/lib/eventkit/db_dir"
 user=eventkit
 priority=1
 autostart=true
@@ -245,7 +252,7 @@ sudo echo '<VirtualHost *:80>
         ExtFilterDefine gzip mode=output cmd=/bin/gzip
 
         ScriptAlias /overpass-api/ /bin/cgi-bin/
-        Alias /static/ /var/lib/eventkit/oet2/static/
+        Alias /static/ /var/lib/eventkit/static/
         Alias /downloads/ /var/lib/eventkit/exports_download/
 
         <Directory "/bin/cgi-bin/">
@@ -285,13 +292,13 @@ a2enmod proxy_http
 a2enmod ext_filter
 a2dissite 000-default.conf
 a2ensite eventkit.conf
+sudo service apache2 reload
 usermod -g eventkit www-data
 sudo chmod 755 /home
 sudo chmod 755 /var/lib/eventkit
 sudo chmod 755 /var/lib/eventkit
-sudo chmod -R 755 /var/lib/eventkit/osm-3s*
 sudo chmod 775 /var/log/eventkit
-sudo chown -R eventkit:eventkit /var/lib/eventkit/oet2 /var/log/eventkit /var/log/supervisor.log
+sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
 
 
 sudo ufw allow 22
@@ -302,11 +309,12 @@ sudo ufw allow proto tcp from 127.0.0.1 to 127.0.0.1 port 5432
 
 sudo ufw --force enable
 
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/oet2/manage.py migrate
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/oet2/manage.py collectstatic
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
 #sed -i -e 's/start-stop-daemon --start --quiet/start-stop-daemon --start --chuid eventkit --quiet/g' /etc/init.d/supervisor
 sudo service supervisor start
 sudo update-rc.d supervisor enable
+sudo chown -R eventkit:eventkit /var/log/eventkit
 
 sudo service apache2 start
 sudo update-rc.d apache2 enable

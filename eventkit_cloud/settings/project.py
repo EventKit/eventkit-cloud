@@ -45,8 +45,8 @@ OSMAND_MAP_CREATOR_DIR = '/var/lib/eventkit/OsmAndMapCreator'
 GARMIN_CONFIG = '/var/lib/eventkit/hotosm/eventkit-cloud/utils/conf/garmin_config.xml'
 
 # url to overpass api endpoint
-OVERPASS_API_URL = 'http://localhost/overpass-api/interpreter'
-#OVERPASS_API_URL = 'http://api.openstreetmap.fr/oapi/interpreter'
+#OVERPASS_API_URL = 'http://localhost/overpass-api/interpreter'
+OVERPASS_API_URL = 'http://api.openstreetmap.fr/oapi/interpreter'
 
 """
 Maximum extent of a Job
