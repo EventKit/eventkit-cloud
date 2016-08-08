@@ -92,6 +92,7 @@ mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
+git checkout initialVagrant
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit
@@ -118,6 +119,7 @@ sudo tar -zxvf osm-3s_v*.tar.gz
 cd osm-3s_v*
 ./configure CXXFLAGS="-O3" --prefix=$EXEC_DIR
 sudo make install
+cd $DB_DIR
 #sudo -u eventkit wget http://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 #sudo -u eventkit /usr/local/bin/osmconvert --out-osm brazil-latest.osm.pbf | /var/lib/eventkit/osm-3s*/bin/update_database --meta --db-dir=$DB_DIR --flush-size=1
 cd ~
