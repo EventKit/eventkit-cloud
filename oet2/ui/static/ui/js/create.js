@@ -811,9 +811,11 @@ create.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
+            var providers = $(this).find('input[name="cbox1"]').val();
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
+            $('#summary-providers').html(providers);
             $('#summary-name').html(name);
             $('#summary-description').html(description);
             $('#summary-event').html(event);
@@ -946,6 +948,8 @@ create.job = (function(){
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
+                        case 'digital-globe':
+                            form_data['digital_globe'] = true;
                         case 'filename': break;
                         case 'config_type': break;
                         case 'publishconfig': break;
