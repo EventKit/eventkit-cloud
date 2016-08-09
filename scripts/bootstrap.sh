@@ -84,15 +84,15 @@ sudo mv OsmAndMapCreator-main.zip /var/lib/eventkit/OsmAndMapCreator/
 unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 
 mkdir /var/lib/eventkit/tmp
-#cd /var/lib/eventkit/tmp
-#sudo git clone https://github.com/terranodo/osm-export-tool2.git
-#cd osm-export-tool2
-#sudo git checkout apps-refactor
-#cp -R * /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
+cd /var/lib/eventkit/tmp
+sudo git clone https://github.com/terranodo/osm-export-tool2.git
+cd osm-export-tool2
+sudo git checkout apps-refactor
+cp -R * /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-git checkout initialVagrant
+#git checkout initialVagrant
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit
