@@ -15,6 +15,15 @@
         <div id="create-job-wizard">
             <form id="create-job-form" role="form" action="" class="" method="POST">
                 {% csrf_token %}
+                <br>
+                <div class="form-group row">
+                    <div class="col-md-12" id="provider-selection">
+                        <label>{% trans 'Select Imagery Provider:' %}</label>&nbsp;&nbsp;&nbsp;
+                        <label><input type="checkbox" name="digital-globe">{% trans 'Digital Globe' %}</label>&nbsp;&nbsp;&nbsp;
+                        <input type="checkbox" name="provider-two"> <label>{% trans 'Provider 2' %}</label>
+                    </div>
+                </div>
+                <br>
                 <ul id="tabs" class="nav nav-pills">
                     <li id="create-tab" role="presentation" class="active"><a data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
                     <li id="formats-tab" role="presentation"><a data-toggle="tab" href="#formats">{% trans 'File Formats' %}</a></li>
