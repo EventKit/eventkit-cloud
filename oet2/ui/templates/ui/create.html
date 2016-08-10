@@ -17,10 +17,9 @@
                 {% csrf_token %}
                 <br>
                 <div class="form-group row">
-                    <div class="col-md-12" id="provider-selection">
-                        <label>{% trans 'Select Imagery Provider:' %}</label>&nbsp;&nbsp;&nbsp;
-                        <label><input type="checkbox" name="digital-globe">{% trans 'Digital Globe' %}</label>&nbsp;&nbsp;&nbsp;
-                        <input type="checkbox" name="provider-two"> <label>{% trans 'Provider 2' %}</label>
+                    <div class="col-md-12">
+                        <label>{% trans 'Select Imagery Provider(s):' %}</label>
+                        <div id="provider-selection"></div>
                     </div>
                 </div>
                 <br>
@@ -205,6 +204,7 @@
                                 <div id="details" class="col-md-6 pull-left">
                                     <h4>{% trans 'Export Details' %}</h4>
                                     <hr/>
+                                    <span><strong>{% trans 'Providers: ' %}</strong></span><span id="summary-providers"></span><br/>
                                     <span><strong>{% trans 'Name:' %}</strong></span><span id="summary-name"></span><br/>
                                     <span><strong>{% trans 'Description:' %}</strong></span><span id="summary-description"></span><br/>
                                     <span><strong>{% trans 'Activation:' %}</strong></span><span id="summary-event"></span><br/>
