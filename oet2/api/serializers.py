@@ -320,6 +320,7 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         model = ExportFormat
         fields = ('uid', 'url', 'slug', 'name', 'description')
 
+
 class ExportProviderSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportProvider model."""
     model_url = serializers.HyperlinkedIdentityField(

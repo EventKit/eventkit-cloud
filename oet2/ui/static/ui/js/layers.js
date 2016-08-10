@@ -13,5 +13,6 @@ Layers.HOT = new OpenLayers.Layer.XYZ("Humanitarian OSM",
                 {
                     isBaseLayer: true,
                     sphericalMercator: true,
+                    tileOptions: {crossOriginKeyword: 'anonymous'},
                 }
             );

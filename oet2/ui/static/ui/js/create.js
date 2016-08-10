@@ -243,12 +243,18 @@ create.job = (function(){
      * build the providers checkboxes.
      */
     function buildProviderFormats(){
-        //TODO: update to read in json file with list of providers just like buildExportFormats does
-        var digiGlobe = 'Digital Globe';
+
         var providersDiv = $('#provider-selection');
-        providersDiv.append('<div class="checkbox"><label>'
-                            + '<input type="checkbox" value="Digital Globe"'
-                            + ' name="digital-globe"/>'+digiGlobe+'</label></div><hr/>');
+        $.getJSON(Config.PROVIDERS_URL, function(data){
+            for (i = 0; i < data.length; i++){
+                provider = data[i];
+                providersDiv.append('<div class="checkbox"><label>'
+                    + '<input type="checkbox" id="providers"'
+                    + 'name="' + provider.name + '"/>'
+                    + provider.name
+                    + '</label></div>');
+            }
+        })
     }
 
     /*
@@ -828,18 +834,17 @@ create.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
-            //TODO: make providers loop through input name of providers when we have json file set up
-            var providers;
-            if ($(this).find('input[name="digital-globe"]:checked')) {
-                providers = $(this).find('input[name="digital-globe"]').val();
-            }
-            else {
-                providers = ''
-            }
+            var providers = [];
+            var providerUl = $('<ul>');
+            $.each($(this).find('input[id="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('name');
+                providerUl.append($('<li>' + providers + '</li>'));
+            });
+            $('#summary-providers').html(providerUl);
+
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
-            $('#summary-providers').html(providers);
             $('#summary-name').html(name);
             $('#summary-description').html(description);
             $('#summary-event').html(event);
