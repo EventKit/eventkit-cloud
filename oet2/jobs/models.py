@@ -104,6 +104,24 @@ class ExportFormat(TimeStampedModelMixin):
     def __unicode__(self, ):
         return '{0}'.format(self.slug)
 
+class ExportProvider(TimeStampedModelMixin):
+    """
+    Model for a ExportFormat.
+    """
+    id = models.AutoField(primary_key=True, editable=False)
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
+    name = models.CharField(max_length=100, unique=True)
+    url = LowerCaseCharField(max_length=1000, unique=True, default='')
+
+    class Meta:  # pragma: no cover
+        managed = True
+        db_table = 'export_provider'
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
+    def __unicode__(self, ):
+        return '{0}'.format(self.name)
 
 class ExportProvider(TimeStampedModelMixin):
     """

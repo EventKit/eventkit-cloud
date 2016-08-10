@@ -20,7 +20,7 @@ from rest_framework import serializers
 
 import validators
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
 )
 from oet2.tasks.models import (
     ExportRun, ExportTask, ExportTaskException, ExportTaskResult
@@ -320,6 +320,17 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         model = ExportFormat
         fields = ('uid', 'url', 'slug', 'name', 'description')
 
+class ExportProviderSerializer(serializers.ModelSerializer):
+    """Return a representation of the ExportProvider model."""
+    model_url = serializers.HyperlinkedIdentityField(
+       view_name='api:providers-detail',
+       lookup_field='id'
+    )
+
+    class Meta:
+        model = ExportProvider
+        fields = ('uid', 'model_url', 'url', 'name')
+
 
 class ListJobSerializer(serializers.Serializer):
     """
@@ -496,6 +507,12 @@ class JobSerializer(serializers.Serializer):
         """Return the export formats selected for this export."""
         formats = [format for format in obj.formats.all()]
         serializer = ExportFormatSerializer(formats, many=True, context={'request': self.context['request']})
+        return serializer.data
+
+    def get_providers(self, obj):
+        """Return the export formats selected for this export."""
+        providers = [format for format in obj.providers.all()]
+        serializer = ExportProviderSerializer(providers, many=True, context={'request': self.context['request']})
         return serializer.data
 
     def get_configurations(self, obj):
