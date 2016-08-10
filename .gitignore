@@ -80,7 +80,7 @@ celerybeat-schedule
 .idea
 
 # IntelliJ
-.iml
+*.iml
 
 # project specific files
 core/settings/secret.py
