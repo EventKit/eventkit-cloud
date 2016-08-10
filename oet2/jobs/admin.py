@@ -10,6 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider
 
 admin.site.register(ExportFormat)
+admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
 admin.site.register(ExportProvider)
 

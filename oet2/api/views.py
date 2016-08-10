@@ -17,13 +17,13 @@ from rest_framework.serializers import ValidationError
 
 from oet2.jobs import presets
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
 )
 from oet2.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer,
-    RegionSerializer, ListJobSerializer
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer
 )
 from oet2.tasks.models import ExportRun, ExportTask
 from oet2.tasks.task_runners import ExportTaskRunner
@@ -193,6 +193,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
             formats = request.data.get('formats')
+
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -340,6 +341,18 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ExportFormat.objects.all()
     lookup_field = 'slug'
     ordering = ['description']
+
+class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ###ExportFormat API endpoint.
+
+    Endpoint exposing the supported export formats.
+    """
+    serializer_class = ExportProviderSerializer
+    permission_classes = (permissions.AllowAny,)
+    queryset = ExportProvider.objects.all()
+    lookup_field = 'id'
+    ordering = ['name']
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
