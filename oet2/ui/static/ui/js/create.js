@@ -83,6 +83,8 @@ create.job = (function(){
         addRegionMask();
         addRegions();
 
+        buildProviderFormats();
+
         // add export format checkboxes
         buildExportFormats();
 
@@ -236,6 +238,18 @@ create.job = (function(){
             mask.addFeatures(features);
         });
     }
+    
+    /*
+     * build the export format checkboxes.
+     */
+    function buildProviderFormats(){
+        //TODO: update to read in json file with list of providers just like buildExportFormats does
+        var digiGlobe = 'Digital Globe';
+        var providersDiv = $('#provider-selection');
+        providersDiv.append('<div class="checkbox"><label>'
+                            + '<input type="checkbox" value="Digital Globe"'
+                            + ' name="digital-globe"/>'+digiGlobe+'</label></div><hr/>');
+    }
 
     /*
      * build the export format checkboxes.
@@ -260,6 +274,9 @@ create.job = (function(){
             initForm();
         });
     }
+
+    
+
 
     /*
      * update the bbox extents on the form.
@@ -811,7 +828,8 @@ create.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
-            var providers = $(this).find('input[name="cbox1"]').val();
+            //TODO: make providers loop through input name of providers when we have json file set up
+            var providers = $(this).find('input[name="digital-globe"]').val();
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
