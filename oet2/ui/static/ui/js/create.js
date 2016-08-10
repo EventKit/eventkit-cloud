@@ -240,7 +240,7 @@ create.job = (function(){
     }
     
     /*
-     * build the export format checkboxes.
+     * build the providers checkboxes.
      */
     function buildProviderFormats(){
         //TODO: update to read in json file with list of providers just like buildExportFormats does
@@ -829,7 +829,13 @@ create.job = (function(){
          */
         $('#create-job-form').bind('change', function(e){
             //TODO: make providers loop through input name of providers when we have json file set up
-            var providers = $(this).find('input[name="digital-globe"]').val();
+            var providers;
+            if ($(this).find('input[name="digital-globe"]:checked')) {
+                providers = $(this).find('input[name="digital-globe"]').val();
+            }
+            else {
+                providers = ''
+            }
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
