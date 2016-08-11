@@ -93,6 +93,11 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 rm -rf /var/lib/eventkit/tmp
 
+sudo mkdir /var/lib/eventkit/OsmAndMapCreator
+cd /var/lib/eventkit/OsmAndMapCreator
+sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
+sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
+sudo rm -f OsmAndMapCreator-main.zip
 
 sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3691.zip
 sudo unzip mkgmap-r3691.zip
@@ -100,10 +105,6 @@ sudo mv mkgmap-r3691 /var/lib/eventkit/
 sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
 sudo unzip splitter-r437.zip
 sudo mv splitter-r437 /var/lib/eventkit/
-sudo mkdir /var/lib/eventkit/OsmAndMapCreator
-sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
-sudo mv OsmAndMapCreator-main.zip /var/lib/eventkit/OsmAndMapCreator/
-sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 sudo echo '<?xml version="1.0" encoding="utf-8"?>
 <!--
     Garmin IMG file creation config.
@@ -125,23 +126,24 @@ sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
 sudo mkdir /var/lib/eventkit/db_dir
 sudo chown eventkit:eventkit -R /var/lib/eventkit/
-export EXEC_DIR=/bin
-export DB_DIR=/var/lib/eventkit/db_dir
 
-sudo apt-get -y install expat-dev
-cd /var/lib/eventkit
-sudo wget http://dev.overpass-api.de/releases/osm-3s_v0.7.52.tar.gz
-sudo tar -zxvf osm-3s_v*.tar.gz
-cd osm-3s_v*
-./configure CXXFLAGS="-O3" --prefix=$EXEC_DIR
-sudo make install
-cd $DB_DIR
+#export EXEC_DIR=/bin
+#export DB_DIR=/var/lib/eventkit/db_dir
+#
+#sudo apt-get -y install expat-dev
+#cd /var/lib/eventkit
+#sudo wget http://dev.overpass-api.de/releases/osm-3s_v0.7.52.tar.gz
+#sudo tar -zxvf osm-3s_v*.tar.gz
+#cd osm-3s_v*
+#./configure CXXFLAGS="-O3" --prefix=$EXEC_DIR
+#sudo make install
+#cd $DB_DIR
 #sudo -u eventkit wget http://download.geofabrik.de/south-america/brazil-latest.osm.pbf
 #sudo -u eventkit /usr/local/bin/osmconvert --out-osm brazil-latest.osm.pbf | /var/lib/eventkit/osm-3s*/bin/update_database --meta --db-dir=$DB_DIR --flush-size=1
-cd ~
-sudo git clone https://github.com/drolbr/Overpass-API.git
-sudo cp -pR Overpass-API/rules /var/lib/eventkit/db_dir/rules
-sudo rm -rf Overpass-API/
+#cd ~
+#sudo git clone https://github.com/drolbr/Overpass-API.git
+#sudo cp -pR Overpass-API/rules /var/lib/eventkit/db_dir/rules
+#sudo rm -rf Overpass-API/
 
 sudo mkdir /var/log/eventkit
 
@@ -162,7 +164,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 serverurl=unix:///var/run/supervisor.sock
 
 [group:oet2]
-programs=oet2, overpass-api, overpass-areas, overpass-rules, celery-1, celery-2
+programs=oet2, celery-1, celery-2
 priority=999
 
 [program:oet2]
@@ -179,49 +181,6 @@ command = /var/lib/eventkit/.virtualenvs/eventkit/bin/gunicorn eventkit_cloud.ws
            --no-sendfile
 user=eventkit
 priority=1
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:overpass-api]
-directory = /bin
-command = /bin/sh -c "rm -f /dev/shm/osm3s*osm_base && rm -f /var/lib/eventkit/db_dir/osm3s*osm_base && /bin/bin/dispatcher --osm-base --meta --db-dir=/var/lib/eventkit/db_dir"
-user=eventkit
-priority=1
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:overpass-areas]
-directory = /bin
-command = /bin/sh -c "rm -f /dev/shm/osm3s*areas && rm -f /var/lib/eventkit/db_dir/osm3s*areas && /bin/bin/dispatcher --areas --db-dir=/var/lib/eventkit/db_dir"
-user=eventkit
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:overpass-rules]
-directory = /bin
-command = /bin/bin/rules_loop.sh /var/lib/eventkit/db_dir
-user=eventkit
 autostart=true
 autorestart=true
 stdout_logfile=/var/log/eventkit/stdout.log
@@ -261,6 +220,50 @@ stderr_logfile=/var/log/eventkit/stderr.log
 stderr_logfile_maxbytes=50MB
 stderr_logfile_backups=5
 stopsignal=INT' > /etc/supervisor/supervisord.conf
+
+#[program:overpass-api]
+#directory = /bin
+#command = /bin/sh -c "rm -f /dev/shm/osm3s*osm_base && rm -f /var/lib/eventkit/db_dir/osm3s*osm_base && /bin/bin/dispatcher --osm-base --meta --db-dir=/var/lib/eventkit/db_dir"
+#user=eventkit
+#priority=1
+#autostart=true
+#autorestart=true
+#stdout_logfile=/var/log/eventkit/stdout.log
+#stdout_logfile_maxbytes=50MB
+#stdout_logfile_backups=5
+#stderr_logfile=/var/log/eventkit/stderr.log
+#stderr_logfile_maxbytes=50MB
+#stderr_logfile_backups=5
+#stopsignal=INT
+#
+#[program:overpass-areas]
+#directory = /bin
+#command = /bin/sh -c "rm -f /dev/shm/osm3s*areas && rm -f /var/lib/eventkit/db_dir/osm3s*areas && /bin/bin/dispatcher --areas --db-dir=/var/lib/eventkit/db_dir"
+#user=eventkit
+#autostart=true
+#autorestart=true
+#stdout_logfile=/var/log/eventkit/stdout.log
+#stdout_logfile_maxbytes=50MB
+#stdout_logfile_backups=5
+#stderr_logfile=/var/log/eventkit/stderr.log
+#stderr_logfile_maxbytes=50MB
+#stderr_logfile_backups=5
+#stopsignal=INT
+#
+#[program:overpass-rules]
+#directory = /bin
+#command = /bin/bin/rules_loop.sh /var/lib/eventkit/db_dir
+#user=eventkit
+#autostart=true
+#autorestart=true
+#stdout_logfile=/var/log/eventkit/stdout.log
+#stdout_logfile_maxbytes=50MB
+#stdout_logfile_backups=5
+#stderr_logfile=/var/log/eventkit/stderr.log
+#stderr_logfile_maxbytes=50MB
+#stderr_logfile_backups=5
+#stopsignal=INT
+
 
 sudo echo '<VirtualHost *:80>
         ServerName cloud.eventkit.dev
