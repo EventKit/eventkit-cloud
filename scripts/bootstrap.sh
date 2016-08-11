@@ -45,7 +45,7 @@ cd ~
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
-sudo apt-get -y install gdal-bin libgdal-dev libgdal20 libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5
+sudo apt-get -y install gdal-bin libgdal-dev libgdal20 libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite
 
 sudo apt-get -y install osmctools
 sudo apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
@@ -72,17 +72,6 @@ sudo apt-get -y install rabbitmq-server
 service rabbitmq-server start
 sudo update-rc.d rabbitmq-server enable
 
-sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3691.zip
-sudo unzip mkgmap-r3691.zip
-sudo mv mkgmap-r3691 /var/lib/eventkit/
-sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
-sudo unzip splitter-r437.zip
-sudo mv splitter-r437 /var/lib/eventkit/
-sudo mkdir /var/lib/eventkit/OsmAndMapCreator
-sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
-sudo mv OsmAndMapCreator-main.zip /var/lib/eventkit/OsmAndMapCreator/
-unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
-
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/osm-export-tool2.git
@@ -103,6 +92,33 @@ export C_INCLUDE_PATH=/usr/include/gdal
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
 rm -rf /var/lib/eventkit/tmp
+
+
+sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3691.zip
+sudo unzip mkgmap-r3691.zip
+sudo mv mkgmap-r3691 /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
+sudo unzip splitter-r437.zip
+sudo mv splitter-r437 /var/lib/eventkit/
+sudo mkdir /var/lib/eventkit/OsmAndMapCreator
+sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
+sudo mv OsmAndMapCreator-main.zip /var/lib/eventkit/OsmAndMapCreator/
+sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
+sudo echo '<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Garmin IMG file creation config.
+    @see utils/garmin.py
+-->
+<garmin obj="prog" src="cloud.eventkit.dev">
+    <mkgmap>/var/lib/eventkit/mkgmap-r3691/mkgmap.jar</mkgmap>
+    <splitter>/var/lib/eventkit/splitter-r437/splitter.jar</splitter>
+    <xmx>1024m</xmx>
+    <description>EventKit Export Garmin Map</description>
+    <family-name>EventKit Exports</family-name>
+    <family-id>2</family-id>
+    <series-name>EventKit Exports</series-name>
+</garmin>' > /var/lib/eventkit/.virtualenvs/eventkit/src/oet2/oet2/utils/conf/garmin_config.xml
+
 
 
 sudo mkdir /var/lib/eventkit/exports_stage
