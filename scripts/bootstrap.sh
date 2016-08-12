@@ -99,9 +99,9 @@ sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zi
 sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 sudo rm -f OsmAndMapCreator-main.zip
 
-sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3691.zip
-sudo unzip mkgmap-r3691.zip
-sudo mv mkgmap-r3691 /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip
+sudo unzip mkgmap-r3693.zip
+sudo mv mkgmap-r3693 /var/lib/eventkit/
 sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
 sudo unzip splitter-r437.zip
 sudo mv splitter-r437 /var/lib/eventkit/
@@ -111,7 +111,7 @@ sudo echo '<?xml version="1.0" encoding="utf-8"?>
     @see utils/garmin.py
 -->
 <garmin obj="prog" src="cloud.eventkit.dev">
-    <mkgmap>/var/lib/eventkit/mkgmap-r3691/mkgmap.jar</mkgmap>
+    <mkgmap>/var/lib/eventkit/mkgmap-r3693/mkgmap.jar</mkgmap>
     <splitter>/var/lib/eventkit/splitter-r437/splitter.jar</splitter>
     <xmx>1024m</xmx>
     <description>EventKit Export Garmin Map</description>
