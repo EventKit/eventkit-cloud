@@ -1,0 +1,19 @@
+version: '2'
+services:
+  postgis:
+    build:
+        context: .
+        dockerfile: Dockerfile_postgis
+    ports:
+     - "5432:5432"
+  rabbitmq:
+    build:
+        context: .
+        dockerfile: Dockerfile_rabbitmq
+  eventkit:
+    build:
+        context: .
+        dockerfile: Dockerfile_eventkit
+    depends_on:
+      - postgis
+      - rabbitmq

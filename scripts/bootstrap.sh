@@ -54,8 +54,8 @@ sudo apt-get -y install default-jre zip unzip
 sudo service postgresql start
 sudo update-rc.d postgresql enable
 
-sudo grep -q '   peer' /etc/postgresql/9.5/main/pg_hba.conf && sudo sed -i "s/   peer/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
-sudo grep -q '   ident' /etc/postgresql/9.5/main/pg_hba.conf && sudo sed -i "s/   ident/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
+sudo grep -q '   peer' /etc/postgresql/9.5/main/pg_hba.conf && sudo sed -i "s/   peer/   trust/g" /etc/postgresql/9.5/main/pg_hba.conf
+sudo grep -q '   ident' /etc/postgresql/9.5/main/pg_hba.conf && sudo sed -i "s/   ident/   trust/g" /etc/postgresql/9.5/main/pg_hba.conf
 sudo service postgresql restart
 
 sudo -u postgres createdb 'eventkit_exports_dev'
@@ -337,6 +337,8 @@ sudo chown -R eventkit:eventkit /var/log/eventkit
 
 sudo service apache2 start
 sudo update-rc.d apache2 enable
+
+sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
 
 
 

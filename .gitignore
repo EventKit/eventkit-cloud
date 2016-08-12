@@ -2,3 +2,4 @@
 *.log
 .idea
 .vagrant
+ubuntu-xenial-core-cloudimg-amd64-root.tar.gz

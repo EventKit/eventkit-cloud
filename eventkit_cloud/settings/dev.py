@@ -23,7 +23,7 @@ DATABASES = {
         'CONN_MAX_AGE': None,
         'USER': 'eventkit',
         'PASSWORD': 'eventkit_exports_dev',
-        'HOST': 'localhost'
+        'HOST': 'postgis'
     }
 }
 
