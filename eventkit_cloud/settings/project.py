@@ -43,7 +43,7 @@ EXPORT_MEDIA_ROOT = '/downloads/'
 OSMAND_MAP_CREATOR_DIR = '/var/lib/eventkit/OsmAndMapCreator'
 
 # location of the garmin config file
-GARMIN_CONFIG = '/var/lib/eventkit/.virtualenvs/eventkit/src/oet2/oet2/utils/conf/garmin_config.xml'
+GARMIN_CONFIG = '/var/lib/eventkit/conf/garmin_config.xml'
 
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
