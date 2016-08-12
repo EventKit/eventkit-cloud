@@ -92,7 +92,7 @@ MIDDLEWARE_CLASSES = [
 ROOT_URLCONF = 'eventkit_cloud.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'eventkit_cloud.wsgi.application'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
