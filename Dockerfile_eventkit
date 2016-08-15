@@ -226,5 +226,6 @@ RUN chmod 755 /var/lib/eventkit
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
-CMD ["/usr/bin/python /var/lib/eventkit/manage.py migrate && /usr/bin/python /var/lib/eventkit/manage.py collectstatic --noinput && chown -R eventkit:eventkit /var/log/eventkit && service apache2 start && service supervisorctl start && tail -f /var/log/eventkit/*"]
-#CMD ["tail -f /var/log/eventkit/*"]
+COPY ./scripts/docker_startup.sh /usr/bin/docker_startup.sh
+RUN chmod 744 /usr/bin/docker_startup.sh
+CMD ["/usr/bin/docker_startup.sh"]
