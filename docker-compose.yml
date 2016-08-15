@@ -1,5 +1,17 @@
 version: '2'
 services:
+  eventkit:
+      build:
+          context: .
+          dockerfile: Dockerfile_eventkit
+      depends_on:
+        - postgis
+        - rabbitmq
+      links:
+        - postgis
+        - rabbitmq
+      extra_hosts:
+        - "cloud.eventkit.dev:127.0.0.1"
   postgis:
     build:
         context: .
@@ -10,10 +22,4 @@ services:
     build:
         context: .
         dockerfile: Dockerfile_rabbitmq
-  eventkit:
-    build:
-        context: .
-        dockerfile: Dockerfile_eventkit
-    depends_on:
-      - postgis
-      - rabbitmq
+  

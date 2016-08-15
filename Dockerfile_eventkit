@@ -45,69 +45,57 @@ RUN apt-get -y install git
 RUN mkdir /var/lib/eventkit
 RUN mkdir /var/lib/eventkit/oet2
 RUN apt-get -y install libpq-dev python-dev
-RUN apt-get -y install gcc gcc-c++
-RUN apt-get -y install zlib-devel
-RUN cd /var/lib/eventkit
-RUN git clone https://gitlab.com/osm-c-tools/osmctools.git
-RUN cd osmctools/src
-RUN gcc osmupdate.c -o ../osmupdate
-RUN gcc osmfilter.c -O3 -o ../osmfilter
-RUN gcc osmconvert.c -lz -O3 -o ../osmconvert
-RUN cd ..
-RUN cp osmupdate osmfilter osmconvert /usr/local/bin
-RUN cd ..
-RUN rm -fr osmctools
-RUN cd ~
+RUN apt-get -y install gcc g++
+RUN git clone https://gitlab.com/osm-c-tools/osmctools.git /var/lib/eventkit/osmctools
+RUN gcc /var/lib/eventkit/osmctools/src/osmupdate.c -o /var/lib/eventkit/osmctools/osmupdate
+RUN gcc /var/lib/eventkit/osmctools/src/osmfilter.c -O3 -o /var/lib/eventkit/osmctools/osmfilter
+RUN gcc /var/lib/eventkit/osmctools/src/osmconvert.c -lz -O3 -o /var/lib/eventkit/osmctools/osmconvert
+RUN cp /var/lib/eventkit/osmctools/osmupdate /var/lib/eventkit/osmctools/osmfilter /var/lib/eventkit/osmctools/osmconvert /usr/local/bin
+RUN rm -fr /var/lib/eventkit/osmctools
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 RUN apt-get update
-RUN apt-get -y install gdal-bin libgdal-dev libgdal20 libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite
+RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite 
 RUN apt-get -y install osmctools
 RUN apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
 RUN apt-get -y install default-jre zip unzip
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://github.com/terranodo/osm-export-tool2.git
-RUN cd osm-export-tool2
-RUN git checkout apps-refactor
-RUN cp -R * /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
+RUN git clone https://github.com/terranodo/osm-export-tool2.git /var/lib/eventkit/tmp/osm-export-tool2
+RUN cd /var/lib/eventkit/tmp/osm-export-tool2 && git checkout apps-refactor
+RUN cp -R /var/lib/eventkit/oet2 /usr/lib/python2.7/site-packages/
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://github.com/terranodo/eventkit-cloud.git
-RUN cd eventkit-cloud
-RUN git checkout initialDocker
-RUN cp -R * /var/lib/eventkit
-RUN cd /var/lib/eventkit
+RUN git clone https://github.com/terranodo/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
+RUN cd /var/lib/eventkit/tmp/eventkit-cloud && git checkout initialDocker
+RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
 RUN apt-get -y install libxml2-dev libxslt-dev
-RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
-RUN export C_INCLUDE_PATH=/usr/include/gdal
-RUN pip install -r requirements.txt
-RUN pip install -r requirements-dev.txt
+RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
+  export C_INCLUDE_PATH=/usr/include/gdal &&\
+  pip install -r /var/lib/eventkit/requirements.txt &&\
+  pip install -r /var/lib/eventkit/requirements-dev.txt
 RUN rm -rf /var/lib/eventkit/tmp
 RUN mkdir /var/lib/eventkit/OsmAndMapCreator
-RUN cd /var/lib/eventkit/OsmAndMapCreator
-RUN wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
+RUN wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip -O /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 RUN unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
-RUN rm -f OsmAndMapCreator-main.zip
-RUN wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip
-RUN unzip mkgmap-r3693.zip
-RUN mv mkgmap-r3693 /var/lib/eventkit/
-RUN wget http://www.mkgmap.org.uk/download/splitter-r437.zip
-RUN unzip splitter-r437.zip
-RUN mv splitter-r437 /var/lib/eventkit/
-RUN echo '<?xml version="1.0" encoding="utf-8"?>
-<!--
-   Garmin IMG file creation config.
-   @see utils/garmin.py
--->
-<garmin obj="prog" src="cloud.eventkit.dev">
-   <mkgmap>/var/lib/eventkit/mkgmap-r3693/mkgmap.jar</mkgmap>
-   <splitter>/var/lib/eventkit/splitter-r437/splitter.jar</splitter>
-   <xmx>1024m</xmx>
-   <description>EventKit Export Garmin Map</description>
-   <family-name>EventKit Exports</family-name>
-   <family-id>2</family-id>
-   <series-name>EventKit Exports</series-name>
-</garmin>' > /var/lib/eventkit/.virtualenvs/eventkit/src/oet2/oet2/utils/conf/garmin_config.xml
+RUN rm -f /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
+RUN wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip -O /var/lib/eventkit/mkgmap-r3693.zip
+RUN unzip /var/lib/eventkit/mkgmap-r3693.zip
+RUN wget http://www.mkgmap.org.uk/download/splitter-r437.zip -O /var/lib/eventkit/splitter-r437.zip
+RUN unzip /var/lib/eventkit/splitter-r437.zip
+RUN echo '<?xml version="1.0" encoding="utf-8"?>\n\
+<!--\n\
+   Garmin IMG file creation config.\n\
+   @see utils/garmin.py\n\
+-->\n\
+<garmin obj="prog" src="cloud.eventkit.dev">\n\
+   <mkgmap>/var/lib/eventkit/mkgmap-r3693/mkgmap.jar</mkgmap>\n\
+   <splitter>/var/lib/eventkit/splitter-r437/splitter.jar</splitter>\n\
+   <xmx>1024m</xmx>\n\
+   <description>EventKit Export Garmin Map</description>\n\
+   <family-name>EventKit Exports</family-name>\n\
+   <family-id>2</family-id>\n\
+   <series-name>EventKit Exports</series-name>\n\
+</garmin>' > /src/oet2/oet2/utils/conf/garmin_config.xml
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
 RUN mkdir /var/lib/eventkit/db_dir
@@ -115,135 +103,128 @@ RUN chown eventkit:eventkit -R /var/lib/eventkit/
 
 RUN mkdir /var/log/eventkit
 RUN apt-get install supervisor apache2 -y
-RUN echo '[unix_http_server]
-file=/var/run/supervisor.sock
-
-[supervisord]
-pidfile=/var/run/supervisor.pid
-logfile=/var/log/supervisor.log
-logfile_backups=1
-
-[rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-[supervisorctl]
-serverurl=unix:///var/run/supervisor.sock
-
-[group:oet2]
-programs=oet2, celery-1, celery-2
-priority=999
-
-[program:oet2]
-directory = /var/lib/eventkit
-command = /var/lib/eventkit/.virtualenvs/eventkit/bin/gunicorn eventkit_cloud.wsgi:application
-          --bind cloud.eventkit.dev:6080
-          --worker-class eventlet
-          --workers 2
-          --threads 4
-          --access-logfile /var/log/eventkit/oet2-access-log.txt
-          --error-logfile /var/log/eventkit/oet2-error-log.txt
-          --name eventkit
-          --user eventkit
-          --no-sendfile
-user=eventkit
-priority=1
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:celery-1]
-directory = /var/lib/eventkit
-command = /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py celery worker --loglevel debug --logfile=/var/log/eventkit/celery.log
-environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"
-user=eventkit
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:celery-2]
-directory=/var/lib/eventkit
-command=/var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py celery beat --loglevel debug --logfile=/var/log/eventkit/celery-beat.log
-environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"
-user=eventkit
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
+RUN echo '[unix_http_server]\n\
+file=/var/run/supervisor.sock\n\
+\n\
+pidfile=/var/run/supervisor.pid\n\
+logfile=/var/log/supervisor.log\n\
+logfile_backups=1\n\
+\n\
+[rpcinterface:supervisor]\n\
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface\n\
+\n\
+[supervisorctl]\n\
+serverurl=unix:///var/run/supervisor.sock\n\
+\n\
+[group:oet2]\n\
+programs=oet2, celery-1, celery-2\n\
+priority=999\n\
+\n\
+[program:oet2]\n\
+directory = /var/lib/eventkit\n\
+command = /usr/lib/bin/gunicorn eventkit_cloud.wsgi:application\n\
+          --bind cloud.eventkit.dev:6080\n\
+          --worker-class eventlet\n\
+          --workers 2\n\
+          --threads 4\n\
+          --access-logfile /var/log/eventkit/oet2-access-log.txt\n\
+          --error-logfile /var/log/eventkit/oet2-error-log.txt\n\
+          --name eventkit\n\
+          --user eventkit\n\
+          --no-sendfile\n\
+user=eventkit\n\
+priority=1\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/var/log/eventkit/stdout.log\n\
+stdout_logfile_maxbytes=50MB\n\
+stdout_logfile_backups=5\n\
+stderr_logfile=/var/log/eventkit/stderr.log\n\
+stderr_logfile_maxbytes=50MB\n\
+stderr_logfile_backups=5\n\
+stopsignal=INT\n\
+\n\
+[program:celery-1]\n\
+directory = /var/lib/eventkit\n\
+command = /usr/bin/python /var/lib/eventkit/manage.py celery worker --loglevel debug --logfile=/var/log/eventkit/celery.log\n\
+environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"\n\
+user=eventkit\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/var/log/eventkit/stdout.log\n\
+stdout_logfile_maxbytes=50MB\n\
+stdout_logfile_backups=5\n\
+stderr_logfile=/var/log/eventkit/stderr.log\n\
+stderr_logfile_maxbytes=50MB\n\
+stderr_logfile_backups=5\n\
+stopsignal=INT\n\
+\n\
+[program:celery-2]\n\
+directory=/var/lib/eventkit\n\
+command=/usr/bin/python /var/lib/eventkit/manage.py celery beat --loglevel debug --logfile=/var/log/eventkit/celery-beat.log\n\
+environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"\n\
+user=eventkit\n\
+autostart=true\n\
+autorestart=true\n\
+stdout_logfile=/var/log/eventkit/stdout.log\n\
+stdout_logfile_maxbytes=50MB\n\
+stdout_logfile_backups=5\n\
+stderr_logfile=/var/log/eventkit/stderr.log\n\
+stderr_logfile_maxbytes=50MB\n\
+stderr_logfile_backups=5\n\
 stopsignal=INT' > /etc/supervisor/supervisord.conf
 
-echo '<VirtualHost *:80>
-       ServerName cloud.eventkit.dev
-       ServerAdmin webmaster@localhost
-       ExtFilterDefine gzip mode=output cmd=/bin/gzip
+RUN echo '<VirtualHost *:80>\n\
+       ServerName cloud.eventkit.dev\n\
+       ServerAdmin webmaster@localhost\n\
+       ExtFilterDefine gzip mode=output cmd=/bin/gzip\n\
 
-       ScriptAlias /overpass-api/ /bin/cgi-bin/
-       Alias /static/ /var/lib/eventkit/static/
-       Alias /downloads/ /var/lib/eventkit/exports_download/
-
-       <Directory "/bin/cgi-bin/">
-               AllowOverride None
-               Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-               Require all granted
-       </Directory>
-
-       <Directory "/var/lib/eventkit/static/">
-               AllowOverride None
-               Options -MultiViews +SymLinksIfOwnerMatch
-               Require all granted
-       </Directory>
-
-       <Directory "/var/lib/eventkit/exports_download/">
-               AllowOverride None
-               Options -MultiViews +SymLinksIfOwnerMatch
-               Require all granted
-       </Directory>
-
-       ErrorLog /var/log/eventkit/apache2-error.log
-
-       LogLevel warn
-
-       CustomLog /var/log/eventkit/apache2-access.log combined
-
-       ProxyPreserveHost On
-       ProxyPass /overpass-api !
-       ProxyPass /downloads !
-       ProxyPass /static !
-       ProxyPass / http://cloud.eventkit.dev:6080/
-       ProxyPassReverse / http://cloud.eventkit.dev:6080/
-
+       ScriptAlias /overpass-api/ /bin/cgi-bin/\n\
+       Alias /static/ /var/lib/eventkit/static/\n\
+       Alias /downloads/ /var/lib/eventkit/exports_download/\n\
+\n\
+       <Directory "/bin/cgi-bin/">\n\
+               AllowOverride None\n\
+               Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
+               Require all granted\n\
+       </Directory>\n\
+\n\
+       <Directory "/var/lib/eventkit/static/">\n\
+               AllowOverride None\n\
+               Options -MultiViews +SymLinksIfOwnerMatch\n\
+               Require all granted\n\
+       </Directory>\n\
+\n\
+       <Directory "/var/lib/eventkit/exports_download/">\n\
+               AllowOverride None\n\
+               Options -MultiViews +SymLinksIfOwnerMatch\n\
+               Require all granted\n\
+       </Directory>\n\
+\n\
+       ErrorLog /var/log/eventkit/apache2-error.log\n\
+\n\
+       LogLevel warn\n\
+\n\
+       CustomLog /var/log/eventkit/apache2-access.log combined\n\
+\n\
+       ProxyPreserveHost On\n\
+       ProxyPass /overpass-api !\n\
+       ProxyPass /downloads !\n\
+       ProxyPass /static !\n\
+       ProxyPass / http://cloud.eventkit.dev:6080/\n\
+       ProxyPassReverse / http://cloud.eventkit.dev:6080/\n\
+\n\
 </VirtualHost>' > /etc/apache2/sites-available/eventkit.conf
 RUN a2enmod proxy
 RUN a2enmod proxy_http
 RUN a2enmod ext_filter
 RUN a2dissite 000-default.conf
 RUN a2ensite eventkit.conf
-RUN service apache2 reload
 RUN usermod -g eventkit www-data
 RUN chmod 755 /home
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 775 /var/log/eventkit
-RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
-RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
-RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-#sed -i -e 's/start-stop-daemon --start --quiet/start-stop-daemon --start --chuid eventkit --quiet/g' /etc/init.d/supervisor
-RUN chown -R eventkit:eventkit /var/log/eventkit
-
-# overwrite this with 'CMD []' in a dependent Dockerfile
-CMD ["service apache2 start && supervisorctl start all -n"]
+RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
+CMD ["/usr/bin/python /var/lib/eventkit/manage.py migrate && /usr/bin/python /var/lib/eventkit/manage.py collectstatic --noinput && chown -R eventkit:eventkit /var/log/eventkit && service apache2 start && service supervisorctl start && tail -f /var/log/eventkit/*"]
+#CMD ["tail -f /var/log/eventkit/*"]
