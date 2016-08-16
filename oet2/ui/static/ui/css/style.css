@@ -55,7 +55,7 @@ html, body {
 /* nav styles */
 
 .navbar {
-    background-color: #fff;
+    background-color: #000;
     margin-bottom: 0px !important;
 }
 
@@ -64,12 +64,12 @@ html, body {
 }
 
 a.navbar-brand {
-    color: #fff !important;
+    color: #000 !important;
     margin-left: 10px !important;
 }
 
 nav > div.container {
-    background-color: #B02129;
+    background-color: #009999;
     border: none !important;
 }
 
@@ -81,11 +81,11 @@ ul.nav {
 
 .navbar-inverse .navbar-nav>.active>a {
     background-color: #B02129;
-    color: #fff;
+    color: #000;
 }
 
 .navbar-inverse .navbar-nav>li>a {
-    color: #fff;
+    color: #000;
     padding-left: 10px;
 }
 
