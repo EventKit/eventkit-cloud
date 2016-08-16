@@ -61,10 +61,6 @@ RUN apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
 RUN apt-get -y install default-jre zip unzip
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://github.com/terranodo/osm-export-tool2.git /var/lib/eventkit/tmp/osm-export-tool2
-RUN cd /var/lib/eventkit/tmp/osm-export-tool2 && git checkout apps-refactor
-RUN cp -R /var/lib/eventkit/oet2 /usr/lib/python2.7/site-packages/
-RUN cd /var/lib/eventkit/tmp
 RUN git clone https://github.com/terranodo/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
 RUN cd /var/lib/eventkit/tmp/eventkit-cloud && git checkout initialDocker
 RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
@@ -106,6 +102,7 @@ RUN apt-get install supervisor apache2 -y
 RUN echo '[unix_http_server]\n\
 file=/var/run/supervisor.sock\n\
 \n\
+[supervisord]\n\
 pidfile=/var/run/supervisor.pid\n\
 logfile=/var/log/supervisor.log\n\
 logfile_backups=1\n\
@@ -228,4 +225,4 @@ RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 COPY ./scripts/docker_startup.sh /usr/bin/docker_startup.sh
 RUN chmod 744 /usr/bin/docker_startup.sh
-CMD ["/usr/bin/docker_startup.sh"]
+CMD ["bash /usr/bin/docker_startup.sh"]
