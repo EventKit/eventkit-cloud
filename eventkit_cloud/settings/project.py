@@ -27,7 +27,8 @@ EXPORT_TASKS = {
     'sqlite': 'oet2.tasks.export_tasks.SqliteExportTask',
     'kml': 'oet2.tasks.export_tasks.KmlExportTask',
     'garmin': 'oet2.tasks.export_tasks.GarminExportTask',
-    'thematic': 'oet2.tasks.export_tasks.ThematicLayersExportTask'
+    'thematic': 'oet2.tasks.export_tasks.ThematicLayersExportTask',
+    'gpkg': 'oet2.tasks.export_tasks.GeopackageExportTask'
 }
 
 # where exports are staged for processing

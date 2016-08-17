@@ -20,7 +20,7 @@ jsonfield
 #imposm
 decorator
 webtest
--e git://github.com/terranodo/osm-export-tool2.git@apps-refactor#egg=oet2
+-e git://github.com/terranodo/osm-export-tool2.git@eventkit#egg=oet2
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
 -e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
