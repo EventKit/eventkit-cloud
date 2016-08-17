@@ -1,7 +1,6 @@
 Django>=1.8,<=1.9
 psycopg2
-djangorestframework
-django-filter
+djangorestframework<3.3.0
 djangorestframework-gis
 celery[librabbitmq]
 python-social-auth
