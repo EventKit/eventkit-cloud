@@ -12,6 +12,8 @@ services:
         - rabbitmq
       extra_hosts:
         - "cloud.eventkit.dev:127.0.0.1"
+      ports:
+        - "80:80"
   postgis:
     build:
         context: .
