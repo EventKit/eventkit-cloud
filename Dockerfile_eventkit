@@ -79,7 +79,7 @@ RUN wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip -O /var/lib/eventkit
 RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/mkgmap-r3693.zip
 RUN wget http://www.mkgmap.org.uk/download/splitter-r437.zip -O /var/lib/eventkit/splitter-r437.zip
 RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/splitter-r437.zip
-COPY ./config/garmin_config.xml /src/oet2/oet2/utils/conf/garmin_config.xml
+COPY ./config/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
 RUN mkdir /var/lib/eventkit/db_dir
@@ -100,7 +100,7 @@ RUN chmod 755 /var/lib/eventkit
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
-COPY ./scripts/docker_startup.sh /docker_startup.sh
-RUN chmod 777 /docker_startup.sh
+COPY ./scripts/eventkit-entrypoint.sh /eventkit-entrypoint.sh
+RUN chmod 777 /eventkit-entrypoint.sh
 EXPOSE 80
-CMD ["/docker_startup.sh"]
+CMD ["/eventkit-entrypoint.sh"]
