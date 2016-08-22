@@ -8,6 +8,7 @@ from .utils import ABS_PATH
 
 from .secret import SECRET_KEY  # NOQA  # isort:skip
 
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
@@ -15,7 +16,7 @@ from .secret import SECRET_KEY  # NOQA  # isort:skip
 TIME_ZONE = 'UTC'
 
 # default DEBUG setting
-DEBUG = False
+DEBUG = True
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -23,11 +24,9 @@ LANGUAGE_CODE = 'en'
 
 LANGUAGES = (
     ('en', _('English')),
-#    ('id', _('Bahasa Indonesia')),
-#    ('de', _('German')),
-#    ('es', _('Spanish')),
-#    ('ja', _('Japanese')),
-#    ('fr', _('French')),
+    ('de', _('German')),
+    ('es', _('Spanish')),
+    ('fr', _('French')),
 )
 
 LOCALE_PATHS = (
@@ -70,7 +69,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    # ABS_PATH('oet2.core', 'base_static'),
+    # ABS_PATH('core', 'base_static'),
 )
 
 
@@ -90,10 +89,10 @@ MIDDLEWARE_CLASSES = [
     'social.apps.django_app.middleware.SocialAuthExceptionMiddleware',
 ]
 
-ROOT_URLCONF = 'oet2.core.urls'
+ROOT_URLCONF = 'eventkit_cloud.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'oet2.core.wsgi.application'
+WSGI_APPLICATION = 'eventkit_cloud.wsgi.application'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -131,4 +130,5 @@ AUTHENTICATION_BACKENDS = (
     'social.backends.email.EmailAuth',
     'social.backends.username.UsernameAuth',
     'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
 )

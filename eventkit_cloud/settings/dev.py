@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .secret import *
-
-#import django
-#django.setup()
-
 from .project import *  # NOQA
 
 # Set debug to True for development
@@ -20,12 +15,14 @@ INSTALLED_APPS += (
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'oet2',
+        'NAME': 'eventkit_exports_dev',
         'OPTIONS': {
             'options': '-c search_path=exports,public',
+            ##'sslmode': 'require',
         },
         'CONN_MAX_AGE': None,
-        'USER': 'ortelius',
+        'USER': 'eventkit',
+        'PASSWORD': 'eventkit_exports_dev',
         'HOST': 'localhost'
     }
 }
@@ -61,6 +58,12 @@ CACHES = {
     }
 }
 
+# session settings
+SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
+SESSION_COOKIE_DOMAIN = 'cloud.eventkit.dev'
+SESSION_COOKIE_PATH = '/'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -77,7 +80,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': '/var/log/eventkit/debug.log',
             'formatter': 'verbose'
         },
         'console': {
@@ -90,20 +93,56 @@ LOGGING = {
         'django': {
             'handlers': ['file'],
             'propagate': True,
+           # 'level': 'DEBUG',
             'level': 'ERROR',
         },
-        'api': {
+        'oet2.api': {
             'handlers': ['file'],
             'propagate': True,
             'level': 'DEBUG',
         },
-        'api.tests': {
+        'oet2.api.tests': {
             'handlers': ['console'],
             'propagate': True,
             'level': 'DEBUG',
         },
-        'tasks.tests': {
+        'oet2.tasks.tests': {
             'handlers': ['console'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.tasks': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.celery.task': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.jobs': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.jobs.tests': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.utils': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.utils.tests': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2': {
+            'handlers': ['file'],
             'propagate': True,
             'level': 'DEBUG',
         },
@@ -115,32 +154,10 @@ LOGGING = {
         'celery.task': {
             'handlers': ['file'],
             'propagate': True,
-            'level': 'DEBUG',
-        },
-        'jobs': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'jobs.tests': {
-            'handlers': ['console', 'file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'utils': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'utils.tests': {
-            'handlers': ['console', 'file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'hot_exports': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
+            'level': 'DEBUG'
+        }
     }
 }
+
+TILESET_CACHE_DIRECTORY='/cache'
+DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
