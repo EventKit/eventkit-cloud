@@ -19,7 +19,6 @@ sudo echo 'source /usr/local/bin/virtualenvwrapper.sh' >> /etc/profile.d/path.sh
 source /etc/profile.d/path.sh
 mkvirtualenv eventkit
 sudo mkdir /var/lib/eventkit
-sudo mkdir /var/lib/eventkit/oet2
 workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev
@@ -196,10 +195,10 @@ sudo ufw allow proto tcp from 127.0.0.1 to 127.0.0.1 port 5432
 
 sudo ufw --force enable
 
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
 
-sudo service supervisor start
+sudo service supervisor restart
 sudo update-rc.d supervisor enable
 sudo chown -R eventkit:eventkit /var/log/eventkit
 
