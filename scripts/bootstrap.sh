@@ -27,8 +27,7 @@ workon eventkit
 sudo apt-get -y install libpq-dev python-dev
 sudo apt-get -y install postgis postgresql-contrib-9.5
 
-sudo apt-get -y install gcc gcc-c++
-sudo apt-get -y install zlib-devel
+sudo apt-get -y install gcc g++
 
 cd /var/lib/eventkit
 sudo git clone https://gitlab.com/osm-c-tools/osmctools.git
@@ -45,7 +44,7 @@ cd ~
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
-sudo apt-get -y install gdal-bin libgdal-dev libgdal20 libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite
+sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite
 
 sudo apt-get -y install osmctools
 sudo apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
@@ -74,11 +73,6 @@ sudo update-rc.d rabbitmq-server enable
 
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
-sudo git clone https://github.com/terranodo/osm-export-tool2.git
-cd osm-export-tool2
-sudo git checkout apps-refactor
-cp -R * /var/lib/eventkit/oet2 /var/lib/eventkit/.virtualenvs/eventkit/lib/python2.7/site-packages/
-cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
 #git checkout initialVagrant
@@ -91,7 +85,6 @@ export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-rm -rf /var/lib/eventkit/tmp
 
 sudo mkdir /var/lib/eventkit/OsmAndMapCreator
 cd /var/lib/eventkit/OsmAndMapCreator
@@ -105,22 +98,9 @@ sudo mv mkgmap-r3693 /var/lib/eventkit/
 sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
 sudo unzip splitter-r437.zip
 sudo mv splitter-r437 /var/lib/eventkit/
-sudo echo '<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Garmin IMG file creation config.
-    @see utils/garmin.py
--->
-<garmin obj="prog" src="cloud.eventkit.dev">
-    <mkgmap>/var/lib/eventkit/mkgmap-r3693/mkgmap.jar</mkgmap>
-    <splitter>/var/lib/eventkit/splitter-r437/splitter.jar</splitter>
-    <xmx>1024m</xmx>
-    <description>EventKit Export Garmin Map</description>
-    <family-name>EventKit Exports</family-name>
-    <family-id>2</family-id>
-    <series-name>EventKit Exports</series-name>
-</garmin>' > /var/lib/eventkit/.virtualenvs/eventkit/src/oet2/oet2/utils/conf/garmin_config.xml
 
-
+sudo mkdir /var/lib/eventkit/conf
+sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -149,77 +129,7 @@ sudo mkdir /var/log/eventkit
 
 sudo apt-get install supervisor apache2 -y
 
-sudo echo '[unix_http_server]
-file=/var/run/supervisor.sock
-
-[supervisord]
-pidfile=/var/run/supervisor.pid
-logfile=/var/log/supervisor.log
-logfile_backups=1
-
-[rpcinterface:supervisor]
-supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-
-[supervisorctl]
-serverurl=unix:///var/run/supervisor.sock
-
-[group:oet2]
-programs=oet2, celery-1, celery-2
-priority=999
-
-[program:oet2]
-directory = /var/lib/eventkit
-command = /var/lib/eventkit/.virtualenvs/eventkit/bin/gunicorn eventkit_cloud.wsgi:application
-           --bind cloud.eventkit.dev:6080
-           --worker-class eventlet
-           --workers 2
-           --threads 4
-           --access-logfile /var/log/eventkit/oet2-access-log.txt
-           --error-logfile /var/log/eventkit/oet2-error-log.txt
-           --name eventkit
-           --user eventkit
-           --no-sendfile
-user=eventkit
-priority=1
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:celery-1]
-directory = /var/lib/eventkit
-command = /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py celery worker --loglevel debug --logfile=/var/log/eventkit/celery.log
-environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"
-user=eventkit
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT
-
-[program:celery-2]
-directory=/var/lib/eventkit
-command=/var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py celery beat --loglevel debug --logfile=/var/log/eventkit/celery-beat.log
-environment=DJANGO_SETTINGS_MODULE="eventkit_cloud.settings.dev"
-user=eventkit
-autostart=true
-autorestart=true
-stdout_logfile=/var/log/eventkit/stdout.log
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=5
-stderr_logfile=/var/log/eventkit/stderr.log
-stderr_logfile_maxbytes=50MB
-stderr_logfile_backups=5
-stopsignal=INT' > /etc/supervisor/supervisord.conf
+sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord.conf /etc/supervisor/supervisord.conf
 
 #[program:overpass-api]
 #directory = /bin
@@ -265,47 +175,7 @@ stopsignal=INT' > /etc/supervisor/supervisord.conf
 #stopsignal=INT
 
 
-sudo echo '<VirtualHost *:80>
-        ServerName cloud.eventkit.dev
-        ServerAdmin webmaster@localhost
-        ExtFilterDefine gzip mode=output cmd=/bin/gzip
-
-        ScriptAlias /overpass-api/ /bin/cgi-bin/
-        Alias /static/ /var/lib/eventkit/static/
-        Alias /downloads/ /var/lib/eventkit/exports_download/
-
-        <Directory "/bin/cgi-bin/">
-                AllowOverride None
-                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-                Require all granted
-        </Directory>
-
-        <Directory "/var/lib/eventkit/static/">
-                AllowOverride None
-                Options -MultiViews +SymLinksIfOwnerMatch
-                Require all granted
-        </Directory>
-
-        <Directory "/var/lib/eventkit/exports_download/">
-                AllowOverride None
-                Options -MultiViews +SymLinksIfOwnerMatch
-                Require all granted
-        </Directory>
-
-        ErrorLog /var/log/eventkit/apache2-error.log
-
-        LogLevel warn
-
-        CustomLog /var/log/eventkit/apache2-access.log combined
-
-        ProxyPreserveHost On
-        ProxyPass /overpass-api !
-        ProxyPass /downloads !
-        ProxyPass /static !
-        ProxyPass / http://cloud.eventkit.dev:6080/
-        ProxyPassReverse / http://cloud.eventkit.dev:6080/
-
-</VirtualHost>' > /etc/apache2/sites-available/eventkit.conf
+sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
 a2enmod proxy
 a2enmod proxy_http
 a2enmod ext_filter
@@ -340,5 +210,4 @@ sudo update-rc.d apache2 enable
 
 sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
 
-
-
+rm -rf /var/lib/eventkit/tmp
