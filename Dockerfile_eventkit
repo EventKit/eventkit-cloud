@@ -79,7 +79,7 @@ RUN wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip -O /var/lib/eventkit
 RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/mkgmap-r3693.zip
 RUN wget http://www.mkgmap.org.uk/download/splitter-r437.zip -O /var/lib/eventkit/splitter-r437.zip
 RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/splitter-r437.zip
-RUN cp /var/lib/eventkit/tmp/eventkit-cloud/config/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
+RUN cp /var/lib/eventkit/config/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
@@ -88,8 +88,8 @@ RUN chown eventkit:eventkit -R /var/lib/eventkit/
 RUN mkdir /var/log/eventkit
 
 RUN apt-get install supervisor apache2 -y
-RUN cp /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord.conf /etc/supervisor/supervisord.conf
-RUN cp /var/lib/eventkit/tmp/eventkit-cloud/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
+RUN cp /var/lib/eventkit/config/supervisord.conf /etc/supervisor/supervisord.conf
+RUN cp /var/lib/eventkit/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
 
 RUN a2enmod proxy
 RUN a2enmod proxy_http
@@ -104,7 +104,7 @@ RUN chmod 755 /var/lib/eventkit
 RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
-RUN cp /var/lib/eventkit/tmp/eventkit-cloud/scripts/eventkit-entrypoint.sh /eventkit-entrypoint.sh
+RUN cp /var/lib/eventkit/scripts/eventkit-entrypoint.sh /eventkit-entrypoint.sh
 RUN chmod 777 /eventkit-entrypoint.sh
 EXPOSE 80
 RUN rm -rf /var/lib/eventkit/tmp

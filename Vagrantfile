@@ -14,7 +14,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #config.vm.network :private_network, ip: "127.0.0.1"
   config.vm.network :private_network, ip: "192.168.99.130"
   # config.vm.synced_folder "./", "/var/lib/eventkit/vagrant"
-  # config.vm.synced_folder "../osm-export-tool2/oet2", "/var/lib/eventkit/.virtualenvs/eventkit/src/oet2"
+  # config.vm.synced_folder "../osm-export-tool2/", "/var/lib/eventkit/.virtualenvs/eventkit/src/oet2"
 
   # Example of share an additional folder to the guest VM.
   config.vm.provider :virtualbox do |vb|

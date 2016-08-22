@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# set -e
-
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
 sudo echo "PATH=:$PATH" >> /etc/profile.d/path.sh
 
@@ -13,6 +11,7 @@ sudo apt-get -y install python-pip
 sudo apt-get -y install vim
 sudo apt-get -y install git
 
+sudo pip install --upgrade pip
 sudo pip install virtualenvwrapper
 sudo echo 'export WORKON_HOME=/var/lib/eventkit/.virtualenvs' >> /etc/profile.d/path.sh
 sudo echo 'export PROJECT_HOME=/var/lib/eventkit' >> /etc/profile.d/path.sh
@@ -74,7 +73,7 @@ mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-#git checkout initialVagrant
+#git checkout initialDocker
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit
@@ -199,7 +198,7 @@ sudo ufw --force enable
 
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-#sed -i -e 's/start-stop-daemon --start --quiet/start-stop-daemon --start --chuid eventkit --quiet/g' /etc/init.d/supervisor
+
 sudo service supervisor start
 sudo update-rc.d supervisor enable
 sudo chown -R eventkit:eventkit /var/log/eventkit
