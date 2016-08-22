@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # set -e
 
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
