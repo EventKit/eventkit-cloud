@@ -1,7 +1,7 @@
 #!/bin/bash
 
-
-# set -e
+MKGMAP_VERSION=r3693
+SPLITTER_VERSION=r437
 
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
 sudo echo "PATH=:$PATH" >> /etc/profile.d/path.sh
@@ -14,6 +14,7 @@ sudo apt-get -y install python-pip
 sudo apt-get -y install vim
 sudo apt-get -y install git
 
+sudo pip install --upgrade pip
 sudo pip install virtualenvwrapper
 sudo echo 'export WORKON_HOME=/var/lib/eventkit/.virtualenvs' >> /etc/profile.d/path.sh
 sudo echo 'export PROJECT_HOME=/var/lib/eventkit' >> /etc/profile.d/path.sh
@@ -21,7 +22,6 @@ sudo echo 'source /usr/local/bin/virtualenvwrapper.sh' >> /etc/profile.d/path.sh
 source /etc/profile.d/path.sh
 mkvirtualenv eventkit
 sudo mkdir /var/lib/eventkit
-sudo mkdir /var/lib/eventkit/oet2
 workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev
@@ -75,7 +75,7 @@ mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-#git checkout initialVagrant
+#git checkout initialDocker
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit
@@ -85,7 +85,6 @@ export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-rm -rf /var/lib/eventkit/tmp
 
 sudo mkdir /var/lib/eventkit/OsmAndMapCreator
 cd /var/lib/eventkit/OsmAndMapCreator
@@ -93,14 +92,28 @@ sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zi
 sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 sudo rm -f OsmAndMapCreator-main.zip
 
-sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip
-sudo unzip mkgmap-r3693.zip
-sudo mv mkgmap-r3693 /var/lib/eventkit/
-sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
-sudo unzip splitter-r437.zip
-sudo mv splitter-r437 /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/mkgmap-${MKGMAP_VERSION}.zip
+sudo unzip mkgmap-${MKGMAP_VERSION}.zip
+sudo mv mkgmap-${MKGMAP_VERSION} /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/splitter-${SPLITTER_VERSION}.zip
+sudo unzip splitter-${SPLITTER_VERSION}.zip
+sudo mv splitter-${SPLITTER_VERSION} /var/lib/eventkit/
+
 sudo mkdir /var/lib/eventkit/conf
-sudo mv /tmp/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
+sudo echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<!--
+    Garmin IMG file creation config.
+    @see utils/garmin.py
+-->
+<garmin obj=\"prog\" src=\"cloud.eventkit.dev\">
+    <mkgmap>/var/lib/eventkit/mkgmap-${MKGMAP_VERSION}/mkgmap.jar</mkgmap>
+    <splitter>/var/lib/eventkit/splitter-${SPLITTER_VERSION}/splitter.jar</splitter>
+    <xmx>1024m</xmx>
+    <description>EventKit Export Garmin Map</description>
+    <family-name>EventKit Exports</family-name>
+    <family-id>2</family-id>
+    <series-name>EventKit Exports</series-name>
+</garmin>" > /var/lib/eventkit/conf/garmin_config.xml
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -129,7 +142,7 @@ sudo mkdir /var/log/eventkit
 
 sudo apt-get install supervisor apache2 -y
 
-sudo mv /tmp/supervisord.conf /etc/supervisor/supervisord.conf
+sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord.conf /etc/supervisor/supervisord.conf
 
 #[program:overpass-api]
 #directory = /bin
@@ -175,7 +188,7 @@ sudo mv /tmp/supervisord.conf /etc/supervisor/supervisord.conf
 #stopsignal=INT
 
 
-sudo mv /tmp/eventkit.conf /etc/apache2/sites-available/eventkit.conf
+sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
 a2enmod proxy
 a2enmod proxy_http
 a2enmod ext_filter
@@ -198,10 +211,11 @@ sudo ufw allow proto tcp from 127.0.0.1 to 127.0.0.1 port 5432
 
 sudo ufw --force enable
 
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-#sed -i -e 's/start-stop-daemon --start --quiet/start-stop-daemon --start --chuid eventkit --quiet/g' /etc/init.d/supervisor
-sudo service supervisor start
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
+
+sudo service supervisor restart
 sudo update-rc.d supervisor enable
 sudo chown -R eventkit:eventkit /var/log/eventkit
 
@@ -209,3 +223,5 @@ sudo service apache2 start
 sudo update-rc.d apache2 enable
 
 sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
+
+rm -rf /var/lib/eventkit/tmp

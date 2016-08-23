@@ -29,3 +29,4 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute='0', hour='*', day_of_week='*')
     },
 }
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
