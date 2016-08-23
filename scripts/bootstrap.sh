@@ -1,5 +1,8 @@
 #!/bin/bash
 
+MKGMAP_VERSION=r3693
+SPLITTER_VERSION=r437
+
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
 sudo echo "PATH=:$PATH" >> /etc/profile.d/path.sh
 
@@ -89,15 +92,28 @@ sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zi
 sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
 sudo rm -f OsmAndMapCreator-main.zip
 
-sudo wget http://www.mkgmap.org.uk/download/mkgmap-r3693.zip
-sudo unzip mkgmap-r3693.zip
-sudo mv mkgmap-r3693 /var/lib/eventkit/
-sudo wget http://www.mkgmap.org.uk/download/splitter-r437.zip
-sudo unzip splitter-r437.zip
-sudo mv splitter-r437 /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/mkgmap-${MKGMAP_VERSION}.zip
+sudo unzip mkgmap-${MKGMAP_VERSION}.zip
+sudo mv mkgmap-${MKGMAP_VERSION} /var/lib/eventkit/
+sudo wget http://www.mkgmap.org.uk/download/splitter-${SPLITTER_VERSION}.zip
+sudo unzip splitter-${SPLITTER_VERSION}.zip
+sudo mv splitter-${SPLITTER_VERSION} /var/lib/eventkit/
 
 sudo mkdir /var/lib/eventkit/conf
-sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/garmin_config.xml /var/lib/eventkit/conf/garmin_config.xml
+sudo echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<!--
+    Garmin IMG file creation config.
+    @see utils/garmin.py
+-->
+<garmin obj=\"prog\" src=\"cloud.eventkit.dev\">
+    <mkgmap>/var/lib/eventkit/mkgmap-${MKGMAP_VERSION}/mkgmap.jar</mkgmap>
+    <splitter>/var/lib/eventkit/splitter-${SPLITTER_VERSION}/splitter.jar</splitter>
+    <xmx>1024m</xmx>
+    <description>EventKit Export Garmin Map</description>
+    <family-name>EventKit Exports</family-name>
+    <family-id>2</family-id>
+    <series-name>EventKit Exports</series-name>
+</garmin>" > /var/lib/eventkit/conf/garmin_config.xml
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -196,6 +212,7 @@ sudo ufw allow proto tcp from 127.0.0.1 to 127.0.0.1 port 5432
 sudo ufw --force enable
 
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
+sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
 
 sudo service supervisor restart

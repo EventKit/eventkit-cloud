@@ -5,9 +5,6 @@ VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "bento/ubuntu-16.04"
-  config.vm.provision "file", source: "config/eventkit.conf", destination: "/tmp/eventkit.conf"
-  config.vm.provision "file", source: "config/garmin_config.xml", destination: "/tmp/garmin_config.xml"
-  config.vm.provision "file", source: "config/supervisord.conf", destination: "/tmp/supervisord.conf"
   config.vm.provision :shell, path: "scripts/bootstrap.sh"
   config.vm.hostname = "cloud.eventkit.dev"
   ## create a private network visible only to the host machine
