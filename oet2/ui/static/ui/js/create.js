@@ -433,18 +433,17 @@ create.job = (function(){
      * Add the region mask to the map.
      * Calls into region mask api.
      */
-    // function addRegionMask(){
-    //     // get the regions from the regions api
-    //     $.getJSON(Config.REGION_MASK_URL, function(data){
-    //         var geojson = new OpenLayers.Format.GeoJSON({
-    //                 'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-    //                 'externalProjection': new OpenLayers.Projection("EPSG:4326")
-    //         });
-    //         var features = geojson.read(data);
-    //         mask.addFeatures(features);
-    //     });
-    // }
-
+    function addRegionMask(){
+        // get the regions from the regions api
+        $.getJSON(Config.REGION_MASK_URL, function(data){
+            var geojson = new OpenLayers.Format.GeoJSON({
+                    'internalProjection': new OpenLayers.Projection("EPSG:3857"),
+                    'externalProjection': new OpenLayers.Projection("EPSG:4326")
+            });
+            var features = geojson.read(data);
+            mask.addFeatures(features);
+        });
+    }
     function zoomtoextent() {
         var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
@@ -597,9 +596,6 @@ create.job = (function(){
 
         //var extent = ol.geom.Polygon.fromExtent(bounds);
         
-        bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
-        console.log(bounds_trunc.getArea());
-        var area = bounds_trunc.getArea() / 1000000;
         //var area = geodesicArea(bounds_trunc) / 1000000; // sq km
         
         // format the area and max bounds for display..
