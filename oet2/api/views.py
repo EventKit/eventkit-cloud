@@ -205,8 +205,8 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            export_formats = get_models(request.data.get('formats'), ExportFormat, ExportFormat.slug)
-            export_providers = get_models(request.data.get('providers'), ExportProvider, ExportProvider.name)
+            export_formats = get_models(request.data.get('formats'), ExportFormat, 'slug')
+            export_providers = get_models(request.data.get('providers'), ExportProvider, 'name')
 
             tags = request.data.get('tags')
             preset = request.data.get('preset')
@@ -540,13 +540,15 @@ class OSMDataModelView(views.APIView):
         return JsonResponse(data, status=status.HTTP_200_OK)
 
 
-def get_models(model_list, Model, *model_index):
+def get_models(model_list, model_object, model_index):
     models = []
+    if not model_list:
+        return models
     for model_id in model_list:
         # would be good to accept either format slug or uuid here..
         try:
-            model = Model.objects.get(model_index=model_id)
+            model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
-        except Model.DoesNotExist as e:
-            logger.warn('{0} with {1}: {2} does not exist'.format(Model, model_index, model_id))
+        except model_object.DoesNotExist as e:
+            logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
     return models
