@@ -854,8 +854,8 @@ class TestExportTaskViewSet(APITestCase):
 class TestStaticFunctions(APITestCase):
 
     def test_get_models(self):
-        ExportFormat.create_or_add(name="Test1", slug="Test1")
-        ExportFormat.create_or_add(name="Test2", slug="Test2")
+        ExportFormat.objects.create(name="Test1", slug="Test1")
+        ExportFormat.objects.create(name="Test2", slug="Test2")
         sample_models = ["Test1", "Test2"]
         models = get_models(sample_models, ExportFormat, 'name')
         assert len(models) == 2
