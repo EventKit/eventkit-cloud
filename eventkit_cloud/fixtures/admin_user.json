@@ -1,0 +1,19 @@
+[
+    {
+        "pk": 1,
+        "model": "auth.User",
+        "fields": {
+            "is_staff": true,
+            "date_joined": "2016-06-15T14:25:19.000",
+            "is_superuser": true,
+            "last_login": "2016-06-15T14:25:19.000",
+            "email": "admin@eventkit.dev",
+            "username": "admin",
+            "is_active": true,
+            "groups": [
+                1
+            ],
+            "password": "pbkdf2_sha256$20000$qH1pQEscvOgy$ypOQA/Ogej//J0218c39CFXobmv14050/hwWHnvhgxg="
+        }
+    }
+]

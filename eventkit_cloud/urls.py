@@ -14,7 +14,8 @@ urlpatterns = patterns('',
             permanent=False),
         name="favicon"
     ),
-    (r'^djmp/', include('djmp.urls')),
     url(r'^eventkit/register$', register_service),
     url(r'^eventkit/voyager$', import_voyager_cart),
 ) + urlpatterns
+
+urlpatterns += patterns('',(r'^djmp/', include('djmp.urls')))
