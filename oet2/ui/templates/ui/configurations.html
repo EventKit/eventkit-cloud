@@ -193,7 +193,7 @@
         </div>
         </form>
     {% else %}
-    <div style="font-size: large;"><a href="{% url 'osm:begin' 'openstreetmap' %}?next={{request.path}}">{% trans 'Login' %}</a> {% trans 'to upload a preset configuration file.' %}</div>
+    <div style="font-size: large;"><a href="{% url 'login' %}?next={{request.path}}">{% trans 'Login' %}</a> {% trans 'to upload a preset configuration file.' %}</div>
     {% endif %}
     </div>
 </div>

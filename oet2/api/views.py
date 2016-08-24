@@ -114,6 +114,19 @@ class JobViewSet(viewsets.ModelViewSet):
         """Return all objects by default."""
         return Job.objects.all()
 
+    # def get_formats(self, formats):
+    #     export_formats = []
+    #     for slug in formats:
+    #             # would be good to accept either format slug or uuid here..
+    #             try:
+    #                 export_format = ExportFormat.objects.get(slug=slug)
+    #                 export_formats.append(export_format)
+    #             except ExportFormat.DoesNotExist as e:
+    #                 logger.warn('Export format with uid: {0} does not exist'.format(slug))
+    #     return export_formats
+
+
+
     def list(self, request, *args, **kwargs):
         """
         List export jobs.
@@ -192,7 +205,8 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            formats = request.data.get('formats')
+            export_formats = get_models(request.data.get('formats'), ExportFormat, ExportFormat.slug)
+            export_providers = get_models(request.data.get('providers'), ExportProvider, ExportProvider.name)
 
             tags = request.data.get('tags')
             preset = request.data.get('preset')
@@ -200,15 +214,7 @@ class JobViewSet(viewsets.ModelViewSet):
             transform = request.data.get('transform')
             featuresave = request.data.get('featuresave')
             featurepub = request.data.get('featurepub')
-            export_formats = []
             job = None
-            for slug in formats:
-                # would be good to accept either format slug or uuid here..
-                try:
-                    export_format = ExportFormat.objects.get(slug=slug)
-                    export_formats.append(export_format)
-                except ExportFormat.DoesNotExist as e:
-                    logger.warn('Export format with uid: {0} does not exist'.format(slug))
             if len(export_formats) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
@@ -532,3 +538,15 @@ class OSMDataModelView(views.APIView):
         parser = PresetParser(path + '/presets/osm_presets.xml')
         data = parser.build_hdm_preset_dict()
         return JsonResponse(data, status=status.HTTP_200_OK)
+
+
+def get_models(model_list, Model, *model_index):
+    models = []
+    for model_id in model_list:
+        # would be good to accept either format slug or uuid here..
+        try:
+            model = Model.objects.get(model_index=model_id)
+            models.append(model)
+        except Model.DoesNotExist as e:
+            logger.warn('{0} with {1}: {2} does not exist'.format(Model, model_index, model_id))
+    return models

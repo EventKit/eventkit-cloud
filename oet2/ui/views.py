@@ -45,11 +45,12 @@ def login(request):
     exports_url = reverse('list')
     help_url = reverse('help')
     if not request.user.is_authenticated():
-        return render_to_response(
-            'osm/login.html',
-            {'exports_url': exports_url, 'help_url': help_url},
-            RequestContext(request)
-        )
+        return redirect('login')
+        # return render_to_response(
+        #     'ui/login.html',
+        #     {'exports_url': exports_url, 'help_url': help_url},
+        #     RequestContext(request)
+        # )
     else:
         return redirect('create')
 
@@ -59,12 +60,7 @@ def logout(request):
     exports_url = reverse('list')
     help_url = reverse('help')
     auth_logout(request)
-    return render_to_response(
-        'osm/login.html',
-        {'exports_url': exports_url, 'help_url': help_url},
-        RequestContext(request)
-    )
-
+    return redirect('login')
 
 def require_email(request):
     """

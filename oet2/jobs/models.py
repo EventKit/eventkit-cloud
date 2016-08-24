@@ -111,8 +111,17 @@ class ExportProvider(TimeStampedModelMixin):
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    name = models.CharField(max_length=100)
-    url = LowerCaseCharField(max_length=1000, unique=True, default='')
+    name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
+    url = LowerCaseCharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
+    layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
+    TYPES = (
+        ('osm', 'OpenStreetMap'),
+        ('wms', 'WMS'),
+        ('wfs', 'WFS'),
+        ('wmts', 'WMTS'),
+        ('dg', 'Digital Globe')
+    )
+    type = LowerCaseCharField(verbose_name="Service Type", max_length=3, default='wms', choices=TYPES)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -122,7 +131,7 @@ class ExportProvider(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
     def __unicode__(self, ):
-        return '{0}'.format(self.url)
+        return '{0}'.format(self.name)
 
 
 class Region(TimeStampedModelMixin):
