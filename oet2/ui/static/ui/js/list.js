@@ -182,9 +182,6 @@ jobs.list = (function(){
         });
 
         $(map.getViewport()).on('mousemove', function(e) {
-            if ($('#feature-popup').css('display') == 'block') {
-                $('#feature-popup').css('display', 'none');
-            }
             var pixel = map.getEventPixel(e.originalEvent);
             var hit = map.forEachFeatureAtPixel(pixel, function(feature, layer) {
                 if (layer == job_extents && feature.getStyle().getZIndex() != -1) {
@@ -195,9 +192,10 @@ jobs.list = (function(){
                 }
             });
             if (hit) {
-                $popup = $('#feature-popup');
-                $popup.css('display', 'block');
-            } 
+                //display the featureover event!
+            } else {
+                //do nothing
+            }
         });
 
         //OL3 double click handler:
@@ -514,6 +512,7 @@ jobs.list = (function(){
         };
 
         return styles;
+
     }
 
 
