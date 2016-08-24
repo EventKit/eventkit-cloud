@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MKGMAP_VERSION=r3693
+MKGMAP_VERSION=r3694
 SPLITTER_VERSION=r437
 
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
@@ -100,12 +100,13 @@ sudo unzip splitter-${SPLITTER_VERSION}.zip
 sudo mv splitter-${SPLITTER_VERSION} /var/lib/eventkit/
 
 sudo mkdir /var/lib/eventkit/conf
-sudo echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+sudo cat > /var/lib/eventkit/conf/garmin_config.xml <<- EOM
+<?xml version="1.0" encoding="utf-8"?>
 <!--
     Garmin IMG file creation config.
     @see utils/garmin.py
 -->
-<garmin obj=\"prog\" src=\"cloud.eventkit.dev\">
+<garmin obj="prog" src="cloud.eventkit.dev">
     <mkgmap>/var/lib/eventkit/mkgmap-${MKGMAP_VERSION}/mkgmap.jar</mkgmap>
     <splitter>/var/lib/eventkit/splitter-${SPLITTER_VERSION}/splitter.jar</splitter>
     <xmx>1024m</xmx>
@@ -113,7 +114,8 @@ sudo echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
     <family-name>EventKit Exports</family-name>
     <family-id>2</family-id>
     <series-name>EventKit Exports</series-name>
-</garmin>" > /var/lib/eventkit/conf/garmin_config.xml
+</garmin>
+EOM
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -211,6 +213,8 @@ sudo ufw allow proto tcp from 127.0.0.1 to 127.0.0.1 port 5432
 
 sudo ufw --force enable
 
+sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
+
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
@@ -223,6 +227,5 @@ sudo chown -R eventkit:eventkit /var/log/eventkit
 sudo service apache2 start
 sudo update-rc.d apache2 enable
 
-sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
 
 rm -rf /var/lib/eventkit/tmp
