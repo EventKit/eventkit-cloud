@@ -19,6 +19,7 @@ from rest_framework.test import APITestCase
 from oet2.api.pagination import LinkHeaderPagination
 from oet2.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job
 from oet2.tasks.models import ExportRun, ExportTask
+from oet2.api.views import get_models
 
 logger = logging.getLogger(__name__)
 
@@ -848,3 +849,13 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEquals(1, len(data))
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
+
+
+class TestStaticFunctions(APITestCase):
+
+    def test_get_models(self):
+        ExportFormat.create_or_add(name="Test1", slug="Test1")
+        ExportFormat.create_or_add(name="Test2", slug="Test2")
+        sample_models = ["Test1", "Test2"]
+        models = get_models(sample_models, ExportFormat, 'name')
+        assert len(models) == 2
