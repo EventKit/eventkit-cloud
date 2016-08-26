@@ -3,15 +3,16 @@ from django.template import RequestContext
 from django.conf.urls import patterns, url
 from django.contrib import messages
 from django.shortcuts import render_to_response
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
-from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider
+from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, ProviderTask
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
+admin.site.register(ExportProviderType)
+admin.site.register(ProviderTask)
 
 
 class HOTRegionGeoAdmin(OSMGeoAdmin):

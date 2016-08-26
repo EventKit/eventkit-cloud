@@ -17,13 +17,13 @@ from rest_framework.serializers import ValidationError
 
 from oet2.jobs import presets
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
 )
 from oet2.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer,
-    RegionSerializer, ListJobSerializer, ExportProviderSerializer
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
 )
 from oet2.tasks.models import ExportRun, ExportTask
 from oet2.tasks.task_runners import ExportTaskRunner
@@ -205,9 +205,7 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            export_formats = get_models(request.data.get('formats'), ExportFormat, 'slug')
-            export_providers = get_models(request.data.get('providers'), ExportProvider, 'name')
-
+            provider_tasks = request.data.get('provider_tasks')
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -215,12 +213,19 @@ class JobViewSet(viewsets.ModelViewSet):
             featuresave = request.data.get('featuresave')
             featurepub = request.data.get('featurepub')
             job = None
-            if len(export_formats) > 0:
+            if len(provider_tasks) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
                     with transaction.atomic():
                         job = serializer.save()
-                        job.formats = export_formats
+                        provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
+                        try:
+                            provider_serializer.is_valid(raise_exception=True)
+                        except ValidationError:
+                            error_data = OrderedDict()
+                            error_data['errors'] = [_('A provider and an export format must be selected.')]
+                            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                        job.provider_tasks = provider_serializer.save()
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: %s' % preset)
@@ -552,3 +557,21 @@ def get_models(model_list, model_object, model_index):
         except model_object.DoesNotExist as e:
             logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
     return models
+
+
+def get_provider_task(export_provider, export_formats):
+    """
+
+    Args:
+        ExportProvider:
+        ExportFormat:
+
+    Returns:
+
+    """
+    provider_task = ProviderTask.objects.create(provider=export_provider)
+    for export_format in export_formats:
+        if export_format in export_provider.export_provider_type.supported_formats.all():
+            provider_task.formats.add(export_format)
+    provider_task.save()
+    return provider_task
