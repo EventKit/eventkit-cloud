@@ -1279,10 +1279,6 @@ create.job = (function(){
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
                 form_data["provider_tasks"] = []
-                console.log("providers  " + providers)
-                console.log("form_data['providers']  " + form_data['providers'])
-                console.log("formats  " + formats)
-                console.log("form_data['formats']  " + form_data['formats'])
                 provider_tasks = []
 
                 if(typeof(providers)==='string'){
@@ -1294,11 +1290,9 @@ create.job = (function(){
 
                 var formatArray = [];
                 for(var format in formats) {
-                    console.log(formats[format])
                     formatArray.push(formats[format]);
                 }
                 for(var provider in providers){
-                    console.log(providers[provider])
                     provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
                 }
                 form_data["provider_tasks"] = provider_tasks
