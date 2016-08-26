@@ -460,10 +460,12 @@ create.job = (function(){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
                 providersDiv.append('<div class="checkbox"><label>'
-                    + '<input type="checkbox" id="providers"'
-                    + 'name="' + provider.name + '"/>'
-                    + provider.name
-                    + '</label></div>');
+                                 + '<input type="checkbox"'
+                                 + 'name="providers"'
+                                 + 'value="' + provider.name + '"'
+                                 + 'data-description="' + provider.name + '"/>'
+                                 + provider.name
+                                 + '</label></div>');
             }
         })
     }
@@ -730,6 +732,14 @@ create.job = (function(){
                         choice: {
                             min: 1,
                             message: gettext('At least one export format must be selected')
+                        }
+                    }
+                },
+                'providers': {
+                    validators: {
+                        choice: {
+                            min: 1,
+                            message: gettext('At least one export provider must be selected')
                         }
                     }
                 },
@@ -1074,12 +1084,12 @@ create.job = (function(){
          */
         $('#create-job-form').bind('change', function(e){
             var providers = [];
-            var providerUl = $('<ul>');
-            $.each($(this).find('input[id="providers"]:checked'), function(p, provider){
-                var providers = provider.getAttribute('name');
-                providerUl.append($('<li>' + providers + '</li>'));
+            var $providerUl = $('<ul>');
+            $.each($(this).find('input[name="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('data-description');
+                $providerUl.append($('<li>' + providers + '</li>'));
             });
-            $('#summary-providers').html(providerUl);
+            $('#summary-providers').html($providerUl);
 
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
@@ -1198,6 +1208,9 @@ create.job = (function(){
                 if (field === 'formats') {
                     message = 'Please select an export format.';
                 }
+                else if (field === 'providers') {
+                    message = 'Please select an export format.';
+                }
                 else {
                     message = 'The <strong>' + field + '</strong> field is required'
                 }
@@ -1213,11 +1226,10 @@ create.job = (function(){
                 var form_data = {};
                 var tags = [];
                 var formats = [];
+                var providers = [];
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
-                        case 'digital-globe':
-                            form_data['digital_globe'] = true;
                         case 'filename': break;
                         case 'config_type': break;
                         case 'publishconfig': break;
@@ -1232,6 +1244,10 @@ create.job = (function(){
                             break;
                         case 'formats':
                             formats.push(field.value);
+                            break;
+                        case 'providers':
+                            providers.push(field.value);
+                            break;
                         default:
                             form_data[field.name] = field.value;
                     }
@@ -1262,7 +1278,32 @@ create.job = (function(){
                 });
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
-                form_data["formats"] = formats;
+                form_data["provider_tasks"] = []
+                console.log("providers  " + providers)
+                console.log("form_data['providers']  " + form_data['providers'])
+                console.log("formats  " + formats)
+                console.log("form_data['formats']  " + form_data['formats'])
+                provider_tasks = []
+
+                if(typeof(providers)==='string'){
+                    providers = [providers]
+                }
+                if(typeof(formats)==='string'){
+                    formats = [formats]
+                }
+
+                var formatArray = [];
+                for(var format in formats) {
+                    console.log(formats[format])
+                    formatArray.push(formats[format]);
+                }
+                for(var provider in providers){
+                    console.log(providers[provider])
+                    provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
+                }
+                form_data["provider_tasks"] = provider_tasks
+                delete form_data["providers"]
+                delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
