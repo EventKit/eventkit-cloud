@@ -8,7 +8,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', 'insert_export_providers'),
         ('jobs', 'create_hstore_extension'),
         ('jobs', 'install_default_group'),
         ('jobs', 'insert_export_formats'),

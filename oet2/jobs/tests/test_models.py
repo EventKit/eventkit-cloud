@@ -35,7 +35,7 @@ class TestJob(TestCase):
         self.job.save()
         self.uid = self.job.uid
         # add the formats to the job
-        self.job.formats = self.formats
+        #self.job.formats = self.formats
         self.job.save()
         self.tags = [('building', 'yes'), ('place', 'city'), ('highway', 'service'), ('aeroway', 'helipad')]
         for tag in self.tags:

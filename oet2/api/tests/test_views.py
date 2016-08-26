@@ -17,9 +17,9 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from oet2.api.pagination import LinkHeaderPagination
-from oet2.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job
+from oet2.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, ExportProviderType, ProviderTask
 from oet2.tasks.models import ExportRun, ExportTask
-from oet2.api.views import get_models
+from oet2.api.views import get_models, get_provider_task
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +43,12 @@ class TestJobViewSet(APITestCase):
         self.job = Job.objects.create(name='TestJob', event='Test Activation',
                                  description='Test description', user=self.user,
                                  the_geom=the_geom)
-        format = ExportFormat.objects.get(slug='obf')
-        self.job.formats.add(format)
+        formats = ExportFormat.objects.all()
+        provider = ExportProvider.objects.first()
+        provider_task = ProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(*formats)
+
+        self.job.provider_tasks.add(provider_task)
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
@@ -121,7 +125,8 @@ class TestJobViewSet(APITestCase):
         # test significant content
         self.assertEquals(response.data['uid'], data['uid'])
         self.assertEquals(response.data['url'], data['url'])
-        self.assertEqual(response.data['exports'][0]['url'], data['exports'][0]['url'])
+        self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['url'])
+
 
     def test_delete_job(self, ):
         url = reverse('api:jobs-detail', args=[self.job.uid])
@@ -148,7 +153,7 @@ class TestJobViewSet(APITestCase):
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_create_job_success(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
@@ -162,7 +167,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats,
+            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags
@@ -178,8 +183,9 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
-        self.assertEqual(response.data['exports'][0]['slug'], request_data['formats'][0])
-        self.assertEqual(response.data['exports'][1]['slug'], request_data['formats'][1])
+
+        self.assertEqual(response.data['exports'][0]['formats'][0]['slug'], request_data['provider_tasks'][0]['formats'][0])
+        self.assertEqual(response.data['exports'][0]['formats'][1]['slug'], request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertTrue(response.data['published'])
@@ -190,7 +196,7 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_create_job_with_config_success(self, mock):
         task_runner = mock.return_value
         config_uid = self.config.uid
@@ -204,7 +210,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats,
+            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': formats}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -221,15 +227,15 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
-        self.assertEqual(response.data['exports'][0]['slug'], request_data['formats'][0])
-        self.assertEqual(response.data['exports'][1]['slug'], request_data['formats'][1])
+        self.assertEqual(response.data['exports'][0]['formats'][0]['slug'], request_data['provider_tasks'][0]['formats'][0])
+        self.assertEqual(response.data['exports'][0]['formats'][1]['slug'], request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_create_job_with_tags(self, mock):
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
@@ -245,7 +251,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats,
+            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': formats}],
             # 'preset': config_uid,
             'transform': '',
             'translate': '',
@@ -262,8 +268,8 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
-        self.assertEqual(response.data['exports'][0]['slug'], request_data['formats'][0])
-        self.assertEqual(response.data['exports'][1]['slug'], request_data['formats'][1])
+        self.assertEqual(response.data['exports'][0]['formats'][0]['slug'], request_data['provider_tasks'][0]['formats'][0])
+        self.assertEqual(response.data['exports'][0]['formats'][1]['slug'], request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         configs = self.job.configs.all()
@@ -280,9 +286,9 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -299,7 +305,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -318,9 +324,9 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -337,9 +343,9 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -356,9 +362,9 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -375,9 +381,9 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': -3.9,  # inverted
             'ymax': 27.6,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -412,13 +418,14 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
+            'provider_tasks': [{'provider': 'OpenStreetMap'}]# 'formats': formats}]
             # 'formats': '', # missing
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['Select an export format.'], response.data['formats'])
+        self.assertEquals(['A provider and an export format must be selected.'], response.data['errors'])
 
     def test_invalid_format_param(self, ):
         url = reverse('api:jobs-list')
@@ -430,13 +437,13 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': '',  # invalid
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': ''}] # invalid
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertIsNotNone(response.data['formats'])
+        self.assertIsNotNone(response.data.get('provider_tasks')[0].get('formats'))
 
     def test_no_matching_format_slug(self, ):
         url = reverse('api:jobs-list')
@@ -448,15 +455,16 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'formats': ['broken-format-one', 'broken-format-two']
+            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, request_data, format='json')
+
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response.data['formats'], ['invalid export format.'])
+        self.assertEquals(response.data['provider_tasks'][0]['formats'], ['Object with slug=broken-format-one does not exist.'])
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_get_correct_region(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
@@ -470,7 +478,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 13.54,
             'xmax': 48.52,
             'ymax': 20.24,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
@@ -483,8 +491,8 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
-        self.assertEqual(response.data['exports'][0]['slug'], request_data['formats'][0])
-        self.assertEqual(response.data['exports'][1]['slug'], request_data['formats'][1])
+        self.assertEqual(response.data['exports'][0]['formats'][0]['slug'], request_data['provider_tasks'][0]['formats'][0])
+        self.assertEqual(response.data['exports'][0]['formats'][1]['slug'], request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
 
@@ -505,7 +513,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 47.66,
             'xmax': 11.61,
             'ymax': 54.24,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -525,7 +533,7 @@ class TestJobViewSet(APITestCase):
             'ymin': -10,
             'xmax': 40,
             'ymax': 20,
-            'formats': formats
+            'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -569,7 +577,7 @@ class TestBBoxSearch(APITestCase):
                 'ymin': extent[1],
                 'xmax': extent[2],
                 'ymax': extent[3],
-                'formats': formats
+                'provider_tasks': [{'provider':'OpenStreetMap', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
@@ -690,7 +698,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = File(open(path + '/files/Example Transform.sql', 'r'))
         name = 'Test Export Config'
-        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM', 'published': True}, format='multipart')
+        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM', 'published': True}, format='JSON')
         data = response.data
         uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=uid)
@@ -709,7 +717,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = File(open(path + '/files/hdm_presets.xml', 'r'))
         name = 'Test Export Preset'
-        response = self.client.post(post_url, {'name': name, 'upload': f, 'config_type': 'PRESET', 'published': True}, format='multipart')
+        response = self.client.post(post_url, {'name': name, 'upload': f, 'config_type': 'PRESET', 'published': True}, format='JSON')
         data = response.data
         uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=uid)
@@ -741,7 +749,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
         self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='multipart')
+        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='JSON')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_invalid_preset(self, ):
@@ -749,7 +757,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/invalid_hdm_presets.xml', 'r')
         self.assertIsNotNone(f)
-        response = self.client.post(url, {'name': 'Invalid Preset', 'upload': f, 'config_type': 'PRESET'}, format='multipart')
+        response = self.client.post(url, {'name': 'Invalid Preset', 'upload': f, 'config_type': 'PRESET'}, format='JSON')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_invalid_name(self, ):
@@ -757,13 +765,13 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
         self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM'}, format='multipart')
+        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM'}, format='JSON')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response.data['name'], ['This field is required.'])
 
     def test_invalid_upload(self, ):
         url = reverse('api:configs-list')
-        response = self.client.post(url, {'upload': '', 'config_type': 'TRANSFORM-WRONG'}, format='multipart')
+        response = self.client.post(url, {'upload': '', 'config_type': 'TRANSFORM-WRONG'}, format='JSON')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @skip('Transform not implemented.')
@@ -773,7 +781,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = File(open(path + '/files/Example Transform.sql', 'r'))
         name = 'Test Export Config'
-        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM'}, format='multipart')
+        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM'}, format='JSON')
         data = response.data
         saved_uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=saved_uid)
@@ -782,7 +790,7 @@ class TestExportConfigViewSet(APITestCase):
         url = reverse('api:configs-detail', args=[saved_uid])
         f = File(open(path + '/files/hdm_presets.xml', 'r'))
         updated_name = 'Test Export Config Updated'
-        response = self.client.put(url, {'name': updated_name, 'upload': f, 'config_type': 'PRESET'}, format='multipart')
+        response = self.client.put(url, {'name': updated_name, 'upload': f, 'config_type': 'PRESET'}, format='JSON')
         data = response.data
         updated_uid = data['uid']
         self.assertEquals(saved_uid, updated_uid)  # check its the same uid
@@ -859,3 +867,93 @@ class TestStaticFunctions(APITestCase):
         sample_models = ["Test1", "Test2"]
         models = get_models(sample_models, ExportFormat, 'name')
         assert len(models) == 2
+
+    def test_get_provider_tasks(self):
+        #Arbitrary "Formats"
+        format_test1 = ExportFormat.objects.create(name="Test1", slug="Test1")
+        format_test2 = ExportFormat.objects.create(name="Test2", slug="Test2")
+        format_test3 = ExportFormat.objects.create(name="Test3", slug="Test3")
+
+        #Formats we want to process
+        requested_types = (format_test1, format_test2)
+
+        # An arbitrary provider type...
+        provider_type = ExportProviderType.objects.create(type_name="test")
+        # ... and the formats it actually supports.
+        supported_formats = [format_test2, format_test3]
+        provider_type.supported_formats.add(*supported_formats)
+        provider_type.save()
+
+        #Assign the type to an arbitrary provider.
+        export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
+
+        #Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
+        provider_task = get_provider_task(export_provider, requested_types)
+        assert len(provider_task.formats.all()) == 1
+
+
+#
+# from oet2.api.serializers import *
+# from oet2.jobs.models import *
+# from oet2.api.views import get_provider_task
+#
+#
+# # format_test1 = ExportFormat.objects.create(name="Test1", slug="Test1")
+# # format_test2 = ExportFormat.objects.create(name="Test2", slug="Test2")
+# # format_test3 = ExportFormat.objects.create(name="Test3", slug="Test3")
+# #
+# # #Formats we want to process
+# # requested_types = (format_test1, format_test2)
+# #
+# # # An arbitrary provider type...
+# # provider_type = ExportProviderType.objects.create(type_name="test")
+# # # ... and the formats it actually supports.
+# # supported_formats = [format_test2, format_test3]
+# # provider_type.supported_formats.add(*supported_formats)
+# # provider_type.save()
+# #
+# # #Assign the type to an arbitrary provider.
+# # export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
+# #
+# # #Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
+# # provider_task = get_provider_task(export_provider, requested_types)
+# # assert len(provider_task.formats.all()) == 1
+#
+# format_test1 = ExportFormat.objects.filter(slug="test1")[0]
+# format_test2 = ExportFormat.objects.filter(slug="test2")[0]
+# format_test3 = ExportFormat.objects.filter(slug="test3")[0]
+#
+# #Formats we want to process
+# requested_types = (format_test1, format_test2)
+#
+# # An arbitrary provider type...
+# provider_type = ExportProviderType.objects.filter(type_name="test")[0]
+# # ... and the formats it actually supports.
+# supported_formats = [format_test2, format_test3]
+# provider_type.supported_formats.add(*supported_formats)
+# provider_type.save()
+#
+# #Assign the type to an arbitrary provider.
+# export_provider = ExportProvider.objects.filter(name="provider1", export_provider_type=provider_type)[0]
+#
+# #Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
+# provider_task = get_provider_task(export_provider, requested_types)
+# assert len(provider_task.formats.all()) == 1
+# pts = ProviderTaskSerializer(instance=provider_task)
+# #
+# # data = {"provider": "OpenStreetMap", "formats": [{"name": "Test2", "slug": "test2"}]}
+#
+# data = [{"provider": "OpenStreetMap", "formats": ["shp", "kml", "gpkg"]}, {"provider": "provider1", "formats": ["kml", "gpkg"]}]
+# new_pts = ProviderTaskSerializer(data=data, many=True)
+# new_pts.is_valid()
+# test = new_pts.save()
+
+
+
+
+
+def date_handler(obj):
+    if hasattr(obj, 'isoformat'):
+        return obj.isoformat()
+    else:
+        raise TypeError

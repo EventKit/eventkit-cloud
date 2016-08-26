@@ -105,23 +105,33 @@ class ExportFormat(TimeStampedModelMixin):
         return '{0}'.format(self.slug)
 
 
+class ExportProviderType(TimeStampedModelMixin):
+    """
+    Model to hold types and supported exports for providers.
+    """
+    id = models.AutoField(primary_key=True, editable=False)
+    type_name = models.CharField(verbose_name="Type Name", max_length=4, unique=True, default='')
+    supported_formats = models.ManyToManyField(ExportFormat,
+                                               verbose_name="Supported Export Formats",
+                                               blank=True)
+    def __str__(self):
+        return '{0}'.format(self.type_name)
+
+    def __unicode__(self, ):
+        return '{0}'.format(self.type_name)
+
+
+
 class ExportProvider(TimeStampedModelMixin):
     """
-    Model for a ExportFormat.
+    Model for a ExportProvider.
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     url = LowerCaseCharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
-    TYPES = (
-        ('osm', 'OpenStreetMap'),
-        ('wms', 'WMS'),
-        ('wfs', 'WFS'),
-        ('wmts', 'WMTS'),
-        ('dg', 'Digital Globe')
-    )
-    type = LowerCaseCharField(verbose_name="Service Type", max_length=3, default='wms', choices=TYPES)
+    export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -155,6 +165,22 @@ class Region(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
 
+class ProviderTask(models.Model):
+    """
+    Model for a set of tasks assigned to a provider for a job.
+    """
+    id = models.AutoField(primary_key=True, editable=False)
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
+    provider = models.ForeignKey(ExportProvider, related_name='provider')
+    formats = models.ManyToManyField(ExportFormat, related_name='formats')
+
+    def __str__(self):
+        return '{0} - {1}'.format(self.uid, self.provider)
+
+    def __unicode__(self, ):
+        return '{0} - {1}'.format(self.uid, self.provider)
+
+
 class Job(TimeStampedModelMixin):
     """
     Model for a Job.
@@ -166,7 +192,7 @@ class Job(TimeStampedModelMixin):
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
     region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
-    formats = models.ManyToManyField(ExportFormat, related_name='formats')
+    provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
     configs = models.ManyToManyField(ExportConfig, related_name='configs', blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     feature_save = models.BooleanField(default=False, db_index=True)  # save feature selections
