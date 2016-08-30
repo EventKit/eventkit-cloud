@@ -16,7 +16,11 @@ INSTALLED_APPS += (
 
 DATABASES = {}
 
-DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports_dev@localhost:5432/eventkit_exports_dev')
+if os.environ.get('VCAP_SERVICES'):
+    environ = os.environ.get('VCAP_SERVICES')
+    DATABASES['default'] = environ['pz-postgres'][0]['credentials']["uri"]
+else:
+    DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports_dev@localhost:5432/eventkit_exports_dev')
 
 DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
 
