@@ -1,5 +1,6 @@
 -e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
 Django>=1.8,<=1.9
+dj-database-url
 psycopg2
 djangorestframework<3.3.0
 django-filter

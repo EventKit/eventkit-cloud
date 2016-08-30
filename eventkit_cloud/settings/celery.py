@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from celery.schedules import crontab
 
 from .contrib import *  # NOQA
+import os
 
 # Celery config
 CELERY_TRACK_STARTED = True
@@ -29,4 +30,4 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute='0', hour='*', day_of_week='*')
     },
 }
-BROKER_URL = 'amqp://guest:guest@rabbitmq:5672//'
+BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')

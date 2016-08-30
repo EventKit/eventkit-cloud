@@ -2,31 +2,24 @@
 from __future__ import absolute_import
 
 from .project import *  # NOQA
+import dj_database_url
+import os
 
-# Hosts/domain names that are valid for this site; required if DEBUG is False
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['cloud.eventkit.dev']
+# Set debug to True for development
+DEBUG = True
+LOGGING_OUTPUT_ENABLED = DEBUG
+LOGGING_LOG_SQL = DEBUG
 
-# Comment if you are not running behind proxy
-USE_X_FORWARDED_HOST = True
+INSTALLED_APPS += (
+    'django_extensions',
+)
 
-# Set debug to false for production
-DEBUG = False
+DATABASES = {}
 
+DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports_dev@localhost:5432/eventkit_exports_dev')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'hot_exports_dev',
-        'OPTIONS': {
-            'options': '-c search_path=exports,public',
-            'sslmode': 'require',
-        },
-        'CONN_MAX_AGE': None,
-        'USER': 'hot',
-        'PASSWORD': 'password',
-    }
-}
+DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
+
 
 TEMPLATES = [
     {
@@ -49,13 +42,20 @@ TEMPLATES = [
     },
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Disable caching while in development
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
 
 # session settings
-SESSION_COOKIE_NAME = 'hot_exports_sessionid'
-SESSION_COOKIE_DOMAIN = 'cloud.eventkit.dev'
+SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
+SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', 'cloud.eventkit')
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
 
 LOGGING = {
     'version': 1,
@@ -73,7 +73,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'filename': '/var/log/eventkit/debug.log',
             'formatter': 'verbose'
         },
         'console': {
@@ -86,20 +86,56 @@ LOGGING = {
         'django': {
             'handlers': ['file'],
             'propagate': True,
+           # 'level': 'DEBUG',
             'level': 'ERROR',
         },
-        'api': {
+        'oet2.api': {
             'handlers': ['file'],
             'propagate': True,
             'level': 'DEBUG',
         },
-        'api.tests': {
+        'oet2.api.tests': {
             'handlers': ['console'],
             'propagate': True,
             'level': 'DEBUG',
         },
-        'tasks.tests': {
+        'oet2.tasks.tests': {
             'handlers': ['console'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.tasks': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.celery.task': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.jobs': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.jobs.tests': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.utils': {
+            'handlers': ['file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2.utils.tests': {
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
+        'oet2': {
+            'handlers': ['file'],
             'propagate': True,
             'level': 'DEBUG',
         },
@@ -111,32 +147,10 @@ LOGGING = {
         'celery.task': {
             'handlers': ['file'],
             'propagate': True,
-            'level': 'DEBUG',
-        },
-        'jobs': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'jobs.tests': {
-            'handlers': ['console', 'file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'utils': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'utils.tests': {
-            'handlers': ['console', 'file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'hot_exports': {
-            'handlers': ['file'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
+            'level': 'DEBUG'
+        }
     }
 }
+
+TILESET_CACHE_DIRECTORY=os.environ.get('TILESET_CACHE_DIRECTORY', '/cache')
+DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'

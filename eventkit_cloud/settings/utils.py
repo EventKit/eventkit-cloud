@@ -23,7 +23,8 @@ with a random generated SECRET_KEY setting."""
         secret_key = get_random_string(
             50, 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)')
         with open(secret_path, 'w') as f:
-            f.write("SECRET_KEY = " + repr(secret_key) + "\n")
+            f.write("import os\n")
+            f.write("SECRET_KEY = os.environ.get('SECRET_KEY', " + repr(secret_key) + "\n")
 
 # Import the secret key
 ensure_secret_key_file()

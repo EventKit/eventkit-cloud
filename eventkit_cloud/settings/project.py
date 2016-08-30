@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 from .celery import *  # NOQA
+import os
 
 # Project apps
 INSTALLED_APPS += (
@@ -48,7 +49,7 @@ GARMIN_CONFIG = '/var/lib/eventkit/conf/garmin_config.xml'
 
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
-OVERPASS_API_URL = 'http://overpass-api.de/api/interpreter'
+OVERPASS_API_URL = os.environ.get('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
 
 """
 Maximum extent of a Job
@@ -59,9 +60,9 @@ JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 5
 
-HOSTNAME = 'cloud.eventkit.dev'
-SITE_NAME = 'cloud.eventkit.dev'
-SITE_URL = 'http://cloud.eventkit.dev'
+HOSTNAME = os.environ.get('HOSTNAME', 'cloud.eventkit.dev')
+SITE_NAME = os.environ.get('SITE_NAME', 'cloud.eventkit.dev')
+SITE_URL = os.environ.get('SITE_URL', 'http://cloud.eventkit.dev')
 SITE_ID = 1
 
 """
