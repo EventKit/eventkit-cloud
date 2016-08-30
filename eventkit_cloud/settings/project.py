@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from .celery import *  # NOQA
 import os
+import json
 
 # Project apps
 INSTALLED_APPS += (
@@ -60,8 +61,8 @@ JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
 EXPORT_MAX_RUNS = 5
 
 if os.environ.get('VCAP_APPLICATION'):
-    environ = os.environ.get('VCAP_APPLICATION')
-    HOSTNAME = environ['application_uris'][0]
+    env = json.loads(os.environ.get('VCAP_APPLICATION'))
+    HOSTNAME = env['application_uris'][0]
     SITE_NAME = HOSTNAME
     SITE_URL = "https://{0}".format(SITE_NAME)
 else:

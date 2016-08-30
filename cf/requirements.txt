@@ -26,3 +26,4 @@ webtest
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
 numpy==1.11.1
+django_extensions
