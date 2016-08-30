@@ -27,3 +27,4 @@ webtest
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
 numpy==1.11.1
 django_extensions
+whitenoise==2.0.6

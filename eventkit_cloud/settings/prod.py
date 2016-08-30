@@ -19,6 +19,7 @@ DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
     DATABASES = {'default': dj_database_url.config()}
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 else:
     DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports_dev@localhost:5432/eventkit_exports_dev')
 
@@ -152,3 +153,8 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 TILESET_CACHE_DIRECTORY=os.environ.get('TILESET_CACHE_DIRECTORY', '/cache')
 DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
+
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
