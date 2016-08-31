@@ -48,7 +48,7 @@ sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libsp
 
 sudo apt-get -y install osmctools
 sudo apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
-sudo apt-get -y install default-jre zip unzip
+sudo apt-get -y install zip unzip
 
 sudo service postgresql start
 sudo update-rc.d postgresql enable
@@ -85,37 +85,6 @@ export CPLUS_INCLUDE_PATH=/usr/include/gdal
 export C_INCLUDE_PATH=/usr/include/gdal
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-
-sudo mkdir /var/lib/eventkit/OsmAndMapCreator
-cd /var/lib/eventkit/OsmAndMapCreator
-sudo wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip
-sudo unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
-sudo rm -f OsmAndMapCreator-main.zip
-
-sudo wget http://www.mkgmap.org.uk/download/mkgmap-${MKGMAP_VERSION}.zip
-sudo unzip mkgmap-${MKGMAP_VERSION}.zip
-sudo mv mkgmap-${MKGMAP_VERSION} /var/lib/eventkit/
-sudo wget http://www.mkgmap.org.uk/download/splitter-${SPLITTER_VERSION}.zip
-sudo unzip splitter-${SPLITTER_VERSION}.zip
-sudo mv splitter-${SPLITTER_VERSION} /var/lib/eventkit/
-
-sudo mkdir /var/lib/eventkit/conf
-sudo cat > /var/lib/eventkit/conf/garmin_config.xml <<- EOM
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Garmin IMG file creation config.
-    @see utils/garmin.py
--->
-<garmin obj="prog" src="cloud.eventkit.dev">
-    <mkgmap>/var/lib/eventkit/mkgmap-${MKGMAP_VERSION}/mkgmap.jar</mkgmap>
-    <splitter>/var/lib/eventkit/splitter-${SPLITTER_VERSION}/splitter.jar</splitter>
-    <xmx>1024m</xmx>
-    <description>EventKit Export Garmin Map</description>
-    <family-name>EventKit Exports</family-name>
-    <family-id>2</family-id>
-    <series-name>EventKit Exports</series-name>
-</garmin>
-EOM
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download

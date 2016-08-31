@@ -61,7 +61,7 @@ RUN apt-get update
 RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite 
 RUN apt-get -y install osmctools
 RUN apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
-RUN apt-get -y install default-jre zip unzip
+RUN apt-get -y install zip unzip
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
 RUN git clone https://github.com/terranodo/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
@@ -72,30 +72,6 @@ RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
   /var/lib/eventkit/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements.txt &&\
   /var/lib/eventkit/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements-dev.txt
-
-RUN mkdir /var/lib/eventkit/OsmAndMapCreator
-RUN wget http://download.osmand.net/latest-night-build/OsmAndMapCreator-main.zip -O /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
-RUN cd /var/lib/eventkit/OsmAndMapCreator && unzip /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip 
-RUN rm -f /var/lib/eventkit/OsmAndMapCreator/OsmAndMapCreator-main.zip
-RUN wget http://www.mkgmap.org.uk/download/mkgmap-${MKGMAP_VERSION}.zip -O /var/lib/eventkit/mkgmap-${MKGMAP_VERSION}.zip
-RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/mkgmap-${MKGMAP_VERSION}.zip
-RUN wget http://www.mkgmap.org.uk/download/splitter-${SPLITTER_VERSION}.zip -O /var/lib/eventkit/splitter-${SPLITTER_VERSION}.zip
-RUN cd /var/lib/eventkit && unzip /var/lib/eventkit/splitter-${SPLITTER_VERSION}.zip
-RUN mkdir /var/lib/eventkit/conf 
-RUN echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-<!--\n\
-    Garmin IMG file creation config.\n\
-    @see utils/garmin.py\n\
--->\n\
-<garmin obj=\"prog\" src=\"cloud.eventkit.dev\">\n\
-    <mkgmap>/var/lib/eventkit/mkgmap-${MKGMAP_VERSION}/mkgmap.jar</mkgmap>\n\
-    <splitter>/var/lib/eventkit/splitter-${SPLITTER_VERSION}/splitter.jar</splitter>\n\
-    <xmx>1024m</xmx>\n\
-    <description>EventKit Export Garmin Map</description>\n\
-    <family-name>EventKit Exports</family-name>\n\
-    <family-id>2</family-id>\n\
-    <series-name>EventKit Exports</series-name>\n\
-</garmin>" > /var/lib/eventkit/conf/garmin_config.xml
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
