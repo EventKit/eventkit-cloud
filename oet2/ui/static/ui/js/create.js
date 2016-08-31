@@ -214,8 +214,8 @@ create.job = (function(){
                 'dataProjection': 'EPSG:4326'
             });
             maskSource.addFeatures(features);
-            var extent = maskSource.getExtent();
-            map.getView().fit(extent, map.getSize());
+            //var extent = maskSource.getExtent();
+            //map.getView().fit(extent, map.getSize());
             //zoomtoextent();
 
         });
@@ -588,7 +588,6 @@ create.job = (function(){
         //var extent = ol.geom.Polygon.fromExtent(bounds);
         
         bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
-        console.log(bounds_trunc.getArea());
         var area = bounds_trunc.getArea() / 1000000;
         //var area = geodesicArea(bounds_trunc) / 1000000; // sq km
         
