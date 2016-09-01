@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmand, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
+    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
 )
 
 # Get an instance of a logger
@@ -272,32 +272,6 @@ class KmlExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in kml export, %s', str(e))
             raise Exception(e)
-
-
-class ObfExportTask(ExportTask):
-    """
-    Class defining OBF export function.
-    """
-    name = 'OBF Export'
-
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        pbffile = stage_dir + job_name + '.pbf'
-        map_creator_dir = settings.OSMAND_MAP_CREATOR_DIR
-        work_dir = stage_dir + 'osmand'
-        try:
-            o2o = osmand.OSMToOBF(
-                pbffile=pbffile, work_dir=work_dir, map_creator_dir=map_creator_dir
-            )
-            out = o2o.convert()
-            obffile = stage_dir + job_name + '.obf'
-            shutil.move(out, obffile)
-            shutil.rmtree(work_dir)
-            return {'result': obffile}
-        except Exception as e:
-            logger.error('Raised exception in obf export, %s', str(e))
-            raise Exception(e)
-
 
 class SqliteExportTask(ExportTask):
     """

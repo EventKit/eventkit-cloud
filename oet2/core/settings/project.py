@@ -34,9 +34,6 @@ EXPORT_DOWNLOAD_ROOT = '/home/ubuntu/export_downloads/'
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = '/downloads/'
 
-# home dir of the OSMAnd Map Creator
-OSMAND_MAP_CREATOR_DIR = '/home/ubuntu/osmand/OsmAndMapCreator'
-
 # url to overpass api endpoint
 OVERPASS_API_URL = 'http://localhost/interpreter'
 
