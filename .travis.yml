@@ -19,7 +19,7 @@ before_install:
     - sudo apt-get install libcurl4-gnutls-dev
     - export CPLUS_INCLUDE_PATH=/usr/include/gdal
     - export C_INCLUDE_PATH=/usr/include/gdal
-    - sudo apt-get install -y gdal-bin python-gdal libgdal1h
+    - sudo apt-get install -y gdal-bin python-gdal libgdal1 libgdal1h
     - sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install postgresql-9.4-postgis-2.2
 
 before_script:
