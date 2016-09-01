@@ -17,7 +17,7 @@ before_install:
     - sudo apt-get install -y libspatialite5 libspatialite-dev
     - sudo apt-get install -y python-software-properties
     - sudo apt-get install libcurl4-gnutls-dev
-    - sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev 
+    - sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libgdal1 
     - sudo apt-get -y install postgis postgresql-contrib-9.5
 
 before_script:
