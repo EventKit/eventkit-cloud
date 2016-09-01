@@ -6,6 +6,9 @@ language: python
 python:
   - "2.7"
 
+virtualenv:
+  system_site_packages: true
+
 addons:
   postgresql: "9.4"
 
@@ -16,7 +19,7 @@ before_install:
     - sudo apt-get install libcurl4-gnutls-dev
     - export CPLUS_INCLUDE_PATH=/usr/include/gdal
     - export C_INCLUDE_PATH=/usr/include/gdal
-    - sudo apt-get install -y gdal-bin libgdal-dev
+    - sudo apt-get install -y gdal-bin python-gdal
 
 before_script:
     - psql -U postgres -c "create extension postgis"
