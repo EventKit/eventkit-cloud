@@ -21,7 +21,6 @@ EXPORT_TASKS = {
     'obf': 'tasks.export_tasks.ObfExportTask',
     'sqlite': 'tasks.export_tasks.SqliteExportTask',
     'kml': 'tasks.export_tasks.KmlExportTask',
-    'garmin': 'tasks.export_tasks.GarminExportTask',
     'thematic': 'tasks.export_tasks.ThematicLayersExportTask',
     'geopackage': 'tasks.export_tasks.GeopackageExportTask'
 }
@@ -37,9 +36,6 @@ EXPORT_MEDIA_ROOT = '/downloads/'
 
 # home dir of the OSMAnd Map Creator
 OSMAND_MAP_CREATOR_DIR = '/home/ubuntu/osmand/OsmAndMapCreator'
-
-# location of the garmin config file
-GARMIN_CONFIG = '/home/ubuntu/www/hotosm/utils/conf/garmin_config.xml'
 
 # url to overpass api endpoint
 OVERPASS_API_URL = 'http://localhost/interpreter'

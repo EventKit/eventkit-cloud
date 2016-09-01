@@ -247,12 +247,6 @@ exports.detail = (function(){
                                         result.size + '</td></tr>');
                                 }
                                 break;
-                            case 'Garmin Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Garmin Map (IMG) File') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
                             case 'SQLITE Export':
                                 if (status === 'SUCCESS') {
                                     $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
@@ -513,17 +507,6 @@ exports.detail = (function(){
                             result.size + '</td><td>' + task.status + '</td></tr>');
                         }
                         break;
-                    case 'Garmin Export':
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
-                            cls = status.toLowerCase();
-                            $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Garmin Map (IMG) File') + '</td><td> -- <td> -- </td><td>' + task.status + '</td></tr>');
-                        }
-                        else {
-                            cls = status.toLowerCase();
-                            $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('Garmin Map (IMG) File') + '</a></td><td>' + duration + '</td><td>' +
-                            result.size + '</td><td>' + task.status + '</td></tr>');
-                        }
-                        break;
                     case 'SQLITE Export':
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
@@ -705,19 +688,6 @@ exports.detail = (function(){
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td><a href="' + result.url + '">' + gettext('OSMAnd (OBF) File') + '</a></td><td>' + duration + '</td><td>' +
-                            result.size + '</td><td>' + task.status + '</td>');
-                        }
-                        break;
-                    case 'Garmin Export':
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
-                            $tr.html('<td>' + gettext('Garmin Map (IMG) File') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                        }
-                        else {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
-                            $tr.html('<td><a href="' + result.url + '">' + gettext('Garmin Map (IMG) File') + '</a></td><td>' + duration + '</td><td>' +
                             result.size + '</td><td>' + task.status + '</td>');
                         }
                         break;

@@ -19,8 +19,6 @@ class Migration(migrations.Migration):
                                     slug='KML')
         ExportFormat.objects.create(name='SQLITE Format', description='SQlite SQL',
                                     slug='SQLITE')
-        ExportFormat.objects.create(name='Garmin Map Format', description='Garmin Map',
-                                    slug='GARMIN')
         ExportFormat.objects.create(name='ESRI Shapefile Format (Thematic)', description='Esri SHP (Thematic Schema)',
                                     slug='THEMATIC')
         ExportFormat.objects.create(name='Geopackage', description='Geopackage',

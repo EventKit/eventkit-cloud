@@ -30,7 +30,4 @@ EXPORT_MEDIA_ROOT = '/downloads/'
 # home dir of the OSMAnd Map Creator
 OSMAND_MAP_CREATOR_DIR = '/project/OsmAndMapCreator'
 
-# location of the garmin config file
-GARMIN_CONFIG = '/project/osm-export-tool2/utils/conf/garmin_config.xml'
-
 OVERPASS_API_URL = 'http://localhost:8000/cgi-bin/interpreter'
