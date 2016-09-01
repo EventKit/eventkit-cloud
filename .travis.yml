@@ -10,17 +10,15 @@ virtualenv:
   system_site_packages: true
 
 addons:
-  postgresql: "9.4"
+  postgresql: "9.5"
 
 before_install:
     - sudo -E apt-get -yq update &>> ~/apt-get-update.log;
     - sudo apt-get install -y libspatialite5 libspatialite-dev
     - sudo apt-get install -y python-software-properties
     - sudo apt-get install libcurl4-gnutls-dev
-    - export CPLUS_INCLUDE_PATH=/usr/include/gdal
-    - export C_INCLUDE_PATH=/usr/include/gdal
-    - sudo apt-get install -y gdal-bin python-gdal libgdal1 libgdal1h
-    - sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes install postgresql-9.4-postgis-2.2
+    - sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev 
+    - sudo apt-get -y install postgis postgresql-contrib-9.5
 
 before_script:
     - psql -U postgres -c "create extension postgis"
