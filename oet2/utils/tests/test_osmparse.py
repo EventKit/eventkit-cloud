@@ -11,7 +11,8 @@ from ..osmparse import OSMParser
 class TestOSMParser(TestCase):
 
     def setUp(self,):
-        self.path = settings.ABS_PATH()
+        import os
+        self.path = os.path.join(os.pardir(), os.dirpath(__file__))
 
     @patch('os.path.exists')
     @patch('subprocess.PIPE')

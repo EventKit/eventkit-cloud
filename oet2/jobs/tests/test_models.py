@@ -236,7 +236,7 @@ class TestJobRegionIntersection(TestCase):
         job = Job.objects.all()[0]
         # use the_geog
         started = timezone.now()
-        regions = Region.objects.filter(the_geog__intersects=job.the_geog).intersection(job.the_geog, field_name='the_geog').order_by('-intersection')
+        regions = Region.objects.filter(the_geog__intersects=job.the_geog).intersection(job.the_geog, field_name='the_geog').order_by('-intersection.area')
         finished = timezone.now()
         geog_time = finished - started
         # logger.debug('Geography lookup took: %s' % geog_time)
