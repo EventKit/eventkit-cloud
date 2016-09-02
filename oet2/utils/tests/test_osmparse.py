@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from mock import MagicMock, Mock, patch
 
 from django.conf import settings
@@ -11,8 +12,8 @@ from ..osmparse import OSMParser
 class TestOSMParser(TestCase):
 
     def setUp(self,):
-        import os
-        self.path = os.path.join(os.pardir(), os.dirpath(__file__))
+        self.path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
+
 
     @patch('os.path.exists')
     @patch('subprocess.PIPE')
@@ -23,7 +24,7 @@ class TestOSMParser(TestCase):
             --config OSM_CONFIG_FILE {0} \
             --config OGR_INTERLEAVED_READING YES \
             --config OSM_MAX_TMPFILE_SIZE 100 -gt 65536
-        """.format(self.path + '/utils/conf/hotosm.ini')
+        """.format(self.path + '/conf/hotosm.ini')
         exists.return_value = True
         proc = Mock()
         popen.return_value = proc
@@ -41,7 +42,7 @@ class TestOSMParser(TestCase):
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
     def test_create_default_schema(self, popen, pipe, exists):
-        sql_cmd = "spatialite /path/to/query.sqlite < {0}".format(self.path + '/utils/sql/planet_osm_schema.sql')
+        sql_cmd = "spatialite /path/to/query.sqlite < {0}".format(self.path + '/sql/planet_osm_schema.sql')
         proc = Mock()
         popen.return_value = proc
         proc.communicate.return_value = (Mock(), Mock())
@@ -55,7 +56,7 @@ class TestOSMParser(TestCase):
         proc.communicate.assert_called_once()
         proc.wait.assert_called_once()
 
-    @patch('utils.osmparse.ogr.Open')
+    @patch('oet2.utils.osmparse.ogr.Open')
     @patch('os.path.exists')
     def test_update_zindexes(self, exists, ogr_open):
         exists.return_value = True

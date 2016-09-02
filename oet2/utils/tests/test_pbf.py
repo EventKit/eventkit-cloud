@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class TestOSMToPBF(SimpleTestCase):
 
     @patch('os.path.exists')
-    @patch('utils.garmin.subprocess.PIPE')
-    @patch('utils.garmin.subprocess.Popen')
+    @patch('utils.pbf.subprocess.PIPE')
+    @patch('utils.pbf.subprocess.Popen')
     def test_convert(self, popen, pipe, exists):
         osm = '/path/to/sample.osm'
         pbffile = '/path/to/sample.pbf'

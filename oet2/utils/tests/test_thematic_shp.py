@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class TestThematicShp(TestCase):
 
     def setUp(self,):
-        self.path = settings.ABS_PATH()
+        self.path = os.path.join(os.pardir, os.dirpath(__file__))
         parser = presets.PresetParser(self.path + '/utils/tests/files/hdm_presets.xml')
         self.tags = parser.parse()
         Group.objects.create(name='TestDefaultExportExtentGroup')

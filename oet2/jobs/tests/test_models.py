@@ -2,6 +2,7 @@
 import logging
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -281,6 +282,7 @@ class TestJobRegionIntersection(TestCase):
 class TestExportConfig(TestCase):
 
     def setUp(self,):
+        self.abs_path = settings.ABS_PATH()
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -306,7 +308,8 @@ class TestExportConfig(TestCase):
         self.assertFalse(saved_config.published)
         self.assertIsNotNone(saved_config)
         self.assertEqual(config, saved_config)
-        sf = File(open(os.path.abspath('.') + '/media/export/config/preset/hdm_presets.xml'))
+        logger.debug(os.getcwd())
+        sf = File(open(self.abs_path + '/media/export/config/preset/hdm_presets.xml'))
         self.assertIsNotNone(sf)  # check the file gets created on disk
         saved_config.delete()  # clean up
         sf.close()
