@@ -65,8 +65,8 @@ media/*
 
 # Django Settings
 #settings_private.py
-static
-!oet2/ui/static
+#static
+#!oet2/ui/static
 migrations
 !oet2/jobs/migrations
 !oet2/tasks/migrations
@@ -84,3 +84,5 @@ celerybeat-schedule
 
 # project specific files
 core/settings/secret.py
+
+*.iml
