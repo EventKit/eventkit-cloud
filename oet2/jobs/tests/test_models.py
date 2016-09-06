@@ -308,7 +308,6 @@ class TestExportConfig(TestCase):
         self.assertFalse(saved_config.published)
         self.assertIsNotNone(saved_config)
         self.assertEqual(config, saved_config)
-        logger.debug(os.getcwd())
         sf = File(open(self.abs_path + '/media/export/config/preset/hdm_presets.xml'))
         self.assertIsNotNone(sf)  # check the file gets created on disk
         saved_config.delete()  # clean up

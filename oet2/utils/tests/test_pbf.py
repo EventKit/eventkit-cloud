@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 class TestOSMToPBF(SimpleTestCase):
 
     @patch('os.path.exists')
-    @patch('utils.pbf.subprocess.PIPE')
-    @patch('utils.pbf.subprocess.Popen')
+    @patch('oet2.utils.pbf.subprocess.PIPE')
+    @patch('oet2.utils.pbf.subprocess.Popen')
     def test_convert(self, popen, pipe, exists):
         osm = '/path/to/sample.osm'
         pbffile = '/path/to/sample.pbf'
