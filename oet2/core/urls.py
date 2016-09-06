@@ -8,6 +8,8 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views.i18n import javascript_catalog
 
+from django.contrib.auth.views import login
+
 from oet2.api.urls import router
 from oet2.api.views import HDMDataModelView, OSMDataModelView, RunJob
 from oet2.ui import urls as ui_urls
@@ -15,6 +17,9 @@ from oet2.ui.views import (
     about, create_error_view, help_create, help_exports, help_features,
     help_formats, help_main, help_presets
 )
+from osgeo_importer.urls import urlpatterns as importer_urlpatterns
+from tastypie.api import Api
+
 
 admin.autodiscover()
 
@@ -23,7 +28,7 @@ urlpatterns = []
 urlpatterns += i18n_patterns('oet2.ui.views',
     url(r'^$', 'login', name='index'),
     url(r'^exports/', include(ui_urls)),
-    url(r'^login/$', 'login', name="login"),
+    url(r'^login/$', login, {'template_name': 'ui/login.html'}, name='login'),
     url(r'^logout$', 'logout', name='logout'),
     url(r'^error$', create_error_view, name='error'),
     url(r'^about$', about, name='about'),
@@ -44,12 +49,12 @@ urlpatterns += i18n_patterns('admin.views',
     url(r'^admin/', include(admin.site.urls)),
 )
 
-# OAuth urls
-urlpatterns += i18n_patterns('oet2.ui.social',
-    url('^osm/', include('social.apps.django_app.urls', namespace='osm')),
-    url('^osm/email_verify_sent/$', TemplateView.as_view(template_name='osm/email_verify_sent.html'), name='email_verify_sent'),
-    url('^osm/error$', TemplateView.as_view(template_name='osm/error.html'), name='login_error')
-)
+# # OAuth urls
+# urlpatterns += i18n_patterns('oet2.ui.social',
+#     url('^osm/', include('social.apps.django_app.urls', namespace='osm')),
+#     url('^osm/email_verify_sent/$', TemplateView.as_view(template_name='osm/email_verify_sent.html'), name='email_verify_sent'),
+#     url('^osm/error$', TemplateView.as_view(template_name='osm/error.html'), name='login_error')
+# )
 
 # don't apply i18n patterns here.. api uses Accept-Language header
 urlpatterns += patterns('oet2.api.views',
@@ -60,16 +65,24 @@ urlpatterns += patterns('oet2.api.views',
     url(r'^api/osm-data-model$', OSMDataModelView.as_view(), name='osm-data-model'),
 )
 
+
 # i18n for js
 js_info_dict = {
     'packages': ('hot_osm',),
 }
 
+importer_api = Api(api_name='importer-api')
+urlpatterns += importer_urlpatterns
+
 urlpatterns += patterns('',
     url(r'^jsi18n/$', javascript_catalog, js_info_dict),
     url(r'^i18n/', include('django.conf.urls.i18n')),
+    url(r'^djmp/', include('djmp.urls')),
+    url(r'^djmp/', include('djmp.urls')),
+    url(r'', include(importer_api.urls)),
 )
 
 # handler500 = 'oet2.ui.views.internal_error_view'
+
 
 # handler404 = 'oet2.ui.views.not_found_error_view'

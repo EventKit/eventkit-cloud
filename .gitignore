@@ -79,6 +79,9 @@ celerybeat-schedule
 # PyCharm
 .idea
 
+# IntelliJ
+*.iml
+
 # project specific files
 core/settings/secret.py
 

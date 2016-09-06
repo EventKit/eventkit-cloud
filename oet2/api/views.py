@@ -17,13 +17,13 @@ from rest_framework.serializers import ValidationError
 
 from oet2.jobs import presets
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
 )
 from oet2.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer,
-    RegionSerializer, ListJobSerializer
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer
 )
 from oet2.tasks.models import ExportRun, ExportTask
 from oet2.tasks.task_runners import ExportTaskRunner
@@ -114,6 +114,19 @@ class JobViewSet(viewsets.ModelViewSet):
         """Return all objects by default."""
         return Job.objects.all()
 
+    # def get_formats(self, formats):
+    #     export_formats = []
+    #     for slug in formats:
+    #             # would be good to accept either format slug or uuid here..
+    #             try:
+    #                 export_format = ExportFormat.objects.get(slug=slug)
+    #                 export_formats.append(export_format)
+    #             except ExportFormat.DoesNotExist as e:
+    #                 logger.warn('Export format with uid: {0} does not exist'.format(slug))
+    #     return export_formats
+
+
+
     def list(self, request, *args, **kwargs):
         """
         List export jobs.
@@ -192,22 +205,16 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            formats = request.data.get('formats')
+            export_formats = get_models(request.data.get('formats'), ExportFormat, 'slug')
+            export_providers = get_models(request.data.get('providers'), ExportProvider, 'name')
+
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
             transform = request.data.get('transform')
             featuresave = request.data.get('featuresave')
             featurepub = request.data.get('featurepub')
-            export_formats = []
             job = None
-            for slug in formats:
-                # would be good to accept either format slug or uuid here..
-                try:
-                    export_format = ExportFormat.objects.get(slug=slug)
-                    export_formats.append(export_format)
-                except ExportFormat.DoesNotExist as e:
-                    logger.warn('Export format with uid: {0} does not exist'.format(slug))
             if len(export_formats) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
@@ -340,6 +347,19 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ExportFormat.objects.all()
     lookup_field = 'slug'
     ordering = ['description']
+
+
+class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ###ExportFormat API endpoint.
+
+    Endpoint exposing the supported export formats.
+    """
+    serializer_class = ExportProviderSerializer
+    permission_classes = (permissions.AllowAny,)
+    queryset = ExportProvider.objects.all()
+    lookup_field = 'id'
+    ordering = ['name']
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -518,3 +538,17 @@ class OSMDataModelView(views.APIView):
         parser = PresetParser(path + '/presets/osm_presets.xml')
         data = parser.build_hdm_preset_dict()
         return JsonResponse(data, status=status.HTTP_200_OK)
+
+
+def get_models(model_list, model_object, model_index):
+    models = []
+    if not model_list:
+        return models
+    for model_id in model_list:
+        # would be good to accept either format slug or uuid here..
+        try:
+            model = model_object.objects.get(**{model_index: model_id})
+            models.append(model)
+        except model_object.DoesNotExist as e:
+            logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
+    return models

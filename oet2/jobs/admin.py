@@ -7,9 +7,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
-from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region
+from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider
 
 admin.site.register(ExportFormat)
+admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
 
 

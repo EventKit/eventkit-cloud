@@ -207,6 +207,8 @@ create.job = (function(){
             //map.getView().fit(extent, map.getSize())
         });
 
+        buildProviderFormats();
+
         // add export format checkboxes
         buildExportFormats();
 
@@ -447,6 +449,24 @@ create.job = (function(){
         var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
     }
+    
+    /*
+     * build the providers checkboxes.
+     */
+    function buildProviderFormats(){
+
+        var providersDiv = $('#provider-selection');
+        $.getJSON(Config.PROVIDERS_URL, function(data){
+            for (i = 0; i < data.length; i++){
+                provider = data[i];
+                providersDiv.append('<div class="checkbox"><label>'
+                    + '<input type="checkbox" id="providers"'
+                    + 'name="' + provider.name + '"/>'
+                    + provider.name
+                    + '</label></div>');
+            }
+        })
+    }
 
     /*
      * build the export format checkboxes.
@@ -471,6 +491,9 @@ create.job = (function(){
             initForm();
         });
     }
+
+    
+
 
     /*
      * update the bbox extents on the form.
@@ -706,7 +729,6 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            max: 6,
                             message: gettext('At least one export format must be selected')
                         }
                     }
@@ -1051,6 +1073,14 @@ create.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
+            var providers = [];
+            var providerUl = $('<ul>');
+            $.each($(this).find('input[id="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('name');
+                providerUl.append($('<li>' + providers + '</li>'));
+            });
+            $('#summary-providers').html(providerUl);
+
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
@@ -1186,6 +1216,8 @@ create.job = (function(){
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
+                        case 'digital-globe':
+                            form_data['digital_globe'] = true;
                         case 'filename': break;
                         case 'config_type': break;
                         case 'publishconfig': break;
