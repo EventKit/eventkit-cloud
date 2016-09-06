@@ -36,7 +36,7 @@ EXPORT_TASKS = {
 EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
 
 # where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = os.getenv(''EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
+EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
 
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
