@@ -1,4 +1,3 @@
--e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
 Django>=1.8,<=1.9
 dj-database-url
 psycopg2
@@ -18,12 +17,13 @@ uwsgi
 gunicorn
 eventlet
 jsonfield
-#rtree
-#imposm
 decorator
 webtest
+django_extensions
+#rtree
+#imposm
+#numpy==1.11.1
 -e git://github.com/terranodo/osm-export-tool2.git@eventkit#egg=oet2
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
+-e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
-numpy==1.11.1
-django_extensions
