@@ -33,23 +33,23 @@ EXPORT_TASKS = {
 }
 
 # where exports are staged for processing
-EXPORT_STAGING_ROOT = '/var/lib/eventkit/exports_stage/'
+EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
 
 # where exports are stored for public download
-EXPORT_DOWNLOAD_ROOT = '/var/lib/eventkit/exports_download/'
+EXPORT_DOWNLOAD_ROOT = os.getenv(''EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
 
 # the root url for export downloads
-EXPORT_MEDIA_ROOT = '/downloads/'
+EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
 
 # home dir of the OSMAnd Map Creator
-OSMAND_MAP_CREATOR_DIR = '/var/lib/eventkit/OsmAndMapCreator'
+OSMAND_MAP_CREATOR_DIR = os.getenv('OSMAND_MAP_CREATOR_DIR', '/var/lib/eventkit/OsmAndMapCreator')
 
 # location of the garmin config file
-GARMIN_CONFIG = '/var/lib/eventkit/conf/garmin_config.xml'
+GARMIN_CONFIG = os.getenv('GARMIN_CONFIG', '/var/lib/eventkit/conf/garmin_config.xml')
 
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
-OVERPASS_API_URL = os.environ.get('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
+OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
 
 """
 Maximum extent of a Job
