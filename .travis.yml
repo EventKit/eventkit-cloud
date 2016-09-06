@@ -6,14 +6,6 @@ language: generic
 sudo: required
 dist: trusty
 
-python:
-  - "2.7"
-
-virtualenv:
-  system_site_packages: true
-
-addons:
-  postgresql: "9.3"
 
 before_install:
     - sudo mv /etc/apt/sources.list.d/* /tmp
