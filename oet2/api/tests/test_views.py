@@ -5,7 +5,7 @@ import os
 import uuid
 from unittest import skip
 
-from mock import patch
+from mock import patch, Mock
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -149,7 +149,8 @@ class TestJobViewSet(APITestCase):
 
     @patch('oet2.tasks.task_runners.ExportTaskRunner')
     def test_create_job_success(self, mock):
-        task_runner = mock.return_value
+        task_runner = Mock()
+        task_runner.run_task = mock.return_value
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
         config_uid = self.config.uid
@@ -191,7 +192,8 @@ class TestJobViewSet(APITestCase):
 
     @patch('oet2.tasks.task_runners.ExportTaskRunner')
     def test_create_job_with_config_success(self, mock):
-        task_runner = mock.return_value
+        task_runner = Mock()
+        task_runner.run_task = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -232,7 +234,8 @@ class TestJobViewSet(APITestCase):
     def test_create_job_with_tags(self, mock):
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        task_runner = mock.return_value
+        task_runner = Mock()
+        task_runner.run_task = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -457,7 +460,8 @@ class TestJobViewSet(APITestCase):
 
     @patch('oet2.tasks.task_runners.ExportTaskRunner')
     def test_get_correct_region(self, mock):
-        task_runner = mock.return_value
+        task_runner = Mock()
+        task_runner.run_task = mock.return_value
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
         # job extent spans africa / asia but greater intersection with asia

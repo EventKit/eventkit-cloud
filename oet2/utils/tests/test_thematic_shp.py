@@ -2,7 +2,7 @@
 import logging
 import os
 
-from mock import Mock, patch
+from mock import Mock, patch, MagicMock
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -69,9 +69,9 @@ class TestThematicShp(TestCase):
         conn = Mock()
         conn.enable_load_extention = Mock()
         connect.return_value = conn
-        cur = Mock()
+        cur = MagicMock()
         conn.cursor = cur
-        cur.execute = Mock()
+        cur.execute = MagicMock()
         cmd = "SELECT load_extension('libspatialite')"
         tags = self.job.categorised_tags
         t2s = ThematicSQliteToShp(
