@@ -77,12 +77,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/eventkit/debug.log',
-            'formatter': 'verbose'
-        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',

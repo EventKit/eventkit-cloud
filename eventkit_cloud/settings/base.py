@@ -72,7 +72,6 @@ STATICFILES_DIRS = (
     # ABS_PATH('core', 'base_static'),
 )
 
-
 # default middleware classes
 MIDDLEWARE_CLASSES = [
     # 'django.middleware.gzip.GZipMiddleware',
@@ -106,7 +105,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
 )
 
-
 # enable cached storage
 STATICFILES_STORAGE = (
     'django.contrib.staticfiles.storage.CachedStaticFilesStorage'
@@ -116,14 +114,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder'
 )
-
-PUSH_NOTIFICATIONS_SETTINGS = {
-    # google key
-    "GCM_API_KEY": "AIzaSyD2Jl24UkiquEV16cAhLuNUW-oVsKuIVx0",
-    # apple certificate
-    "APNS_CERTIFICATE": "/path/to/your/certificate.pem",
-}
-
 
 AUTHENTICATION_BACKENDS = (
     'social.backends.openstreetmap.OpenStreetMapOAuth',
