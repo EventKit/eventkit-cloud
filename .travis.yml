@@ -20,12 +20,12 @@ before_install:
     - export CPLUS_INCLUDE_PATH=/usr/include/gdal
     - export C_INCLUDE_PATH=/usr/include/gdal
 
-before_script:
-    - psql -c 'create database hot_exports_dev;' -U postgres
-    - psql -U postgres -c "create extension postgis"
-    - createuser hot --superuser --createdb -U postgres
-
 install: pip install --user -r requirements-dev.txt
+
+before_script:
+    - sudo -u postgres psql -c 'create database hot_exports_dev;'
+    - sudo -u postgres psql -c "create extension postgis"
+    - sudo -u postgres createuser hot --superuser --createdb
 
 # command to run tests
 script:
