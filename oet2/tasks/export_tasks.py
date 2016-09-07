@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    garmin, kml, osmand, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
+    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
 )
 
 # Get an instance of a logger
@@ -273,32 +273,6 @@ class KmlExportTask(ExportTask):
             logger.error('Raised exception in kml export, %s', str(e))
             raise Exception(e)
 
-
-class ObfExportTask(ExportTask):
-    """
-    Class defining OBF export function.
-    """
-    name = 'OBF Export'
-
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        pbffile = stage_dir + job_name + '.pbf'
-        map_creator_dir = settings.OSMAND_MAP_CREATOR_DIR
-        work_dir = stage_dir + 'osmand'
-        try:
-            o2o = osmand.OSMToOBF(
-                pbffile=pbffile, work_dir=work_dir, map_creator_dir=map_creator_dir
-            )
-            out = o2o.convert()
-            obffile = stage_dir + job_name + '.obf'
-            shutil.move(out, obffile)
-            shutil.rmtree(work_dir)
-            return {'result': obffile}
-        except Exception as e:
-            logger.error('Raised exception in obf export, %s', str(e))
-            raise Exception(e)
-
-
 class SqliteExportTask(ExportTask):
     """
     Class defining SQLITE export function.
@@ -330,44 +304,6 @@ class GeopackageExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in geopackage export, %s', str(e))
             raise Exception(e)
-
-
-class GarminExportTask(ExportTask):
-    """
-    Class defining GARMIN export function.
-    """
-
-    name = 'Garmin Export'
-    _region = ''  # set by the task_runner
-
-    @property
-    def region(self,):
-        return self._region
-
-    @region.setter
-    def region(self, value):
-        self._region = value
-
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        work_dir = stage_dir + 'garmin'
-        config = settings.GARMIN_CONFIG  # get path to garmin config
-        pbffile = stage_dir + job_name + '.pbf'
-        try:
-            o2i = garmin.OSMToIMG(
-                pbffile=pbffile, work_dir=work_dir,
-                config=config, region=None, debug=False
-            )
-            o2i.run_splitter()
-            out = o2i.run_mkgmap()
-            imgfile = stage_dir + job_name + '_garmin.zip'
-            shutil.move(out, imgfile)
-            shutil.rmtree(work_dir)
-            return {'result': imgfile}
-        except Exception as e:
-            logger.error('Raised exception in garmin export, %s', str(e))
-            raise Exception(e)
-
 
 class GeneratePresetTask(ExportTask):
     """

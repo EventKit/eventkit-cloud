@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 class TestOverpass(TestCase):
 
     def setUp(self,):
-        self.url = 'http://localhost/interpreter'
+        self.url = settings.OVERPASS_API_URL
         self.bbox = '6.25,-10.85,6.40,-10.62'  # monrovia
-        self.path = settings.ABS_PATH()
+        self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -40,7 +40,7 @@ class TestOverpass(TestCase):
         self.osm = self.path + '/files/query.osm'
         self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.40,-10.62);<;);out body;'
         self.job.tags.all().delete()
-        parser = presets.PresetParser(self.path + '/utils/tests/files/hdm_presets.xml')
+        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
         self.assertEquals(256, len(tags))
@@ -57,22 +57,22 @@ class TestOverpass(TestCase):
 
     def test_get_query(self,):
         overpass = Overpass(
-            stage_dir=self.path + '/utils/tests/files/',
+            stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
             filters=self.job.filters
         )
         q = overpass.get_query()
         self.assertEquals(q, self.query)
 
-    @patch('utils.overpass.requests.post')
+    @patch('oet2.utils.overpass.requests.post')
     def test_run_query(self, mock_post):
         op = Overpass(
-            stage_dir=self.path + '/utils/tests/files/',
+            stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
             filters=self.job.filters
         )
         q = op.get_query()
-        out = self.path + '/utils/tests/files/query.osm'
+        out = self.path + '/files/query.osm'
         mock_response = mock.Mock()
         expected = ['<osm>some data</osm>']
         mock_response.iter_content.return_value = expected
