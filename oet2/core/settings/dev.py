@@ -25,7 +25,7 @@ DATABASES = {
             'options': '-c search_path=exports,public',
         },
         'CONN_MAX_AGE': None,
-        'USER': 'ortelius',
+        'USER': 'hot',
         'HOST': 'localhost'
     }
 }

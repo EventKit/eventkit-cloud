@@ -5,6 +5,9 @@ sudo: required
 dist: trusty
 language: generic
 
+services:
+  - postgresql
+
 before_install:
     - sudo mv /etc/apt/sources.list.d/* /tmp
     - sudo apt-get -qq remove postgis
@@ -18,6 +21,7 @@ before_install:
     - export C_INCLUDE_PATH=/usr/include/gdal
 
 before_script:
+    - psql -c 'create database hot_exports_dev;' -U postgres
     - psql -U postgres -c "create extension postgis"
     - createuser hot --superuser --createdb -U postgres
 
