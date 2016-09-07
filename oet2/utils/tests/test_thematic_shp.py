@@ -121,17 +121,19 @@ class TestThematicShp(TestCase):
                                 stdout=pipe, stderr=pipe)
         self.assertEquals(out, shapefile)
 
+    @patch('os.listdir')
     @patch('shutil.copy')
     @patch('os.path.exists')
     @patch('shutil.rmtree')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_zip_shp_file(self, popen, pipe, rmtree, exists, copy):
+    def test_zip_shp_file(self, popen, pipe, rmtree, exists, copy, listdir):
         sqlite = self.path + '/files/test_thematic_shp_thematic.sqlite'
         shapefile = self.path + '/files/thematic_shp'
         zipfile = self.path + '/files/thematic_shp.zip'
         zip_cmd = "zip -j -r {0} {1}".format(zipfile, shapefile)
         exists.return_value = True
+        listdir.return_value = True
         proc = Mock()
         popen.return_value = proc
         proc.communicate.return_value = (Mock(), Mock())
