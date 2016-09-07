@@ -5,6 +5,7 @@ from celery.schedules import crontab
 
 from .contrib import *  # NOQA
 import os
+import json
 
 # Celery config
 CELERY_TRACK_STARTED = True
@@ -30,4 +31,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute='0', hour='*', day_of_week='*')
     },
 }
-BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+
+if os.environ.get('VCAP_SERVICES'):
+    services = json.loads(os.environ.get('VCAP_SERVICES'))
+    try:
+        BROKER_URL = services['cloudamqp'][0]['credentials']['uri']
+    except KeyError:
+        BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+else:
+    BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')

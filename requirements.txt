@@ -8,11 +8,10 @@ celery[librabbitmq]
 django-celery
 python-social-auth
 lxml
-GDAL
+#GDAL
 python-magic
 backports.ssl_match_hostname
 click
-gdal
 uwsgi
 gunicorn
 eventlet
