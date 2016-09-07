@@ -24,7 +24,8 @@ before_script:
     - createuser hot --superuser --createdb -U postgres
 
 install:
-    "pip install -r requirements-dev.txt"
+    allow_failures:
+        "pip install -r requirements-dev.txt"
 
 # command to run tests
 script:
