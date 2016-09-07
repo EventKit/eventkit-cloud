@@ -26,6 +26,7 @@ DATABASES = {
         },
         'CONN_MAX_AGE': None,
         'USER': 'hot',
+        'PASSWORD': 'hot',
         'HOST': 'localhost'
     }
 }

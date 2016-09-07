@@ -24,8 +24,8 @@ install: pip install --user -r requirements-dev.txt
 
 before_script:
     - sudo -u postgres psql -c 'create database hot_exports_dev;'
-    - sudo -u postgres psql -c "create extension postgis"
-    - sudo -u postgres createuser hot --superuser --createdb
+    - sudo -u postgres psql -c 'create extension postgis'
+    - sudo -u postgres psql -c  "create user hot with password 'hot' superuser createdb"
 
 # command to run tests
 script:
