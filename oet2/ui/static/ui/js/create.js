@@ -209,6 +209,7 @@ create.job = (function(){
 
         // add export format checkboxes
         buildExportFormats();
+        buildProviderFormats();
 
 
         //     OL2 add bounding box selection layer
@@ -447,6 +448,27 @@ create.job = (function(){
         var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
     }
+
+    /*
+     * build the providers checkboxes.
+     */
+    function buildProviderFormats(){
+
+        var providersDiv = $('#provider-selection');
+        $.getJSON(Config.PROVIDERS_URL, function(data){
+            for (i = 0; i < data.length; i++){
+                provider = data[i];
+                providersDiv.append('<div class="checkbox"><label>'
+                    + '<input type="checkbox"'
+                    + 'name="providers"'
+                    + 'value="' + provider.name + '"'
+                    + 'data-description="' + provider.name + '"/>'
+                    + provider.name
+                    + '</label></div>');
+            }
+        })
+    }
+
 
     /*
      * build the export format checkboxes.
@@ -711,7 +733,16 @@ create.job = (function(){
                         }
                     }
                 },
-                'xmin':{
+                'providers': {
+                    validators: {
+                        choice: {
+                            min: 1,
+                            message: gettext('At least one export provider must be selected')
+                        }
+                    }
+                },
+
+        'xmin':{
                     validators: {
                         notEmpty: {
                             message: 'not empty'
@@ -1051,6 +1082,13 @@ create.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
+            var providers = [];
+            var $providerUl = $('<ul>');
+            $.each($(this).find('input[name="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('data-description');
+                $providerUl.append($('<li>' + providers + '</li>'));
+            });
+            $('#summary-providers').html($providerUl);
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
@@ -1168,6 +1206,9 @@ create.job = (function(){
                 if (field === 'formats') {
                     message = 'Please select an export format.';
                 }
+                    else if (field === 'providers') {
+                    message = 'Please select a provider.'
+                }
                 else {
                     message = 'The <strong>' + field + '</strong> field is required'
                 }
@@ -1183,6 +1224,7 @@ create.job = (function(){
                 var form_data = {};
                 var tags = [];
                 var formats = [];
+                var providers = [];
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
@@ -1200,6 +1242,10 @@ create.job = (function(){
                             break;
                         case 'formats':
                             formats.push(field.value);
+                            break;
+                        case 'providers':
+                            providers.push(field.value);
+                            break;
                         default:
                             form_data[field.name] = field.value;
                     }
@@ -1231,6 +1277,26 @@ create.job = (function(){
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
                 form_data["formats"] = formats;
+                form_data["provider_tasks"] = []
+                provider_tasks = []
+
+                if(typeof(providers)==='string'){
+                    providers = [providers]
+                }
+                if(typeof(formats)==='string'){
+                    formats = [formats]
+                }
+
+                var formatArray = [];
+                for(var format in formats) {
+                    formatArray.push(formats[format]);
+                }
+                for(var provider in providers){
+                    provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
+                }
+                form_data["provider_tasks"] = provider_tasks
+                delete form_data["providers"]
+                //delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
