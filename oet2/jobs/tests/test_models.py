@@ -6,6 +6,8 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.db.models.functions import Intersection
+from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
 from django.utils import timezone
@@ -237,7 +239,7 @@ class TestJobRegionIntersection(TestCase):
         job = Job.objects.all()[0]
         # use the_geog
         started = timezone.now()
-        regions = Region.objects.filter(the_geog__intersects=job.the_geog).intersection(job.the_geog, field_name='the_geog').order_by('-intersection.area')
+        regions = Region.objects.filter(the_geog__intersects=job.the_geog).annotate(intersection=Area(Intersection('the_geog', job.the_geog))).order_by('-intersection')
         finished = timezone.now()
         geog_time = finished - started
         # logger.debug('Geography lookup took: %s' % geog_time)
@@ -249,7 +251,7 @@ class TestJobRegionIntersection(TestCase):
         self.assertIsNotNone(africa)
         self.assertEquals('Central Asia/Middle East', asia.name)
         self.assertEquals('Africa', africa.name)
-        self.assertTrue(asia.intersection.area > africa.intersection.area)
+        self.assertTrue(asia.intersection > africa.intersection)
 
         regions = None
 
