@@ -35,6 +35,7 @@ RUN set -xe \
 # enable the universe
 RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
 
+RUN apt-get update
 RUN apt-get -y install sudo
 RUN export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
 RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
