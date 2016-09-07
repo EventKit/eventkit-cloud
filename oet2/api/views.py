@@ -294,7 +294,7 @@ class JobViewSet(viewsets.ModelViewSet):
             # run the tasks
             # task_runner = ExportTaskRunner()
             job_uid = str(job.uid)
-            TaskFactory(job_uid)
+            # TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
