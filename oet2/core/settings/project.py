@@ -14,7 +14,7 @@ INSTALLED_APPS += (
     'oet2.utils',
 )
 
-INSTALLED_APPS += ("djcelery")
+INSTALLED_APPS += ("djcelery",)
 
 LOGIN_URL = '/login/'
 
