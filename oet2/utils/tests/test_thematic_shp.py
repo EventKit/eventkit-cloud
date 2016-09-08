@@ -2,7 +2,7 @@
 import logging
 import os
 
-from mock import Mock, patch
+from mock import Mock, patch, MagicMock
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -20,8 +20,8 @@ logger = logging.getLogger(__name__)
 class TestThematicShp(TestCase):
 
     def setUp(self,):
-        self.path = settings.ABS_PATH()
-        parser = presets.PresetParser(self.path + '/utils/tests/files/hdm_presets.xml')
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
         self.tags = parser.parse()
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -44,8 +44,8 @@ class TestThematicShp(TestCase):
     @patch('shutil.copy')
     @patch('os.path.exists')
     def testInit(self, exists, copy):
-        sqlite = self.path + '/utils/tests/files/test.sqlite'
-        shapefile = self.path + '/utils/tests/files/thematic_shp'
+        sqlite = self.path + '/files/test.sqlite'
+        shapefile = self.path + '/files/thematic_shp'
         cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8".format(shapefile, sqlite)
         proc = Mock()
         exists.return_value = True
@@ -62,16 +62,16 @@ class TestThematicShp(TestCase):
     @patch('os.path.exists')
     @patch('sqlite3.connect')
     def test_generate_thematic_schema(self, connect, exists, copy):
-        sqlite = self.path + '/utils/tests/files/test.sqlite'
-        shapefile = self.path + '/utils/tests/files/thematic_shp'
-        thematic_sqlite = self.path + '/utils/tests/files/test_thematic_shp_thematic.sqlite'
+        sqlite = self.path + '/files/test.sqlite'
+        shapefile = self.path + '/files/thematic_shp'
+        thematic_sqlite = self.path + '/files/test_thematic_shp_thematic.sqlite'
         exists.return_value = True
         conn = Mock()
         conn.enable_load_extention = Mock()
         connect.return_value = conn
-        cur = Mock()
+        cur = MagicMock()
         conn.cursor = cur
-        cur.execute = Mock()
+        cur.execute = MagicMock()
         cmd = "SELECT load_extension('libspatialite')"
         tags = self.job.categorised_tags
         t2s = ThematicSQliteToShp(
@@ -93,8 +93,8 @@ class TestThematicShp(TestCase):
     @patch('subprocess.Popen')
     @patch('sqlite3.connect')
     def test_convert(self, connect, popen, pipe, exists, copy):
-        sqlite = self.path + '/utils/tests/files/test_thematic_shp_thematic.sqlite'
-        shapefile = self.path + '/utils/tests/files/shp'
+        sqlite = self.path + '/files/test_thematic_shp_thematic.sqlite'
+        shapefile = self.path + '/files/shp'
         cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8".format(shapefile, sqlite)
         proc = Mock()
         exists.return_value = True
@@ -121,17 +121,19 @@ class TestThematicShp(TestCase):
                                 stdout=pipe, stderr=pipe)
         self.assertEquals(out, shapefile)
 
+    @patch('os.listdir')
     @patch('shutil.copy')
     @patch('os.path.exists')
     @patch('shutil.rmtree')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_zip_shp_file(self, popen, pipe, rmtree, exists, copy):
-        sqlite = self.path + '/utils/tests/files/test_thematic_shp_thematic.sqlite'
-        shapefile = self.path + '/utils/tests/files/thematic_shp'
-        zipfile = self.path + '/utils/tests/files/thematic_shp.zip'
+    def test_zip_shp_file(self, popen, pipe, rmtree, exists, copy, listdir):
+        sqlite = self.path + '/files/test_thematic_shp_thematic.sqlite'
+        shapefile = self.path + '/files/thematic_shp'
+        zipfile = self.path + '/files/thematic_shp.zip'
         zip_cmd = "zip -j -r {0} {1}".format(zipfile, shapefile)
         exists.return_value = True
+        listdir.return_value = True
         proc = Mock()
         popen.return_value = proc
         proc.communicate.return_value = (Mock(), Mock())

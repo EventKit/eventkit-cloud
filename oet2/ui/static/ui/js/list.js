@@ -2,29 +2,34 @@ jobs = {};
 jobs.list = (function(){
     var map;
     var job_extents;
+    var job_extents_source;
+    var scaleLine;
+    var attribution;
+    var selectControl;
     var bbox;
     var filtering = false;
     var searchForm = $('form#search');
 
+    // SHOULD NOT NEED THIS IN OL3
     /*
      * Override unselect so hidden features don't get reset
      * with the 'default' style on unselect.
      */
-    OpenLayers.Control.SelectFeature.prototype.unselect = function(feature){
-        var layer = feature.layer;
-        if (feature.renderIntent == 'hidden') {
-            OpenLayers.Util.removeItem(layer.selectedFeatures, feature);
-            layer.events.triggerEvent("featureunselected", {feature: feature});
-            this.onUnselect.call(this.scope, feature);
-        }
-        else {
-            // Store feature style for restoration later
-            this.unhighlight(feature); // resets the renderIntent to 'default'
-            OpenLayers.Util.removeItem(layer.selectedFeatures, feature);
-            layer.events.triggerEvent("featureunselected", {feature: feature});
-            this.onUnselect.call(this.scope, feature);
-        }
-    }
+    // OpenLayers.Control.SelectFeature.prototype.unselect = function(feature){
+    //     var layer = feature.layer;
+    //     if (feature.renderIntent == 'hidden') {
+    //         OpenLayers.Util.removeItem(layer.selectedFeatures, feature);
+    //         layer.events.triggerEvent("featureunselected", {feature: feature});
+    //         this.onUnselect.call(this.scope, feature);
+    //     }
+    //     else {
+    //         // Store feature style for restoration later
+    //         this.unhighlight(feature); // resets the renderIntent to 'default'
+    //         OpenLayers.Util.removeItem(layer.selectedFeatures, feature);
+    //         layer.events.triggerEvent("featureunselected", {feature: feature});
+    //         this.onUnselect.call(this.scope, feature);
+    //     }
+    // }
 
 
     /*
@@ -68,164 +73,306 @@ jobs.list = (function(){
      * Initialize the job list map
      */
     function initListMap(){
-        var maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        var mapOptions = {
-                displayProjection: new OpenLayers.Projection("EPSG:4326"),
-                controls: [new OpenLayers.Control.Attribution(),
-                           new OpenLayers.Control.ScaleLine()],
-                maxExtent: maxExtent,
-                scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
-                units: 'm',
-                sphericalMercator: true,
-                noWrap: true // don't wrap world extents
-        }
-        map = new OpenLayers.Map('list-export-map', {
-            options: mapOptions
-        });
+
+
+        //***** OPENLAYERS 2 CODE COMMENTED OUT THROUGHOUT FILE ************
+        //var maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
+        //var mapOptions = {
+                //displayProjection: new OpenLayers.Projection("EPSG:4326"),
+                //controls: [new OpenLayers.Control.Attribution(),
+                //          new OpenLayers.Control.ScaleLine()],
+
+                //maxExtent is no longer in OL3, just extent
+                //maxExtent: maxExtent,
+                //cant find scales to set in OL3
+                //scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
+                //units: 'm',
+                //sphericalMercator: true,
+                //noWrap: true // don't wrap world extents
+        //}
+        //map = new OpenLayers.Map('list-export-map', {
+        //    options: mapOptions
+        //});
 
         // restrict extent to world bounds to prevent panning..
-        map.restrictedExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
+        //map.restrictedExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
 
         // add base layers
-        var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
-        osm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
-        map.addLayer(osm);
-        map.zoomToMaxExtent();
+        // var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+        // osm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
+        // map.addLayer(osm);
+        // map.zoomToMaxExtent();
 
-        job_extents = new OpenLayers.Layer.Vector('extents', {
-            displayInLayerSwitcher: false,
-            styleMap: getExtentStyles()
+        //var zoomLevels = [500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250];
+
+        //add base layers
+        var osm = new ol.layer.Tile({
+            source: new ol.source.OSM()
         });
-        // add export extents to map
+
+        map = new ol.Map({
+            target: 'list-export-map',
+            layers: [osm],
+            view: new ol.View({
+                projection: 'EPSG:3857',
+                extent: [-20037508.34,-20037508.34, 20037508.34, 20037508.34],
+                center: [0, 0],
+                zoom: 2,
+                minZoom: 2,
+                maxZoom: 18,
+            }),
+            interactions : ol.interaction.defaults({doubleClickZoom :false})
+        });
+
+        scaleLine = new ol.control.ScaleLine();
+        map.addControl(scaleLine);
+
+        attribution = new ol.control.Attribution();
+        map.addControl(attribution);
+
+        job_extents_source = new ol.source.Vector();
+
+        job_extents = new ol.layer.Vector({
+            name: 'Job Extents',
+            source: job_extents_source,
+            style: getExtentStyles().default,
+        });
         map.addLayer(job_extents);
 
+        // job_extents = new OpenLayers.Layer.Vector('extents', {
+        //     displayInLayerSwitcher: false,
+        //     styleMap: getExtentStyles()
+        // });
+        // add export extents to map
+
+        //map.addLayer(job_extents);
+
         /* required to fire selection events on bounding boxes */
-        var selectControl = new OpenLayers.Control.SelectFeature(job_extents,{
-            id: 'selectControl'
+        // var selectControl = new OpenLayers.Control.SelectFeature(job_extents,{
+        //     id: 'selectControl'
+        // });
+        // map.addControl(selectControl);
+        // selectControl.activate();
+
+        selectControl = new ol.interaction.Select({
+            layers: [job_extents],
+            style: getExtentStyles().select,
+            condition: ol.events.condition.click,
+            filter: function(feature, layer) {
+                if(feature.getStyle().getZIndex() != -1) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         });
-        map.addControl(selectControl);
-        selectControl.activate();
+        map.addInteraction(selectControl);
 
-
-        /*
-         * Feature selection and hover events
-         */
-        job_extents.events.register("featureselected", this, function(e){
-            var uid = e.feature.data.uid;
+        selectControl.getFeatures().on('add', function(e){
+            var uid = e.element.getProperties().uid;
             $('tr#' + uid).css('background-color', '#E8E8E8');
+            e.element.setStyle(getExtentStyles().select);
         });
 
-        job_extents.events.register("featureunselected", this, function(e){
-            var uid = e.feature.data.uid;
+        selectControl.getFeatures().on('remove', function(e){
+            var uid = e.element.getProperties().uid;
             $('tr#' + uid).css('background-color', '#FFF');
+            e.element.setStyle(getExtentStyles().default);
         });
 
-        job_extents.events.register('featureover', this, function(e){
-            $popup = $('#feature-popup');
-            $popup.css('display', 'block');
+        $(map.getViewport()).on('mousemove', function(e) {
+            if ($('#feature-popup').css('display') == 'block') {
+                $('#feature-popup').css('display', 'none');
+            }
+            var pixel = map.getEventPixel(e.originalEvent);
+            var hit = map.forEachFeatureAtPixel(pixel, function(feature, layer) {
+                if (layer == job_extents && feature.getStyle().getZIndex() != -1) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            });
+            if (hit) {
+                $popup = $('#feature-popup');
+                $popup.css('display', 'block');
+            } 
         });
 
-        job_extents.events.register('featureout', this, function(e){
-            $('#feature-popup').css('display', 'none');
-        });
-
-
-        /*
-         * Double-click handler.
-         * Does redirection to export detail page on feature double click.
-         */
-        var dblClickHandler = new OpenLayers.Handler.Click(selectControl,
-                {
-                    dblclick: function(e){
-                        var feature = this.layer.selectedFeatures[0];
-                        var uid = feature.attributes.uid;
+        //OL3 double click handler:
+        map.on('dblclick', function(evt) {
+            var feature = map.forEachFeatureAtPixel(evt.pixel,
+                function(feature, layer) {
+                    if(layer == job_extents && feature.getStyle().getZIndex() != -1) {
+                        var uid = feature.getProperties().uid;
                         window.location.href = '/exports/' + uid;
                     }
-                },
-                {
-                    single: false,
-                    double: true,
-                    stopDouble: true,
-                    stopSingle: false
-                }
-        )
-        dblClickHandler.activate();
+                });
+        });
 
+
+        /*
+         * OLD OL2 code...Feature selection and hover events
+         */
+        // job_extents.events.register("featureselected", this, function(e){
+        //     var uid = e.feature.data.uid;
+        //     $('tr#' + uid).css('background-color', '#E8E8E8');
+        // });
+
+        // job_extents.events.register("featureunselected", this, function(e){
+        //     var uid = e.feature.data.uid;
+        //     $('tr#' + uid).css('background-color', '#FFF');
+        // });
+
+        // job_extents.events.register('featureover', this, function(e){
+        //     $popup = $('#feature-popup');
+        //     $popup.css('display', 'block');
+        // });
+
+        // job_extents.events.register('featureout', this, function(e){
+        //     $('#feature-popup').css('display', 'none');
+        // });
+
+
+        /*
+         * OL2 Double-click handler.
+         * Does redirection to export detail page on feature double click.
+         */
+        // var dblClickHandler = new OpenLayers.Handler.Click(selectControl,
+        //         {
+        //             dblclick: function(e){
+        //                 var feature = this.layer.selectedFeatures[0];
+        //                 var uid = feature.attributes.uid;
+        //                 window.location.href = '/exports/' + uid;
+        //             }
+        //         },
+        //         {
+        //             single: false,
+        //             double: true,
+        //             stopDouble: true,
+        //             stopSingle: false
+        //         }
+        // )
+        // dblClickHandler.activate();
 
         // add filter selection layer
-        bbox = new OpenLayers.Layer.Vector("filter", {
-           displayInLayerSwitcher: false,
-           styleMap: getTransformStyleMap(),
+        bboxSource = new ol.source.Vector()
+        bbox = new ol.layer.Vector({
+            name: 'Filter',
+            source: bboxSource,
+            style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'blue'
+                }),
+                fill: new ol.style.Fill({
+                    color: [0, 0, 255, 0.05]
+                })
+            })
         });
-        map.addLayers([bbox]);
+        map.addLayer(bbox);
+
 
         // add a draw feature control for bbox selection.
-        var box = new OpenLayers.Control.DrawFeature(bbox, OpenLayers.Handler.RegularPolygon, {
-           handlerOptions: {
-              sides: 4,
-              snapAngle: 90,
-              irregular: true,
-              persist: true
-           }
-        });
-        map.addControl(box);
+        // var box = new OpenLayers.Control.DrawFeature(bbox, OpenLayers.Handler.RegularPolygon, {
+        //    handlerOptions: {
+        //       sides: 4,
+        //       snapAngle: 90,
+        //       irregular: true,
+        //       persist: true
+        //    }
+        // });
+        // map.addControl(box);
 
-
-        // add a transform control to enable modifications to bounding box (drag, resize)
-        var transform = new OpenLayers.Control.TransformFeature(bbox, {
-           rotate: false,
-           irregular: true,
-           renderIntent: "transform",
+        var dragBox = new ol.interaction.DragBox({
+            condition: ol.events.condition.primaryAction,
         });
 
-        // listen for selection box being added to bbox layer
-        box.events.register('featureadded', this, function(e){
-            // get selection bounds
-            bounds = e.feature.geometry.bounds.clone();
+        var translate;
 
-            // clear existing selection features
-            bbox.removeAllFeatures();
-            box.deactivate();
+        dragBox.on('boxend', function(e){
+            var dragFeature = new ol.Feature({
+                geometry: dragBox.getGeometry()
+            });
+            bboxSource.addFeature(dragFeature);
+            map.removeInteraction(dragBox);
+            translate = new ol.interaction.Translate({
+                features: new ol.Collection([dragFeature])
+            });
 
-            // add a bbox feature based on user selection
-            var feature = new OpenLayers.Feature.Vector(bounds.toGeometry());
-            bbox.addFeatures(feature);
-
-            // enable bbox modification
-            transform.setFeature(feature);
-
-            // filter the results by bbox
+            var bounds = dragFeature.getGeometry().getExtent();
             filtering = true;
             setBounds(bounds);
-            map.zoomToExtent(bbox.getDataExtent());
+            map.getView().fit(bounds, map.getSize());
 
+            map.addInteraction(translate);
+            translate.on('translateend', function(e){
+                var bounds = dragFeature.getGeometry().getExtent();
+                filtering = true;
+                setBounds(bounds);
+                map.getView().fit(bounds, map.getSize());
+            });
         });
+        
 
-        // filter results after bbox is moved / modified
-        transform.events.register("transformcomplete", this, function(e){
-            var bounds = e.feature.geometry.bounds.clone();
-            // filter the results by bbox
-            filtering = true;
-            setBounds(bounds);
-        });
+        // // add a transform control to enable modifications to bounding box (drag, resize)
+        // var transform = new OpenLayers.Control.TransformFeature(bbox, {
+        //    rotate: false,
+        //    irregular: true,
+        //    renderIntent: "transform",
+        // });
 
-        // add the transform control
-        map.addControl(transform);
+        // // listen for selection box being added to bbox layer
+        // box.events.register('featureadded', this, function(e){
+        //     // get selection bounds
+        //     bounds = e.feature.geometry.bounds.clone();
+
+        //     // clear existing selection features
+        //     bbox.removeAllFeatures();
+        //     box.deactivate();
+
+        //     // add a bbox feature based on user selection
+        //     var feature = new OpenLayers.Feature.Vector(bounds.toGeometry());
+        //     bbox.addFeatures(feature);
+
+        //     // enable bbox modification
+        //     transform.setFeature(feature);
+
+        //     // filter the results by bbox
+        //     filtering = true;
+        //     setBounds(bounds);
+        //     map.zoomToExtent(bbox.getDataExtent());
+
+        // });
+
+        // // filter results after bbox is moved / modified
+        // transform.events.register("transformcomplete", this, function(e){
+        //     var bounds = e.feature.geometry.bounds.clone();
+        //     // filter the results by bbox
+        //     filtering = true;
+        //     setBounds(bounds);
+        // });
+
+        // // add the transform control
+        // map.addControl(transform);
 
         // handles click on filter area button
         $("#filter-area").bind('click', function(e){
             /*
              * activate the draw box control
              */
-            bbox.removeAllFeatures();
-            transform.unsetFeature();
-            box.activate();
+            //bbox.removeAllFeatures();
+            //transform.unsetFeature();
+            //box.activate();
+            map.removeInteraction(translate);
+            bboxSource.clear();
+            map.addInteraction(dragBox);
         });
 
-        map.setLayerIndex(bbox, 0);
-        map.setLayerIndex(job_extents, 100);
+        // map.setLayerIndex(bbox, 0);
+        // map.setLayerIndex(job_extents, 100);
 
-        // clears the search selection area
+        // // clears the search selection area
         $('#clear-filter').bind('click', function(e){
             /*
              * Unsets the bounds on the form and
@@ -234,9 +381,11 @@ jobs.list = (function(){
             if (filtering) {
                 // clear the filter extents
                 filtering = false;
-                bbox.removeAllFeatures();
-                box.deactivate();
-                transform.unsetFeature();
+                map.removeInteraction(translate);
+                //bbox.removeAllFeatures();
+                bboxSource.clear();
+                //box.deactivate();
+                //transform.unsetFeature();
                 // reset the bounds and reload default search results.
                 $('input#bbox').val('-180,-90,180,90');
                 runSearch();
@@ -247,84 +396,124 @@ jobs.list = (function(){
          * Reset the map to the job extents.
          */
         $('#reset-map').bind('click', function(e){
-            map.zoomToExtent(job_extents.getDataExtent());
+            if(job_extents_source.getFeatures().length > 0) {
+                map.getView().fit(job_extents_source.getExtent(), map.getSize());
+            }
+            else {
+                zoomtoextent()
+            }
         });
 
     }
 
+    function zoomtoextent() {
+        var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
+        map.getView().fit(extent, map.getSize());
+    }
 
+    // NOT USED FOR OL3
     /*
      * get the style map for the filter bounding box.
      */
-    function getTransformStyleMap(){
-        return new OpenLayers.StyleMap({
-                    "default": new OpenLayers.Style({
-                        fillColor: "blue",
-                        fillOpacity: 0.05,
-                        strokeColor: "blue",
-                        graphicZIndex : 1,
-                    }),
-                    // style for the select extents box
-                    "transform": new OpenLayers.Style({
-                        display: "${getDisplay}",
-                        cursor: "${role}",
-                        pointRadius: 4,
-                        fillColor: "blue",
-                        fillOpacity: 1,
-                        strokeColor: "blue",
-                        graphicZIndex : -1,
-                    },
-                    {
-                        context: {
-                            getDisplay: function(feature) {
-                                // hide the resize handles except at the south-east corner
-                                return  feature.attributes.role === "n-resize"  ||
-                                        feature.attributes.role === "ne-resize" ||
-                                        feature.attributes.role === "e-resize"  ||
-                                        feature.attributes.role === "s-resize"  ||
-                                        feature.attributes.role === "sw-resize" ||
-                                        feature.attributes.role === "w-resize"  ? "none" : ""
-                            }
-                        }
-                    })
-                });
-    }
+
+    // function getTransformStyleMap(){
+    //     return new OpenLayers.StyleMap({
+    //                 "default": new OpenLayers.Style({
+    //                     fillColor: "blue",
+    //                     fillOpacity: 0.05,
+    //                     strokeColor: "blue",
+    //                     graphicZIndex : 1,
+    //                 }),
+    //                 // style for the select extents box
+    //                 "transform": new OpenLayers.Style({
+    //                     display: "${getDisplay}",
+    //                     cursor: "${role}",
+    //                     pointRadius: 4,
+    //                     fillColor: "blue",
+    //                     fillOpacity: 1,
+    //                     strokeColor: "blue",
+    //                     graphicZIndex : -1,
+    //                 },
+    //                 {
+    //                     context: {
+    //                         getDisplay: function(feature) {
+    //                             // hide the resize handles except at the south-east corner
+    //                             return  feature.attributes.role === "n-resize"  ||
+    //                                     feature.attributes.role === "ne-resize" ||
+    //                                     feature.attributes.role === "e-resize"  ||
+    //                                     feature.attributes.role === "s-resize"  ||
+    //                                     feature.attributes.role === "sw-resize" ||
+    //                                     feature.attributes.role === "w-resize"  ? "none" : ""
+    //                         }
+    //                     }
+    //                 })
+    //             });
+    // }
 
 
     /**
      * Returns the styles for job extent display.
      */
     function getExtentStyles(){
+        var defaultStyle = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: [215, 63, 63, 0.1]
+            }),
+            stroke: new ol.style.Stroke({
+                color: [215, 63, 63, 1],
+                width: 3.5,
+            })
+        });
+
+        var selectStyle = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: [0, 0, 255, 0.1]
+            }),
+            stroke: new ol.style.Stroke({
+                color: [0, 0, 255, 1],
+                width: 3.5,
+            })
+        });
+
+        var hiddenStyle = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: [0, 0, 0, 0]
+            }),
+            stroke: new ol.style.Stroke({
+                color: [0, 0, 0, 0]
+            }),
+            zIndex: -1
+        });
+
         // default style for export extents
-        var defaultStyle = new OpenLayers.Style({
-            strokeWidth: 3.5,
-            strokeColor: '#D73F3F',
-            fillColor: '#D73F3F',
-            fillOpacity: 0.1,
-            //graphicZIndex : 50,
-        });
-        // export extent selection style
-        var selectStyle = new OpenLayers.Style({
-            strokeWidth: 3.5,
-            strokeColor: 'blue',
-            fillColor: 'blue',
-            fillOpacity: 0.1,
-            //graphicZIndex : 40,
-        });
+        // var defaultStyle = new OpenLayers.Style({
+        //     strokeWidth: 3.5,
+        //     strokeColor: '#D73F3F',
+        //     fillColor: '#D73F3F',
+        //     fillOpacity: 0.1,
+        //     //graphicZIndex : 50,
+        // });
+        // // export extent selection style
+        // var selectStyle = new OpenLayers.Style({
+        //     strokeWidth: 3.5,
+        //     strokeColor: 'blue',
+        //     fillColor: 'blue',
+        //     fillOpacity: 0.1,
+        //     //graphicZIndex : 40,
+        // });
+        
+        
+        // var hiddenStyle = new OpenLayers.Style({
+        //     display: 'none'
+        // });
 
-        var hiddenStyle = new OpenLayers.Style({
-            display: 'none'
-        });
-
-        var styles = new OpenLayers.StyleMap(
-        {
+        var styles = {
             "default": defaultStyle,
             "select": selectStyle,
             "hidden": hiddenStyle
-        });
+        };
 
         return styles;
-
     }
 
 
@@ -358,94 +547,108 @@ jobs.list = (function(){
 
             // toggle feature visibility
             $('span.toggle-feature').on('click', function(e){
-                var selectControl = map.getControlsBy('id','selectControl')[0];
-                var uid = $(e.target).attr('id');
-                for(var f=0; f < job_extents.features.length; f++){
-                    var feature = job_extents.features[f];
-                    if(feature.attributes.uid === uid){;
-                        var visible = feature.getVisibility();
-                        if (visible) {
-                            feature.renderIntent = 'hidden';
-                            selectControl.unselect(feature);
-                            job_extents.redraw();
-                            $('tr#' + uid).addClass('warning');
-                        }
-                        else {
-                            feature.renderIntent = 'default';
-                            $('tr#' + uid).removeClass('warning');
-                            job_extents.redraw();
-                        }
-                   }
+                // // var selectControl = map.getControlsBy('id','selectControl')[0];
+                if (selectControl) {
+                    var uid = $(e.target).attr('id');
+                    for(var f=0; f < job_extents_source.getFeatures().length; f++){
+                        var feature = job_extents_source.getFeatures()[f];
+                        if(feature.getProperties().uid === uid){;
+                            if (feature.getStyle().getZIndex() != -1) {
+                                // feature.renderIntent = 'hidden';
+                                // selectControl.unselect(feature);
+                                //selectControl.getFeatures().remove(feature);
+                                feature.setStyle(getExtentStyles().hidden);
+                                //job_extents.redraw();
+                                $('tr#' + uid).addClass('warning');
+                            }
+                            else {
+                                //feature.renderIntent = 'default';
+                                feature.setStyle(getExtentStyles().select);
+                                $('tr#' + uid).removeClass('warning');
+                                //job_extents.redraw();
+                            }
+                       }
+                    }
                 }
                 $(this).toggleClass('glyphicon-eye-open glyphicon-eye-close');
             });
-
             $('span.zoom-feature').on('click', function(e){
                 var uid = $(e.target).attr('data-zoom');
-                for(var f=0; f < job_extents.features.length; f++){
-                    var feature = job_extents.features[f];
-                    if(feature.attributes.uid === uid){;
-                        var bounds = feature.geometry.bounds;
-                        map.zoomToExtent(bounds);
+                for(var f=0; f < job_extents_source.getFeatures().length; f++){
+                    var feature = job_extents_source.getFeatures()[f];
+                    if(feature.getProperties().uid === uid){;
+                        var bounds = feature.getGeometry().getExtent();
+                        map.getView().fit(bounds, map.getSize());
 
                    }
                 }
-
             });
 
             // clear the existing export extent features and add the new ones..
-            job_extents.destroyFeatures();
+            job_extents_source.clear();
             $.each(data, function(idx, job){
                  var extent = job.extent;
-                 var geojson = new OpenLayers.Format.GeoJSON({
-                         'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-                         'externalProjection': new OpenLayers.Projection("EPSG:4326")
+                 var geojson = new ol.format.GeoJSON();
+                 var feature = geojson.readFeature(extent, {
+                    'featureProjection': "EPSG:3857",
+                    'dataProjection': "EPSG:4326"
                  });
-                 var feature = geojson.read(extent);
-                 job_extents.addFeatures(feature);
+                 job_extents_source.addFeature(feature);
+                 feature.setStyle(getExtentStyles().default);
              });
-
             /*
              * Zoom to extents depending on whether
              * bbox filtering is applied or not..
              */
             if (filtering) {
-                map.zoomToExtent(bbox.getDataExtent());
+                map.getView().fit(bboxSource.getExtent(), map.getSize());
             }
             else {
-                var bounds = job_extents.getDataExtent();
-                if (bounds) {
-                    map.zoomToExtent(job_extents.getDataExtent());
+                if (job_extents_source.getFeatures().length) {
+                    var bounds = job_extents_source.getExtent();
+                    map.getView().fit(job_extents_source.getExtent(), map.getSize());
                 }
                 else {
                     // zoom to max if no results
-                    map.zoomToMaxExtent();
+                    zoomtoextent()
                 }
             }
-
             // select bbox features based on row hovering
             $('table#jobs tbody tr').hover(
                 // mouse in
                 function(e){
-                    var selectControl = map.getControlsBy('id','selectControl')[0];
-                    var uid = $(this).attr('id');
-                    for(var f=0; f < job_extents.features.length; f++){
-                        var feature = job_extents.features[f];
-                        if(feature.attributes.uid === uid && feature.renderIntent != 'hidden'){
-                            selectControl.select(feature);
-                        }
-                        else {
-                            selectControl.unselect(feature);
+                    selectControl.getFeatures().clear();
+                    // var selectControl = map.getControlsBy('id','selectControl')[0];
+                    if (selectControl) {
+                        var uid = $(this).attr('id');
+                        for(var f=0; f < job_extents_source.getFeatures().length; f++){
+                            var feature = job_extents_source.getFeatures()[f];
+                            if(feature.getProperties().uid === uid && feature.getStyle().getZIndex() != -1){
+                                //selectControl.select(feature);
+
+                                //selectControl.getFeatures().push(feature);
+                                feature.setStyle(getExtentStyles().select);
+                                $('tr#' + uid).css('background-color', '#E8E8E8');
+                            }
                         }
                     }
                 },
                 // mouse out
                 function(e){
-                    var selectControl = map.getControlsBy('id','selectControl')[0];
-                    selectControl.unselectAll();
+                    // selectControl.unselectAll();
+
+                    // Reset table and feature styles on mouse out
+                    job_extents_source.getFeatures().forEach(function(feature, index, array){
+                        if (feature.getStyle().getZIndex() != -1) {
+                            feature.setStyle(getExtentStyles().default);
+                        }
+                    });
+                    $('table#jobs tbody tr').each(function() {
+                        $this = $(this);
+                        $this.css('background-color', '#FFF');
+                    });
                 }
             );
-
             // set message if no results returned from this url..
             $('td.dataTables_empty').html('No search results found.');
         });
@@ -740,11 +943,12 @@ jobs.list = (function(){
      */
     function setBounds(bounds) {
         fmt = '0.0000000000' // format to 10 decimal places
-        bounds.transform('EPSG:3857', 'EPSG:4326');
-        var xmin = numeral(bounds.left).format(fmt);
-        var ymin = numeral(bounds.bottom).format(fmt);
-        var xmax = numeral(bounds.right).format(fmt);
-        var ymax = numeral(bounds.top).format(fmt);
+        //bounds.transform('EPSG:3857', 'EPSG:4326');
+        bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+        var xmin = numeral(bounds[0]).format(fmt);
+        var ymin = numeral(bounds[1]).format(fmt);
+        var xmax = numeral(bounds[2]).format(fmt);
+        var ymax = numeral(bounds[3]).format(fmt);
         var extents = xmin + ',' + ymin + ',' + xmax + ',' + ymax;
         // set the bbox extents on the form and trigger search..
         $('input#bbox').val(extents).trigger('input');

@@ -390,9 +390,7 @@ class JobSerializer(serializers.Serializer):
     """
     EXPORT_FORMAT_CHOICES = (
         ('shp', 'Shapefile Format'),
-        ('obf', 'OBF Format'),
         ('kml', 'KML Format'),
-        ('garmin', 'Garmin Format'),
         ('sqlite', 'SQLITE Format'),
         ('thematic', 'Thematic Shapefile Format'),
         ('gpkg', 'Geopackage Format')

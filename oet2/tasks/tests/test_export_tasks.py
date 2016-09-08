@@ -18,8 +18,8 @@ from celery.datastructures import ExceptionInfo
 from oet2.jobs import presets
 from oet2.jobs.models import Job, Tag
 from oet2.tasks.export_tasks import (
-    ExportTaskErrorHandler, FinalizeRunTask, GarminExportTask,
-    GeneratePresetTask, KmlExportTask, ObfExportTask, OSMConfTask,
+    ExportTaskErrorHandler, FinalizeRunTask,
+    GeneratePresetTask, KmlExportTask, OSMConfTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask
 )
 from oet2.tasks.models import ExportRun, ExportTask, ExportTaskResult
@@ -59,7 +59,7 @@ class TestExportTasks(TestCase):
         self.assertEquals(238, self.job.tags.all().count())
 
     @patch('celery.app.task.Task.request')
-    @patch('utils.osmconf.OSMConfig')
+    @patch('oet2.utils.osmconf.OSMConfig')
     def test_run_osmconf_task(self, mock_config, mock_request):
         task = OSMConfTask()
         celery_uid = str(uuid.uuid4())
@@ -79,7 +79,7 @@ class TestExportTasks(TestCase):
         self.assertEquals('RUNNING', run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('utils.overpass.Overpass')
+    @patch('oet2.utils.overpass.Overpass')
     def test_run_overpass_task(self, overpass, mock_request):
         task = OverpassQueryTask()
         celery_uid = str(uuid.uuid4())
@@ -102,7 +102,7 @@ class TestExportTasks(TestCase):
         self.assertEquals('RUNNING', run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('utils.pbf.OSMToPBF')
+    @patch('oet2.utils.pbf.OSMToPBF')
     def test_run_osmtopbf_task(self, mock_overpass, mock_request):
         task = OSMToPBFConvertTask()
         celery_uid = str(uuid.uuid4())
@@ -122,7 +122,7 @@ class TestExportTasks(TestCase):
         self.assertEquals('RUNNING', run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('utils.osmparse.OSMParser')
+    @patch('oet2.utils.osmparse.OSMParser')
     def test_run_osmprepschema_task(self, mock_parser, mock_request):
         task = OSMPrepSchemaTask()
         celery_uid = str(uuid.uuid4())
@@ -145,7 +145,7 @@ class TestExportTasks(TestCase):
         self.assertEquals('RUNNING', run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('utils.shp.SQliteToShp')
+    @patch('oet2.utils.shp.SQliteToShp')
     def test_run_shp_export_task(self, mock, mock_request):
         task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
@@ -164,62 +164,8 @@ class TestExportTasks(TestCase):
         self.assertIsNotNone(run_task)
         self.assertEquals('RUNNING', run_task.status)
 
-    @patch('shutil.rmtree')
-    @patch('shutil.move')
     @patch('celery.app.task.Task.request')
-    @patch('utils.osmand.OSMToOBF')
-    def test_run_obf_export_task(self, mock_obf, mock_request,
-                                 mock_move, mock_rmtree):
-        task = ObfExportTask()
-        celery_uid = str(uuid.uuid4())
-        type(mock_request).id = PropertyMock(return_value=celery_uid)
-        osm_to_obf = mock_obf.return_value
-        shutil_move = mock_move.return_value
-        shutil_rmtree = mock_rmtree.return_value
-        job_name = self.job.name.lower()
-        expected_output_path = '/home/ubuntu/export_staging/' + str(self.run.uid) + '/' + job_name + '.obf'
-        osm_to_obf.convert.return_value = expected_output_path
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        saved_export_task = ExportTask.objects.create(run=self.run, status='PENDING', name=task.name)
-        result = task.run(run_uid=str(self.run.uid), stage_dir=stage_dir, job_name=job_name)
-        osm_to_obf.convert.assert_called_once()
-        shutil_move.assert_called_once()
-        shutil_rmtree.assert_called_once()
-        self.assertEquals(expected_output_path, result['result'])
-        # test tasks update_task_state method
-        run_task = ExportTask.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(run_task)
-        self.assertEquals('RUNNING', run_task.status)
-
-    @patch('shutil.rmtree')
-    @patch('shutil.move')
-    @patch('celery.app.task.Task.request')
-    @patch('utils.garmin.OSMToIMG')
-    def test_run_garmin_export_task(self, mock_obf, mock_request,
-                                    mock_move, mock_rmtree):
-        task = GarminExportTask()
-        celery_uid = str(uuid.uuid4())
-        type(mock_request).id = PropertyMock(return_value=celery_uid)
-        osm_to_img = mock_obf.return_value
-        shutil_move = mock_move.return_value
-        shutil_rmtree = mock_rmtree.return_value
-        job_name = self.job.name.lower()
-        expected_output_path = '/home/ubuntu/export_staging/' + str(self.run.uid) + '/' + job_name + '_garmin.zip'
-        osm_to_img.run_mkgmap.return_value = expected_output_path
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        saved_export_task = ExportTask.objects.create(run=self.run, status='PENDING', name=task.name)
-        result = task.run(run_uid=str(self.run.uid), stage_dir=stage_dir, job_name=job_name)
-        osm_to_img.run_mkgmap.assert_called_once()
-        shutil_move.assert_called_once()
-        shutil_rmtree.assert_called_once()
-        self.assertEquals(expected_output_path, result['result'])
-        # test tasks update_task_state method
-        run_task = ExportTask.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(run_task)
-        self.assertEquals('RUNNING', run_task.status)
-
-    @patch('celery.app.task.Task.request')
-    @patch('utils.kml.SQliteToKml')
+    @patch('oet2.utils.kml.SQliteToKml')
     def test_run_kml_export_task(self, mock_kml, mock_request):
         task = KmlExportTask()
         celery_uid = str(uuid.uuid4())
