@@ -169,6 +169,7 @@ class TestJobViewSet(APITestCase):
             'tags': self.tags
         }
         response = self.client.post(url, request_data, format='json')
+        print(response)
         job_uid = response.data['uid']
         # test the ExportTaskRunner.run_task(job_id) method gets called.
         # task_runner.run_task.assert_called_once_with(job_uid=job_uid)

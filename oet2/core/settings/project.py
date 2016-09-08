@@ -48,7 +48,7 @@ JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 5
 
-HOSTNAME = 'hot.geoweb.io'
+HOSTNAME = 'localhost'
 
 """
 Admin email address
