@@ -26,7 +26,7 @@ from serializers import (
     RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
 )
 from oet2.tasks.models import ExportRun, ExportTask
-from oet2.tasks.task_runners import ExportTaskRunner
+from oet2.tasks.task_factory import TaskFactory
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -288,13 +288,13 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 error_data = OrderedDict()
-                error_data['formats'] = [_('Invalid format provided.')]
+                error_data['provider_tasks'] = [_('Invalid provider task.')]
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
-            task_runner = ExportTaskRunner()
+            # task_runner = ExportTaskRunner()
             job_uid = str(job.uid)
-            task_runner.run_task(job_uid=job_uid)
+            # TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -316,7 +316,7 @@ class RunJob(views.APIView):
         Re-runs the job.
 
         Gets the job_uid and current user from the request.
-        Creates an instance of the ExportTaskRunner and
+        Creates an instance of the TaskFactory and
         calls run_task on it, passing the job_uid and user.
 
         Args:
@@ -330,8 +330,7 @@ class RunJob(views.APIView):
         if (job_uid):
             # run the tasks
             job = Job.objects.get(uid=job_uid)
-            task_runner = ExportTaskRunner()
-            run = task_runner.run_task(job_uid=job_uid, user=user)
+            run = TaskFactory(job_uid)
             if run:
                 running = ExportRunSerializer(run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)

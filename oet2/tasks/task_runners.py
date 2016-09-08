@@ -10,7 +10,7 @@ from django.db import DatabaseError
 
 from celery import chain, chord, group
 
-from oet2.jobs.models import Job
+from oet2.jobs.models import ProviderTask
 from oet2.tasks.models import ExportRun, ExportTask
 
 from .export_tasks import (
@@ -33,29 +33,29 @@ class TaskRunner(object):
         raise NotImplementedError('Override in subclass.')
 
 
-class ExportTaskRunner(TaskRunner):
+class ExportOSMTaskRunner(TaskRunner):
     """
     Runs HOT Export Tasks
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, job_uid=None, user=None):
+    def run_task(self, provider_task_uid=None, user=None, job_name=None):
         """
         Run export tasks.
 
         Args:
-            job_uid: the uid of the job to run.
+            provider_task_uid: the uid of the provider_task to run.
 
         Return:
             the ExportRun instance.
         """
         run_uid = ''
-        logger.debug('Running Job with id: {0}'.format(job_uid))
-        # pull the job from the database
-        job = Job.objects.get(uid=job_uid)
-        job_name = self.normalize_job_name(job.name)
+        logger.debug('Running Job with id: {0}'.format(provider_task_uid))
+        # pull the provider_task from the database
+        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        job_name = self.normalize_job_name(job_name)
         # get the formats to export
-        formats = [format.slug for format in job.formats.all()]
+        formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = []
         # build a list of celery tasks based on the export formats..
         for format in formats:
@@ -82,18 +82,15 @@ class ExportTaskRunner(TaskRunner):
             try:
                 # enforce max runs
                 max_runs = settings.EXPORT_MAX_RUNS
-                # get the number of existing runs for this job
-                run_count = job.runs.count()
+                # get the number of existing runs for this provider_task
+                run_count = provider_task.runs.count()
                 if run_count > 0:
                     while run_count > max_runs - 1:
                         # delete the earliest runs
-                        job.runs.earliest(field_name='started_at').delete()  # delete earliest
+                        provider_task.runs.earliest(field_name='started_at').delete()  # delete earliest
                         run_count -= 1
-                # add the new run
-                if not user:
-                    user = job.user
                 # add the export run to the database
-                run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED')  # persist the run
+                run = ExportRun.objects.create(job=provider_task, user=user, status='SUBMITTED')  # persist the run
                 run.save()
                 run_uid = str(run.uid)
                 logger.debug('Saved run with id: {0}'.format(run_uid))
@@ -106,8 +103,9 @@ class ExportTaskRunner(TaskRunner):
             os.makedirs(stage_dir, 6600)
 
             # pull out the tags to create the conf file
-            categories = job.categorised_tags  # dict of points/lines/polygons
-            bbox = job.overpass_extents  # extents of job in order required by overpass
+            categories = provider_task.categorised_tags  # dict of points/lines/polygons
+            bbox = provider_task.overpass_extents  # extents of provider_task in order required by overpass
+
 
             """
             Set up the initial tasks:
@@ -125,8 +123,8 @@ class ExportTaskRunner(TaskRunner):
             """
             Not implemented for now.
 
-            transform = job.configs.filter(config_type='TRANSFORM')
-            translate = job.configs.filter(config_type='TRANSLATION')
+            transform = provider_task.configs.filter(config_type='TRANSFORM')
+            translate = provider_task.configs.filter(config_type='TRANSLATION')
             """
 
             # save initial tasks to the db with 'PENDING' state..
@@ -147,7 +145,7 @@ class ExportTaskRunner(TaskRunner):
                 """
                 if export_task.name == 'Garmin Export':
                     # add the region name to the Garmin export
-                    export_task.region = job.region.name
+                    export_task.region = provider_task.region.name
                 try:
                     ExportTask.objects.create(run=run,
                                               status='PENDING', name=export_task.name)
@@ -156,7 +154,7 @@ class ExportTaskRunner(TaskRunner):
                     logger.error('Saving task {0} threw: {1}'.format(export_task.name, e))
                     raise e
             # check if we need to generate a preset file from Job feature selections
-            if job.feature_save or job.feature_pub:
+            if provider_task.feature_save or provider_task.feature_pub:
                 # run GeneratePresetTask
                 preset_task = GeneratePresetTask()
                 ExportTask.objects.create(run=run,
@@ -173,7 +171,7 @@ class ExportTaskRunner(TaskRunner):
             """
             initial_tasks = chain(
                     conf.si(categories=categories, stage_dir=stage_dir, run_uid=run_uid, job_name=job_name) |
-                    query.si(stage_dir=stage_dir, job_name=job_name, bbox=bbox, run_uid=run_uid, filters=job.filters)
+                    query.si(stage_dir=stage_dir, job_name=job_name, bbox=bbox, run_uid=run_uid, filters=provider_task.filters)
             )
 
             schema_tasks = chain(

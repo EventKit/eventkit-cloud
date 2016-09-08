@@ -2,9 +2,12 @@
 import logging
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.db.models.functions import Intersection
+from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
 from django.utils import timezone
@@ -236,7 +239,7 @@ class TestJobRegionIntersection(TestCase):
         job = Job.objects.all()[0]
         # use the_geog
         started = timezone.now()
-        regions = Region.objects.filter(the_geog__intersects=job.the_geog).intersection(job.the_geog, field_name='the_geog').order_by('-intersection')
+        regions = Region.objects.filter(the_geog__intersects=job.the_geog).annotate(intersection=Area(Intersection('the_geog', job.the_geog))).order_by('-intersection')
         finished = timezone.now()
         geog_time = finished - started
         # logger.debug('Geography lookup took: %s' % geog_time)
@@ -248,7 +251,7 @@ class TestJobRegionIntersection(TestCase):
         self.assertIsNotNone(africa)
         self.assertEquals('Central Asia/Middle East', asia.name)
         self.assertEquals('Africa', africa.name)
-        self.assertTrue(asia.intersection.area > africa.intersection.area)
+        self.assertTrue(asia.intersection > africa.intersection)
 
         regions = None
 
@@ -281,6 +284,7 @@ class TestJobRegionIntersection(TestCase):
 class TestExportConfig(TestCase):
 
     def setUp(self,):
+        self.abs_path = settings.ABS_PATH()
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -306,7 +310,7 @@ class TestExportConfig(TestCase):
         self.assertFalse(saved_config.published)
         self.assertIsNotNone(saved_config)
         self.assertEqual(config, saved_config)
-        sf = File(open(os.path.abspath('.') + '/media/export/config/preset/hdm_presets.xml'))
+        sf = File(open(self.abs_path + '/media/export/config/preset/hdm_presets.xml'))
         self.assertIsNotNone(sf)  # check the file gets created on disk
         saved_config.delete()  # clean up
         sf.close()

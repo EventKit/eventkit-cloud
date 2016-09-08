@@ -20,12 +20,13 @@ INSTALLED_APPS += (
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'oet2',
+        'NAME': 'hot_exports_dev',
         'OPTIONS': {
             'options': '-c search_path=exports,public',
         },
         'CONN_MAX_AGE': None,
-        'USER': 'ortelius',
+        'USER': 'hot',
+        'PASSWORD': 'hot',
         'HOST': 'localhost'
     }
 }
