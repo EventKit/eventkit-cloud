@@ -9,6 +9,7 @@ from unittest import skip
 
 from lxml import etree
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.files import File
@@ -202,7 +203,7 @@ class TestTagParser(TestCase):
         self.assertEqual(config, saved_config)
         self.assertIsNotNone(saved_config.upload)
         # logger.debug(saved_config.upload)
-        sf = File(open(os.path.abspath('.') + '/media/export/config/preset/hdm_custom_preset.xml'))
+        sf = File(open(settings.ABS_PATH() + '/media/export/config/preset/hdm_custom_preset.xml'))
         self.assertIsNotNone(sf)  # check the file gets created on disk
         sf.close()
 
@@ -210,7 +211,7 @@ class TestTagParser(TestCase):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
-        xml = StringIO(open(os.path.abspath('.') + saved_config.upload.url).read())
+        xml = StringIO(open(settings.ABS_PATH() + saved_config.upload.url).read())
         tree = etree.parse(xml)
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)

@@ -34,7 +34,7 @@ class TestJobFilter(APITestCase):
         self.job2 = Job.objects.create(name='TestJob2',
                                  description='Test description', user=self.user2,
                                  the_geom=the_geom)
-        format = ExportFormat.objects.get(slug='obf')
+        format = ExportFormat.objects.get(slug='shp')
         self.job1.formats.add(format)
         self.job2.formats.add(format)
         token = Token.objects.create(user=self.user1)
@@ -43,7 +43,7 @@ class TestJobFilter(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_filterset_no_user(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
@@ -52,7 +52,7 @@ class TestJobFilter(APITestCase):
         response = self.client.get(url)
         self.assertEquals(2, len(response.data))
 
-    @patch('api.views.ExportTaskRunner')
+    @patch('oet2.api.views.ExportTaskRunner')
     def test_filterset_with_user(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
