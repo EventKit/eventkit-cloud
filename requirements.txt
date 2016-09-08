@@ -5,6 +5,7 @@ djangorestframework<3.3.0
 django-filter
 djangorestframework-gis
 celery[librabbitmq]
+django-celery
 python-social-auth
 lxml
 GDAL
