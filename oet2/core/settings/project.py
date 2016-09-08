@@ -37,7 +37,7 @@ EXPORT_DOWNLOAD_ROOT = '/home/ubuntu/export_downloads/'
 EXPORT_MEDIA_ROOT = '/downloads/'
 
 # url to overpass api endpoint
-OVERPASS_API_URL = 'http://localhost/interpreter'
+OVERPASS_API_URL = 'http://overpass-api.de/api/interpreter'
 
 """
 Maximum extent of a Job
