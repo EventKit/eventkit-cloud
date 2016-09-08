@@ -43,7 +43,9 @@ class TestJobViewSet(APITestCase):
                                  description='Test description', user=self.user,
                                  the_geom=the_geom)
         format = ExportFormat.objects.get(slug='shp')
+        print format
         self.job.formats.add(format)
+        print self.job.formats
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
