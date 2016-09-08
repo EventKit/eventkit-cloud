@@ -14,7 +14,7 @@ INSTALLED_APPS += (
     'oet2.utils',
 )
 
-INSTALLED_APPS += ("osgeo_importer", "djmp", "djcelery",)
+INSTALLED_APPS += ("osgeo_importer", "djmp", "guardian", "djcelery",)
 
 LOGIN_URL = '/login/'
 
