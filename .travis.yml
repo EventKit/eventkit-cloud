@@ -29,6 +29,7 @@ before_script:
 
 # command to run tests
 script:
+    - ./manage.py makemigrations
     - ./manage.py migrate
     - ./manage.py test
 
