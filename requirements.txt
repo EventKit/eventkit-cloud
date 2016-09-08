@@ -10,6 +10,7 @@ python-social-auth
 lxml
 GDAL
 python-magic
+jsonfield
 -e git://github.com/terranodo/osm-export-tool2.git@eventkit#egg=oet2
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
