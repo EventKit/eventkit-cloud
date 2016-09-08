@@ -288,7 +288,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 error_data = OrderedDict()
-                error_data['formats'] = [_('Invalid format provided.')]
+                error_data['provider_tasks'] = [_('Invalid provider task.')]
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
