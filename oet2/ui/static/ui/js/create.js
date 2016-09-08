@@ -595,13 +595,15 @@ create.job = (function(){
         var top = bounds[3].toFixed(6);
 
         //var extent = ol.geom.Polygon.fromExtent(bounds);
-        
+
+        var bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
+        console.log(bounds_trunc.getArea());
+        var area = bounds_trunc.getArea() / 1000000;
         //var area = geodesicArea(bounds_trunc) / 1000000; // sq km
-        
+
         // format the area and max bounds for display..
         var area_str = numeral(area).format('0 0');
         var max_bounds_str = numeral(max_bounds_area).format('0 0');
-
         if (!valid_region) {
            // invalid region
            validateBBox(); // trigger validation on extents
