@@ -23,7 +23,7 @@ from oet2.jobs.models import (
     ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
 )
 from oet2.tasks.models import (
-    ExportRun, ExportTask, ExportTaskException, ExportTaskResult
+    ExportRun, ExportTask, ExportTaskException, ExportTaskResult, ExportProviderTask
 )
 
 try:
@@ -206,6 +206,19 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             return None  # can't compute yet
 
 
+class ExportProviderTaskSerializer(serializers.ModelSerializer):
+
+    tasks = ExportTaskSerializer(many=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name='api:provider_tasks-detail',
+        lookup_field='uid'
+    )
+
+    class Meta:
+        model = ExportProviderTask
+        fields = ('uid', 'url', 'name', 'tasks',)
+
+
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
     uid = serializers.SerializerMethodField()
@@ -240,14 +253,14 @@ class ExportRunSerializer(serializers.ModelSerializer):
        lookup_field='uid'
     )
     job = SimpleJobSerializer()  # nest the job details
-    tasks = ExportTaskSerializer(many=True)
+    provider_tasks = ExportProviderTaskSerializer(many=True)
     finished_at = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
-        fields = ('uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 'status', 'job', 'tasks')
+        fields = ('uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 'status', 'job', 'provider_tasks')
 
     def get_finished_at(self, obj):
         if (not obj.finished_at):

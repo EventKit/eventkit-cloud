@@ -44,6 +44,7 @@ class ExportRun(RunModelMixin):
     """
     Model for export task runs.
     """
+    # provider_task = models.ForeignKey(ProviderTask, related_name='runs')
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
     status = models.CharField(
@@ -59,6 +60,24 @@ class ExportRun(RunModelMixin):
         return '{0}'.format(self.uid)
 
 
+class ExportProviderTask(models.Model):
+    """
+    Model for an ExportTask.
+    """
+    id = models.AutoField(primary_key=True, editable=False)
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50)
+    run = models.ForeignKey(ExportRun, related_name='provider_tasks')
+
+    class Meta:
+        ordering = ['name']
+        managed = True
+        db_table = 'export_provider_tasks'
+
+    def __str__(self):
+        return 'ExportProviderTask uid: {0}'.format(self.uid)
+
+
 class ExportTask(models.Model):
     """
     Model for an ExportTask.
@@ -67,7 +86,7 @@ class ExportTask(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
-    run = models.ForeignKey(ExportRun, related_name='tasks')
+    export_provider_task = models.ForeignKey(ExportProviderTask, related_name='tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     started_at = models.DateTimeField(editable=False, null=True)

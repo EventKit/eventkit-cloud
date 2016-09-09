@@ -3,7 +3,6 @@ import importlib
 import logging
 import os
 import re
-from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import DatabaseError
@@ -11,12 +10,11 @@ from django.db import DatabaseError
 from celery import chain, chord, group
 
 from oet2.jobs.models import ProviderTask
-from oet2.tasks.models import ExportRun, ExportTask
+from oet2.tasks.models import ExportTask, ExportProviderTask
 
-from .export_tasks import (
-    FinalizeRunTask, GeneratePresetTask, OSMConfTask, OSMPrepSchemaTask,
-    OSMToPBFConvertTask, OverpassQueryTask
-)
+from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
+                           OSMToPBFConvertTask, OverpassQueryTask
+                           )
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -26,6 +24,7 @@ class TaskRunner(object):
     """
     Abstract base class for running tasks
     """
+
     class Meta:
         abstract = True
 
@@ -39,7 +38,7 @@ class ExportOSMTaskRunner(TaskRunner):
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, job_name=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
         """
         Run export tasks.
 
@@ -53,7 +52,8 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        job_name = self.normalize_job_name(job_name)
+        job = run.job
+        job_name = self.normalize_job_name(job.name)
         # get the formats to export
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = []
@@ -77,35 +77,10 @@ class ExportOSMTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            # start the run
-            run = None
-            try:
-                # enforce max runs
-                max_runs = settings.EXPORT_MAX_RUNS
-                # get the number of existing runs for this provider_task
-                run_count = provider_task.runs.count()
-                if run_count > 0:
-                    while run_count > max_runs - 1:
-                        # delete the earliest runs
-                        provider_task.runs.earliest(field_name='started_at').delete()  # delete earliest
-                        run_count -= 1
-                # add the export run to the database
-                run = ExportRun.objects.create(job=provider_task, user=user, status='SUBMITTED')  # persist the run
-                run.save()
-                run_uid = str(run.uid)
-                logger.debug('Saved run with id: {0}'.format(run_uid))
-            except DatabaseError as e:
-                logger.error('Error saving export run: {0}'.format(e))
-                raise e
-
-            # setup the staging directory
-            stage_dir = settings.EXPORT_STAGING_ROOT + str(run_uid) + '/'
-            os.makedirs(stage_dir, 6600)
 
             # pull out the tags to create the conf file
-            categories = provider_task.categorised_tags  # dict of points/lines/polygons
-            bbox = provider_task.overpass_extents  # extents of provider_task in order required by overpass
-
+            categories = job.categorised_tags  # dict of points/lines/polygons
+            bbox = job.overpass_extents  # extents of provider_task in order required by overpass
 
             """
             Set up the initial tasks:
@@ -113,12 +88,13 @@ class ExportOSMTaskRunner(TaskRunner):
                 2. Create the Overpass Query task which pulls raw data from overpass and filters it.
                 3. Convert raw osm to compressed pbf.
                 4. Create the default sqlite schema file using ogr2ogr config file created at step 1.
+            Store in osm_tasks to hold the task_uid.
             """
-            conf = OSMConfTask()
-            query = OverpassQueryTask()
-            pbfconvert = OSMToPBFConvertTask()
-            prep_schema = OSMPrepSchemaTask()
 
+            osm_tasks = {'conf': {'obj': OSMConfTask(), 'task_uid': None},
+                         'query': {'obj': OverpassQueryTask(), 'task_uid': None},
+                         'pbfconvert': {'obj': OSMToPBFConvertTask(), 'task_uid': None},
+                         'prep_schema': {'obj': OSMPrepSchemaTask(), 'task_uid': None}}
             # check for transform and/or translate configurations
             """
             Not implemented for now.
@@ -126,43 +102,12 @@ class ExportOSMTaskRunner(TaskRunner):
             transform = provider_task.configs.filter(config_type='TRANSFORM')
             translate = provider_task.configs.filter(config_type='TRANSLATION')
             """
-
+            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
             # save initial tasks to the db with 'PENDING' state..
-            for initial_task in [conf, query, pbfconvert, prep_schema]:
-                try:
-                    ExportTask.objects.create(run=run,
-                                              status='PENDING', name=initial_task.name)
-                    logger.debug('Saved task: {0}'.format(initial_task.name))
-                except DatabaseError as e:
-                    logger.error('Saving task {0} threw: {1}'.format(initial_task.name, e))
-                    raise e
-            # save the rest of the ExportFormat tasks.
-            for export_task in export_tasks:
-                """
-                Set the region name on the Garmin Export task.
-                The region gets written to the exported '.img' file.
-                Could set additional params here in future if required.
-                """
-                if export_task.name == 'Garmin Export':
-                    # add the region name to the Garmin export
-                    export_task.region = provider_task.region.name
-                try:
-                    ExportTask.objects.create(run=run,
-                                              status='PENDING', name=export_task.name)
-                    logger.debug('Saved task: {0}'.format(export_task.name))
-                except DatabaseError as e:
-                    logger.error('Saving task {0} threw: {1}'.format(export_task.name, e))
-                    raise e
-            # check if we need to generate a preset file from Job feature selections
-            if provider_task.feature_save or provider_task.feature_pub:
-                # run GeneratePresetTask
-                preset_task = GeneratePresetTask()
-                ExportTask.objects.create(run=run,
-                                              status='PENDING', name=preset_task.name)
-                logger.debug('Saved task: {0}'.format(preset_task.name))
-                # add to export tasks
-                export_tasks.append(preset_task)
-
+            for task_type, task in osm_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                osm_tasks[task_type]['task_uid'] = export_task.uid
             """
             Create a celery chain which runs the initial conf and query tasks (initial_tasks),
             followed by a chain of pbfconvert and prep_schema (schema_tasks).
@@ -170,33 +115,49 @@ class ExportOSMTaskRunner(TaskRunner):
             by the finalize_task at the end to clean up staging dirs, update run status, email user etc..
             """
             initial_tasks = chain(
-                    conf.si(categories=categories, stage_dir=stage_dir, run_uid=run_uid, job_name=job_name) |
-                    query.si(stage_dir=stage_dir, job_name=job_name, bbox=bbox, run_uid=run_uid, filters=provider_task.filters)
+                osm_tasks.get('conf').get('obj').si(categories=categories,
+                                                    task_uid=osm_tasks.get('conf').get('task_uid'),
+                                                    stage_dir=stage_dir,
+                                                    run_uid=run_uid,
+                                                    export_provider_task_name=export_provider_task.name) |
+                osm_tasks.get('query').get('obj').si(stage_dir=stage_dir,
+                                                     task_uid=osm_tasks.get('query').get('task_uid'),
+                                                     export_provider_task_name=export_provider_task.name,
+                                                     bbox=bbox, run_uid=run_uid)
             )
 
             schema_tasks = chain(
-                    pbfconvert.si(stage_dir=stage_dir, job_name=job_name, run_uid=run_uid) |
-                    prep_schema.si(stage_dir=stage_dir, job_name=job_name, run_uid=run_uid)
+                osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
+                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid'),
+                                                          export_provider_task_name=export_provider_task.name,
+                                                          run_uid=run_uid) |
+                osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
+                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid'),
+                                                           export_provider_task_name=export_provider_task.name,
+                                                           run_uid=run_uid)
             )
 
             format_tasks = group(
-                task.si(run_uid=run_uid, stage_dir=stage_dir, job_name=job_name) for task in export_tasks
+                task.si(run_uid=run_uid,
+                        stage_dir=stage_dir,
+                        task_uid=osm_tasks.get('prep_schema').get('task_uid'),
+                        export_provider_task_name=export_provider_task.name) for task in export_tasks
             )
-
-            finalize_task = FinalizeRunTask()
 
             """
             If header tasks fail, errors will not propagate to the finalize_task.
             This means that the finalize_task will always be called, and will update the
             overall run status.
             """
-            chain(
-                    chain(initial_tasks, schema_tasks),
-                    chord(header=format_tasks,
-                        body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
-            ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
+            # return chain(
+            #         chain(initial_tasks, schema_tasks),
+            #         chord(header=format_tasks,
+            #             body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
+            # ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
 
-            return run
+            return chord(header=chain(initial_tasks, schema_tasks),
+                         body=format_tasks)
+            # return run
 
         else:
             return False
@@ -207,6 +168,17 @@ class ExportOSMTaskRunner(TaskRunner):
         # Replace all whitespace with a single underscore
         s = re.sub(r"\s+", '_', s)
         return s.lower()
+
+
+def create_export_task(task_name=None, export_provider_task=None):
+    try:
+        export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                status='PENDING', name=task_name)
+        logger.debug('Saved task: {0}'.format(task_name))
+    except DatabaseError as e:
+        logger.error('Saving task {0} threw: {1}'.format(task_name, e))
+        raise e
+    return export_task
 
 
 def error_handler(task_id=None):

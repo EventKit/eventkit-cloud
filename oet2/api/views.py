@@ -22,10 +22,10 @@ from oet2.jobs.models import (
 from oet2.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
-    ExportTaskSerializer, JobSerializer, RegionMaskSerializer,
+    ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
     RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
 )
-from oet2.tasks.models import ExportRun, ExportTask
+from oet2.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from oet2.tasks.task_factory import TaskFactory
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
@@ -124,8 +124,6 @@ class JobViewSet(viewsets.ModelViewSet):
     #             except ExportFormat.DoesNotExist as e:
     #                 logger.warn('Export format with uid: {0} does not exist'.format(slug))
     #     return export_formats
-
-
 
     def list(self, request, *args, **kwargs):
         """
@@ -294,7 +292,7 @@ class JobViewSet(viewsets.ModelViewSet):
             # run the tasks
             # task_runner = ExportTaskRunner()
             job_uid = str(job.uid)
-            # TaskFactory(job_uid)
+            TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -485,6 +483,31 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized ExportTask data.
         """
         queryset = ExportTask.objects.filter(uid=uid)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ###ExportTask API endpoint.
+
+    Provides List and Retrieve endpoints for ExportTasks.
+    """
+    serializer_class = ExportProviderTaskSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    queryset = ExportTask.objects.all()
+    lookup_field = 'uid'
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        GET a single export task.
+
+        Args:
+            request: the http request.
+            uid: the uid of the export task to GET.
+        Returns:
+            the serialized ExportTask data.
+        """
+        queryset = ExportProviderTask.objects.filter(uid=uid)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
