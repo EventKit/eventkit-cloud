@@ -555,7 +555,6 @@ class TestBBoxSearch(APITestCase):
                                 HTTP_HOST='testserver')
         # pull out the formats
         formats = [format.slug for format in ExportFormat.objects.all()]
-        print(formats)
         # create test jobs
         extents = [(-3.9, 16.1, 7.0, 27.6), (36.90, 13.54, 48.52, 20.24),
             (-71.79, -49.57, -67.14, -46.16), (-61.27, -6.49, -56.20, -2.25),

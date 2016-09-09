@@ -31,6 +31,7 @@ class TestExportTaskRunner(TestCase):
         self.region = Region.objects.get(name='Africa')
         self.job.region = self.region
         self.uid = str(self.job.uid)
+        print("UID: {}".format(self.uid))
         self.job.save()
 
     @patch('oet2.tasks.task_runners.chain')
@@ -46,6 +47,8 @@ class TestExportTaskRunner(TestCase):
         celery_chain = mock_chain.return_value
         celery_chain.apply_async.return_value = Mock()
         self.job.formats = [shp_task]
+        print("formats")
+        print(self.job.formats)
         runner = ExportTaskRunner()
         runner.run_task(job_uid=self.uid)
         run = self.job.runs.all()[0]
