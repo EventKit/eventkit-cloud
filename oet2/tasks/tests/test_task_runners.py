@@ -48,9 +48,10 @@ class TestExportTaskRunner(TestCase):
         celery_chain.apply_async.return_value = Mock()
         self.job.formats = [shp_task]
         print("formats")
-        print(self.job.formats)
+        for exformat in self.job.formats:
+            print("Slug: {}".format(exformat.slug))
         runner = ExportTaskRunner()
-        runner.run_task(job_uid=self.uid)
+        print runner.run_task(job_uid=self.uid)
         run = self.job.runs.all()[0]
         self.assertIsNotNone(run)
         # assert delay method called on mock chord..
