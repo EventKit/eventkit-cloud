@@ -12,7 +12,7 @@ DATABASES = {
             'sslmode': 'require',
         },
         'CONN_MAX_AGE': None,
-        'USER': 'dodobas',
+        'USER': 'hot',
         'HOST': 'localhost'
     }
 }

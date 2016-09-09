@@ -151,6 +151,7 @@ class TestJobViewSet(APITestCase):
     def test_create_job_success(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
+        logger.debug(url)
         formats = [format.slug for format in ExportFormat.objects.all()]
         config_uid = self.config.uid
         request_data = {

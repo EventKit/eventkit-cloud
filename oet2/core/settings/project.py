@@ -14,15 +14,17 @@ INSTALLED_APPS += (
     'oet2.utils',
 )
 
+INSTALLED_APPS += ("osgeo_importer", "djmp", "guardian", "djcelery",)
+
 LOGIN_URL = '/login/'
 
 EXPORT_TASKS = {
-    'shp': 'tasks.export_tasks.ShpExportTask',
-    'obf': 'tasks.export_tasks.ObfExportTask',
-    'sqlite': 'tasks.export_tasks.SqliteExportTask',
-    'kml': 'tasks.export_tasks.KmlExportTask',
-    'thematic': 'tasks.export_tasks.ThematicLayersExportTask',
-    'geopackage': 'tasks.export_tasks.GeopackageExportTask'
+    'shp': 'oet2.tasks.export_tasks.ShpExportTask',
+    'obf': 'oet2.tasks.export_tasks.ObfExportTask',
+    'sqlite': 'oet2.tasks.export_tasks.SqliteExportTask',
+    'kml': 'oet2.tasks.export_tasks.KmlExportTask',
+    'thematic': 'oet2.tasks.export_tasks.ThematicLayersExportTask',
+    'geopackage': 'oet2.tasks.export_tasks.GeopackageExportTask'
 }
 
 # where exports are staged for processing
@@ -35,7 +37,7 @@ EXPORT_DOWNLOAD_ROOT = '/home/ubuntu/export_downloads/'
 EXPORT_MEDIA_ROOT = '/downloads/'
 
 # url to overpass api endpoint
-OVERPASS_API_URL = 'http://localhost/interpreter'
+OVERPASS_API_URL = 'http://overpass-api.de/api/interpreter'
 
 """
 Maximum extent of a Job
@@ -46,7 +48,7 @@ JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 5
 
-HOSTNAME = 'hot.geoweb.io'
+HOSTNAME = 'localhost'
 
 """
 Admin email address
