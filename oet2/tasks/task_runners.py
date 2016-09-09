@@ -56,6 +56,7 @@ class ExportTaskRunner(TaskRunner):
         job_name = self.normalize_job_name(job.name)
         # get the formats to export
         formats = [format.slug for format in job.formats.all()]
+        print formats
         export_tasks = []
         # build a list of celery tasks based on the export formats..
         for format in formats:
@@ -80,7 +81,7 @@ class ExportTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
-        print len(export_task)
+        print len(export_tasks)
         if len(export_tasks) > 0:
             # start the run
             run = None
@@ -143,6 +144,7 @@ class ExportTaskRunner(TaskRunner):
                     logger.debug('Saved task: {0}'.format(initial_task.name))
                 except DatabaseError as e:
                     logger.error('Saving task {0} threw: {1}'.format(initial_task.name, e))
+                    print e
                     raise e
             # save the rest of the ExportFormat tasks.
             for export_task in export_tasks:
@@ -160,6 +162,7 @@ class ExportTaskRunner(TaskRunner):
                     logger.debug('Saved task: {0}'.format(export_task.name))
                 except DatabaseError as e:
                     logger.error('Saving task {0} threw: {1}'.format(export_task.name, e))
+                    print e
                     raise e
             # check if we need to generate a preset file from Job feature selections
             if job.feature_save or job.feature_pub:
