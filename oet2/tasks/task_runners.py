@@ -64,7 +64,8 @@ class ExportTaskRunner(TaskRunner):
                 task_fq_name = self.export_task_registry[format]
                 # instantiate the required class.
                 parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+                module_path, class_name = 'oet2' + '.'.join(parts[:-1]), parts[-1]
+                print module_path
                 module = importlib.import_module(module_path)
                 CeleryExportTask = getattr(module, class_name)
                 export_task = CeleryExportTask()
