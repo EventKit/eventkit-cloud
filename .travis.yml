@@ -19,6 +19,8 @@ before_install:
     - sudo apt-get -y install python python-pip python-gdal git postgresql-9.3-postgis-2.2 libpq-dev python-dev gcc g++ gdal-bin libgdal-dev libspatialite5 osmctools spatialite-bin zip unzip rabbitmq-server libxml2-dev libxslt-dev
     - export CPLUS_INCLUDE_PATH=/usr/include/gdal
     - export C_INCLUDE_PATH=/usr/include/gdal
+    - sudo mkdir -p /home/ubuntu/export_staging
+    - sudo chmod 777 /home/ubuntu/export_staging
 
 install: pip install --user -r requirements-dev.txt
 
