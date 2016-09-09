@@ -8,20 +8,22 @@ celery[librabbitmq]
 django-celery
 python-social-auth
 lxml
-#GDAL
+GDAL
 python-magic
 backports.ssl_match_hostname
 click
 uwsgi
+gdal
 gunicorn
 eventlet
 jsonfield
 decorator
 webtest
 django_extensions
+whitenoise
 #rtree
 #imposm
-#numpy==1.11.1
+numpy==1.11.1
 -e git://github.com/terranodo/osm-export-tool2.git@eventkit#egg=oet2
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
 -e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
