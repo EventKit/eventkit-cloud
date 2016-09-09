@@ -59,6 +59,7 @@ class ExportTaskRunner(TaskRunner):
         export_tasks = []
         # build a list of celery tasks based on the export formats..
         for format in formats:
+            print("format: {}".format(format))
             try:
                 # see settings.EXPORT_TASKS for configuration
                 task_fq_name = self.export_task_registry[format]
@@ -79,6 +80,7 @@ class ExportTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
+        print len(export_task)
         if len(export_tasks) > 0:
             # start the run
             run = None
@@ -102,6 +104,7 @@ class ExportTaskRunner(TaskRunner):
                 logger.debug('Saved run with id: {0}'.format(run_uid))
             except DatabaseError as e:
                 logger.error('Error saving export run: {0}'.format(e))
+                print(e)
                 raise e
 
             # setup the staging directory
