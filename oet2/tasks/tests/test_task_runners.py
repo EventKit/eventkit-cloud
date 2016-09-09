@@ -48,8 +48,6 @@ class TestExportTaskRunner(TestCase):
         celery_chain.apply_async.return_value = Mock()
         self.job.formats = [shp_task]
         print("formats")
-        for exformat in self.job.formats:
-            print("Slug: {}".format(exformat.slug))
         runner = ExportTaskRunner()
         print runner.run_task(job_uid=self.uid)
         run = self.job.runs.all()[0]
