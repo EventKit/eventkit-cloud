@@ -31,7 +31,6 @@ class TestExportTaskRunner(TestCase):
         self.region = Region.objects.get(name='Africa')
         self.job.region = self.region
         self.uid = str(self.job.uid)
-        print("UID: {}".format(self.uid))
         self.job.save()
 
     @patch('oet2.tasks.task_runners.chain')

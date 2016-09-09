@@ -56,32 +56,26 @@ class ExportTaskRunner(TaskRunner):
         job_name = self.normalize_job_name(job.name)
         # get the formats to export
         formats = [format.slug for format in job.formats.all()]
-        print formats
         export_tasks = []
         # build a list of celery tasks based on the export formats..
         for format in formats:
-            print("format: {}".format(format))
             try:
                 # see settings.EXPORT_TASKS for configuration
                 task_fq_name = self.export_task_registry[format]
                 # instantiate the required class.
                 parts = task_fq_name.split('.')
                 module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                print module_path
                 module = importlib.import_module(module_path)
                 CeleryExportTask = getattr(module, class_name)
                 export_task = CeleryExportTask()
                 export_tasks.append(export_task)
             except KeyError as e:
                 logger.debug(e)
-                print(e)
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
-                print(msg)
                 logger.debug(msg)
 
         # run the tasks
-        print len(export_tasks)
         if len(export_tasks) > 0:
             # start the run
             run = None
@@ -105,7 +99,6 @@ class ExportTaskRunner(TaskRunner):
                 logger.debug('Saved run with id: {0}'.format(run_uid))
             except DatabaseError as e:
                 logger.error('Error saving export run: {0}'.format(e))
-                print(e)
                 raise e
 
             # setup the staging directory
@@ -144,7 +137,6 @@ class ExportTaskRunner(TaskRunner):
                     logger.debug('Saved task: {0}'.format(initial_task.name))
                 except DatabaseError as e:
                     logger.error('Saving task {0} threw: {1}'.format(initial_task.name, e))
-                    print e
                     raise e
             # save the rest of the ExportFormat tasks.
             for export_task in export_tasks:
@@ -162,7 +154,6 @@ class ExportTaskRunner(TaskRunner):
                     logger.debug('Saved task: {0}'.format(export_task.name))
                 except DatabaseError as e:
                     logger.error('Saving task {0} threw: {1}'.format(export_task.name, e))
-                    print e
                     raise e
             # check if we need to generate a preset file from Job feature selections
             if job.feature_save or job.feature_pub:
