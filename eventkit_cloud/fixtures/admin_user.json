@@ -13,7 +13,7 @@
             "groups": [
                 1
             ],
-            "password": "pbkdf2_sha256$20000$qH1pQEscvOgy$ypOQA/Ogej//J0218c39CFXobmv14050/hwWHnvhgxg="
+            "password": "pbkdf2_sha256$12000$jgCrk99hgDAw$YxBq7iPxv2B6/CrJYZ41NBiDkUihjXqLwvMw9BzQVrA="
         }
     }
 ]

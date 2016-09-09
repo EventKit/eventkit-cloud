@@ -75,26 +75,16 @@ RUN mkdir /var/lib/eventkit/db_dir
 RUN chown eventkit:eventkit -R /var/lib/eventkit/
 RUN mkdir /var/log/eventkit
 
-RUN apt-get install supervisor apache2 -y
-RUN cp /var/lib/eventkit/config/supervisord.conf /etc/supervisor/supervisord.conf
-RUN cp /var/lib/eventkit/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
-
-RUN a2enmod proxy
-RUN a2enmod proxy_http
-RUN a2enmod ext_filter
-RUN a2dissite 000-default.conf
-RUN a2ensite eventkit.conf
-RUN usermod -g eventkit www-data
-
 RUN chmod 755 /home
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 755 /var/lib/eventkit
 RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
-RUN cp /var/lib/eventkit/scripts/eventkit-entrypoint.sh /eventkit-entrypoint.sh
-RUN chmod 777 /eventkit-entrypoint.sh
 EXPOSE 80
 RUN rm -rf /var/lib/eventkit/tmp
 
-CMD ["/eventkit-entrypoint.sh"]
+RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
+RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
+
+CMD ["/var/lib/eventkit/.virtualenvs/eventkit/bin/python", "/var/lib/eventkit/manage.py", "runserver", "0.0.0.0:80"]

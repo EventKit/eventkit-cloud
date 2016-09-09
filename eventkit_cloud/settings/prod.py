@@ -19,9 +19,10 @@ DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
     DATABASES = {'default': dj_database_url.config()}
-    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 else:
     DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports_dev@localhost:5432/eventkit_exports_dev')
+
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
 

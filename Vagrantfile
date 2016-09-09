@@ -15,7 +15,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # Example of share an additional folder to the guest VM.
   config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "8224", "--cpus", "4"]
+    vb.customize ["modifyvm", :id, "--memory", "4096", "--cpus", "4"]
   end
   
 end
