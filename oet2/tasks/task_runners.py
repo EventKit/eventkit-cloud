@@ -71,8 +71,10 @@ class ExportTaskRunner(TaskRunner):
                 export_tasks.append(export_task)
             except KeyError as e:
                 logger.debug(e)
+                print(e)
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
+                print(msg)
                 logger.debug(msg)
 
         # run the tasks
