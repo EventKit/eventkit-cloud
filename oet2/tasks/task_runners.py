@@ -155,8 +155,7 @@ class ExportOSMTaskRunner(TaskRunner):
             #             body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
             # ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
 
-            return chord(header=chain(initial_tasks, schema_tasks),
-                         body=format_tasks)
+            return chain(chain(initial_tasks, schema_tasks), format_tasks)
             # return run
 
         else:
