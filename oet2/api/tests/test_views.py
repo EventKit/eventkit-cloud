@@ -43,9 +43,7 @@ class TestJobViewSet(APITestCase):
                                  description='Test description', user=self.user,
                                  the_geom=the_geom)
         format = ExportFormat.objects.get(slug='shp')
-        print format
         self.job.formats.add(format)
-        print self.job.formats
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
@@ -153,7 +151,6 @@ class TestJobViewSet(APITestCase):
     def test_create_job_success(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
-        print(url)
         logger.debug(url)
         formats = [format.slug for format in ExportFormat.objects.all()]
         config_uid = self.config.uid
@@ -171,7 +168,6 @@ class TestJobViewSet(APITestCase):
             'tags': self.tags
         }
         response = self.client.post(url, request_data, format='json')
-        print(response)
         job_uid = response.data['uid']
         # test the ExportTaskRunner.run_task(job_id) method gets called.
         # task_runner.run_task.assert_called_once_with(job_uid=job_uid)
@@ -559,6 +555,7 @@ class TestBBoxSearch(APITestCase):
                                 HTTP_HOST='testserver')
         # pull out the formats
         formats = [format.slug for format in ExportFormat.objects.all()]
+        print(formats)
         # create test jobs
         extents = [(-3.9, 16.1, 7.0, 27.6), (36.90, 13.54, 48.52, 20.24),
             (-71.79, -49.57, -67.14, -46.16), (-61.27, -6.49, -56.20, -2.25),
