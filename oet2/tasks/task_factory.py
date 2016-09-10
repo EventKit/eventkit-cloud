@@ -42,10 +42,13 @@ class TaskFactory():
                                                              run=self.run,
                                                              stage_dir=self.stage_dir)
                     header_tasks.append(task_runner_tasks)
-            finalize_task = FinalizeRunTask()
-            chord(header=group(*header_tasks),
-                  body=finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
-            ).apply_async(expires=datetime.now() + timedelta(days=1))
+            if header_tasks:
+                finalize_task = FinalizeRunTask()
+                chord(header=group(*header_tasks),
+                      body=finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
+                ).apply_async(expires=datetime.now() + timedelta(days=1))
+            else:
+                return False
         else:
             return False
 

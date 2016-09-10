@@ -117,31 +117,30 @@ class ExportOSMTaskRunner(TaskRunner):
             initial_tasks = chain(
                 osm_tasks.get('conf').get('obj').si(categories=categories,
                                                     task_uid=osm_tasks.get('conf').get('task_uid'),
-                                                    stage_dir=stage_dir,
-                                                    run_uid=run_uid,
-                                                    export_provider_task_name=export_provider_task.name) |
+                                                    job_name=job_name,
+                                                    stage_dir=stage_dir) |
                 osm_tasks.get('query').get('obj').si(stage_dir=stage_dir,
                                                      task_uid=osm_tasks.get('query').get('task_uid'),
-                                                     export_provider_task_name=export_provider_task.name,
-                                                     bbox=bbox, run_uid=run_uid)
+                                                     job_name=job_name,
+                                                     bbox=bbox,
+                                                     filters=job.filters)
             )
 
             schema_tasks = chain(
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
-                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid'),
-                                                          export_provider_task_name=export_provider_task.name,
-                                                          run_uid=run_uid) |
+                                                          job_name=job_name,
+                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')) |
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
-                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid'),
-                                                           export_provider_task_name=export_provider_task.name,
-                                                           run_uid=run_uid)
+                                                           job_name=job_name,
+                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid'))
             )
+
 
             format_tasks = group(
                 task.si(run_uid=run_uid,
                         stage_dir=stage_dir,
-                        task_uid=osm_tasks.get('prep_schema').get('task_uid'),
-                        export_provider_task_name=export_provider_task.name) for task in export_tasks
+                        job_name=job_name,
+                        task_uid=osm_tasks.get('prep_schema').get('task_uid')) for task in export_tasks
             )
 
             """
@@ -154,6 +153,8 @@ class ExportOSMTaskRunner(TaskRunner):
             #         chord(header=format_tasks,
             #             body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
             # ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
+
+            # chain(initial_tasks, schema_tasks).apply_async()
 
             return chain(chain(initial_tasks, schema_tasks), format_tasks)
             # return run
