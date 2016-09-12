@@ -4,7 +4,7 @@ import os
 
 from celery import Celery
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.dev')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
 
 from django.conf import settings  # noqa
 
