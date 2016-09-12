@@ -37,7 +37,7 @@ cd ~
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
-sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite
+sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
 
 sudo apt-get -y install osmctools
 sudo apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
@@ -61,6 +61,8 @@ sudo mkdir /var/lib/eventkit/db_dir
 sudo chown eventkit:eventkit -R /var/lib/eventkit/
 
 sudo mkdir /var/log/eventkit
+
+sudo apt-get install -y supervisor
 
 sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord-celery.conf /etc/supervisor/supervisord.conf
 
