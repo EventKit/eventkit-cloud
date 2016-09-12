@@ -77,6 +77,12 @@ LOGGING = {
         },
     },
     'handlers': {
+		'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose'
+        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
