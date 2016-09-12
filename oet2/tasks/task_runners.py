@@ -56,7 +56,7 @@ class ExportOSMTaskRunner(TaskRunner):
         job_name = self.normalize_job_name(job.name)
         # get the formats to export
         formats = [format.slug for format in provider_task.formats.all()]
-        export_tasks = []
+        export_tasks = {}
         # build a list of celery tasks based on the export formats..
         for format in formats:
             try:
@@ -67,8 +67,7 @@ class ExportOSMTaskRunner(TaskRunner):
                 module_path, class_name = '.'.join(parts[:-1]), parts[-1]
                 module = importlib.import_module(module_path)
                 CeleryExportTask = getattr(module, class_name)
-                export_task = CeleryExportTask()
-                export_tasks.append(export_task)
+                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -103,11 +102,17 @@ class ExportOSMTaskRunner(TaskRunner):
             translate = provider_task.configs.filter(config_type='TRANSLATION')
             """
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
-            # save initial tasks to the db with 'PENDING' state..
+            # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
             for task_type, task in osm_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
                                                  export_provider_task=export_provider_task)
                 osm_tasks[task_type]['task_uid'] = export_task.uid
+            # save export(format) tasks to the db with 'PENDING' state, store task_uid for updating the task later.
+            for task_type, task in export_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                export_tasks[task_type]['task_uid'] = export_task.uid
+
             """
             Create a celery chain which runs the initial conf and query tasks (initial_tasks),
             followed by a chain of pbfconvert and prep_schema (schema_tasks).
@@ -135,12 +140,12 @@ class ExportOSMTaskRunner(TaskRunner):
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid'))
             )
 
-
             format_tasks = group(
-                task.si(run_uid=run_uid,
-                        stage_dir=stage_dir,
-                        job_name=job_name,
-                        task_uid=osm_tasks.get('prep_schema').get('task_uid')) for task in export_tasks
+                task.get('obj').si(run_uid=run_uid,
+                                   stage_dir=stage_dir,
+                                   job_name=job_name,
+                                   task_uid=task.get('task_uid')) for task_name, task in
+                export_tasks.iteritems()
             )
 
             """
@@ -148,16 +153,8 @@ class ExportOSMTaskRunner(TaskRunner):
             This means that the finalize_task will always be called, and will update the
             overall run status.
             """
-            # return chain(
-            #         chain(initial_tasks, schema_tasks),
-            #         chord(header=format_tasks,
-            #             body=finalize_task.si(stage_dir=stage_dir, run_uid=run_uid))
-            # ).apply_async(expires=datetime.now() + timedelta(days=1))  # tasks expire after one day.
-
-            # chain(initial_tasks, schema_tasks).apply_async()
 
             return chain(chain(initial_tasks, schema_tasks), format_tasks)
-            # return run
 
         else:
             return False
