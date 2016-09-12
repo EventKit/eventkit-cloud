@@ -1261,7 +1261,7 @@ create.job = (function(){
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
                 form_data["provider_tasks"] = []
-                provider_tasks = []
+                var provider_tasks = []
 
                 if(typeof(providers)==='string'){
                     providers = [providers]
@@ -1277,9 +1277,10 @@ create.job = (function(){
                 for(var provider in providers){
                     provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
                 }
-                form_data["provider_tasks"] = provider_tasks
+                form_data["provider_tasks"] = provider_tasks;
+                form_data["formats"] = formats;
                 delete form_data["providers"]
-                delete form_data["formats"]
+                //delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({

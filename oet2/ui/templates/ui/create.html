@@ -15,14 +15,6 @@
         <div id="create-job-wizard">
             <form id="create-job-form" role="form" action="" class="" method="POST">
                 {% csrf_token %}
-                <br>
-                <div class="form-group row">
-                    <div class="col-md-12">
-                        <label>{% trans 'Select Data Provider(s):' %}</label>
-                        <div id="provider-selection"></div>
-                    </div>
-                </div>
-                <br>
                 <ul id="tabs" class="nav nav-pills">
                     <li id="create-tab" role="presentation" class="active"><a data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
                     <li id="formats-tab" role="presentation"><a data-toggle="tab" href="#formats">{% trans 'File Formats' %}</a></li>
@@ -30,10 +22,23 @@
                     <li id="upload-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#upload">{% trans 'Preset File' %}</a></li>
                     <li id="summary-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
                 </ul>
+                <div class="form-group row">
+                    <div class="col-md-12">
+                        &nbsp;
+                    </div>
+                </div>
+
                 <div class="tab-content">
                     <div id="create" class="tab-pane fade in active">
                         <div class="panel panel-default">
                             <div class="panel-body">
+                                <div class="form-group row">
+                                    <div class="col-md-12">
+                                        <label>{% trans 'Select Data Provider(s):' %}</label>
+                                        <div id="provider-selection"></div>
+                                    </div>
+                                </div>
+                                <br/>
                                 <div class="form-group row" id="form-group-name">
                                     <div class="col-md-12">
                                         <label class="control-label" for="name">{% trans 'Name' %}</label>
@@ -292,7 +297,7 @@
         <div id="gazetteer" class="col-md-7">
             <div class="input-group">
                 <span class="input-group-addon gazetteer"><span class="glyphicon glyphicon-search"></span></span>
-                <input id="nominatim" type="text" class="form-control typeahead" data-provide="typeahead" autocomplete="off" placeholder="{% trans 'Search for a place or enter xmin,ymin,xmax,ymax' %}" tabindex="4"/>
+                <input id="nominatim" type="text" class="form-control typeahead" data-provide="typeahead" autocomplete="off" placeholder="{% trans 'Search for a place by name' %}" tabindex="4"/>
             </div>
 
         </div>
