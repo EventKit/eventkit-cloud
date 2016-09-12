@@ -33,13 +33,14 @@ def validate_region(regions):
 
     Raises:
         ValidationError: if no regions are found.
-    """
+
     if len(regions) == 0:
         detail = OrderedDict()
         detail['id'] = _('invalid_region')
         detail['message'] = _('Job extent is not within a valid region.')
         raise serializers.ValidationError(detail)
     return regions[0]
+    """
 
 
 def validate_formats(data):
