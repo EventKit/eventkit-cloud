@@ -48,7 +48,6 @@ class ExportOSMTaskRunner(TaskRunner):
         Return:
             the ExportRun instance.
         """
-        run_uid = ''
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
@@ -141,7 +140,7 @@ class ExportOSMTaskRunner(TaskRunner):
             )
 
             format_tasks = group(
-                task.get('obj').si(run_uid=run_uid,
+                task.get('obj').si(run_uid=run.uid,
                                    stage_dir=stage_dir,
                                    job_name=job_name,
                                    task_uid=task.get('task_uid')) for task_name, task in
@@ -153,9 +152,7 @@ class ExportOSMTaskRunner(TaskRunner):
             This means that the finalize_task will always be called, and will update the
             overall run status.
             """
-
-            return chain(chain(initial_tasks, schema_tasks), format_tasks)
-
+            return chain(chain(initial_tasks | schema_tasks) | format_tasks)
         else:
             return False
 

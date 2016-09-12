@@ -6,7 +6,7 @@ from .models import ExportRun
 from .task_runners import ExportOSMTaskRunner
 from django.conf import settings
 from .export_tasks import FinalizeRunTask
-from celery import chord, group
+from celery import group, chain
 from datetime import datetime, timedelta
 import logging
 import os
@@ -44,9 +44,8 @@ class TaskFactory():
                     header_tasks.append(task_runner_tasks)
             if header_tasks:
                 finalize_task = FinalizeRunTask()
-                chord(header=group(*header_tasks),
-                      body=finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
-                ).apply_async(expires=datetime.now() + timedelta(days=1))
+                chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
+                      ).apply_async(expires=datetime.now() + timedelta(days=1))
             else:
                 return False
         else:

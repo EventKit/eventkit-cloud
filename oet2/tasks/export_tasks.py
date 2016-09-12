@@ -362,7 +362,10 @@ class FinalizeRunTask(Task):
         from oet2.tasks.models import ExportRun
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
-        tasks = run.tasks.all()
+        tasks = []
+        provider_tasks = run.provider_tasks.all()
+        for provider_task in provider_tasks:
+            tasks.extend(provider_task.tasks.all())
         # mark run as incomplete if any tasks fail
         for task in tasks:
             if task.status == 'FAILED':
