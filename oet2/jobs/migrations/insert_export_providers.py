@@ -30,11 +30,12 @@ class Migration(migrations.Migration):
             wms_type.supported_formats.add(export_format.pk)
         wms_type.save()
 
-        ExportProvider.objects.create(name='OpenStreetMap', export_provider_type=osm_type)
+        ExportProvider.objects.create(name='OpenStreetMap', slug='osm', export_provider_type=osm_type)
         ExportProvider.objects.create(name='Active Fires 1 Month',
-                                    url='http://neowms.sci.gsfc.nasa.gov/wms/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0',
-                                    layer='MOD14A1_M_FIRE',
-                                    export_provider_type=wms_type)
+                                      slug='fires1mo',
+                                      url='http://neowms.sci.gsfc.nasa.gov/wms/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0',
+                                      layer='MOD14A1_M_FIRE',
+                                      export_provider_type=wms_type)
 
     dependencies = [
         ('jobs', '0003_auto_20160825_1845'),

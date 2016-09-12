@@ -15,7 +15,6 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0007_alter_validators_add_error_messages'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('jobs', '0001_initial'),
     ]
@@ -73,6 +72,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(max_length=100, unique=True, verbose_name='Service Name')),
+                ('slug', oet2.jobs.models.LowerCaseCharField(max_length=10, unique=True, default='')),
                 ('url', oet2.jobs.models.LowerCaseCharField(blank=True, default='', max_length=1000, null=True, verbose_name='Service URL')),
                 ('layer', models.CharField(blank=True, max_length=100, null=True, verbose_name='Service Layer')),
                 ('type', oet2.jobs.models.LowerCaseCharField(choices=[('osm', 'OpenStreetMap'), ('wms', 'WMS'), ('wfs', 'WFS'), ('wmts', 'WMTS'), ('dg', 'Digital Globe')], default='wms', max_length=3, verbose_name='Service Type')),

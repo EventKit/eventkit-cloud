@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
+    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -54,18 +54,19 @@ class ExportTask(Task):
         # update the task
         finished = timezone.now()
         task = ExportTask.objects.get(celery_uid=task_id)
+        provider_task_name = task.export_provider_task.name
         task.finished_at = finished
         # get the output
         output_url = retval['result']
         stat = os.stat(output_url)
         size = stat.st_size / 1024 / 1024.00
         # construct the download_path
-        download_root = settings.EXPORT_DOWNLOAD_ROOT
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('/')
         parts = output_url.split('/')
         filename = parts[-1]
         run_uid = parts[-2]
-        run_dir = '{0}{1}'.format(download_root, run_uid)
-        download_path = '{0}{1}/{2}'.format(download_root, run_uid, filename)
+        run_dir = '{0}/{1}'.format(download_root, run_uid)
+        download_path = os.path.join(os.path.join(os.path.join(download_root, run_uid), provider_task_name), filename)
         try:
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir)
@@ -75,8 +76,8 @@ class ExportTask(Task):
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
-        download_media_root = settings.EXPORT_MEDIA_ROOT
-        download_url = '{0}{1}/{2}'.format(download_media_root, run_uid, filename)
+        download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('/')
+        download_url = '/'.join([download_media_root, run_uid, provider_task_name, filename])
         # save the task and task result
         result = ExportTaskResult(
             task=task,
@@ -308,6 +309,26 @@ class GeopackageExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in geopackage export, %s', str(e))
             raise Exception(e)
+
+
+class WMSExportTask(ExportTask):
+    """
+    Class defining geopackage export function.
+    """
+    name = 'WMS Export'
+
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkgfile = stage_dir + job_name + '.gpkg'
+        try:
+
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile)
+            out = w2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in wms export, %s', str(e))
+            raise Exception(e)
+
 
 class GeneratePresetTask(ExportTask):
     """

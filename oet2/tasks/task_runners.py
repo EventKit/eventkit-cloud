@@ -52,7 +52,7 @@ class ExportOSMTaskRunner(TaskRunner):
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
-        job_name = self.normalize_job_name(job.name)
+        job_name = normalize_job_name(job.name)
         # get the formats to export
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
@@ -156,13 +156,82 @@ class ExportOSMTaskRunner(TaskRunner):
         else:
             return False
 
-    def normalize_job_name(self, name):
-        # Remove all non-word characters
-        s = re.sub(r"[^\w\s]", '', name)
-        # Replace all whitespace with a single underscore
-        s = re.sub(r"\s+", '_', s)
-        return s.lower()
 
+class ExportWMSTaskRunner(TaskRunner):
+    """
+    Runs WMS Export Tasks
+    """
+    export_task_registry = settings.EXPORT_TASKS
+
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
+        """
+        Run export tasks.
+
+        Args:
+            provider_task_uid: the uid of the provider_task to run.
+
+        Return:
+            the ExportRun instance.
+        """
+        logger.debug('Running Job with id: {0}'.format(provider_task_uid))
+        # pull the provider_task from the database
+        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        job = run.job
+        job_name = normalize_job_name(job.name)
+        # get the formats to export
+        formats = [format.slug for format in provider_task.formats.all()]
+        export_tasks = {}
+        # build a list of celery tasks based on the export formats..
+        for format in formats:
+            try:
+                # see settings.EXPORT_TASKS for configuration
+                task_fq_name = self.export_task_registry[format]
+                # instantiate the required class.
+                parts = task_fq_name.split('.')
+                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+                module = importlib.import_module(module_path)
+                CeleryExportTask = getattr(module, class_name)
+                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
+            except KeyError as e:
+                logger.debug(e)
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
+
+        # run the tasks
+        if len(export_tasks) > 0:
+            bbox = job.overpass_extents
+
+            osm_tasks = {'conf': {'obj': OSMConfTask(), 'task_uid': None},
+                         'query': {'obj': OverpassQueryTask(), 'task_uid': None},
+                         'pbfconvert': {'obj': OSMToPBFConvertTask(), 'task_uid': None},
+                         'prep_schema': {'obj': OSMPrepSchemaTask(), 'task_uid': None}}
+            # check for transform and/or translate configurations
+            """
+            Not implemented for now.
+
+            transform = provider_task.configs.filter(config_type='TRANSFORM')
+            translate = provider_task.configs.filter(config_type='TRANSLATION')
+            """
+            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.slug)
+            # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
+            for task_type, task in osm_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                osm_tasks[task_type]['task_uid'] = export_task.uid
+            # save export(format) tasks to the db with 'PENDING' state, store task_uid for updating the task later.
+            for task_type, task in export_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                export_tasks[task_type]['task_uid'] = export_task.uid
+
+
+def normalize_job_name(name):
+    # Remove all non-word characters
+    s = re.sub(r"[^\w\s]", '', name)
+    # Replace all whitespace with a single underscore
+    s = re.sub(r"\s+", '_', s)
+    return s.lower()
 
 def create_export_task(task_name=None, export_provider_task=None):
     try:
