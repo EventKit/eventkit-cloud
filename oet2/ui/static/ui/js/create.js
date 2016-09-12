@@ -137,75 +137,76 @@ create.job = (function(){
         //     addRegionMask();
         //     addRegions();
 
-        // OL3 add the regions layer
-        regionsSource = new ol.source.Vector({
-            wrapX: false,
-            noWrap: true,
-        });
+        //*** COMMENTED OUT TO TAKE OUT RED HOT REGIONS OL3
+        // add the regions layer
+
+        // regionsSource = new ol.source.Vector({
+        //     wrapX: false,
+        //     noWrap: true,
+        // });
+        //
+        //
+        // regions = new ol.layer.Vector({
+        //         name: 'regions',
+        //         source: regionsSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [0,0,0,-0.7],
+        //                 //opacity: 0.8,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [215, 63, 63, 0.8],
+        //                 width: 3.5,
+        //             })
+        //         }),
+        //
+        //     })
+        // map.addLayer(regions);
+        //
+        // // add the region mask layer
+        // maskSource = new ol.source.Vector();
+        //     mask = new ol.layer.Vector({
+        //         name: 'mask',
+        //         source: maskSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [255,255,255,0.0]
+        //                 //opacity: 0.7,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [255,255,255,0.2],
+        //                 width: .1,
+        //                 //opacity: 0.2,
+        //             }),
+        //         }),
+        //     });
+        //
+        // map.addLayer(mask);
 
 
-        regions = new ol.layer.Vector({
-                name: 'regions',
-                source: regionsSource,
-                style: new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: [0,0,0,-0.7],
-                        //opacity: 0.8,
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: [215, 63, 63, 0.8],
-                        width: 3.5,
-                    })
-                }),
+        // // get the regions from the regions api
+        // $.getJSON(Config.REGIONS_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     regionsSource.addFeatures(features);
+        //     var extent = regionsSource.getExtent();
+        //     map.getView().fit(extent, map.getSize());
+        // });
 
-            })
-        map.addLayer(regions);
 
-        // add the region mask layer
-        maskSource = new ol.source.Vector();
-            mask = new ol.layer.Vector({
-                name: 'mask',
-                source: maskSource,
-                style: new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: [255,255,255,0.0]
-                        //opacity: 0.7,
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: [255,255,255,0.2],
-                        width: .1,
-                        //opacity: 0.2,
-                    }),
-                }),
-            });
-
-        map.addLayer(mask);
-
-        //add region and mask features
-        //addRegionMask();
-        // get the regions from the regions api
-        $.getJSON(Config.REGIONS_URL, function(data){
-            var geojson = new ol.format.GeoJSON();
-            var features = geojson.readFeatures(data, {
-                'featureProjection': 'EPSG:3857',
-                'dataProjection': 'EPSG:4326'
-            });
-            regionsSource.addFeatures(features);
-            var extent = regionsSource.getExtent();
-            map.getView().fit(extent, map.getSize());
-        });
-
-        //addRegions();
-        $.getJSON(Config.REGION_MASK_URL, function(data){
-            var geojson = new ol.format.GeoJSON();
-            var features = geojson.readFeatures(data, {
-                'featureProjection': 'EPSG:3857',
-                'dataProjection': 'EPSG:4326'
-            });
-            maskSource.addFeatures(features);
-            //var extent = maskSource.getExtent();
-            //map.getView().fit(extent, map.getSize())
-        });
+        // $.getJSON(Config.REGION_MASK_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     maskSource.addFeatures(features);
+        //     //var extent = maskSource.getExtent();
+        //     //map.getView().fit(extent, map.getSize())
+        // });
 
         buildProviderFormats();
 
@@ -429,22 +430,6 @@ create.job = (function(){
     //     });
     // }
 
-    /*
-     * Add the region mask to the map.
-     * Calls into region mask api.
-     */
-    // function addRegionMask(){
-    //     // get the regions from the regions api
-    //     $.getJSON(Config.REGION_MASK_URL, function(data){
-    //         var geojson = new OpenLayers.Format.GeoJSON({
-    //                 'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-    //                 'externalProjection': new OpenLayers.Projection("EPSG:4326")
-    //         });
-    //         var features = geojson.read(data);
-    //         mask.addFeatures(features);
-    //     });
-    // }
-
     function zoomtoextent() {
         var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
@@ -493,8 +478,6 @@ create.job = (function(){
             initForm();
         });
     }
-
-    
 
 
     /*
@@ -552,60 +535,59 @@ create.job = (function(){
             return false;
         }
 
-        var regions, region;
-        map.getLayers().forEach(function (l) {
-            if (l.get('name') == 'regions')
-                regions = l;
-        })
-
-        var valid_region = false;
-
-        // check that we're within a HOT region.
-        var SW = [bounds[0], bounds[1]];
-        var NW = [bounds[0], bounds[3]];
-        var NE = [bounds[2], bounds[3]];
-        var SE = [bounds[2], bounds[1]];
-        var boundary_coords = [SW, NW, NE, SE]
-
-        var checkcount = 0;
-        for(var i=0; i<regions.getSource().getFeatures().length; i++) {
-            for (var j=0; j<boundary_coords.length; j++) {
-                featuresAtCoord = regions.getSource().getFeaturesAtCoordinate(boundary_coords[j]);
-                if (featuresAtCoord.length > 0 && featuresAtCoord[0] == regions.getSource().getFeatures()[i]) {
-                    checkcount++;
-                }
-            }
-            if (checkcount !=0) {
-                break;
-            }
-        }
-        if (checkcount === 4) {
-            valid_region = true;
-        }
+        //*****COMMENTING OUT TO GET RID OF RED HOT REGIONS
+        // var regions, region;
+        // map.getLayers().forEach(function (l) {
+        //     if (l.get('name') == 'regions')
+        //         regions = l;
+        // })
+        //
+        // var valid_region = false;
+        //
+        // // check that we're within a HOT region.
+        // var SW = [bounds[0], bounds[1]];
+        // var NW = [bounds[0], bounds[3]];
+        // var NE = [bounds[2], bounds[3]];
+        // var SE = [bounds[2], bounds[1]];
+        // var boundary_coords = [SW, NW, NE, SE]
+        //
+        // var checkcount = 0;
+        // for(var i=0; i<regions.getSource().getFeatures().length; i++) {
+        //     for (var j=0; j<boundary_coords.length; j++) {
+        //         featuresAtCoord = regions.getSource().getFeaturesAtCoordinate(boundary_coords[j]);
+        //         if (featuresAtCoord.length > 0 && featuresAtCoord[0] == regions.getSource().getFeatures()[i]) {
+        //             checkcount++;
+        //         }
+        //     }
+        //     if (checkcount !=0) {
+        //         break;
+        //     }
+        // }
+        // if (checkcount === 4) {
+        //     valid_region = true;
+        // }
        
         /*
          * calculate the extent area and convert to sq kilometers
          * converts to lat long which will be proj set on form if extents are valid.
          */
-        //bounds.transform('EPSG:3857', 'EPSG:4326')
-        //bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+
         // trim bounds to 6 decimal places before calculating geodesic area
         var left = bounds[0].toFixed(6);
         var bottom = bounds[1].toFixed(6);
         var right = bounds[2].toFixed(6);
         var top = bounds[3].toFixed(6);
 
-        //var extent = ol.geom.Polygon.fromExtent(bounds);
-        
-        bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
-        console.log(bounds_trunc.getArea());
+        var bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
+        //console.log(bounds_trunc.getArea());
         var area = bounds_trunc.getArea() / 1000000;
-        //var area = geodesicArea(bounds_trunc) / 1000000; // sq km
-        
+
         // format the area and max bounds for display..
         var area_str = numeral(area).format('0 0');
         var max_bounds_str = numeral(max_bounds_area).format('0 0');
 
+        //NO HOT REGION SO SET VALID TO TRUE
+        var valid_region = true;
         if (!valid_region) {
            // invalid region
            validateBBox(); // trigger validation on extents

@@ -549,10 +549,10 @@ class JobSerializer(serializers.Serializer):
         extents = validators.validate_bbox_params(data)
         the_geom = validators.validate_bbox(extents, user=user)
         data['the_geom'] = the_geom
-        regions = Region.objects.filter(the_geom__intersects=the_geom).intersection(the_geom, field_name='the_geom')
+        # regions = Region.objects.filter(the_geom__intersects=the_geom).intersection(the_geom, field_name='the_geom')
         # sort the returned regions by area of intersection, largest first.
-        sorted_regions = sorted(regions.all(), key=lambda a: a.intersection.area, reverse=True) 
-        data['region'] = validators.validate_region(sorted_regions)
+        # sorted_regions = sorted(regions.all(), key=lambda a: a.intersection.area, reverse=True)
+        # data['region'] = validators.validate_region(sorted_regions)
         # remove unwanted fields, these are pulled from the request in the view if the serializer is valid
         data.pop('xmin'), data.pop('ymin'), data.pop('xmax'), data.pop('ymax'), data.pop('provider_tasks')
         return data
