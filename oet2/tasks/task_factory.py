@@ -19,11 +19,11 @@ class TaskFactory():
 
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
-        self.type_task_map = {'osm': ExportOSMTaskRunner, 'wms': ExportWMSTaskRunner}
+        self.type_task_map = {'osm': ExportOSMTaskRunner}#, 'wms': ExportWMSTaskRunner}
         # setup the staging directory
         self.run = self.create_run()
         if self.run:
-            self.stage_dir = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip(r'\/'),str(self.run.uid)))
+            self.stage_dir = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)))
             os.makedirs(self.stage_dir, 6600)
             self.parse_tasks()
         else:
@@ -37,6 +37,8 @@ class TaskFactory():
                 # Create an instance of a task runner based on the type name
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
+                    print("CREATING DIR {}".format(os.path.join(self.stage_dir, provider_task.provider.slug)))
+                    os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
                     task_runner_tasks = task_runner.run_task(user=self.job.user,
                                                              provider_task_uid=provider_task.uid,
                                                              run=self.run,
