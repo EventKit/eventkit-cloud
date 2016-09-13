@@ -12,6 +12,7 @@ import logging
 import sys
 from django.db import IntegrityError
 from django.conf import settings
+from billiard import Process
 
 logger = logging.getLogger(__name__)
 
@@ -40,23 +41,17 @@ class WMSToGeopackage():
         Convert sqlite to gpkg.
         """
         conf_dict = create_conf_from_wms(self.wms_url)
-        tileset = create_tileset_from_conf_dict(conf_dict, self.name, bbox=self.bbox)
+        tileset = create_tileset_from_conf_dict(conf_dict, self.name, bbox=self.bbox, gpkg_file=self.gpkgfile)
         mapproxy_conf, seed_conf = generate_confs(tileset)
         tasks = seed_conf.seeds(['tileset_seed'])
-        seeder.seed(tasks=tasks)
+        try:
+            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks":tasks})
+            p.start()
+            p.join()
+        except Exception as e:
+            logger.error("wms failed.")
+            raise e
         return self.gpkgfile
-
-
-def wait_for_seed(tileset=None, interval=5):
-    tileset.seed()
-    if not tileset:
-        return False
-    not_ready = True
-    while not_ready:
-        sleep(interval)
-        if get_status(tileset).get('current').get('status') == 'ready':
-            not_ready = False
-    return True
 
 
 def create_conf_from_wms(wms_url):
@@ -96,9 +91,8 @@ def create_tileset_from_conf_dict(conf_dict, name, bbox=None, gpkg_file=None):
                 cache_type = layer_source_data.get('cache').get('type')
                 directory_layout = layer_source_data.get('cache').get('directory_layout')
                 directory = layer_source_data.get('cache').get('directory')
-                filename = layer_source_data.get('cache').get('filename')
+                filename = filename or layer_source_data.get('cache').get('filename')
                 table_name = layer_source_data.get('cache').get('table_name')
-
                 if layer_source_data.get('cache').get('grids'):
                     for grid in layer_source_data.get('cache').get('grids'):
                         if grid.get('srs').lower() == 'epsg:4326':

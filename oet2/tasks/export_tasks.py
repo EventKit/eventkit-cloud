@@ -397,10 +397,10 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError as e:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        # try:
+        #     shutil.rmtree(stage_dir)
+        # except IOError as e:
+        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
