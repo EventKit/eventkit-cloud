@@ -58,6 +58,8 @@ class OSMConfig(object):
         self.config.set('multipolygons', 'attributes', ','.join(self.categories['polygons']))
         # write the out the config
         config_file = stage_dir + self.job_name + '.ini'
+        if not os.path.exists(stage_dir):
+            os.mkdir(stage_dir)
         try:
             with open(config_file, 'wb') as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
