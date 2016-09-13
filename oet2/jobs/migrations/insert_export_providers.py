@@ -31,10 +31,10 @@ class Migration(migrations.Migration):
         wms_type.save()
 
         ExportProvider.objects.create(name='OpenStreetMap', slug='osm', export_provider_type=osm_type)
-        ExportProvider.objects.create(name='Active Fires 1 Month',
-                                      slug='fires1mo',
-                                      url='http://neowms.sci.gsfc.nasa.gov/wms/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0',
-                                      layer='MOD14A1_M_FIRE',
+        ExportProvider.objects.create(name='USGS-Shaded',
+                                      slug='usgs-shade',
+                                      url='https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WMSServer?request=GetCapabilities&service=WMS',
+                                      layer='0',
                                       export_provider_type=wms_type)
 
     dependencies = [
