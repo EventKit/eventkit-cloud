@@ -73,7 +73,10 @@ def create_tileset_from_conf_dict(conf_dict, name, bbox=None, gpkg_file=None):
 
     name = name
     created_by = "Eventkit Service"
-    cache_type = 'file'
+    if gpkg_file:
+        cache_type = 'geopackage'
+    else:
+        cache_type = 'file'
     directory_layout = 'tms'
     directory = getattr(settings, 'CACHE_DIR', '/cache')
     filename = gpkg_file
@@ -89,10 +92,7 @@ def create_tileset_from_conf_dict(conf_dict, name, bbox=None, gpkg_file=None):
         for source in layer.get('sources'):
             layer_source_data = conf_dict.get('sources').get(source) or conf_dict.get('caches').get(source)
             if layer_source_data.get('cache'):
-                if gpkg_file:
-                    cache_type = 'geopackage'
-                else:
-                    cache_type = layer_source_data.get('cache').get('type')
+                cache_type = layer_source_data.get('cache').get('type')
                 directory_layout = layer_source_data.get('cache').get('directory_layout')
                 directory = layer_source_data.get('cache').get('directory')
                 filename = filename or layer_source_data.get('cache').get('filename')
