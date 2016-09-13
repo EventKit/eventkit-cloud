@@ -64,10 +64,10 @@ EXPORT_MAX_RUNS = 5
 
 if os.environ.get('VCAP_APPLICATION'):
     env = json.loads(os.environ.get('VCAP_APPLICATION'))
-    #HOSTNAME = env['application_uris'][0]
-    HOSTNAME = "eventkit.cfapps.io"
-    SITE_NAME = HOSTNAME
-    SITE_URL = "https://{0}".format(SITE_NAME)
+    HOSTNAME = os.getenv('HOSTNAME', env['application_uris'][0])
+    # HOSTNAME = "eventkit.cfapps.io"
+    SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
+    SITE_URL = os.getenv('SITE_URL', "https://{0}".format(SITE_NAME))
 else:
     HOSTNAME = os.environ.get('HOSTNAME', 'cloud.eventkit.dev')
     SITE_NAME = os.environ.get('SITE_NAME', 'cloud.eventkit.dev')

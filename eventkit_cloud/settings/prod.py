@@ -8,8 +8,10 @@ import json
 
 # Set debug to True for development
 DEBUG = os.environ.get('DEBUG', False)
-if not os.environ.get('VCAP_SERVICES'):
-    ALLOWED_HOSTS = ['cloud.eventkit.dev']
+
+if not DEBUG:
+    ALLOWED_HOSTS = [HOSTNAME]
+
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
