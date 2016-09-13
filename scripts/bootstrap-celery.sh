@@ -85,3 +85,7 @@ sudo update-rc.d supervisor enable
 sudo chown -R eventkit:eventkit /var/log/eventkit
 
 rm -rf /var/lib/eventkit/tmp
+
+# restart supervisord
+sudo unlink /run/supervisor.sock
+sudo /etc/init.d/supervisor restart
