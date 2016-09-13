@@ -1,7 +1,11 @@
 from __future__ import absolute_import
 
 from djmp.models import Tileset
+from djmp.helpers import generate_confs
+from dateutil import parser
+from time import sleep
 from mapproxy.script.conf.app import config_command
+from mapproxy.seed import seeder
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
@@ -17,7 +21,7 @@ class WMSToGeopackage():
     Convert a WMS services to a geopackage.
     """
 
-    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, debug=None):
+    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, debug=None, name=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -28,18 +32,31 @@ class WMSToGeopackage():
         self.gpkgfile = gpkgfile
         self.bbox = bbox
         self.wms_url = wms_url
-        if not self.gpkgfile:
-            # create gpkg path from sqlite path.
-            root = self.sqlite.split('.')[0]
-            self.gpkgfile = root + '.gkpg'
         self.debug = debug
+        self.name = name
 
     def convert(self, ):
         """
         Convert sqlite to gpkg.
         """
         conf_dict = create_conf_from_wms(self.wms_url)
-        tileset = create_tileset_from_conf_dict(conf_dict)
+        tileset = create_tileset_from_conf_dict(conf_dict, self.name, bbox=self.bbox)
+        mapproxy_conf, seed_conf = generate_confs(tileset)
+        tasks = seed_conf.seeds(['tileset_seed'])
+        seeder.seed(tasks=tasks)
+        return self.gpkgfile
+
+
+def wait_for_seed(tileset=None, interval=5):
+    tileset.seed()
+    if not tileset:
+        return False
+    not_ready = True
+    while not_ready:
+        sleep(interval)
+        if get_status(tileset).get('current').get('status') == 'ready':
+            not_ready = False
+    return True
 
 
 def create_conf_from_wms(wms_url):
@@ -55,14 +72,15 @@ def create_conf_from_wms(wms_url):
         logger.error(exc)
     return conf_dict
 
-def create_tileset_from_conf_dict(conf_dict, name, bbox=None):
+
+def create_tileset_from_conf_dict(conf_dict, name, bbox=None, gpkg_file=None):
 
     name = name
     created_by = "Eventkit Service"
     cache_type = 'file'
     directory_layout = 'tms'
     directory = getattr(settings, 'CACHE_DIR', '/cache')
-    filename = None
+    filename = gpkg_file
     table_name = None
     server_url = None
     source_type = 'wms'
@@ -70,8 +88,6 @@ def create_tileset_from_conf_dict(conf_dict, name, bbox=None):
     layer_zoom_stop = 6
 
     layers = get_layers(conf_dict.get('layers'))
-    print(str(layers))
-    sys.stdout.flush()
     for layer in layers:
         layer_name = layer.get('name')
         for source in layer.get('sources'):
@@ -104,25 +120,25 @@ def create_tileset_from_conf_dict(conf_dict, name, bbox=None):
             bbox = [-180, -89, 180, 89]
         try:
             print("Creating tileset for name: {}".format(name))
-            return Tileset.objects.get_or_create(name=name,
-                                          created_by=created_by,
-                                          layer_name=layer_name,
-                                          cache_type=cache_type,
-                                          directory_layout=directory_layout,
-                                          directory=directory,
-                                          filename=filename,
-                                          table_name=table_name,
-                                          bbox_x0=bbox[0],
-                                          bbox_y0=bbox[1],
-                                          bbox_x1=bbox[2],
-                                          bbox_y1=bbox[3],
-                                          server_url=server_url,
-                                          source_type=source_type,
-                                          mapfile=mapfile,
-                                          layer_zoom_stop=layer_zoom_stop)
+            tileset, created = Tileset.objects.get_or_create(name=name,
+                                                             created_by=created_by,
+                                                             layer_name=layer_name,
+                                                             cache_type=cache_type,
+                                                             directory_layout=directory_layout,
+                                                             directory=directory,
+                                                             filename=filename,
+                                                             table_name=table_name,
+                                                             bbox_x0=bbox[0],
+                                                             bbox_y0=bbox[1],
+                                                             bbox_x1=bbox[2],
+                                                             bbox_y1=bbox[3],
+                                                             server_url=server_url,
+                                                             source_type=source_type,
+                                                             mapfile=mapfile,
+                                                             layer_zoom_stop=layer_zoom_stop)
+            return tileset
         except IntegrityError:
             continue
-    sys.stdout.flush()
 
 def get_layers(layers):
     layer_list = []

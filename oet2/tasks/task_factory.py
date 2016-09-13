@@ -19,7 +19,7 @@ class TaskFactory():
 
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
-        self.type_task_map = {'osm': ExportOSMTaskRunner}#, 'wms': ExportWMSTaskRunner}
+        self.type_task_map = {'osm': ExportOSMTaskRunner, 'wms': ExportWMSTaskRunner}
         # setup the staging directory
         self.run = self.create_run()
         if self.run:

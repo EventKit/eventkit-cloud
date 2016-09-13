@@ -3,6 +3,7 @@ import importlib
 import logging
 import os
 import re
+import json
 
 from django.conf import settings
 from django.db import DatabaseError
@@ -13,7 +14,7 @@ from oet2.jobs.models import ProviderTask
 from oet2.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
-                           OSMToPBFConvertTask, OverpassQueryTask
+                           OSMToPBFConvertTask, OverpassQueryTask, WMSExportTask
                            )
 
 # Get an instance of a logger
@@ -200,30 +201,20 @@ class ExportWMSTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            bbox = job.overpass_extents
+            bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            osm_tasks = {'conf': {'obj': OSMConfTask(), 'task_uid': None},
-                         'query': {'obj': OverpassQueryTask(), 'task_uid': None},
-                         'pbfconvert': {'obj': OSMToPBFConvertTask(), 'task_uid': None},
-                         'prep_schema': {'obj': OSMPrepSchemaTask(), 'task_uid': None}}
-            # check for transform and/or translate configurations
-            """
-            Not implemented for now.
+            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
-            transform = provider_task.configs.filter(config_type='TRANSFORM')
-            translate = provider_task.configs.filter(config_type='TRANSLATION')
-            """
-            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.slug)
-            # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
-            for task_type, task in osm_tasks.iteritems():
-                export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task)
-                osm_tasks[task_type]['task_uid'] = export_task.uid
-            # save export(format) tasks to the db with 'PENDING' state, store task_uid for updating the task later.
-            for task_type, task in export_tasks.iteritems():
-                export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task)
-                export_tasks[task_type]['task_uid'] = export_task.uid
+            wms_task = WMSExportTask()
+            export_task = create_export_task(task_name=wms_task.name,
+                                             export_provider_task=export_provider_task)
+
+            return chain(wms_task.si(stage_dir=stage_dir,
+                                     job_name=job_name,
+                                     task_uid=export_task.uid,
+                                     name=provider_task.provider.slug,
+                                     bbox=bbox,
+                                     wms_url=provider_task.provider.url))
 
 
 def normalize_job_name(name):

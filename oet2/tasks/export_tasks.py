@@ -321,12 +321,11 @@ class WMSExportTask(ExportTask):
     """
     name = 'WMS Export'
 
-    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None, bbox=None, wms_url=None, name=None):
         self.update_task_state(task_uid=task_uid)
-        gpkgfile = stage_dir + job_name + '.gpkg'
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-
-            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile)
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
