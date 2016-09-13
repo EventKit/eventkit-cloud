@@ -46,6 +46,7 @@ sudo apt-get -y install zip unzip
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
+git checkout s3_integration_mvv # switch to this experimental branch (temporary for s3 workers)
 cd eventkit-cloud
 cp -R * /var/lib/eventkit
 cd /var/lib/eventkit
@@ -70,6 +71,13 @@ sudo chmod 755 /home
 sudo chmod 755 /var/lib/eventkit
 sudo chmod 755 /var/lib/eventkit
 sudo chmod 775 /var/log/eventkit
+
+# make a staging directory (the prod webapp asssumes workers are on on cloudfoundry so we mimic the same path)
+# TODO: symlink?
+sudo mkdir /home/vcap
+sudo mkdir /home/vcap/staging
+sudo chmod 775 /home/vcap/staging
+
 sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
 
 sudo service supervisor restart
