@@ -233,13 +233,15 @@ exports.detail = (function(){
                     $('#submitted_runs > .panel-group').empty();
                     $('#submitted_runs').css('display', 'none');
                 }
-                $.each(data, function(index, run){
-                    if (run.status == 'SUBMITTED') { return; } // ignore submitted runs
+                $.each(data, function(index, run) {
+                    if (run.status == 'SUBMITTED') {
+                        return;
+                    } // ignore submitted runs
                     var started = moment(run.started_at).format('h:mm:ss a, MMMM Do YYYY');
                     var finished = moment(run.finished_at).format('h:mm:ss a, MMMM Do YYYY');
                     var duration = moment.duration(run.duration).humanize();
                     var status_class = '';
-                    switch (run.status){
+                    switch (run.status) {
                         case 'COMPLETED':
                             status_class = 'alert alert-success';
                             break;
@@ -253,72 +255,80 @@ exports.detail = (function(){
                             break;
                     }
                     var expanded = !exports.detail.timer && index === 0 ? 'in' : '';
-                    var context = { 'run_uid': run.uid, 'status': run.status, 'user': run.user,
-                                    'started': started, 'finished': finished,
-                                    'duration': duration,'status_class': status_class,
-                                    'expanded': expanded};
+                    var context = {
+                        'run_uid': run.uid, 'status': run.status, 'user': run.user,
+                        'started': started, 'finished': finished,
+                        'duration': duration, 'status_class': status_class,
+                        'expanded': expanded
+                    };
                     var template = run.status == 'COMPLETED' || run.status == 'INCOMPLETE' ? getCompletedRunTemplate() : getFailedRunTemplate();
                     var html = template(context);
                     $runPanel.append(html);
-
-                    // add task info
-                    $taskDiv = $runPanel.find('div#' + run.uid).find('#tasks').find('table');
-                    var tasks = run.tasks;
-                    $.each(tasks, function(i, task){
-                        var errors = task.errors;
-                        var result = task.result;
-                        var status = task.status;
-                        var duration = numeral(task.duration).format("HH:mm:ss.SSS");
-                        switch (task.name) {
-                            case 'KML Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'OSM2PBF':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'Default Shapefile Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'SQLITE Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'Thematic Shapefile Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'Geopackage Export':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Geopackage Export') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                            case 'Generate Preset':
-                                if (status === 'SUCCESS') {
-                                    $taskDiv.append('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('Custom JOSM Preset (XML)') + '</a></td><td>' + duration + '</td><td>' +
-                                        result.size + '</td></tr>');
-                                }
-                                break;
-                        }
-                        if (errors.length > 0) {
-                            $exceptions = $('tr#exceptions-' + run.uid);
-                            $exceptions.css('display', 'table-row');
-                            $errorsDiv = $runPanel.find('div#' + run.uid).find('#errors').find('table');
-                            $errorsDiv.append('<tr><td>' + task.name + '</td><td>' + task.errors[0].exception + '</td></tr>');
-                        }
+                    // add data provider info
+                    $providersDiv = $('div#' + run.uid).find('#providers').find('table');
+                    var providers = run.provider_tasks;
+                    $.each(providers, function (i, provider) {
+                        var name = provider.name;
+                        $providersDiv.append('<tr id="' + provider.uid + '"><td>' + name + '</td></tr>');
+                        // add task info
+                        $taskDiv = $('div#' + run.uid).find('#tasks').find('table');
+                        var tasks = provider.tasks;
+                        $.each(tasks, function (i, task) {
+                            var errors = task.errors;
+                            var result = task.result;
+                            var status = task.status;
+                            var duration = numeral(task.duration).format("HH:mm:ss.SSS");
+                            switch (task.name) {
+                                case 'KML Export':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'OSM2PBF':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'Default Shapefile Export':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'SQLITE Export':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'Thematic Shapefile Export':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'Geopackage Export':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Geopackage Export') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                                case 'Generate Preset':
+                                    if (status === 'SUCCESS') {
+                                        $taskDiv.append('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('Custom JOSM Preset (XML)') + '</a></td><td>' + duration + '</td><td>' +
+                                            result.size + '</td></tr>');
+                                    }
+                                    break;
+                            }
+                            if (errors.length > 0) {
+                                $exceptions = $('tr#exceptions-' + run.uid);
+                                $exceptions.css('display', 'table-row');
+                                $errorsDiv = $runPanel.find('div#' + run.uid).find('#errors').find('table');
+                                $errorsDiv.append('<tr><td>' + task.name + '</td><td>' + task.errors[0].exception + '</td></tr>');
+                            }
+                        });
                     });
                 });
             }
@@ -350,9 +360,14 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Started') + ' :</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Finished') + ':</strong></td><td><div id="finished">{{ finished }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
+                                                   <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
+                                                        <div id="providers"> \
+                                                            <table id="providers" width="100%"> \
+                                                            </table> \
+                                                        </div> \
                                                    <tr id="downloads-{{ run_uid }}"><td><strong>' + gettext('Download') + ':</strong></td><td> \
                                                         <div id="tasks"> \
-                                                            <table class="table table-condensed" width="100%"> \
+                                                            <table id="tasks" class="table table-condensed" width="100%"> \
                                                             <thead><th>' + gettext('File') + '</th><th>' + gettext('Duration') + '</th><th>' + gettext('Size') + '</th></thead> \
                                                             </table> \
                                                         </div> \

@@ -15,7 +15,6 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0007_alter_validators_add_error_messages'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('jobs', '0001_initial'),
     ]

@@ -1280,7 +1280,7 @@ create.job = (function(){
                 form_data["provider_tasks"] = provider_tasks;
                 form_data["formats"] = formats;
                 delete form_data["providers"]
-                //delete form_data["formats"]
+                delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
