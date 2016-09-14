@@ -4,3 +4,4 @@
 .vagrant
 ubuntu-xenial-core-cloudimg-amd64-root.tar.gz
 .Dockerfile_eventkit.swp
+manifest.yml
