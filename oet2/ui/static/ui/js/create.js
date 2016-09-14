@@ -668,10 +668,10 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 4);
                 }
                 if (index == 2 || index == 3) {
-                    $('li.next').css('display', 'block');
+                    $('th.next').css('display', 'block');
                 }
                 else {
-                    $('li.next').css('display', 'none');
+                    $('th.next').css('display', 'none');
                 }
             },
             onNext: function(tab, navigation, index){
