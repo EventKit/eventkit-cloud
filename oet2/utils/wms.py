@@ -116,6 +116,7 @@ def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
                         'minutes': 0
                     },
                     'levels': {
+                        'to': level_to or 10,
                         'from': level_from or 0
                     },
                     'caches': ['cache']
