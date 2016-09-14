@@ -87,6 +87,8 @@ sudo chown -R eventkit:eventkit /var/log/eventkit
 
 rm -rf /var/lib/eventkit/tmp
 
+sudo apt-get install -y inotify-tools
+
 # restart supervisord
 sudo unlink /run/supervisor.sock
 sudo /etc/init.d/supervisor restart
