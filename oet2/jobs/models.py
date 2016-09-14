@@ -129,7 +129,7 @@ class ExportProvider(TimeStampedModelMixin):
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
-    slug = LowerCaseCharField(max_length=10, unique=True, default='')
+    slug = LowerCaseCharField(max_length=20, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
