@@ -249,10 +249,33 @@ span#submit-spinner i {
 }
 
 #create-job-wizard ul.nav-pills {
-    font-size: medium !important;
-    float: left !important;
+    font-size: medium ;
+    float: left ;
     font-size: small;
     font-weight: 500;
+    border-radius: 5px !important;
+    background-color: #ebebeb !important;
+    border: 1px solid #d6d6d6 !important;
+    position: relative !important;
+    min-height: 50px !important;
+    margin-bottom: 20px !important;
+    float: left !important;
+}
+#create-job-wizard ul.nav-pills > li {
+    display: inline !important;
+}
+
+#create-job-wizard ul.nav-pills > li > a {
+    font-family: sans-serif !important;
+    color: #337ab7 !important;
+    text-decoration:none !important;
+    margin-left:20px !important;
+    font-size:18px !important;
+    position: relative !important;
+    top: 1px;
+}
+#create-job-wizard ul.nav-pills > li > a:hover {
+    text-decoration:underline !important;
 }
 
 #create-job-wizard {

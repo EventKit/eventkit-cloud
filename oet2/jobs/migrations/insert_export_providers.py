@@ -30,9 +30,9 @@ class Migration(migrations.Migration):
             wms_type.supported_formats.add(export_format.pk)
         wms_type.save()
 
-        ExportProvider.objects.create(name='OpenStreetMap Data', export_provider_type=osm_type)
-        ExportProvider.objects.create(name='OpenStreetMap Tiles', export_provider_type=osm_type)
-        ExportProvider.objects.create(name='DigitalGlobe Satellite Imagery (foundation mosaic)', export_provider_type=wms_type)
+        ExportProvider.objects.create(name='OpenStreetMap Data', slug= 'osm_vector', export_provider_type=osm_type)
+        ExportProvider.objects.create(name='OpenStreetMap Tiles', slug='osm_raster', export_provider_type=osm_type)
+        ExportProvider.objects.create(name='DigitalGlobe Satellite Imagery (foundation mosaic)', slug='DG_found', export_provider_type=wms_type)
 
     dependencies = [
         ('jobs', '0003_auto_20160825_1845'),
