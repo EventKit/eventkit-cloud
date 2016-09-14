@@ -27,7 +27,7 @@ class WMSToGeopackage():
     Convert a WMS services to a geopackage.
     """
 
-    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, debug=None, name=None):
+    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -40,6 +40,9 @@ class WMSToGeopackage():
         self.wms_url = wms_url
         self.debug = debug
         self.name = name
+        self.level_from = level_from
+        self.level_to = level_to
+        self.layer = layer
 
     def convert(self, ):
         """
@@ -47,26 +50,37 @@ class WMSToGeopackage():
         """
         conf_dict = create_conf_from_wms(self.wms_url)
         sources = []
-        for source in conf_dict.get('sources'):
-            sources.append(source)
+        # for source in conf_dict.get('sources'):
+        #     sources.append(source)
+        conf_dict['caches'] = get_cache_template("{}_wms".format(self.layer), self.gpkgfile)
 
+
+
+        # Add autoconfiguration to base_config
         mapproxy_config = base_config()
-
-        # Add autoconfiguration
         load_config(mapproxy_config, config_dict=conf_dict)
 
+        logger.error('CONF:')
+        logger.error('{}'.format(conf_dict))
         errors, informal_only = validate_options(mapproxy_config)
         if not informal_only:
-            raise ConfigurationError('invalid configuration - {}'.format(', '.join(errors)))
+            raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
 
+        #Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
-        seed_dict = get_seed_template
+        logger.error('SEED:')
+        logger.error('{}'.format(conf_dict))
+        seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
         errors, informal_only = validate_seed_conf(seed_dict)
         if not informal_only:
-            raise SeedConfigurationError('invalid seed configuration - {}'.format(', '.join(errors)))
-        seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
+            raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
 
+        # Create a seed configuration object
+        seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
+        logger.error("Beginning seeding to {}".format(self.gpkgfile))
+
+        # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
             p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed'])})
             p.start()
@@ -87,28 +101,27 @@ def get_cache_template(sources, geopackage):
             "grids": ["GLOBAL_WEBMERCATOR"]
         }}
 
-def get_seed_template(bbox=[-180,-89,180,89], level_from=0, level_to=12):
-    {
-        'coverages': {
-            'geom': {
-                'srs': 'EPSG:4326',
-                'bbox': bbox
-            }
-        },
-        'seeds': {
-            'seed': {
-                'coverages': ['geom'],
-                'refresh_before': {
-                    'minutes': 0
-                },
-                'levels': {
-                    'to': level_to,
-                    'from': level_from
-                },
-                'caches': ['cache']
+def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
+    return {
+            'coverages': {
+                'geom': {
+                    'srs': 'EPSG:4326',
+                    'bbox': bbox
+                }
+            },
+            'seeds': {
+                'seed': {
+                    'coverages': ['geom'],
+                    'refresh_before': {
+                        'minutes': 0
+                    },
+                    'levels': {
+                        'from': level_from or 0
+                    },
+                    'caches': ['cache']
+                }
             }
         }
-    }
 
 
 def create_conf_from_wms(wms_url):
