@@ -90,7 +90,6 @@ class WMSToGeopackage():
             raise e
         return self.gpkgfile
 
-
 def get_cache_template(sources, geopackage):
     return {'cache': {
             "sources": sources,
@@ -137,5 +136,3 @@ def create_conf_from_wms(wms_url):
     except yaml.YAMLError as exc:
         logger.error(exc)
     return conf_dict
-
-

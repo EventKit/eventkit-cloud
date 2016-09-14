@@ -2,6 +2,32 @@
 {% load staticfiles %}
 {% load i18n %}
 {% block css %}
+<!--style>
+    .navbar-custom > ul {
+        border-radius: 5px !important;
+        background-color: #ebebeb !important;
+        border: 1px solid #d6d6d6 !important;
+        position: relative !important;
+        min-height: 50px !important;
+        margin-bottom: 20px !important;
+        float: left !important;
+    }
+
+    .navbar-custom > li {
+        display: inline !important;
+    }
+    .navbar-custom > li > a {
+        font-family: sans-serif !important;
+        color: #337ab7 !important;
+        text-decoration:none !important;
+        margin-left:20px !important;
+        font-size:18px !important;
+        position: relative !important; top: 14px !important;
+    }
+    .navbar-custom > li > a:hover {
+        text-decoration:underline !important;
+    }
+</style-->
 {{ block.super}}
     <link rel="stylesheet" href="{% static 'ui/contrib/formvalidation/dist/css/formValidation.css' %}"/>
 {% endblock %}
@@ -15,13 +41,30 @@
         <div id="create-job-wizard">
             <form id="create-job-form" role="form" action="" class="" method="POST">
                 {% csrf_token %}
-                <div class="form-group row">
-                    <div class="col-md-7">
-                        <table>
-                            <th width="15%"><a data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></th><th width="2%">{% trans '>>' %}</th><th width="10%"><a data-toggle="tab" href="#formats">{% trans 'File Formats' %}</a></th><th width="2%">{% trans '>>' %}</th><th width="15%"><a data-toggle="tab" href="#summary">{% trans 'Summary' %}</a></th>
-                        </table>
-                    </div>
-                </div>
+                        <!--div class="form-group row">
+                            <div class="col-md-6">
+                                <table id="tabs" style="table-layout: fixed; width: 100%" border="1">
+                                    <th width="38px"><a data-toggle="tab" href="#create">{% trans 'Configure Export' %}</a></th>
+                                    <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
+                                    <th width="38px"><a data-toggle="tab" href="#formats">{% trans 'Select Export Formats' %}</a></th>
+                                    <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
+                                    <th width="38px"><a data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></th>
+                                    <th width="10px"><i id="back-button" class="fa fa-arrow-circle-left fa-3x" aria-hidden="true"></i></th>
+                                    <th width="10px"><i id="next-button" class="fa fa-arrow-circle-right fa-3x" aria-hidden="true"></i></th>
+                                </table>
+                            </div>
+                        </div-->
+                <ul>
+                    <li  id="createtab"><a style="top:6px" href="#create">{% trans 'Describe Export' %}</a></li>
+                    <li style="position: relative; top: 19px;"><img class="hidden-xs"  src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                    <li  id="formatstab"><a style="top:6px" data-toggle="tab" href="#formats">{% trans 'Select Export Formats' %}</a></li>
+                    <li  style="position: relative; top: 19px;"><img class="hidden-xs" src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                    <li  id="summarytab"><a style="top:6px" data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></li>
+                    <li  id="back-button"><a style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
+                    <li id="next-button"><a style="text-decoration: none" href="#formats"><i class="fa fa-arrow-circle-right fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
+                </ul>
+
+
                 <!--ul id="tabs" class="nav nav-pills">
                     <li id="create-tab" role="presentation" class="active"><a data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
                     <li id="breadcrumb" style="vertical-align: text-bottom"><strong>{% trans '>>' %}</strong></li>
@@ -30,11 +73,7 @@
                     <!--li-- id="upload-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#upload">{% trans 'Preset File' %}</a></li-->
                     <!--li id="summary-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
                 </ul-->
-                <div class="form-group row">
-                    <div class="col-md-12">
-                        &nbsp;
-                    </div>
-                </div>
+
 
                 <div class="tab-content">
                     <div id="create" class="tab-pane fade in active">
@@ -220,7 +259,7 @@
                                     <span><strong>{% trans 'Providers: ' %}</strong></span><span id="summary-providers"></span><br/>
                                     <span><strong>{% trans 'Name:' %}</strong></span><span id="summary-name"></span><br/>
                                     <span><strong>{% trans 'Description:' %}</strong></span><span id="summary-description"></span><br/>
-                                    <span><strong>{% trans 'Activation:' %}</strong></span><span id="summary-event"></span><br/>
+                                    <span><strong>{% trans 'Project:' %}</strong></span><span id="summary-event"></span><br/>
                                     <span><strong>{% trans 'Export formats:' %}</strong></span></br>
                                     <span id="summary-formats"></span>
                                 </div>

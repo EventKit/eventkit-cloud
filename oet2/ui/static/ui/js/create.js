@@ -461,16 +461,31 @@ create.job = (function(){
     function buildExportFormats(){
         var formatsDiv = $('#supported-formats');
         $.getJSON(Config.EXPORT_FORMATS_URL, function(data){
-            for (i = 0; i < data.length; i++){
+            for (i = 0; i < data.length; i++) {
                 format = data[i];
-                formatsDiv.append('<div class="checkbox"><label>'
-                                 + '<input type="checkbox"'
-                                 + 'name="formats"'
-                                 + 'value="' + format.slug + '"'
-                                 + 'data-description="' + format.description + '"/>'
-                                 + format.description
-                                 + '</label></div>');
+
+                //make geopackage checkbox checked by default
+                if (format.slug == 'GPKG') {
+                    formatsDiv.append('<div class="checkbox"><label>'
+                        + '<input type="checkbox"'
+                        + 'name="formats"'
+                        + 'value="' + format.slug + '"'
+                        + 'checked="checked"'
+                        + 'data-description="' + format.description + '"/>'
+                        + format.description
+                        + '</label></div>');
+                }
+                else {
+                    formatsDiv.append('<div class="checkbox"><label>'
+                        + '<input type="checkbox"'
+                        + 'name="formats"'
+                        + 'value="' + format.slug + '"'
+                        + 'data-description="' + format.description + '"/>'
+                        + format.description
+                        + '</label></div>');
+                }
             }
+
             /*
              * only initialize form validation when
              * all form elements have been loaded.
@@ -668,10 +683,10 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 4);
                 }
                 if (index == 2 || index == 3) {
-                    $('li.next').css('display', 'block');
+                    $('th.next').css('display', 'block');
                 }
                 else {
-                    $('li.next').css('display', 'none');
+                    $('th.next').css('display', 'none');
                 }
             },
             onNext: function(tab, navigation, index){
