@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage
+    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -54,29 +54,34 @@ class ExportTask(Task):
         # update the task
         finished = timezone.now()
         task = ExportTask.objects.get(celery_uid=task_id)
+        provider_task_name = task.export_provider_task.name
         task.finished_at = finished
         # get the output
         output_url = retval['result']
         stat = os.stat(output_url)
         size = stat.st_size / 1024 / 1024.00
         # construct the download_path
-        download_root = settings.EXPORT_DOWNLOAD_ROOT
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         parts = output_url.split('/')
         filename = parts[-1]
-        run_uid = parts[-2]
-        run_dir = '{0}{1}'.format(download_root, run_uid)
-        download_path = '{0}{1}/{2}'.format(download_root, run_uid, filename)
+        provider_slug = parts[-2]
+        run_uid = parts[-3]
+        run_dir = os.path.join(download_root, run_uid)
+        provider_dir = os.path.join(run_dir, provider_slug)
+        download_path = os.path.join(provider_dir, filename)
         try:
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir)
-            # don't copy raw overpass data
+            if not os.path.exists(provider_dir):
+                os.makedirs(provider_dir)
+            # don't copy raw run_dir data
             if (task.name != 'OverpassQuery'):
                 shutil.copy(output_url, download_path)
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
-        download_media_root = settings.EXPORT_MEDIA_ROOT
-        download_url = '{0}{1}/{2}'.format(download_media_root, run_uid, filename)
+        download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+        download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
         # save the task and task result
         result = ExportTaskResult(
             task=task,
@@ -191,8 +196,8 @@ class OSMToPBFConvertTask(ExportTask):
 
     def run(self, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        osm = stage_dir + job_name + '.osm'
-        pbffile = stage_dir + job_name + '.pbf'
+        osm = os.path.join(stage_dir, '{0}.osm'.format(job_name))
+        pbffile = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
         o2p = pbf.OSMToPBF(osm=osm, pbffile=pbffile)
         pbffile = o2p.convert()
         return {'result': pbffile}
@@ -207,9 +212,9 @@ class OSMPrepSchemaTask(ExportTask):
 
     def run(self, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        osm = stage_dir + job_name + '.pbf'
-        sqlite = stage_dir + job_name + '.sqlite'
-        osmconf = stage_dir + job_name + '.ini'
+        osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
         osmparser = osmparse.OSMParser(osm=osm, sqlite=sqlite, osmconf=osmconf)
         osmparser.create_spatialite()
         osmparser.create_default_schema()
@@ -229,7 +234,7 @@ class ThematicLayersExportTask(ExportTask):
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
-        sqlite = stage_dir + job_name + '.sqlite'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         try:
             t2s = thematic_shp.ThematicSQliteToShp(sqlite=sqlite, tags=tags, job_name=job_name)
             t2s.generate_thematic_schema()
@@ -248,8 +253,8 @@ class ShpExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = stage_dir + job_name + '.sqlite'
-        shapefile = stage_dir + job_name + '_shp'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
             s2s = shp.SQliteToShp(sqlite=sqlite, shapefile=shapefile)
             out = s2s.convert()
@@ -267,8 +272,8 @@ class KmlExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = stage_dir + job_name + '.sqlite'
-        kmlfile = stage_dir + job_name + '.kml'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
             s2k = kml.SQliteToKml(sqlite=sqlite, kmlfile=kmlfile)
             out = s2k.convert()
@@ -287,7 +292,7 @@ class SqliteExportTask(ExportTask):
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         # sqlite already generated by OSMPrepSchema so just return path.
-        sqlite = stage_dir + job_name + '.sqlite'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         return {'result': sqlite}
 
 
@@ -299,8 +304,8 @@ class GeopackageExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = stage_dir + job_name + '.sqlite'
-        gpkgfile = stage_dir + job_name + '.gpkg'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
             out = s2g.convert()
@@ -308,6 +313,25 @@ class GeopackageExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in geopackage export, %s', str(e))
             raise Exception(e)
+
+
+class WMSExportTask(ExportTask):
+    """
+    Class defining geopackage export function.
+    """
+    name = 'WMS Export'
+
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None, bbox=None, wms_url=None, name=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        try:
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name)
+            out = w2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in wms export, %s', str(e))
+            raise Exception(e)
+
 
 class GeneratePresetTask(ExportTask):
     """
@@ -373,10 +397,10 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError as e:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        # try:
+        #     shutil.rmtree(stage_dir)
+        # except IOError as e:
+        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
