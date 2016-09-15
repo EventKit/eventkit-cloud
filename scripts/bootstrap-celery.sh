@@ -47,6 +47,13 @@ sudo apt-get -y install zip unzip
 sudo service postgresql start
 sudo update-rc.d postgresql enable
 
+sudo grep -q "#listen_addresses = 'localhost'" /etc/postgresql/9.3/main/postgresql.conf && sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/9.3/main/postgresql.conf
+sudo echo "host    eventkit_exports_dev     eventkit        all            md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+
+sudo service postgresql restart
+
+
+
 sudo -u postgres createdb 'eventkit_exports_dev'
 sudo -u postgres psql -c "CREATE ROLE eventkit WITH PASSWORD 'eventkit_exports';"
 sudo -u postgres psql -d eventkit_exports_dev -c "ALTER ROLE eventkit SUPERUSER;"
@@ -94,6 +101,7 @@ sudo chmod 775 /home/vcap/staging
 
 sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
 
+sudo ufw allow 22
 sudo ufw allow 5432
 sudo ufw --force enable
 
