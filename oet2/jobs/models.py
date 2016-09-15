@@ -133,6 +133,10 @@ class ExportProvider(TimeStampedModelMixin):
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
+    config = models.TextField(default='', null=True, blank=True,
+                              verbose_name="Mapproxy Configuration",
+                              help_text="This is an optional field which is needed if the service "
+                                        "requires authentication.")
 
     class Meta:  # pragma: no cover
         managed = True

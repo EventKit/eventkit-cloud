@@ -321,18 +321,28 @@ class WMSExportTask(ExportTask):
     """
     name = 'WMS Export'
 
-    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None, bbox=None, wms_url=None, name=None):
+    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
+            wms_url=None, name=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name)
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name, layer=layer,
+                                      config=config)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
             logger.error('Raised exception in wms export, %s', str(e))
             raise Exception(e)
 
-
+test = """
+layers:
+- layers:
+  - md:
+      abstract: DigitalGlobe:FoundationGEOINT
+    name: DigitalGlobe:FoundationGEOINT
+    sources: ['DigitalGlobe:FoundationGEOINT_wms']
+    title: DigitalGlobe:FoundationGEOINT
+"""
 class GeneratePresetTask(ExportTask):
     """
     Generates a JOSM Preset from the exports selected features.

@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                                       export_provider_type=wms_type)
 
     dependencies = [
-        ('jobs', '0003_auto_20160825_1845'),
+        ('jobs', '0001_initial'),
     ]
 
     operations = [

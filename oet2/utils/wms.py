@@ -27,7 +27,7 @@ class WMSToGeopackage():
     Convert a WMS services to a geopackage.
     """
 
-    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -43,18 +43,23 @@ class WMSToGeopackage():
         self.level_from = level_from
         self.level_to = level_to
         self.layer = layer
+        self.config = config
 
     def convert(self, ):
         """
         Convert sqlite to gpkg.
         """
-        conf_dict = create_conf_from_wms(self.wms_url)
+        if self.config:
+            conf_dict = yaml.load(self.config)
+        else:
+            conf_dict = create_conf_from_wms(self.wms_url)
         sources = []
         # for source in conf_dict.get('sources'):
         #     sources.append(source)
-        conf_dict['caches'] = get_cache_template("{}_wms".format(self.layer), self.gpkgfile)
+        conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)], self.gpkgfile)
 
-
+        #disable SSL cert checks
+        conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
         # Add autoconfiguration to base_config
         mapproxy_config = base_config()
@@ -69,9 +74,10 @@ class WMSToGeopackage():
         #Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
-        logger.error('SEED:')
-        logger.error('{}'.format(conf_dict))
+
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
+        logger.error('SEED:')
+        logger.error('{}'.format(seed_dict))
         errors, informal_only = validate_seed_conf(seed_dict)
         if not informal_only:
             raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
@@ -82,7 +88,8 @@ class WMSToGeopackage():
 
         # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
-            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed'])})
+            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
+                                                                  "concurrency": 1})
             p.start()
             p.join()
         except Exception as e:
@@ -115,7 +122,6 @@ def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
                         'minutes': 0
                     },
                     'levels': {
-                        'to': level_to or 10,
                         'from': level_from or 0
                     },
                     'caches': ['cache']

@@ -203,6 +203,8 @@ class ExportWMSTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
             bbox = json.loads("[{}]".format(job.overpass_extents))
 
+            #swap xy
+            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
             wms_task = WMSExportTask()
@@ -213,6 +215,8 @@ class ExportWMSTaskRunner(TaskRunner):
                                      job_name=job_name,
                                      task_uid=export_task.uid,
                                      name=provider_task.provider.slug,
+                                     layer=provider_task.provider.layer,
+                                     config=provider_task.provider.config,
                                      bbox=bbox,
                                      wms_url=provider_task.provider.url))
 
