@@ -48,6 +48,8 @@ sudo service postgresql start
 sudo update-rc.d postgresql enable
 
 sudo grep -q "#listen_addresses = 'localhost'" /etc/postgresql/9.3/main/postgresql.conf && sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/9.3/main/postgresql.conf
+sudo grep -q '   peer' /etc/postgresql/9.3/main/pg_hba.conf && sudo sed -i "s/   peer/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
+sudo grep -q '   ident' /etc/postgresql/9.3/main/pg_hba.conf && sudo sed -i "s/   ident/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
 sudo echo "host    eventkit_exports_dev     eventkit        all            md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
 sudo service postgresql restart
