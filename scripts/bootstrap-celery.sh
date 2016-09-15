@@ -19,6 +19,7 @@ sudo mkdir /var/lib/eventkit
 workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev
+sudo apt-get -y install postgis postgresql-contrib
 
 sudo apt-get -y install gcc g++
 
@@ -40,8 +41,20 @@ sudo apt-get update
 sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
 
 sudo apt-get -y install osmctools
-sudo apt-get -y install spatialite-bin libspatialite7 libspatialite-dev
+sudo apt-get -y install spatialite-bin
 sudo apt-get -y install zip unzip
+
+sudo service postgresql start
+sudo update-rc.d postgresql enable
+
+sudo -u postgres createdb 'eventkit_exports_dev'
+sudo -u postgres psql -c "CREATE ROLE eventkit WITH PASSWORD 'eventkit_exports';"
+sudo -u postgres psql -d eventkit_exports_dev -c "ALTER ROLE eventkit SUPERUSER;"
+sudo -u postgres psql -d eventkit_exports_dev -c "ALTER ROLE eventkit WITH LOGIN;"
+sudo -u postgres psql -d eventkit_exports_dev -c "GRANT ALL PRIVILEGES ON DATABASE eventkit_exports_dev TO eventkit;"
+sudo -u postgres psql -d eventkit_exports_dev -c "CREATE EXTENSION POSTGIS;"
+sudo -u postgres psql -d eventkit_exports_dev -c "CREATE EXTENSION HSTORE;"
+sudo -u postgres psql -d eventkit_exports_dev -c "CREATE SCHEMA exports AUTHORIZATION eventkit;"
 
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
@@ -80,6 +93,9 @@ sudo mkdir /home/vcap/staging
 sudo chmod 775 /home/vcap/staging
 
 sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
+
+sudo ufw allow 5432
+sudo ufw --force enable
 
 sudo service supervisor restart
 sudo update-rc.d supervisor enable
