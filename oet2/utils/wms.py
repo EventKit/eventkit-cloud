@@ -57,6 +57,9 @@ class WMSToGeopackage():
         # for source in conf_dict.get('sources'):
         #     sources.append(source)
         conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)], self.gpkgfile)
+        if not conf_dict.get('grids'):
+            conf_dict['grids'] = {}
+        conf_dict['grids']['webmercator'] = {'srs': 'EPSG:3857', 'tile_size': [256, 256]}
 
         #disable SSL cert checks
         conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
@@ -104,7 +107,7 @@ def get_cache_template(sources, geopackage):
                 "type": "geopackage",
                 "filename": str(geopackage)
             },
-            "grids": ["GLOBAL_WEBMERCATOR"]
+            "grids": ['webmercator']
         }}
 
 def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
