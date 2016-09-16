@@ -78,7 +78,7 @@ SITE_ID = 1
 Admin email address
 which receives task error notifications.
 """
-TASK_ERROR_EMAIL = 'joseph.svrcek@rgi-corp.com'
+TASK_ERROR_EMAIL = 'eventkit.team@gmail.com'
 
 """
 Overpass Element limit
