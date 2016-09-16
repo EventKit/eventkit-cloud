@@ -224,10 +224,10 @@ create.job = (function(){
 
 
         // OL3 add bounding box selection layer
-        bboxSource = new ol.source.Vector()
+        //bboxSource = new ol.source.Vector()
         bbox = new ol.layer.Vector({
             name: 'Select',
-            source: bboxSource,
+            //source: bboxSource,
             style: new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     color: 'blue'
@@ -259,6 +259,8 @@ create.job = (function(){
         var translate;
 
         dragBox.on('boxend', function(e){
+            bboxSource = new ol.source.Vector();
+            bbox.setSource(bboxSource);
             var dragFeature = new ol.Feature({
                 geometry: dragBox.getGeometry()
             });
@@ -365,6 +367,10 @@ create.job = (function(){
              * activate the draw bbox control
              */
             $('#nominatim').val('');
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             unsetBounds();
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
@@ -376,6 +382,10 @@ create.job = (function(){
 
         $('#zoom-selection').bind('click', function(e){
             // zoom to the bounding box extent
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             if (bboxSource.getFeatures().length > 0) {
                 map.getView().fit(bboxSource.getExtent(), map.getSize());
             }
@@ -392,6 +402,10 @@ create.job = (function(){
              */
             $('#nominatim').val('');
             unsetBounds();
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             bboxSource.clear();
 
             //bbox.removeAllFeatures();
@@ -465,7 +479,7 @@ create.job = (function(){
                 format = data[i];
 
                 //make geopackage checkbox checked by default
-                if (format.slug == 'GPKG') {
+                if (format.slug == 'gpkg') {
                     formatsDiv.append('<div class="checkbox"><label>'
                         + '<input type="checkbox"'
                         + 'name="formats"'
@@ -540,6 +554,7 @@ create.job = (function(){
      * Display success message when extents are valid.
      */
     function validateBounds(bounds) {
+
         if (!bounds) {
             // no extents selected..
             validateBBox(); // trigger form validation.
@@ -671,26 +686,207 @@ create.job = (function(){
         /*
          * Initialize the bootstrap form wizard.
          */
-        $('#create-job-wizard').bootstrapWizard({
-            tabClass: 'nav nav-pills',
-            onTabClick: function(tab, navigation, index){
-                return validateTab(index);
-            },
-            onTabShow: function(tab, navigation, index){
-                if (index == 1) {
+        $('#create-job-wizard a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var index;
+            if (e.target.hash == "#create")
+                index = 0;
+            if (e.target.hash == "#formats")
+                index = 1;
+            if (e.target.hash == "#summary")
+                index = 2;
+
+                if (index == 0){
+                    //TODO: change previous button to gray;
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                    $('#previousFirstArrow').hide();
+                    $('#previousArrow').show();
+                    $('#nextArrow').show();
+                    $('#nextLastArrow').hide();
+
+                }
+                if (index == 1){
+                    //TODO: change both buttons to green
+                    $('#previousFirstArrow').show();
+                    $('#previousArrow').hide();
+                    $('#nextArrow').show();
+                    $('#nextLastArrow').hide();
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
                     $('#create-job-wizard').bootstrapWizard('enable', 2);
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
-                    $('#create-job-wizard').bootstrapWizard('enable', 4);
                 }
-                if (index == 2 || index == 3) {
-                    $('th.next').css('display', 'block');
+                if (index == 2){
+                    //TODO: change next botton to gray
+                    //TODO: change previous button to green
+                    $('#nextArrow').hide();
+                    $('#nextLastArrow').show();
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
+                    $('#create-job-wizard').bootstrapWizard('enable', 2);
+                    $('#create-job-wizard').bootstrapWizard('enable', 3);
+
+
+            }
+        });
+
+        $('#create-job-wizard').bootstrapWizard({
+            tabClass: 'nav nav-pills',
+            'nextSelector': '.next',
+            'previousSelector': '.previous',
+            onTabClick: function(tab, navigation, index){
+
+               var valid = validateTab(index);
+
+                //validation was not happening correct in this event.  Index always seemed to be 0.
+                if (valid){
+                    if (index == 0){
+                        
+                    }
+                    if (index == 1){
+
+                    }
+                    if (index == 2){
+
+                        
+                    }
                 }
                 else {
-                    $('th.next').css('display', 'none');
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0) {
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+
+
+                    }
+                    if (index == 1) {
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+            
+                    }
+                    return false;
+                }
+
+            },
+            onTabShow: function(tab, navigation, index){
+
+                if (index == 0){
+                    $('#create-job-wizard').bootstrapWizard('disable', 1);
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                }
+
+                if (index == 1) {
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                    
+                }
+
+                if (index == 2){
+                    $('#create-job-wizard').bootstrapWizard('enable', 3);
+                    $('#nextLastArrow').prop('visibility', 'hidden')
+                    $('#nextLastArrow').addClass('visibility');
+                }
+                
+            },
+            onNext: function(tab, navigation, index){                
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        //TODO: change buttons to both green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 1){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 2){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
                 }
             },
-            onNext: function(tab, navigation, index){
-                return validateTab(index);
+            onPrevious: function(tab, navigation, index){
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        //TODO: change buttons to both green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').hide();
+                        $('#previousArrow').show();
+                    }
+                    if (index == 1){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#nextArrow').show();
+                        $('#nextLastArrow').hide();
+                    }
+                    if (index == 2){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
+                }
             }
         });
 
@@ -704,7 +900,7 @@ create.job = (function(){
             // Feedback icons
             icon: {
                 valid: 'glyphicon glyphicon-ok',
-                //invalid: 'glyphicon glyphicon-remove',
+                invalid: 'glyphicon glyphicon-remove',
                 validating: 'glyphicon glyphicon-refresh'
             },
             excluded: ':disabled',
@@ -861,7 +1057,12 @@ create.job = (function(){
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
             if (isValidBBox === false || isValidBBox === null) {
-                validateBounds(bboxSource.getExtent());
+                if (bboxSource == null) {
+                    validateBounds(null);
+                }
+                else {
+                    validateBounds(bboxSource.getExtent());
+                }
             }
 
             // validate the form panel contents
@@ -1596,6 +1797,10 @@ create.job = (function(){
                         else {
                             // clear any existing features and reset the map extents
                             //bbox.removeAllFeatures();
+                            if (bboxSource == null){
+                                bboxSource = new ol.source.Vector();
+                                bbox.setSource(bboxSource);
+                            }
                             bboxSource.clear();
                             //transform.unsetFeature();
                             unsetBounds();
@@ -1701,6 +1906,10 @@ create.job = (function(){
             var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
 
             //var vectorSource = new ol.source.Vector();
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             bboxSource.addFeature(polygonFeature);
 
             map.getView().fit(bboxSource.getExtent(), map.getSize());
@@ -1726,6 +1935,10 @@ create.job = (function(){
             if (val === '') {
                 unsetBounds();
                 //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
                 bboxSource.clear();
                 //box.deactivate();
                 //transform.unsetFeature();
@@ -1739,6 +1952,10 @@ create.job = (function(){
             if (isEnterBBox) {
                 // remove existing features
                 //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
                 bboxSource.clear();
                 var coords = val.split(',');
                 // check for correct number of coords
@@ -1767,6 +1984,10 @@ create.job = (function(){
                     (parseFloat(bottom) < -90 || parseFloat(bottom) > 90) ||
                     (parseFloat(top) < -90 || parseFloat(top) > 90)){
                     //bbox.removeAllFeatures();
+                    if (bboxSource == null){
+                        bboxSource = new ol.source.Vector();
+                        bbox.setSource(bboxSource);
+                    }
                     bboxSource.clear();
                     validateBounds();
                     return;
@@ -2382,5 +2603,8 @@ $(document).ready(function() {
             $('#list-export-map').css('visibility', 'hidden');
             $('#list-controls').css('display','none');
         });
+
+
+    //$('#create-job-wizard').bootstrapWizard();
         create.job.init();
 });
