@@ -696,7 +696,6 @@ create.job = (function(){
                 index = 2;
 
                 if (index == 0){
-                    //TODO: change previous button to gray;
                     $('#create-job-wizard').bootstrapWizard('enable', 1);
                     $('#create-job-wizard').bootstrapWizard('disable', 2);
                     $('#previousFirstArrow').hide();
@@ -706,7 +705,6 @@ create.job = (function(){
 
                 }
                 if (index == 1){
-                    //TODO: change both buttons to green
                     $('#previousFirstArrow').show();
                     $('#previousArrow').hide();
                     $('#nextArrow').show();
@@ -716,8 +714,6 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
                 }
                 if (index == 2){
-                    //TODO: change next botton to gray
-                    //TODO: change previous button to green
                     $('#nextArrow').hide();
                     $('#nextLastArrow').show();
                     $('#create-job-wizard').bootstrapWizard('enable', 1);
@@ -792,23 +788,18 @@ create.job = (function(){
 
                 if (valid){
                     if (index == 0){
-                        //TODO: change buttons to both green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
                         $('#previousFirstArrow').show();
                         $('#previousArrow').hide();
                     }
                     if (index == 1){
-                        //TODO: change next botton to gray
-                        //TODO: change previous button to green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('enable', 2);
                         $('#previousFirstArrow').show();
                         $('#previousArrow').hide();
                     }
                     if (index == 2){
-                        //TODO: change next botton to gray
-                        //TODO: change previous button to green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('enable', 2);
                         $('#create-job-wizard').bootstrapWizard('enable', 3);
