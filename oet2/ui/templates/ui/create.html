@@ -54,15 +54,7 @@
                                 </table>
                             </div>
                         </div-->
-                <ul>
-                    <li  id="createtab"><a style="top:6px" href="#create">{% trans 'Describe Export' %}</a></li>
-                    <li style="position: relative; top: 19px;"><img class="hidden-xs"  src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
-                    <li  id="formatstab"><a style="top:6px" data-toggle="tab" href="#formats">{% trans 'Select Export Formats' %}</a></li>
-                    <li  style="position: relative; top: 19px;"><img class="hidden-xs" src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
-                    <li  id="summarytab"><a style="top:6px" data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></li>
-                    <li  id="back-button"><a style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
-                    <li id="next-button"><a style="text-decoration: none" href="#formats"><i class="fa fa-arrow-circle-right fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
-                </ul>
+
 
 
                 <!--ul id="tabs" class="nav nav-pills">
@@ -74,9 +66,25 @@
                     <!--li id="summary-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
                 </ul-->
 
+                <div class="container" style="border-radius: 5px !important; background-color: #ebebeb !important; border: 1px solid #d6d6d6 !important;">
+                <ul>
+                    <li  id="createtab"><a style="top:6px" data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
+                    <li style="position: relative; top: 19px;"><img class="hidden-xs"  src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                    <li  id="formatstab"><a id="formatsLink"  style="top:6px" data-toggle="tab" href="#formats">{% trans 'Select Export Formats' %}</a></li>
+                    <li  style="position: relative; top: 19px;"><img class="hidden-xs" src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                    <li  id="summarytab"><a id="summaryLink"  style="top:6px" data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></li>
+                </ul>
 
+                <ul class="nav nav-pills pager-wizard">
+                    <li class="previous first"><a id="previousFirstArrow" style="text-decoration: none; display:none;" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
+                    <li class="previous"><a id="previousArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
+                    <li class="next last"><a id="nextLastArrow" style="text-decoration: none; display: none;" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
+                    <li class="next"><a id="nextArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
+                </ul>
+                </div>
                 <div class="tab-content">
-                    <div id="create" class="tab-pane fade in active">
+                    <div id="create" name="create" class="tab-pane fade in active">
+
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <div class="form-group row">
@@ -118,6 +126,7 @@
                         </div>
                     </div>
                     <div id="formats" class="tab-pane fade in">
+
                         <div class="panel panel-default">
                         <div class="panel-body">
                             <div class="form-group row" id="form-group-formats">
@@ -130,7 +139,7 @@
                         </div>
                       </div>
                     </div>
-                    <div id="features" class="tab-pane fade in">
+                    <!--div id="features" class="tab-pane fade in">
                         <div class="panel panel-default">
                         <div class="panel-body">
                             <div class="row">
@@ -146,7 +155,7 @@
                                         <div class="form-group-row" id="form-group-hdm-features">
                                             <div class="col-md-6">
                                                 <!--<h5>Humanitarian Data Model v2.11</h5>-->
-                                                <div id="hdm-feature-tree" class="pull-left">
+                                                <!--div id="hdm-feature-tree" class="pull-left">
                                                     <ul class="nav nav-list"></ul>
                                                 </div>
                                             </div>
@@ -154,7 +163,7 @@
                                         <div class="form-group-row" id="form-group-osm-features">
                                             <div class="col-md-6">
                                                 <!--<h5>OpenStreetMap Data Model</h5>-->
-                                                <div id="osm-feature-tree" class="pull-left">
+                                                <!--div id="osm-feature-tree" class="pull-left">
                                                     <ul class="nav nav-list"></ul>
                                                 </div>
                                             </div>
@@ -164,8 +173,8 @@
                             </div>
                         </div>
                       </div>
-                    </div>
-                    <div id="upload" class="tab-pane fade in">
+                    </div-->
+                    <!--div id="upload" class="tab-pane fade in">
                       <div class="panel panel-default">
                         <div class="panel-body">
                             <div class="row">
@@ -197,7 +206,7 @@
                                 </select>
                             </div>
                             <br/>
-                            -->
+                            >
                             <div class="form-group row" id="form-group-publish">
                                 <div class="col-md-12">
                                     <div class="checkbox">
@@ -248,8 +257,9 @@
                             </div>
                         </div>
                       </div>
-                    </div>
+                    </div-->
                     <div id="summary" class="tab-pane fade in">
+
                       <div class="panel panel-default">
                         <div class="panel-body">
                             <div class="row">
@@ -314,9 +324,9 @@
                         </div>
                       </div>
                     </div>
-                    <ul id="create-pager" class="pager wizard">
+                    <!--ul id="create-pager" class="pager wizard">
                         <li class="next"><a href="#">{% trans 'Skip' %}</a></li>
-                    </ul>
+                    </ul-->
                 </div>
                 <!-- container for job extents -->
                 <div class="form-group row" id="form-group-bbox">
