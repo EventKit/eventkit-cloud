@@ -53,6 +53,7 @@ Admin email address
 which receives task error notifications.
 """
 TASK_ERROR_EMAIL = 'export-tool@hotosm.org'
+FROM_EMAIL = 'Eventkit Team <eventkit.team@gmail.com>'
 
 """
 Overpass Element limit

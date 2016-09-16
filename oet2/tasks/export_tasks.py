@@ -416,9 +416,9 @@ class FinalizeRunTask(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export is ready"
+        subject = "Your Eventkit Data Pack is ready."
         to = [addr]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'status': run.status
@@ -454,10 +454,10 @@ class ExportTaskErrorHandler(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export Failed"
+        subject = "Your Eventkit Data Pack Failed"
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'task_id': task_id

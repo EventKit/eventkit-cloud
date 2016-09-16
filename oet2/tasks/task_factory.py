@@ -37,13 +37,12 @@ class TaskFactory():
                 # Create an instance of a task runner based on the type name
                 if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                     task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
-                    print("CREATING DIR {}".format(os.path.join(self.stage_dir, provider_task.provider.slug)))
                     os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
                     task_runner_tasks = task_runner.run_task(user=self.job.user,
                                                              provider_task_uid=provider_task.uid,
                                                              run=self.run,
                                                              stage_dir=os.path.join(self.stage_dir, provider_task.provider.slug))
-                    header_tasks.append(task_runner_tasks)
+                    header_tasks = [task_runner_tasks]
             if header_tasks:
                 finalize_task = FinalizeRunTask()
                 chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
