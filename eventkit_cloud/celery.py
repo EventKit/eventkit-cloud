@@ -4,6 +4,7 @@ import os
 
 from celery import Celery
 
+
 if os.getenv("DEVELOPMENT"):
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.dev')
 else:
