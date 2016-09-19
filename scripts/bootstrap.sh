@@ -18,6 +18,7 @@ sudo pip install --upgrade pip
 sudo pip install virtualenvwrapper
 sudo echo 'export WORKON_HOME=/var/lib/eventkit/.virtualenvs' >> /etc/profile.d/path.sh
 sudo echo 'export PROJECT_HOME=/var/lib/eventkit' >> /etc/profile.d/path.sh
+sudo echo 'export DEVELOPMENT=True' >> /etc/profile.d/path.sh
 sudo echo 'source /usr/local/bin/virtualenvwrapper.sh' >> /etc/profile.d/path.sh
 source /etc/profile.d/path.sh
 mkvirtualenv eventkit
@@ -75,7 +76,7 @@ mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-#git checkout initialDocker
+git checkout removeDJMP
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit

@@ -50,7 +50,7 @@ TEMPLATES = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # Disable caching while in development
 CACHES = {
@@ -153,9 +153,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 #         }
 #     }
 # }
-
-TILESET_CACHE_DIRECTORY=os.environ.get('TILESET_CACHE_DIRECTORY', '/cache')
-DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'

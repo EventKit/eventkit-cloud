@@ -25,3 +25,5 @@ whitenoise==2.0.6
 numpy==1.11.1
 -e git://github.com/terranodo/osm-export-tool2.git@cf-tests#egg=oet2
 -e git://github.com/mapproxy/mapproxy.git@master#egg=mapproxy
+python-dateutil
+django-tastypie

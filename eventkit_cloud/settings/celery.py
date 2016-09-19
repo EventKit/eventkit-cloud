@@ -17,8 +17,6 @@ CELERY_TRACK_STARTED = True
  If exceptions are thrown in the chord header then allow the
  finalize task to collect the results and update the overall run state.
 
- @see tasks.task_runners.ExportTaskRunner#161
-
 """
 CELERY_CHORD_PROPAGATES = False
 
