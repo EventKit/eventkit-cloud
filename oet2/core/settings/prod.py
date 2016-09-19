@@ -140,5 +140,3 @@ LOGGING = {
         },
     }
 }
-
-USE_S3=False
