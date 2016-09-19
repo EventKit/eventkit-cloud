@@ -15,8 +15,8 @@ from django.db import DatabaseError
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
-class TaskFactory():
 
+class TaskFactory():
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
         self.type_task_map = {'osm': ExportOSMTaskRunner, 'wms': ExportWMSTaskRunner}
@@ -30,7 +30,7 @@ class TaskFactory():
         if self.run:
             provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
             if provider_tasks:
-                header_tasks = []
+                header_tasks = None
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
@@ -39,11 +39,15 @@ class TaskFactory():
                         task_runner_tasks = task_runner.run_task(user=self.job.user,
                                                                  provider_task_uid=provider_task.uid,
                                                                  run=self.run,
-                                                                 stage_dir=os.path.join(self.stage_dir, provider_task.provider.slug))
-                        header_tasks += [task_runner_tasks]
+                                                                 stage_dir=os.path.join(self.stage_dir,
+                                                                                        provider_task.provider.slug))
+                        if header_tasks:
+                            header_tasks = chain(header_tasks | task_runner_tasks)
+                        else:
+                            header_tasks = task_runner_tasks
                 if header_tasks:
                     finalize_task = FinalizeRunTask()
-                    chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
+                    chain(header_tasks, finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
                           ).apply_async(expires=datetime.now() + timedelta(days=1))
                 else:
                     return False
