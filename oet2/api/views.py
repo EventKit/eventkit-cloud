@@ -17,16 +17,16 @@ from rest_framework.serializers import ValidationError
 
 from oet2.jobs import presets
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
 )
 from oet2.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
-    ExportTaskSerializer, JobSerializer, RegionMaskSerializer,
-    RegionSerializer, ListJobSerializer, ExportProviderSerializer
+    ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
 )
-from oet2.tasks.models import ExportRun, ExportTask
-from oet2.tasks.task_runners import ExportTaskRunner
+from oet2.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from oet2.tasks.task_factory import TaskFactory
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -125,8 +125,6 @@ class JobViewSet(viewsets.ModelViewSet):
     #                 logger.warn('Export format with uid: {0} does not exist'.format(slug))
     #     return export_formats
 
-
-
     def list(self, request, *args, **kwargs):
         """
         List export jobs.
@@ -205,9 +203,7 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            export_formats = get_models(request.data.get('formats'), ExportFormat, 'slug')
-            export_providers = get_models(request.data.get('providers'), ExportProvider, 'name')
-
+            provider_tasks = request.data.get('provider_tasks')
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -215,12 +211,19 @@ class JobViewSet(viewsets.ModelViewSet):
             featuresave = request.data.get('featuresave')
             featurepub = request.data.get('featurepub')
             job = None
-            if len(export_formats) > 0:
+            if len(provider_tasks) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
                     with transaction.atomic():
                         job = serializer.save()
-                        job.formats = export_formats
+                        provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
+                        try:
+                            provider_serializer.is_valid(raise_exception=True)
+                        except ValidationError:
+                            error_data = OrderedDict()
+                            error_data['errors'] = [_('A provider and an export format must be selected.')]
+                            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                        job.provider_tasks = provider_serializer.save()
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: %s' % preset)
@@ -283,14 +286,15 @@ class JobViewSet(viewsets.ModelViewSet):
                     return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 error_data = OrderedDict()
-                error_data['formats'] = [_('Invalid format provided.')]
+                error_data['provider_tasks'] = [_('Invalid provider task.')]
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
-            task_runner = ExportTaskRunner()
+
             job_uid = str(job.uid)
-            task_runner.run_task(job_uid=job_uid)
+            task_factory = TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
+            task_factory.parse_tasks()
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -311,7 +315,7 @@ class RunJob(views.APIView):
         Re-runs the job.
 
         Gets the job_uid and current user from the request.
-        Creates an instance of the ExportTaskRunner and
+        Creates an instance of the TaskFactory and
         calls run_task on it, passing the job_uid and user.
 
         Args:
@@ -325,10 +329,10 @@ class RunJob(views.APIView):
         if (job_uid):
             # run the tasks
             job = Job.objects.get(uid=job_uid)
-            task_runner = ExportTaskRunner()
-            run = task_runner.run_task(job_uid=job_uid, user=user)
-            if run:
-                running = ExportRunSerializer(run, context={'request': request})
+            task_factory = TaskFactory(job_uid)
+            if task_factory:
+                task_factory.parse_tasks()
+                running = ExportRunSerializer(task_factory.run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
@@ -484,6 +488,31 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ###ExportTask API endpoint.
+
+    Provides List and Retrieve endpoints for ExportTasks.
+    """
+    serializer_class = ExportProviderTaskSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    queryset = ExportTask.objects.all()
+    lookup_field = 'uid'
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        GET a single export task.
+
+        Args:
+            request: the http request.
+            uid: the uid of the export task to GET.
+        Returns:
+            the serialized ExportTask data.
+        """
+        queryset = ExportProviderTask.objects.filter(uid=uid)
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -552,3 +581,21 @@ def get_models(model_list, model_object, model_index):
         except model_object.DoesNotExist as e:
             logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
     return models
+
+
+def get_provider_task(export_provider, export_formats):
+    """
+
+    Args:
+        ExportProvider:
+        ExportFormat:
+
+    Returns:
+
+    """
+    provider_task = ProviderTask.objects.create(provider=export_provider)
+    for export_format in export_formats:
+        if export_format in export_provider.export_provider_type.supported_formats.all():
+            provider_task.formats.add(export_format)
+    provider_task.save()
+    return provider_task

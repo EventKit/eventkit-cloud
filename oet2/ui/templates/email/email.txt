@@ -1,10 +1,10 @@
 {% load i18n %}
-{% trans 'This is an automated email from HOT Exports.' %}
+{% trans 'This is an automated email from the Eventkit Team.' %}
 
-{% trans 'Your HOT Export is ready.' %}
+{% trans 'Your Eventkit Data Pack is ready.' %}
 
 {% trans 'Please copy and paste this link' %} {{ url }}/ {% trans ' into your browser to download your files.' %}
 
-{% trans 'Thank you for using the HOT Export Service' %}
+{% trans 'Thank you for using Eventkit.' %}
 
-{% trans 'Humanitarian OpenStreetMap Team' %}
+{% trans 'Eventkit Team' %}

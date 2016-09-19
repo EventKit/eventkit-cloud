@@ -56,13 +56,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{% url 'create' %}"><strong>{% trans 'Export' %}</strong></a>
+          <a class="navbar-brand" href="{% url 'create' %}"><strong>{% trans 'Manage Data Pack' %}</strong></a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li><a href="{% url 'create' %}">{% trans 'Create' %}</a></li>
             <li><a href="{% url 'list' %}">{% trans 'Exports' %}</a></li>
-            <li><a href="{% url 'configurations' %}">{% trans 'Presets' %}</a></li>
+            <!--li><a href="{% url 'configurations' %}">{% trans 'Presets' %}</a></li-->
             <li><a href="{% url 'help' %}">{% trans 'Help' %}</a></li>
             <li><a href="{% url 'about' %}">{% trans 'About' %}</a></li>
             {% if user.is_authenticated %}

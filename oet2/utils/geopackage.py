@@ -15,7 +15,7 @@ class SQliteToGeopackage(object):
     Thin wrapper around ogr2ogr to convert sqlite to KML.
     """
 
-    def __init__(self, sqlite=None, gpkgfile=None, debug=True):
+    def __init__(self, sqlite=None, gpkgfile=None, debug=None):
         """
         Initialize the SQliteToKml utility.
 

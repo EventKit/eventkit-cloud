@@ -137,75 +137,76 @@ create.job = (function(){
         //     addRegionMask();
         //     addRegions();
 
-        // OL3 add the regions layer
-        regionsSource = new ol.source.Vector({
-            wrapX: false,
-            noWrap: true,
-        });
+        //*** COMMENTED OUT TO TAKE OUT RED HOT REGIONS OL3
+        // add the regions layer
+
+        // regionsSource = new ol.source.Vector({
+        //     wrapX: false,
+        //     noWrap: true,
+        // });
+        //
+        //
+        // regions = new ol.layer.Vector({
+        //         name: 'regions',
+        //         source: regionsSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [0,0,0,-0.7],
+        //                 //opacity: 0.8,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [215, 63, 63, 0.8],
+        //                 width: 3.5,
+        //             })
+        //         }),
+        //
+        //     })
+        // map.addLayer(regions);
+        //
+        // // add the region mask layer
+        // maskSource = new ol.source.Vector();
+        //     mask = new ol.layer.Vector({
+        //         name: 'mask',
+        //         source: maskSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [255,255,255,0.0]
+        //                 //opacity: 0.7,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [255,255,255,0.2],
+        //                 width: .1,
+        //                 //opacity: 0.2,
+        //             }),
+        //         }),
+        //     });
+        //
+        // map.addLayer(mask);
 
 
-        regions = new ol.layer.Vector({
-                name: 'regions',
-                source: regionsSource,
-                style: new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: [0,0,0,-0.7],
-                        //opacity: 0.8,
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: [215, 63, 63, 0.8],
-                        width: 3.5,
-                    })
-                }),
+        // // get the regions from the regions api
+        // $.getJSON(Config.REGIONS_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     regionsSource.addFeatures(features);
+        //     var extent = regionsSource.getExtent();
+        //     map.getView().fit(extent, map.getSize());
+        // });
 
-            })
-        map.addLayer(regions);
 
-        // add the region mask layer
-        maskSource = new ol.source.Vector();
-            mask = new ol.layer.Vector({
-                name: 'mask',
-                source: maskSource,
-                style: new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: [255,255,255,0.0]
-                        //opacity: 0.7,
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: [255,255,255,0.2],
-                        width: .1,
-                        //opacity: 0.2,
-                    }),
-                }),
-            });
-
-        map.addLayer(mask);
-
-        //add region and mask features
-        //addRegionMask();
-        // get the regions from the regions api
-        $.getJSON(Config.REGIONS_URL, function(data){
-            var geojson = new ol.format.GeoJSON();
-            var features = geojson.readFeatures(data, {
-                'featureProjection': 'EPSG:3857',
-                'dataProjection': 'EPSG:4326'
-            });
-            regionsSource.addFeatures(features);
-            var extent = regionsSource.getExtent();
-            map.getView().fit(extent, map.getSize());
-        });
-
-        //addRegions();
-        $.getJSON(Config.REGION_MASK_URL, function(data){
-            var geojson = new ol.format.GeoJSON();
-            var features = geojson.readFeatures(data, {
-                'featureProjection': 'EPSG:3857',
-                'dataProjection': 'EPSG:4326'
-            });
-            maskSource.addFeatures(features);
-            //var extent = maskSource.getExtent();
-            //map.getView().fit(extent, map.getSize())
-        });
+        // $.getJSON(Config.REGION_MASK_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     maskSource.addFeatures(features);
+        //     //var extent = maskSource.getExtent();
+        //     //map.getView().fit(extent, map.getSize())
+        // });
 
         buildProviderFormats();
 
@@ -223,10 +224,10 @@ create.job = (function(){
 
 
         // OL3 add bounding box selection layer
-        bboxSource = new ol.source.Vector()
+        //bboxSource = new ol.source.Vector()
         bbox = new ol.layer.Vector({
             name: 'Select',
-            source: bboxSource,
+            //source: bboxSource,
             style: new ol.style.Style({
                 stroke: new ol.style.Stroke({
                     color: 'blue'
@@ -258,6 +259,8 @@ create.job = (function(){
         var translate;
 
         dragBox.on('boxend', function(e){
+            bboxSource = new ol.source.Vector();
+            bbox.setSource(bboxSource);
             var dragFeature = new ol.Feature({
                 geometry: dragBox.getGeometry()
             });
@@ -364,6 +367,10 @@ create.job = (function(){
              * activate the draw bbox control
              */
             $('#nominatim').val('');
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             unsetBounds();
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
@@ -375,6 +382,10 @@ create.job = (function(){
 
         $('#zoom-selection').bind('click', function(e){
             // zoom to the bounding box extent
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             if (bboxSource.getFeatures().length > 0) {
                 map.getView().fit(bboxSource.getExtent(), map.getSize());
             }
@@ -391,6 +402,10 @@ create.job = (function(){
              */
             $('#nominatim').val('');
             unsetBounds();
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             bboxSource.clear();
 
             //bbox.removeAllFeatures();
@@ -429,22 +444,6 @@ create.job = (function(){
     //     });
     // }
 
-    /*
-     * Add the region mask to the map.
-     * Calls into region mask api.
-     */
-    // function addRegionMask(){
-    //     // get the regions from the regions api
-    //     $.getJSON(Config.REGION_MASK_URL, function(data){
-    //         var geojson = new OpenLayers.Format.GeoJSON({
-    //                 'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-    //                 'externalProjection': new OpenLayers.Projection("EPSG:4326")
-    //         });
-    //         var features = geojson.read(data);
-    //         mask.addFeatures(features);
-    //     });
-    // }
-
     function zoomtoextent() {
         var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
@@ -460,10 +459,12 @@ create.job = (function(){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
                 providersDiv.append('<div class="checkbox"><label>'
-                    + '<input type="checkbox" id="providers"'
-                    + 'name="' + provider.name + '"/>'
-                    + provider.name
-                    + '</label></div>');
+                                 + '<input type="checkbox"'
+                                 + 'name="providers"'
+                                 + 'value="' + provider.name + '"'
+                                 + 'data-description="' + provider.name + '"/>'
+                                 + provider.name
+                                 + '</label></div>');
             }
         })
     }
@@ -474,16 +475,31 @@ create.job = (function(){
     function buildExportFormats(){
         var formatsDiv = $('#supported-formats');
         $.getJSON(Config.EXPORT_FORMATS_URL, function(data){
-            for (i = 0; i < data.length; i++){
+            for (i = 0; i < data.length; i++) {
                 format = data[i];
-                formatsDiv.append('<div class="checkbox"><label>'
-                                 + '<input type="checkbox"'
-                                 + 'name="formats"'
-                                 + 'value="' + format.slug + '"'
-                                 + 'data-description="' + format.description + '"/>'
-                                 + format.description
-                                 + '</label></div>');
+
+                //make geopackage checkbox checked by default
+                if (format.slug == 'gpkg') {
+                    formatsDiv.append('<div class="checkbox"><label>'
+                        + '<input type="checkbox"'
+                        + 'name="formats"'
+                        + 'value="' + format.slug + '"'
+                        + 'checked="checked"'
+                        + 'data-description="' + format.description + '"/>'
+                        + format.description
+                        + '</label></div>');
+                }
+                else {
+                    formatsDiv.append('<div class="checkbox"><label>'
+                        + '<input type="checkbox"'
+                        + 'name="formats"'
+                        + 'value="' + format.slug + '"'
+                        + 'data-description="' + format.description + '"/>'
+                        + format.description
+                        + '</label></div>');
+                }
             }
+
             /*
              * only initialize form validation when
              * all form elements have been loaded.
@@ -491,8 +507,6 @@ create.job = (function(){
             initForm();
         });
     }
-
-    
 
 
     /*
@@ -540,6 +554,7 @@ create.job = (function(){
      * Display success message when extents are valid.
      */
     function validateBounds(bounds) {
+
         if (!bounds) {
             // no extents selected..
             validateBBox(); // trigger form validation.
@@ -550,60 +565,59 @@ create.job = (function(){
             return false;
         }
 
-        var regions, region;
-        map.getLayers().forEach(function (l) {
-            if (l.get('name') == 'regions')
-                regions = l;
-        })
-
-        var valid_region = false;
-
-        // check that we're within a HOT region.
-        var SW = [bounds[0], bounds[1]];
-        var NW = [bounds[0], bounds[3]];
-        var NE = [bounds[2], bounds[3]];
-        var SE = [bounds[2], bounds[1]];
-        var boundary_coords = [SW, NW, NE, SE]
-
-        var checkcount = 0;
-        for(var i=0; i<regions.getSource().getFeatures().length; i++) {
-            for (var j=0; j<boundary_coords.length; j++) {
-                featuresAtCoord = regions.getSource().getFeaturesAtCoordinate(boundary_coords[j]);
-                if (featuresAtCoord.length > 0 && featuresAtCoord[0] == regions.getSource().getFeatures()[i]) {
-                    checkcount++;
-                }
-            }
-            if (checkcount !=0) {
-                break;
-            }
-        }
-        if (checkcount === 4) {
-            valid_region = true;
-        }
+        //*****COMMENTING OUT TO GET RID OF RED HOT REGIONS
+        // var regions, region;
+        // map.getLayers().forEach(function (l) {
+        //     if (l.get('name') == 'regions')
+        //         regions = l;
+        // })
+        //
+        // var valid_region = false;
+        //
+        // // check that we're within a HOT region.
+        // var SW = [bounds[0], bounds[1]];
+        // var NW = [bounds[0], bounds[3]];
+        // var NE = [bounds[2], bounds[3]];
+        // var SE = [bounds[2], bounds[1]];
+        // var boundary_coords = [SW, NW, NE, SE]
+        //
+        // var checkcount = 0;
+        // for(var i=0; i<regions.getSource().getFeatures().length; i++) {
+        //     for (var j=0; j<boundary_coords.length; j++) {
+        //         featuresAtCoord = regions.getSource().getFeaturesAtCoordinate(boundary_coords[j]);
+        //         if (featuresAtCoord.length > 0 && featuresAtCoord[0] == regions.getSource().getFeatures()[i]) {
+        //             checkcount++;
+        //         }
+        //     }
+        //     if (checkcount !=0) {
+        //         break;
+        //     }
+        // }
+        // if (checkcount === 4) {
+        //     valid_region = true;
+        // }
        
         /*
          * calculate the extent area and convert to sq kilometers
          * converts to lat long which will be proj set on form if extents are valid.
          */
-        //bounds.transform('EPSG:3857', 'EPSG:4326')
-        //bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+
         // trim bounds to 6 decimal places before calculating geodesic area
         var left = bounds[0].toFixed(6);
         var bottom = bounds[1].toFixed(6);
         var right = bounds[2].toFixed(6);
         var top = bounds[3].toFixed(6);
 
-        //var extent = ol.geom.Polygon.fromExtent(bounds);
-        
-        bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
-        console.log(bounds_trunc.getArea());
+        var bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
+        //console.log(bounds_trunc.getArea());
         var area = bounds_trunc.getArea() / 1000000;
-        //var area = geodesicArea(bounds_trunc) / 1000000; // sq km
-        
+
         // format the area and max bounds for display..
         var area_str = numeral(area).format('0 0');
         var max_bounds_str = numeral(max_bounds_area).format('0 0');
 
+        //NO HOT REGION SO SET VALID TO TRUE
+        var valid_region = true;
         if (!valid_region) {
            // invalid region
            validateBBox(); // trigger validation on extents
@@ -672,26 +686,198 @@ create.job = (function(){
         /*
          * Initialize the bootstrap form wizard.
          */
-        $('#create-job-wizard').bootstrapWizard({
-            tabClass: 'nav nav-pills',
-            onTabClick: function(tab, navigation, index){
-                return validateTab(index);
-            },
-            onTabShow: function(tab, navigation, index){
-                if (index == 1) {
+        $('#create-job-wizard a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var index;
+            if (e.target.hash == "#create")
+                index = 0;
+            if (e.target.hash == "#formats")
+                index = 1;
+            if (e.target.hash == "#summary")
+                index = 2;
+
+                if (index == 0){
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                    $('#previousFirstArrow').hide();
+                    $('#previousArrow').show();
+                    $('#nextArrow').show();
+                    $('#nextLastArrow').hide();
+
+                }
+                if (index == 1){
+                    $('#previousFirstArrow').show();
+                    $('#previousArrow').hide();
+                    $('#nextArrow').show();
+                    $('#nextLastArrow').hide();
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
                     $('#create-job-wizard').bootstrapWizard('enable', 2);
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
-                    $('#create-job-wizard').bootstrapWizard('enable', 4);
                 }
-                if (index == 2 || index == 3) {
-                    $('li.next').css('display', 'block');
+                if (index == 2){
+                    $('#nextArrow').hide();
+                    $('#nextLastArrow').show();
+                    $('#create-job-wizard').bootstrapWizard('enable', 1);
+                    $('#create-job-wizard').bootstrapWizard('enable', 2);
+                    $('#create-job-wizard').bootstrapWizard('enable', 3);
+
+
+            }
+        });
+
+        $('#create-job-wizard').bootstrapWizard({
+            tabClass: 'nav nav-pills',
+            'nextSelector': '.next',
+            'previousSelector': '.previous',
+            onTabClick: function(tab, navigation, index){
+
+               var valid = validateTab(index);
+
+                //validation was not happening correct in this event.  Index always seemed to be 0.
+                if (valid){
+                    if (index == 0){
+                        
+                    }
+                    if (index == 1){
+
+                    }
+                    if (index == 2){
+
+                        
+                    }
                 }
                 else {
-                    $('li.next').css('display', 'none');
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0) {
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+
+
+                    }
+                    if (index == 1) {
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+            
+                    }
+                    return false;
+                }
+
+            },
+            onTabShow: function(tab, navigation, index){
+
+                if (index == 0){
+                    $('#create-job-wizard').bootstrapWizard('disable', 1);
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                }
+
+                if (index == 1) {
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                    
+                }
+
+                if (index == 2){
+                    $('#create-job-wizard').bootstrapWizard('enable', 3);
+                    $('#nextLastArrow').prop('visibility', 'hidden')
+                    $('#nextLastArrow').addClass('visibility');
+                }
+                
+            },
+            onNext: function(tab, navigation, index){                
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 1){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 2){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
                 }
             },
-            onNext: function(tab, navigation, index){
-                return validateTab(index);
+            onPrevious: function(tab, navigation, index){
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        //TODO: change buttons to both green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').hide();
+                        $('#previousArrow').show();
+                    }
+                    if (index == 1){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#nextArrow').show();
+                        $('#nextLastArrow').hide();
+                    }
+                    if (index == 2){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
+                }
             }
         });
 
@@ -705,7 +891,7 @@ create.job = (function(){
             // Feedback icons
             icon: {
                 valid: 'glyphicon glyphicon-ok',
-                //invalid: 'glyphicon glyphicon-remove',
+                invalid: 'glyphicon glyphicon-remove',
                 validating: 'glyphicon glyphicon-refresh'
             },
             excluded: ':disabled',
@@ -730,6 +916,14 @@ create.job = (function(){
                         choice: {
                             min: 1,
                             message: gettext('At least one export format must be selected')
+                        }
+                    }
+                },
+                'providers': {
+                    validators: {
+                        choice: {
+                            min: 1,
+                            message: gettext('At least one export provider must be selected')
                         }
                     }
                 },
@@ -854,7 +1048,12 @@ create.job = (function(){
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
             if (isValidBBox === false || isValidBBox === null) {
-                validateBounds(bboxSource.getExtent());
+                if (bboxSource == null) {
+                    validateBounds(null);
+                }
+                else {
+                    validateBounds(bboxSource.getExtent());
+                }
             }
 
             // validate the form panel contents
@@ -1074,12 +1273,12 @@ create.job = (function(){
          */
         $('#create-job-form').bind('change', function(e){
             var providers = [];
-            var providerUl = $('<ul>');
-            $.each($(this).find('input[id="providers"]:checked'), function(p, provider){
-                var providers = provider.getAttribute('name');
-                providerUl.append($('<li>' + providers + '</li>'));
+            var $providerUl = $('<ul>');
+            $.each($(this).find('input[name="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('data-description');
+                $providerUl.append($('<li>' + providers + '</li>'));
             });
-            $('#summary-providers').html(providerUl);
+            $('#summary-providers').html($providerUl);
 
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
@@ -1198,6 +1397,9 @@ create.job = (function(){
                 if (field === 'formats') {
                     message = 'Please select an export format.';
                 }
+                else if (field === 'providers') {
+                    message = 'Please select an export format.';
+                }
                 else {
                     message = 'The <strong>' + field + '</strong> field is required'
                 }
@@ -1213,11 +1415,10 @@ create.job = (function(){
                 var form_data = {};
                 var tags = [];
                 var formats = [];
+                var providers = [];
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
-                        case 'digital-globe':
-                            form_data['digital_globe'] = true;
                         case 'filename': break;
                         case 'config_type': break;
                         case 'publishconfig': break;
@@ -1232,6 +1433,10 @@ create.job = (function(){
                             break;
                         case 'formats':
                             formats.push(field.value);
+                            break;
+                        case 'providers':
+                            providers.push(field.value);
+                            break;
                         default:
                             form_data[field.name] = field.value;
                     }
@@ -1262,7 +1467,27 @@ create.job = (function(){
                 });
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
+                form_data["provider_tasks"] = []
+                var provider_tasks = []
+
+                if(typeof(providers)==='string'){
+                    providers = [providers]
+                }
+                if(typeof(formats)==='string'){
+                    formats = [formats]
+                }
+
+                var formatArray = [];
+                for(var format in formats) {
+                    formatArray.push(formats[format]);
+                }
+                for(var provider in providers){
+                    provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
+                }
+                form_data["provider_tasks"] = provider_tasks;
                 form_data["formats"] = formats;
+                delete form_data["providers"]
+                delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
@@ -1563,6 +1788,10 @@ create.job = (function(){
                         else {
                             // clear any existing features and reset the map extents
                             //bbox.removeAllFeatures();
+                            if (bboxSource == null){
+                                bboxSource = new ol.source.Vector();
+                                bbox.setSource(bboxSource);
+                            }
                             bboxSource.clear();
                             //transform.unsetFeature();
                             unsetBounds();
@@ -1668,6 +1897,10 @@ create.job = (function(){
             var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
 
             //var vectorSource = new ol.source.Vector();
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             bboxSource.addFeature(polygonFeature);
 
             map.getView().fit(bboxSource.getExtent(), map.getSize());
@@ -1693,6 +1926,10 @@ create.job = (function(){
             if (val === '') {
                 unsetBounds();
                 //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
                 bboxSource.clear();
                 //box.deactivate();
                 //transform.unsetFeature();
@@ -1706,6 +1943,10 @@ create.job = (function(){
             if (isEnterBBox) {
                 // remove existing features
                 //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
                 bboxSource.clear();
                 var coords = val.split(',');
                 // check for correct number of coords
@@ -1734,6 +1975,10 @@ create.job = (function(){
                     (parseFloat(bottom) < -90 || parseFloat(bottom) > 90) ||
                     (parseFloat(top) < -90 || parseFloat(top) > 90)){
                     //bbox.removeAllFeatures();
+                    if (bboxSource == null){
+                        bboxSource = new ol.source.Vector();
+                        bbox.setSource(bboxSource);
+                    }
                     bboxSource.clear();
                     validateBounds();
                     return;
@@ -2349,5 +2594,8 @@ $(document).ready(function() {
             $('#list-export-map').css('visibility', 'hidden');
             $('#list-controls').css('display','none');
         });
+
+
+    //$('#create-job-wizard').bootstrapWizard();
         create.job.init();
 });

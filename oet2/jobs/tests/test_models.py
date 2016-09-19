@@ -14,8 +14,9 @@ from django.utils import timezone
 
 import oet2.jobs.presets as presets
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag
+    ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag, ExportProvider, ProviderTask
 )
+from oet2.tasks.models import ExportProviderTask
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +33,16 @@ class TestJob(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
+        export_provider = ExportProvider.objects.get(slug='osm-vector')
+        provider_task = ProviderTask.objects.create(provider=export_provider)
         self.job = Job(name='TestJob',
                                  description='Test description', event='Nepal activation',
                                  user=self.user, the_geom=the_geom)
         self.job.save()
         self.uid = self.job.uid
         # add the formats to the job
-        self.job.formats = self.formats
+        provider_task.formats.add(*self.formats)
+        self.job.provider_tasks.add(provider_task)
         self.job.save()
         self.tags = [('building', 'yes'), ('place', 'city'), ('highway', 'service'), ('aeroway', 'helipad')]
         for tag in self.tags:
@@ -54,9 +58,9 @@ class TestJob(TestCase):
         self.assertEquals(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_formats = saved_job.formats.all()
-        self.assertIsNotNone(saved_formats)
-        self.assertItemsEqual(saved_formats, self.formats)
+        saved_provider_tasks = saved_job.provider_tasks.first()
+        self.assertIsNotNone(saved_provider_tasks.formats.all())
+        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
         tags = saved_job.tags.all()
         self.assertEquals(4, len(tags))
         self.assertEquals('Test description', saved_job.description)
@@ -68,9 +72,9 @@ class TestJob(TestCase):
         self.assertEquals(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_formats = saved_job.formats.all()
-        self.assertIsNotNone(saved_formats)
-        self.assertItemsEqual(saved_formats, self.formats)
+        saved_provider_tasks = saved_job.provider_tasks.first()
+        self.assertIsNotNone(saved_provider_tasks.formats.all())
+        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job
         f = File(open(self.path + '/files/hdm_presets.xml'))
         filename = f.name.split('/')[-1]

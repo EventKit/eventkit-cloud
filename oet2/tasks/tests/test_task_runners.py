@@ -9,9 +9,10 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 
-from oet2.jobs.models import ExportFormat, Job, Region
+from oet2.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
 
-from ..task_runners import ExportTaskRunner
+from ..task_runners import ExportOSMTaskRunner
+from ..task_factory import TaskFactory
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,14 @@ class TestExportTaskRunner(TestCase):
         self.job = Job.objects.create(name='TestJob',
                                  description='Test description', user=self.user,
                                  the_geom=the_geom)
+        provider = ExportProvider.objects.first()
+        provider_task = ProviderTask.objects.create(provider=provider)
+        self.job.provider_tasks.add(provider_task)
         self.region = Region.objects.get(name='Africa')
         self.job.region = self.region
-        self.uid = str(self.job.uid)
+        self.uid = str(provider_task.uid)
         self.job.save()
+        self.task_factory = TaskFactory(self.job.uid)
 
     @patch('oet2.tasks.task_runners.chain')
     @patch('oet2.tasks.export_tasks.ShpExportTask')
@@ -45,14 +50,14 @@ class TestExportTaskRunner(TestCase):
         # celery chain mock
         celery_chain = mock_chain.return_value
         celery_chain.apply_async.return_value = Mock()
-        self.job.formats = [shp_task]
-        runner = ExportTaskRunner()
-        runner.run_task(job_uid=self.uid)
+        self.job.provider_tasks.all()[0].formats.add(shp_task)
+        runner = ExportOSMTaskRunner()
+        runner.run_task(provider_task_uid=self.uid, run=self.job.runs.all()[0])
         run = self.job.runs.all()[0]
         self.assertIsNotNone(run)
         # assert delay method called on mock chord..
         celery_chain.delay.assert_called_once()
-        tasks = run.tasks.all()
+        tasks = run.provider_tasks.all()[0].tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(5, len(tasks))  # 4 initial tasks + 1 shape export task
         self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
