@@ -31,10 +31,6 @@ class Migration(migrations.Migration):
         wms_type.save()
 
         ExportProvider.objects.create(name='OpenStreetMap Data', slug='osm-vector', export_provider_type=osm_type)
-        ExportProvider.objects.create(name='USGS-Shaded', slug='usgs-shade',
-                                      url='https://basemap.nationalmap.gov/arcgis/services/USGSShadedReliefOnly/MapServer/WMSServer?request=GetCapabilities&service=WMS',
-                                      layer=0,
-                                      export_provider_type=wms_type)
 
     dependencies = [
         ('jobs', '0001_initial'),

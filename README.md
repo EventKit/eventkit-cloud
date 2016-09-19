@@ -269,3 +269,5 @@ For all languages:
 Finally, compile language files
 
 `python manage.py compilemessages`
+
+Testing Travis

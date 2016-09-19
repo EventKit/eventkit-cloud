@@ -5,7 +5,7 @@ from .project import *  # NOQA
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['hot.geoweb.io']
+ALLOWED_HOSTS = ['localhost']
 
 # Comment if you are not running behind proxy
 USE_X_FORWARDED_HOST = True
@@ -52,7 +52,7 @@ TEMPLATES = [
 
 # session settings
 SESSION_COOKIE_NAME = 'hot_exports_sessionid'
-SESSION_COOKIE_DOMAIN = 'hot.geoweb.io'
+SESSION_COOKIE_DOMAIN = 'localhost'
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
