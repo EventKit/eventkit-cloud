@@ -329,9 +329,10 @@ class RunJob(views.APIView):
         if (job_uid):
             # run the tasks
             job = Job.objects.get(uid=job_uid)
-            run = TaskFactory(job_uid)
-            if run:
-                running = ExportRunSerializer(run, context={'request': request})
+            task_factory = TaskFactory(job_uid)
+            if task_factory:
+                task_factory.parse_tasks()
+                running = ExportRunSerializer(task_factory.run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)

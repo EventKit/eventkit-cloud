@@ -68,10 +68,11 @@ class WMSToGeopackage():
         mapproxy_config = base_config()
         load_config(mapproxy_config, config_dict=conf_dict)
 
-        logger.error('CONF:')
-        logger.error('{}'.format(conf_dict))
         errors, informal_only = validate_options(mapproxy_config)
         if not informal_only:
+            logger.error("Mapproxy configuration failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
             raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
 
         #Create a configuration object
@@ -79,10 +80,12 @@ class WMSToGeopackage():
 
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
-        logger.error('SEED:')
-        logger.error('{}'.format(seed_dict))
+
         errors, informal_only = validate_seed_conf(seed_dict)
         if not informal_only:
+            logger.error("Mapproxy Seed failed.")
+            logger.error("Using Seed Configuration:")
+            logger.error(seed_dict)
             raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
 
         # Create a seed configuration object
@@ -96,7 +99,10 @@ class WMSToGeopackage():
             p.start()
             p.join()
         except Exception as e:
-            logger.error("wms failed.")
+            logger.error("WMS Export failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
+            logger.error(seed_dict)
             raise e
         return self.gpkgfile
 

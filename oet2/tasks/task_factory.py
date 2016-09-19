@@ -40,7 +40,7 @@ class TaskFactory():
                                                                  provider_task_uid=provider_task.uid,
                                                                  run=self.run,
                                                                  stage_dir=os.path.join(self.stage_dir, provider_task.provider.slug))
-                        header_tasks = [task_runner_tasks]
+                        header_tasks += [task_runner_tasks]
                 if header_tasks:
                     finalize_task = FinalizeRunTask()
                     chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
