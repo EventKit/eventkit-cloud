@@ -407,10 +407,10 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-        # try:
-        #     shutil.rmtree(stage_dir)
-        # except IOError as e:
-        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError as e:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
@@ -423,8 +423,10 @@ class FinalizeRunTask(Task):
             'url': url,
             'status': run.status
         }
-        text = get_template('email/email.txt').render(Context(ctx))
-        html = get_template('email/email.html').render(Context(ctx))
+        # text = get_template('email/email.txt').render(Context(ctx))
+        # html = get_template('email/email.html').render(Context(ctx))
+        text = get_template('email/email.txt').render(ctx)
+        html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
@@ -447,8 +449,8 @@ class ExportTaskErrorHandler(Task):
         try:
             if os.path.isdir(stage_dir):
                 #leave the stage_dir in place for debugging
-                #shutil.rmtree(stage_dir)
-                pass
+                shutil.rmtree(stage_dir)
+                # pass
         except IOError as e:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         hostname = settings.HOSTNAME
@@ -462,8 +464,8 @@ class ExportTaskErrorHandler(Task):
             'url': url,
             'task_id': task_id
         }
-        text = get_template('email/error_email.txt').render(Context(ctx))
-        html = get_template('email/error_email.html').render(Context(ctx))
+        text = get_template('email/error_email.txt').render(ctx)
+        html = get_template('email/error_email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()

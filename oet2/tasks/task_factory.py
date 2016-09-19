@@ -25,32 +25,30 @@ class TaskFactory():
         if self.run:
             self.stage_dir = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)))
             os.makedirs(self.stage_dir, 6600)
-            self.parse_tasks()
-        else:
-            return False
 
     def parse_tasks(self):
-        provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
-        if provider_tasks:
-            header_tasks = []
-            for provider_task in provider_tasks:
-                # Create an instance of a task runner based on the type name
-                if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
-                    task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
-                    os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
-                    task_runner_tasks = task_runner.run_task(user=self.job.user,
-                                                             provider_task_uid=provider_task.uid,
-                                                             run=self.run,
-                                                             stage_dir=os.path.join(self.stage_dir, provider_task.provider.slug))
-                    header_tasks = [task_runner_tasks]
-            if header_tasks:
-                finalize_task = FinalizeRunTask()
-                chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
-                      ).apply_async(expires=datetime.now() + timedelta(days=1))
+        if self.run:
+            provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
+            if provider_tasks:
+                header_tasks = []
+                for provider_task in provider_tasks:
+                    # Create an instance of a task runner based on the type name
+                    if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
+                        task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
+                        os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
+                        task_runner_tasks = task_runner.run_task(user=self.job.user,
+                                                                 provider_task_uid=provider_task.uid,
+                                                                 run=self.run,
+                                                                 stage_dir=os.path.join(self.stage_dir, provider_task.provider.slug))
+                        header_tasks = [task_runner_tasks]
+                if header_tasks:
+                    finalize_task = FinalizeRunTask()
+                    chain(group(header_tasks) | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
+                          ).apply_async(expires=datetime.now() + timedelta(days=1))
+                else:
+                    return False
             else:
                 return False
-        else:
-            return False
 
     def create_run(self):
         # start the run

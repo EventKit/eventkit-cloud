@@ -290,10 +290,11 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
-            # task_runner = ExportTaskRunner()
+
             job_uid = str(job.uid)
-            TaskFactory(job_uid)
+            task_factory = TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
+            task_factory.parse_tasks()
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,

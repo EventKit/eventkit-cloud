@@ -19,7 +19,7 @@ from rest_framework.test import APITestCase
 from oet2.api.pagination import LinkHeaderPagination
 from oet2.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, ExportProviderType, \
     ProviderTask
-from oet2.tasks.models import ExportRun, ExportTask
+from oet2.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from oet2.api.views import get_models, get_provider_task
 
 logger = logging.getLogger(__name__)
@@ -157,9 +157,9 @@ class TestJobViewSet(APITestCase):
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @patch('oet2.tasks.task_runners.ExportOSMTaskRunner')
+    @patch('oet2.api.views.TaskFactory')
     def test_create_job_success(self, mock):
-        task_runner = mock.return_value
+        task_factory = mock.return_value
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
         config_uid = self.config.uid
@@ -179,8 +179,8 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test the ExportOSMTaskRunner.run_task(job_id) method gets called.
-        # task_runner.run_task.assert_called_once_with(job_uid=job_uid)
-
+        task_factory(job_uid)
+        task_factory.parse_tasks.assert_called_once()
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
@@ -202,9 +202,9 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('oet2.tasks.task_runners.ExportOSMTaskRunner')
+    @patch('oet2.api.views.TaskFactory')
     def test_create_job_with_config_success(self, mock):
-        task_runner = mock.return_value
+        task_factory = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -225,7 +225,8 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test the ExportTaskRunner.run_task(job_id) method gets called.
-        # task_runner.run_task.assert_called_once_with(job_uid=job_uid)
+        task_factory(job_uid)
+        task_factory.parse_tasks.assert_called_once()
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -243,11 +244,11 @@ class TestJobViewSet(APITestCase):
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('oet2.tasks.task_runners.ExportOSMTaskRunner')
+    @patch('oet2.api.views.TaskFactory')
     def test_create_job_with_tags(self, mock):
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        task_runner = mock.return_value
+        task_factory = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -268,7 +269,8 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test the ExportTaskRunner.run_task(job_id) method gets called.
-        # task_runner.run_task.assert_called_once_with(job_uid=job_uid)
+        task_factory(job_uid)
+        task_factory.parse_tasks.assert_called_once()
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -715,7 +717,7 @@ class TestExportConfigViewSet(APITestCase):
         f = File(open(path + '/files/Example Transform.sql', 'r'))
         name = 'Test Export Config'
         response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM', 'published': True},
-                                    format='json')
+                                    format='multipart')
         data = response.data
         uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=uid)
@@ -735,7 +737,7 @@ class TestExportConfigViewSet(APITestCase):
         f = File(open(path + '/files/hdm_presets.xml', 'r'))
         name = 'Test Export Preset'
         response = self.client.post(post_url, {'name': name, 'upload': f, 'config_type': 'PRESET', 'published': True},
-                                    format='json')
+                                    format='multipart')
         data = response.data
         uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=uid)
@@ -767,7 +769,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
         self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='JSON')
+        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='multipart')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_invalid_preset(self, ):
@@ -776,7 +778,7 @@ class TestExportConfigViewSet(APITestCase):
         f = open(path + '/files/invalid_hdm_presets.xml', 'r')
         self.assertIsNotNone(f)
         response = self.client.post(url, {'name': 'Invalid Preset', 'upload': f, 'config_type': 'PRESET'},
-                                    format='json')
+                                    format='multipart')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_invalid_name(self, ):
@@ -784,7 +786,7 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
         self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM'}, format='JSON')
+        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM'}, format='multipart')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response.data['name'], ['This field is required.'])
 
@@ -847,7 +849,11 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         self.run = ExportRun.objects.create(job=self.job)
         self.celery_uid = str(uuid.uuid4())
-        self.task = ExportTask.objects.create(run=self.run, name='Shapefile Export',
+        # provider = ExportProvider.objects.first()
+        # provider_task = ProviderTask.objects.create(provider=provider)
+        self.export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task,
+                                              name='Shapefile Export',
                                               celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 

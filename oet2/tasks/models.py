@@ -44,7 +44,6 @@ class ExportRun(RunModelMixin):
     """
     Model for export task runs.
     """
-    # provider_task = models.ForeignKey(ProviderTask, related_name='runs')
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
     status = models.CharField(
@@ -66,7 +65,7 @@ class ExportProviderTask(models.Model):
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, blank=True)
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
 
     class Meta:
