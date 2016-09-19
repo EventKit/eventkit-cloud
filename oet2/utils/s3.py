@@ -3,9 +3,10 @@ import os
 import boto3
 from django.conf import settings
 
-BUCKET_NAME = settings.AWS_BUCKET_NAME
+
 
 def upload_to_s3(run_uuid, filename):
+    BUCKET_NAME = settings.AWS_BUCKET_NAME
     asset_path = os.path.join(
         settings.EXPORT_DOWNLOAD_ROOT,
         run_uuid, 
