@@ -70,7 +70,7 @@ cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
 sudo git fetch origin
-sudo git checkout s3_integration_mvv # switch to this experimental branch (temporary for s3 workers)
+sudo git checkout ec2_instance # switch to this experimental branch (temporary for s3 workers)
 cp -R * /var/lib/eventkit
 cd /var/lib/eventkit
 sudo apt-get -y install libxml2-dev libxslt-dev
