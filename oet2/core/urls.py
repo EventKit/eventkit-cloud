@@ -7,15 +7,16 @@ from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views.i18n import javascript_catalog
+from django.http import HttpResponseRedirect
 
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import login
 
 from oet2.api.urls import router
 from oet2.api.views import HDMDataModelView, OSMDataModelView, RunJob
 from oet2.ui import urls as ui_urls
 from oet2.ui.views import (
     about, create_error_view, help_create, help_exports, help_features,
-    help_formats, help_main, help_presets
+    help_formats, help_main, help_presets, logout
 )
 
 from tastypie.api import Api
@@ -26,7 +27,7 @@ admin.autodiscover()
 urlpatterns = []
 
 urlpatterns += i18n_patterns('oet2.ui.views',
-    url(r'^$', login, name='index'),
+    url(r'^$', lambda r: HttpResponseRedirect('exports/create/'), name='index'),
     url(r'^exports/', include(ui_urls)),
     url(r'^login/$', login, {'template_name': 'ui/login.html'}, name='login'),
     url(r'^logout$', logout, name='logout'),
