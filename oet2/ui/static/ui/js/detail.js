@@ -265,13 +265,16 @@ exports.detail = (function(){
                     var html = template(context);
                     $runPanel.append(html);
                     // add data provider info
-                    $providersDiv = $('div#' + run.uid).find('#providers').find('table');
+                    $providersDiv = $('div#' + run.uid).find('#providers');
                     var providers = run.provider_tasks;
                     $.each(providers, function (i, provider) {
                         var name = provider.name;
-                        $providersDiv.append('<tr id="' + provider.uid + '"><td>' + name + '</td></tr>');
+                        $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
                         // add task info
-                        $taskDiv = $('div#' + run.uid).find('#tasks').find('table');
+
+                        var taskDiv = '<div><table border=0 class="table table-condensed">';
+
+                        //$taskDiv = $('div#' + run.uid).find('#tasks').find('table');
                         var tasks = provider.tasks;
                         $.each(tasks, function (i, task) {
                             var errors = task.errors;
@@ -281,47 +284,42 @@ exports.detail = (function(){
                             switch (task.name) {
                                 case 'KML Export':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'OSM2PBF':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'Default Shapefile Export':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'SQLITE Export':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'Thematic Shapefile Export':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'Geopackage Export':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '">' + gettext('Geopackage Export') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '">' + gettext('Geopackage Export') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                                 case 'Generate Preset':
                                     if (status === 'SUCCESS') {
-                                        $taskDiv.append('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('Custom JOSM Preset (XML)') + '</a></td><td>' + duration + '</td><td>' +
-                                            result.size + '</td></tr>');
+                                        taskDiv+=('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('Custom JOSM Preset (XML)') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
                             }
+
+
                             if (errors.length > 0) {
                                 $exceptions = $('tr#exceptions-' + run.uid);
                                 $exceptions.css('display', 'table-row');
@@ -329,7 +327,15 @@ exports.detail = (function(){
                                 $errorsDiv.append('<tr><td>' + task.name + '</td><td>' + task.errors[0].exception + '</td></tr>');
                             }
                         });
+                        taskDiv+=('</table></div>');
+                        $(taskDiv).appendTo('#providers');
+                        $providersDiv.append('</table>')
+
+
+
                     });
+
+
                 });
             }
         });
@@ -362,14 +368,6 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
                                                         <div id="providers"> \
-                                                            <table id="providers" width="100%"> \
-                                                            </table> \
-                                                        </div> \
-                                                   <tr id="downloads-{{ run_uid }}"><td><strong>' + gettext('Download') + ':</strong></td><td> \
-                                                        <div id="tasks"> \
-                                                            <table id="tasks" class="table table-condensed" width="100%"> \
-                                                            <thead><th>' + gettext('File') + '</th><th>' + gettext('Duration') + '</th><th>' + gettext('Size') + '</th></thead> \
-                                                            </table> \
                                                         </div> \
                                                     </td></tr> \
                                                     <tr id="exceptions-{{ run_uid }}" style="display: none;"><td><strong>' + gettext('Errors') + ':</strong></td><td> \
@@ -491,15 +489,18 @@ exports.detail = (function(){
             var html = template(context);
             $runPanel.append(html);
             // add data provider info
-            $providersDiv = $('div#' + run.uid).find('#providers').find('table');
+            $providersDiv = $('div#' + run.uid).find('#providers');
             var providers = run.provider_tasks;
-            $.each(providers, function(i, provider){
+            $.each(providers, function (i, provider) {
                 var name = provider.name;
-                $providersDiv.append('<tr id="' + provider.uid +'"><td>' + name + '</td></tr>');
+                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
                 // add task info
-                $taskDiv = $('div#' + provider.uid).find('#tasks').find('table');
+
+                var taskDiv = '<div><table border=0 class="table table-condensed">';
+
+                //$taskDiv = $('div#' + run.uid).find('#tasks').find('table');
                 var tasks = provider.tasks;
-                $.each(tasks, function(i, task){
+                $.each(tasks, function (i, task) {
                     var result = task.result;
                     var status = task.status;
                     var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
@@ -507,100 +508,103 @@ exports.detail = (function(){
                         case 'OverpassQuery':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Extract OpenStreetMap Data') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Extract OpenStreetMap Data') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Extract OpenStreetMap Data') + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Extract OpenStreetMap Data') + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'KML Export':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Google Earth (KMZ)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Google Earth (KMZ)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' +
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('Google Earth (KMZ) File') + '</a></td><td>' + duration + '</td><td>' +
                                     result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'OSM2PBF':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('OpenStreetMap (PBF) File') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('OpenStreetMap (PBF) File') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' +
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('OpenStreetMap (PBF) File') + '</a></td><td>' + duration + '</td><td>' +
                                     result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'Default Shapefile Export':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('ESRI Shapefile (SHP)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('ESRI Shapefile (SHP)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
                                     result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'Thematic Shapefile Export':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Thematic ESRI Shapefile (SHP)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Thematic ESRI Shapefile (SHP)') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('Thematic ESRI Shapefile (SHP)') + '</a></td><td>' + duration + '</td><td>' +
                                     result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'SQLITE Export':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid + '"><td>' + gettext('SQlite Database File') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid + '"><td>' + gettext('SQlite Database File') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + gettext('SQlite Database File') + '</a></td><td>' + duration + '</td><td>' +
                                     result.size + '</td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'OSMSchema':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate OpenStreetMap Schema') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate OpenStreetMap Schema') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>'+ gettext('Generate OpenStreetMap Schema') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>'+ gettext('Generate OpenStreetMap Schema') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'Geopackage Export':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Geopackage File') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Geopackage File') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>'+ gettext('Geopackage File') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>'+ gettext('Geopackage File') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
                             }
                             break;
                         case 'Generate Preset':
                             if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate JOSM Preset') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate JOSM Preset') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
                             }
                             else {
                                 cls = status.toLowerCase();
-                                $taskDiv.append('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate JOSM Preset') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate JOSM Preset') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
                             }
                             break;
                     }
                 });
+                taskDiv+=('</table></div>');
+                $(taskDiv).appendTo('#providers');
+                $providersDiv.append('</table>')
             });
         });
     }
@@ -630,18 +634,9 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Status') + ':</strong></td><td><div id="status" class="{{ status_class }}" role="alert">{{ status }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Started') + ':</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Run by') + ':</strong></td><td><div id="user">{{ user }}</div></td></tr> \
-                                                   <tr><td><strong>' + gettext('Providers') + ':</strong></td><td> \
+                                                   <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
                                                         <div id="providers"> \
-                                                            <table class="table table-condensed" width="100%"> \
-                                                            </table> \
                                                         </div> \
-                                                   <tr><td><strong>' + gettext('Tasks') + ':</strong></td><td> \
-                                                        <div id="tasks"> \
-                                                             <table class="table table-condensed" width="100%"> \
-                                                                    <thead><th>' + gettext('Name') + '</th><th>' + gettext('Duration') + '</th><th>' + gettext('Size') + '</th><th>' + gettext('Status') + '</th></thead> \
-                                                             </table> \
-                                                        </div> \
-                                                   </td></tr> \
                                                    </td></tr> \
                                                </table> \
                                            </div> \
