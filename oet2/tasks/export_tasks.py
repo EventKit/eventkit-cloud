@@ -334,15 +334,7 @@ class WMSExportTask(ExportTask):
             logger.error('Raised exception in wms export, %s', str(e))
             raise Exception(e)
 
-test = """
-layers:
-- layers:
-  - md:
-      abstract: DigitalGlobe:FoundationGEOINT
-    name: DigitalGlobe:FoundationGEOINT
-    sources: ['DigitalGlobe:FoundationGEOINT_wms']
-    title: DigitalGlobe:FoundationGEOINT
-"""
+
 class GeneratePresetTask(ExportTask):
     """
     Generates a JOSM Preset from the exports selected features.
