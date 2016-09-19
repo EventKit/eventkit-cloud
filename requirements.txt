@@ -28,3 +28,4 @@ numpy==1.11.1
 -e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
 -e git://github.com/terranodo/django-mapproxy.git@master#egg=djmp
 -e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo_importer
+boto3
