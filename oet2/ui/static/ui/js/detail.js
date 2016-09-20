@@ -1,7 +1,7 @@
 exports = {}
 exports.detail = (function(){
     var map;
-    var job_extents_source
+    var job_extents_source;
 
     return {
         init: function(){
