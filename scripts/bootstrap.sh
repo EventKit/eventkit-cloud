@@ -76,7 +76,7 @@ mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
 sudo git clone https://github.com/terranodo/eventkit-cloud.git
 cd eventkit-cloud
-git checkout removeDJMP
+#git checkout removeDJMP
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
 cp -R * /var/lib/eventkit
