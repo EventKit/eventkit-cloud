@@ -33,13 +33,14 @@ def validate_region(regions):
 
     Raises:
         ValidationError: if no regions are found.
-    """
+
     if len(regions) == 0:
         detail = OrderedDict()
         detail['id'] = _('invalid_region')
         detail['message'] = _('Job extent is not within a valid region.')
         raise serializers.ValidationError(detail)
     return regions[0]
+    """
 
 
 def validate_formats(data):
@@ -52,9 +53,39 @@ def validate_formats(data):
     Raises:
         ValidationError: if there are no formats selected.
     """
-    formats = data['formats']
-    if formats == None or len(formats) == 0:
-        raise serializers.ValidationError({'formats': [_('Select an export format.')]})
+    print("VALIDATING DATA:{}".format(data))
+    if data.get('formats') == None or len(data.get('formats')) == 0:
+        raise serializers.ValidationError({'formats': [_('invalid export format.')]})
+
+
+def validate_provider_tasks(data):
+    """
+    Validate the selected export formats.
+
+    Args:
+        data: the submitted form data.
+
+    Raises:
+        ValidationError: if there are no formats selected.
+    """
+    print("VALIDATING DATA:{}".format(data))
+    if data.get('formats') == None or len(data.get('formats')) == 0:
+        raise serializers.ValidationError({'formats': [_('invalid export format.')]})
+
+
+def validate_providers(data):
+    """
+    Validate the selected export formats.
+
+    Args:
+        data: the submitted form data.
+
+    Raises:
+        ValidationError: if there are no formats selected.
+    """
+    for provider_task in data.get('provider_tasks', {"provider": None}):
+        if provider_task.get('provider') == None or len(provider_task.get('provider')) == 0:
+            raise serializers.ValidationError({'provider': [_('Select a provider.')]})
 
 
 def validate_search_bbox(extents):

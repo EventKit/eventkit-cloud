@@ -34,7 +34,7 @@ class OSMParser(object):
         if osmconf:
             self.osmconf = osmconf
         else:
-            self.osmconf = self.path + '/conf/hotosm.ini'
+            self.osmconf = os.path.join(os.path.join(self.path, 'conf'),'hotosm.ini')
             logger.debug('Found osmconf ini file at: {0}'.format(self.osmconf))
         """
         OGR Command to run.
@@ -81,7 +81,7 @@ class OSMParser(object):
         # update the spatialite schema
         self.update_sql = Template("spatialite $sqlite < $update_sql")
         sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
-                            'update_sql': self.path + '/sql/planet_osm_schema.sql'})
+                            'update_sql': os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql')})
         if(self.debug):
             print 'Running: %s' % sql_cmd
         proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',

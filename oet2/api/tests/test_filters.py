@@ -10,7 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
-from oet2.jobs.models import ExportFormat, Job
+from oet2.jobs.models import ExportFormat, Job, ExportProvider, ProviderTask
 
 logger = logging.getLogger(__name__)
 
@@ -35,26 +35,29 @@ class TestJobFilter(APITestCase):
                                  description='Test description', user=self.user2,
                                  the_geom=the_geom)
         format = ExportFormat.objects.get(slug='shp')
-        self.job1.formats.add(format)
-        self.job2.formats.add(format)
+        export_provider = ExportProvider.objects.get(slug='osm-vector')
+        provider_task = ProviderTask.objects.create(provider=export_provider)
+        provider_task.formats.add(format)
+        self.job1.provider_tasks.add(provider_task)
+        self.job2.provider_tasks.add(provider_task)
         token = Token.objects.create(user=self.user1)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-    @patch('oet2.api.views.ExportTaskRunner')
+    @patch('oet2.api.views.TaskFactory')
     def test_filterset_no_user(self, mock):
-        task_runner = mock.return_value
+        task_factory = mock.return_value
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
         url += '?start=2015-01-01&end=2030-08-01'
         response = self.client.get(url)
         self.assertEquals(2, len(response.data))
 
-    @patch('oet2.api.views.ExportTaskRunner')
+    @patch('oet2.api.views.TaskFactory')
     def test_filterset_with_user(self, mock):
-        task_runner = mock.return_value
+        task_factory = mock.return_value
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
         url += '?start=2015-01-01&end=2030-08-01&user=demo1'

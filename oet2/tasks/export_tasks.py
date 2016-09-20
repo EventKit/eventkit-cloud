@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_shp, geopackage
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_shp, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -54,32 +54,38 @@ class ExportTask(Task):
         # update the task
         finished = timezone.now()
         task = ExportTask.objects.get(celery_uid=task_id)
+        provider_task_name = task.export_provider_task.name
         task.finished_at = finished
         # get the output
         output_url = retval['result']
         stat = os.stat(output_url)
         size = stat.st_size / 1024 / 1024.00
         # construct the download_path
-        download_root = settings.EXPORT_DOWNLOAD_ROOT
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         parts = output_url.split('/')
         filename = parts[-1]
-        run_uid = parts[-2]
-        run_dir = '{0}{1}'.format(download_root, run_uid)
-        download_path = '{0}{1}/{2}'.format(download_root, run_uid, filename)
+        provider_slug = parts[-2]
+        run_uid = parts[-3]
+        run_dir = os.path.join(download_root, run_uid)
+        provider_dir = os.path.join(run_dir, provider_slug)
+        download_path = os.path.join(provider_dir, filename)
         try:
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir)
-            # don't copy raw overpass data
+            if not os.path.exists(provider_dir):
+                os.makedirs(provider_dir)
+            # don't copy raw run_dir data
             if (task.name != 'OverpassQuery'):
                 shutil.copy(output_url, download_path)
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
+
         if settings.USE_S3:
             download_url = s3.upload_to_s3(run_uid, filename)
         else:
-            download_media_root = settings.EXPORT_MEDIA_ROOT
-            download_url = '{0}{1}/{2}'.format(download_media_root, run_uid, filename)
+            download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+            download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
 
         # save the task and task result
         result = ExportTaskResult(
@@ -103,7 +109,7 @@ class ExportTask(Task):
             5. run ExportTaskErrorHandler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from oet2.tasks.models import ExportTask, ExportTaskException, ExportRun
+        from oet2.tasks.models import ExportTask, ExportTaskException, ExportProviderTask
         logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
         task = ExportTask.objects.get(celery_uid=task_id)
         task.status = 'FAILED'
@@ -113,7 +119,7 @@ class ExportTask(Task):
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
         if self.abort_on_error:
-            run = ExportRun.objects.get(tasks__celery_uid=task_id)
+            run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
             run.status = 'FAILED'
             run.finished_at = timezone.now()
             run.save()
@@ -125,7 +131,7 @@ class ExportTask(Task):
     def after_return(self, *args, **kwargs):
         logger.debug('Task returned: {0}'.format(self.request))
 
-    def update_task_state(self, run_uid=None, name=None):
+    def update_task_state(self, task_uid=None):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -134,7 +140,7 @@ class ExportTask(Task):
         from oet2.tasks.models import ExportTask
         celery_uid = self.request.id
         try:
-            task = ExportTask.objects.get(run__uid=run_uid, name=name)
+            task = ExportTask.objects.get(uid=task_uid)
             celery_uid = self.request.id
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
@@ -153,8 +159,12 @@ class OSMConfTask(ExportTask):
     name = 'OSMConf'
     abort_on_error = True
 
-    def run(self, run_uid=None, categories=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
+    def run(self,
+            categories=None,
+            stage_dir=None,
+            job_name=None,
+            task_uid=None):
+        self.update_task_state(task_uid=task_uid)
         conf = osmconf.OSMConfig(categories, job_name=job_name)
         configfile = conf.create_osm_conf(stage_dir=stage_dir)
         return {'result': configfile}
@@ -167,11 +177,11 @@ class OverpassQueryTask(ExportTask):
     name = 'OverpassQuery'
     abort_on_error = True
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None, filters=None, bbox=None):
+    def run(self, task_uid= None, stage_dir=None, job_name=None, filters=None, bbox=None):
         """
         Runs the query and returns the path to the filtered osm file.
         """
-        self.update_task_state(run_uid=run_uid, name=self.name)
+        self.update_task_state(task_uid=task_uid)
         op = overpass.Overpass(
             bbox=bbox, stage_dir=stage_dir,
             job_name=job_name, filters=filters
@@ -189,10 +199,10 @@ class OSMToPBFConvertTask(ExportTask):
     name = 'OSM2PBF'
     abort_on_error = True
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        osm = stage_dir + job_name + '.osm'
-        pbffile = stage_dir + job_name + '.pbf'
+    def run(self, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        osm = os.path.join(stage_dir, '{0}.osm'.format(job_name))
+        pbffile = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
         o2p = pbf.OSMToPBF(osm=osm, pbffile=pbffile)
         pbffile = o2p.convert()
         return {'result': pbffile}
@@ -205,11 +215,11 @@ class OSMPrepSchemaTask(ExportTask):
     name = 'OSMSchema'
     abort_on_error = True
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        osm = stage_dir + job_name + '.pbf'
-        sqlite = stage_dir + job_name + '.sqlite'
-        osmconf = stage_dir + job_name + '.ini'
+    def run(self, task_uid=None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
         osmparser = osmparse.OSMParser(osm=osm, sqlite=sqlite, osmconf=osmconf)
         osmparser.create_spatialite()
         osmparser.create_default_schema()
@@ -224,12 +234,12 @@ class ThematicLayersExportTask(ExportTask):
 
     name = "Thematic Shapefile Export"
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from oet2.tasks.models import ExportRun
-        self.update_task_state(run_uid=run_uid, name=self.name)
+        self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
-        sqlite = stage_dir + job_name + '.sqlite'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         try:
             t2s = thematic_shp.ThematicSQliteToShp(sqlite=sqlite, tags=tags, job_name=job_name)
             t2s.generate_thematic_schema()
@@ -246,10 +256,10 @@ class ShpExportTask(ExportTask):
     """
     name = 'Default Shapefile Export'
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        sqlite = stage_dir + job_name + '.sqlite'
-        shapefile = stage_dir + job_name + '_shp'
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
             s2s = shp.SQliteToShp(sqlite=sqlite, shapefile=shapefile)
             out = s2s.convert()
@@ -265,10 +275,10 @@ class KmlExportTask(ExportTask):
     """
     name = 'KML Export'
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        sqlite = stage_dir + job_name + '.sqlite'
-        kmlfile = stage_dir + job_name + '.kml'
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
             s2k = kml.SQliteToKml(sqlite=sqlite, kmlfile=kmlfile)
             out = s2k.convert()
@@ -284,10 +294,10 @@ class SqliteExportTask(ExportTask):
 
     name = 'SQLITE Export'
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
         # sqlite already generated by OSMPrepSchema so just return path.
-        sqlite = stage_dir + job_name + '.sqlite'
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         return {'result': sqlite}
 
 
@@ -297,10 +307,10 @@ class GeopackageExportTask(ExportTask):
     """
     name = 'Geopackage Export'
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
-        self.update_task_state(run_uid=run_uid, name=self.name)
-        sqlite = stage_dir + job_name + '.sqlite'
-        gpkgfile = stage_dir + job_name + '.gpkg'
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
             out = s2g.convert()
@@ -309,6 +319,27 @@ class GeopackageExportTask(ExportTask):
             logger.error('Raised exception in geopackage export, %s', str(e))
             raise Exception(e)
 
+
+class WMSExportTask(ExportTask):
+    """
+    Class defining geopackage export function.
+    """
+    name = 'WMS Export'
+
+    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
+            wms_url=None, name=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        try:
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name, layer=layer,
+                                      config=config)
+            out = w2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in wms export, %s', str(e))
+            raise Exception(e)
+
+
 class GeneratePresetTask(ExportTask):
     """
     Generates a JOSM Preset from the exports selected features.
@@ -316,10 +347,10 @@ class GeneratePresetTask(ExportTask):
 
     name = 'Generate Preset'
 
-    def run(self, run_uid=None, stage_dir=None, job_name=None):
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from oet2.tasks.models import ExportRun
         from oet2.jobs.models import ExportConfig
-        self.update_task_state(run_uid=run_uid, name=self.name)
+        self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         job = run.job
         user = job.user
@@ -362,7 +393,10 @@ class FinalizeRunTask(Task):
         from oet2.tasks.models import ExportRun
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
-        tasks = run.tasks.all()
+        tasks = []
+        provider_tasks = run.provider_tasks.all()
+        for provider_task in provider_tasks:
+            tasks.extend(provider_task.tasks.all())
         # mark run as incomplete if any tasks fail
         for task in tasks:
             if task.status == 'FAILED':
@@ -379,15 +413,17 @@ class FinalizeRunTask(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export is ready"
+        subject = "Your Eventkit Data Pack is ready."
         to = [addr]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'status': run.status
         }
-        text = get_template('email/email.txt').render(Context(ctx))
-        html = get_template('email/email.html').render(Context(ctx))
+        # text = get_template('email/email.txt').render(Context(ctx))
+        # html = get_template('email/email.html').render(Context(ctx))
+        text = get_template('email/email.txt').render(ctx)
+        html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
@@ -410,23 +446,23 @@ class ExportTaskErrorHandler(Task):
         try:
             if os.path.isdir(stage_dir):
                 #leave the stage_dir in place for debugging
-                #shutil.rmtree(stage_dir)
-                pass
+                shutil.rmtree(stage_dir)
+                # pass
         except IOError as e:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export Failed"
+        subject = "Your Eventkit Data Pack Failed"
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'task_id': task_id
         }
-        text = get_template('email/error_email.txt').render(Context(ctx))
-        html = get_template('email/error_email.html').render(Context(ctx))
+        text = get_template('email/error_email.txt').render(ctx)
+        html = get_template('email/error_email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()

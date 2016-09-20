@@ -20,10 +20,10 @@ from rest_framework import serializers
 
 import validators
 from oet2.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
 )
 from oet2.tasks.models import (
-    ExportRun, ExportTask, ExportTaskException, ExportTaskResult
+    ExportRun, ExportTask, ExportTaskException, ExportTaskResult, ExportProviderTask
 )
 
 try:
@@ -206,6 +206,19 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             return None  # can't compute yet
 
 
+class ExportProviderTaskSerializer(serializers.ModelSerializer):
+
+    tasks = ExportTaskSerializer(many=True)
+    url = serializers.HyperlinkedIdentityField(
+        view_name='api:provider_tasks-detail',
+        lookup_field='uid'
+    )
+
+    class Meta:
+        model = ExportProviderTask
+        fields = ('uid', 'url', 'name', 'tasks',)
+
+
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
     uid = serializers.SerializerMethodField()
@@ -240,14 +253,14 @@ class ExportRunSerializer(serializers.ModelSerializer):
        lookup_field='uid'
     )
     job = SimpleJobSerializer()  # nest the job details
-    tasks = ExportTaskSerializer(many=True)
+    provider_tasks = ExportProviderTaskSerializer(many=True)
     finished_at = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
-        fields = ('uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 'status', 'job', 'tasks')
+        fields = ('uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 'status', 'job', 'provider_tasks')
 
     def get_finished_at(self, obj):
         if (not obj.finished_at):
@@ -375,6 +388,81 @@ class ListJobSerializer(serializers.Serializer):
         return obj.user.username
 
 
+# class FormatSerializer(serializers.ModelSerializer):
+#
+#     slug = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
+#
+#     class Meta:
+#         model = ExportFormat
+#         fields = ('slug',)
+#         read_only = ('slug',)
+#         extra_kwargs = {
+#             'slug': {
+#                 'validators': []
+#             }
+#         }
+#
+# class ProviderSerializer(serializers.ModelSerializer):
+#
+#     type = serializers.ModelSerializer(required=False)
+#     class Meta:
+#         model = ExportProvider
+#         fields = ('name', 'url', 'layer', 'type')
+#         read_only = ('name', 'url', 'layer', 'type')
+#         extra_kwargs = {
+#             'name': {
+#                 'validators': []
+#             },
+#             'url': {
+#                 'validators': []
+#             },
+#             'layer': {
+#                 'validators': []
+#             },
+#             'type': {
+#                 'validators': []
+#             }
+#         }
+
+
+class ProviderTaskSerializer(serializers.ModelSerializer):
+
+    formats = serializers.SlugRelatedField(many=True,
+                                           queryset=ExportFormat.objects.all(),
+                                           slug_field='slug',
+                                           error_messages={'non_field_errors': _('Select an export format.')})
+    provider = serializers.SlugRelatedField(many=False, queryset=ExportProvider.objects.all(), slug_field='name')
+
+    class Meta:
+        model = ProviderTask
+        fields = ('provider', 'formats')
+
+    def create(self, validated_data):
+        from oet2.api.views import get_models
+        """Creates an export ProviderTask."""
+        format_names = validated_data.pop("formats")
+        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        provider_model = ExportProvider.objects.get(name=validated_data.get("provider"))
+        provider_task = ProviderTask.objects.create(provider=provider_model)
+        provider_task.formats.add(*format_models)
+        provider_task.save()
+        return provider_task
+
+    def update(self, instance, validated_data):
+        """Not implemented."""
+        pass
+
+    def validate(self, data):
+        """
+        Validates the data submitted during ProviderTask creation.
+
+        See api/validators.py for validation code.
+        """
+        # validators.validate_formats(data)
+        # validators.validate_providers(data)
+        return data
+
+
 class JobSerializer(serializers.Serializer):
     """
     Return a full representation of an export Job.
@@ -382,29 +470,7 @@ class JobSerializer(serializers.Serializer):
     This is the core representation of the API.
     """
 
-    """
-    List of the available Export Formats.
-    
-    This list should be updated to add support for
-    additional export formats.
-    """
-    EXPORT_FORMAT_CHOICES = (
-        ('shp', 'Shapefile Format'),
-        ('kml', 'KML Format'),
-        ('sqlite', 'SQLITE Format'),
-        ('thematic', 'Thematic Shapefile Format'),
-        ('gpkg', 'Geopackage Format')
-    )
-
-    formats = serializers.MultipleChoiceField(
-        choices=EXPORT_FORMAT_CHOICES,
-        allow_blank=False,
-        write_only=True,
-        error_messages={
-            'invalid_choice': _("invalid export format."),
-            'not_a_list': _('Expected a list of items but got type "{input_type}".')
-        }
-    )
+    provider_tasks = ProviderTaskSerializer(many=True)
 
     uid = serializers.UUIDField(read_only=True)
     url = serializers.HyperlinkedIdentityField(
@@ -479,16 +545,16 @@ class JobSerializer(serializers.Serializer):
         See api/validators.py for validation code.
         """
         user = data['user']
-        validators.validate_formats(data)
+        #validators.validate_formats(data)
         extents = validators.validate_bbox_params(data)
         the_geom = validators.validate_bbox(extents, user=user)
         data['the_geom'] = the_geom
-        regions = Region.objects.filter(the_geom__intersects=the_geom).intersection(the_geom, field_name='the_geom')
+        # regions = Region.objects.filter(the_geom__intersects=the_geom).intersection(the_geom, field_name='the_geom')
         # sort the returned regions by area of intersection, largest first.
-        sorted_regions = sorted(regions.all(), key=lambda a: a.intersection.area, reverse=True) 
-        data['region'] = validators.validate_region(sorted_regions)
+        # sorted_regions = sorted(regions.all(), key=lambda a: a.intersection.area, reverse=True)
+        # data['region'] = validators.validate_region(sorted_regions)
         # remove unwanted fields, these are pulled from the request in the view if the serializer is valid
-        data.pop('xmin'), data.pop('ymin'), data.pop('xmax'), data.pop('ymax'), data.pop('formats')
+        data.pop('xmin'), data.pop('ymin'), data.pop('xmax'), data.pop('ymax'), data.pop('provider_tasks')
         return data
 
     def get_extent(self, obj):
@@ -505,9 +571,19 @@ class JobSerializer(serializers.Serializer):
 
     def get_exports(self, obj):
         """Return the export formats selected for this export."""
-        formats = [format for format in obj.formats.all()]
-        serializer = ExportFormatSerializer(formats, many=True, context={'request': self.context['request']})
-        return serializer.data
+        exports = []
+        for provider_task in obj.provider_tasks.all():
+            serializer = ExportFormatSerializer(provider_task.formats, many=True, context={'request': self.context['request']})
+            exports.append({"provider": provider_task.provider.name, "formats": serializer.data})
+        return exports
+
+    def get_provider_tasks(self, obj):
+        """Return the export formats selected for this export."""
+        exports = []
+        for provider_task in obj.provider_tasks.all():
+            serializer = ProviderTaskSerializer(provider_task.formats, many=True, context={'request': self.context['request']})
+            exports.append({provider_task.provider.name: serializer.data})
+        return exports
 
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
@@ -531,3 +607,5 @@ class JobSerializer(serializers.Serializer):
     def get_owner(self, obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+
