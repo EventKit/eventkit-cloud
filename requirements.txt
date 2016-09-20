@@ -29,3 +29,4 @@ numpy==1.11.1
 whitenoise
 python-dateutil
 django-tastypie
+boto3

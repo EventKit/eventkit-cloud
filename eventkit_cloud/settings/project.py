@@ -83,6 +83,7 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'eventkit.team@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', None)
 EMAIL_USE_TLS = True
+
 """
 Overpass Element limit
 
