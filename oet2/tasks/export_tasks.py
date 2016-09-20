@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage, wms
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_shp, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -80,8 +80,13 @@ class ExportTask(Task):
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
-        download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-        download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+
+        if settings.USE_S3:
+            download_url = s3.upload_to_s3(run_uid, filename)
+        else:
+            download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+            download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+
         # save the task and task result
         result = ExportTaskResult(
             task=task,
@@ -321,11 +326,13 @@ class WMSExportTask(ExportTask):
     """
     name = 'WMS Export'
 
-    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None, bbox=None, wms_url=None, name=None):
+    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
+            wms_url=None, name=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name)
+            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name, layer=layer,
+                                      config=config)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -397,24 +404,26 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-        # try:
-        #     shutil.rmtree(stage_dir)
-        # except IOError as e:
-        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError as e:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export is ready"
+        subject = "Your Eventkit Data Pack is ready."
         to = [addr]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'status': run.status
         }
-        text = get_template('email/email.txt').render(Context(ctx))
-        html = get_template('email/email.html').render(Context(ctx))
+        # text = get_template('email/email.txt').render(Context(ctx))
+        # html = get_template('email/email.html').render(Context(ctx))
+        text = get_template('email/email.txt').render(ctx)
+        html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
@@ -437,23 +446,23 @@ class ExportTaskErrorHandler(Task):
         try:
             if os.path.isdir(stage_dir):
                 #leave the stage_dir in place for debugging
-                #shutil.rmtree(stage_dir)
-                pass
+                shutil.rmtree(stage_dir)
+                # pass
         except IOError as e:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your HOT Export Failed"
+        subject = "Your Eventkit Data Pack Failed"
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
-        from_email = 'HOT Exports <exports@hotosm.org>'
+        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
             'task_id': task_id
         }
-        text = get_template('email/error_email.txt').render(Context(ctx))
-        html = get_template('email/error_email.html').render(Context(ctx))
+        text = get_template('email/error_email.txt').render(ctx)
+        html = get_template('email/error_email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()

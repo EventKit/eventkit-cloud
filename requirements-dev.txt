@@ -1,5 +1,5 @@
 -r requirements.txt
-
+boto3
 coverage
 django-nose
 mock>=1.0,<1.1

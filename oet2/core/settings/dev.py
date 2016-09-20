@@ -145,3 +145,7 @@ LOGGING = {
         },
     }
 }
+
+TILESET_CACHE_DIRECTORY='/cache'
+DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
+USE_S3=False

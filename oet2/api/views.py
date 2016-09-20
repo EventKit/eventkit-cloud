@@ -290,10 +290,11 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
-            # task_runner = ExportTaskRunner()
+
             job_uid = str(job.uid)
-            TaskFactory(job_uid)
+            task_factory = TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
+            task_factory.parse_tasks()
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -328,9 +329,10 @@ class RunJob(views.APIView):
         if (job_uid):
             # run the tasks
             job = Job.objects.get(uid=job_uid)
-            run = TaskFactory(job_uid)
-            if run:
-                running = ExportRunSerializer(run, context={'request': request})
+            task_factory = TaskFactory(job_uid)
+            if task_factory:
+                task_factory.parse_tasks()
+                running = ExportRunSerializer(task_factory.run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)

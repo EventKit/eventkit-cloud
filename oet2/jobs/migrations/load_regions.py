@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
         ds = None
 
     dependencies = [
-        ('jobs', '0001_initial'),
+        ('jobs', 'install_default_group'),
     ]
 
     operations = [

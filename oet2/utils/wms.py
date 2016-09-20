@@ -1,10 +1,14 @@
 from __future__ import absolute_import
 
-# from djmp.models import Tileset
-# from djmp.helpers import generate_confs
 from dateutil import parser
 from time import sleep
 from mapproxy.script.conf.app import config_command
+from mapproxy.seed.seeder import seed
+from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError, ConfigurationError
+from mapproxy.seed.spec import validate_seed_conf
+from mapproxy.config.loader import ProxyConfiguration
+from mapproxy.config.spec import validate_options
+from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
 from mapproxy.seed import util
 import yaml
@@ -23,7 +27,7 @@ class WMSToGeopackage():
     Convert a WMS services to a geopackage.
     """
 
-    def __init__(self, gpkgfile=None, bbox=None, wms_url=None, debug=None, name=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -36,23 +40,106 @@ class WMSToGeopackage():
         self.wms_url = wms_url
         self.debug = debug
         self.name = name
+        self.level_from = level_from
+        self.level_to = level_to
+        self.layer = layer
+        self.config = config
 
     def convert(self, ):
         """
         Convert sqlite to gpkg.
         """
-        conf_dict = create_conf_from_wms(self.wms_url)
-        # tileset = create_tileset_from_conf_dict(conf_dict, self.name, bbox=self.bbox, gpkg_file=self.gpkgfile)
-        # mapproxy_conf, seed_conf = generate_confs(tileset)
-        # tasks = seed_conf.seeds(['tileset_seed'])
-        # try:
-        #     p = Process(target=seeder.seed, daemon=False, kwargs={"tasks":tasks})
-        #     p.start()
-        #     p.join()
-        # except Exception as e:
-        #     logger.error("wms failed.")
-        #     raise e
-        # return self.gpkgfile
+        if self.config:
+            conf_dict = yaml.load(self.config)
+        else:
+            conf_dict = create_conf_from_wms(self.wms_url)
+        sources = []
+        # for source in conf_dict.get('sources'):
+        #     sources.append(source)
+        conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)], self.gpkgfile)
+        if not conf_dict.get('grids'):
+            conf_dict['grids'] = {}
+        conf_dict['grids']['webmercator'] = {'srs': 'EPSG:3857',
+                                             'tile_size': [256, 256],
+                                             'origin': 'nw'}
+
+        #disable SSL cert checks
+        conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
+
+        # Add autoconfiguration to base_config
+        mapproxy_config = base_config()
+        load_config(mapproxy_config, config_dict=conf_dict)
+
+        errors, informal_only = validate_options(mapproxy_config)
+        if not informal_only:
+            logger.error("Mapproxy configuration failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
+            raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
+
+        #Create a configuration object
+        mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
+
+
+        seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
+
+        errors, informal_only = validate_seed_conf(seed_dict)
+        if not informal_only:
+            logger.error("Mapproxy Seed failed.")
+            logger.error("Using Seed Configuration:")
+            logger.error(seed_dict)
+            raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
+
+        # Create a seed configuration object
+        seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
+        logger.error("Beginning seeding to {}".format(self.gpkgfile))
+
+        # Call seeder using billiard without daemon, because of limitations of running child processes in python.
+        try:
+            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
+                                                                  "concurrency": 1})
+            p.start()
+            p.join()
+        except Exception as e:
+            logger.error("WMS Export failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
+            logger.error(seed_dict)
+            raise e
+        return self.gpkgfile
+
+def get_cache_template(sources, geopackage):
+    return {'cache': {
+            "sources": sources,
+            "cache": {
+                "type": "geopackage",
+                "filename": str(geopackage)
+            },
+            "grids": ['webmercator']
+        }}
+
+def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
+    return {
+            'coverages': {
+                'geom': {
+                    'srs': 'EPSG:4326',
+                    'bbox': bbox
+                }
+            },
+            'seeds': {
+                'seed': {
+                    'coverages': ['geom'],
+                    'refresh_before': {
+                        'minutes': 0
+                    },
+                    'levels': {
+                        'to': level_to or 8,
+                        'from': level_from or 0
+                    },
+                    'caches': ['cache']
+                }
+            }
+        }
 
 
 def create_conf_from_wms(wms_url):
@@ -67,82 +154,3 @@ def create_conf_from_wms(wms_url):
     except yaml.YAMLError as exc:
         logger.error(exc)
     return conf_dict
-
-
-# def create_tileset_from_conf_dict(conf_dict, name, bbox=None, gpkg_file=None):
-#
-#     name = name
-#     created_by = "Eventkit Service"
-#     if gpkg_file:
-#         cache_type = 'geopackage'
-#     else:
-#         cache_type = 'file'
-#     directory_layout = 'tms'
-#     directory = getattr(settings, 'CACHE_DIR', '/cache')
-#     filename = gpkg_file
-#     table_name = None
-#     server_url = None
-#     source_type = 'wms'
-#     mapfile = None
-#     layer_zoom_stop = 6
-#
-#     layers = get_layers(conf_dict.get('layers'))
-#     for layer in layers:
-#         layer_name = layer.get('name')
-#         for source in layer.get('sources'):
-#             layer_source_data = conf_dict.get('sources').get(source) or conf_dict.get('caches').get(source)
-#             if layer_source_data.get('cache'):
-#                 cache_type = layer_source_data.get('cache').get('type')
-#                 directory_layout = layer_source_data.get('cache').get('directory_layout')
-#                 directory = layer_source_data.get('cache').get('directory')
-#                 filename = filename or layer_source_data.get('cache').get('filename')
-#                 table_name = layer_source_data.get('cache').get('table_name')
-#                 if layer_source_data.get('cache').get('grids'):
-#                     for grid in layer_source_data.get('cache').get('grids'):
-#                         if grid.get('srs').lower() == 'epsg:4326':
-#                             temp_bbox = conf_dict.get('grids').get(grid).get('bbox')
-#                             if bbox and temp_bbox:
-#                                 #since we are supporting only one grid, ensure that grid covers all of the grids area.
-#                                 for i in [0, 1]:
-#                                     bbox[i] = temp_bbox if temp_bbox[i] < bbox[i] else bbox[i]
-#                                 for i in [2, 3]:
-#                                     bbox[i] = temp_bbox if temp_bbox[i] > bbox[i] else bbox[i]
-#                             elif temp_bbox:
-#                                 bbox = temp_bbox
-#             if layer_source_data.get('type', ' ').lower() == 'wms':
-#                 server_url = layer_source_data.get('req').get('url')
-#                 source_type = 'wms'
-#             if layer_source_data.get('type', ' ').lower() == 'mapnik':
-#                 mapfile = layer_source_data.get('mapfile')
-#         if not bbox:
-#             bbox = [-180, -89, 180, 89]
-#         try:
-#             print("Creating tileset for name: {}".format(name))
-#             tileset, created = Tileset.objects.get_or_create(name=name,
-#                                                              created_by=created_by,
-#                                                              layer_name=layer_name,
-#                                                              cache_type=cache_type,
-#                                                              directory_layout=directory_layout,
-#                                                              directory=directory,
-#                                                              filename=filename,
-#                                                              table_name=table_name,
-#                                                              bbox_x0=bbox[0],
-#                                                              bbox_y0=bbox[1],
-#                                                              bbox_x1=bbox[2],
-#                                                              bbox_y1=bbox[3],
-#                                                              server_url=server_url,
-#                                                              source_type=source_type,
-#                                                              mapfile=mapfile,
-#                                                              layer_zoom_stop=layer_zoom_stop)
-#             return tileset
-#         except IntegrityError:
-#             continue
-
-def get_layers(layers):
-    layer_list = []
-    for layer in layers:
-        if isinstance(layer, dict) and layer.get('layers'):
-            layer_list += get_layers(layer.get('layers'))
-        else:
-            layer_list += [layer]
-    return layer_list
