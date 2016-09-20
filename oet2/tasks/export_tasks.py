@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from oet2.jobs.presets import TagParser
 from oet2.utils import (
-    kml, osmconf, osmparse, overpass, pbf, shp, thematic_shp, geopackage, wms
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_shp, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -80,8 +80,13 @@ class ExportTask(Task):
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
-        download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-        download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+
+        if settings.USE_S3:
+            download_url = s3.upload_to_s3(run_uid, filename)
+        else:
+            download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+            download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+
         # save the task and task result
         result = ExportTaskResult(
             task=task,

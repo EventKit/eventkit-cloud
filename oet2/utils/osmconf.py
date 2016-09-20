@@ -57,6 +57,7 @@ class OSMConfig(object):
         self.config.set('lines', 'attributes', ','.join(self.categories['lines']))
         self.config.set('multipolygons', 'attributes', ','.join(self.categories['polygons']))
         # write the out the config
+
         config_file = os.path.join(stage_dir, '{0}.ini'.format(self.job_name))
         try:
             with open(config_file, 'wb') as configfile:
