@@ -2,8 +2,14 @@ clone = {};
 clone.job = (function(){
     var map;
     var regions;
+    var regionsSource;
+    var maskSource;
     var mask;
     var transform;
+    var attribution;
+    var scaleLine;
+    var bbox;
+    var bboxSource;
     var max_bounds_area = $('#user-max-extent').text();
 
     return {
@@ -23,114 +29,248 @@ clone.job = (function(){
      * and the UI controls.
      */
     function initMap() {
-        // set up the map and add the required layers
-        var maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        var mapOptions = {
-                displayProjection: new OpenLayers.Projection("EPSG:4326"),
-                controls: [new OpenLayers.Control.Attribution(),
-                           new OpenLayers.Control.ScaleLine()],
-                maxExtent: maxExtent,
-                scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
-                units: 'm',
-                sphericalMercator: true,
-                noWrap: true, // don't wrap world extents
-        }
-        map = new OpenLayers.Map('create-export-map', {options: mapOptions});
 
-        // restrict extent to world bounds to prevent panning..
-        map.restrictedExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
+        //     // OL2 set up the map and add the required layers
+        //     var maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
+        //     var mapOptions = {
+        //             displayProjection: new OpenLayers.Projection("EPSG:4326"),
+        //             controls: [new OpenLayers.Control.Attribution(),
+        //                        new OpenLayers.Control.ScaleLine()],
+        //             maxExtent: maxExtent,
+        //             scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
+        //             units: 'm',
+        //             sphericalMercator: true,
+        //             noWrap: true, // don't wrap world extents
+        //     }
+        //     map = new OpenLayers.Map('create-export-map', {options: mapOptions});
+        //
+        //     // restrict extent to world bounds to prevent panning..
+        //     map.restrictedExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
+        //
+        //     // add base layers
+        //     var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
+        //     var hotosm = Layers.HOT
+        //     osm.options = {
+        //         //layers: "basic",
+        //         isBaseLayer: true,
+        //         visibility: true,
+        //         displayInLayerSwitcher: true,
+        //     };
+        //     osm.attribution = "&copy; <a href='//www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors.";
+        //     hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
+        //     map.addLayers([osm]);
+        //
+        //var zoomLevels = [500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250];
 
-        // add base layers
-        var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
-        //var osm = Layers.HOT;
-
-        //var hotosm = Layers.HOT
-
-        osm.options = {
-            layers: "basic",
-            isBaseLayer: true,
-            visibility: true,
-            displayInLayerSwitcher: true,
-        };
-
-        osm.attribution = "&copy; <a href='//www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors.";
-        //hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
-        map.addLayers([osm]);
-
-        // add the regions layer
-        regions = new OpenLayers.Layer.Vector('regions', {
-            displayInLayerSwitcher: false,
-            style: {
-                strokeWidth: 3.5,
-                strokeColor: '#D73F3F',
-                fillColor: 'transparent',
-                fillOpacity: 0.8,
-            }
-        });
-
-        // add the region mask layer
-        mask = new OpenLayers.Layer.Vector('mask', {
-            displayInLayerSwitcher: false,
-            styleMap: new OpenLayers.StyleMap({
-                "default": new OpenLayers.Style({
-                fillColor: "#fff",
-                fillOpacity: 0.7,
-                strokeColor: "#fff",
-                strokeWidth: .1,
-                strokeOpacity: 0.2,
-                })
+        // OL3 set up the map and add the required layers
+        map = new ol.Map({
+            interactions: ol.interaction.defaults({
+                keyboard: false,
+                altShiftDragRotate: false
             }),
-        });
-        map.addLayers([regions, mask]);
+            target: 'create-export-map',
+            view: new ol.View({
+                projection: "EPSG:3857",
+                center: [44.4333, 33.3333],
+                zoom: 4,
+                minZoom: 2,
+                maxZoom: 18,
+            })
+        })
 
-        // add region and mask features
-        addRegionMask();
-        addRegions();
+
+        //add base layers
+        var osm = new ol.layer.Tile({
+            title: "OpenStreetMap",
+            source: new ol.source.OSM({
+                wrapX: false,
+                noWrap: true,
+                attributions: [
+                    new ol.Attribution({
+                        html: '&copy ' +
+                        '<a href="//www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.'
+                    }),
+
+                    ol.source.OSM.ATTRIBUTION
+                ]
+            })
+        })
+        var hotosm = Layers.HOT;
+        hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
+
+        map.addLayer(osm);
+
+        scaleLine = new ol.control.ScaleLine();
+        map.addControl(scaleLine);
+
+        attribution = new ol.control.Attribution();
+        map.addControl(attribution);
+
+
+        //     // OL2 add the regions layer
+        //     regions = new OpenLayers.Layer.Vector('regions', {
+        //         displayInLayerSwitcher: false,
+        //         style: {
+        //             strokeWidth: 3.5,
+        //             strokeColor: '#D73F3F',
+        //             fillColor: 'transparent',
+        //             fillOpacity: 0.8,
+        //         }
+        //     });
+        //
+        //     // add the region mask layer
+        //     mask = new OpenLayers.Layer.Vector('mask', {
+        //         displayInLayerSwitcher: false,
+        //         styleMap: new OpenLayers.StyleMap({
+        //             "default": new OpenLayers.Style({
+        //             fillColor: "#fff",
+        //             fillOpacity: 0.7,
+        //             strokeColor: "#fff",
+        //             strokeWidth: .1,
+        //             strokeOpacity: 0.2,
+        //             })
+        //         }),
+        //     });
+        //     map.addLayers([regions, mask]);
+        //
+        //     // add region and mask features
+        //     addRegionMask();
+        //     addRegions();
+
+        //*** COMMENTED OUT TO TAKE OUT RED HOT REGIONS OL3
+        // add the regions layer
+
+        // regionsSource = new ol.source.Vector({
+        //     wrapX: false,
+        //     noWrap: true,
+        // });
+        //
+        //
+        // regions = new ol.layer.Vector({
+        //         name: 'regions',
+        //         source: regionsSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [0,0,0,-0.7],
+        //                 //opacity: 0.8,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [215, 63, 63, 0.8],
+        //                 width: 3.5,
+        //             })
+        //         }),
+        //
+        //     })
+        // map.addLayer(regions);
+        //
+        // // add the region mask layer
+        // maskSource = new ol.source.Vector();
+        //     mask = new ol.layer.Vector({
+        //         name: 'mask',
+        //         source: maskSource,
+        //         style: new ol.style.Style({
+        //             fill: new ol.style.Fill({
+        //                 color: [255,255,255,0.0]
+        //                 //opacity: 0.7,
+        //             }),
+        //             stroke: new ol.style.Stroke({
+        //                 color: [255,255,255,0.2],
+        //                 width: .1,
+        //                 //opacity: 0.2,
+        //             }),
+        //         }),
+        //     });
+        //
+        // map.addLayer(mask);
+
+
+        // // get the regions from the regions api
+        // $.getJSON(Config.REGIONS_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     regionsSource.addFeatures(features);
+        //     var extent = regionsSource.getExtent();
+        //     map.getView().fit(extent, map.getSize());
+        // });
+
+
+        // $.getJSON(Config.REGION_MASK_URL, function(data){
+        //     var geojson = new ol.format.GeoJSON();
+        //     var features = geojson.readFeatures(data, {
+        //         'featureProjection': 'EPSG:3857',
+        //         'dataProjection': 'EPSG:4326'
+        //     });
+        //     maskSource.addFeatures(features);
+        //     //var extent = maskSource.getExtent();
+        //     //map.getView().fit(extent, map.getSize())
+        // });
+
+        buildProviderFormats();
 
         // add export format checkboxes
         buildExportFormats();
 
-        // add bounding box selection layer
-        bbox = new OpenLayers.Layer.Vector("bbox", {
-           displayInLayerSwitcher: false,
-           styleMap: getTransformStyleMap(),
+
+        //     OL2 add bounding box selection layer
+        //     bbox = new OpenLayers.Layer.Vector("bbox", {
+        //        displayInLayerSwitcher: false,
+        //        styleMap: getTransformStyleMap(),
+        //     });
+        //     map.addLayers([bbox]);
+        //
+
+
+        // OL3 add bounding box selection layer
+        //bboxSource = new ol.source.Vector()
+        bbox = new ol.layer.Vector({
+            name: 'Select',
+            //source: bboxSource,
+            style: new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: 'blue'
+                }),
+                fill: new ol.style.Fill({
+                    color: [0, 0, 255, 0.05]
+                })
+            })
         });
-        map.addLayers([bbox]);
-
-        // add a draw feature control for bbox selection.
-        box = new OpenLayers.Control.DrawFeature(bbox, OpenLayers.Handler.RegularPolygon, {
-           handlerOptions: {
-              sides: 4,
-              snapAngle: 90,
-              irregular: true,
-              persist: true
-           }
-        });
-        map.addControl(box);
+        map.addLayer(bbox);
 
 
-        // add a transform control to enable modifications to bounding box (drag, resize)
-        transform = new OpenLayers.Control.TransformFeature(bbox, {
-           rotate: false,
-           irregular: true,
-           renderIntent: "transform",
+
+        //     // add a draw feature control for bbox selection.
+        //     box = new OpenLayers.Control.DrawFeature(bbox, OpenLayers.Handler.RegularPolygon, {
+        //        handlerOptions: {
+        //           sides: 4,
+        //           snapAngle: 90,
+        //           irregular: true,
+        //           persist: true
+        //        }
+        //     });
+        //     map.addControl(box);
+
+        var dragBox = new ol.interaction.DragBox({
+            condition: ol.events.condition.primaryAction,
         });
 
-        // listen for selection box being added to bbox layer
-        box.events.register('featureadded', this, function(e){
-            // get selection bounds
-            bounds = e.feature.geometry.bounds;
+        var translate;
 
-            // clear existing features
-            bbox.removeAllFeatures();
-            box.deactivate();
+        dragBox.on('boxend', function(e){
+            bboxSource = new ol.source.Vector();
+            bbox.setSource(bboxSource);
+            var dragFeature = new ol.Feature({
+                geometry: dragBox.getGeometry()
+            });
+            bboxSource.addFeature(dragFeature);
+            map.removeInteraction(dragBox);
+            translate = new ol.interaction.Translate({
+                features: new ol.Collection([dragFeature])
+            });
 
-            // add a bbox feature based on user selection
-            var feature = new OpenLayers.Feature.Vector(bounds.toGeometry());
-            bbox.addFeatures(feature);
-
-            // enable bbox modification
-            transform.setFeature(feature);
+            var bounds = dragFeature.getGeometry().getExtent();
 
             // validate the selected extents
             if (validateBounds(bounds)) {
@@ -139,32 +279,86 @@ clone.job = (function(){
             else {
                 unsetBounds();
             }
+
+            map.getView().fit(bounds, map.getSize());
+
+            map.addInteraction(translate);
+            translate.on('translateend', function(e){
+                var bounds = dragFeature.getGeometry().getExtent();
+                // validate the selected extents
+                if (validateBounds(bounds)) {
+                    setBounds(bounds);
+                }
+                else {
+                    unsetBounds();
+                }
+                map.getView().fit(bounds, map.getSize());
+            });
         });
 
-        // update the bounds after bbox is moved / modified
-        transform.events.register("transformcomplete", this, function(e){
-            var bounds = e.feature.geometry.bounds.clone();
-            if (validateBounds(bounds)) {
-                setBounds(bounds);
-            }
-            else {
-                unsetBounds();
-            }
-        });
+        var draw = new ol.interaction.Draw({
+            source: new ol.source.Vector({wrapX: false}),
+            type: 'Point',
+        })
 
-        // update bounds during bbox modification
-        transform.events.register("transform", this, function(e){
-            var bounds = e.object.feature.geometry.bounds.clone();
-            if (validateBounds(bounds)) {
-                setBounds(bounds);
-            }
-            else {
-                unsetBounds();
-            }
-        });
-        // add the transform control
-        map.addControl(transform);
-
+        //
+        //
+        //     // add a transform control to enable modifications to bounding box (drag, resize)
+        //     transform = new OpenLayers.Control.TransformFeature(bbox, {
+        //        rotate: false,
+        //        irregular: true,
+        //        renderIntent: "transform",
+        //     });
+        //
+        //     // listen for selection box being added to bbox layer
+        //     box.events.register('featureadded', this, function(e){
+        //         // get selection bounds
+        //         bounds = e.feature.geometry.bounds;
+        //
+        //         // clear existing features
+        //         bbox.removeAllFeatures();
+        //         box.deactivate();
+        //
+        //         // add a bbox feature based on user selection
+        //         var feature = new OpenLayers.Feature.Vector(bounds.toGeometry());
+        //         bbox.addFeatures(feature);
+        //
+        //         // enable bbox modification
+        //         transform.setFeature(feature);
+        //
+        //         // validate the selected extents
+        //         if (validateBounds(bounds)) {
+        //             setBounds(bounds);
+        //         }
+        //         else {
+        //             unsetBounds();
+        //         }
+        //     });
+        //
+        //     // update the bounds after bbox is moved / modified
+        //     transform.events.register("transformcomplete", this, function(e){
+        //         var bounds = e.feature.geometry.bounds.clone();
+        //         if (validateBounds(bounds)) {
+        //             setBounds(bounds);
+        //         }
+        //         else {
+        //             unsetBounds();
+        //         }
+        //     });
+        //
+        //     // update bounds during bbox modification
+        //     transform.events.register("transform", this, function(e){
+        //         var bounds = e.object.feature.geometry.bounds.clone();
+        //         if (validateBounds(bounds)) {
+        //             setBounds(bounds);
+        //         }
+        //         else {
+        //             unsetBounds();
+        //         }
+        //     });
+        //     // add the transform control
+        //     map.addControl(transform);
+        //
         // handles click on select area button
         $("#select-area").bind('click', function(e){
             /*
@@ -173,16 +367,30 @@ clone.job = (function(){
              * activate the draw bbox control
              */
             $('#nominatim').val('');
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
             unsetBounds();
-            bbox.removeAllFeatures();
-            transform.unsetFeature();
-            box.activate();
+            //bbox.removeAllFeatures();
+            //transform.unsetFeature();
+            //box.activate();
+            map.removeInteraction(translate);
+            bboxSource.clear();
+            map.addInteraction(dragBox);
         });
 
         $('#zoom-selection').bind('click', function(e){
             // zoom to the bounding box extent
-            if (bbox.features.length > 0) {
-                map.zoomToExtent(bbox.getDataExtent(), false);
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
+            if (bboxSource.getFeatures().length > 0) {
+                map.getView().fit(bboxSource.getExtent(), map.getSize());
+            }
+            else{
+                zoomtoextent();
             }
         });
 
@@ -194,51 +402,71 @@ clone.job = (function(){
              */
             $('#nominatim').val('');
             unsetBounds();
-            bbox.removeAllFeatures();
-            box.deactivate();
-            transform.unsetFeature();
-            map.zoomToExtent(regions.getDataExtent());
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
+            bboxSource.clear();
+
+            //bbox.removeAllFeatures();
+            //box.deactivate();
+            //transform.unsetFeature();
+            zoomtoextent();
+            //map.zoomToExtent(regions.getDataExtent());
             validateBounds();
         });
 
-        /* Add map controls */
-        map.addControl(new OpenLayers.Control.ScaleLine());
-
-        // set inital zoom to regions extent
-        map.zoomTo(regions.getDataExtent());
+        //     /* Add map controls */
+        //     map.addControl(new OpenLayers.Control.ScaleLine());
+        //
+        //     // set inital zoom to regions extent
+        //     map.zoomTo(regions.getDataExtent());
+        //map.getView().fit(regions.getExtent(), map.getSize());
+        zoomtoextent();
     }
 
     /*
      * Add the regions to the map.
      * Calls into region api.
      */
-    function addRegions(){
-        // get the regions from the regions api
-        $.getJSON(Config.REGIONS_URL, function(data){
-            var geojson = new OpenLayers.Format.GeoJSON({
-                    'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-                    'externalProjection': new OpenLayers.Projection("EPSG:4326")
-            });
-            var features = geojson.read(data);
-            regions.addFeatures(features);
-            map.zoomToExtent(regions.getDataExtent());
-        });
+
+    //OL2 Code
+    // function addRegions(){
+    //     // get the regions from the regions api
+    //     $.getJSON(Config.REGIONS_URL, function(data){
+    //         var geojson = new OpenLayers.Format.GeoJSON({
+    //                 'internalProjection': new OpenLayers.Projection("EPSG:3857"),
+    //                 'externalProjection': new OpenLayers.Projection("EPSG:4326")
+    //         });
+    //         var features = geojson.read(data);
+    //         regions.addFeatures(features);
+    //         map.zoomToExtent(regions.getDataExtent());
+    //     });
+    // }
+
+    function zoomtoextent() {
+        var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
+        map.getView().fit(extent, map.getSize());
     }
 
     /*
-     * Add the region mask to the map.
-     * Calls into region mask api.
+     * build the providers checkboxes.
      */
-    function addRegionMask(){
-        // get the regions from the regions api
-        $.getJSON(Config.REGION_MASK_URL, function(data){
-            var geojson = new OpenLayers.Format.GeoJSON({
-                    'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-                    'externalProjection': new OpenLayers.Projection("EPSG:4326")
-            });
-            var features = geojson.read(data);
-            mask.addFeatures(features);
-        });
+    function buildProviderFormats(){
+
+        var providersDiv = $('#provider-selection');
+        $.getJSON(Config.PROVIDERS_URL, function(data){
+            for (i = 0; i < data.length; i++){
+                provider = data[i];
+                providersDiv.append('<div class="checkbox"><label>'
+                    + '<input type="checkbox"'
+                    + 'name="providers"'
+                    + 'value="' + provider.name + '"'
+                    + 'data-description="' + provider.name + '"/>'
+                    + provider.name
+                    + '</label></div>');
+            }
+        })
     }
 
     /*
@@ -247,16 +475,19 @@ clone.job = (function(){
     function buildExportFormats(){
         var formatsDiv = $('#supported-formats');
         $.getJSON(Config.EXPORT_FORMATS_URL, function(data){
-            for (i = 0; i < data.length; i++){
+            for (i = 0; i < data.length; i++) {
                 format = data[i];
+
                 formatsDiv.append('<div class="checkbox"><label>'
-                                 + '<input type="checkbox"'
-                                 + 'name="formats"'
-                                 + 'value="' + format.slug + '"'
-                                 + 'data-description="' + format.description + '"/>'
-                                 + format.description
-                                 + '</label></div>');
+                    + '<input type="checkbox"'
+                    + 'name="formats"'
+                    + 'value="' + format.slug + '"'
+                    + 'data-description="' + format.description + '"/>'
+                    + format.description
+                    + '</label></div>');
+            
             }
+
             /*
              * only initialize form validation when
              * all form elements have been loaded.
@@ -265,15 +496,17 @@ clone.job = (function(){
         });
     }
 
+
     /*
      * update the bbox extents on the form.
      */
     function setBounds(bounds) {
+        var bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
         fmt = '0.000000' // format to 6 decimal places .11 metre precision
-        var xmin = numeral(bounds.left).format(fmt);
-        var ymin = numeral(bounds.bottom).format(fmt);
-        var xmax = numeral(bounds.right).format(fmt);
-        var ymax = numeral(bounds.top).format(fmt);
+        var xmin = numeral(bounds[0]).format(fmt);
+        var ymin = numeral(bounds[1]).format(fmt);
+        var xmax = numeral(bounds[2]).format(fmt);
+        var ymax = numeral(bounds[3]).format(fmt);
         // fire input event here to make sure fields validate..
         $('#xmin').val(xmin).trigger('input');
         $('#ymin').val(ymin).trigger('input');
@@ -309,57 +542,85 @@ clone.job = (function(){
      * Display success message when extents are valid.
      */
     function validateBounds(bounds) {
+
         if (!bounds) {
             // no extents selected..
             validateBBox(); // trigger form validation.
             $('#valid-extents').css('visibility','hidden');
             $('#alert-extents').css('visibility','visible');
+            //$('#alert-extents').html('<span>Select area to export.&nbsp;&nbsp;</span><span class="glyphicon glyphicon-remove">&nbsp;</span>');
             $('#alert-extents').html('<span>' + gettext('Select area to export') + '&nbsp;&nbsp;</span>');
             return false;
         }
-        var extent = bounds.toGeometry();
-        var regions = map.getLayersByName('regions')[0].features;
-        var valid_region = false;
-        // check that we're within a HOT region.
-        for (i = 0; i < regions.length; i++){
-            region = regions[i].geometry;
-            if (extent.intersects(region)){
-                valid_region = true;
-            }
-        }
-       /*
+
+        //*****COMMENTING OUT TO GET RID OF RED HOT REGIONS
+        // var regions, region;
+        // map.getLayers().forEach(function (l) {
+        //     if (l.get('name') == 'regions')
+        //         regions = l;
+        // })
+        //
+        // var valid_region = false;
+        //
+        // // check that we're within a HOT region.
+        // var SW = [bounds[0], bounds[1]];
+        // var NW = [bounds[0], bounds[3]];
+        // var NE = [bounds[2], bounds[3]];
+        // var SE = [bounds[2], bounds[1]];
+        // var boundary_coords = [SW, NW, NE, SE]
+        //
+        // var checkcount = 0;
+        // for(var i=0; i<regions.getSource().getFeatures().length; i++) {
+        //     for (var j=0; j<boundary_coords.length; j++) {
+        //         featuresAtCoord = regions.getSource().getFeaturesAtCoordinate(boundary_coords[j]);
+        //         if (featuresAtCoord.length > 0 && featuresAtCoord[0] == regions.getSource().getFeatures()[i]) {
+        //             checkcount++;
+        //         }
+        //     }
+        //     if (checkcount !=0) {
+        //         break;
+        //     }
+        // }
+        // if (checkcount === 4) {
+        //     valid_region = true;
+        // }
+
+        /*
          * calculate the extent area and convert to sq kilometers
          * converts to lat long which will be proj set on form if extents are valid.
          */
-        bounds.transform('EPSG:3857', 'EPSG:4326')
+
         // trim bounds to 6 decimal places before calculating geodesic area
-        var left = bounds.left.toFixed(6);
-        var bottom = bounds.bottom.toFixed(6);
-        var right = bounds.right.toFixed(6);
-        var top = bounds.top.toFixed(6);
-        
-        bounds_trunc = new OpenLayers.Bounds(left, bottom, right, top);
-        var area = bounds_trunc.toGeometry().getGeodesicArea() / 1000000; // sq km
-        
+        var left = bounds[0].toFixed(6);
+        var bottom = bounds[1].toFixed(6);
+        var right = bounds[2].toFixed(6);
+        var top = bounds[3].toFixed(6);
+
+        var bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
+        //console.log(bounds_trunc.getArea());
+        var area = bounds_trunc.getArea() / 1000000;
+
         // format the area and max bounds for display..
         var area_str = numeral(area).format('0 0');
         var max_bounds_str = numeral(max_bounds_area).format('0 0');
 
+        //NO HOT REGION SO SET VALID TO TRUE
+        var valid_region = true;
         if (!valid_region) {
-           // invalid region
-           validateBBox(); // trigger validation on extents
-           $('#valid-extents').css('visibility','hidden');
-           $('#alert-extents').css('visibility','visible');
-           $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is outside') + '<br/>' + gettext('a valid HOT Export Region'))
-           return false;
+            // invalid region
+            validateBBox(); // trigger validation on extents
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','visible');
+            $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is outside') + '<br/>' + gettext('a valid HOT Export Region'))
+            return false;
         } else if (area > max_bounds_area) {
-           // area too large
-           validateBBox(); // trigger validation on extents
-           $('#valid-extents').css('visibility','hidden');
-           $('#alert-extents').css('visibility','visible');
-           $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is ') + area_str
-                                 + gettext(' sq km.') + '<br/>' + gettext('Must be less than ') + max_bounds_str + gettext(' sq km.'));
-           return false;
+            // area too large
+            validateBBox(); // trigger validation on extents
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','visible');
+            $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is ') + area_str
+                + gettext(' sq km.') + '<br/>' + gettext('Must be less than ') + max_bounds_str + gettext(' sq km.'));
+            return false;
         } else {
             // extents are valid so display success message..
             $('#alert-extents').css('visibility','hidden');
@@ -369,40 +630,41 @@ clone.job = (function(){
         }
     }
 
+    // NOT USED FOR OL3
     /*
      * get the style map for the selection bounding box.
      */
-    function getTransformStyleMap(){
-        return new OpenLayers.StyleMap({
-                    "default": new OpenLayers.Style({
-                        fillColor: "blue",
-                        fillOpacity: 0.05,
-                        strokeColor: "blue"
-                    }),
-                    // style for the select extents box
-                    "transform": new OpenLayers.Style({
-                        display: "${getDisplay}",
-                        cursor: "${role}",
-                        pointRadius: 4,
-                        fillColor: "blue",
-                        fillOpacity: 1,
-                        strokeColor: "blue",
-                    },
-                    {
-                        context: {
-                            getDisplay: function(feature) {
-                                // hide the resize handles except at the se and nw corners
-                                return  feature.attributes.role === "n-resize"  ||
-                                        feature.attributes.role === "ne-resize" ||
-                                        feature.attributes.role === "e-resize"  ||
-                                        feature.attributes.role === "s-resize"  ||
-                                        feature.attributes.role === "sw-resize" ||
-                                        feature.attributes.role === "w-resize"  ? "none" : ""
-                            }
-                        }
-                    })
-                });
-    }
+    // function getTransformStyleMap(){
+    //     return new OpenLayers.StyleMap({
+    //                 "default": new OpenLayers.Style({
+    //                     fillColor: "blue",
+    //                     fillOpacity: 0.05,
+    //                     strokeColor: "blue"
+    //                 }),
+    //                 // style for the select extents box
+    //                 "transform": new OpenLayers.Style({
+    //                     display: "${getDisplay}",
+    //                     cursor: "${role}",
+    //                     pointRadius: 4,
+    //                     fillColor: "blue",
+    //                     fillOpacity: 1,
+    //                     strokeColor: "blue",
+    //                 },
+    //                 {
+    //                     context: {
+    //                         getDisplay: function(feature) {
+    //                             // hide the resize handles except at the se & nw corners
+    //                             return  feature.attributes.role === "n-resize"  ||
+    //                                     feature.attributes.role === "ne-resize" ||
+    //                                     feature.attributes.role === "e-resize"  ||
+    //                                     feature.attributes.role === "s-resize"  ||
+    //                                     feature.attributes.role === "sw-resize" ||
+    //                                     feature.attributes.role === "w-resize"  ? "none" : ""
+    //                         }
+    //                     }
+    //                 })
+    //             });
+    // }
 
     /*
      * Initialize the form validation.
@@ -412,21 +674,198 @@ clone.job = (function(){
         /*
          * Initialize the bootstrap form wizard.
          */
+        $('#create-job-wizard a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var index;
+            if (e.target.hash == "#create")
+                index = 0;
+            if (e.target.hash == "#formats")
+                index = 1;
+            if (e.target.hash == "#summary")
+                index = 2;
+
+            if (index == 0){
+                $('#create-job-wizard').bootstrapWizard('enable', 1);
+                $('#create-job-wizard').bootstrapWizard('disable', 2);
+                $('#previousFirstArrow').hide();
+                $('#previousArrow').show();
+                $('#nextArrow').show();
+                $('#nextLastArrow').hide();
+
+            }
+            if (index == 1){
+                $('#previousFirstArrow').show();
+                $('#previousArrow').hide();
+                $('#nextArrow').show();
+                $('#nextLastArrow').hide();
+                $('#create-job-wizard').bootstrapWizard('enable', 1);
+                $('#create-job-wizard').bootstrapWizard('enable', 2);
+                $('#create-job-wizard').bootstrapWizard('enable', 3);
+
+            }
+            if (index == 2){
+                $('#nextArrow').hide();
+                $('#nextLastArrow').show();
+                $('#create-job-wizard').bootstrapWizard('enable', 1);
+                $('#create-job-wizard').bootstrapWizard('enable', 2);
+                $('#create-job-wizard').bootstrapWizard('enable', 3);
+
+            }
+        });
+
         $('#create-job-wizard').bootstrapWizard({
             tabClass: 'nav nav-pills',
+            'nextSelector': '.next',
+            'previousSelector': '.previous',
             onTabClick: function(tab, navigation, index){
-                return validateTab(index);
-            },
-            onTabShow: function(tab, navigation, index){
-                if (index == 2 || index == 3) {
-                    $('li.next').css('display', 'block');
+
+                var valid = validateTab(index);
+
+                //validation was not happening correct in this event.  Index always seemed to be 0.
+                if (valid){
+                    if (index == 0){
+
+                    }
+                    if (index == 1){
+
+                    }
+                    if (index == 2){
+
+
+                    }
                 }
                 else {
-                    $('li.next').css('display', 'none');
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0) {
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+
+
+                    }
+                    if (index == 1) {
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+
+                    }
+                    return false;
                 }
+
+            },
+            onTabShow: function(tab, navigation, index){
+
+                if (index == 0){
+                    $('#create-job-wizard').bootstrapWizard('disable', 1);
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+                }
+
+                if (index == 1) {
+                    $('#create-job-wizard').bootstrapWizard('disable', 2);
+
+                }
+
+                if (index == 2){
+                    $('#create-job-wizard').bootstrapWizard('enable', 3);
+                    $('#nextLastArrow').prop('visibility', 'hidden')
+                    $('#nextLastArrow').addClass('visibility');
+                }
+
             },
             onNext: function(tab, navigation, index){
-                return validateTab(index);
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 1){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#previousFirstArrow').show();
+                        $('#previousArrow').hide();
+                    }
+                    if (index == 2){
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
+                }
+            },
+            onPrevious: function(tab, navigation, index){
+
+                var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
+
+                if (valid){
+                    if (index == 0){
+                        //TODO: change buttons to both green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#previousFirstArrow').hide();
+                        $('#previousArrow').show();
+                    }
+                    if (index == 1){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#nextArrow').show();
+                        $('#nextLastArrow').hide();
+                    }
+                    if (index == 2){
+                        //TODO: change next botton to gray
+                        //TODO: change previous button to green
+                        $('#create-job-wizard').bootstrapWizard('enable', 1);
+                        $('#create-job-wizard').bootstrapWizard('enable', 2);
+                        $('#create-job-wizard').bootstrapWizard('enable', 3);
+                        $('#nextArrow').hide();
+                        $('#nextLastArrow').show();
+                    }
+                }
+                else{
+                    //not valid so change links of tabs to be disabled and next button to be disabled
+                    if (index == 0){
+                        //2nd and 3rd tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 1);
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+
+                    }
+                    if (index == 1){
+                        //third tab should not be able to be clicked along with next button
+                        $('#create-job-wizard').bootstrapWizard('disable', 2);
+                        $('#nextArrow').prop('disabled', true);
+                        $('#nextArrow').addClass('disabled');
+
+                    }
+                    return false;
+                }
             }
         });
 
@@ -440,7 +879,7 @@ clone.job = (function(){
             // Feedback icons
             icon: {
                 valid: 'glyphicon glyphicon-ok',
-                //invalid: 'glyphicon glyphicon-remove',
+                invalid: 'glyphicon glyphicon-remove',
                 validating: 'glyphicon glyphicon-refresh'
             },
             excluded: ':disabled',
@@ -464,8 +903,15 @@ clone.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            max: 6,
                             message: gettext('At least one export format must be selected')
+                        }
+                    }
+                },
+                'providers': {
+                    validators: {
+                        choice: {
+                            min: 1,
+                            message: gettext('At least one export provider must be selected')
                         }
                     }
                 },
@@ -505,48 +951,79 @@ clone.job = (function(){
                     }
                 },
                 /*
-                'config_type': {
-                    validators: {
-                        notEmpty: {
-                            message: 'The configuration type is required and cannot be empty'
-                        },
-                    }
-                },
-                */
+                 'config_type': {
+                 validators: {
+                 notEmpty: {
+                 message: 'The configuration type is required and cannot be empty'
+                 },
+                 }
+                 },
+                 */
             }
         })
-        .on('success.form.fv', function(e){
-            e.preventDefault();
-            /*
-             * Enable the submit button, but prevent automatic form submission
-             * on successful validation as this is done by ajax call
-             * when the submit button is clicked.
-             */
-            $('#btn-submit-job').prop('disabled', false);
-            $('#btn-submit-job').removeClass('disabled');
-        })
-        .on('success.field.fv', function(e) {
+            .on('success.form.fv', function(e){
+                e.preventDefault();
+                /*
+                 * Enable the submit button, but prevent automatic form submission
+                 * on successful validation as this is done by ajax call
+                 * when the submit button is clicked.
+                 */
+                $('#btn-submit-job').prop('disabled', false);
+                $('#btn-submit-job').removeClass('disabled');
+            })
+            .on('err.form.fv', function(e){
+                /*
+                 * Disable submit button when form is invalid.
+                 */
+                $('#btn-submit-job').prop('disabled', true);
+                $('#btn-submit-job').addClass('disabled');
+            })
+            .on('success.field.fv', function(e) {
+                // re-enable the file upload button when field is valid
+                if (e.target.id === 'filename' || e.target.id === 'config_type') {
+                    $('button#upload').prop('disabled', false);
+                    $('#select-file').prop('disabled', false);
+                }
+            }).on('err.field.fv', function(e) {
             // re-enable the file upload button when field is valid
-            if (e.target.id === 'filename' || e.target.id === 'config_type') {
-                $('button#upload').prop('disabled', false);
-                $('#select-file').prop('disabled', false);
-            }
-        }).on('err.field.fv', function(e) {
-            // disable the file upload button when field is invalid
             if (e.target.id === 'filename' || e.target.id === 'config_type') {
                 $('button#upload').prop('disabled', true);
                 $('#select-file').prop('disabled', true);
             }
         });
 
+
         /*
          * Validates a wizard tab given the tab index.
          */
         function validateTab(index) {
             var fv = $('#create-job-form').data('formValidation'), // FormValidation instance
-                // The current tab
+            // The current tab
                 $tab = $('#create-job-form').find('.tab-pane').eq(index),
                 $bbox = $('#bbox');
+
+            // validate the form first
+            fv.validate();
+            var isFormValid = fv.isValid();
+            if (!isFormValid) {
+                // disable submit button unless form is valid
+                $('#btn-submit-job').prop('disabled', true);
+                $('#btn-submit-job').addClass('disabled');
+            }
+            else {
+                $('#btn-submit-job').prop('disabled', false);
+                $('#btn-submit-job').removeClass('disabled');
+            }
+
+            // ignore upload tab as we apply custom validation there..
+            /*
+             var id = $tab.attr('id');
+             if (id === 'features' || id === 'summary' || id === 'upload'){
+             fv.resetField('filename');
+             $('#select-file').prop('disabled', false);
+             return true;
+             }
+             */
 
             /*
              * Disable config form field validation
@@ -555,36 +1032,22 @@ clone.job = (function(){
              */
             fv.enableFieldValidators('filename', false);
 
-            // ignore upload tab as we apply custom validation there..
-            var id = $tab.attr('id');
-            if (id === 'features' || id === 'summary' || id === 'upload') {
-                fv.resetField('filename');
-                $('#select-file').prop('disabled', false);
-                return true;
-            }
-
-            // validate the form first
-            fv.validate();
-            var isFormValid = fv.isValid();
-            if (!isFormValid) {
-                // disable submit button unless form is valid
-                $('#btn-submit-job').prop('disabled', true);
-            }
-            else {
-                $('#btn-submit-job').prop('disabled', false);
-            }
-
             // validate the bounding box extents
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
             if (isValidBBox === false || isValidBBox === null) {
-                validateBounds(bbox.getDataExtent());
+                if (bboxSource == null) {
+                    validateBounds(null);
+                }
+                else {
+                    validateBounds(bboxSource.getExtent());
+                }
             }
 
             // validate the form panel contents
             fv.validateContainer($tab);
             var isValidStep = fv.isValidContainer($tab);
-            if ((isValidStep === false || isValidStep === null) ||
+            if ((isValidStep === false) ||
                 (isValidBBox === false || isValidBBox === null)) {
                 // stay on this tab
                 return false;
@@ -597,7 +1060,7 @@ clone.job = (function(){
          */
         function validateFileUploadTab() {
             var fv = $('#create-job-form').data('formValidation'), // FormValidation instance
-                // The current tab
+            // The current tab
                 $tab = $('#create-job-form').find('.tab-pane').eq(3);
 
             // validate the form panel contents
@@ -623,8 +1086,7 @@ clone.job = (function(){
             var fv = $('#create-job-form').data('formValidation');
             fv.enableFieldValidators('filename', true);
             $(this).popover('hide');
-            var isValidTab = validateFileUploadTab();
-            if(!isValidTab){
+            if (!validateFileUploadTab()) {
                 e.preventDefault();
                 $(this).prop('disabled', true);
             }
@@ -634,30 +1096,31 @@ clone.job = (function(){
          * Listen for changes on file selection button.
          */
         $('#select-file :file').on('change', function(){
-                var $input = $(this),
-                    filename = $input.val().replace(/\\/g, '/').replace(/.*\//, ''),
-                    $filelist = $('#filelist'),
-                    selection = {},
-                    type = $('input#config_type').val(),
-                    published = $('input#publish_config').is(':checked') ? 'Published' : 'Private';
-                selection['filename'] = filename;
-                selection['config_type'] = type;
-                selection['published'] = published;
+            var $input = $(this),
+                filename = $input.val().replace(/\\/g, '/').replace(/.*\//, ''),
+                $filelist = $('#filelist'),
+                selection = {},
+            //type = $('option:selected').val(),
+                type = $('input#config_type').val(),
+                published = $('input#publish_config').is(':checked') ? 'Published' : 'Private';
+            selection['filename'] = filename;
+            selection['config_type'] = type;
+            selection['published'] = published;
 
-                // disable form fields
-                $('input#filename').prop('disabled', true);
-                $('select#config_type').prop('disabled', true);
-                $('input#publish_config').prop('disabled', true);
+            // disable form fields
+            $('input#filename').prop('disabled', true);
+            $('select#config_type').prop('disabled', true);
+            $('input#publish_config').prop('disabled', true);
 
-                // toggle select and upload button visibility
-                $('.btn-file').css('visibility', 'hidden');
-                $('button#upload').prop('disabled', false).css('visibility', 'visible');
+            // toggle select and upload button visibility
+            $('.btn-file').css('visibility', 'hidden');
+            $('button#upload').prop('disabled', false).css('visibility', 'visible');
 
-                // disable config-browser
-                $('button#select-config').prop('disabled', true);
+            // disable config-browser
+            $('button#select-config').prop('disabled', true);
 
-                // trigger the selection event
-                $filelist.trigger({type: 'config:fileselected', source: 'config-upload', selection: selection});
+            // trigger the selection event
+            $filelist.trigger({type: 'config:fileselected', source: 'config-upload', selection: selection});
         });
 
         /*
@@ -676,7 +1139,7 @@ clone.job = (function(){
             $('button#select-config').prop('disabled', true);
 
             // disable selected config remove buttons until file uploaded
-            $('#filelist').find('tr.config').find('button').each(function(idx, btn){
+            $(this).find('tr.config').find('button').each(function(idx, btn){
                 $(btn).prop('disabled', true);
             });
 
@@ -690,19 +1153,20 @@ clone.job = (function(){
             /*
              * Put this back later if we implement translation or transforms
              *
-            var config_type = $('select#config_type').val();
-            switch (config_type) {
-                case 'PRESET':
-                    $('option#select-preset').prop('disabled', true);
-                    break;
-                case 'TRANSFORM':
-                    $('option#select-transform').prop('disabled', true);
-                    break;
-                case 'TRANSLATION':
-                    $('option#select-translate').prop('disabled', true);
-                    break;
-            }
-            */
+             var config_type = $('select#config_type').val();
+             switch (config_type) {
+             case 'PRESET':
+             $('option#select-preset').prop('disabled', true);
+             break;
+             case 'TRANSFORM':
+             $('option#select-transform').prop('disabled', true);
+             break;
+             case 'TRANSLATION':
+             $('option#select-translate').prop('disabled', true);
+             break;
+             }
+             */
+
             var published = $('input[name="publish_config"]').is(':checked');
             var data = new FormData();
             data.append('name', filename);
@@ -743,7 +1207,7 @@ clone.job = (function(){
                     selection['filename'] = result.filename;
                     selection['config_type'] = result.config_type;
                     selection['published'] = result.published;
-
+                    // notify the file list
                     $('#filelist').trigger({type: 'config:uploaded', source: 'config-upload', selection: selection});
 
                 },
@@ -764,9 +1228,10 @@ clone.job = (function(){
          * Handle click on select config button (config-browser)
          */
         $('button#select-config').on('click', function(e){
+            $(this).popover('hide');
             var modalOpts = {
-                    keyboard: true,
-                    backdrop: 'static',
+                keyboard: true,
+                backdrop: 'static',
             }
             // reset the input field validation
             var fv = $('#create-job-form').data('formValidation');
@@ -774,6 +1239,7 @@ clone.job = (function(){
             $('#select-file').prop('disabled', false);
             $("#configSelectionModal").modal(modalOpts, 'show');
         });
+
 
         /*
          * Updates progressbar on file upload.
@@ -786,6 +1252,7 @@ clone.job = (function(){
             }
         }
 
+
         // ----- SUMMARY TAB ----- //
 
         /*
@@ -793,6 +1260,14 @@ clone.job = (function(){
          * and update the export summary tab.
          */
         $('#create-job-form').bind('change', function(e){
+            var providers = [];
+            var $providerUl = $('<ul>');
+            $.each($(this).find('input[name="providers"]:checked'), function(p, provider){
+                var providers = provider.getAttribute('data-description');
+                $providerUl.append($('<li>' + providers + '</li>'));
+            });
+            $('#summary-providers').html($providerUl);
+
             var name = $(this).find('input[name="name"]').val();
             var description = $(this).find('textarea[name="description"]').val();
             var event = $(this).find('input[name="event"]').val();
@@ -806,17 +1281,6 @@ clone.job = (function(){
                 $ul.append($('<li>' + description + '</li>'));
             });
             $('#summary-formats').html($ul);
-            /*
-            var $tbl = $('<table class="table">');
-            $tbl.append('<tr><th>Filename</th><th>Type</th><th>Status</th></tr>');
-            $('#filelist tr.config').each(function(idx, config){
-                 var filename = $(config).find('td').eq(0).find('span').html();
-                 var config_type = $(config).find('td').eq(1).html();
-                 var status = $(config).find('td').eq(2).html();
-                 $tbl.append('<tr><td>' + filename + '</td><td>' + config_type + '</td><td>' + status + '</td></tr>');
-            });
-            */
-            //$('#summary-configs').html($ul);
         });
 
         /*
@@ -827,11 +1291,10 @@ clone.job = (function(){
             $('div#summary-configs').css('visibility', 'visible');
             var selection = e.selection;
             $('#filelist tr.config').each(function(idx, config){
-                 var filename = $(config).find('td').eq(0).find('span').html();
-                 var config_type = $(config).find('td').eq(1).html();
-                 var status = $(config).find('td').eq(2).html();
-                 var published = published = status ? 'Published' : 'Private';
-                 $('table#summary-configs').append('<tr id="' + selection.uid + '" class="config"><td>' + filename + '</td><td>' + config_type + '</td><td>' + published + '</td></tr>');
+                var filename = $(config).find('td').eq(0).find('span').html();
+                var config_type = $(config).find('td').eq(1).html();
+                var status = $(config).find('td').eq(2).html();
+                $('table#summary-configs').append('<tr id="' + selection.uid + '" class="config"><td>' + filename + '</td><td>' + config_type + '</td><td>' + status + '</td></tr>');
             });
         });
 
@@ -882,7 +1345,6 @@ clone.job = (function(){
             }
         });
 
-
         // ----- FORM SUBMISSION ----- //
 
         /*
@@ -896,8 +1358,8 @@ clone.job = (function(){
             // validate the bounding box
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
-            if (isValidBBox === false || isValidBBox === null){
-                validateBounds(bbox.getDataExtent());
+            if (isValidBBox === false || isValidBBox === null) {
+                validateBounds(bboxSource.getExtent());
             }
 
             /*
@@ -913,6 +1375,24 @@ clone.job = (function(){
             if (!fvIsValidForm) {
                 // alert user here..
                 e.preventDefault();
+                var modalOpts = {
+                    keyboard: true,
+                    backdrop: 'static',
+                }
+                var message = ''
+                var fields = fv.getInvalidFields();
+                var field = $(fields[0]).attr('name');
+                if (field === 'formats') {
+                    message = 'Please select an export format.';
+                }
+                else if (field === 'providers') {
+                    message = 'Please select an export format.';
+                }
+                else {
+                    message = 'The <strong>' + field + '</strong> field is required'
+                }
+                $('p#validation-message').html(gettext(message));
+                $("#validationErrorModal").modal(modalOpts, 'show');
             }
             else {
                 // submit the form..
@@ -923,6 +1403,7 @@ clone.job = (function(){
                 var form_data = {};
                 var tags = [];
                 var formats = [];
+                var providers = [];
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
@@ -940,6 +1421,10 @@ clone.job = (function(){
                             break;
                         case 'formats':
                             formats.push(field.value);
+                            break;
+                        case 'providers':
+                            providers.push(field.value);
+                            break;
                         default:
                             form_data[field.name] = field.value;
                     }
@@ -970,7 +1455,27 @@ clone.job = (function(){
                 });
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
+                form_data["provider_tasks"] = []
+                var provider_tasks = []
+
+                if(typeof(providers)==='string'){
+                    providers = [providers]
+                }
+                if(typeof(formats)==='string'){
+                    formats = [formats]
+                }
+
+                var formatArray = [];
+                for(var format in formats) {
+                    formatArray.push(formats[format]);
+                }
+                for(var provider in providers){
+                    provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
+                }
+                form_data["provider_tasks"] = provider_tasks;
                 form_data["formats"] = formats;
+                delete form_data["providers"]
+                delete form_data["formats"]
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
@@ -999,11 +1504,10 @@ clone.job = (function(){
                 });
             }
         });
-
         populateForm();
     }
 
-    // ----- FEATURE SELECTION TREES ----- //
+// ----- FEATURE SELECTION TREES ----- //
 
     /*
      * Initialises the HDM feature tree.
@@ -1011,7 +1515,6 @@ clone.job = (function(){
     function initHDMFeatureTree(){
         // turn off preset selection on config upload
         //$('option#select-preset').prop('disabled', true);
-
         /*
          * Fire preset selection on hdm-tree
          * to set the state of preset related controls.
@@ -1038,9 +1541,9 @@ clone.job = (function(){
                         var geom = $(v).attr('geom');
                         geom_str = geom.join([separator=',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
-                                           '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="HDM" data-geom="' +
-                                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" checked/></div>' +
-                                        '</li>');
+                            '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="HDM" data-geom="' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" checked/></div>' +
+                            '</li>');
                         $level.append($entry);
                     }
                     else {
@@ -1049,7 +1552,7 @@ clone.job = (function(){
                         var icon = level_idx == 0 ? 'fa-minus-square-o' : 'fa-plus-square-o';
                         var root = level_idx == 0 ? 'root' : '';
                         var $nextLevel = $('<li class="level nav-header ' + state + ' ' + root + '"><label><i class="level fa ' + icon + ' fa-fw"></i>' + k + '</label>' +
-                                            '<div class="checkbox tree-checkbox"><input class="level" type="checkbox" checked/></div>');
+                            '<div class="checkbox tree-checkbox"><input class="level" type="checkbox" checked/></div>');
                         var $nextUL = $('<ul class="nav nav-list sub-level ' + collapse + '">');
                         $nextLevel.append($nextUL);
                         $level.append($nextLevel);
@@ -1094,8 +1597,8 @@ clone.job = (function(){
             });
 
             /*
-            * Handle events on entry checkboxes.
-            */
+             * Handle events on entry checkboxes.
+             */
             $('#hdm-feature-tree input.entry').on("change", function(e){
                 // fire changed event on levels
                 $('#hdm-feature-tree input.level').trigger("entry:changed", e);
@@ -1161,9 +1664,9 @@ clone.job = (function(){
                         var geom = $(v).attr('geom');
                         geom_str = geom.join([separator=',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
-                                           '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="OSM" data-geom="' +
-                                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '"/></div>' +
-                                        '</li>');
+                            '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="OSM" data-geom="' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" disabled/></div>' +
+                            '</li>');
                         $level.append($entry);
                     }
                     else {
@@ -1172,7 +1675,7 @@ clone.job = (function(){
                         var icon = level_idx == 0 ? 'fa-minus-square-o' : 'fa-plus-square-o';
                         var root = level_idx == 0 ? 'root' : '';
                         var $nextLevel = $('<li class="level nav-header ' + state + ' ' + root + '"><label><i class="level fa ' + icon + ' fa-fw"></i>' + k + '</label>' +
-                                            '<div class="checkbox tree-checkbox"><input class="level" type="checkbox" /></div>');
+                            '<div class="checkbox tree-checkbox"><input class="level" type="checkbox" disabled /></div>');
                         var $nextUL = $('<ul class="nav nav-list sub-level ' + collapse + '">');
                         $nextLevel.append($nextUL);
                         $level.append($nextLevel);
@@ -1217,8 +1720,8 @@ clone.job = (function(){
             });
 
             /*
-            * Handle events on entry checkboxes.
-            */
+             * Handle events on entry checkboxes.
+             */
             $('#osm-feature-tree input.entry').on("change", function(e){
                 // fire changed event on levels
                 $('#osm-feature-tree input.level').trigger("entry:changed", e);
@@ -1256,69 +1759,71 @@ clone.job = (function(){
                     $(document).trigger({type: 'preset:deselected', source: 'feature-tree'});
                 }
             });
-
-
         });
     }
 
     /*
      * Handles placename lookups using nominatim.
-     * Only interested relations.
+     * Only interested in relations.
      */
     function initNominatim(){
         window.query_cache = {};
         $('#nominatim').typeahead({
             source: function (query, process) {
-                        // check if user is entering bbox coordinates manually
-                        if (checkQueryRegex(query)) {
-                            return;
-                        }
-                        else {
-                            // clear any existing features and reset the map extents
-                            bbox.removeAllFeatures();
-                            transform.unsetFeature();
-                            unsetBounds();
-                            map.zoomToExtent(regions.getDataExtent());
+                // check if user is entering bbox coordinates manually
+                if (checkQueryRegex(query)) {
+                    return;
+                }
+                else {
+                    // clear any existing features and reset the map extents
+                    //bbox.removeAllFeatures();
+                    if (bboxSource == null){
+                        bboxSource = new ol.source.Vector();
+                        bbox.setSource(bboxSource);
+                    }
+                    bboxSource.clear();
+                    //transform.unsetFeature();
+                    unsetBounds();
+                    //p.getView().fit(regions.getExtent(), map.getSize());
+                    // map.zoomToExtent(regions.getDataExtent());
+                    zoomtoextent();
 
-                        }
-                        // if in cache use cached value
-
-                        if(query_cache[query]){
-                            process(query_cache[query]);
-                            return;
-                        }
-
-                        if( typeof searching != "undefined") {
-                            clearTimeout(searching);
-                            process([]);
-                        }
-                        searching = setTimeout(function() {
-                            return $.getJSON(
-                                Config.GEONAMES_SEARCH_URL,
-                                {
-                                    q: query,
-                                    maxRows: 20,
-                                    username: 'hotexports',
-                                    style: 'full'
-                                },
-                                function(data){
-                                    // build list of suggestions
-                                    var suggestions = [];
-                                    var geonames = data.geonames;
-                                    $.each(geonames, function(i, place){
-                                        // only interested in features with a bounding box
-                                        if (place.bbox) {
-                                            suggestions.push(place);
-                                        }
-                                    });
-                                    // save result to cache
-                                    query_cache[query] = suggestions;
-                                    return process(suggestions);
+                }
+                // if in cache use cached value
+                if(query_cache[query]){
+                    process(query_cache[query]);
+                    return;
+                }
+                if( typeof searching != "undefined") {
+                    clearTimeout(searching);
+                    process([]);
+                }
+                searching = setTimeout(function() {
+                    return $.getJSON(
+                        Config.GEONAMES_SEARCH_URL,
+                        {
+                            q: query,
+                            maxRows: 20,
+                            username: 'hotexports',
+                            style: 'full'
+                        },
+                        function(data){
+                            // build list of suggestions
+                            var suggestions = [];
+                            var geonames = data.geonames;
+                            $.each(geonames, function(i, place){
+                                // only interested in features with a bounding box
+                                if (place.bbox) {
+                                    suggestions.push(place);
                                 }
-                            );
-                        }, 200); // timeout before initiating search..
+                            });
+                            // save result to cache
+                            query_cache[query] = suggestions;
+                            return process(suggestions);
+                        }
+                    );
+                }, 200); // timeout before initiating search..
             },
-
             displayText: function(item){
                 //return item.display_name;
                 names = [];
@@ -1331,21 +1836,21 @@ clone.job = (function(){
             afterSelect: function(item){
                 var boundingbox = item.bbox;
                 var bottom = boundingbox.south, top = boundingbox.north,
-                    left = boundingbox.west, right = boundingbox.east;
-                var bounds = new OpenLayers.Bounds(left, bottom, right, top);
+                    left = boundingbox.east, right = boundingbox.west;
+                //var bounds = new OpenLayers.Bounds(left, bottom, right, top);
+                var bounds = [left, bottom, right, top];
                 // add the bounds to the map..
                 var feature = buildBBoxFeature(bounds);
                 // allow bbox to be modified
-                if (feature){
-                    transform.setFeature(feature);
-                }
+                // if (feature){
+                //     transform.setFeature(feature);
+                // }
             }
-
         });
 
         /**
-        * Tests if the query is a float
-        */
+         * Tests if the query is a float
+         */
         function checkQueryRegex(query){
             var reg = new RegExp('[-+]?([0-9]*.[0-9]+|[0-9]+)');
             if (reg.test(query)){
@@ -1357,21 +1862,47 @@ clone.job = (function(){
          * Construct the feature from the bounds.
          */
         function buildBBoxFeature(bounds){
-            // convert to web mercator
-            var merc_bounds = bounds.clone().transform('EPSG:4326', 'EPSG:3857');
-            var geom = merc_bounds.toGeometry();
-            var feature = new OpenLayers.Feature.Vector(geom);
-            // add the bbox to the map
-            bbox.addFeatures([feature]);
-            map.zoomToExtent(bbox.getDataExtent());
+
+            var formattedCoords = [];
+            var merc_bounds = [];
+            //var unformattedCoordinates = [[175, 70], [175, 60], [-160, 60], [-160, 70]];
+            var unformatedCoords = [[bounds[0],bounds[3]],[bounds[0], bounds[1]],[bounds[2], bounds[1]],[bounds[2], bounds[3]]];
+
+            $(unformatedCoords).each(function(index, coordinate){
+                var lat = coordinate[0];
+                var lon = coordinate[1];
+
+                var circle = new ol.geom.Circle([lat, lon])
+                circle.transform('EPSG:4326', 'EPSG:3857');
+                formattedCoords.push(circle.getCenter());
+            });
+
+            merc_bounds.push(formattedCoords[0][0]);
+            merc_bounds.push(formattedCoords[1][1]);
+            merc_bounds.push(formattedCoords[2][0]);
+            merc_bounds.push(formattedCoords[3][1]);
+
+            var polygonGeometry = new ol.geom.Polygon([formattedCoords])
+            var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
+
+            //var vectorSource = new ol.source.Vector();
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
+            bboxSource.addFeature(polygonFeature);
+
+            map.getView().fit(bboxSource.getExtent(), map.getSize());
+            //map.zoomToExtent(bbox.getDataExtent());
+
             // validate the selected extents
             if (validateBounds(merc_bounds)) {
                 setBounds(merc_bounds);
-                return feature;
+                return polygonFeature;
             }
             else {
                 unsetBounds();
-                return feature;
+                return polygonFeature;
             }
         }
 
@@ -1383,10 +1914,16 @@ clone.job = (function(){
             // if search field is empty, reset map
             if (val === '') {
                 unsetBounds();
-                bbox.removeAllFeatures();
-                box.deactivate();
-                transform.unsetFeature();
-                map.zoomToExtent(regions.getDataExtent());
+                //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
+                bboxSource.clear();
+                //box.deactivate();
+                //transform.unsetFeature();
+                map.getView().fit(regions.getExtent(), map.getSize());
+                //map.zoomToExtent(regions.getDataExtent());
                 validateBounds();
                 return;
             }
@@ -1394,21 +1931,30 @@ clone.job = (function(){
             var isEnterBBox = checkQueryRegex(val);
             if (isEnterBBox) {
                 // remove existing features
-                bbox.removeAllFeatures();
+                //bbox.removeAllFeatures();
+                if (bboxSource == null){
+                    bboxSource = new ol.source.Vector();
+                    bbox.setSource(bboxSource);
+                }
+                bboxSource.clear();
                 var coords = val.split(',');
                 // check for correct number of coords
                 if (coords.length != 4) {
-                     bbox.removeAllFeatures();
-                     validateBounds();
-                     return;
+                    //bbox.removeAllFeatures();
+                    bboxSource.clear();
+                    validateBounds();
+                    return;
                 }
                 // test for empty or invalid coords
                 for (i = 0; i < coords.length; i++){
-                     if (coords[i] === '' || !checkQueryRegex(coords[i])) {
-                         bbox.removeAllFeatures();
-                         validateBounds();
-                         return;
-                     }
+                    coords[i] = parseFloat(coords[i]);
+                    if (coords[i] === '' || !checkQueryRegex(coords[i])) {
+                        //bbox.removeAllFeatures();
+
+                        bboxSource.clear();
+                        validateBounds();
+                        return;
+                    }
                 }
                 var left = coords[0], bottom = coords[1],
                     right = coords[2], top = coords[3];
@@ -1417,12 +1963,18 @@ clone.job = (function(){
                     (parseFloat(right) < -180 || parseFloat(right) > 180) ||
                     (parseFloat(bottom) < -90 || parseFloat(bottom) > 90) ||
                     (parseFloat(top) < -90 || parseFloat(top) > 90)){
-                    bbox.removeAllFeatures();
+                    //bbox.removeAllFeatures();
+                    if (bboxSource == null){
+                        bboxSource = new ol.source.Vector();
+                        bbox.setSource(bboxSource);
+                    }
+                    bboxSource.clear();
                     validateBounds();
                     return;
                 }
+
                 // add feature
-                var bounds = new OpenLayers.Bounds(left, bottom, right, top);
+                var bounds = [left, bottom, right, top];
                 buildBBoxFeature(bounds);
             }
         });
@@ -1443,7 +1995,6 @@ clone.job = (function(){
         $(document).on('preset:selected', function(e){
             switch (e.source){
                 case 'feature-tree':
-                    // feature trees can be overridden by other preset sources
                     // enable feature save and publish inputs
                     $('input#feature_save').prop('disabled', false);
                     $('input#feature_pub').prop('disabled', false);
@@ -1459,8 +2010,7 @@ clone.job = (function(){
                         .each(function(i, input){
                             $(input).prop('disabled', true);
                             $(input).closest('tr').css('opacity', .5);
-                    });
-                    // disable feature save and publish inputs
+                        });
                     $('input#feature_save').prop('disabled', true);
                     $('input#feature_pub').prop('disabled', true);
                     break;
@@ -1472,7 +2022,6 @@ clone.job = (function(){
                         $(input).prop('checked', false);
                         $(input).prop('disabled', true);
                     });
-                    // disable feature save and publish inputs
                     $('input#feature_save').prop('disabled', true);
                     $('input#feature_pub').prop('disabled', true);
                     break;
@@ -1497,7 +2046,7 @@ clone.job = (function(){
                         .each(function(i, input){
                             $(input).prop('disabled', false);
                             $(input).closest('tr').css('opacity', 1);
-                    });
+                        });
                     break;
                 case 'config-upload':
                     // re-enable the hdm-feature-tree and select all by default
@@ -1511,12 +2060,9 @@ clone.job = (function(){
                         .each(function(i, input){
                             $(input).prop('disabled', false);
                             $(input).closest('tr').css('opacity', 1);
-                    });
+                        });
                     // enable the config_type selection option
                     $('option#select-preset').prop('disabled', false);
-                    // disable feature save and publish inputs
-                    $('input#feature_save').prop('disabled', false);
-                    $('input#feature_pub').prop('disabled', false);
                     break;
                 case 'config-browser':
                     // enable the preset option on the config type selection control
@@ -1526,9 +2072,6 @@ clone.job = (function(){
                         $(input).prop('disabled', false);
                         $(input).prop('checked', true);
                     });
-                    // disable feature save and publish inputs
-                    $('input#feature_save').prop('disabled', false);
-                    $('input#feature_pub').prop('disabled', false);
                     break;
             }
 
@@ -1575,8 +2118,8 @@ clone.job = (function(){
                 var $td = $tr.find('td').last();
                 $td.empty();
                 var html = '<button id="' + selection.uid + '" type="button" class="delete-file btn btn-danger btn-sm pull-right">' +
-                                    gettext('Delete') + '&nbsp;&nbsp;<span class="glyphicon glyphicon-trash">' +
-                            '</span></button>';
+                    gettext('Delete') + '&nbsp;&nbsp;<span class="glyphicon glyphicon-trash">' +
+                    '</span></button>';
                 $td.html(html);
 
                 // reset the form for more file uploads..
@@ -1601,11 +2144,11 @@ clone.job = (function(){
                             jqxhr.setRequestHeader("X-CSRFToken", csrftoken);
                         },
                         success: function(result, textStatus, jqxhr) {
+                            // notify the config-browser
                             $('table#configurations').trigger({type: 'config:removed', selection: selection});
                             $('#filelist').trigger({type: 'config:delete-upload', selection: selection});
                         },
                         error: function(jqxhr, textStatus, errorThrown){
-                            console.log(jqxhr);
                             var status = jqxhr.status;
                             resetUploadConfigTab(textStatus);
                             var modalOpts = {
@@ -1614,7 +2157,7 @@ clone.job = (function(){
                             }
                             var message = '';
                             if (status === 404) {
-                                message = 'Requested file not found.'
+                                message = gettext('Requested file not found')
                             }
                             else {
                                 message = jqxhr.responseJSON.message[0];
@@ -1637,14 +2180,14 @@ clone.job = (function(){
                         $(upload).remove();
                         filesSelected -= 1;
                     }
-                });
+                })
 
                 // add the selected config from config-browser to the table
                 var $tr = $('<tr id="' + selection.uid + '" data-filename="' + selection.filename + '" data-source="' + source + '"' +
-                                'data-type="' + selection.config_type + '" data-published="' + selection.published + '"' +
-                                'class="config"><td><i class="fa fa-file"></i>&nbsp;&nbsp;<span>' + selection.filename + '</span></td>' +
-                                '<td>' + selection.config_type + '</td><td>' + selection.published + '</td>' +
-                                '<td><button id="' + selection.uid + '" type="button" class="btn btn-warning btn-sm pull-right">Remove&nbsp;&nbsp;<span class="glyphicon glyphicon-remove"></span></button></td></tr>');
+                    'data-type="' + selection.config_type + '" data-published="' + selection.published + '"' +
+                    'class="config"><td><i class="fa fa-file"></i>&nbsp;&nbsp;<span>' + selection.filename + '</span></td>' +
+                    '<td>' + selection.config_type + '</td><td>' + selection.published + '</td>' +
+                    '<td><button id="' + selection.uid + '" type="button" class="btn btn-warning btn-sm pull-right">Remove&nbsp;&nbsp;<span class="glyphicon glyphicon-remove"></span></button></td></tr>');
                 $(this).append($tr);
                 $tr.on('click', 'button#' + selection.uid, function(e){
                     // notify the config-browser of removal
@@ -1655,7 +2198,6 @@ clone.job = (function(){
 
                 // notify the config-browser
                 $('table#configurations').trigger({type: 'config:added', selection:selection});
-
             }
 
             $(this).css('display', 'block');
@@ -1675,10 +2217,10 @@ clone.job = (function(){
             var selection = e.selection;
             var source = e.source;
             var html = '<tr id="upload" data-filename="' + selection.filename + '" data-source="' + source + '"' +
-                        'data-type="' + selection.config_type + '" data-published="' + selection.published + '" ' +
-                        'class="config"><td><i class="fa fa-file"></i>&nbsp;&nbsp;<span>' + selection.filename + '</span></td>' +
-                       '<td>' + selection.config_type + '</td><td>' + selection.published + '</td>' +
-                       '<td><button id="remove-upload" type="button" class="btn btn-warning btn-sm pull-right">Remove&nbsp;&nbsp;<span class="glyphicon glyphicon-remove"></span></button></td></tr>';
+                'data-type="' + selection.config_type + '" data-published="' + selection.published + '" ' +
+                'class="config"><td><i class="fa fa-file"></i>&nbsp;&nbsp;<span>' + selection.filename + '</span></td>' +
+                '<td>' + selection.config_type + '</td><td>' + selection.published + '</td>' +
+                '<td><button id="remove-upload" type="button" class="btn btn-warning btn-sm pull-right">Remove&nbsp;&nbsp;<span class="glyphicon glyphicon-remove"></span></button></td></tr>';
             $(this).append(html);
             $(this).css('display', 'block');
 
@@ -1717,7 +2259,7 @@ clone.job = (function(){
             var configs = $('#filelist tr.config').length;
             var $tr = $(this).find('tr#' + selection.uid);
             if (configs == 1) {
-               $tr.fadeOut(300, function(){
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                     // hide the file list
@@ -1774,7 +2316,7 @@ clone.job = (function(){
             var configs = $('#filelist tr.config').length;
             var $tr = $(this).find('tr#upload');
             if (configs == 1) {
-               $tr.fadeOut(300, function(){
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                     // hide the file list
@@ -1826,7 +2368,7 @@ clone.job = (function(){
 
             // remove the config form input value
             var config_type_lwr = config_type.toLowerCase();
-            $('input#' + config_type_lwr).val('');
+            $('input#' + config_type_lwr).val();
 
             // get number of configuration files in the table
             var configs = $('#filelist tr.config').length;
@@ -1878,7 +2420,6 @@ clone.job = (function(){
                 $('input#feature_save').prop('disabled', false);
                 $('input#feature_pub').prop('disabled', false);
             }
-
         });
     }
 
@@ -1983,7 +2524,7 @@ clone.job = (function(){
         });
         $('input#filename').popover({
             //title: 'Select Formats',
-            content: gettext("Give the selected Preset file a name"),
+            content: "Give the selected Preset file a name",
             trigger: 'hover',
             delay: {show: 0, hide: 100},
             placement: 'top'
@@ -2043,32 +2584,43 @@ clone.job = (function(){
         $.getJSON(Config.JOBS_URL + '/' + job_uid, function(data, success, jqXHR){
 
             // -- describe export tab -- //
+
+            // // -- Providers Checkboxes -- //
+            var providers = data.provider_tasks;
+            for (i = 0; i < providers.length; i++){
+                $('#provider-selection input[value="' + providers[i].provider + '"]').prop('checked', true);
+            }
+
+
             $('#name').val(data.name);
             $('#description').val(data.description);
             $('#event').val(data.event);
 
             // add export bounding box
             var extent = data.extent;
-            var geojson = new OpenLayers.Format.GeoJSON({
-                    'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-                    'externalProjection': new OpenLayers.Projection("EPSG:4326")
+            var geojson = new ol.format.GeoJSON();
+            var feature = geojson.readFeature(extent, {
+                'featureProjection': "EPSG:3857",
+                'dataProjection': "EPSG:4326"
             });
-            var feature = geojson.read(extent, 'Feature');
-            bbox.addFeatures(feature);
+            if (bboxSource == null){
+                bboxSource = new ol.source.Vector();
+                bbox.setSource(bboxSource);
+            }
+            bboxSource.addFeature(feature);
+            map.getView().fit(feature.getGeometry().getExtent(), map.getSize());
 
-            var bounds = feature.geometry.bounds.clone();
-            bounds.transform('EPSG:3857', 'EPSG:4326');
+            var bounds = feature.getGeometry().getExtent();
 
-            // set the bounds on the form
+           // set the bounds on the form
             setBounds(bounds);
 
-            // enable bbox modification
-            transform.setFeature(feature);
+            // // -- select formats tab -- //
+            var formats = data.exports;
+            for (i = 0; i < formats[0].formats.length; i++){
+                $('#supported-formats input[value="' + formats[0].formats[i].slug + '"]').prop('checked', true);
+            }
 
-            // -- select formats tab -- //
-            $.each(data.exports, function(idx, format){
-                $('#supported-formats input[value="' + format.slug + '"]').prop('checked', true);
-            });
 
             // -- select features tab -- //
 
@@ -2167,7 +2719,7 @@ clone.job = (function(){
             }
 
             // zoom to export extents
-            map.zoomToExtent(bbox.getDataExtent());
+            map.getView().fit(bounds, map.getSize());
         });
     }
 

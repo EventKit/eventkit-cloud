@@ -712,6 +712,7 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 1);
                     $('#create-job-wizard').bootstrapWizard('enable', 2);
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
+
                 }
                 if (index == 2){
                     $('#nextArrow').hide();
@@ -719,7 +720,6 @@ create.job = (function(){
                     $('#create-job-wizard').bootstrapWizard('enable', 1);
                     $('#create-job-wizard').bootstrapWizard('enable', 2);
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
-
 
             }
         });
@@ -1876,7 +1876,6 @@ create.job = (function(){
 
             var formattedCoords = [];
             var merc_bounds = [];
-            //var unformattedCoordinates = [[175, 70], [175, 60], [-160, 60], [-160, 70]];
             var unformatedCoords = [[bounds[0],bounds[3]],[bounds[0], bounds[1]],[bounds[2], bounds[1]],[bounds[2], bounds[3]]];
 
             $(unformatedCoords).each(function(index, coordinate){
@@ -1896,7 +1895,6 @@ create.job = (function(){
             var polygonGeometry = new ol.geom.Polygon([formattedCoords])
             var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
 
-            //var vectorSource = new ol.source.Vector();
             if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);

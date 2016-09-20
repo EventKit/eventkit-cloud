@@ -1,7 +1,7 @@
 exports = {}
 exports.detail = (function(){
     var map;
-    var job_extents_source
+    var job_extents_source;
 
     return {
         init: function(){
@@ -317,6 +317,11 @@ exports.detail = (function(){
                                         taskDiv+=('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('Custom JOSM Preset (XML)') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
+                                case 'WMS Export':
+                                    if (status === 'SUCCESS') {
+                                        taskDiv+=('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('WMS Export') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
+                                    }
+                                    break;
                             }
 
 
@@ -600,6 +605,16 @@ exports.detail = (function(){
                                 taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate JOSM Preset') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
                             }
                             break;
+                        case 'WMS Export':
+                            if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                                cls = status.toLowerCase();
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate WMS Export') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr>');
+                            }
+                            else {
+                                cls = status.toLowerCase();
+                                taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + gettext('Generate WMS Export') + '</td><td>' + duration + '</td><td></td><td>' + task.status + '</td></tr>');
+                            }
+                            break;
                     }
                 });
                 taskDiv+=('</table></div>');
@@ -784,6 +799,18 @@ exports.detail = (function(){
                                 $tr.removeClass();
                                 $tr.addClass(status.toLowerCase());
                                 $tr.html('<td>' + gettext('Generate JOSM Preset') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td>');
+                            }
+                            break;
+                        case 'WMS Export':
+                            if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                                $tr.removeClass();
+                                $tr.addClass(status.toLowerCase());
+                                $tr.html('<td>' + gettext('Generate WMS Export') + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            }
+                            else {
+                                $tr.removeClass();
+                                $tr.addClass(status.toLowerCase());
+                                $tr.html('<td>' + gettext('Generate WMS Export') + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td>');
                             }
                             break;
                 }
