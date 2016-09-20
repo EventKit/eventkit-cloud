@@ -78,7 +78,13 @@ SITE_ID = 1
 Admin email address
 which receives task error notifications.
 """
-TASK_ERROR_EMAIL = 'joseph.svrcek@rgi-corp.com'
+TASK_ERROR_EMAIL = 'eventkit.team@gmail.com'
+DEFAULT_FROM_EMAIL = 'Eventkit Team <eventkit.team@gmail.com>'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'eventkit.team@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', None)
+EMAIL_USE_TLS = True
 
 """
 Overpass Element limit
