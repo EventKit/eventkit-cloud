@@ -17,8 +17,6 @@ INSTALLED_APPS += (
     'eventkit_cloud'
 )
 
-INSTALLED_APPS += ("osgeo_importer", "djmp", "guardian")
-
 INSTALLED_APPS += ("djcelery", )
 import djcelery
 djcelery.setup_loader()
@@ -69,9 +67,9 @@ if os.environ.get('VCAP_APPLICATION'):
     SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
     SITE_URL = os.getenv('SITE_URL', "https://{0}".format(SITE_NAME))
 else:
-    HOSTNAME = os.environ.get('HOSTNAME', 'cloud.eventkit.dev')
-    SITE_NAME = os.environ.get('SITE_NAME', 'cloud.eventkit.dev')
-    SITE_URL = os.environ.get('SITE_URL', 'http://cloud.eventkit.dev')
+    HOSTNAME = os.getenv('HOSTNAME', 'cloud.eventkit.dev')
+    SITE_NAME = os.getenv('SITE_NAME', 'cloud.eventkit.dev')
+    SITE_URL = os.getenv('SITE_URL', 'http://cloud.eventkit.dev')
 SITE_ID = 1
 
 """
@@ -106,9 +104,6 @@ http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 
 OVERPASS_TIMEOUT = 1600  # query timeout in seconds
 
-# djmp Settings
-TILESET_CACHE_DIRECTORY = '/home/vcap/cache' 
-TILESET_CACHE_URL = os.getenv('TILESET_CACHE_URL', 'cache/layers')
-DJMP_AUTHORIZATION_CLASS = "djmp.guardian_auth.GuardianAuthorization"
-USE_DISK_CACHE=True
-ENABLE_GUARDIAN_PERMISSIONS=False
+USE_DISK_CACHE = True
+
+

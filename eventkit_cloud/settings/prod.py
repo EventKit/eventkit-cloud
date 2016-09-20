@@ -156,9 +156,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 #     }
 # }
 
-TILESET_CACHE_DIRECTORY=os.environ.get('TILESET_CACHE_DIRECTORY', '/cache')
-DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
-
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

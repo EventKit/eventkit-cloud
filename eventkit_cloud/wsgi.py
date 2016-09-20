@@ -11,10 +11,17 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
+import sys
 
-from whitenoise.django import DjangoWhiteNoise
-
-application = get_wsgi_application()
-application = DjangoWhiteNoise(application)
-
+if os.environ.get("DEVELOPMENT", False):
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.dev")
+    application = get_wsgi_application()
+elif os.environ.get("PRODUCTION", False):
+    from whitenoise.django import DjangoWhiteNoise
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
+    application = get_wsgi_application()
+    application = DjangoWhiteNoise(application)
+else:
+    print("NO ENVIRONMENT VARIABLE DETECTED FOR CONFIGURATION.")
+    print("Please add 'DEVELOPMENT' or 'PRODUCTION' as an environment variable,"
+          " to specify the correct environment.")
