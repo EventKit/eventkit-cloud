@@ -59,7 +59,9 @@ class WMSToGeopackage():
         conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)], self.gpkgfile)
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {}
-        conf_dict['grids']['webmercator'] = {'srs': 'EPSG:3857', 'tile_size': [256, 256]}
+        conf_dict['grids']['webmercator'] = {'srs': 'EPSG:3857',
+                                             'tile_size': [256, 256],
+                                             'origin': 'nw'}
 
         #disable SSL cert checks
         conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
