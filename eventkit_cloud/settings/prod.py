@@ -12,7 +12,9 @@ if os.environ.get('LDAP_SERVER_URI') and os.environ.get('LDAP_BASE_URL'):
     import ldap
     from django_auth_ldap.config import LDAPSearch
     LDAP_TLD = os.environ.get('LDAP_BASE_URL').split('.')[-1]
+    LDAP_BASE = os.environ.get('LDAP_BASE_URL').split('.')[0]
     AUTH_LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI')
+    AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_PASSWORD')
     AUTH_LDAP_USER_DN_TEMPLATE = 'uid=%(user)s,cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
     LDAP_SEARCH_DN = 'cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
     AUTH_LDAP_USER = '(uid=%(user))'
