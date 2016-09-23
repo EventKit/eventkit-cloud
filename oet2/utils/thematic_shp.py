@@ -80,9 +80,15 @@ class ThematicSQliteToShp(object):
         conn = sqlite3.connect(self.thematic_sqlite)
         # load spatialite extension
         conn.enable_load_extension(True)
-        cmd = "SELECT load_extension('mod_spatialite')"
-        cur = conn.cursor()
-        cur.execute(cmd)
+        try:
+            cmd = "SELECT load_extension('mod_spatialite')"
+            cur = conn.cursor()
+            cur.execute(cmd)
+        except sqlite3.OperationalError as e:
+            cmd = "SELECT load_extension('libspatialite')"
+            cur = conn.cursor()
+            cur.execute(cmd)
+        
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
         sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, Geometry FROM $planet_table WHERE $select_clause')
