@@ -8,17 +8,17 @@ import json
 
 
 # Authentication Settings
-if os.environ.get('LDAP_SERVER_URI') and os.environ.get('LDAP_BASE_URL'):
+if os.environ.get('LDAP_SERVER_URI'):
     import ldap
     from django_auth_ldap.config import LDAPSearch
-    LDAP_TLD = os.environ.get('LDAP_BASE_URL').split('.')[-1]
-    LDAP_BASE = os.environ.get('LDAP_BASE_URL').split('.')[0]
+
     AUTH_LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI')
-    AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_PASSWORD')
-    AUTH_LDAP_USER_DN_TEMPLATE = 'uid=%(user)s,cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
-    LDAP_SEARCH_DN = 'cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
-    AUTH_LDAP_USER = '(uid=%(user))'
-    AUTH_LDAP_BIND_DN = 'uid=readonly,cn=sysaccounts,cn=etc,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
+    AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_BIND_PASSWORD')
+    AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get('LDAP_USER_DN_TEMPLATE')
+    LDAP_SEARCH_DN = os.environ.get('LDAP_SEARCH_DN')
+    AUTH_LDAP_USER = os.environ.get('LDAP_USER')
+    AUTH_LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN')
+
     AUTHENTICATION_BACKENDS = (
       'django_auth_ldap.backend.LDAPBackend',
       'django.contrib.auth.backends.ModelBackend',
