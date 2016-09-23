@@ -6,6 +6,33 @@ import dj_database_url
 import os
 import json
 
+
+# Authentication Settings
+if os.environ.get('LDAP_SERVER_URI') and os.environ.get('LDAP_BASE_URL'):
+    import ldap
+    from django_auth_ldap.config import LDAPSearch
+    LDAP_TLD = os.environ.get('LDAP_BASE_URL').split('.')[-1]
+    AUTH_LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI')
+    AUTH_LDAP_USER_DN_TEMPLATE = 'uid=%(user)s,cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
+    LDAP_SEARCH_DN = 'cn=users,cn=accounts,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
+    AUTH_LDAP_USER = '(uid=%(user))'
+    AUTH_LDAP_BIND_DN = 'uid=readonly,cn=sysaccounts,cn=etc,dc={},dc={}'.format(LDAP_BASE, LDAP_TLD)
+    AUTHENTICATION_BACKENDS = (
+      'django_auth_ldap.backend.LDAPBackend',
+      'django.contrib.auth.backends.ModelBackend',
+      #'guardian.backends.ObjectPermissionBackend',
+    )
+    AUTH_LDAP_USER_ATTR_MAP = {
+      'first_name': 'givenName',
+      'last_name': 'sn',
+      'email': 'mail',
+    }
+    AUTH_LDAP_USER_SEARCH = LDAPSearch(
+      LDAP_SEARCH_DN,
+      ldap.SCOPE_SUBTREE,
+      AUTH_LDAP_USER
+    )
+
 # Set debug to True for development
 DEBUG = os.environ.get('DEBUG', False)
 

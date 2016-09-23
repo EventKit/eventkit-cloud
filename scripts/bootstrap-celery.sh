@@ -50,20 +50,20 @@ sudo update-rc.d postgresql enable
 sudo grep -q "#listen_addresses = 'localhost'" /etc/postgresql/9.3/main/postgresql.conf && sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/9.3/main/postgresql.conf
 sudo grep -q '   peer' /etc/postgresql/9.3/main/pg_hba.conf && sudo sed -i "s/   peer/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
 sudo grep -q '   ident' /etc/postgresql/9.3/main/pg_hba.conf && sudo sed -i "s/   ident/   trust/g" /etc/postgresql/9.3/main/pg_hba.conf
-sudo echo "host    eventkit_exports_dev     eventkit        all            md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+sudo echo "host    eventkit_exports     eventkit        all            md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
 sudo service postgresql restart
 
 
 
-sudo -u postgres createdb 'eventkit_exports_dev'
+sudo -u postgres createdb 'eventkit_exports'
 sudo -u postgres psql -c "CREATE ROLE eventkit WITH PASSWORD 'eventkit_exports';"
-sudo -u postgres psql -d eventkit_exports_dev -c "ALTER ROLE eventkit SUPERUSER;"
-sudo -u postgres psql -d eventkit_exports_dev -c "ALTER ROLE eventkit WITH LOGIN;"
-sudo -u postgres psql -d eventkit_exports_dev -c "GRANT ALL PRIVILEGES ON DATABASE eventkit_exports_dev TO eventkit;"
-sudo -u postgres psql -d eventkit_exports_dev -c "CREATE EXTENSION POSTGIS;"
-sudo -u postgres psql -d eventkit_exports_dev -c "CREATE EXTENSION HSTORE;"
-sudo -u postgres psql -d eventkit_exports_dev -c "CREATE SCHEMA exports AUTHORIZATION eventkit;"
+sudo -u postgres psql -d eventkit_exports -c "ALTER ROLE eventkit SUPERUSER;"
+sudo -u postgres psql -d eventkit_exports -c "ALTER ROLE eventkit WITH LOGIN;"
+sudo -u postgres psql -d eventkit_exports -c "GRANT ALL PRIVILEGES ON DATABASE eventkit_exports TO eventkit;"
+sudo -u postgres psql -d eventkit_exports -c "CREATE EXTENSION POSTGIS;"
+sudo -u postgres psql -d eventkit_exports -c "CREATE EXTENSION HSTORE;"
+sudo -u postgres psql -d eventkit_exports -c "CREATE SCHEMA exports AUTHORIZATION eventkit;"
 
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
