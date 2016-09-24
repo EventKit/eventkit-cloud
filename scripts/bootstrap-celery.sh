@@ -115,6 +115,12 @@ rm -rf /var/lib/eventkit/tmp
 
 sudo apt-get install -y inotify-tools
 
+# we need to kill all python processes to get rid of this annoying
+# issue where supervisor boots up a worker before it gets a proper config
+# The worker is harder to kill than weeds! It keeps trying to connect to
+# a bogus rabbitmq URI and makes useless logs.
+sudo killall python
+
 # restart supervisord
 sudo unlink /run/supervisor.sock
 sudo /etc/init.d/supervisor restart
