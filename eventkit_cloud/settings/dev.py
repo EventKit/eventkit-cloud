@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import urlparse
+
 from .project import *  # NOQA
 
 # Set debug to True for development
