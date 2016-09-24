@@ -12,20 +12,39 @@ INSTALLED_APPS += (
     'django_extensions',
 )
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'eventkit_exports_dev',
-        'OPTIONS': {
-            'options': '-c search_path=exports,public',
-            ##'sslmode': 'require',
-        },
-        'CONN_MAX_AGE': None,
-        'USER': 'eventkit',
-        'PASSWORD': 'eventkit_exports_dev',
-        'HOST': 'postgis'
+uri = os.environ.get('DATABASE_URL')
+if uri:
+    uri = urlparse.urlparse(uri)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': uri.path[1:],
+            'OPTIONS': {
+                'options': '-c search_path=exports,public',
+                ##'sslmode': 'require',
+            },
+            'CONN_MAX_AGE': None,
+            'USER': uri.username,
+            'PASSWORD': uri.password,
+            'HOST': uri.hostname
+        }
     }
-}
+
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'eventkit_exports_dev',
+            'OPTIONS': {
+                'options': '-c search_path=exports,public',
+                ##'sslmode': 'require',
+            },
+            'CONN_MAX_AGE': None,
+            'USER': 'eventkit',
+            'PASSWORD': 'eventkit_exports_dev',
+            'HOST': 'postgis'
+        }
+    }
 
 
 TEMPLATES = [
