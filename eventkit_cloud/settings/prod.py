@@ -122,52 +122,52 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 #            # 'level': 'DEBUG',
 #             'level': 'ERROR',
 #         },
-#         'oet2.api': {
+#         'eventkit_cloud.api': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.api.tests': {
+#         'eventkit_cloud.api.tests': {
 #             'handlers': ['console'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.tasks.tests': {
+#         'eventkit_cloud.tasks.tests': {
 #             'handlers': ['console'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.tasks': {
+#         'eventkit_cloud.tasks': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.celery.task': {
+#         'eventkit_cloud.celery.task': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.jobs': {
+#         'eventkit_cloud.jobs': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.jobs.tests': {
+#         'eventkit_cloud.jobs.tests': {
 #             'handlers': ['console', 'file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.utils': {
+#         'eventkit_cloud.utils': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2.utils.tests': {
+#         'eventkit_cloud.utils.tests': {
 #             'handlers': ['console', 'file'],
 #             'propagate': True,
 #             'level': 'DEBUG',
 #         },
-#         'oet2': {
+#         'eventkit_cloud': {
 #             'handlers': ['file'],
 #             'propagate': True,
 #             'level': 'DEBUG',

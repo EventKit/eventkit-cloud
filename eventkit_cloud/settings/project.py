@@ -9,11 +9,11 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Project apps
 INSTALLED_APPS += (
-    'oet2.jobs',
-    'oet2.tasks',
-    'oet2.api',
-    'oet2.ui',
-    'oet2.utils',
+    'eventkit_cloud.jobs',
+    'eventkit_cloud.tasks',
+    'eventkit_cloud.api',
+    'eventkit_cloud.ui',
+    'eventkit_cloud.utils',
     'eventkit_cloud'
 )
 
@@ -24,12 +24,12 @@ djcelery.setup_loader()
 LOGIN_URL = '/login/'
 
 EXPORT_TASKS = {
-    'shp': 'oet2.tasks.export_tasks.ShpExportTask',
-    'obf': 'oet2.tasks.export_tasks.ObfExportTask',
-    'sqlite': 'oet2.tasks.export_tasks.SqliteExportTask',
-    'kml': 'oet2.tasks.export_tasks.KmlExportTask',
-    'thematic': 'oet2.tasks.export_tasks.ThematicLayersExportTask',
-    'gpkg': 'oet2.tasks.export_tasks.GeopackageExportTask'
+    'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
+    'obf': 'eventkit_cloud.tasks.export_tasks.ObfExportTask',
+    'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
+    'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
+    'thematic': 'eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask',
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask'
 }
 
 # where exports are staged for processing

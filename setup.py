@@ -5,11 +5,11 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 setup(
-    name="oet2",
+    name="eventkit",
     version="0.1",
     author="",
     author_email="",
-    description="OSM Export Tool 2",
+    description="Eventkit Cloud",
     long_description=(read('README.md')),
     # Full list of classifiers can be found at:
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -17,8 +17,7 @@ setup(
         'Development Status :: 1 - Planning',
     ],
     license="BSD",
-    keywords="django mapproxy",
-    url='https://github.com/hotosm/osm-export-tool2',
+    keywords="osm-export-tool2 django eventkit",
     packages=['oet2',],
     include_package_data=True,
     zip_safe=False,

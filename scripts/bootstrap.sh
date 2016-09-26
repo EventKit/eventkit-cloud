@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MKGMAP_VERSION=r3694
-SPLITTER_VERSION=r437
+#MKGMAP_VERSION=r3694
+#SPLITTER_VERSION=r437
 
 export PATH=/usr/local/bin:$PATH:/usr/pgsql-9.5/bin
 sudo echo "PATH=:$PATH" >> /etc/profile.d/path.sh
@@ -72,10 +72,7 @@ sudo apt-get -y install rabbitmq-server
 service rabbitmq-server start
 sudo update-rc.d rabbitmq-server enable
 
-mkdir /var/lib/eventkit/tmp
-cd /var/lib/eventkit/tmp
-sudo git clone https://github.com/terranodo/eventkit-cloud.git
-cd eventkit-cloud
+cd /vagrant
 #git checkout removeDJMP
 #"cd /var/lib/eventkit/vagrant" is only while developing
 #cd /var/lib/eventkit/vagrant
@@ -114,7 +111,7 @@ sudo mkdir /var/log/eventkit
 
 sudo apt-get install supervisor apache2 -y
 
-sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord.conf /etc/supervisor/supervisord.conf
+sudo cp /vagrant/config/supervisord.conf /etc/supervisor/supervisord.conf
 
 #[program:overpass-api]
 #directory = /bin
@@ -160,7 +157,7 @@ sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord.conf /etc/superv
 #stopsignal=INT
 
 
-sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
+sudo cp /vagrant/config/eventkit.conf /etc/apache2/sites-available/eventkit.conf
 a2enmod proxy
 a2enmod proxy_http
 a2enmod ext_filter
@@ -197,5 +194,3 @@ sudo chown -R eventkit:eventkit /var/log/eventkit
 sudo service apache2 start
 sudo update-rc.d apache2 enable
 
-
-rm -rf /var/lib/eventkit/tmp

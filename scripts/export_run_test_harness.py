@@ -9,9 +9,9 @@ import os
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 
-from oet2.jobs.models import ExportFormat, Job, Region, Tag
-from oet2.jobs.presets import PresetParser
-from oet2.tasks.task_runners import ExportTaskRunner
+from eventkit_cloud.jobs.models import ExportFormat, Job, Region, Tag
+from eventkit_cloud.jobs.presets import PresetParser
+from eventkit_cloud.tasks.task_runners import ExportTaskRunner
 
 
 def run(*script_args):

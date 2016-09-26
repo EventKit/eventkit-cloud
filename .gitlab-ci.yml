@@ -1,10 +1,7 @@
-notifications:
-  email: false
-
 services:
   - postgresql
 
-before_install:
+before_script:
     - sudo mv /etc/apt/sources.list.d/* /tmp
     - sudo apt-get -qq remove postgis
     - sudo apt-get -y install software-properties-common
@@ -17,15 +14,11 @@ before_install:
     - export C_INCLUDE_PATH=/usr/include/gdal
     - sudo mkdir -p /home/ubuntu/export_staging
     - sudo chmod 777 /home/ubuntu/export_staging
-
-install: pip install --user -r requirements-dev.txt
-
-before_script:
+    - pip install --user -r requirements-dev.txt
     - sudo -u postgres psql -c 'create database hot_exports_dev;'
     - sudo -u postgres psql -c 'create extension postgis'
     - sudo -u postgres psql -c  "create user hot with password 'hot' superuser createdb"
 
-# command to run tests
 eventkit:
     script:
         - ./manage.py makemigrations

@@ -6,7 +6,7 @@ from .project import *  # noqa
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'oet2_dev',
+        'NAME': 'eventkit_cloud_dev',
         'OPTIONS': {
             'options': '-c search_path=exports,public',
             'sslmode': 'require',

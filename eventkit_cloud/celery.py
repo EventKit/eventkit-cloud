@@ -5,10 +5,10 @@ import os
 from celery import Celery
 
 
-if os.getenv("DEVELOPMENT"):
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.dev')
-else:
+if os.getenv("PRODUCTION"):
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
+else:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.dev')
 
 from django.conf import settings  # noqa
 
