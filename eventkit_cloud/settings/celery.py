@@ -35,6 +35,6 @@ if os.environ.get('VCAP_SERVICES'):
     try:
         BROKER_URL = services['cloudamqp'][0]['credentials']['uri']
     except KeyError:
-        BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+        BROKER_URL = os.environ.get('BROKER_URL', 'amqp://duxxbksw:jpTD62f4sU1aDasD7LUL8bFqTBZ1dH1Z@reindeer.rmq.cloudamqp.com/duxxbksw/duxxbksw:jpTD62f4sU1aDasD7LUL8bFqTBZ1dH1Z@reindeer.rmq.cloudamqp.com/duxxbksw/')
 else:
-    BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@rabbitmq:5672//')
+    BROKER_URL = os.environ.get('BROKER_URL', 'amqp://duxxbksw:jpTD62f4sU1aDasD7LUL8bFqTBZ1dH1Z@reindeer.rmq.cloudamqp.com/duxxbksw/duxxbksw:jpTD62f4sU1aDasD7LUL8bFqTBZ1dH1Z@reindeer.rmq.cloudamqp.com/duxxbksw/')
