@@ -1,0 +1,14 @@
+backports.ssl_match_hostname
+click
+gdal
+uwsgi
+gunicorn
+eventlet
+#rtree
+#imposm
+decorator
+webtest
+-e git://github.com/terranodo/mapproxy.git@addGeopackageAutoconfig#egg=mapproxy
+-e git://github.com/terranodo/osm-extract.git@master#egg=osm-extract
+-e git://github.com/ProminentEdge/django-osgeo-importer.git@master#egg=osgeo-importer
+numpy==1.11.1

@@ -1,6 +1,89 @@
-*.pyc
 *.log
 .idea
 .vagrant
 ubuntu-xenial-core-cloudimg-amd64-root.tar.gz
 .Dockerfile_eventkit.swp
+*.komodoproject
+.komodotools
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+develop-eggs/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+media/*
+
+
+# Django Settings
+#settings_private.py
+#static
+#!oet2/ui/static
+migrations
+!oet2/jobs/migrations
+!oet2/tasks/migrations
+
+nohup.out
+api/tests/examples
+celerybeat.pid
+celerybeat-schedule
+
+# PyCharm
+.idea
+
+# IntelliJ
+*.iml
+
+# project specific files
+core/settings/secret.py
+
+*.iml
