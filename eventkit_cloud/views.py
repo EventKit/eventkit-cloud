@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 from django.contrib.auth.decorators import login_required
 from .service_manager import create_conf_from_wms, create_confs_from_voyager
 import json
 from django.http import HttpResponse, HttpResponseRedirect
-from .tasks import task_create_confs_from_voyager
+from .tasks.voyager_tasks import task_create_confs_from_voyager
 
 @login_required
 def register_service(request):

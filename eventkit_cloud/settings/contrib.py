@@ -24,7 +24,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'oet2.api.renderers.HOTExportApiRenderer',
+        'eventkit_cloud.api.renderers.HOTExportApiRenderer',
     ),
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
     'DEFAULT_VERSION': '1.0',
@@ -39,7 +39,7 @@ SOCIAL_AUTH_LOGIN_ERROR_URL = '/osm/error'
 SOCIAL_AUTH_URL_NAMESPACE = 'osm'
 SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['username', 'first_name', 'email']
 SOCIAL_AUTH_FORCE_EMAIL_VALIDATION = True
-SOCIAL_AUTH_EMAIL_VALIDATION_FUNCTION = 'oet2.ui.pipeline.email_validation'
+SOCIAL_AUTH_EMAIL_VALIDATION_FUNCTION = 'eventkit_cloud.ui.pipeline.email_validation'
 SOCIAL_AUTH_EMAIL_VALIDATION_URL = '/osm/email_verify_sent/'
 
 # SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
@@ -51,7 +51,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.social_auth.auth_allowed',
     'social.pipeline.social_auth.social_user',
     'social.pipeline.user.get_username',
-    'oet2.ui.pipeline.require_email',
+    'eventkit_cloud.ui.pipeline.require_email',
     'social.pipeline.mail.mail_validation',
     'social.pipeline.social_auth.associate_by_email',
     'social.pipeline.user.create_user',

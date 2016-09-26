@@ -2,7 +2,7 @@ import os
 
 from django.utils import timezone
 
-from oet2.jobs import presets
+from eventkit_cloud.jobs import presets
 from utils.overpass import Overpass
 
 

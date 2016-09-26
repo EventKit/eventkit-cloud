@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   ## create a private network visible only to the host machine
   #config.vm.network :private_network, ip: "127.0.0.1"
   config.vm.network :private_network, ip: "192.168.99.130"
-  # config.vm.synced_folder "./", "/var/lib/eventkit/vagrant"
+  #onfig.vm.synced_folder "./", "/var/lib/eventkit/eventkit"
   # config.vm.synced_folder "../osm-export-tool2/", "/var/lib/eventkit/.virtualenvs/eventkit/src/oet2"
 
   # Example of share an additional folder to the guest VM.
