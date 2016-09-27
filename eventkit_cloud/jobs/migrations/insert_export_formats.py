@@ -12,15 +12,19 @@ class Migration(migrations.Migration):
     def insert_export_formats(apps, schema_editor):
         ExportFormat = apps.get_model('jobs', 'ExportFormat')
         ExportFormat.objects.create(name='Geopackage', description='GeoPackage',
-                                    slug='GPKG')
+                                    slug='gpkg')
+        ExportFormat.objects.create(name='Geopackage (Thematic)', description='GeoPackage (Thematic)',
+                                    slug='thematic-gpkg')
         ExportFormat.objects.create(name='ESRI Shapefile Format', description='Esri Shapefile (OSM Schema)',
-                                    slug='SHP')
+                                    slug='shp')
         ExportFormat.objects.create(name='KML Format', description='Google Earth KMZ',
-                                    slug='KML')
+                                    slug='kml')
         ExportFormat.objects.create(name='SQLITE Format', description='SQlite SQL',
-                                    slug='SQLITE')
-        ExportFormat.objects.create(name='ESRI Shapefile Format (Thematic)', description='Esri SHP (Thematic Schema)',
-                                    slug='THEMATIC')
+                                    slug='sqlite')
+        ExportFormat.objects.create(name='SQLITE Format (Thematic)', description='SQlite SQL (Thematic)',
+                                    slug='thematic-sqlite')
+        ExportFormat.objects.create(name='ESRI Shapefile Format (Thematic)', description='Esri Shapefile (Thematic Schema)',
+                                    slug='thematic-shp')
 
 
     dependencies = [

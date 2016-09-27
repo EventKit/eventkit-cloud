@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(max_length=100)),
-                ('slug', eventkit_cloud.jobs.models.LowerCaseCharField(default='', max_length=10, unique=True)),
+                ('slug', eventkit_cloud.jobs.models.LowerCaseCharField(default='', max_length=20, unique=True)),
                 ('description', models.CharField(max_length=255)),
                 ('cmd', models.TextField(max_length=1000)),
             ],

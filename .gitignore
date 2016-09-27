@@ -6,6 +6,7 @@ db_dir
 .Dockerfile_eventkit.swp
 *.komodoproject
 .komodotools
+staticfiles/
 
 
 # Byte-compiled / optimized / DLL files
@@ -68,7 +69,7 @@ media/*
 # Django Settings
 #settings_private.py
 #static
-#!oet2/ui/static
+#!eventkit_cloud/ui/static
 migrations
 !eventkit_cloud/jobs/migrations
 !eventkit_cloud/tasks/migrations

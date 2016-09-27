@@ -18,7 +18,7 @@ setup(
     ],
     license="BSD",
     keywords="osm-export-tool2 django eventkit",
-    packages=['oet2',],
+    packages=['eventkit_cloud',],
     include_package_data=True,
     zip_safe=False,
     install_requires=[

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import importlib
 import logging
-import os
 import re
 import json
 
 from django.conf import settings
 from django.db import DatabaseError
 
-from celery import chain, chord, group
+from celery import chain, group
 
 from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
@@ -19,6 +18,18 @@ from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
+export_task_registry = {
+    'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
+    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSqliteExportTask',
+    'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
+    'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
+    'thematic-shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask',
+    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGeopackageExportTask'
+}
+
+thematic_tasks_list = ['thematic-sqlite', 'thematic-shp', 'thematic-gpkg']
 
 
 class TaskRunner(object):
@@ -37,7 +48,6 @@ class ExportOSMTaskRunner(TaskRunner):
     """
     Runs HOT Export Tasks
     """
-    export_task_registry = settings.EXPORT_TASKS
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
         """
@@ -60,14 +70,8 @@ class ExportOSMTaskRunner(TaskRunner):
         # build a list of celery tasks based on the export formats..
         for format in formats:
             try:
-                # see settings.EXPORT_TASKS for configuration
-                task_fq_name = self.export_task_registry[format]
                 # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
+                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -140,6 +144,33 @@ class ExportOSMTaskRunner(TaskRunner):
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid'))
             )
 
+            thematic_exports = {}
+            for thematic_task in thematic_tasks_list:
+                if export_tasks.get(thematic_task):
+                    thematic_exports[thematic_task] = export_tasks.pop(thematic_task)
+
+            thematic_tasks = None
+            if thematic_exports:
+                # if user requested thematic-sqlite do it...if not create the celery task, and store the task in the model.
+
+                thematic_sqlite = thematic_exports.pop('thematic-sqlite', None)
+                if not thematic_sqlite:
+                    thematic_sqlite_task = create_format_task('thematic-sqlite')()
+                    thematic_sqlite = {'obj': thematic_sqlite_task,
+                                       'task_uid': create_export_task(task_name=thematic_sqlite_task.name,
+                                                                      export_provider_task=export_provider_task).uid}
+                thematic_tasks = chain(thematic_sqlite.get('obj').si(run_uid=run.uid,
+                                                                     stage_dir=stage_dir,
+                                                                     job_name=job_name,
+                                                                     task_uid=thematic_sqlite.get('task_uid')) | group(
+                    task.get('obj').si(run_uid=run.uid,
+                                       stage_dir=stage_dir,
+                                       job_name=job_name,
+                                       task_uid=task.get('task_uid')) for task_name, task in
+                    thematic_exports.iteritems()
+                ))
+                logger.error("THEMATIC_TASKS: {0}".format(thematic_tasks))
+
             format_tasks = group(
                 task.get('obj').si(run_uid=run.uid,
                                    stage_dir=stage_dir,
@@ -153,7 +184,10 @@ class ExportOSMTaskRunner(TaskRunner):
             This means that the finalize_task will always be called, and will update the
             overall run status.
             """
-            return chain(chain(initial_tasks | schema_tasks) | format_tasks)
+            if thematic_tasks:
+                return chain(initial_tasks | schema_tasks | thematic_tasks | format_tasks)
+            else:
+                return chain(initial_tasks | schema_tasks | format_tasks)
         else:
             return False
 
@@ -185,14 +219,8 @@ class ExportWMSTaskRunner(TaskRunner):
         # build a list of celery tasks based on the export formats..
         for format in formats:
             try:
-                # see settings.EXPORT_TASKS for configuration
-                task_fq_name = self.export_task_registry[format]
                 # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
+                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -203,7 +231,7 @@ class ExportWMSTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
             bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            #swap xy
+            # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
@@ -221,12 +249,23 @@ class ExportWMSTaskRunner(TaskRunner):
                                wms_url=provider_task.provider.url)
 
 
+def create_format_task(format):
+    task_fq_name = export_task_registry[format]
+    # instantiate the required class.
+    parts = task_fq_name.split('.')
+    module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+    module = importlib.import_module(module_path)
+    CeleryExportTask = getattr(module, class_name)
+    return CeleryExportTask
+
+
 def normalize_job_name(name):
     # Remove all non-word characters
     s = re.sub(r"[^\w\s]", '', name)
     # Replace all whitespace with a single underscore
     s = re.sub(r"\s+", '_', s)
     return s.lower()
+
 
 def create_export_task(task_name=None, export_provider_task=None):
     try:

@@ -53,7 +53,6 @@ def validate_formats(data):
     Raises:
         ValidationError: if there are no formats selected.
     """
-    print("VALIDATING DATA:{}".format(data))
     if data.get('formats') == None or len(data.get('formats')) == 0:
         raise serializers.ValidationError({'formats': [_('invalid export format.')]})
 
@@ -68,7 +67,6 @@ def validate_provider_tasks(data):
     Raises:
         ValidationError: if there are no formats selected.
     """
-    print("VALIDATING DATA:{}".format(data))
     if data.get('formats') == None or len(data.get('formats')) == 0:
         raise serializers.ValidationError({'formats': [_('invalid export format.')]})
 

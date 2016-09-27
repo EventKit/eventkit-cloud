@@ -11,7 +11,7 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-class ThematicSQliteToShp(object):
+class ThematicSqlite(object):
     """
     Thin wrapper around ogr2ogr to convert sqlite to shp using thematic layers.
     """
@@ -34,18 +34,13 @@ class ThematicSQliteToShp(object):
         if not os.path.exists(self.sqlite):
             raise IOError('Cannot find sqlite file for this task.')
         self.shapefile = shapefile
-        self.zipped = zipped
         self.stage_dir = os.path.dirname(self.sqlite)
         if not self.shapefile:
             # create shp path from sqlite path.
             self.shapefile = self.stage_dir + '/' + self.job_name + '_thematic_shp'
         self.debug = debug
-        self.cmd = Template("ogr2ogr -f 'ESRI Shapefile' $shp $sqlite -lco ENCODING=UTF-8")
-        self.zip_cmd = Template("zip -j -r $zipfile $shp_dir")
         # create thematic sqlite file
         self.thematic_sqlite = self.stage_dir + '/' + self.job_name + '_thematic.sqlite'
-        shutil.copy(self.sqlite, self.thematic_sqlite)
-        assert os.path.exists(self.thematic_sqlite), 'Thematic sqlite file not found.'
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {
@@ -68,7 +63,7 @@ class ThematicSQliteToShp(object):
             'grassy_fields_polygons': {'key': 'leisure', 'table': 'planet_osm_polygon', 'select_clause': 'leisure="pitch" OR leisure="common" OR leisure="golf_course"'},
         }
 
-    def generate_thematic_schema(self,):
+    def convert(self,):
         """
         Generate the thematic schema.
 
@@ -77,6 +72,8 @@ class ThematicSQliteToShp(object):
         generate the thematic layers based on the exports categoried_tags.
         """
         # setup sqlite connection
+        shutil.copy(self.sqlite, self.thematic_sqlite)
+        assert os.path.exists(self.thematic_sqlite), 'Thematic sqlite file not found.'
         conn = sqlite3.connect(self.thematic_sqlite)
         # load spatialite extension
         conn.enable_load_extension(True)
@@ -84,11 +81,10 @@ class ThematicSQliteToShp(object):
             cmd = "SELECT load_extension('mod_spatialite')"
             cur = conn.cursor()
             cur.execute(cmd)
-        except sqlite3.OperationalError as e:
+        except sqlite3.OperationalError:
             cmd = "SELECT load_extension('libspatialite')"
             cur = conn.cursor()
             cur.execute(cmd)
-        
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
         sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, Geometry FROM $planet_table WHERE $select_clause')
@@ -166,49 +162,5 @@ class ThematicSQliteToShp(object):
         cur.execute('DROP TABLE planet_osm_polygon')
         conn.commit()
         cur.close()
+        return self.thematic_sqlite
 
-    def convert(self, ):
-        """
-        Convert the thematic sqlite schema to shapefile.
-        """
-        convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'sqlite': self.thematic_sqlite})
-        if(self.debug):
-            print 'Running: %s' % convert_cmd
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
-        if(self.debug):
-            print 'ogr2ogr returned: %s' % returncode
-        if self.zipped and returncode == 0:
-            zipfile = self._zip_shape_dir()
-            return zipfile
-        else:
-            return self.shapefile
-
-    def _zip_shape_dir(self, ):
-        """
-        Zip the shapefile directory.
-        """
-        zipfile = self.shapefile + '.zip'
-        if not os.listdir(self.shapefile):
-            logger.warn("Attempted to zip an empty directory.")
-            logger.warn("This is likely caused by the requested data missing the required thematic columns.")
-            raise Exception("No shapefiles available to zip.")
-        zip_cmd = self.zip_cmd.safe_substitute({'zipfile': zipfile, 'shp_dir': self.shapefile})
-        proc = subprocess.Popen(zip_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('{}:{}'.format(stdout, stderr))
-            raise Exception('Error zipping shape directory. Exited with returncode: {0}'.format(returncode))
-        if returncode == 0:
-            # remove the shapefile directory
-            shutil.rmtree(self.shapefile)
-        if self.debug:
-            print 'Zipped shapefiles: {0}'.format(self.shapefile)
-        return zipfile

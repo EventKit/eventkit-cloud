@@ -25,7 +25,7 @@ class SQliteToGeopackage(object):
             debug: turn debugging on / off
         """
         self.sqlite = sqlite
-        if not os.path.exists(self.sqlite):
+        if not os.path.isfile(self.sqlite):
             raise IOError('Cannot find sqlite file for this task.')
         self.gpkgfile = gpkgfile
         if not self.gpkgfile:
