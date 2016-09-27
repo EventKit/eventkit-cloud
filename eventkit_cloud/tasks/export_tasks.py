@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_shp, geopackage, wms
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms
 )
 
 # Get an instance of a logger
@@ -81,7 +81,7 @@ class ExportTask(Task):
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
 
-        if getattr(settings, 'USE_S3', False):
+        if settings.USE_S3:
             download_url = s3.upload_to_s3(run_uid, filename)
         else:
             download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
@@ -227,9 +227,11 @@ class OSMPrepSchemaTask(ExportTask):
         return {'result': sqlite}
 
 
-class ThematicLayersExportTask(ExportTask):
+class ThematicShpExportTask(ExportTask):
     """
     Task to export thematic shapefile.
+
+    Requires ThematicSqliteExportTask to be called first.
     """
 
     name = "Thematic Shapefile Export"
@@ -238,15 +240,36 @@ class ThematicLayersExportTask(ExportTask):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
-        tags = run.job.categorised_tags
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        thematic_sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        shapefile = os.path.join(stage_dir,'{0}_thematic_shp'.format(job_name))
         try:
-            t2s = thematic_shp.ThematicSQliteToShp(sqlite=sqlite, tags=tags, job_name=job_name)
-            t2s.generate_thematic_schema()
+            t2s = shp.SQliteToShp(sqlite=thematic_sqlite, shapefile=job_name)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
-            logger.error('Raised exception in thematic task, %s', str(e))
+            logger.error('Raised exception in thematic shp task, %s', str(e))
+            raise Exception(e)  # hand off to celery..
+
+
+class ThematicSqliteExportTask(ExportTask):
+    """
+    Task to export thematic shapefile.
+    """
+
+    name = "Thematic SQLite Export"
+
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        from eventkit_cloud.tasks.models import ExportRun
+        self.update_task_state(task_uid=task_uid)
+        run = ExportRun.objects.get(uid=run_uid)
+        tags = run.job.categorised_tags
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        try:
+            t2s = thematic_sqlite.ThematicSqlite(sqlite=sqlite, tags=tags, job_name=job_name)
+            out = t2s.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in thematic sqlite task, %s', str(e))
             raise Exception(e)  # hand off to celery..
 
 
@@ -287,6 +310,7 @@ class KmlExportTask(ExportTask):
             logger.error('Raised exception in kml export, %s', str(e))
             raise Exception(e)
 
+
 class SqliteExportTask(ExportTask):
     """
     Class defining SQLITE export function.
@@ -317,6 +341,26 @@ class GeopackageExportTask(ExportTask):
             return {'result': out}
         except Exception as e:
             logger.error('Raised exception in geopackage export, %s', str(e))
+            raise Exception(e)
+
+
+class ThematicGeopackageExportTask(ExportTask):
+    """
+    Class defining geopackage export function.
+    Requires ThematicSqliteExportTask.
+    """
+    name = 'Thematic Geopackage Export'
+
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        gpkgfile = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
+        try:
+            s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
+            out = s2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in thematic geopackage export, %s', str(e))
             raise Exception(e)
 
 

@@ -89,7 +89,7 @@ class ExportFormat(TimeStampedModelMixin):
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     name = models.CharField(max_length=100)
-    slug = LowerCaseCharField(max_length=10, unique=True, default='')
+    slug = LowerCaseCharField(max_length=20, unique=True, default='')
     description = models.CharField(max_length=255)
     cmd = models.TextField(max_length=1000)
     objects = models.Manager()

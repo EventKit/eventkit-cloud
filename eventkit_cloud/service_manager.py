@@ -27,9 +27,6 @@ def create_conf_from_wms(wms_url, name="Eventkit", bbox=None):
 
 
 def create_confs_from_voyager(service_list, base_url, bbox=None):
-    print(service_list)
-    print(base_url)
-    sys.stdout.flush()
     service_list = export_voyager_data(service_list, base_url)
     for service in service_list:
         if 'wms' in service.get('format'):
