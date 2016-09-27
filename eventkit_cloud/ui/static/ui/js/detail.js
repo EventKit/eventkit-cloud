@@ -203,6 +203,7 @@ exports.detail = (function(){
                         window.location.href = Config.CREATE_ERROR_URL;
                     }
                 }
+                
             })
         });
 
