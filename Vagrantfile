@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   ## create a private network visible only to the host machine
   #config.vm.network :private_network, ip: "127.0.0.1"
   config.vm.network :private_network, ip: "192.168.99.130"
-  config.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
+  #config.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
 
   # Example of share an additional folder to the guest VM.
   config.vm.provider :virtualbox do |vb|
