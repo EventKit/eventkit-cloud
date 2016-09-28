@@ -32,6 +32,11 @@ class Migration(migrations.Migration):
 
         ExportProvider.objects.create(name='OpenStreetMap Data', slug='osm-vector', export_provider_type=osm_type)
 
+        wmts_type = ExportProviderType.objects.create(type_name='wmts')
+        for export_format in export_formats:
+            wmts_type.supported_formats.add(export_format.pk)
+        wmts_type.save()
+
     dependencies = [
         ('jobs', '0001_initial'),
     ]

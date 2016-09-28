@@ -322,6 +322,11 @@ exports.detail = (function(){
                                         taskDiv+=('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('WMS Export') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                     }
                                     break;
+                                case 'WMTS Export':
+                                    if (status === 'SUCCESS') {
+                                        taskDiv+=('<tr><td><a href="' + result.url + '" target="_blank">' + gettext('WMTS Export') + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
+                                    }
+                                    break;
                             }
 
 
