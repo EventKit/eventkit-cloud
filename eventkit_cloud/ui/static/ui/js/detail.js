@@ -280,8 +280,8 @@ exports.detail = (function(){
                                 var result = task.result;
                                 var status = task.status;
                                 var duration = numeral(task.duration).format("HH:mm:ss.SSS");
-                                //var descriptiveName = task.descriptiveName;
-                                var descriptiveName = 'Name Placeholder';
+                                var descriptiveName = task.name;
+                                //var descriptiveName = 'Name Placeholder';
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                 }
@@ -471,8 +471,8 @@ exports.detail = (function(){
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
-                        //var descriptiveName = task.descriptiveName;
-                        var descriptiveName = 'Name Placeholder';
+                        var descriptiveName = task.name;
+                        //var descriptiveName = 'Name Placeholder';
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
@@ -554,8 +554,8 @@ exports.detail = (function(){
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
-                        //var descriptiveName = task.descriptiveName;
-                        var descriptiveName = 'Name Placeholder';
+                        var descriptiveName = task.name;
+                        //var descriptiveName = 'Name Placeholder';
                         var $tr = $runDiv.find('table').find('tr#' + uid);
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             $tr.removeClass();
