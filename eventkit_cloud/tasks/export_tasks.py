@@ -256,7 +256,7 @@ class ThematicSqliteExportTask(ExportTask):
     Task to export thematic shapefile.
     """
 
-    name = "Thematic SQLite Export"
+    name = "SQLITE Format (Thematic)"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
@@ -277,7 +277,7 @@ class ShpExportTask(ExportTask):
     """
     Class defining SHP export function.
     """
-    name = 'Default Shapefile Export'
+    name = 'ESRI Shapefile Format'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
@@ -296,7 +296,7 @@ class KmlExportTask(ExportTask):
     """
     Class defining KML export function.
     """
-    name = 'KML Export'
+    name = 'KML Format'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
@@ -316,7 +316,7 @@ class SqliteExportTask(ExportTask):
     Class defining SQLITE export function.
     """
 
-    name = 'SQLITE Export'
+    name = 'SQLITE Format'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
@@ -329,7 +329,7 @@ class GeopackageExportTask(ExportTask):
     """
     Class defining geopackage export function.
     """
-    name = 'Geopackage Export'
+    name = 'Geopackage'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
@@ -349,7 +349,7 @@ class ThematicGeopackageExportTask(ExportTask):
     Class defining geopackage export function.
     Requires ThematicSqliteExportTask.
     """
-    name = 'Thematic Geopackage Export'
+    name = 'Geopackage (Thematic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)

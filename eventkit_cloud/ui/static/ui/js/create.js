@@ -486,7 +486,7 @@ create.job = (function(){
                         + 'value="' + format.slug + '"'
                         + 'checked="checked"'
                         + 'data-description="' + format.description + '"/>'
-                        + format.description
+                        + format.name
                         + '</label></div>');
                 }
                 else {
@@ -495,7 +495,7 @@ create.job = (function(){
                         + 'name="formats"'
                         + 'value="' + format.slug + '"'
                         + 'data-description="' + format.description + '"/>'
-                        + format.description
+                        + format.name
                         + '</label></div>');
                 }
             }
