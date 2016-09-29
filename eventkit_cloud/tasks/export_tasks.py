@@ -243,7 +243,7 @@ class ThematicShpExportTask(ExportTask):
         thematic_sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_thematic_shp'.format(job_name))
         try:
-            t2s = shp.SQliteToShp(sqlite=thematic_sqlite, shapefile=job_name)
+            t2s = shp.SQliteToShp(sqlite=thematic_sqlite, shapefile=shapefile)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
