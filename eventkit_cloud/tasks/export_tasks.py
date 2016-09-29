@@ -80,21 +80,28 @@ class ExportTask(Task):
         except IOError as e:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
+        try:
+            if settings.USE_S3:
+                download_url = s3.upload_to_s3(run_uid, filename)
+            else:
+                download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+                download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
 
-        if settings.USE_S3:
-            download_url = s3.upload_to_s3(run_uid, filename)
-        else:
-            download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-            download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+            # save the task and task result
+            result = ExportTaskResult(
+                task=task,
+                filename=filename,
+                size=size,
+                download_url=download_url
+            )
+            result.save()
+        except IOError:
+            logging.warning(
+                'output file %s was not able to be found (run_uid: %s)',
+                filename,
+                run_uid
+            )
 
-        # save the task and task result
-        result = ExportTaskResult(
-            task=task,
-            filename=filename,
-            size=size,
-            download_url=download_url
-        )
-        result.save()
         task.status = 'SUCCESS'
         task.save()
 
