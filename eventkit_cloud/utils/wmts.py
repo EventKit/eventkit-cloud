@@ -22,13 +22,12 @@ from billiard import Process
 logger = logging.getLogger(__name__)
 
 
-class WMSToGeopackage(object):
+class WMTSToGeopackage():
     """
-    Convert a WMS services to a geopackage.
+    Convert a WMTS services to a geopackage.
     """
 
-    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, wmts_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -38,7 +37,7 @@ class WMSToGeopackage(object):
         """
         self.gpkgfile = gpkgfile
         self.bbox = bbox
-        self.wms_url = wms_url
+        self.wmts_url = wmts_url
         self.debug = debug
         self.name = name
         self.level_from = level_from
@@ -53,31 +52,30 @@ class WMSToGeopackage(object):
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
-            conf_dict = create_conf_from_wms(self.wms_url)
+            conf_dict = create_conf_from_wmts(self.wmts_url)
         sources = []
         # for source in conf_dict.get('sources'):
         #     sources.append(source)
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
-                                                  'tile_size': [256, 256],
-                                                  'origin': 'nw'}}
-        conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)],
+                                             'tile_size': [256, 256],
+                                             'origin': 'nw'}}
+        conf_dict['caches'] = get_cache_template(["{}_wmts".format(self.layer)],
                                                  [grids for grids in conf_dict.get('grids')],
                                                  self.gpkgfile)
-        # disable SSL cert checks
+        #disable SSL cert checks
         conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
         # Add autoconfiguration to base_config
         mapproxy_config = base_config()
         load_config(mapproxy_config, config_dict=conf_dict)
-
-        # Create a configuration object
+        #Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
-        logger.info("Beginning seeding to {}".format(self.gpkgfile))
+        logger.error("Beginning seeding to {}".format(self.gpkgfile))
         logger.error(conf_dict)
         logger.error(seed_dict)
         # Call seeder using billiard without daemon, because of limitations of running child processes in python.
@@ -87,12 +85,15 @@ class WMSToGeopackage(object):
             p.start()
             p.join()
         except Exception as e:
-            logger.error("WMS Export failed.")
+            logger.error("WMTS Export failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
             errors, informal_only = validate_options(mapproxy_config)
             if not informal_only:
                 logger.error("Mapproxy configuration failed.")
                 logger.error("Using Configuration:")
                 logger.error(mapproxy_config)
+                raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
             errors, informal_only = validate_seed_conf(seed_dict)
             if not informal_only:
                 logger.error("Mapproxy Seed failed.")
@@ -102,46 +103,43 @@ class WMSToGeopackage(object):
             raise e
         return self.gpkgfile
 
-
 def get_cache_template(sources, grids, geopackage):
     return {'cache': {
-        "sources": sources,
-        "cache": {
-            "type": "geopackage",
-            "filename": str(geopackage)
-        },
-        "grids": grids
-    }}
+            "sources": sources,
+            "cache": {
+                "type": "geopackage",
+                "filename": str(geopackage)
+            },
+            "grids": grids
+        }}
 
-
-def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None):
+def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
     return {
-        'coverages': {
-            'geom': {
-                'srs': 'EPSG:4326',
-                'bbox': bbox
-            }
-        },
-        'seeds': {
-            'seed': {
-                'coverages': ['geom'],
-                'refresh_before': {
-                    'minutes': 0
-                },
-                'levels': {
-                    'to': level_to or 10,
-                    'from': level_from or 0
-                },
-                'caches': ['cache']
+            'coverages': {
+                'geom': {
+                    'srs': 'EPSG:4326',
+                    'bbox': bbox
+                }
+            },
+            'seeds': {
+                'seed': {
+                    'coverages': ['geom'],
+                    'refresh_before': {
+                        'minutes': 0
+                    },
+                    'levels': {
+                        'to': level_to or 8,
+                        'from': level_from or 0
+                    },
+                    'caches': ['cache']
+                }
             }
         }
-    }
 
 
-def create_conf_from_wms(wms_url):
+def create_conf_from_wmts(wmts_url):
     temp_file = NamedTemporaryFile()
-    # wms_url = wms_url.replace('"','')
-    params = ['--capabilities', wms_url, '--output', temp_file.name, '--force']
+    params = ['--capabilities', wmts_url, '--output', temp_file.name, '--force']
     config_command(params)
 
     conf_dict = None
