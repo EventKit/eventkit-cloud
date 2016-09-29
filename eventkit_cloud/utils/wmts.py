@@ -69,27 +69,11 @@ class WMTSToGeopackage():
         # Add autoconfiguration to base_config
         mapproxy_config = base_config()
         load_config(mapproxy_config, config_dict=conf_dict)
-
-        errors, informal_only = validate_options(mapproxy_config)
-        if not informal_only:
-            logger.error("Mapproxy configuration failed.")
-            logger.error("Using Configuration:")
-            logger.error(mapproxy_config)
-            raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
-
         #Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
-
-        errors, informal_only = validate_seed_conf(seed_dict)
-        if not informal_only:
-            logger.error("Mapproxy Seed failed.")
-            logger.error("Using Seed Configuration:")
-            logger.error(seed_dict)
-            raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
-
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
         logger.error("Beginning seeding to {}".format(self.gpkgfile))
@@ -104,7 +88,18 @@ class WMTSToGeopackage():
             logger.error("WMTS Export failed.")
             logger.error("Using Configuration:")
             logger.error(mapproxy_config)
-            logger.error(seed_dict)
+            errors, informal_only = validate_options(mapproxy_config)
+            if not informal_only:
+                logger.error("Mapproxy configuration failed.")
+                logger.error("Using Configuration:")
+                logger.error(mapproxy_config)
+                raise ConfigurationError('Mapproxy configuration error - {}'.format(', '.join(errors)))
+            errors, informal_only = validate_seed_conf(seed_dict)
+            if not informal_only:
+                logger.error("Mapproxy Seed failed.")
+                logger.error("Using Seed Configuration:")
+                logger.error(seed_dict)
+                raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
         return self.gpkgfile
 
