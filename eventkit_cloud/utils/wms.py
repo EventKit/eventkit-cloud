@@ -75,7 +75,6 @@ class WMSToGeopackage(object):
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
-
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
         logger.info("Beginning seeding to {}".format(self.gpkgfile))
