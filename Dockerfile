@@ -60,8 +60,9 @@ RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspa
 
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://github.com/terranodo/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
+RUN git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
 RUN cd /var/lib/eventkit/tmp/eventkit-cloud
+RUN git checkout 8372-UpdateDockerFile
 RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
