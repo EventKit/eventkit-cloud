@@ -5,14 +5,15 @@ from django.conf import settings
 
 
 
-def upload_to_s3(run_uuid, filename):
+def upload_to_s3(run_uuid, slug, filename):
     BUCKET_NAME = settings.AWS_BUCKET_NAME
     asset_path = os.path.join(
         settings.EXPORT_DOWNLOAD_ROOT,
-        run_uuid, 
+        run_uuid,
+        slug,
         filename
     )
-    asset_remote_path = os.path.join(run_uuid, filename)
+    asset_remote_path = os.path.join(os.path.join(run_uuid, slug), filename)
     client = boto3.client(
         's3',
         aws_access_key_id=settings.AWS_ACCESS_KEY,
