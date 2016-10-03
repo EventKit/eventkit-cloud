@@ -4,27 +4,40 @@ services:
       build:
         context: .
       environment:
-        - DATABASE_URL=postgis://postgres:postgres@postgres:5432/postgres
+        - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
       depends_on:
-        - postgres
+        - postgis
         - rabbitmq
       links:
-        - postgres
+        - postgis
         - rabbitmq
       extra_hosts:
         - "cloud.eventkit.dev:127.0.0.1"
       ports:
         - "80:80"
-  postgres:
-    image: mdillon/postgis 
+      command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
+  celery:
+      build:
+        context: .
+      environment:
+        - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+        - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+        - DEBUG=True
+      depends_on:
+        - postgis
+        - rabbitmq
+      links:
+        - postgis
+        - rabbitmq
+      command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
+  postgis:
+    image: mdillon/postgis
     environment:
-      - DB_NAME=eventkit
-      - DB_DATA_NAME=eventkit_data
-      - DB_PASS=eventkit
-      - DB_USER=eventkit
-      - POSTGRES_USER=postgres
+      - POSTGRES_USER=eventkit
+      - POSTGRES_PASSWORD=eventkit_exports
+      - POSTGRES_DB=eventkit_exports
     ports:
      - "5432:5432"
   rabbitmq:

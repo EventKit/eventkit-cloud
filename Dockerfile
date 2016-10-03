@@ -60,7 +60,12 @@ RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspa
 
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
+
+COPY ./requirements.txt /var/lib/eventkit/
+COPY ./requirements-dev.txt /var/lib/eventkit/
+COPY ./manage.py /var/lib/eventkit/
+COPY ./scripts /var/lib/eventkit/
+
 RUN cd /var/lib/eventkit/tmp/eventkit-cloud
 RUN git checkout 8372-UpdateDockerFile
 RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
@@ -88,4 +93,4 @@ RUN rm -rf /var/lib/eventkit/tmp
 RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
 RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 
-CMD ["/var/lib/eventkit/.virtualenvs/eventkit/bin/python", "/var/lib/eventkit/manage.py", "runserver", "0.0.0.0:80"]
+CMD ["sh", "/var/lib/eventkit/scripts/eventkit-entrypoint.sh"]
