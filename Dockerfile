@@ -66,9 +66,6 @@ COPY ./requirements-dev.txt /var/lib/eventkit/
 COPY ./manage.py /var/lib/eventkit/
 COPY ./scripts /var/lib/eventkit/
 
-RUN cd /var/lib/eventkit/tmp/eventkit-cloud
-RUN git checkout 8372-UpdateDockerFile
-RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
