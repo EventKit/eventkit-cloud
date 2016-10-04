@@ -15,13 +15,12 @@ end
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
+  config.vm.hostname = "cloud.eventkit.dev"
+  config.vm.network :private_network, ip: "192.168.99.130"
+  
   config.vm.define "eventkit", primary: true do |eventkit|
     eventkit.vm.box = "bento/ubuntu-16.04"
     eventkit.vm.provision :shell, path: "scripts/bootstrap.sh"
-    eventkit.vm.hostname = "cloud.eventkit.dev"
-    ## create a private network visible only to the host machine
-    #config.vm.network :private_network, ip: "127.0.0.1"
-    eventkit.vm.network :private_network, ip: "192.168.99.130"
     eventkit.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
 
     # Example of share an additional folder to the guest VM.
@@ -50,10 +49,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         file << open('https://partner-images.canonical.com/core/xenial/current/ubuntu-xenial-core-cloudimg-amd64-root.tar.gz').read
       end
     end
-    docker.vm.hostname = "docker.eventkit.dev"
     ## create a private network visible only to the host machine
     #config.vm.network :private_network, ip: "127.0.0.1"
-    docker.vm.network :private_network, ip: "192.168.99.140"
     docker.vm.provision :shell, path: "scripts/setup_dependencies.sh"
     docker.vm.provision :reload
     docker.vm.provision :shell, path: "scripts/install_docker.sh"

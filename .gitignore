@@ -89,3 +89,5 @@ celerybeat-schedule
 core/settings/secret.py
 
 *.iml
+
+exports_download
