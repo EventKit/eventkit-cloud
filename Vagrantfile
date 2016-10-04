@@ -41,7 +41,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         )
     end
 
-    docker.vm.box = "box-cutter/ubuntu1404-desktop"
+    docker.vm.box = "ubuntu/trusty64"
     
     img_file = "ubuntu-xenial-core-cloudimg-amd64-root.tar.gz"
     unless File.exists?(img_file)
@@ -59,8 +59,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     docker.vm.provision :shell, path: "scripts/install_docker.sh"
 
     docker.vm.provider "virtualbox" do |vb|
-       # Display the VirtualBox GUI when booting the machine
-       vb.gui = true
       
        # Customize the amount of memory on the VM:
        vb.memory = "8192"
