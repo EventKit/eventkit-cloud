@@ -11,6 +11,8 @@ services:
         - DEBUG=True
         - C_FORCE_ROOT=True
      command: echo 'Base box is not used, exiting now'
+     #entrypoint:
+        #- bash -c '/var/lib/eventkit/scripts/wait-for-postgis.sh postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports'
   eventkit:
       extends:
         service: base
@@ -31,6 +33,7 @@ services:
       depends_on:
         - postgis
         - rabbitmq
+        - eventkit
       links:
         - postgis
         - rabbitmq
