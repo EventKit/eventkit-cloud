@@ -31,6 +31,7 @@ services:
       depends_on:
         - postgis
         - rabbitmq
+        - eventkit
       links:
         - postgis
         - rabbitmq
