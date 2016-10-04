@@ -56,13 +56,17 @@ RUN rm -fr /var/lib/eventkit/osmctools
 
 RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 RUN apt-get update
-RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite osmctools spatialite-bin libspatialite7 libspatialite-dev default-jre zip unzip
+RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite osmctools spatialite-bin libspatialite7 libspatialite-dev default-jre zip unzip postgresql-client
 
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
-RUN git clone https://github.com/terranodo/eventkit-cloud.git /var/lib/eventkit/tmp/eventkit-cloud
-RUN cd /var/lib/eventkit/tmp/eventkit-cloud
-RUN cp -R /var/lib/eventkit/tmp/eventkit-cloud/* /var/lib/eventkit
+
+COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
+COPY ./requirements.txt /var/lib/eventkit/requirements.txt
+COPY ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
+COPY ./manage.py /var/lib/eventkit/manage.py
+COPY ./scripts /var/lib/eventkit/scripts
+
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
@@ -84,7 +88,9 @@ RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 EXPOSE 80
 RUN rm -rf /var/lib/eventkit/tmp
 
-RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
+#RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
+#RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 
-CMD ["/var/lib/eventkit/.virtualenvs/eventkit/bin/python", "/var/lib/eventkit/manage.py", "runserver", "0.0.0.0:80"]
+ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh", "postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports"]
+CMD ["echo", "Override this command in the docker-compose.yaml"]
+
