@@ -61,6 +61,7 @@ RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspa
 RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
 
+COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
 COPY ./requirements.txt /var/lib/eventkit/
 COPY ./requirements-dev.txt /var/lib/eventkit/
 COPY ./manage.py /var/lib/eventkit/
