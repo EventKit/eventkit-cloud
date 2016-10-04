@@ -10,6 +10,8 @@ services:
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
         - C_FORCE_ROOT=True
+        - PRODUCTION=True
+        - SITE_NAME=cloud.eventkit.dev
      command: echo 'Base box is not used, exiting now'
      #entrypoint:
         #- bash -c '/var/lib/eventkit/scripts/wait-for-postgis.sh postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports'
@@ -48,3 +50,5 @@ services:
      - "5432:5432"
   rabbitmq:
      image: rabbitmq
+     expose: 
+       - "5672"
