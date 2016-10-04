@@ -62,10 +62,10 @@ RUN mkdir /var/lib/eventkit/tmp
 RUN cd /var/lib/eventkit/tmp
 
 COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
-COPY ./requirements.txt /var/lib/eventkit/
-COPY ./requirements-dev.txt /var/lib/eventkit/
-COPY ./manage.py /var/lib/eventkit/
-COPY ./scripts /var/lib/eventkit/
+COPY ./requirements.txt /var/lib/eventkit/requirements.txt
+COPY ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
+COPY ./manage.py /var/lib/eventkit/manage.py
+COPY ./scripts /var/lib/eventkit/scripts
 
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
@@ -91,4 +91,6 @@ RUN rm -rf /var/lib/eventkit/tmp
 RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
 RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 
-CMD ["sh", "/var/lib/eventkit/scripts/eventkit-entrypoint.sh"]
+ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh", "postgis", "eventkit"]
+CMD ["echo", "Override this command in the docker-compose.yaml"]
+
