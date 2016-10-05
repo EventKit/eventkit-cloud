@@ -105,6 +105,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
 )
 
+
 # enable cached storage
 STATICFILES_STORAGE = (
     'django.contrib.staticfiles.storage.CachedStaticFilesStorage'
