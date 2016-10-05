@@ -46,6 +46,7 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
+
 )
 
 DATABASES = {}
@@ -75,6 +76,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
+                'django_classification_banner.context_processors.classification',
             ],
             'debug': DEBUG
         },
@@ -89,6 +91,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
+
 
 # session settings
 SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
