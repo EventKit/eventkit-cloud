@@ -15,9 +15,9 @@ from .views import clone_export, create_export
 # )
 
 urlpatterns = [
-    url(r'^$', TemplateView.as_view(template_name='ui/list.html'), name='list'),
+    url(r'^$', login_required(TemplateView.as_view(template_name='ui/list.html')), name='list'),
     url(r'^create/$', login_required(create_export, redirect_field_name=None), name='create'),
-    url(r'^configurations/$', TemplateView.as_view(template_name='ui/configurations.html'), name='configurations'),
-    url(r'^(?P<uuid>[^/]+)/$', TemplateView.as_view(template_name='ui/detail.html'), name='detail'),
+    url(r'^configurations/$', login_required(TemplateView.as_view(template_name='ui/configurations.html')), name='configurations'),
+    url(r'^(?P<uuid>[^/]+)/$', login_required(TemplateView.as_view(template_name='ui/detail.html')), name='detail'),
     url(r'^clone/(?P<uuid>[^/]+)/$', login_required(clone_export), name='clone')
 ]
