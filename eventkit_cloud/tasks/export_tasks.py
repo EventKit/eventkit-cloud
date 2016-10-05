@@ -96,7 +96,7 @@ class ExportTask(Task):
             )
             result.save()
         except IOError:
-            logging.warning(
+            logger.warning(
                 'output file %s was not able to be found (run_uid: %s)',
                 filename,
                 run_uid
