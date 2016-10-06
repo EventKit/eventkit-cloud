@@ -1,6 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
-
 # Ensure vagrant/docker scripts and conf are set for unix.
 *.conf eol=lf
 *.sh eol=lf
