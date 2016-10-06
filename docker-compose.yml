@@ -14,6 +14,7 @@ services:
         - DEVELOPMENT=True
         - SITE_NAME=cloud.eventkit.dev
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
+        - CELERY_RESULT_BACKEND=amqp://guest:guest@rabbitmq:5672/
      command: echo 'Base box is not used, exiting now'
      #entrypoint:
         #- bash -c '/var/lib/eventkit/scripts/wait-for-postgis.sh postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports'
@@ -38,9 +39,11 @@ services:
         - postgis
         - rabbitmq
         - eventkit
+        - redis
       links:
         - postgis
         - rabbitmq
+        - redis
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis
@@ -64,3 +67,7 @@ services:
      image: httpd
      ports:
         - "80:80"
+  redis:
+     image: redis
+     expose:
+       - "6379"
