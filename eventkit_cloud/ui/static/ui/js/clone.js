@@ -599,10 +599,12 @@ clone.job = (function(){
         var bounds_trunc = new ol.geom.Polygon.fromExtent([left, bottom, right, top]);
         //console.log(bounds_trunc.getArea());
         var area = bounds_trunc.getArea() / 1000000;
+        area = Math.abs(area);
 
         // format the area and max bounds for display..
         var area_str = numeral(area).format('0 0');
-        var max_bounds_str = numeral(max_bounds_area).format('0 0');
+        //var max_bounds_str = numeral(max_bounds_area).format('0 0');
+        var max_bounds_area = 8000;
 
         //NO HOT REGION SO SET VALID TO TRUE
         var valid_region = true;
@@ -619,7 +621,7 @@ clone.job = (function(){
             $('#valid-extents').css('visibility','hidden');
             $('#alert-extents').css('visibility','visible');
             $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is ') + area_str
-                + gettext(' sq km.') + '<br/>' + gettext('Must be less than ') + max_bounds_str + gettext(' sq km.'));
+                + gettext(' sq km.') + '<br/>' + gettext('Must be less than ') + max_bounds_area + gettext(' sq km.'));
             return false;
         } else {
             // extents are valid so display success message..
