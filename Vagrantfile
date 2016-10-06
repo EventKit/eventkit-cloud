@@ -18,13 +18,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = "cloud.eventkit.dev"
   config.vm.network :private_network, ip: "192.168.99.130"
   
-  config.vm.define "eventkit", primary: true do |eventkit|
-    eventkit.vm.box = "bento/ubuntu-16.04"
-    eventkit.vm.provision :shell, path: "scripts/bootstrap.sh"
-    eventkit.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
+  config.vm.define "nodocker", autostart: false do |nodocker|
+    nodocker.vm.box = "bento/ubuntu-16.04"
+    nodocker.vm.provision :shell, path: "scripts/bootstrap.sh"
+    nodocker.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
 
     # Example of share an additional folder to the guest VM.
-    eventkit.vm.provider :virtualbox do |vb|
+    nodocker.vm.provider :virtualbox do |vb|
       vb.customize ["modifyvm", :id, "--memory", "4096", "--cpus", "4"]
     end
   end
