@@ -27,8 +27,7 @@ class WMSToGeopackage(object):
     Convert a WMS services to a geopackage.
     """
 
-    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
         Initialize the SQliteToKml utility.
 

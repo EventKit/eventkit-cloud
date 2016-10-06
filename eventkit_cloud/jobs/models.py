@@ -133,6 +133,10 @@ class ExportProvider(TimeStampedModelMixin):
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
+    level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
+                                    help_text="This determines the starting zoom level a tile export will seed from")
+    level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
+                                  help_text="This determine what zoom level your tile export will seed to")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Mapproxy Configuration",
                               help_text="This is an optional field which is needed if the service "
