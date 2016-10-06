@@ -6,5 +6,3 @@ apt-get -y install docker-engine python-pip
 pip install --upgrade pip
 pip install docker-compose
 service docker start
-cd /vagrant
-docker-compose up -d
