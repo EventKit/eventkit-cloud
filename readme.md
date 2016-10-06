@@ -11,12 +11,20 @@ After installing the dependencies open an elevated shell/command prompt and ente
 <pre>git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git
 cd eventkit-cloud
 vagrant plugin install vagrant-hostsupdater
-vagrant up</pre>
+vagrant up nodocker</pre>
 After the virtual machine finishes provisioning, open a browser and navigate to http://cloud.eventkit.dev
 
 ### Docker-in-Vagrant
 If you are running on a windows machine but would like to develop using docker, a vagrant box can be built that will install docker and run it for you inside the vm.
-Follow the Vagrant instructions, but instead of `vagrant up` use `vagrant up docker`.
+To run Docker-in-Vagrant enter:
+<pre>git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git
+cd eventkit-cloud
+vagrant plugin install vagrant-hostsupdater
+vagrant up docker</pre>
+Then ssh into the vm and run:
+<pre>cd /vagrant
+docker-compose build
+docker-compose up</pre>
 
 ### Docker 
 Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc. 
@@ -36,29 +44,29 @@ Then open a browser and navigate to http://cloud.eventkit.dev
 ### Settings
 The following environment variables can be used to adjust how eventkit_cloud is configured.
 
-## S3 Storage
+#### S3 Storage
 If you want your export files to be stored on S3 rather than locally add:
 <pre>USE_S3=True
 AWS_BUCKET_NAME='<my-bucket>'
 AWS_ACCESS_KEY='<my-access-key>'
 AWS_SECRET_KEY='<my-secret-key>'</pre>
 
-## Database
+#### Database
 To use your own database connection string add:
 <pre>DATABASE_URL='postgis://<user>:<password>@<site>:5432/<database_name>'</pre>
 
-## Settings file
+#### Settings file
 If you want to run eventkit_cloud using the dev.py settings file add:
 <pre>DEVELOPMENT=True</pre>
 If you want to run using the prod.py settings file add:
 <pre>PRODUCTION=True</pre>
 
-## Task error email
+#### Task error email
 To configure the email address that will send out any error messages add:
 <pre>EMAIL_HOST_USER='<email>@<email>.com'
 EMAIL_HOST_PASSWORD='<email-password>'</pre>
 
-## Overpass API
+#### Overpass API
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = '<my-overpass-site.com>/api/interpreter'</pre>
 
