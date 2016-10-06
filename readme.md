@@ -8,7 +8,7 @@ Eventkit-cloud requires [Vagrant](https://www.vagrantup.com/), which itself requ
 
 ### Vagrant
 After installing the dependencies open an elevated shell/command prompt and enter:
-<pre>git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git
+<pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
 vagrant plugin install vagrant-hostsupdater
 vagrant up nodocker</pre>
@@ -17,7 +17,7 @@ After the virtual machine finishes provisioning, open a browser and navigate to 
 ### Docker-in-Vagrant
 If you are running on a windows machine but would like to develop using docker, a vagrant box can be built that will install docker and run it for you inside the vm.
 To run Docker-in-Vagrant enter:
-<pre>git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git
+<pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
 vagrant plugin install vagrant-hostsupdater
 vagrant up docker</pre>
@@ -30,7 +30,7 @@ docker-compose up</pre>
 Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc. 
 
 After installing docker open an elevated shell/command prompt and enter:
-<pre>git clone https://gitlab.devops.geointservices.io/eventkit/eventkit-cloud.git
+<pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
 wget https://partner-images.canonical.com/core/xenial/current/ubuntu-xenial-core-cloudimg-amd64-root.tar.gz
 docker-compose up</pre>
