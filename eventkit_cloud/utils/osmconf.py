@@ -59,7 +59,9 @@ class OSMConfig(object):
         # write the out the config
 
         config_file = os.path.join(stage_dir, '{0}.ini'.format(self.job_name))
-        os.makedirs(stage_dir, 6600)
+
+        if not os.path.isdir(stage_dir):
+            os.makedirs(stage_dir, 6600)
         try:
             with open(config_file, 'wb') as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
