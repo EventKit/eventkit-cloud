@@ -29,7 +29,7 @@ class WMSToGeopackage(object):
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
-        Initialize the SQliteToKml utility.
+        Initialize the WMSToGeopackage utility.
 
         Args:
             gpkgfile: where to write the gpkg output
@@ -47,7 +47,7 @@ class WMSToGeopackage(object):
 
     def convert(self, ):
         """
-        Convert sqlite to gpkg.
+        Convert wms to gpkg.
         """
         if self.config:
             conf_dict = yaml.load(self.config)
