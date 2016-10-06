@@ -6,7 +6,7 @@ from .models import ExportRun
 from .task_runners import ExportOSMTaskRunner, ExportWMSTaskRunner, ExportWMTSTaskRunner
 from django.conf import settings
 from .export_tasks import FinalizeRunTask
-from celery import group, chain
+from celery import group, chord
 from datetime import datetime, timedelta
 import logging
 import os
@@ -30,7 +30,7 @@ class TaskFactory():
         if self.run:
             provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
             if provider_tasks:
-                header_tasks = None
+                header_tasks = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
@@ -41,13 +41,11 @@ class TaskFactory():
                                                                  run=self.run,
                                                                  stage_dir=os.path.join(self.stage_dir,
                                                                                         provider_task.provider.slug))
-                        if header_tasks:
-                            header_tasks = chain(header_tasks | task_runner_tasks)
-                        else:
-                            header_tasks = task_runner_tasks
+                        header_tasks += [task_runner_tasks]
                 if header_tasks:
                     finalize_task = FinalizeRunTask()
-                    chain(header_tasks | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
+                    chord(group(header_tasks), body=finalize_task.si(stage_dir=self.stage_dir,
+                                                              run_uid=self.run.uid).set(link_error=[finalize_task.si()])
                           ).apply_async(expires=datetime.now() + timedelta(days=1))
                 else:
                     return False

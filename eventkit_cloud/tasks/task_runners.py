@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import DatabaseError
 
 from celery import chain, group
+from celery.canvas import Signature
 
 from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
@@ -67,6 +68,7 @@ class ExportOSMTaskRunner(TaskRunner):
         # get the formats to export
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
+        task_list = []
         # build a list of celery tasks based on the export formats..
         for format in formats:
             try:
@@ -123,33 +125,32 @@ class ExportOSMTaskRunner(TaskRunner):
             The export format tasks (format_tasks) are then run in parallel, followed
             by the finalize_task at the end to clean up staging dirs, update run status, email user etc..
             """
-            initial_tasks = chain(
+            task_list += [
                 osm_tasks.get('conf').get('obj').si(categories=categories,
                                                     task_uid=osm_tasks.get('conf').get('task_uid'),
                                                     job_name=job_name,
-                                                    stage_dir=stage_dir) |
+                                                    stage_dir=stage_dir),
                 osm_tasks.get('query').get('obj').si(stage_dir=stage_dir,
                                                      task_uid=osm_tasks.get('query').get('task_uid'),
                                                      job_name=job_name,
                                                      bbox=bbox,
                                                      filters=job.filters)
-            )
+            ]
 
-            schema_tasks = chain(
+            task_list += [
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
                                                           job_name=job_name,
-                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')) |
+                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')),
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
                                                            job_name=job_name,
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid'))
-            )
+            ]
 
             thematic_exports = {}
             for thematic_task in thematic_tasks_list:
                 if export_tasks.get(thematic_task):
                     thematic_exports[thematic_task] = export_tasks.pop(thematic_task)
 
-            thematic_tasks = None
             if thematic_exports:
                 # if user requested thematic-sqlite do it...if not create the celery task, and store the task in the model.
 
@@ -159,35 +160,27 @@ class ExportOSMTaskRunner(TaskRunner):
                     thematic_sqlite = {'obj': thematic_sqlite_task,
                                        'task_uid': create_export_task(task_name=thematic_sqlite_task.name,
                                                                       export_provider_task=export_provider_task).uid}
-                thematic_tasks = chain(thematic_sqlite.get('obj').si(run_uid=run.uid,
-                                                                     stage_dir=stage_dir,
-                                                                     job_name=job_name,
-                                                                     task_uid=thematic_sqlite.get('task_uid')) | group(
-                    task.get('obj').si(run_uid=run.uid,
-                                       stage_dir=stage_dir,
-                                       job_name=job_name,
-                                       task_uid=task.get('task_uid')) for task_name, task in
-                    thematic_exports.iteritems()
-                ))
-                logger.error("THEMATIC_TASKS: {0}".format(thematic_tasks))
+                task_list += [thematic_sqlite.get('obj').si(run_uid=run.uid,
+                                                            stage_dir=stage_dir,
+                                                            job_name=job_name,
+                                                            task_uid=thematic_sqlite.get('task_uid'))]
+                task_list += [task.get('obj').si(run_uid=run.uid,
+                                                 stage_dir=stage_dir,
+                                                 job_name=job_name,
+                                                 task_uid=task.get('task_uid')) for task_name, task in
+                              thematic_exports.iteritems()]
 
-            format_tasks = group(
-                task.get('obj').si(run_uid=run.uid,
-                                   stage_dir=stage_dir,
-                                   job_name=job_name,
-                                   task_uid=task.get('task_uid')) for task_name, task in
-                export_tasks.iteritems()
-            )
+            task_list += [task.get('obj').si(run_uid=run.uid,
+                                             stage_dir=stage_dir,
+                                             job_name=job_name,
+                                             task_uid=task.get('task_uid')) for task_name, task in
+                          export_tasks.iteritems()]
 
             """
-            If header tasks fail, errors will not propagate to the finalize_task.
-            This means that the finalize_task will always be called, and will update the
-            overall run status.
+            The tasks are chained as a list instead of nested groups.
+            This is because celery3.x has issues with handling these callbacks even using redis as a result backend
             """
-            if thematic_tasks:
-                return chain(initial_tasks | schema_tasks | thematic_tasks | format_tasks)
-            else:
-                return chain(initial_tasks | schema_tasks | format_tasks)
+            return chain(task_list)
         else:
             return False
 
@@ -250,6 +243,7 @@ class ExportWMSTaskRunner(TaskRunner):
                                level_from=provider_task.provider.level_from,
                                level_to=provider_task.provider.level_to)
 
+
 class ExportWMTSTaskRunner(TaskRunner):
     """
     Runs WMTS Export Tasks
@@ -294,7 +288,7 @@ class ExportWMTSTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
             bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            #swap xy
+            # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
@@ -312,6 +306,7 @@ class ExportWMTSTaskRunner(TaskRunner):
                                 wmts_url=provider_task.provider.url,
                                 level_from=provider_task.provider.level_from,
                                 level_to=provider_task.provider.level_to)
+
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]
