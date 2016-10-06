@@ -281,7 +281,7 @@ class TestExportTasks(TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(task, result.task)
         self.assertEquals('SUCCESS', task.status)
-        self.assertEquals('Default Shapefile Export', task.name)
+        self.assertEquals('ESRI Shapefile Format', task.name)
         # pull out the result and test
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
