@@ -94,6 +94,8 @@ class Migration(migrations.Migration):
                 ('slug', eventkit_cloud.jobs.models.LowerCaseCharField(default='', max_length=20, unique=True)),
                 ('url', models.CharField(blank=True, default='', max_length=1000, null=True, verbose_name='Service URL')),
                 ('layer', models.CharField(blank=True, max_length=100, null=True, verbose_name='Service Layer')),
+                ('level_from', models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True, help_text="This determines the starting zoom level a tile export will seed from")),
+                ('level_to', models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True, help_text="This determine what zoom level your tile export will seed to")),
                 ('config', models.TextField(blank=True, default='', help_text='This is an optional field which is needed if the service requires authentication.', null=True, verbose_name='Mapproxy Configuration')),
             ],
             options={
