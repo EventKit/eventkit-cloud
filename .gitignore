@@ -91,3 +91,4 @@ core/settings/secret.py
 *.iml
 
 exports_download
+*~
