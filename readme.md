@@ -15,8 +15,8 @@ vagrant up</pre>
 After the virtual machine finishes provisioning, open a browser and navigate to http://cloud.eventkit.dev
 
 ### Docker-in-Vagrant
-If you are running on a windows machine but would like to develop using docker, a vagrant box can be built that will install docker and run it for you inside the vm
-Follow the Vagrant instructions, but instead of `vagrant up` use `vagrant up docker`
+If you are running on a windows machine but would like to develop using docker, a vagrant box can be built that will install docker and run it for you inside the vm.
+Follow the Vagrant instructions, but instead of `vagrant up` use `vagrant up docker`.
 
 ### Docker 
 Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc. 
@@ -34,18 +34,18 @@ On windows:
 Then open a browser and navigate to http://cloud.eventkit.dev
 
 ###Settings
-The following environment variables can be used to adjust how eventkit_cloud will run
+The following environment variables can be used to adjust how eventkit_cloud is configured.
 
 ##S3 Storage
-If you want your export files to be stored on S3 rather than locally, add these variables to your env
-<pre>USE_S3 = True
-AWS_BUCKET_NAME='my-bucket'
-AWS_ACCESS_KEY='my-access-key'
-AWS_SECRET_KEY='my-secret-key'</pre>
+If you want your export files to be stored on S3 rather than locally add:
+<pre>USE_S3=True
+AWS_BUCKET_NAME='<my-bucket>'
+AWS_ACCESS_KEY='<my-access-key>'
+AWS_SECRET_KEY='<my-secret-key>'</pre>
 
 ##Database
 To use your own database connection string add:
-<pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
+<pre>DATABASE_URL='postgis://<user>:<password>@<site>:5432/<database_name>'</pre>
 
 ##Settings file
 If you want to run eventkit_cloud using the dev.py settings file add:
@@ -55,9 +55,14 @@ If you want to run using the prod.py settings file add:
 
 ##Task error email
 To configure the email address that will send out any error messages add:
-<pre>EMAIL_HOST_USER='email@email.com'
-EMAIL_HOST_PASSWORD='email-password'</pre>
+<pre>EMAIL_HOST_USER='<email>@<email>.com'
+EMAIL_HOST_PASSWORD='<email-password>'</pre>
 
 ##Overpass API
 To use your own instance of an Overpass API add:
-<pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
+<pre>OVERPASS_API_URL = '<my-overpass-site.com>/api/interpreter'</pre>
+
+##Export Directories
+If you need to change where export files are staged or downloaded you can add:
+<pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'
+EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
