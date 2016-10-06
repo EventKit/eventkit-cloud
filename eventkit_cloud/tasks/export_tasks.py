@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms, wmts
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms, wmts, rest,
 )
 
 # Get an instance of a logger
@@ -411,6 +411,27 @@ class WMTSExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in wmts export, %s', str(e))
             raise Exception(e)
+
+
+class RESTExportTask(ExportTask):
+    """
+    Class defining geopackage export for rest
+    """
+    name = 'REST Export'
+
+    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
+            rest_url=None, level_from=None, level_to=None, name=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        try:
+            r2g = rest.RESTToGeopackage(gpkgfile=gpkgfile, bbox=bbox, rest_url=rest_url, name=name, layer=layer,
+                                        config=config, level_from=level_from, level_to=level_to)
+            out = r2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in wmts export, %s', str(e))
+            raise Exception(e)
+
 
 class GeneratePresetTask(ExportTask):
     """

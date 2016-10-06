@@ -37,6 +37,11 @@ class Migration(migrations.Migration):
             wmts_type.supported_formats.add(export_format.pk)
         wmts_type.save()
 
+        rest_type = ExportProviderType.objects.create(type_name='rest')
+        for export_format in export_formats:
+            rest_type.supported_formats.add(export_format.pk)
+        wmts_type.save()
+
     dependencies = [
         ('jobs', '0001_initial'),
     ]
