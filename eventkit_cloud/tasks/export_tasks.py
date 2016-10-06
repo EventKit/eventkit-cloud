@@ -378,12 +378,12 @@ class WMSExportTask(ExportTask):
     name = 'WMS Export'
 
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            wms_url=None, name=None):
+            wms_url=None, level_from=None, level_to=None, name=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name, layer=layer,
-                                      config=config)
+                                      config=config, level_from=level_from, level_to=level_to)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -397,12 +397,12 @@ class WMTSExportTask(ExportTask):
     name = 'WMTS Export'
 
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            wmts_url=None, name=None):
+            wmts_url=None, level_from=None, level_to=None, name=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             w2g = wmts.WMTSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wmts_url=wmts_url, name=name, layer=layer,
-                                        config=config)
+                                        config=config, level_from=level_from, level_to=level_to)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:

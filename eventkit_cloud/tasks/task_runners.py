@@ -246,7 +246,9 @@ class ExportWMSTaskRunner(TaskRunner):
                                layer=provider_task.provider.layer,
                                config=provider_task.provider.config,
                                bbox=bbox,
-                               wms_url=provider_task.provider.url)
+                               wms_url=provider_task.provider.url,
+                               level_from=provider_task.provider.level_from,
+                               level_to=provider_task.provider.level_to)
 
 class ExportWMTSTaskRunner(TaskRunner):
     """
@@ -307,7 +309,9 @@ class ExportWMTSTaskRunner(TaskRunner):
                                 layer=provider_task.provider.layer,
                                 config=provider_task.provider.config,
                                 bbox=bbox,
-                                wmts_url=provider_task.provider.url)
+                                wmts_url=provider_task.provider.url,
+                                level_from=provider_task.provider.level_from,
+                                level_to=provider_task.provider.level_to)
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]
