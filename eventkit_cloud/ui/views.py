@@ -22,7 +22,7 @@ def create_export(request):
     extent = max_extent.get('extent')
     context = {'user': user, 'max_extent': extent}
     context.update(csrf(request))
-    return render_to_response('ui/create.html', context)
+    return render_to_response('ui/create.html', context, RequestContext(request))
 
 
 @require_http_methods(['GET'])
@@ -38,7 +38,7 @@ def clone_export(request, uuid=None):
     extent = max_extent.get('extent')
     context = {'user': user, 'max_extent': extent}
     context.update(csrf(request))
-    return render_to_response('ui/clone.html', context)
+    return render_to_response('ui/clone.html', context, RequestContext(request))
 
 
 def login(request):

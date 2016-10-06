@@ -3,6 +3,7 @@
   <head>
     {% load staticfiles %}
     {% load i18n %}
+    {% load classification_banner %}
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +21,7 @@
     <link href="{% static 'ui/css/style.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'ui/contrib/font-awesome/css/font-awesome.min.css' %}">
     <link href='//fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+    <link href="{% static 'django_classification_banner/classification.css' %}" rel="stylesheet">
     {% endblock %}
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -27,12 +29,30 @@
       <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-  </head>
 
+  </head>
   <body>
     <a name="top"></a>
+    <div>
+        <table width="100%">
+            <tr  id="classification">
+                <td width="100%">
+                    {% classification_banner %}
+                </td>
+            </tr>
+        </table><br>
+    </div>
+    <!--table border="1" width="100%" style="height:20px;">
+            <tr>
+                <td width="100%" align="center" style="background-color: green">
+                    {{ settings.CLASSIFICATION_TEXT }}
+                </td>
+            </tr>
+
+        </table-->
     {% block navbar %}
     <div id="banner" class="container-fluid">
+
         <div class="row">
 
             <div class="col-md-4"><img class="logo" src="{% static 'ui/images/eventkit_logo.png' %}"/>
@@ -47,6 +67,7 @@
             </div>
         </div>
     </div>
+
     <nav class="navbar navbar-inverse">
       <div class="container">
         <div class="navbar-header">
@@ -86,6 +107,7 @@
     </div>
 
 
+
     <!-- JavaScript
     ================================================== -->
     {% block corejs %}
@@ -94,5 +116,17 @@
     <script src="{% static 'ui/contrib/bootstrap/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'ui/js/language.js' %}"></script>
     {% endblock %}
+
+          <div class="classification-banner-bottom">
+              {% classification_banner %}
+              <!--table border="1" width="100%" style="position:absolute; bottom:0; height:20px; margin-top:40px;">
+                  <tr>
+                      <td width="100%" align="center" style="background-color: green">
+                          {{ settings.CLASSIFICATION_TEXT }}
+                      </td>
+                  </tr>
+
+              </table-->
+          </div>
   </body>
 </html>
