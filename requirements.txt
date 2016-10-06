@@ -3,6 +3,7 @@ dj-database-url
 psycopg2
 djangorestframework<3.3.0
 django-filter==0.14.0
+django-classification-banner
 djangorestframework-gis
 celery[librabbitmq]
 django-celery
