@@ -385,4 +385,4 @@ class TestExportTasks(TestCase):
         rmtree.assert_called_once_with(stage_dir)
         msg.send.assert_called_once()
         run = ExportRun.objects.get(uid=run_uid)
-        self.assertEquals('FAILED', run.status)
+        self.assertEquals('INCOMPLETE', run.status)

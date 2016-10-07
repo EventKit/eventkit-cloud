@@ -62,6 +62,7 @@ class OSMConfig(object):
 
         if not os.path.isdir(stage_dir):
             os.makedirs(stage_dir, 6600)
+
         try:
             with open(config_file, 'wb') as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
