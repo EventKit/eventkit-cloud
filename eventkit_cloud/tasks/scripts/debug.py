@@ -33,14 +33,14 @@ class FinalTask(TestTask):
 
 
 def run_chain():
-    list = [ExampleTask().si(task_num=1, result="File1"),
-            ExampleTask().si(task_num=2, result="File2"),
-            ExampleTask().si(task_num=3, result="File3"),
-            ExampleTask().si(task_num=4, result="File4"),
-            ExampleTask().si(task_num=5, result="File5")]
-    run_2 = FailureTask().si(task_num=6, result="File6")
+    run_1 = chain(ExampleTask().si(task_num=1, result="File1"),
+                  ExampleTask().si(task_num=2, result="File2"),
+                  ExampleTask().si(task_num=3, result="File3"),
+                  ExampleTask().si(task_num=4, result="File4"),
+                  ExampleTask().si(task_num=5, result="File5"))
+    run_2 = ExampleTask().si(task_num=6, result="File6")
     run_3 = ExampleTask().si(task_num=7, result="File7")
 
-    chord(group([chain(list), run_2, run_3]),
+    chord(group([run_1, run_2, run_3]),
           body=FinalTask().si(task_num=8, result="File8").set(link_error=[FinalTask().si()])).apply_async(
         expires=datetime.now() + timedelta(days=1))

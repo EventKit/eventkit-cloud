@@ -107,7 +107,9 @@ class ExportOSMTaskRunner(TaskRunner):
             transform = provider_task.configs.filter(config_type='TRANSFORM')
             translate = provider_task.configs.filter(config_type='TRANSLATION')
             """
-            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
+            export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                     name=provider_task.provider.name,
+                                                                     status="PENDING")
             # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
             for task_type, task in osm_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
@@ -125,32 +127,33 @@ class ExportOSMTaskRunner(TaskRunner):
             The export format tasks (format_tasks) are then run in parallel, followed
             by the finalize_task at the end to clean up staging dirs, update run status, email user etc..
             """
-            task_list += [
+            initial_tasks = (
                 osm_tasks.get('conf').get('obj').si(categories=categories,
                                                     task_uid=osm_tasks.get('conf').get('task_uid'),
                                                     job_name=job_name,
-                                                    stage_dir=stage_dir),
+                                                    stage_dir=stage_dir) |
                 osm_tasks.get('query').get('obj').si(stage_dir=stage_dir,
                                                      task_uid=osm_tasks.get('query').get('task_uid'),
                                                      job_name=job_name,
                                                      bbox=bbox,
                                                      filters=job.filters)
-            ]
+            )
 
-            task_list += [
+            schema_tasks = (
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
                                                           job_name=job_name,
-                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')),
+                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')) |
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
                                                            job_name=job_name,
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid'))
-            ]
+            )
 
             thematic_exports = {}
             for thematic_task in thematic_tasks_list:
                 if export_tasks.get(thematic_task):
                     thematic_exports[thematic_task] = export_tasks.pop(thematic_task)
 
+            thematic_tasks = None
             if thematic_exports:
                 # if user requested thematic-sqlite do it...if not create the celery task, and store the task in the model.
 
@@ -160,27 +163,28 @@ class ExportOSMTaskRunner(TaskRunner):
                     thematic_sqlite = {'obj': thematic_sqlite_task,
                                        'task_uid': create_export_task(task_name=thematic_sqlite_task.name,
                                                                       export_provider_task=export_provider_task).uid}
-                task_list += [thematic_sqlite.get('obj').si(run_uid=run.uid,
-                                                            stage_dir=stage_dir,
-                                                            job_name=job_name,
-                                                            task_uid=thematic_sqlite.get('task_uid'))]
-                task_list += [task.get('obj').si(run_uid=run.uid,
-                                                 stage_dir=stage_dir,
-                                                 job_name=job_name,
-                                                 task_uid=task.get('task_uid')) for task_name, task in
-                              thematic_exports.iteritems()]
+                thematic_tasks = (thematic_sqlite.get('obj').si(run_uid=run.uid,
+                                                                stage_dir=stage_dir,
+                                                                job_name=job_name,
+                                                                task_uid=thematic_sqlite.get('task_uid')) |
+                                  group(task.get('obj').si(run_uid=run.uid,
+                                                           stage_dir=stage_dir,
+                                                           job_name=job_name,
+                                                           task_uid=task.get('task_uid')) for task_name, task in
+                                        thematic_exports.iteritems())
+                                  )
 
-            task_list += [task.get('obj').si(run_uid=run.uid,
-                                             stage_dir=stage_dir,
-                                             job_name=job_name,
-                                             task_uid=task.get('task_uid')) for task_name, task in
-                          export_tasks.iteritems()]
+            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+                                                    stage_dir=stage_dir,
+                                                    job_name=job_name,
+                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                 export_tasks.iteritems())
 
             """
             The tasks are chained as a list instead of nested groups.
             This is because celery3.x has issues with handling these callbacks even using redis as a result backend
             """
-            return chain(task_list)
+            return export_provider_task.uid, (initial_tasks | schema_tasks | format_tasks | thematic_tasks)
         else:
             return False
 
@@ -226,22 +230,24 @@ class ExportWMSTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
+            export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                     name=provider_task.provider.name,
+                                                                     status="PENDING")
 
             wms_task = WMSExportTask()
             export_task = create_export_task(task_name=wms_task.name,
                                              export_provider_task=export_provider_task)
 
-            return wms_task.si(stage_dir=stage_dir,
-                               job_name=job_name,
-                               task_uid=export_task.uid,
-                               name=provider_task.provider.slug,
-                               layer=provider_task.provider.layer,
-                               config=provider_task.provider.config,
-                               bbox=bbox,
-                               wms_url=provider_task.provider.url,
-                               level_from=provider_task.provider.level_from,
-                               level_to=provider_task.provider.level_to)
+            return export_provider_task.uid, wms_task.si(stage_dir=stage_dir,
+                                                         job_name=job_name,
+                                                         task_uid=export_task.uid,
+                                                         name=provider_task.provider.slug,
+                                                         layer=provider_task.provider.layer,
+                                                         config=provider_task.provider.config,
+                                                         bbox=bbox,
+                                                         wms_url=provider_task.provider.url,
+                                                         level_from=provider_task.provider.level_from,
+                                                         level_to=provider_task.provider.level_to)
 
 
 class ExportWMTSTaskRunner(TaskRunner):
@@ -290,22 +296,24 @@ class ExportWMTSTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
+            export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                     name=provider_task.provider.name,
+                                                                     status="PENDING")
 
             wmts_task = WMTSExportTask()
             export_task = create_export_task(task_name=wmts_task.name,
                                              export_provider_task=export_provider_task)
 
-            return wmts_task.si(stage_dir=stage_dir,
-                                job_name=job_name,
-                                task_uid=export_task.uid,
-                                name=provider_task.provider.slug,
-                                layer=provider_task.provider.layer,
-                                config=provider_task.provider.config,
-                                bbox=bbox,
-                                wmts_url=provider_task.provider.url,
-                                level_from=provider_task.provider.level_from,
-                                level_to=provider_task.provider.level_to)
+            return export_provider_task.uid, wmts_task.si(stage_dir=stage_dir,
+                                                          job_name=job_name,
+                                                          task_uid=export_task.uid,
+                                                          name=provider_task.provider.slug,
+                                                          layer=provider_task.provider.layer,
+                                                          config=provider_task.provider.config,
+                                                          bbox=bbox,
+                                                          wmts_url=provider_task.provider.url,
+                                                          level_from=provider_task.provider.level_from,
+                                                          level_to=provider_task.provider.level_to)
 
 
 def create_format_task(format):
