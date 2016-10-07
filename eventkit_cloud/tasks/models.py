@@ -8,11 +8,12 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
 from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
 
@@ -141,3 +142,10 @@ def exportrun_delete_exports(sender, instance, **kwargs):
     run_uid = instance.uid
     run_dir = '{0}{1}'.format(download_root, run_uid)
     shutil.rmtree(run_dir, ignore_errors=True)
+
+
+@receiver(pre_delete, sender=ExportRun)
+def delete_s3_pre_delete(sender, instance, *args, **kwargs):
+    delete_from_s3(str(instance.uid))
+
+

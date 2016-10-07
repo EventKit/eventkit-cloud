@@ -12,7 +12,6 @@ from django.db.models.fields import CharField
 from django.db.models.signals import (
     post_delete,
     post_save,
-    pre_delete
 )
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
@@ -357,11 +356,6 @@ def exportconfig_delete_upload(sender, instance, **kwargs):
     exports = Job.objects.filter(configs__uid=instance.uid)
     for export in exports.all():
         export.configs.remove(instance)
-
-
-@receiver(pre_delete, sender=Job)
-def delete_s3_pre_delete(sender, instance, *args, **kwargs):
-    delete_from_s3(str(instance.uid))
 
 
 @receiver(post_save, sender=User)
