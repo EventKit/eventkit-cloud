@@ -19,7 +19,7 @@ sudo mkdir /var/lib/eventkit
 workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev
-sudo apt-get -y install postgis postgresql-contrib
+sudo apt-get -y install postgis postgresql-contrib*
 
 sudo apt-get -y install gcc g++
 
@@ -38,8 +38,8 @@ cd ~
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
-sudo apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
-
+sudo apt-get -y install gdal-bin libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
+sudo apt-get libgdal-dev
 sudo apt-get -y install osmctools
 sudo apt-get -y install spatialite-bin
 sudo apt-get -y install zip unzip
