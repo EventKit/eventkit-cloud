@@ -9,9 +9,14 @@ from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.fields import CharField
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import (
+    post_delete,
+    post_save,
+)
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+
+from eventkit_cloud.utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
 
