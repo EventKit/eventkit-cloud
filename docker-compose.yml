@@ -7,6 +7,10 @@ services:
      build:
        context: .
      environment:
+        - USE_S3=True
+        - AWS_ACCESS_KEY=AKIAIMC6ZVLYXG6U3MPA
+        - AWS_SECRET_KEY=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
+        - AWS_BUCKET_NAME=eventkit
         - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
