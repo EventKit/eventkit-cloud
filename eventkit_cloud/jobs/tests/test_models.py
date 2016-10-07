@@ -11,7 +11,6 @@ from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
 from django.utils import timezone
-from mock import patch
 
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
