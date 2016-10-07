@@ -5,8 +5,8 @@ from ..jobs.models import Job
 from .models import ExportRun
 from .task_runners import ExportOSMTaskRunner, ExportWMSTaskRunner, ExportWMTSTaskRunner
 from django.conf import settings
-from .export_tasks import FinalizeRunTask
-from celery import group, chain
+from .export_tasks import FinalizeExportProviderTask
+from celery import chord
 from datetime import datetime, timedelta
 import logging
 import os
@@ -30,27 +30,33 @@ class TaskFactory():
         if self.run:
             provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
             if provider_tasks:
-                header_tasks = None
+                header_tasks = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                         task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
                         os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
-                        task_runner_tasks = task_runner.run_task(user=self.job.user,
-                                                                 provider_task_uid=provider_task.uid,
-                                                                 run=self.run,
-                                                                 stage_dir=os.path.join(self.stage_dir,
-                                                                                        provider_task.provider.slug))
-                        if header_tasks:
-                            header_tasks = chain(header_tasks | task_runner_tasks)
-                        else:
-                            header_tasks = task_runner_tasks
-                if header_tasks:
-                    finalize_task = FinalizeRunTask()
-                    chain(header_tasks | finalize_task.si(stage_dir=self.stage_dir, run_uid=self.run.uid)
-                          ).apply_async(expires=datetime.now() + timedelta(days=1))
-                else:
-                    return False
+                        export_provider_task_uid, task_runner_tasks = task_runner.run_task(user=self.job.user,
+                                                                                           provider_task_uid=provider_task.uid,
+                                                                                           run=self.run,
+                                                                                           stage_dir=os.path.join(
+                                                                                               self.stage_dir,
+                                                                                               provider_task.provider.slug))
+                        # Run the task, and when it completes return the status of the task to the model.
+                        # The FinalizeExportProviderTask will check to see if all of the tasks are done, and if they are
+                        #  it will call FinalizeTask which will mark the entire job complete/incomplete.
+                        finalize_export_provider_task = FinalizeExportProviderTask()
+                        (task_runner_tasks | finalize_export_provider_task.si(run_uid=self.run.uid,
+                                                                                       stage_dir=os.path.join(
+                                                                                           self.stage_dir,
+                                                                                           provider_task.provider.slug),
+                                                                                       export_provider_task_uid=export_provider_task_uid)
+                              ).apply_async(interval=1, max_retries=10, expires=datetime.now() + timedelta(days=2),
+                                            link_error=[finalize_export_provider_task.si(run_uid=self.run.uid,
+                                                                                         stage_dir=os.path.join(
+                                                                                             self.stage_dir,
+                                                                                             provider_task.provider.slug),
+                                                                                         export_provider_task_uid=export_provider_task_uid)])
             else:
                 return False
 

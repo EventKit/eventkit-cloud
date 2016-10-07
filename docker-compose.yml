@@ -15,8 +15,6 @@ services:
         - SITE_NAME=cloud.eventkit.dev
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
      command: echo 'Base box is not used, exiting now'
-     #entrypoint:
-        #- bash -c '/var/lib/eventkit/scripts/wait-for-postgis.sh postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports'
   eventkit:
       extends:
         service: base

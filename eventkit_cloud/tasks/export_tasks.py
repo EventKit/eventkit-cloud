@@ -127,9 +127,9 @@ class ExportTask(Task):
         ete.save()
         if self.abort_on_error:
             run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
-            run.status = 'FAILED'
-            run.finished_at = timezone.now()
-            run.save()
+            # run.status = 'FAILED'
+            # run.finished_at = timezone.now()
+            # run.save()
             error_handler = ExportTaskErrorHandler()
             # run error handler
             stage_dir = kwargs['stage_dir']
@@ -151,8 +151,10 @@ class ExportTask(Task):
             celery_uid = self.request.id
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
+            task.export_provider_task.status = 'RUNNING'
             task.started_at = started
             task.save()
+            task.export_provider_task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
         except DatabaseError as e:
             logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
@@ -390,6 +392,7 @@ class WMSExportTask(ExportTask):
             logger.error('Raised exception in wms export, %s', str(e))
             raise Exception(e)
 
+
 class WMTSExportTask(ExportTask):
     """
     Class defining geopackage export for wmts
@@ -447,6 +450,40 @@ class GeneratePresetTask(ExportTask):
             return {'result': output_path}
 
 
+class FinalizeExportProviderTask(Task):
+    """
+        Finalizes provider task.
+
+        Cleans up staging directory.
+        Updates run with finish time.
+        Emails user notification.
+    """
+
+    name = 'Finalize Export Provider Run'
+
+    def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
+        from eventkit_cloud.tasks.models import ExportProviderTask
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task.status = 'COMPLETED'
+        tasks = []
+        # mark run as incomplete if any tasks fail
+        for task in export_provider_task.tasks.all():
+            if task.status == 'FAILED':
+                export_provider_task.status = 'INCOMPLETE'
+        export_provider_task.save()
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        run_complete = True
+        for provider_task in export_provider_task.run.provider_tasks.all():
+            if provider_task.status == 'PENDING' or provider_task.status == 'RUNNING':
+                run_complete = False
+        if run_complete:
+            finalize_run_task = FinalizeRunTask()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+
+
 class FinalizeRunTask(Task):
     """
     Finalizes export run.
@@ -462,20 +499,17 @@ class FinalizeRunTask(Task):
         from eventkit_cloud.tasks.models import ExportRun
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
-        tasks = []
         provider_tasks = run.provider_tasks.all()
         for provider_task in provider_tasks:
-            tasks.extend(provider_task.tasks.all())
         # mark run as incomplete if any tasks fail
-        for task in tasks:
-            if task.status == 'FAILED':
+            if provider_task.status == 'INCOMPLETE':
                 run.status = 'INCOMPLETE'
         finished = timezone.now()
         run.finished_at = finished
         run.save()
         try:
             shutil.rmtree(stage_dir)
-        except IOError as e:
+        except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
@@ -510,7 +544,7 @@ class ExportTaskErrorHandler(Task):
         finished = timezone.now()
         run = ExportRun.objects.get(uid=run_uid)
         run.finished_at = finished
-        run.status = 'FAILED'
+        run.status = 'INCOMPLETE'
         run.save()
         try:
             if os.path.isdir(stage_dir):
@@ -522,7 +556,7 @@ class ExportTaskErrorHandler(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your Eventkit Data Pack Failed"
+        subject = "Your Eventkit Data Pack has a failure."
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
