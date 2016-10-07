@@ -127,9 +127,9 @@ class ExportTask(Task):
         ete.save()
         if self.abort_on_error:
             run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
-            run.status = 'FAILED'
-            run.finished_at = timezone.now()
-            run.save()
+            # run.status = 'FAILED'
+            # run.finished_at = timezone.now()
+            # run.save()
             error_handler = ExportTaskErrorHandler()
             # run error handler
             stage_dir = kwargs['stage_dir']
@@ -154,6 +154,7 @@ class ExportTask(Task):
             task.export_provider_task.status = 'RUNNING'
             task.started_at = started
             task.save()
+            task.export_provider_task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
         except DatabaseError as e:
             logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
@@ -472,11 +473,11 @@ class FinalizeExportProviderTask(Task):
         export_provider_task.save()
         try:
             shutil.rmtree(stage_dir)
-        except IOError as e:
+        except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         run_complete = True
-        for export_provider_task in export_provider_task.run.provider_tasks.all():
-            if export_provider_task.status == 'PENDING' or export_provider_task.status == 'RUNNING':
+        for provider_task in export_provider_task.run.provider_tasks.all():
+            if provider_task.status == 'PENDING' or provider_task.status == 'RUNNING':
                 run_complete = False
         if run_complete:
             finalize_run_task = FinalizeRunTask()
@@ -508,7 +509,7 @@ class FinalizeRunTask(Task):
         run.save()
         try:
             shutil.rmtree(stage_dir)
-        except IOError as e:
+        except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
@@ -543,7 +544,7 @@ class ExportTaskErrorHandler(Task):
         finished = timezone.now()
         run = ExportRun.objects.get(uid=run_uid)
         run.finished_at = finished
-        run.status = 'FAILED'
+        run.status = 'INCOMPLETE'
         run.save()
         try:
             if os.path.isdir(stage_dir):
@@ -555,7 +556,7 @@ class ExportTaskErrorHandler(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your Eventkit Data Pack Failed"
+        subject = "Your Eventkit Data Pack has a failure."
         # email user and administrator
         to = [addr, settings.TASK_ERROR_EMAIL]
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')

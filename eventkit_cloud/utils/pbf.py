@@ -47,6 +47,7 @@ class OSMToPBF(object):
         if (returncode != 0):
             logger.error('%s', stderr)
             raise Exception, "osmconvert failed with return code: {0}".format(returncode)
+
         if(self.debug):
             print 'Osmconvert returned: %s' % returncode
         return self.pbffile

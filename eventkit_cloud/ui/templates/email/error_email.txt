@@ -1,7 +1,7 @@
 {% load i18n %}
 {% trans 'This is an automated email from the Eventkit Team.' %}
 
-{% trans 'Unfortunately, your Eventkit Data Pack has failed.' %}
+{% trans 'Unfortunately, your Eventkit Data Pack has a failure.' %}
 
 {% trans 'Please copy and paste this link ' %}{{ url }}{% trans ' into your browser to see the status of your Eventkit Data Pack.' %}
 

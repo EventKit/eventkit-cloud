@@ -49,6 +49,7 @@ class WMSToGeopackage(object):
         """
         Convert sqlite to gpkg.
         """
+
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
