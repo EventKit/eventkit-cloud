@@ -147,4 +147,5 @@ def create_conf_from_wmts(wmts_url):
         conf_dict = yaml.load(temp_file)
     except yaml.YAMLError as exc:
         logger.error(exc)
+
     return conf_dict

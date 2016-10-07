@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms, wmts, rest,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms, wmts, arcgis,
 )
 
 # Get an instance of a logger
@@ -411,18 +411,18 @@ class WMTSExportTask(ExportTask):
             raise Exception(e)
 
 
-class RESTExportTask(ExportTask):
+class ArcGISExportTask(ExportTask):
     """
-    Class defining geopackage export for rest
+    Class defining geopackage export for arcgis
     """
-    name = 'REST Export'
+    name = 'ArcGIS Export'
 
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            rest_url=None, level_from=None, level_to=None, name=None):
+            arcgis_url=None, level_from=None, level_to=None, name=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            r2g = rest.RESTToGeopackage(gpkgfile=gpkgfile, bbox=bbox, rest_url=rest_url, name=name, layer=layer,
+            r2g = arcgis.ArcGISToGeopackage(gpkgfile=gpkgfile, bbox=bbox, arcgis_url=arcgis_url, name=name, layer=layer,
                                         config=config, level_from=level_from, level_to=level_to)
             out = r2g.convert()
             return {'result': out}

@@ -13,7 +13,7 @@ from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
-                           OSMToPBFConvertTask, OverpassQueryTask, WMSExportTask, WMTSExportTask, RESTExportTask,
+                           OSMToPBFConvertTask, OverpassQueryTask, WMSExportTask, WMTSExportTask, ArcGISExportTask,
                            )
 
 # Get an instance of a logger
@@ -314,7 +314,7 @@ class ExportWMTSTaskRunner(TaskRunner):
                                 level_to=provider_task.provider.level_to)
 
 
-class ExportRESTTaskRunner(TaskRunner):
+class ExportArcGISTaskRunner(TaskRunner):
     """
     Runs REST Export Tasks
     """
@@ -362,18 +362,18 @@ class ExportRESTTaskRunner(TaskRunner):
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
-            rest_task = RESTExportTask()
-            export_task = create_export_task(task_name=rest_task.name,
+            arcgis_task = ArcGISExportTask()
+            export_task = create_export_task(task_name=arcgis_task.name,
                                              export_provider_task=export_provider_task)
 
-            return rest_task.si(stage_dir=stage_dir,
+            return arcgis_task.si(stage_dir=stage_dir,
                                 job_name=job_name,
                                 task_uid=export_task.uid,
                                 name=provider_task.provider.slug,
                                 layer=provider_task.provider.layer,
                                 config=provider_task.provider.config,
                                 bbox=bbox,
-                                rest_url=provider_task.provider.url,
+                                arcgis_url=provider_task.provider.url,
                                 level_from=provider_task.provider.level_from,
                                 level_to=provider_task.provider.level_to)
 
