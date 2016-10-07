@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RESTToGeopackage():
     """
-    Convert a WMTS services to a geopackage.
+    Convert a REST service to a geopackage.
     """
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, rest_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
@@ -59,7 +59,7 @@ class RESTToGeopackage():
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
                                              'tile_size': [256, 256],
                                              'origin': 'nw'}}
-        conf_dict['caches'] = get_cache_template(["{}_wmts".format(self.layer)],
+        conf_dict['caches'] = get_cache_template(["{}_rest".format(self.layer)],
                                                  [grids for grids in conf_dict.get('grids')],
                                                  self.gpkgfile)
         #disable SSL cert checks
