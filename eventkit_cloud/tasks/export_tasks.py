@@ -151,6 +151,7 @@ class ExportTask(Task):
             celery_uid = self.request.id
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
+            task.export_provider_task.status = 'RUNNING'
             task.started_at = started
             task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
@@ -390,6 +391,7 @@ class WMSExportTask(ExportTask):
             logger.error('Raised exception in wms export, %s', str(e))
             raise Exception(e)
 
+
 class WMTSExportTask(ExportTask):
     """
     Class defining geopackage export for wmts
@@ -447,6 +449,40 @@ class GeneratePresetTask(ExportTask):
             return {'result': output_path}
 
 
+class FinalizeExportProviderTask(Task):
+    """
+        Finalizes provider task.
+
+        Cleans up staging directory.
+        Updates run with finish time.
+        Emails user notification.
+    """
+
+    name = 'Finalize Export Provider Run'
+
+    def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
+        from eventkit_cloud.tasks.models import ExportProviderTask
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task.status = 'COMPLETED'
+        tasks = []
+        # mark run as incomplete if any tasks fail
+        for task in export_provider_task.tasks.all():
+            if task.status == 'FAILED':
+                export_provider_task.status = 'INCOMPLETE'
+        export_provider_task.save()
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError as e:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        run_complete = True
+        for export_provider_task in export_provider_task.run.provider_tasks.all():
+            if export_provider_task.status == 'PENDING' or export_provider_task.status == 'RUNNING':
+                run_complete = False
+        if run_complete:
+            finalize_run_task = FinalizeRunTask()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+
+
 class FinalizeRunTask(Task):
     """
     Finalizes export run.
@@ -462,13 +498,10 @@ class FinalizeRunTask(Task):
         from eventkit_cloud.tasks.models import ExportRun
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
-        tasks = []
         provider_tasks = run.provider_tasks.all()
         for provider_task in provider_tasks:
-            tasks.extend(provider_task.tasks.all())
         # mark run as incomplete if any tasks fail
-        for task in tasks:
-            if task.status == 'FAILED':
+            if provider_task.status == 'INCOMPLETE':
                 run.status = 'INCOMPLETE'
         finished = timezone.now()
         run.finished_at = finished

@@ -67,6 +67,7 @@ class ExportProviderTask(models.Model):
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, blank=True)
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
+    status = models.CharField(blank=True, max_length=20, db_index=True)
 
     class Meta:
         ordering = ['name']
