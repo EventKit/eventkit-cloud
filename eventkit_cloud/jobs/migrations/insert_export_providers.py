@@ -37,6 +37,11 @@ class Migration(migrations.Migration):
             wmts_type.supported_formats.add(export_format.pk)
         wmts_type.save()
 
+        arcgis_type = ExportProviderType.objects.create(type_name='arc')
+        for export_format in export_formats:
+            arcgis_type.supported_formats.add(export_format.pk)
+        arcgis_type.save()
+
     dependencies = [
         ('jobs', '0001_initial'),
     ]

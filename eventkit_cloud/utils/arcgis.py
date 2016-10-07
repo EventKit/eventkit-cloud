@@ -22,14 +22,14 @@ from billiard import Process
 logger = logging.getLogger(__name__)
 
 
-class WMTSToGeopackage():
+class ArcGISToGeopackage():
     """
-    Convert a WMTS services to a geopackage.
+    Convert a ArcGIS service to a geopackage.
     """
 
-    def __init__(self, config=None, gpkgfile=None, bbox=None, wmts_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, arcgis_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
         """
-        Initialize the WMTSToGeopackage utility.
+        Initialize the ArcGISToGeopackage utility.
 
         Args:
             gpkgfile: where to write the gpkg output
@@ -37,7 +37,7 @@ class WMTSToGeopackage():
         """
         self.gpkgfile = gpkgfile
         self.bbox = bbox
-        self.wmts_url = wmts_url
+        self.arcgis_url = arcgis_url
         self.debug = debug
         self.name = name
         self.level_from = level_from
@@ -47,20 +47,19 @@ class WMTSToGeopackage():
 
     def convert(self, ):
         """
-        Convert wmts to gpkg.
+        Convert arcgis url to gpkg.
         """
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
-            conf_dict = create_conf_from_wmts(self.wmts_url)
+            conf_dict = create_conf_from_arcgis(self.arcgis_url)
         sources = []
-        # for source in conf_dict.get('sources'):
-        #     sources.append(source)
+
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
                                              'tile_size': [256, 256],
                                              'origin': 'nw'}}
-        conf_dict['caches'] = get_cache_template(["{}_wmts".format(self.layer)],
+        conf_dict['caches'] = get_cache_template(["{}_arcgis".format(self.layer)],
                                                  [grids for grids in conf_dict.get('grids')],
                                                  self.gpkgfile)
         #disable SSL cert checks
@@ -85,7 +84,7 @@ class WMTSToGeopackage():
             p.start()
             p.join()
         except Exception as e:
-            logger.error("WMTS Export failed.")
+            logger.error("ArcGIS Export failed.")
             logger.error("Using Configuration:")
             logger.error(mapproxy_config)
             errors, informal_only = validate_options(mapproxy_config)
@@ -137,9 +136,9 @@ def get_seed_template(bbox=[-180,-89,180,89], level_from=None, level_to=None):
         }
 
 
-def create_conf_from_wmts(wmts_url):
+def create_conf_from_arcgis(arcgis_url):
     temp_file = NamedTemporaryFile()
-    params = ['--capabilities', wmts_url, '--output', temp_file.name, '--force']
+    params = ['--capabilities', arcgis_url, '--output', temp_file.name, '--force']
     config_command(params)
 
     conf_dict = None
@@ -147,5 +146,4 @@ def create_conf_from_wmts(wmts_url):
         conf_dict = yaml.load(temp_file)
     except yaml.YAMLError as exc:
         logger.error(exc)
-
     return conf_dict
