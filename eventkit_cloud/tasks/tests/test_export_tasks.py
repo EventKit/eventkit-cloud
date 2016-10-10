@@ -19,7 +19,7 @@ from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import Job, Tag
 from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
-    GeneratePresetTask, KmlExportTask, OSMConfTask, WMSExportTask, GeopackageExportTask,
+    GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
@@ -223,9 +223,9 @@ class TestExportTasks(TestCase):
         self.assertEquals('RUNNING', run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.wms.WMSToGeopackage')
+    @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
     def test_run_wms_export_task(self, mock_wms, mock_request):
-        task = WMSExportTask()
+        task = ExternalRasterServiceExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         wms_to_gpkg = mock_wms.return_value
