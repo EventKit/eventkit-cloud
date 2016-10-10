@@ -22,14 +22,14 @@ from billiard import Process
 logger = logging.getLogger(__name__)
 
 
-class WMSToGeopackage(object):
+class ExternalRasterServiceToGeopackage(object):
     """
-    Convert a WMS services to a geopackage.
+    Convert a External service to a geopackage.
     """
 
-    def __init__(self, config=None, gpkgfile=None, bbox=None, wms_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None, service_type=None):
         """
-        Initialize the WMSToGeopackage utility.
+        Initialize the ExternalServiceToGeopackage utility.
 
         Args:
             gpkgfile: where to write the gpkg output
@@ -37,23 +37,24 @@ class WMSToGeopackage(object):
         """
         self.gpkgfile = gpkgfile
         self.bbox = bbox
-        self.wms_url = wms_url
+        self.service_url = service_url
         self.debug = debug
         self.name = name
         self.level_from = level_from
         self.level_to = level_to
         self.layer = layer
         self.config = config
+        self.service_type = service_type
 
     def convert(self, ):
         """
-        Convert wms to gpkg.
+        Convert external service to gpkg.
         """
 
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
-            conf_dict = create_conf_from_wms(self.wms_url)
+            conf_dict = create_conf_from_url(self.service_url)
         sources = []
         # for source in conf_dict.get('sources'):
         #     sources.append(source)
@@ -61,7 +62,7 @@ class WMSToGeopackage(object):
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
                                                   'tile_size': [256, 256],
                                                   'origin': 'nw'}}
-        conf_dict['caches'] = get_cache_template(["{}_wms".format(self.layer)],
+        conf_dict['caches'] = get_cache_template(["{}_{}".format(self.layer, self.service_type)],
                                                  [grids for grids in conf_dict.get('grids')],
                                                  self.gpkgfile)
         # disable SSL cert checks
@@ -87,7 +88,7 @@ class WMSToGeopackage(object):
             p.start()
             p.join()
         except Exception as e:
-            logger.error("WMS Export failed.")
+            logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)
             if not informal_only:
                 logger.error("Mapproxy configuration failed.")
@@ -138,10 +139,9 @@ def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None)
     }
 
 
-def create_conf_from_wms(wms_url):
+def create_conf_from_url(service_url):
     temp_file = NamedTemporaryFile()
-    # wms_url = wms_url.replace('"','')
-    params = ['--capabilities', wms_url, '--output', temp_file.name, '--force']
+    params = ['--capabilities', service_url, '--output', temp_file.name, '--force']
     config_command(params)
 
     conf_dict = None

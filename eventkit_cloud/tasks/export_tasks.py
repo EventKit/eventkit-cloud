@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, wms, wmts, arcgis,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service,
 )
 
 # Get an instance of a logger
@@ -373,63 +373,23 @@ class ThematicGeopackageExportTask(ExportTask):
             raise Exception(e)
 
 
-class WMSExportTask(ExportTask):
+class ExternalRasterServiceExportTask(ExportTask):
     """
-    Class defining geopackage export for wms.
+    Class defining geopackage export for external raster service.
     """
-    name = 'WMS Export'
+    name = 'External Raster Service Export'
 
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            wms_url=None, level_from=None, level_to=None, name=None):
+            service_url=None, level_from=None, level_to=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = wms.WMSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wms_url=wms_url, name=name, layer=layer,
-                                      config=config, level_from=level_from, level_to=level_to)
+            w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                      config=config, level_from=level_from, level_to=level_to, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
-            logger.error('Raised exception in wms export, %s', str(e))
-            raise Exception(e)
-
-
-class WMTSExportTask(ExportTask):
-    """
-    Class defining geopackage export for wmts
-    """
-    name = 'WMTS Export'
-
-    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            wmts_url=None, level_from=None, level_to=None, name=None):
-        self.update_task_state(task_uid=task_uid)
-        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        try:
-            w2g = wmts.WMTSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, wmts_url=wmts_url, name=name, layer=layer,
-                                        config=config, level_from=level_from, level_to=level_to)
-            out = w2g.convert()
-            return {'result': out}
-        except Exception as e:
-            logger.error('Raised exception in wmts export, %s', str(e))
-            raise Exception(e)
-
-
-class ArcGISExportTask(ExportTask):
-    """
-    Class defining geopackage export for arcgis
-    """
-    name = 'ArcGIS Export'
-
-    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            arcgis_url=None, level_from=None, level_to=None, name=None):
-        self.update_task_state(task_uid=task_uid)
-        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        try:
-            r2g = arcgis.ArcGISToGeopackage(gpkgfile=gpkgfile, bbox=bbox, arcgis_url=arcgis_url, name=name, layer=layer,
-                                        config=config, level_from=level_from, level_to=level_to)
-            out = r2g.convert()
-            return {'result': out}
-        except Exception as e:
-            logger.error('Raised exception in wmts export, %s', str(e))
+            logger.error('Raised exception in external service export, %s', str(e))
             raise Exception(e)
 
 
