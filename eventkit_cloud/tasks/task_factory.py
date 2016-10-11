@@ -46,6 +46,8 @@ class TaskFactory():
                         # Run the task, and when it completes return the status of the task to the model.
                         # The FinalizeExportProviderTask will check to see if all of the tasks are done, and if they are
                         #  it will call FinalizeTask which will mark the entire job complete/incomplete.
+                        if not task_runner_tasks:
+                            return False
                         finalize_export_provider_task = FinalizeExportProviderTask()
                         (task_runner_tasks | finalize_export_provider_task.si(run_uid=self.run.uid,
                                                                               stage_dir=os.path.join(
