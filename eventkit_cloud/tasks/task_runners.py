@@ -14,8 +14,7 @@ from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
-                           OSMToPBFConvertTask, OverpassQueryTask, WMSExportTask, WMTSExportTask, ArcGISExportTask,
-                           )
+                           OSMToPBFConvertTask, OverpassQueryTask, ExternalRasterServiceExportTask,)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ class ExportOSMTaskRunner(TaskRunner):
     Runs HOT Export Tasks
     """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
         """
         Run export tasks.
 
@@ -189,13 +188,13 @@ class ExportOSMTaskRunner(TaskRunner):
             return False
 
 
-class ExportWMSTaskRunner(TaskRunner):
+class ExportExternalRasterServiceTaskRunner(TaskRunner):
     """
-    Runs WMS Export Tasks
+    Runs External Service Export Tasks
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
         """
         Run export tasks.
 
@@ -234,151 +233,21 @@ class ExportWMSTaskRunner(TaskRunner):
                                                                      name=provider_task.provider.name,
                                                                      status="PENDING")
 
-            wms_task = WMSExportTask()
-            export_task = create_export_task(task_name=wms_task.name,
+            service_task = ExternalRasterServiceExportTask()
+            export_task = create_export_task(task_name=service_task.name,
                                              export_provider_task=export_provider_task)
 
-            return export_provider_task.uid, wms_task.si(stage_dir=stage_dir,
+            return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
                                                          job_name=job_name,
                                                          task_uid=export_task.uid,
                                                          name=provider_task.provider.slug,
                                                          layer=provider_task.provider.layer,
                                                          config=provider_task.provider.config,
                                                          bbox=bbox,
-                                                         wms_url=provider_task.provider.url,
+                                                         service_url=provider_task.provider.url,
                                                          level_from=provider_task.provider.level_from,
-                                                         level_to=provider_task.provider.level_to)
-
-
-class ExportWMTSTaskRunner(TaskRunner):
-    """
-    Runs WMTS Export Tasks
-    """
-    export_task_registry = settings.EXPORT_TASKS
-
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
-        """
-        Run export tasks
-        Args:
-            provider_task_uid: the uid of the provider_task to run.
-
-        Returns:
-            the ExportRun instance.
-        """
-        logger.debug('Running Job with id: {}'.format(provider_task_uid))
-        # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        job = run.job
-        job_name = normalize_job_name(job.name)
-        # get the formats to export
-        formats = [format.slug for format in provider_task.formats.all()]
-        export_tasks = {}
-        # build a list of celery tasks based on the export formats
-        for format in formats:
-            try:
-                # see settings.EXPORT_TASK for configuration
-                task_fq_name = self.export_task_registry[format]
-                # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {}'.format(e)
-                logger.debug(msg)
-
-        # run the tasks
-        if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
-
-            # swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     status="PENDING")
-
-            wmts_task = WMTSExportTask()
-            export_task = create_export_task(task_name=wmts_task.name,
-                                             export_provider_task=export_provider_task)
-
-            return export_provider_task.uid, wmts_task.si(stage_dir=stage_dir,
-                                                          job_name=job_name,
-                                                          task_uid=export_task.uid,
-                                                          name=provider_task.provider.slug,
-                                                          layer=provider_task.provider.layer,
-                                                          config=provider_task.provider.config,
-                                                          bbox=bbox,
-                                                          wmts_url=provider_task.provider.url,
-                                                          level_from=provider_task.provider.level_from,
-                                                          level_to=provider_task.provider.level_to)
-
-
-
-class ExportArcGISTaskRunner(TaskRunner):
-    """
-    Runs REST Export Tasks
-    """
-    export_task_registry = settings.EXPORT_TASKS
-
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
-        """
-        Run export tasks
-        Args:
-            provider_task_uid: the uid of the provider_task to run.
-
-        Returns:
-            the ExportRun instance.
-        """
-        logger.debug('Running Job with id: {}'.format(provider_task_uid))
-        # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        job = run.job
-        job_name = normalize_job_name(job.name)
-        # get the formats to export
-        formats = [format.slug for format in provider_task.formats.all()]
-        export_tasks = {}
-        # build a list of celery tasks based on the export formats
-        for format in formats:
-            try:
-                # see settings.EXPORT_TASK for configuration
-                task_fq_name = self.export_task_registry[format]
-                # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {}'.format(e)
-                logger.debug(msg)
-
-        # run the tasks
-        if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
-
-            #swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
-
-            arcgis_task = ArcGISExportTask()
-            export_task = create_export_task(task_name=arcgis_task.name,
-                                             export_provider_task=export_provider_task)
-
-            return arcgis_task.si(stage_dir=stage_dir,
-                                job_name=job_name,
-                                task_uid=export_task.uid,
-                                name=provider_task.provider.slug,
-                                layer=provider_task.provider.layer,
-                                config=provider_task.provider.config,
-                                bbox=bbox,
-                                arcgis_url=provider_task.provider.url,
-                                level_from=provider_task.provider.level_from,
-                                level_to=provider_task.provider.level_to)
+                                                         level_to=provider_task.provider.level_to,
+                                                         service_type=service_type)
 
 
 def create_format_task(format):
