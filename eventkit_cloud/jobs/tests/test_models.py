@@ -171,11 +171,6 @@ class TestJob(TestCase):
             )
         self.assertEquals(238, self.job.tags.all().count())
 
-    def test_delete_from_s3(self, del_fun):
-        job = Job.objects.all()[0]
-        job.delete()
-        del_fun.assert_called_once_with(str(job.uid))
-
 
 class TestExportFormat(TestCase):
 
