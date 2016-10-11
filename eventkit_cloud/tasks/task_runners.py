@@ -178,22 +178,26 @@ class ExportOSMTaskRunner(TaskRunner):
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')) for task_name, task in
-                                 export_tasks.iteritems())
+                                 export_tasks.iteritems() if task is not None)
 
             """
-            The tasks are chained as a list instead of nested groups.
+            The tasks are chained instead of nested groups.
             This is because celery3.x has issues with handling these callbacks even using redis as a result backend
             """
-            return export_provider_task.uid, (initial_tasks | schema_tasks | format_tasks | thematic_tasks)
+            task_chain = (initial_tasks | schema_tasks)
+            if format_tasks:
+                task_chain = (task_chain | format_tasks)
+            if thematic_tasks:
+                task_chain = (task_chain | thematic_tasks)
+            return export_provider_task.uid, task_chain
         else:
-            return False
+            return None, False
 
 
 class ExportWMSTaskRunner(TaskRunner):
     """
     Runs WMS Export Tasks
     """
-    export_task_registry = settings.EXPORT_TASKS
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
         """
@@ -214,15 +218,16 @@ class ExportWMSTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        for format in formats:
-            try:
-                # instantiate the required class.
-                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {0}'.format(e)
-                logger.debug(msg)
+        # for format in formats:
+        try:
+            # instantiate the required class.
+            # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
+        except KeyError as e:
+            logger.debug(e)
+        except ImportError as e:
+            msg = 'Error importing export task: {0}'.format(e)
+            logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -248,13 +253,14 @@ class ExportWMSTaskRunner(TaskRunner):
                                                          wms_url=provider_task.provider.url,
                                                          level_from=provider_task.provider.level_from,
                                                          level_to=provider_task.provider.level_to)
+        else:
+            return None, False
 
 
 class ExportWMTSTaskRunner(TaskRunner):
     """
     Runs WMTS Export Tasks
     """
-    export_task_registry = settings.EXPORT_TASKS
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
         """
@@ -274,21 +280,16 @@ class ExportWMTSTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats
-        for format in formats:
-            try:
-                # see settings.EXPORT_TASK for configuration
-                task_fq_name = self.export_task_registry[format]
-                # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {}'.format(e)
-                logger.debug(msg)
+        # for format in formats:
+        try:
+            # instantiate the required class.
+            # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
+        except KeyError as e:
+            logger.debug(e)
+        except ImportError as e:
+            msg = 'Error importing export task: {0}'.format(e)
+            logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -314,14 +315,14 @@ class ExportWMTSTaskRunner(TaskRunner):
                                                           wmts_url=provider_task.provider.url,
                                                           level_from=provider_task.provider.level_from,
                                                           level_to=provider_task.provider.level_to)
-
+        else:
+            return None, False
 
 
 class ExportArcGISTaskRunner(TaskRunner):
     """
     Runs REST Export Tasks
     """
-    export_task_registry = settings.EXPORT_TASKS
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None):
         """
@@ -341,27 +342,22 @@ class ExportArcGISTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats
-        for format in formats:
-            try:
-                # see settings.EXPORT_TASK for configuration
-                task_fq_name = self.export_task_registry[format]
-                # instantiate the required class.
-                parts = task_fq_name.split('.')
-                module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                module = importlib.import_module(module_path)
-                CeleryExportTask = getattr(module, class_name)
-                export_tasks[task_fq_name] = {'obj': CeleryExportTask(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {}'.format(e)
-                logger.debug(msg)
+        # for format in formats:
+        try:
+            # instantiate the required class.
+            # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
+        except KeyError as e:
+            logger.debug(e)
+        except ImportError as e:
+            msg = 'Error importing export task: {0}'.format(e)
+            logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
             bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            #swap xy
+            # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run, name=provider_task.provider.name)
 
@@ -369,16 +365,18 @@ class ExportArcGISTaskRunner(TaskRunner):
             export_task = create_export_task(task_name=arcgis_task.name,
                                              export_provider_task=export_provider_task)
 
-            return arcgis_task.si(stage_dir=stage_dir,
-                                job_name=job_name,
-                                task_uid=export_task.uid,
-                                name=provider_task.provider.slug,
-                                layer=provider_task.provider.layer,
-                                config=provider_task.provider.config,
-                                bbox=bbox,
-                                arcgis_url=provider_task.provider.url,
-                                level_from=provider_task.provider.level_from,
-                                level_to=provider_task.provider.level_to)
+            return export_provider_task.uid, arcgis_task.si(stage_dir=stage_dir,
+                                                            job_name=job_name,
+                                                            task_uid=export_task.uid,
+                                                            name=provider_task.provider.slug,
+                                                            layer=provider_task.provider.layer,
+                                                            config=provider_task.provider.config,
+                                                            bbox=bbox,
+                                                            arcgis_url=provider_task.provider.url,
+                                                            level_from=provider_task.provider.level_from,
+                                                            level_to=provider_task.provider.level_to)
+        else:
+            return None, False
 
 
 def create_format_task(format):

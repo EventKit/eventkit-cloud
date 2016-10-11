@@ -46,7 +46,7 @@
                                 <table id="tabs" style="table-layout: fixed; width: 100%" border="1">
                                     <th width="38px"><a data-toggle="tab" href="#create">{% trans 'Configure Export' %}</a></th>
                                     <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
-                                    <th width="38px"><a data-toggle="tab" href="#formats">{% trans 'Select Export Formats' %}</a></th>
+                                    <th width="38px"><a data-toggle="tab" href="#formats">{% trans 'Select Vector Export Formats' %}</a></th>
                                     <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
                                     <th width="38px"><a data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></th>
                                     <th width="10px"><i id="back-button" class="fa fa-arrow-circle-left fa-3x" aria-hidden="true"></i></th>
@@ -131,8 +131,8 @@
                         <div class="panel-body">
                             <div class="form-group row" id="form-group-formats">
                                 <div class="col-md-12">
-                                    <label class="control-label" for="formats">{% trans 'Select Export Formats' %}:</label>
-                                    <p>{% trans 'More than one export format can be selected. Please note that there are two Esri Shapefile options, as the Thematic Schema provides the data in a set of themed geometry tables (points, lines and polygons), whereas the OSM Schema provides all attributes in layers grouped by geometry type' %}</p>
+                                    <label class="control-label" for="formats">{% trans 'Select Vector Export Formats' %}:</label>
+                                    <p>{% trans 'More than one vector export format can be selected. Please note that there are two Esri Shapefile options, as the Thematic Schema provides the data in a set of themed geometry tables (points, lines and polygons), whereas the OSM Schema provides all attributes in layers grouped by geometry type. Raster formats will automatically return Geopackages.' %}</p>
                                     <div id="supported-formats"></div>
                                 </div>
                             </div>
