@@ -587,8 +587,8 @@ def get_provider_task(export_provider, export_formats):
     """
 
     Args:
-        ExportProvider:
-        ExportFormat:
+        ExportProvider: An ExportProvider model for the content provider (i.e. osm or wms service)
+        ExportFormat: An ExportFormat model for the geospatial data format (i.e. shapefile or geopackage)
 
     Returns:
 
