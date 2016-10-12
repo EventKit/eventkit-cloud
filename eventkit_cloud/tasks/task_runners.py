@@ -177,15 +177,20 @@ class ExportOSMTaskRunner(TaskRunner):
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')) for task_name, task in
-                                 export_tasks.iteritems())
+                                 export_tasks.iteritems() if task is not None)
 
             """
-            The tasks are chained as a list instead of nested groups.
+            The tasks are chained instead of nested groups.
             This is because celery3.x has issues with handling these callbacks even using redis as a result backend
             """
-            return export_provider_task.uid, (initial_tasks | schema_tasks | format_tasks | thematic_tasks)
+            task_chain = (initial_tasks | schema_tasks)
+            if format_tasks:
+                task_chain = (task_chain | format_tasks)
+            if thematic_tasks:
+                task_chain = (task_chain | thematic_tasks)
+            return export_provider_task.uid, task_chain
         else:
-            return False
+            return None, None
 
 
 class ExportWFSTaskRunner(TaskRunner):
@@ -254,7 +259,6 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
     """
     Runs External Service Export Tasks
     """
-    export_task_registry = settings.EXPORT_TASKS
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
         """
@@ -275,15 +279,16 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        for format in formats:
-            try:
-                # instantiate the required class.
-                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
-            except KeyError as e:
-                logger.debug(e)
-            except ImportError as e:
-                msg = 'Error importing export task: {0}'.format(e)
-                logger.debug(msg)
+        # for format in formats:
+        try:
+            # instantiate the required class.
+            # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
+        except KeyError as e:
+            logger.debug(e)
+        except ImportError as e:
+            msg = 'Error importing export task: {0}'.format(e)
+            logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -310,6 +315,9 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                          level_from=provider_task.provider.level_from,
                                                          level_to=provider_task.provider.level_to,
                                                          service_type=service_type)
+        else:
+            return None, None
+
 
 
 def create_format_task(format):
