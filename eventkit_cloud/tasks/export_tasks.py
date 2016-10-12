@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service, wfs,
 )
 
 # Get an instance of a logger
@@ -370,6 +370,26 @@ class ThematicGeopackageExportTask(ExportTask):
             return {'result': out}
         except Exception as e:
             logger.error('Raised exception in thematic geopackage export, %s', str(e))
+            raise Exception(e)
+
+
+class WFSExportTask(ExportTask):
+    """
+    Class defining geopackage export for WFS service.
+    """
+    name = 'WFS Export'
+
+    def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
+            service_url=None, level_from=None, level_to=None, name=None, service_type=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        try:
+            w2g = wfs.WFSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                      config=config, level_from=level_from, level_to=level_to, service_type=service_type)
+            out = w2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in external service export, %s', str(e))
             raise Exception(e)
 
 
