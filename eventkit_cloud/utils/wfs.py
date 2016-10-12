@@ -7,7 +7,6 @@ from string import Template
 
 logger = logging.getLogger(__name__)
 
-
 class WFSToSQLITE(object):
     """
     Convert a WFS services to a sqlite file.

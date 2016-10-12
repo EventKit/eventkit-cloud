@@ -14,7 +14,7 @@ from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
-                           OSMToPBFConvertTask, OverpassQueryTask, WFSExportTask, ExternalRasterServiceExportTask,)
+                           OSMToPBFConvertTask, OverpassQueryTask, WFSExportTask, ExternalRasterServiceExportTask, )
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -249,12 +249,12 @@ class ExportWFSTaskRunner(TaskRunner):
                                              export_provider_task=export_provider_task)
 
             initial_task = (service_task.si(stage_dir=stage_dir,
-                                                         job_name=job_name,
-                                                         task_uid=export_task.uid,
-                                                         name=provider_task.provider.slug,
-                                                         layer=provider_task.provider.layer,
-                                                         bbox=bbox,
-                                                         service_url=provider_task.provider.url))
+                                            job_name=job_name,
+                                            task_uid=export_task.uid,
+                                            name=provider_task.provider.slug,
+                                            layer=provider_task.provider.layer,
+                                            bbox=bbox,
+                                            service_url=provider_task.provider.url))
 
             format_tasks = group(task.get('obj').si(run_uid=run.uid,
                                                     stage_dir=stage_dir,
@@ -316,16 +316,18 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                              export_provider_task=export_provider_task)
 
             return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
-                                                         job_name=job_name,
-                                                         task_uid=export_task.uid,
-                                                         name=provider_task.provider.slug,
-                                                         layer=provider_task.provider.layer,
-                                                         config=provider_task.provider.config,
-                                                         bbox=bbox,
-                                                         service_url=provider_task.provider.url,
-                                                         level_from=provider_task.provider.level_from,
-                                                         level_to=provider_task.provider.level_to,
-                                                         service_type=service_type)
+                                                             job_name=job_name,
+                                                             task_uid=export_task.uid,
+                                                             name=provider_task.provider.slug,
+                                                             layer=provider_task.provider.layer,
+                                                             config=provider_task.provider.config,
+                                                             bbox=bbox,
+                                                             service_url=provider_task.provider.url,
+                                                             level_from=provider_task.provider.level_from,
+                                                             level_to=provider_task.provider.level_to,
+                                                             service_type=service_type)
+        else:
+            return None, None
 
 
 def create_format_task(format):
