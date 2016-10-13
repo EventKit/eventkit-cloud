@@ -1,12 +1,9 @@
 from __future__ import absolute_import
 
-import argparse
 import logging
 import os
-import shutil
 import subprocess
 from string import Template
-from billiard import Process
 
 logger = logging.getLogger(__name__)
 
