@@ -565,7 +565,7 @@ exports.detail = (function(){
                         else {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
-                            $tr.html('<td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
+                            $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
                         }
 
                     }
