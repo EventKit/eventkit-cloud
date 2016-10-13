@@ -275,7 +275,8 @@ exports.detail = (function(){
                         var taskDiv = '<div><table border=0 class="table table-condensed">';
                         var tasks = provider.tasks;
                         $.each(tasks, function (i, task) {
-                            if (task.name != "OSMConf" && task.name != 'OSMSchema' && task.name != 'OverpassQuery') {
+                            console.log(task.name)
+                            if (task.name != "OSMConf" && task.name != 'OSMSchema' && task.name != 'OverpassQuery' && task.name != 'WFSExport') {
                                 var errors = task.errors;
                                 var result = task.result;
                                 var status = task.status;
@@ -467,7 +468,8 @@ exports.detail = (function(){
                 var tasks = provider.tasks;
                 $.each(tasks, function (i, task) {
                     //not showing OSMConf files
-                    if (task.name != "OSMConf") {
+                    console.log(task.name)
+                    if (task.name != "OSMConf" && task.name != "WFSExport") {
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
@@ -549,7 +551,8 @@ exports.detail = (function(){
                 var $tr = $runDiv.find('table').find('tr#' + provideruid);
                 $tr.html('<td>' + name + '</td></tr>');
                 $.each(tasks, function(i, task) {
-                    if (task.name != "OSMConf") {
+                    console.log(task.name)
+                    if (task.name != "OSMConf" && task.name != "WFSExport") {
                         var uid = task.uid;
                         var result = task.result;
                         var status = task.status;
