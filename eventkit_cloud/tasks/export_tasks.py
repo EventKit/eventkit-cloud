@@ -375,17 +375,17 @@ class ThematicGeopackageExportTask(ExportTask):
 
 class WFSExportTask(ExportTask):
     """
-    Class defining geopackage export for WFS service.
+    Class defining sqlite export for WFS service.
     """
-    name = 'WFS Export'
+    name = 'WFSExport'
 
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
-            service_url=None, level_from=None, level_to=None, name=None, service_type=None):
+            service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         try:
-            w2g = wfs.WFSToGeopackage(gpkgfile=gpkgfile, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                      config=config, level_from=level_from, level_to=level_to, service_type=service_type)
+            w2g = wfs.WFSToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                      config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
