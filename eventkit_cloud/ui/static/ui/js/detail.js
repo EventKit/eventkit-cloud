@@ -275,7 +275,6 @@ exports.detail = (function(){
                         var taskDiv = '<div><table border=0 class="table table-condensed">';
                         var tasks = provider.tasks;
                         $.each(tasks, function (i, task) {
-                            console.log(task.name)
                             if (task.name != "OSMConf" && task.name != 'OSMSchema' && task.name != 'OverpassQuery' && task.name != 'WFSExport') {
                                 var errors = task.errors;
                                 var result = task.result;
@@ -468,7 +467,6 @@ exports.detail = (function(){
                 var tasks = provider.tasks;
                 $.each(tasks, function (i, task) {
                     //not showing OSMConf files
-                    console.log(task.name)
                     if (task.name != "OSMConf" && task.name != "WFSExport") {
                         var result = task.result;
                         var status = task.status;
@@ -551,7 +549,6 @@ exports.detail = (function(){
                 var $tr = $runDiv.find('table').find('tr#' + provideruid);
                 $tr.html('<td>' + name + '</td></tr>');
                 $.each(tasks, function(i, task) {
-                    console.log(task.name)
                     if (task.name != "OSMConf" && task.name != "WFSExport") {
                         var uid = task.uid;
                         var result = task.result;
