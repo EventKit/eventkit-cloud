@@ -44,23 +44,22 @@ class WFSToSQLITE():
             os.makedirs(os.path.dirname(self.sqlite), 6600)
 
         try:
+            # remove any url params so we can add our own
             self.service_url = self.service_url.split('?')[0]
-            logger.debug(self.service_url)
         except ValueError:
+            # if no url params we can just check for trailing slash and move on
             self.service_url = self.service_url.rstrip('/\\')
         finally:
             self.service_url = '{}{}'.format(self.service_url, '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(self.layer))
-        logger.debug(self.service_url)
 
         if self.bbox:
-            logger.debug('using bbox')
             convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
         else:
             convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url})
-        logger.debug(convert_cmd)
+
         if(self.debug):
             logger.debug('Running: %s' % convert_cmd)
-        logger.debug('starting process')
+
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
@@ -71,5 +70,5 @@ class WFSToSQLITE():
             raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
         if(self.debug):
             logger.debug('ogr2ogr returned: %s' % returncode)
-        logger.debug('returning file')
+
         return self.sqlite
