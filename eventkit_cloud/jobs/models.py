@@ -16,8 +16,6 @@ from django.db.models.signals import (
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
-from eventkit_cloud.utils.s3 import delete_from_s3
-
 logger = logging.getLogger(__name__)
 
 # construct the upload path for export config files..
