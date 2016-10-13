@@ -264,15 +264,6 @@ class ExportWFSTaskRunner(TaskRunner):
 
             task_chain = (initial_task | format_tasks)
             return export_provider_task.uid, task_chain
-            # return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
-            #                                              job_name=job_name,
-            #                                              task_uid=export_task.uid,
-            #                                              name=provider_task.provider.slug,
-            #                                              layer=provider_task.provider.layer,
-            #                                              config=provider_task.provider.config,
-            #                                              bbox=bbox,
-            #                                              service_url=provider_task.provider.url,
-            #                                              service_type=service_type)
 
 
 class ExportExternalRasterServiceTaskRunner(TaskRunner):
