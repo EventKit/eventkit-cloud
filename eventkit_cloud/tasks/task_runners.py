@@ -238,21 +238,40 @@ class ExportWFSTaskRunner(TaskRunner):
                                                                      name=provider_task.provider.name,
                                                                      status="PENDING")
 
+            for task_type, task in export_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                export_tasks[task_type]['task_uid'] = export_task.uid
+
             service_task = WFSExportTask()
             export_task = create_export_task(task_name=service_task.name,
                                              export_provider_task=export_provider_task)
 
-            return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
+            initial_task = (service_task.si(stage_dir=stage_dir,
                                                          job_name=job_name,
                                                          task_uid=export_task.uid,
                                                          name=provider_task.provider.slug,
                                                          layer=provider_task.provider.layer,
-                                                         config=provider_task.provider.config,
                                                          bbox=bbox,
-                                                         service_url=provider_task.provider.url,
-                                                         level_from=provider_task.provider.level_from,
-                                                         level_to=provider_task.provider.level_to,
-                                                         service_type=service_type)
+                                                         service_url=provider_task.provider.url))
+
+            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+                                                    stage_dir=stage_dir,
+                                                    job_name=job_name,
+                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                 export_tasks.iteritems() if task is not None)
+
+            task_chain = (initial_task | format_tasks)
+            return export_provider_task.uid, task_chain
+            # return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
+            #                                              job_name=job_name,
+            #                                              task_uid=export_task.uid,
+            #                                              name=provider_task.provider.slug,
+            #                                              layer=provider_task.provider.layer,
+            #                                              config=provider_task.provider.config,
+            #                                              bbox=bbox,
+            #                                              service_url=provider_task.provider.url,
+            #                                              service_type=service_type)
 
 
 class ExportExternalRasterServiceTaskRunner(TaskRunner):
