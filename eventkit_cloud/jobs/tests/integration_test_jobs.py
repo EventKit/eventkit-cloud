@@ -60,30 +60,24 @@ class TestJob(TestCase):
         This test ensures that if all formats and all providers are selected that the test will finish.
         :return:
         """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestMultiple",
-                    "description": "Test Description", "event": "TestProject", "xmin": "-71.036471",
-                    "ymin": "42.348130",
-                    "xmax": "-71.035420", "ymax": "42.348891", "tags": [],
-                    "provider_tasks": [{"provider": "ESRI-Imagery",
-                                        "formats": ["shp", "thematic-shp",
-                                                    "gpkg", "thematic-gpkg",
-                                                    "kml", "sqlite",
-                                                    "thematic-sqlite"]},
-                                       {"provider": "OpenStreetMap Data",
-                                        "formats": ["shp", "thematic-shp",
-                                                    "gpkg", "thematic-gpkg",
-                                                    "kml", "sqlite",
-                                                    "thematic-sqlite"]},
-                                       {"provider": "OpenStreetMap Tiles",
-                                        "formats": ["shp", "thematic-shp",
-                                                    "gpkg", "thematic-gpkg",
-                                                    "kml", "sqlite",
-                                                    "thematic-sqlite"]},
-                                       {"provider": "USGS-Imagery",
-                                        "formats": ["shp", "thematic-shp",
-                                                    "gpkg", "thematic-gpkg",
-                                                    "kml", "sqlite",
-                                                    "thematic-sqlite"]}]}
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+                    "event": "test", "xmin": "-71.036444", "ymin": "42.348149", "xmax": "-71.035457",
+                    "ymax": "42.348875", "tags": [], "provider_tasks": [{"provider": "ESRI-Imagery",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "OpenStreetMap Tiles",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "USGS-Imagery",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def run_job(self, data):
@@ -96,11 +90,16 @@ class TestJob(TestCase):
         job = response.json()
         run = self.wait_for_run(job.get('uid'))
         self.assertTrue(run.get('status') == "COMPLETED")
-        geopackage_file = self.download_file(self.get_gpkg_url(run, "OpenStreetMap Data"))
-        self.assertTrue(os.path.isfile(geopackage_file))
-        self.assertTrue(check_content_exists(geopackage_file))
+        for provider_task in run.get('provider_tasks'):
+            geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
+            if not geopackage_url:
+                continue
+            geopackage_file = self.download_file(geopackage_url)
+            self.assertTrue(os.path.isfile(geopackage_file))
+            self.assertTrue(check_content_exists(geopackage_file))
+            os.remove(geopackage_file)
         delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
-                           headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         ## Need to add a check here to ensure that the job successfully deleted.
         ## self.assertTrue(delete_response)
         return True
@@ -135,7 +134,7 @@ class TestJob(TestCase):
                 for task in provider_task.get('tasks'):
                     if task.get('name') == "Geopackage":
                         return task.get('result').get("url")
-        return False
+        return None
 
 
 def get_table_count(gpkg, table):
