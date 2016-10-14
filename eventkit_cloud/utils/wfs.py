@@ -8,7 +8,7 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-class WFSToSQLITE():
+class WFSToSQLITE(object):
     """
     Convert a WFS services to a sqlite file.
     """
@@ -37,7 +37,7 @@ class WFSToSQLITE():
         """
         Convert wfs to sqlite.
         """
-        if not os.path.isdir(os.path.dirname(self.sqlite)):
+        if not os.path.exists(os.path.dirname(self.sqlite)):
             os.makedirs(os.path.dirname(self.sqlite), 6600)
 
         try:
@@ -57,7 +57,7 @@ class WFSToSQLITE():
         if(self.debug):
             logger.debug('Running: %s' % convert_cmd)
 
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
+        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/sh',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
         returncode = proc.wait()
