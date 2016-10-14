@@ -44,16 +44,116 @@ class TestJob(TestCase):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
 
-    def test_only_osm(self):
+    def test_osm_geopackage(self):
         """
         This test is to ensure that an OSM file by itself only exporting GeoPackage returns data.
         :return:
         """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestName", "description": "Test Description",
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
                     "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
                     "ymax": "-22.812817", "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
+
+    def test_osm_geopackage_thematic(self):
+        """
+        This test is to ensure that an OSM job will export a thematic GeoPackage.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-gpkg"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_sqlite(self):
+        """
+        This test is to ensure that an OSM will export a sqlite file.
+        :return:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["sqlite"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_sqlite_thematic(self):
+        """
+        This test is to ensure that an OSM job will export a thematic sqlite file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-sqlite"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_shp(self):
+        """
+        This test is to ensure that an OSM job will export a shp.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["shp"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_shp_thematic(self):
+        """
+        This test is to ensure that an OSM job will export a thematic shp.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-shp"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_kml(self):
+        """
+        This test is to ensure that an OSM job will export a kml file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["kml"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wms_gpkg(self):
+        """
+        This test is to ensure that an WMS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "USGS-Imagery", "formats": ["gpkg"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wmts_gpkg(self):
+        """
+        This test is to ensure that an WMTS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Tiles", "formats": ["gpkg"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_arcgis_gpkg(self):
+        """
+        This test is to ensure that an ArcGIS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-ArcGIS", "description": "Test Description",
+                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
+                    "ymax": "-22.812817", "tags": [],
+                    "provider_tasks": [{"provider": "ESRI-Imagery", "formats": ["gpkg"]}]}
+        self.assertTrue(self.run_job(job_data))
+
 
     def test_all(self):
         """
