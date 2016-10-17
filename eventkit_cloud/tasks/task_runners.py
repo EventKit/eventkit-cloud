@@ -14,7 +14,7 @@ from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
-                           OSMToPBFConvertTask, OverpassQueryTask, ExternalRasterServiceExportTask,)
+                           OSMToPBFConvertTask, OverpassQueryTask, WFSExportTask, ExternalRasterServiceExportTask,)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -191,6 +191,79 @@ class ExportOSMTaskRunner(TaskRunner):
             return export_provider_task.uid, task_chain
         else:
             return None, None
+
+
+class ExportWFSTaskRunner(TaskRunner):
+    """
+    Runs External Service Export Tasks
+    """
+    export_task_registry = settings.EXPORT_TASKS
+
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
+        """
+        Run export tasks.
+
+        Args:
+            provider_task_uid: the uid of the provider_task to run.
+
+        Return:
+            the ExportRun instance.
+        """
+        logger.debug('Running Job with id: {0}'.format(provider_task_uid))
+        # pull the provider_task from the database
+        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        job = run.job
+        job_name = normalize_job_name(job.name)
+        # get the formats to export
+        formats = [format.slug for format in provider_task.formats.all()]
+        export_tasks = {}
+        # build a list of celery tasks based on the export formats..
+        for format in formats:
+            if not format.startswith('thematic-'):
+                try:
+                    # instantiate the required class.
+                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                except KeyError as e:
+                    logger.debug(e)
+                except ImportError as e:
+                    msg = 'Error importing export task: {0}'.format(e)
+                    logger.debug(msg)
+
+        # run the tasks
+        if len(export_tasks) > 0:
+            bbox = json.loads("[{}]".format(job.overpass_extents))
+
+            # swap xy
+            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
+            export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                     name=provider_task.provider.name,
+                                                                     status="PENDING")
+
+            for task_type, task in export_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task)
+                export_tasks[task_type]['task_uid'] = export_task.uid
+
+            service_task = WFSExportTask()
+            export_task = create_export_task(task_name=service_task.name,
+                                             export_provider_task=export_provider_task)
+
+            initial_task = (service_task.si(stage_dir=stage_dir,
+                                                         job_name=job_name,
+                                                         task_uid=export_task.uid,
+                                                         name=provider_task.provider.slug,
+                                                         layer=provider_task.provider.layer,
+                                                         bbox=bbox,
+                                                         service_url=provider_task.provider.url))
+
+            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+                                                    stage_dir=stage_dir,
+                                                    job_name=job_name,
+                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                 export_tasks.iteritems() if task is not None)
+
+            task_chain = (initial_task | format_tasks)
+            return export_provider_task.uid, task_chain
 
 
 class ExportExternalRasterServiceTaskRunner(TaskRunner):
