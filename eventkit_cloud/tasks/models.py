@@ -146,6 +146,7 @@ def exportrun_delete_exports(sender, instance, **kwargs):
 
 @receiver(pre_delete, sender=ExportRun)
 def delete_s3_pre_delete(sender, instance, *args, **kwargs):
-    delete_from_s3(str(instance.uid))
+    if getattr(settings, 'USE_S3', False):
+        delete_from_s3(str(instance.uid))
 
 

@@ -81,7 +81,7 @@ class ExportTask(Task):
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
         try:
-            if settings.USE_S3:
+            if getattr(settings, 'USE_S3', False):
                 download_url = s3.upload_to_s3(run_uid, provider_slug, filename)
             else:
                 download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
