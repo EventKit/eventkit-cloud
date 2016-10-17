@@ -19,7 +19,7 @@ description: Eventkit Cloud allows users to select an area and download data int
 # What is the measurable impact of your project? Use the format shown below.
 # The #dashboard team will gladly help you put this together for your project.
 # (required)
-impact: Users will be able to find or provision data without a dedicated collection manager or the need to make requests to a third party entity.
+impact: Users will be able to find or provision data without a dedicated collection manager or the need to make requests to a third party.
 
 # What kind of team owns the repository? (required)
 # values: guild, working-group, project
