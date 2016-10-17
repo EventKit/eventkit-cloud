@@ -14,7 +14,7 @@ from ..models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
 logger = logging.getLogger(__name__)
 
 
-@patch('eventkit_cloud.tasks.models.delete_from_s3')
+
 class TestExportRun(TestCase):
     """
     Test cases for ExportRun model
@@ -34,14 +34,14 @@ class TestExportRun(TestCase):
                                  the_geom=the_geom)
         job.provider_tasks.add(provider_task)
 
-    def test_export_run(self, del_fun):
+    def test_export_run(self, ):
         job = Job.objects.all()[0]
         run = ExportRun.objects.create(job=job, status='SUBMITTED')
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertIsNotNone(saved_run)
         self.assertEqual(run, saved_run)
 
-    def test_get_tasks_for_run(self, del_fun):
+    def test_get_tasks_for_run(self, ):
         job = Job.objects.all()[0]
         run = ExportRun.objects.create(job=job)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
@@ -54,7 +54,7 @@ class TestExportRun(TestCase):
         tasks = run.provider_tasks.all()[0].tasks.all()
         self.assertEqual(tasks[0], saved_task)
 
-    def test_get_runs_for_job(self, del_fun):
+    def test_get_runs_for_job(self, ):
         job = Job.objects.all()[0]
         for x in range(5):
             run = ExportRun.objects.create(job=job)
@@ -66,7 +66,7 @@ class TestExportRun(TestCase):
         self.assertEquals(5, len(runs))
         self.assertEquals(1, len(tasks))
 
-    def test_delete_export_run(self, del_fun):
+    def test_delete_export_run(self, ):
         job = Job.objects.all()[0]
         run = ExportRun.objects.create(job=job)
         task_uid = str(uuid.uuid4())  # from celery
@@ -76,15 +76,18 @@ class TestExportRun(TestCase):
         self.assertEquals(1, runs.count())
         run.delete()
 
+    @patch('eventkit_cloud.tasks.models.delete_from_s3')
     def test_delete_from_s3(self, del_fun):
         job = Job.objects.all()[0]
         run = ExportRun.objects.create(job=job)
         run_uid = run.uid
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = ExportProviderTask.objects.create(run=run)
-        task = ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
-        run.delete()
+        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
+        with self.settings(USE_S3=True):
+            run.delete()
         del_fun.assert_called_once_with(str(run_uid))
+
 
 class TestExportTask(TestCase):
     """
