@@ -37,6 +37,7 @@ class TestJob(TestCase):
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
+        self.bbox = ["-54.607823", "-25.515430", "-54.591687", "-25.504276"]
 
     def tearDown(self):
         if os.path.exists(self.download_dir):
@@ -48,8 +49,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -59,8 +59,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -70,8 +69,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -81,8 +79,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -92,8 +89,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -103,8 +99,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -114,8 +109,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -125,8 +119,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "wms-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -136,8 +129,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "wmts-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -147,11 +139,49 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-ArcGIS", "description": "Test Description",
-                    "event": "TestProject", "xmin": "-43.248067", "ymin": "-22.815982", "xmax": "-43.243861",
-                    "ymax": "-22.812817", "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "arcgis-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
+    def test_wfs_gpkg(self):
+        """
+        This test is to ensure that an WFS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "wfs-source", "formats": ["gpkg"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wfs_shp(self):
+        """
+        This test is to ensure that an WFS job will export a shp file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "wfs-source", "formats": ["shp"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wfs_sqlite(self):
+        """
+        This test is to ensure that an WFS job will export a sqlite file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "wfs-source", "formats": ["sqlite"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wfs_kml(self):
+        """
+        This test is to ensure that an WFS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "wfs-source", "formats": ["kml"]}]}
+        self.assertTrue(self.run_job(job_data))
 
     def test_all(self):
         """
@@ -159,8 +189,8 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "xmin": "-71.036444", "ymin": "42.348149", "xmax": "-71.035457",
-                    "ymax": "42.348875", "tags": [], "provider_tasks": [{"provider": "wms-source",
+                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
+                    "tags": [], "provider_tasks": [{"provider": "wms-source",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
@@ -173,6 +203,10 @@ class TestJob(TestCase):
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
                                                                         {"provider": "arcgis-source",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "wfs-source",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
@@ -238,7 +272,7 @@ def get_table_count(gpkg, table):
     conn = sqlite3.connect(gpkg)
     cur = conn.cursor()
     if is_alnum(table):
-        cur.execute("SELECT COUNT(*) FROM {0}".format(table))
+        cur.execute("SELECT COUNT(*) FROM '{0}';".format(table))
         result = cur.fetchone()
         conn.close()
         return result[0]
@@ -257,7 +291,6 @@ def get_table_names(gpkg):
 
 def check_content_exists(gpkg):
     """
-
     :param gpkg: A geopackage file with data.
     :return: True if there is a single raster tile or feature is found.
     """
@@ -282,7 +315,7 @@ def is_alnum(data):
     @return: if data is only alphanumeric or '_' chars.
     """
     import re
-    if re.match(r'\w+$', data):
+    if re.match(r'[\w:]+$', data):
         return True
     return False
 
@@ -335,6 +368,22 @@ def get_providers_list():
             "level_from" : 0,
             "level_to" : 2,
             "config" : "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        }
+    }, {
+        "model" : "jobs.exportprovider",
+        "pk" : 5,
+        "fields" : {
+            "created_at" : "2016-10-13T17:23:26.890Z",
+            "updated_at" : "2016-10-13T17:23:26.890Z",
+            "uid" : "b47ecf0c-98bd-4b5c-89d1-856fd8c402a3",
+            "name" : "wfs-source",
+            "slug" : "wfs-source",
+            "url" : "http://geonode.state.gov/geoserver/wfs?request=GetCapabilities&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG&SRSNAME=EPSG:4326",
+            "layer" : "geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG",
+            "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wfs'),
+            "level_from" : 0,
+            "level_to" : 2,
+            "config" : ""
         }
     }]
 
