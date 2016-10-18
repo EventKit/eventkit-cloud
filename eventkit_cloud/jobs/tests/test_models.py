@@ -20,7 +20,6 @@ from eventkit_cloud.tasks.models import ExportProviderTask
 
 logger = logging.getLogger(__name__)
 
-@patch('eventkit_cloud.jobs.models.delete_from_s3')
 class TestJob(TestCase):
     """
     Test cases for Job model
@@ -52,7 +51,7 @@ class TestJob(TestCase):
                 job=self.job
             )
 
-    def test_job_creation(self, del_fun):
+    def test_job_creation(self, ):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
         self.assertEquals(self.uid, saved_job.uid)
@@ -66,7 +65,7 @@ class TestJob(TestCase):
         self.assertEquals('Test description', saved_job.description)
         self.assertEquals(0, saved_job.configs.all().count())
 
-    def test_job_creation_with_config(self, del_fun):
+    def test_job_creation_with_config(self, ):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
         self.assertEquals(self.uid, saved_job.uid)
@@ -88,7 +87,7 @@ class TestJob(TestCase):
         self.assertEqual(config, saved_config)
         saved_config.delete()  # cleanup
 
-    def test_spatial_fields(self, del_fun):
+    def test_spatial_fields(self, ):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
         the_geom = GEOSGeometry(bbox, srid=4326)
         the_geog = GEOSGeometry(bbox)
@@ -102,18 +101,18 @@ class TestJob(TestCase):
         self.assertEqual(the_geog, geog)
         self.assertEqual(the_geom_webmercator, geom_web)
 
-    def test_fields(self,  del_fun):
+    def test_fields(self,  ):
         job = Job.objects.all()[0]
         self.assertEquals('TestJob', job.name)
         self.assertEquals('Test description', job.description)
         self.assertEquals('Nepal activation', job.event)
         self.assertEqual(self.user, job.user)
 
-    def test_str(self,  del_fun):
+    def test_str(self,  ):
         job = Job.objects.all()[0]
         self.assertEquals(str(job), 'TestJob')
 
-    def test_job_region(self,  del_fun):
+    def test_job_region(self, ):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # africa
         region = Region.objects.filter(the_geom__contains=bbox)[0]
         self.assertIsNotNone(region)
@@ -123,13 +122,13 @@ class TestJob(TestCase):
         saved_job = Job.objects.all()[0]
         self.assertEqual(saved_job.region, region)
 
-    def test_overpass_extents(self, del_fun):
+    def test_overpass_extents(self, ):
         job = Job.objects.all()[0]
         extents = job.overpass_extents
         self.assertIsNotNone(extents)
         self.assertEquals(4, len(extents.split(',')))
 
-    def test_categorised_tags(self, del_fun):
+    def test_categorised_tags(self, ):
         # delete existing tags
         self.job.tags.all().delete()
         parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
@@ -154,7 +153,7 @@ class TestJob(TestCase):
         self.assertEquals(12, len(categories['lines']))
         self.assertEquals(22, len(categories['polygons']))
 
-    def test_tags(self, del_fun):
+    def test_tags(self, ):
         self.job.tags.all().delete()
         parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
