@@ -24,6 +24,7 @@ class TestJob(TestCase):
         self.create_export_url = self.base_url + '/en/exports/create'
         self.jobs_url = self.base_url + '/api/jobs'
         self.runs_url = self.base_url + '/api/runs'
+        self.rerun_url = self.base_url + '/api/rerun'
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir, mode=0660)
@@ -211,6 +212,72 @@ class TestJob(TestCase):
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
+
+    def test_rerun_all(self):
+        """
+        This test ensures that if all formats and all providers are selected that the test will finish then successfully rerun.
+        :return:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
+                    "tags": [], "provider_tasks": [{"provider": "wms-source",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "wmts-source",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "arcgis-source",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "wfs-source",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]}]}
+        response = self.client.post(self.jobs_url,
+                                    json=job_data,
+                                    headers={'X-CSRFToken': self.csrftoken,
+                                             'Referer': self.create_export_url})
+        self.assertEquals(response.status_code, 202)
+        job = response.json()
+        run = self.wait_for_run(job.get('uid'))
+        self.assertTrue(run.get('status') == "COMPLETED")
+        for provider_task in run.get('provider_tasks'):
+            geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
+            if not geopackage_url:
+                continue
+            geopackage_file = self.download_file(geopackage_url)
+            self.assertTrue(os.path.isfile(geopackage_file))
+            self.assertTrue(check_content_exists(geopackage_file))
+            os.remove(geopackage_file)
+
+        rerun_response = self.client.get(self.rerun_url,
+                                          params={'job_uid':job.get('uid')},
+                                          headers={'X-CSRFToken': self.csrftoken,
+                                                   'Referer': self.create_export_url})
+
+        self.assertEquals(rerun_response.status_code, 202)
+        rerun_job = rerun_response.json()
+        rerun = self.wait_for_run(job.get('uid'))
+        self.assertTrue(rerun.get('status') == "COMPLETED")
+        for provider_task in rerun.get('provider_tasks'):
+            geopackage_url = self.get_gpkg_url(rerun, provider_task.get("name"))
+            if not geopackage_url:
+                continue
+            geopackage_file = self.download_file(geopackage_url)
+            self.assertTrue(os.path.isfile(geopackage_file))
+            self.assertTrue(check_content_exists(geopackage_file))
+            os.remove(geopackage_file)
+
+        delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
+                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+        self.assertTrue(delete_response)
 
     def run_job(self, data):
 
