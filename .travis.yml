@@ -31,6 +31,7 @@ before_script:
 
 # command to run tests
 script:
+    - echo 'postgis     127.0.0.1' >> /etc/hosts
     - ./manage.py makemigrations
     - ./manage.py migrate
     - ./manage.py test
