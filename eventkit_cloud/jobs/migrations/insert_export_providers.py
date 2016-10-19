@@ -42,11 +42,6 @@ class Migration(migrations.Migration):
             arcgis_type.supported_formats.add(export_format.pk)
         arcgis_type.save()
 
-        wfs_type = ExportProviderType.objects.create(type_name='wfs')
-        for export_format in export_formats:
-            wfs_type.supported_formats.add(export_format.pk)
-        wfs_type.save()
-
     dependencies = [
         ('jobs', '0001_initial'),
     ]
