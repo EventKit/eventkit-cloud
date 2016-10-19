@@ -28,6 +28,7 @@ before_script:
     - sudo -u postgres psql -c 'create database hot_exports_dev;'
     - sudo -u postgres psql -c 'create extension postgis'
     - sudo -u postgres psql -c  "create user hot with password 'hot' superuser createdb"
+    - sudo echo "127.0.0.1 postgis rabbitmq cloud.eventkit.dev" >> /etc/hosts
 
 # command to run tests
 script:
