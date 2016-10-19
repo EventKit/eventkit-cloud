@@ -25,9 +25,9 @@ before_install:
 install: pip install --user -r requirements-dev.txt
 
 before_script:
-    - sudo -u postgres psql -c 'create database hot_exports_dev;'
+    - sudo -u postgres psql -c 'create database eventkit_exports;'
     - sudo -u postgres psql -c 'create extension postgis'
-    - sudo -u postgres psql -c  "create user hot with password 'hot' superuser createdb"
+    - sudo -u postgres psql -c  "create user eventkit with password 'eventkit_exports' superuser createdb"
 
 # command to run tests
 script:
@@ -39,4 +39,14 @@ addons:
   hosts:
     - postgis
     - rabbitmq
+    - eventkit
     - cloud.eventkit.dev
+
+env:
+  - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+  - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+  - DEBUG=True
+  - C_FORCE_ROOT=True
+  - DEVELOPMENT=True
+  - SITE_NAME=cloud.eventkit.dev
+  - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
