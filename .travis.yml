@@ -43,10 +43,4 @@ addons:
     - cloud.eventkit.dev
 
 env:
-  - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-  - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-  - DEBUG=True
-  - C_FORCE_ROOT=True
-  - DEVELOPMENT=True
-  - SITE_NAME=cloud.eventkit.dev
-  - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
+  - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports BROKER_URL=amqp://guest:guest@rabbitmq:5672/ DEBUG=True C_FORCE_ROOT=True DEVELOPMENT=True SITE_NAME=cloud.eventkit.dev EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
