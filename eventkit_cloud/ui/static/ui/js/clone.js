@@ -30,38 +30,6 @@ clone.job = (function(){
      */
     function initMap() {
 
-        //     // OL2 set up the map and add the required layers
-        //     var maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        //     var mapOptions = {
-        //             displayProjection: new OpenLayers.Projection("EPSG:4326"),
-        //             controls: [new OpenLayers.Control.Attribution(),
-        //                        new OpenLayers.Control.ScaleLine()],
-        //             maxExtent: maxExtent,
-        //             scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
-        //             units: 'm',
-        //             sphericalMercator: true,
-        //             noWrap: true, // don't wrap world extents
-        //     }
-        //     map = new OpenLayers.Map('create-export-map', {options: mapOptions});
-        //
-        //     // restrict extent to world bounds to prevent panning..
-        //     map.restrictedExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        //
-        //     // add base layers
-        //     var osm = new OpenLayers.Layer.OSM("OpenStreetMap");
-        //     var hotosm = Layers.HOT
-        //     osm.options = {
-        //         //layers: "basic",
-        //         isBaseLayer: true,
-        //         visibility: true,
-        //         displayInLayerSwitcher: true,
-        //     };
-        //     osm.attribution = "&copy; <a href='//www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors.";
-        //     hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
-        //     map.addLayers([osm]);
-        //
-        //var zoomLevels = [500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250];
-
         // OL3 set up the map and add the required layers
         map = new ol.Map({
             interactions: ol.interaction.defaults({
@@ -106,36 +74,6 @@ clone.job = (function(){
         attribution = new ol.control.Attribution();
         map.addControl(attribution);
 
-
-        //     // OL2 add the regions layer
-        //     regions = new OpenLayers.Layer.Vector('regions', {
-        //         displayInLayerSwitcher: false,
-        //         style: {
-        //             strokeWidth: 3.5,
-        //             strokeColor: '#D73F3F',
-        //             fillColor: 'transparent',
-        //             fillOpacity: 0.8,
-        //         }
-        //     });
-        //
-        //     // add the region mask layer
-        //     mask = new OpenLayers.Layer.Vector('mask', {
-        //         displayInLayerSwitcher: false,
-        //         styleMap: new OpenLayers.StyleMap({
-        //             "default": new OpenLayers.Style({
-        //             fillColor: "#fff",
-        //             fillOpacity: 0.7,
-        //             strokeColor: "#fff",
-        //             strokeWidth: .1,
-        //             strokeOpacity: 0.2,
-        //             })
-        //         }),
-        //     });
-        //     map.addLayers([regions, mask]);
-        //
-        //     // add region and mask features
-        //     addRegionMask();
-        //     addRegions();
 
         //*** COMMENTED OUT TO TAKE OUT RED HOT REGIONS OL3
         // add the regions layer
@@ -214,15 +152,6 @@ clone.job = (function(){
         buildExportFormats();
 
 
-        //     OL2 add bounding box selection layer
-        //     bbox = new OpenLayers.Layer.Vector("bbox", {
-        //        displayInLayerSwitcher: false,
-        //        styleMap: getTransformStyleMap(),
-        //     });
-        //     map.addLayers([bbox]);
-        //
-
-
         // OL3 add bounding box selection layer
         //bboxSource = new ol.source.Vector()
         bbox = new ol.layer.Vector({
@@ -239,39 +168,32 @@ clone.job = (function(){
         });
         map.addLayer(bbox);
 
+        bboxSource = new ol.source.Vector();
+        bbox.setSource(bboxSource);
 
-
-        //     // add a draw feature control for bbox selection.
-        //     box = new OpenLayers.Control.DrawFeature(bbox, OpenLayers.Handler.RegularPolygon, {
-        //        handlerOptions: {
-        //           sides: 4,
-        //           snapAngle: 90,
-        //           irregular: true,
-        //           persist: true
-        //        }
-        //     });
-        //     map.addControl(box);
-
-        var dragBox = new ol.interaction.DragBox({
-            condition: ol.events.condition.primaryAction,
+        var dragBox = new ol.interaction.Draw({
+            source: bbox.getSource(),
+            type: /** @type {ol.geom.GeometryType} */ "LineString",
+            geometryFunction: function(coordinates, geometry) {
+                if (!geometry) {
+                    geometry = new ol.geom.Polygon(null);
+                }
+                var start = coordinates[0];
+                var end = coordinates[1];
+                geometry.setCoordinates([
+                    [start, [start[0], end[1]], end, [end[0], start[1]], start]
+                ]);
+                return geometry;
+            }
         });
+
+        //dragBox.setActive(false);
 
         var translate;
 
-        dragBox.on('boxend', function(e){
-            bboxSource = new ol.source.Vector();
-            bbox.setSource(bboxSource);
-            var dragFeature = new ol.Feature({
-                geometry: dragBox.getGeometry()
-            });
-            bboxSource.addFeature(dragFeature);
+        dragBox.on('drawend',function(e) {
             map.removeInteraction(dragBox);
-            translate = new ol.interaction.Translate({
-                features: new ol.Collection([dragFeature])
-            });
-
-            var bounds = dragFeature.getGeometry().getExtent();
-
+            var bounds = e.feature.getGeometry().getExtent();
             // validate the selected extents
             if (validateBounds(bounds)) {
                 setBounds(bounds);
@@ -279,53 +201,44 @@ clone.job = (function(){
             else {
                 unsetBounds();
             }
-
             map.getView().fit(bounds, map.getSize());
-
-            map.addInteraction(translate);
-            translate.on('translateend', function(e){
-                var bounds = dragFeature.getGeometry().getExtent();
-                // validate the selected extents
-                if (validateBounds(bounds)) {
-                    setBounds(bounds);
-                }
-                else {
-                    unsetBounds();
-                }
-                map.getView().fit(bounds, map.getSize());
-            });
         });
 
-        var draw = new ol.interaction.Draw({
-            source: new ol.source.Vector({wrapX: false}),
-            type: 'Point',
-        })
+        map.addInteraction(dragBox);
 
+        // var dragBox = new ol.interaction.DragBox({
+        //     condition: ol.events.condition.primaryAction,
+        // });
         //
+        // var translate;
         //
-        //     // add a transform control to enable modifications to bounding box (drag, resize)
-        //     transform = new OpenLayers.Control.TransformFeature(bbox, {
-        //        rotate: false,
-        //        irregular: true,
-        //        renderIntent: "transform",
+        // dragBox.on('boxend', function(e){
+        //     bboxSource = new ol.source.Vector();
+        //     bbox.setSource(bboxSource);
+        //     var dragFeature = new ol.Feature({
+        //         geometry: dragBox.getGeometry()
+        //     });
+        //     bboxSource.addFeature(dragFeature);
+        //     map.removeInteraction(dragBox);
+        //     translate = new ol.interaction.Translate({
+        //         features: new ol.Collection([dragFeature])
         //     });
         //
-        //     // listen for selection box being added to bbox layer
-        //     box.events.register('featureadded', this, function(e){
-        //         // get selection bounds
-        //         bounds = e.feature.geometry.bounds;
+        //     var bounds = dragFeature.getGeometry().getExtent();
         //
-        //         // clear existing features
-        //         bbox.removeAllFeatures();
-        //         box.deactivate();
+        //     // validate the selected extents
+        //     if (validateBounds(bounds)) {
+        //         setBounds(bounds);
+        //     }
+        //     else {
+        //         unsetBounds();
+        //     }
         //
-        //         // add a bbox feature based on user selection
-        //         var feature = new OpenLayers.Feature.Vector(bounds.toGeometry());
-        //         bbox.addFeatures(feature);
+        //     map.getView().fit(bounds, map.getSize());
         //
-        //         // enable bbox modification
-        //         transform.setFeature(feature);
-        //
+        //     map.addInteraction(translate);
+        //     translate.on('translateend', function(e){
+        //         var bounds = dragFeature.getGeometry().getExtent();
         //         // validate the selected extents
         //         if (validateBounds(bounds)) {
         //             setBounds(bounds);
@@ -333,32 +246,10 @@ clone.job = (function(){
         //         else {
         //             unsetBounds();
         //         }
+        //         map.getView().fit(bounds, map.getSize());
         //     });
-        //
-        //     // update the bounds after bbox is moved / modified
-        //     transform.events.register("transformcomplete", this, function(e){
-        //         var bounds = e.feature.geometry.bounds.clone();
-        //         if (validateBounds(bounds)) {
-        //             setBounds(bounds);
-        //         }
-        //         else {
-        //             unsetBounds();
-        //         }
-        //     });
-        //
-        //     // update bounds during bbox modification
-        //     transform.events.register("transform", this, function(e){
-        //         var bounds = e.object.feature.geometry.bounds.clone();
-        //         if (validateBounds(bounds)) {
-        //             setBounds(bounds);
-        //         }
-        //         else {
-        //             unsetBounds();
-        //         }
-        //     });
-        //     // add the transform control
-        //     map.addControl(transform);
-        //
+        // });
+
         // handles click on select area button
         $("#select-area").bind('click', function(e){
             /*
@@ -485,7 +376,7 @@ clone.job = (function(){
                     + 'data-description="' + format.description + '"/>'
                     + format.description
                     + '</label></div>');
-            
+
             }
 
             /*
@@ -2614,7 +2505,7 @@ clone.job = (function(){
 
             var bounds = feature.getGeometry().getExtent();
 
-           // set the bounds on the form
+            // set the bounds on the form
             setBounds(bounds);
 
             // // -- select formats tab -- //
@@ -2679,10 +2570,10 @@ clone.job = (function(){
                     $input.prop('disabled', false);
                     // check the parent levels
                     $.each($input.parentsUntil('#' + dm.toLowerCase() + '-feature-tree', 'li.level'),
-                           function(idx, level){
-                        $(level).children('div.tree-checkbox').find('input.level').prop('checked', true);
-                        $(level).children('div.tree-checkbox').find('input.level').prop('disabled', false);
-                    });
+                        function(idx, level){
+                            $(level).children('div.tree-checkbox').find('input.level').prop('checked', true);
+                            $(level).children('div.tree-checkbox').find('input.level').prop('disabled', false);
+                        });
                 });
             }
 
@@ -2728,12 +2619,12 @@ clone.job = (function(){
 }());
 
 $(document).ready(function() {
-        // construct the UI app
-        $('li#create-tab').bind('click', function(e){
-            $('#create-export-map').css('visibility', 'visible');
-            $('#create-controls').css('display','block');
-            $('#list-export-map').css('visibility', 'hidden');
-            $('#list-controls').css('display','none');
-        });
-        clone.job.init();
+    // construct the UI app
+    $('li#create-tab').bind('click', function(e){
+        $('#create-export-map').css('visibility', 'visible');
+        $('#create-controls').css('display','block');
+        $('#list-export-map').css('visibility', 'hidden');
+        $('#list-controls').css('display','none');
+    });
+    clone.job.init();
 });
