@@ -113,7 +113,7 @@ class ExportProviderType(TimeStampedModelMixin):
     Model to hold types and supported exports for providers.
     """
     id = models.AutoField(primary_key=True, editable=False)
-    type_name = models.CharField(verbose_name="Type Name", max_length=6, unique=True, default='')
+    type_name = models.CharField(verbose_name="Type Name", max_length=40, unique=True, default='')
     supported_formats = models.ManyToManyField(ExportFormat,
                                                verbose_name="Supported Export Formats",
                                                blank=True)
