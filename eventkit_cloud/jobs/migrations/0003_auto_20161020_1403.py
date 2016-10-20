@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exportprovidertype',
             name='type_name',
-            field=models.CharField(default='', max_length=6, unique=True, verbose_name='Type Name'),
+            field=models.CharField(default='', max_length=40, unique=True, verbose_name='Type Name'),
         ),
     ]

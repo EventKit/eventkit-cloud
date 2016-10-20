@@ -7,6 +7,7 @@ import os
 import shutil
 import sqlite3
 from ..models import ExportProvider, ExportProviderType
+from django.db import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wms-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wms-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wmts_gpkg(self):
@@ -131,7 +132,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wmts-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wmts-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_arcgis_gpkg(self):
@@ -141,7 +142,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-ArcGIS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "arcgis-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-arcgis-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_gpkg(self):
@@ -151,7 +152,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wfs-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_shp(self):
@@ -161,7 +162,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wfs-source", "formats": ["shp"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_sqlite(self):
@@ -171,7 +172,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wfs-source", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_kml(self):
@@ -181,7 +182,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "wfs-source", "formats": ["kml"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_all(self):
@@ -191,7 +192,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "wms-source",
+                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms-source",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
@@ -220,7 +221,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "wms-source",
+                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms-source",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
@@ -395,8 +396,8 @@ def get_providers_list():
             "created_at" : "2016-10-06T17:44:54.837Z",
             "updated_at" : "2016-10-06T17:44:54.837Z",
             "uid" : "8977892f-e057-4723-8fe5-7a9b0080bc66",
-            "name" : "wms-source",
-            "slug" : "wms-source",
+            "name" : "eventkit-integration-test-wms-source",
+            "slug" : "eventkit-integration-test-wms-source",
             "url" : "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
             "layer" : "0",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wms'),
@@ -411,8 +412,8 @@ def get_providers_list():
             "created_at" : "2016-10-06T17:45:46.213Z",
             "updated_at" : "2016-10-06T17:45:46.213Z",
             "uid" : "5e3d76cb-09aa-42ac-96f3-2663e06ac81a",
-            "name" : "wmts-source",
-            "slug" : "wmts-source",
+            "name" : "eventkit-integration-test-wmts-source",
+            "slug" : "eventkit-integration-test-wmts-source",
             "url" : "http://a.tile.openstreetmap.fr/hot/",
             "layer" : "imagery",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wmts'),
@@ -427,8 +428,8 @@ def get_providers_list():
             "created_at" : "2016-10-06T19:17:28.770Z",
             "updated_at" : "2016-10-06T19:17:28.770Z",
             "uid" : "3c497618-5a50-4c93-a310-e439a99549ce",
-            "name" : "arcgis-source",
-            "slug" : "arcgis-source",
+            "name" : "eventkit-integration-test-arcgis-source",
+            "slug" : "eventkit-integration-test-arcgis-source",
             "url" : "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
             "layer" : "imagery",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='arcgis'),
@@ -443,8 +444,8 @@ def get_providers_list():
             "created_at" : "2016-10-13T17:23:26.890Z",
             "updated_at" : "2016-10-13T17:23:26.890Z",
             "uid" : "b47ecf0c-98bd-4b5c-89d1-856fd8c402a3",
-            "name" : "wfs-source",
-            "slug" : "wfs-source",
+            "name" : "eventkit-integration-test-wfs-source",
+            "slug" : "eventkit-integration-test-wfs-source",
             "url" : "http://geonode.state.gov/geoserver/wfs?request=GetCapabilities&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG&SRSNAME=EPSG:4326",
             "layer" : "geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wfs'),
@@ -458,6 +459,7 @@ def get_providers_list():
 def load_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
+        try:
             provider = ExportProvider.objects.using('default').create(
                                       name=export_provider.get('fields').get('name'),
                                       slug=export_provider.get('fields').get('slug'),
@@ -468,6 +470,8 @@ def load_providers():
                                       level_to=export_provider.get('fields').get('level_to'),
                                       config=export_provider.get('fields').get('config'))
             provider.save(using='default')
+        except IntegrityError:
+            continue
 
 
 def delete_providers():
