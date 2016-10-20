@@ -20,6 +20,8 @@ class TestExportRun(TestCase):
     Test cases for ExportRun model
     """
 
+    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+
     def setUp(self, ):
         formats = ExportFormat.objects.all()
         Group.objects.create(name='TestDefaultExportExtentGroup')

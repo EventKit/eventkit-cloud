@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 class TestJobFilter(APITestCase):
 
+    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+
     def setUp(self,):
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user1 = User.objects.create_user(
