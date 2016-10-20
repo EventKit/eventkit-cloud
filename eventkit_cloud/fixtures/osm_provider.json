@@ -1,0 +1,18 @@
+[{
+		"model" : "jobs.exportprovider",
+		"pk" : 1,
+		"fields" : {
+			"created_at" : "2016-10-20T11:17:23.435Z",
+			"updated_at" : "2016-10-20T11:17:23.435Z",
+			"uid" : "d2c7d565-182d-410d-95b9-294b3ee6384c",
+			"name" : "OpenStreetMap Data",
+			"slug" : "osm-vector",
+			"url" : "",
+			"layer" : null,
+			"export_provider_type" : 1,
+			"level_from" : 0,
+			"level_to" : 10,
+			"config" : ""
+		}
+	}
+]

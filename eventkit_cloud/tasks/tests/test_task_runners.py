@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 class TestExportTaskRunner(TestCase):
 
+    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')

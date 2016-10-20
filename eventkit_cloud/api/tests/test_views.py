@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class TestJobViewSet(APITestCase):
+
+    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -564,6 +567,8 @@ class TestBBoxSearch(APITestCase):
     """
     Test cases for testing bounding box searches.
     """
+
+    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
     @patch('eventkit_cloud.tasks.task_runners.ExportOSMTaskRunner')
     def setUp(self, mock):

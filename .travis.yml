@@ -29,11 +29,12 @@ before_script:
     - sudo -u postgres psql -c 'create extension postgis'
     - sudo -u postgres psql -c  "create user eventkit with password 'eventkit_exports' superuser createdb"
 
-# command to run tests
 script:
     - ./manage.py collectstatic --noinput
     - ./manage.py makemigrations
     - ./manage.py migrate
+    - ./manage.py loaddata ./eventkit_cloud/fixtures/insert_provider_types.json
+    - ./manage.py loaddata ./eventkit_cloud/fixtures/osm_provider.json
     - ./manage.py test
 
 addons:
