@@ -109,7 +109,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
-                ('type_name', models.CharField(default='', max_length=6, unique=True, verbose_name='Type Name')),
+                ('type_name', models.CharField(default='', max_length=4, unique=True, verbose_name='Type Name')),
                 ('supported_formats', models.ManyToManyField(blank=True, to='jobs.ExportFormat', verbose_name='Supported Export Formats')),
             ],
             options={
