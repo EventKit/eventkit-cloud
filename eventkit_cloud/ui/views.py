@@ -58,7 +58,7 @@ def view_export(request, uuid=None):
         context = {'user': user}
         return render_to_response('ui/detail.html', context, RequestContext(request))
     else:
-        return redirect('create')
+        return not_allowed_error_view(request)
 
 def login(request):
     exports_url = reverse('list')
@@ -66,7 +66,7 @@ def login(request):
     if not request.user.is_authenticated():
         return redirect('login')
     else:
-        return redirect('create')
+        return not_allowed_error_view(request)
 
 
 def logout(request):
