@@ -7,6 +7,8 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import RequestContext, redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
+from ..jobs.models import Job
+
 
 
 @require_http_methods(['GET'])
@@ -32,25 +34,37 @@ def clone_export(request, uuid=None):
     """
     user = request.user
     max_extent = {'extent': settings.JOB_MAX_EXTENT}  # default
-    for group in user.groups.all():
-        if hasattr(group, 'export_profile'):
-            max_extent['extent'] = group.export_profile.max_extent
-    extent = max_extent.get('extent')
-    context = {'user': user, 'max_extent': extent}
-    context.update(csrf(request))
-    return render_to_response('ui/clone.html', context, RequestContext(request))
+    user = request.user
+    job = Job.objects.get(uid=uuid)
+    if job.user == user or job.published:
+        for group in user.groups.all():
+            if hasattr(group, 'export_profile'):
+                max_extent['extent'] = group.export_profile.max_extent
+        extent = max_extent.get('extent')
+        context = {'user': user, 'max_extent': extent}
+        context.update(csrf(request))
+        return render_to_response('ui/clone.html', context, RequestContext(request))
+    else:
+        return redirect('create')
 
+@require_http_methods(['GET'])
+def view_export(request, uuid=None):
+    """
+    Handles display of the clone export page.
+    """
+    user = request.user
+    job = Job.objects.get(uid=uuid)
+    if job.user == user or job.published:
+        context = {'user': user}
+        return render_to_response('ui/detail.html', context, RequestContext(request))
+    else:
+        return redirect('create')
 
 def login(request):
     exports_url = reverse('list')
     help_url = reverse('help')
     if not request.user.is_authenticated():
         return redirect('login')
-        # return render_to_response(
-        #     'ui/login.html',
-        #     {'exports_url': exports_url, 'help_url': help_url},
-        #     RequestContext(request)
-        # )
     else:
         return redirect('create')
 
