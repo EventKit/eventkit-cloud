@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from ..jobs.models import Job
 from .models import ExportRun
+from .task_runners import ExportOSMTaskRunner, ExportWFSTaskRunner, ExportExternalRasterServiceTaskRunner, ExportArcGISFeatureServiceTaskRunner
 from django.conf import settings
 from .export_tasks import FinalizeExportProviderTask
 from celery import chord
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 class TaskFactory():
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
+        self.type_task_map = {'osm': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
         # setup the staging directory
         self.run = self.create_run()
         if self.run:

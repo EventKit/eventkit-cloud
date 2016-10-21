@@ -18,6 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service, wfs, arcgis_feature_service,
 )
 
 # Get an instance of a logger
@@ -392,6 +393,7 @@ class WFSExportTask(ExportTask):
             raise Exception(e)
 
 
+class ArcGISFeatureServiceExportTask(ExportTask):
     """
     Class defining sqlite export for ArcFeatureService service.
     """
@@ -402,6 +404,8 @@ class WFSExportTask(ExportTask):
         self.update_task_state(task_uid=task_uid)
         sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         try:
+            w2g = arcgis_feature_service.ArcGISFeatureServiceToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                                                   config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:

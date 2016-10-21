@@ -16,6 +16,7 @@ from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
                            OSMToPBFConvertTask, OverpassQueryTask,
                            WFSExportTask, ExternalRasterServiceExportTask,
+                           ArcGISFeatureServiceExportTask, )
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -267,6 +268,7 @@ class ExportWFSTaskRunner(TaskRunner):
             return export_provider_task.uid, task_chain
 
 
+class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
     """
     Runs External Service Export Tasks
     """
@@ -317,6 +319,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                                  export_provider_task=export_provider_task)
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
+            service_task = ArcGISFeatureServiceExportTask()
             export_task = create_export_task(task_name=service_task.name,
                                              export_provider_task=export_provider_task)
 
