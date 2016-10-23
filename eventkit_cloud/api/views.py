@@ -4,10 +4,11 @@ import logging
 import os
 from collections import OrderedDict
 
-from django.contrib.auth.models import User
 from django.db import Error, transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -110,9 +111,10 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_class = JobFilter
     search_fields = ('name', 'description', 'event', 'user__username', 'region__name')
 
-    def get_queryset(self,):
-        """Return all objects by default."""
-        return Job.objects.all()
+    def get_queryset(self):
+        """Return all objects user can view."""
+        user = self.request.user
+        return Job.objects.filter(Q(user=user) | Q(published=True))
 
     # def get_formats(self, formats):
     #     export_formats = []
@@ -166,7 +168,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     'ymin': extents[1],
                     'xmax': extents[2],
                     'ymax': extents[3]
-            }
+                    }
             try:
                 bbox_extents = validate_bbox_params(data)
                 bbox = validate_search_bbox(bbox_extents)
@@ -406,7 +408,8 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'uid'
 
     def get_queryset(self):
-        return ExportRun.objects.all().order_by('-started_at')
+        user = self.request.user
+        return ExportRun.objects.filter(Q(user=user) | Q(job__published=True)).order_by('-started_at')
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -422,7 +425,8 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
         Returns:
             the serialized run data.
         """
-        queryset = ExportRun.objects.filter(uid=uid)
+        queryset = ExportRun.objects.filter(Q(uid=uid),
+                                            Q(user=request.user) | Q(job__published=True))
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -440,7 +444,9 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized run data.
         """
         job_uid = self.request.query_params.get('job_uid', None)
-        queryset = self.filter_queryset(ExportRun.objects.filter(job__uid=job_uid).order_by('-started_at'))
+        queryset = self.filter_queryset(ExportRun.objects.filter(Q(job__uid=job_uid),
+                                                                 Q(user=request.user) | Q(
+                                                                     job__published=True)).order_by('-started_at'))
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -487,6 +493,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = ExportTask.objects.filter(uid=uid)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """

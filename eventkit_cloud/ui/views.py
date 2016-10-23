@@ -7,8 +7,23 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import RequestContext, redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from ..jobs.models import Job
+from ..jobs.models import user_owns_job
+from functools import wraps
 
+
+def user_verification_required(func=None):
+    """
+
+    :param func: A view with a signature (request, uuid) where uuid is a job_uid.
+    :return: The view if the user is authorized, else an unauthorized view.
+    """
+    @wraps(func)
+    def wrapper(request, uuid):
+        # if user_owns_job(request.user, job_uid=uuid):
+            return func(request, uuid)
+        # else:
+        #     return not_allowed_error_view(request)
+    return wrapper
 
 
 @require_http_methods(['GET'])
@@ -27,6 +42,7 @@ def create_export(request):
     return render_to_response('ui/create.html', context, RequestContext(request))
 
 
+@user_verification_required
 @require_http_methods(['GET'])
 def clone_export(request, uuid=None):
     """
@@ -35,30 +51,25 @@ def clone_export(request, uuid=None):
     user = request.user
     max_extent = {'extent': settings.JOB_MAX_EXTENT}  # default
     user = request.user
-    job = Job.objects.get(uid=uuid)
-    if job.user == user or job.published:
-        for group in user.groups.all():
-            if hasattr(group, 'export_profile'):
-                max_extent['extent'] = group.export_profile.max_extent
-        extent = max_extent.get('extent')
-        context = {'user': user, 'max_extent': extent}
-        context.update(csrf(request))
-        return render_to_response('ui/clone.html', context, RequestContext(request))
-    else:
-        return redirect('create')
+    for group in user.groups.all():
+        if hasattr(group, 'export_profile'):
+            max_extent['extent'] = group.export_profile.max_extent
+    extent = max_extent.get('extent')
+    context = {'user': user, 'max_extent': extent}
+    context.update(csrf(request))
+    return render_to_response('ui/clone.html', context, RequestContext(request))
 
+
+@user_verification_required
 @require_http_methods(['GET'])
 def view_export(request, uuid=None):
     """
     Handles display of the clone export page.
     """
     user = request.user
-    job = Job.objects.get(uid=uuid)
-    if job.user == user or job.published:
-        context = {'user': user}
-        return render_to_response('ui/detail.html', context, RequestContext(request))
-    else:
-        return not_allowed_error_view(request)
+    context = {'user': user}
+    return render_to_response('ui/detail.html', context, RequestContext(request))
+
 
 def login(request):
     exports_url = reverse('list')
@@ -143,6 +154,7 @@ def help_presets(request):
         RequestContext(request)
     )
 
+
 # error views
 
 
@@ -161,3 +173,5 @@ def not_found_error_view(request):
 
 def not_allowed_error_view(request):
     return render_to_response('ui/403.html', {}, RequestContext(request), status=403)
+
+
