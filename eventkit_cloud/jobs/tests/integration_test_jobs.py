@@ -122,7 +122,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wms-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wmts_gpkg(self):
@@ -132,7 +132,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wmts-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_arcgis_gpkg(self):
@@ -140,9 +140,9 @@ class TestJob(TestCase):
         This test is to ensure that an ArcGIS job will export a gpkg file.
         :returns:
         """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-ArcGIS", "description": "Test Description",
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arc-Raster", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-arcgis-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_gpkg(self):
@@ -152,7 +152,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_shp(self):
@@ -162,7 +162,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["shp"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_sqlite(self):
@@ -172,7 +172,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wfs_kml(self):
@@ -182,7 +182,17 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs-source", "formats": ["kml"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_arcgis_feature_service(self):
+        """
+        This test is to ensure that an ArcGIS Feature Service job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
+                    "event": "TestProject", "xmin": '-3.0', "ymin": '50.0', "xmax": '0.34', "ymax": '54.05', "tags": [],
+                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_all(self):
@@ -192,7 +202,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms-source",
+                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
@@ -200,15 +210,15 @@ class TestJob(TestCase):
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wmts-source",
+                                                                        {"provider": "eventkit-integration-test-wmts",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arcgis-source",
+                                                                        {"provider": "eventkit-integration-test-arc-raster",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wfs-source",
+                                                                        {"provider": "eventkit-integration-test-wfs",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
@@ -221,7 +231,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms-source",
+                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
@@ -229,15 +239,15 @@ class TestJob(TestCase):
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wmts-source",
+                                                                        {"provider": "eventkit-integration-test-wmts",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arcgis-source",
+                                                                        {"provider": "eventkit-integration-test-arc-raster",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wfs-source",
+                                                                        {"provider": "eventkit-integration-test-wfs",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
@@ -397,8 +407,8 @@ def get_providers_list():
             "created_at" : "2016-10-06T17:44:54.837Z",
             "updated_at" : "2016-10-06T17:44:54.837Z",
             "uid" : "8977892f-e057-4723-8fe5-7a9b0080bc66",
-            "name" : "eventkit-integration-test-wms-source",
-            "slug" : "eventkit-integration-test-wms-source",
+            "name" : "eventkit-integration-test-wms",
+            "slug" : "eventkit-integration-test-wms",
             "url" : "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
             "layer" : "0",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wms'),
@@ -413,8 +423,8 @@ def get_providers_list():
             "created_at" : "2016-10-06T17:45:46.213Z",
             "updated_at" : "2016-10-06T17:45:46.213Z",
             "uid" : "5e3d76cb-09aa-42ac-96f3-2663e06ac81a",
-            "name" : "eventkit-integration-test-wmts-source",
-            "slug" : "eventkit-integration-test-wmts-source",
+            "name" : "eventkit-integration-test-wmts",
+            "slug" : "eventkit-integration-test-wmts",
             "url" : "http://a.tile.openstreetmap.fr/hot/",
             "layer" : "imagery",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wmts'),
@@ -429,14 +439,14 @@ def get_providers_list():
             "created_at" : "2016-10-06T19:17:28.770Z",
             "updated_at" : "2016-10-06T19:17:28.770Z",
             "uid" : "3c497618-5a50-4c93-a310-e439a99549ce",
-            "name" : "eventkit-integration-test-arcgis-source",
-            "slug" : "eventkit-integration-test-arcgis-source",
+            "name" : "eventkit-integration-test-arc-raster",
+            "slug" : "eventkit-integration-test-arc-raster",
             "url" : "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
             "layer" : "imagery",
-            "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='arcgis'),
+            "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='arcgis-raster'),
             "level_from" : 0,
             "level_to" : 2,
-            "config" : "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+            "config" : "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis-raster:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         }
     }, {
         "model" : "jobs.exportprovider",
@@ -445,13 +455,29 @@ def get_providers_list():
             "created_at" : "2016-10-13T17:23:26.890Z",
             "updated_at" : "2016-10-13T17:23:26.890Z",
             "uid" : "b47ecf0c-98bd-4b5c-89d1-856fd8c402a3",
-            "name" : "eventkit-integration-test-wfs-source",
-            "slug" : "eventkit-integration-test-wfs-source",
+            "name" : "eventkit-integration-test-wfs",
+            "slug" : "eventkit-integration-test-wfs",
             "url" : "http://geonode.state.gov/geoserver/wfs?request=GetCapabilities&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG&SRSNAME=EPSG:4326",
             "layer" : "geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wfs'),
             "level_from" : 0,
             "level_to" : 2,
+            "config" : ""
+        }
+    }, {
+        "model" : "jobs.exportprovider",
+        "pk" : 2,
+        "fields" : {
+            "created_at" : "2016-10-21T14:30:27.066Z",
+            "updated_at" : "2016-10-21T14:30:27.066Z",
+            "uid" : "7da498df-7702-4988-bad5-3a8db20e01b8",
+            "name" : "eventkit-integration-test-arc-fs",
+            "slug" : "eventkit-integration-test-arc-fs",
+            "url" : "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
+            "layer" : "0",
+            "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
+            "level_from" : 0,
+            "level_to" : 10,
             "config" : ""
         }
     }]
