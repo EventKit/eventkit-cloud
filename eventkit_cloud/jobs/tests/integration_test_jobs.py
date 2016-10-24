@@ -384,6 +384,7 @@ def check_content_exists(gpkg):
     for table in get_table_names(gpkg):
         if get_table_count(gpkg, table) > 0:
             return True
+    print("Failed to find any data in {0}".format(gpkg))
     return False
 
 

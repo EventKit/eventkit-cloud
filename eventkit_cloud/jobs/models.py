@@ -15,6 +15,7 @@ from django.db.models.signals import (
 )
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -365,3 +366,13 @@ def user_post_save(sender, instance, created, **kwargs):
     """
     if created:
         instance.groups.add(Group.objects.get(name='DefaultExportExtentGroup'))
+
+
+def user_owns_job(user=None, job_uid=None):
+    if not job_uid or not user:
+        return False
+    job = Job.objects.get(uid=job_uid)
+    if job.user == user or job.published:
+        return True
+    else:
+        return False

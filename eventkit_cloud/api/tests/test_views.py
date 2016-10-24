@@ -135,17 +135,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
-    def test_delete_job(self, ):
-        url = reverse('api:jobs-detail', args=[self.job.uid])
-        response = self.client.delete(url)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEquals(response['Content-Length'], '0')
-        self.assertEquals(response['Content-Language'], 'en')
-
-    def test_delete_no_permissions(self, ):
-        url = reverse('api:jobs-detail', args=[self.job.uid])
-        # create another user with token
+    def test_get_job_detail_no_permissions(self, ):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
         )
@@ -155,10 +145,57 @@ class TestJobViewSet(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
-        # try to delete a job belonging to self.user
+        expected = '/api/jobs/{0}'.format(self.job.uid)
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.assertEquals(expected, url)
+        data = {"uid": str(self.job.uid),
+                "name": "TestJob",
+                "url": 'http://testserver{0}'.format(url),
+                "description": "Test Description",
+                "exports": [{'provider': 'OpenStreetMap Data',
+                             'formats': [
+                                 {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
+                                  "url": "http://testserver/api/formats/gpkg",
+                                  "name": "Geopackage",
+                                  "description": "Geopackage"}]}],
+                "created_at": "2015-05-21T19:46:37.163749Z",
+                "updated_at": "2015-05-21T19:46:47.207111Z",
+                "status": "SUCCESS"}
+        response = self.client.get(url)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Language'], 'en')
+
+        # test significant content
+        self.assertEquals(response.data, {'detail': 'Not found.'})
+
+    def test_delete_job(self, ):
+        url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEquals(response['Content-Length'], '0')
+        self.assertEquals(response['Content-Language'], 'en')
+
+    # This test is will not work while the viewsets get_queryset prevents users from viewing queries they don't own.
+
+    # def test_delete_no_permissions(self, ):
+    #     url = reverse('api:jobs-detail', args=[self.job.uid])
+    #     # create another user with token
+    #     user = User.objects.create_user(
+    #         username='other_user', email='other_user@demo.com', password='demo'
+    #     )
+    #     token = Token.objects.create(user=user)
+    #     # reset the client credentials to the new user
+    #     self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+    #                             HTTP_ACCEPT='application/json; version=1.0',
+    #                             HTTP_ACCEPT_LANGUAGE='en',
+    #                             HTTP_HOST='testserver')
+    #     # try to delete a job belonging to self.user
+    #     response = self.client.delete(url)
+    #     # test the response headers
+    #     self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @patch('eventkit_cloud.api.views.TaskFactory')
     def test_create_job_success(self, mock):
@@ -682,6 +719,30 @@ class TestExportRunViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
 
+    def test_retrieve_run_no_permissions(self, ):
+        user = User.objects.create_user(
+            username='other_user', email='other_user@demo.com', password='demo'
+        )
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        expected = '/api/runs/{0}'.format(self.run_uid)
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Language'], 'en')
+
+        # test significant content
+        # self.assertEquals(response.data, {'detail': 'Not found.'})
+        self.assertEquals(response.data, [])
+
     def test_list_runs(self, ):
         expected = '/api/runs'
         url = reverse('api:runs-list')
@@ -693,6 +754,30 @@ class TestExportRunViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(1, len(result))
         self.assertEquals(self.run_uid, result[0].get('uid'))
+
+    def test_list_runs_no_permissions(self, ):
+        user = User.objects.create_user(
+            username='other_user', email='other_user@demo.com', password='demo'
+        )
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        expected = '/api/runs'
+        url = reverse('api:runs-list')
+        self.assertEquals(expected, url)
+        query = '{0}?job_uid={1}'.format(url, self.job.uid)
+        response = self.client.get(query)
+        self.assertIsNotNone(response)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Language'], 'en')
+
+        # test significant content
+        self.assertEquals(response.data, [])
 
 
 class TestExportConfigViewSet(APITestCase):
@@ -733,6 +818,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals('example_transform.sql', saved_config.filename)
         self.assertEquals('text/plain', saved_config.content_type)
         saved_config.delete()
+
 
     def test_delete_no_permissions(self, ):
         """

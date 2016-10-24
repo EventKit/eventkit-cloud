@@ -55,7 +55,7 @@ class TestJobFilter(APITestCase):
         formats = [format.slug for format in ExportFormat.objects.all()]
         url += '?start=2015-01-01&end=2030-08-01'
         response = self.client.get(url)
-        self.assertEquals(2, len(response.data))
+        self.assertEquals(1, len(response.data))
 
     @patch('eventkit_cloud.api.views.TaskFactory')
     def test_filterset_with_user(self, mock):
