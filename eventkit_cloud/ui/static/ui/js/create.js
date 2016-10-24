@@ -132,7 +132,7 @@ create.job = (function(){
             map.getView().fit(bounds, map.getSize());
         });
 
-        map.addInteraction(dragBox);
+        //map.addInteraction(dragBox);
         //
         // dragBox.on('drawend', function(e){
         //     bboxSource = new ol.source.Vector();
@@ -180,16 +180,21 @@ create.job = (function(){
              * clear transform control
              * activate the draw bbox control
              */
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','hidden');
+
             $('#nominatim').val('');
             if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
             unsetBounds();
+            $('#valid-extents').css('visibility','visible');
+            $('#valid-extents').html('<span>' + gettext('Click map after selecting bounding box area.') + '&nbsp;&nbsp;</span>');
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
             //box.activate();
-            map.removeInteraction(translate);
+            //map.removeInteraction(translate);
             bboxSource.clear();
             map.addInteraction(dragBox);
         });
@@ -222,12 +227,11 @@ create.job = (function(){
             }
             bboxSource.clear();
 
-            //bbox.removeAllFeatures();
-            //box.deactivate();
-            //transform.unsetFeature();
             zoomtoextent();
-            //map.zoomToExtent(regions.getDataExtent());
-            validateBounds();
+            $('#alert-extents').css('visibility','hidden');
+            $('#valid-extents').css('visibility','hidden');
+            //validateBounds();
+            map.removeInteraction(dragBox);
         });
 
 
