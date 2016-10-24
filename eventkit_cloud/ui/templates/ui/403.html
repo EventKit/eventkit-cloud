@@ -5,12 +5,11 @@
 <div class="row">
     <div class="col-md-6" style="padding: 15px; font-size: large;">
         <div class="panel panel-danger">
-            <div class="panel-heading"><h4>{% trans 'Server Error' %}</h4></div>
+            <div class="panel-heading"><h4>{% trans 'Unauthorized' %}</h4></div>
             <div class="panel-body">
-                {% trans 'Eventkit has experienced an internal error. Please <a href="https://github.com/hotosm/osm-export-tool2/issues">log an issue</a> in github if this problem persists.' %}
+                {% trans "You don't have sufficient permissions to view this page. Please" %} <a href="mailto:eventkit.team@gmail.com">{% trans 'email us' %}</a> {% trans "if you believe this is an error." %}
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
