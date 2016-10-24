@@ -39,7 +39,8 @@ class TestJob(TestCase):
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
-        self.bbox = ["-54.607823", "-25.515430", "-54.591687", "-25.504276"]
+        self.bbox = ["-0.077419", "50.778155", "-0.037251", "50.818517"]
+
 
     def tearDown(self):
         if os.path.exists(self.download_dir):
@@ -191,7 +192,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
-                    "event": "TestProject", "xmin": '-3.0', "ymin": '50.0', "xmax": '0.34', "ymax": '54.05', "tags": [],
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -221,6 +222,10 @@ class TestJob(TestCase):
                                                                         {"provider": "eventkit-integration-test-wfs",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-arc-fs",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -248,6 +253,10 @@ class TestJob(TestCase):
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]},
                                                                         {"provider": "eventkit-integration-test-wfs",
+                                                                         "formats": ["shp", "thematic-shp", "gpkg",
+                                                                                     "thematic-gpkg", "kml", "sqlite",
+                                                                                     "thematic-sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-arc-fs",
                                                                          "formats": ["shp", "thematic-shp", "gpkg",
                                                                                      "thematic-gpkg", "kml", "sqlite",
                                                                                      "thematic-sqlite"]}]}
@@ -457,8 +466,8 @@ def get_providers_list():
             "uid" : "b47ecf0c-98bd-4b5c-89d1-856fd8c402a3",
             "name" : "eventkit-integration-test-wfs",
             "slug" : "eventkit-integration-test-wfs",
-            "url" : "http://geonode.state.gov/geoserver/wfs?request=GetCapabilities&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG&SRSNAME=EPSG:4326",
-            "layer" : "geonode:Global_LSIB_Lines_Simplified_2015Jan23_USG",
+            "url" : "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:EurasiaOceania_LSIB_Polygons_Simplified_2015&SRSNAME=EPSG:4326",
+            "layer" : "geonode:EurasiaOceania_LSIB_Polygons_Simplified_2015",
             "export_provider_type" : ExportProviderType.objects.using('default').get(type_name='wfs'),
             "level_from" : 0,
             "level_to" : 2,
