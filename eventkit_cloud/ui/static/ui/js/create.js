@@ -98,6 +98,7 @@ create.job = (function(){
         var dragBox = new ol.interaction.Draw({
             source: bbox.getSource(),
             type: /** @type {ol.geom.GeometryType} */ "LineString",
+            maxpoints: 2,
             geometryFunction: function(coordinates, geometry) {
                 if (!geometry) {
                     geometry = new ol.geom.Polygon(null);
@@ -118,17 +119,17 @@ create.job = (function(){
         dragBox.on('drawend',function(e) {
             map.removeInteraction(dragBox);
             var bounds = e.feature.getGeometry().getExtent();
-            bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
-            var transformedBounds = [[bounds[0],bounds[3]],[bounds[0], bounds[1]],[bounds[2], bounds[1]],[bounds[2], bounds[3]]];
+            //bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+            //var transformedBounds = [[bounds[0],bounds[3]],[bounds[0], bounds[1]],[bounds[2], bounds[1]],[bounds[2], bounds[3]]];
 
             // validate the selected extents
-            if (validateBounds(transformedBounds)) {
-                setBounds(transformedBounds);
+            if (validateBounds(bounds)) {
+                setBounds(bounds);
             }
             else {
                 unsetBounds();
             }
-            map.getView().fit(transformedBounds, map.getSize());
+            map.getView().fit(bounds, map.getSize());
         });
 
         map.addInteraction(dragBox);
