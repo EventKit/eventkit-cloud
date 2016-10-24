@@ -735,12 +735,13 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
-        self.assertEquals(response.data, {'detail': 'Not found.'})
+        # self.assertEquals(response.data, {'detail': 'Not found.'})
+        self.assertEquals(response.data, [])
 
     def test_list_runs(self, ):
         expected = '/api/runs'
@@ -771,7 +772,7 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.get(query)
         self.assertIsNotNone(response)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_202_OK)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
 

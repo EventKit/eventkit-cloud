@@ -8,7 +8,6 @@ from django.db import Error, transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
 
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -114,7 +113,9 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
         user = self.request.user
-        return Job.objects.filter(Q(user=user) | Q(published=True))
+        if user.is_authenticated():
+            return Job.objects.filter(Q(user=user) | Q(published=True))
+        return Job.objects.filter(published=True)
 
     # def get_formats(self, formats):
     #     export_formats = []
@@ -409,7 +410,9 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return ExportRun.objects.filter(Q(user=user) | Q(job__published=True)).order_by('-started_at')
+        if user.is_authenticated():
+            return ExportRun.objects.filter(Q(user=user) | Q(job__published=True)).order_by('-started_at')
+        return ExportRun.objects.filter(job__published=True)
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -425,8 +428,7 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
         Returns:
             the serialized run data.
         """
-        queryset = ExportRun.objects.filter(Q(uid=uid),
-                                            Q(user=request.user) | Q(job__published=True))
+        queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -444,9 +446,7 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized run data.
         """
         job_uid = self.request.query_params.get('job_uid', None)
-        queryset = self.filter_queryset(ExportRun.objects.filter(Q(job__uid=job_uid),
-                                                                 Q(user=request.user) | Q(
-                                                                     job__published=True)).order_by('-started_at'))
+        queryset = self.filter_queryset(self.get_queryset()).order_by('-started_at')
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
