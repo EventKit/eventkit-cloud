@@ -184,6 +184,8 @@ create.job = (function(){
             $('#alert-extents').css('visibility','hidden');
 
             $('#nominatim').val('');
+            map.removeInteraction(dragBox);
+            
             if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);

@@ -204,7 +204,7 @@ clone.job = (function(){
             map.getView().fit(bounds, map.getSize());
         });
 
-        map.addInteraction(dragBox);
+        //map.addInteraction(dragBox);
 
         // var dragBox = new ol.interaction.DragBox({
         //     condition: ol.events.condition.primaryAction,
@@ -257,16 +257,23 @@ clone.job = (function(){
              * clear transform control
              * activate the draw bbox control
              */
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','hidden');
+
             $('#nominatim').val('');
+            map.removeInteraction(dragBox);
+
             if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
             unsetBounds();
+            $('#valid-extents').css('visibility','visible');
+            $('#valid-extents').html('<span>' + gettext('Double click map after selecting bounding box area.') + '&nbsp;&nbsp;</span>');
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
             //box.activate();
-            map.removeInteraction(translate);
+            //map.removeInteraction(translate);
             bboxSource.clear();
             map.addInteraction(dragBox);
         });
@@ -299,20 +306,17 @@ clone.job = (function(){
             }
             bboxSource.clear();
 
-            //bbox.removeAllFeatures();
-            //box.deactivate();
-            //transform.unsetFeature();
             zoomtoextent();
-            //map.zoomToExtent(regions.getDataExtent());
-            validateBounds();
+            $('#alert-extents').css('visibility','hidden');
+            $('#valid-extents').css('visibility','hidden');
+            //validateBounds();
+            map.removeInteraction(dragBox);
         });
 
-        //     /* Add map controls */
-        //     map.addControl(new OpenLayers.Control.ScaleLine());
-        //
-        //     // set inital zoom to regions extent
-        //     map.zoomTo(regions.getDataExtent());
-        //map.getView().fit(regions.getExtent(), map.getSize());
+        $('.navbar-collapse a:not(.dropdown-toggle)').click(function(){
+            $(".navbar-collapse").collapse('hide');
+        });
+
         zoomtoextent();
     }
 
