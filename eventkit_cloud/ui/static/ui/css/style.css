@@ -181,6 +181,12 @@ span.heading {
     overflow-x: visible !important;
 }
 
+.alert-custom {
+    padding: 5px;
+    margin-bottom: 0px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
 
 /* Map styles */
 
@@ -213,6 +219,7 @@ span.heading {
     z-index: 100;
     visibility: hidden;
 }
+
 
 #valid-extents {
     position: absolute;

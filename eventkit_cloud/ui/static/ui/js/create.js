@@ -190,7 +190,7 @@ create.job = (function(){
             }
             unsetBounds();
             $('#valid-extents').css('visibility','visible');
-            $('#valid-extents').html('<span>' + gettext('Click map after selecting bounding box area.') + '&nbsp;&nbsp;</span>');
+            $('#valid-extents').html('<span>' + gettext('Double click map after selecting bounding box area.') + '&nbsp;&nbsp;</span>');
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
             //box.activate();
@@ -234,7 +234,9 @@ create.job = (function(){
             map.removeInteraction(dragBox);
         });
 
-
+        $('.navbar-collapse a:not(.dropdown-toggle)').click(function(){
+            $(".navbar-collapse").collapse('hide');
+        });
 
         zoomtoextent();
     }
