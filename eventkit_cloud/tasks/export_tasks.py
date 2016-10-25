@@ -227,13 +227,13 @@ class OSMPrepSchemaTask(ExportTask):
     def run(self, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
-        osmparser = osmparse.OSMParser(osm=osm, sqlite=sqlite, osmconf=osmconf)
-        osmparser.create_spatialite()
-        osmparser.create_default_schema()
+        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf)
+        osmparser.create_geopackage()
+        osmparser.create_default_schema_gpkg()
         osmparser.update_zindexes()
-        return {'result': sqlite}
+        return {'result': gpkg}
 
 
 class ThematicShpExportTask(ExportTask):
@@ -290,10 +290,10 @@ class ShpExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
-            s2s = shp.SQliteToShp(sqlite=sqlite, shapefile=shapefile)
+            s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
             out = s2s.convert()
             return {'result': out}
         except Exception as e:
@@ -493,7 +493,8 @@ class FinalizeExportProviderTask(Task):
                 export_provider_task.status = 'INCOMPLETE'
         export_provider_task.save()
         try:
-            shutil.rmtree(stage_dir)
+            #shutil.rmtree(stage_dir)
+            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         run_complete = True
@@ -529,7 +530,8 @@ class FinalizeRunTask(Task):
         run.finished_at = finished
         run.save()
         try:
-            shutil.rmtree(stage_dir)
+            #shutil.rmtree(stage_dir)
+            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
