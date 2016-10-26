@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 export_task_registry = {
     'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
-    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSqliteExportTask',
+    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask',
     'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
     'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
     'thematic-shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',

@@ -96,33 +96,37 @@ class OSMParser(object):
     #         print 'spatialite returned: %s' % returncode
 
     def create_default_schema_gpkg(self,):
+        """
+        Create the default osm gpkg schema
+        Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
+        """
         assert os.path.exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
-        # conn = sqlite3.connect(self.gpkg)
-        conn = sqlite3.connect(self.gpkg)
-        cur = conn.cursor()
-        sql = open(os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql'), 'r').read()
-        # sql = open('/var/lib/eventkit/eventkit_cloud/utils/sql/planet_osm_schema.sql', 'r').read()
-        cur.executescript(sql)
-        conn.commit()
-        cur.close()
-        conn.close()
-        add_spatial_index = Template('ogrinfo $gpkg -sql "$sql"')
-        sql_commands = ("SELECT CreateSpatialIndex('planet_osm_point', 'geom')",
-                        "SELECT CreateSpatialIndex('planet_osm_line', 'geom')",
-                        "SELECT CreateSpatialIndex('planet_osm_polygon', 'geom')",)
-        for command in sql_commands:
-            sql_cmd = add_spatial_index.safe_substitute({'gpkg': self.gpkg, 'sql': command})
-            # if(self.debug):
-            #     print 'Running: %s' % command
-            proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (stdout, stderr) = proc.communicate()
-            returncode = proc.wait()
-            if returncode != 0:
-                logger.error('%s', stderr)
-                raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
-                break;
-            if self.debug:
-                print 'ogrinfo returned: %s' % returncode
+        try:
+            conn = sqlite3.connect(self.gpkg)
+            cur = conn.cursor()
+            sql = open(os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql'), 'r').read()
+            cur.executescript(sql)
+            conn.commit()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+            conn.close()
+
+        self.update_sql = Template("spatialite $gpkg < $update_sql")
+        sql_cmd = self.update_sql.safe_substitute({'gpkg': self.gpkg,
+                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'spatial_index.sql')})
+        if(self.debug):
+            print 'Running: %s' % sql_cmd
+        proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (stdout, stderr) = proc.communicate()
+        returncode = proc.wait()
+        if returncode != 0:
+            logger.error('%s', stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
+        if self.debug:
+            print 'spatialite returned: %s' % returncode
 
 
     def update_zindexes(self, ):

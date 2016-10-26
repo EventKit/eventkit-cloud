@@ -3,7 +3,7 @@
 -- drop the old line table
 CREATE TABLE planet_osm_point AS SELECT * FROM points;
 DROP TABLE points;
-UPDATE gpkg_contents SET table_name = "planet_osm_point",identifier = "plant_osm_point" WHERE table_name = "points";
+UPDATE gpkg_contents SET table_name = "planet_osm_point",identifier = "planet_osm_point" WHERE table_name = "points";
 UPDATE gpkg_geometry_columns SET table_name = "planet_osm_point" WHERE table_name = "points";
 -- create planet_osm_line
 -- add spatial metadata
@@ -19,7 +19,6 @@ CREATE TABLE planet_osm_polygon AS SELECT * FROM multipolygons;
 DROP TABLE multipolygons;
 UPDATE gpkg_contents SET table_name = "planet_osm_polygon", identifier = "planet_osm_polygon" WHERE table_name = "multipolygons";
 UPDATE gpkg_geometry_columns SET table_name = "planet_osm_polygon" WHERE table_name = "multipolygons";
-
 -- drop other tables created by ogr -- for now!
 -- should see if these features can be recovered
 DROP TABLE multilinestrings;

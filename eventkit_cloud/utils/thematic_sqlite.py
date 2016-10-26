@@ -11,14 +11,14 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-class ThematicSqlite(object):
+class ThematicGPKG(object):
     """
     Thin wrapper around ogr2ogr to convert sqlite to shp using thematic layers.
     """
 
-    def __init__(self, sqlite=None, shapefile=None, tags=None, job_name=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, shapefile=None, tags=None, job_name=None, zipped=True, debug=False):
         """
-        Initialize the ThematicSQliteToShp utility.
+        Initialize the ThematicGPKG utility.
 
         Args:
             sqlite: the sqlite file to convert
@@ -28,19 +28,22 @@ class ThematicSqlite(object):
             zipped: true if output is to be zipped, false otherwise
             debug: turn on/off debug logging output.
         """
-        self.sqlite = sqlite
+        self.gpkg = gpkg
         self.tags = tags
         self.job_name = job_name
-        if not os.path.exists(self.sqlite):
-            raise IOError('Cannot find sqlite file for this task.')
+        if not os.path.exists(self.gpkg):
+            raise IOError('Cannot find gpkg file for this task.')
         self.shapefile = shapefile
-        self.stage_dir = os.path.dirname(self.sqlite)
+        self.stage_dir = os.path.dirname(self.gpkg)
         if not self.shapefile:
             # create shp path from sqlite path.
             self.shapefile = self.stage_dir + '/' + self.job_name + '_thematic_shp'
         self.debug = debug
         # create thematic sqlite file
-        self.thematic_sqlite = self.stage_dir + '/' + self.job_name + '_thematic.sqlite'
+        self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '_thematic.gpkg'
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.update_sql = Template("spatialite $gpkg < $update_sql")
+
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {
@@ -72,9 +75,9 @@ class ThematicSqlite(object):
         generate the thematic layers based on the exports categoried_tags.
         """
         # setup sqlite connection
-        shutil.copy(self.sqlite, self.thematic_sqlite)
-        assert os.path.exists(self.thematic_sqlite), 'Thematic sqlite file not found.'
-        conn = sqlite3.connect(self.thematic_sqlite)
+        shutil.copy(self.gpkg, self.thematic_gpkg)
+        assert os.path.exists(self.thematic_gpkg), 'Thematic gpkg file not found.'
+        conn = sqlite3.connect(self.thematic_gpkg)
         # load spatialite extension
         conn.enable_load_extension(True)
         try:
@@ -87,8 +90,8 @@ class ThematicSqlite(object):
             cur.execute(cmd)
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
-        sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, Geometry FROM $planet_table WHERE $select_clause')
-        recover_geom_tmpl = Template("SELECT RecoverGeometryColumn($tablename, 'GEOMETRY', 4326, $geom_type, 'XY')")
+        sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, geom FROM $planet_table WHERE $select_clause')
+        recover_geom_tmpl = Template("SELECT RecoverGeometryColumn($tablename, 'GEOMETRY', 4326, $geom_type, 'XY')") #REPLACE
         for layer, spec in self.thematic_spec.iteritems():
             layer_type = layer.split('_')[-1]
             isPoly = layer_type == 'polygons'
@@ -124,7 +127,7 @@ class ThematicSqlite(object):
             if temp_columns:
                 params['columns'] = ', '.join(temp_columns)
             else:
-                sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id, Geometry '
+                sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id, geom '
                                     'FROM $planet_table WHERE $select_clause')
             sql = sql_tmpl.safe_substitute(params)
             try:
@@ -135,25 +138,24 @@ class ThematicSqlite(object):
             geom_type = geom_types[layer_type]
             recover_geom_sql = recover_geom_tmpl.safe_substitute({'tablename': "'" + layer + "'", 'geom_type': "'" + geom_type + "'"})
             conn.commit()
-            try:
-                cur.execute(recover_geom_sql)
-                cur.execute("SELECT CreateSpatialIndex({0}, 'GEOMETRY')".format("'" + layer + "'"))
-            except Exception:
-                logger.error("SQL Execute for: {}, has failed.".format(sql))
-                raise
+            # try:
+            #     #cur.execute(recover_geom_sql)
+            #     #cur.execute("SELECT CreateSpatialIndex({0}, 'geom')".format("'" + layer + "'"))
+            # except Exception:
+            #     logger.error("SQL Execute for: {}, has failed.".format(sql))
+            #     raise
             conn.commit()
 
-
         # remove existing geometry columns
-        cur.execute("SELECT DiscardGeometryColumn('planet_osm_point','Geometry')")
-        cur.execute("SELECT DiscardGeometryColumn('planet_osm_line','Geometry')")
-        cur.execute("SELECT DiscardGeometryColumn('planet_osm_polygon','Geometry')")
+        #cur.execute("SELECT DiscardGeometryColumn('planet_osm_point','geom')")
+        #cur.execute("SELECT DiscardGeometryColumn('planet_osm_line','geom')")
+        #cur.execute("SELECT DiscardGeometryColumn('planet_osm_polygon','geom')")
         conn.commit()
 
         # drop existing spatial indexes
-        cur.execute('DROP TABLE idx_planet_osm_point_GEOMETRY')
-        cur.execute('DROP TABLE idx_planet_osm_line_GEOMETRY')
-        cur.execute('DROP TABLE idx_planet_osm_polygon_GEOMETRY')
+        cur.execute('DROP TABLE rtree_planet_osm_point_geom')
+        cur.execute('DROP TABLE rtree_planet_osm_line_geom')
+        cur.execute('DROP TABLE rtree_planet_osm_polygon_geom')
         conn.commit()
 
         # drop default schema tables
@@ -162,5 +164,6 @@ class ThematicSqlite(object):
         cur.execute('DROP TABLE planet_osm_polygon')
         conn.commit()
         cur.close()
-        return self.thematic_sqlite
+
+        return self.thematic_gpkg
 
