@@ -820,12 +820,15 @@ create.job = (function(){
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
             if (isValidBBox === false || isValidBBox === null) {
-                if (bboxSource == null) {
-                    validateBounds(null);
-                }
-                else {
+                if (bboxSource.getFeatures().length > 0) {
                     validateBounds(bboxSource.getExtent());
                 }
+                else{
+                    validateBounds(null);
+                }
+                // else {
+                //     validateBounds(bboxSource.getExtent());
+                // }
             }
 
             // validate the form panel contents
