@@ -160,6 +160,29 @@ class ExportTask(Task):
             logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
             raise e
 
+    # def update_task_progress(self, task_uid=None, progress=None):
+    #     """
+    #     Update the task state and celery task uid.
+    #     Can use the celery uid for diagnostics.
+    #     """
+    #     if not task_uid and not progress:
+    #         return
+    #     started = timezone.now()
+    #     from eventkit_cloud.tasks.models import ExportTask
+    #     celery_uid = self.request.id
+    #     try:
+    #         task = ExportTask.objects.get(uid=task_uid)
+    #         celery_uid = self.request.id
+    #         task.celery_uid = celery_uid
+    #         task.status = 'RUNNING'
+    #         task.export_provider_task.status = 'RUNNING'
+    #         task.started_at = started
+    #         task.save()
+    #         task.export_provider_task.save()
+    #         logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
+    #     except DatabaseError as e:
+    #         logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
+    #         raise e
 
 class OSMConfTask(ExportTask):
     """
@@ -423,9 +446,10 @@ class ExternalRasterServiceExportTask(ExportTask):
             service_url=None, level_from=None, level_to=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        progress_tracker = get_progress_tracker(task_uid=task_uid)
         try:
             w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                      config=config, level_from=level_from, level_to=level_to, service_type=service_type)
+                                      config=config, level_from=level_from, level_to=level_to, service_type=service_type, progress_tracker=progress_tracker)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -590,3 +614,13 @@ class ExportTaskErrorHandler(Task):
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
+
+
+def get_progress_tracker(task_uid=None):
+    from eventkit_cloud.tasks.models import ExportTask
+    def progress_tracker(progress=None):
+        print("UPDATING PROGRESS TO {0}".format(progress))
+        export_task = ExportTask.objects.get(uid=task_uid)
+        export_task.progress = progress
+        export_task.save()
+    return progress_tracker

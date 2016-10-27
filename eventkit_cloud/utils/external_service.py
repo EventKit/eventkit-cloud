@@ -10,6 +10,7 @@ from mapproxy.config.loader import ProxyConfiguration
 from mapproxy.config.spec import validate_options
 from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
+from mapproxy.seed.util import ProgressLog
 from mapproxy.seed import util
 import yaml
 from django.core.files.temp import NamedTemporaryFile
@@ -22,12 +23,24 @@ from billiard import Process
 logger = logging.getLogger(__name__)
 
 
+class CustomLogger(ProgressLog):
+    
+    def __init__(self, progress_tracker=None, *args, **kwargs):
+        self.progress_tracker = progress_tracker
+        super(CustomLogger, self).__init__(*args, **kwargs)
+
+    def log_step(self, progress):
+        self.progress_tracker(progress.progress*100)
+        super(CustomLogger, self).log_step(progress)
+
+
 class ExternalRasterServiceToGeopackage(object):
     """
     Convert a External service to a geopackage.
     """
 
-    def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None, level_from=None, level_to=None, service_type=None):
+    def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
+                 level_from=None, level_to=None, service_type=None, progress_tracker=None):
         """
         Initialize the ExternalServiceToGeopackage utility.
 
@@ -45,6 +58,7 @@ class ExternalRasterServiceToGeopackage(object):
         self.layer = layer
         self.config = config
         self.service_type = service_type
+        self.progress_tracker = progress_tracker
 
     def convert(self, ):
         """
@@ -83,8 +97,13 @@ class ExternalRasterServiceToGeopackage(object):
         logger.error(seed_dict)
         # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
+            progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
+            # seed(seed_tasks, progress_logger=logger, dry_run=options.dry_run,
+            #      concurrency=options.concurrency, cache_locker=cache_locker,
+            #      skip_geoms_for_last_levels=options.geom_levels)
             p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
-                                                                  "concurrency": 1})
+                                                                  "concurrency": 1,
+                                                                  "progress_logger": progress_logger})
             p.start()
             p.join()
         except Exception as e:

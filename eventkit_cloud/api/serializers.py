@@ -164,7 +164,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportTask
-        fields = ('uid', 'url', 'name', 'status', 'started_at', 'finished_at', 'duration', 'result', 'errors',)
+        fields = ('uid', 'url', 'name', 'status', 'progress', 'started_at', 'finished_at', 'duration', 'result', 'errors',)
 
     def get_result(self, obj):
         """Serialize the ExportTaskResult for this ExportTask."""
