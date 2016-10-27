@@ -12,12 +12,12 @@ from django.test import TestCase
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import Job, Tag
 
-from ..thematic_gpkg import ThematicSqlite
+from ..thematic_gpkg import ThematicGPKG
 
 logger = logging.getLogger(__name__)
 
 
-class TestThematicSqlite(TestCase):
+class TestThematicGPKG(TestCase):
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
@@ -41,22 +41,6 @@ class TestThematicSqlite(TestCase):
                 job=self.job
             )
 
-    # @patch('shutil.copy')
-    # @patch('os.path.exists')
-    # def testInit(self, exists, copy):
-    #     sqlite = self.path + '/files/test.sqlite'
-    #     shapefile = self.path + '/files/thematic_shp'
-    #     cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8".format(shapefile, sqlite)
-    #     proc = Mock()
-    #     exists.return_value = True
-    #     # set zipped to False for testing
-    #     t2s = ThematicSQliteToShp(
-    #         sqlite=sqlite, shapefile=shapefile,
-    #         tags=None, job_name='test_thematic_shp',
-    #         zipped=False, debug=False
-    #     )
-    #     exists.assert_called_twice()
-    #     copy.assert_called_once()
 
     @patch('shutil.copy')
     @patch('os.path.exists')
@@ -64,9 +48,8 @@ class TestThematicSqlite(TestCase):
     @patch('subprocess.Popen')
     @patch('sqlite3.connect')
     def test_convert(self, connect, popen, pipe, exists, copy):
-        sqlite = self.path + '/files/test.sqlite'
-        shapefile = self.path + '/files/thematic_shp'
-        thematic_sqlite = self.path + '/files/test_thematic_shp_thematic.sqlite'
+        gpkg = self.path + '/files/test.gpkg'
+        thematic_gpkg = self.path + '/files/test_thematic_shp_thematic.gpkg'
         exists.return_value = True
         conn = Mock()
         conn.enable_load_extention = Mock()
@@ -75,12 +58,12 @@ class TestThematicSqlite(TestCase):
         conn.cursor = cur
         cur.execute = MagicMock()
         tags = self.job.categorised_tags
-        t2s = ThematicSqlite(
-            sqlite=sqlite, shapefile=shapefile,
+        t2s = ThematicGPKG(
+            gpkg=gpkg,
             tags=tags, job_name='test_thematic_sqlite',
             zipped=False, debug=False
         )
-        exists.assert_called_twice()
+        exists.assert_called_once()
         copy.assert_called_once()
         t2s.convert()
         connect.assert_called_once()
