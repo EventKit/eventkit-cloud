@@ -10,7 +10,7 @@ from django.db import DatabaseError
 from celery import chain, group
 from celery.canvas import Signature
 
-from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.jobs.models import ExportProvider, ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
@@ -29,6 +29,7 @@ export_task_registry = {
     'thematic-shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask',
     'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGeopackageExportTask'
+    'zip': 'eventkit_cloud.tasks.export_tasks.ZipFileTask'
 }
 
 thematic_tasks_list = ['thematic-sqlite', 'thematic-shp', 'thematic-gpkg']
@@ -64,6 +65,9 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        export_provider = ExportProvider.objects.get(id=provider_task.provider_id)
+
+        import pdb; pdb.set_trace()
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -80,6 +84,9 @@ class ExportOSMTaskRunner(TaskRunner):
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
+
+        zipfile_task = dict([(key, val) for key, val in export_tasks.iteritems() if key == 'zip'])
+        export_tasks = dict([(key, val) for key, val in export_tasks.iteritems() if key != 'zip'])
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -181,15 +188,32 @@ class ExportOSMTaskRunner(TaskRunner):
                                                     task_uid=task.get('task_uid')) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
 
+            if zipfile_task:
+                zipfile_task['zip']['task_uid'] = create_export_task(
+                    task_name=zipfile_task['zip']['obj'].name,
+                    export_provider_task=export_provider_task
+                ).uid
+
+                zipfile_task = group(task.get('obj').si(
+                    run_uid=run.uid,
+                    stage_dir=stage_dir,
+                    task_uid=task.get('task_uid'),
+                    provider_slug=export_provider.slug
+                ) for task_name, task in
+                                 zipfile_task.iteritems() if task is not None)
+
             """
-            The tasks are chained instead of nested groups.
-            This is because celery3.x has issues with handling these callbacks even using redis as a result backend
+            the tasks are chained instead of nested groups.
+            this is because celery3.x has issues with handling these callbacks even using redis as a result backend
             """
             task_chain = (initial_tasks | schema_tasks)
             if format_tasks:
                 task_chain = (task_chain | format_tasks)
             if thematic_tasks:
                 task_chain = (task_chain | thematic_tasks)
+            if zipfile_task:
+                task_chain = (task_chain | zipfile_task)
+
             return export_provider_task.uid, task_chain
         else:
             return None, False
@@ -220,11 +244,11 @@ class ExportWFSTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        for format in formats:
+        for _format in formats:
             if not format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[_format] = {'obj': create_format_task(format)(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:
@@ -403,7 +427,6 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                              service_type=service_type)
         else:
             return None, None
-
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]
