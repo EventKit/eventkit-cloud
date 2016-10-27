@@ -34,7 +34,8 @@ create.job = (function(){
         map = new ol.Map({
             interactions: ol.interaction.defaults({
                 keyboard: false,
-                altShiftDragRotate: false
+                altShiftDragRotate: false,
+                pinchRotate: false
             }),
             target: 'create-export-map',
             view: new ol.View({
