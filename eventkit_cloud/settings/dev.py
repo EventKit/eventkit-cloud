@@ -82,7 +82,7 @@ CACHES = {
 
 # session settings
 SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
-SESSION_COOKIE_DOMAIN = 'cloud.eventkit.dev'
+SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', SITE_NAME)
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

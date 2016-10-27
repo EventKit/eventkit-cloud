@@ -29,7 +29,7 @@
     }
 </style-->
 {{ block.super}}
-    <link rel="stylesheet" href="{% static 'ui/contrib/formvalidation/dist/css/formValidation.css' %}"/>
+<link rel="stylesheet" href="{% static 'ui/contrib/formvalidation/dist/css/formValidation.css' %}"/>
 {% endblock %}
 
 {% block container %}
@@ -41,19 +41,19 @@
         <div id="create-job-wizard">
             <form id="create-job-form" role="form" action="" class="" method="POST">
                 {% csrf_token %}
-                        <!--div class="form-group row">
-                            <div class="col-md-6">
-                                <table id="tabs" style="table-layout: fixed; width: 100%" border="1">
-                                    <th width="38px"><a data-toggle="tab" href="#create">{% trans 'Configure Export' %}</a></th>
-                                    <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
-                                    <th width="38px"><a data-toggle="tab" href="#formats">{% trans 'Select Vector Export Formats' %}</a></th>
-                                    <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
-                                    <th width="38px"><a data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></th>
-                                    <th width="10px"><i id="back-button" class="fa fa-arrow-circle-left fa-3x" aria-hidden="true"></i></th>
-                                    <th width="10px"><i id="next-button" class="fa fa-arrow-circle-right fa-3x" aria-hidden="true"></i></th>
-                                </table>
-                            </div>
-                        </div-->
+                <!--div class="form-group row">
+                    <div class="col-md-6">
+                        <table id="tabs" style="table-layout: fixed; width: 100%" border="1">
+                            <th width="38px"><a data-toggle="tab" href="#create">{% trans 'Configure Export' %}</a></th>
+                            <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
+                            <th width="38px"><a data-toggle="tab" href="#formats">{% trans 'Select Vector Export Formats' %}</a></th>
+                            <th width="10px"><i class="fa fa-angle-right" aria-hidden="true"></i></th>
+                            <th width="38px"><a data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></th>
+                            <th width="10px"><i id="back-button" class="fa fa-arrow-circle-left fa-3x" aria-hidden="true"></i></th>
+                            <th width="10px"><i id="next-button" class="fa fa-arrow-circle-right fa-3x" aria-hidden="true"></i></th>
+                        </table>
+                    </div>
+                </div-->
 
 
 
@@ -62,25 +62,25 @@
                     <li id="breadcrumb" style="vertical-align: text-bottom"><strong>{% trans '>>' %}</strong></li>
                     <li id="formats-tab" role="presentation"><a data-toggle="tab" href="#formats">{% trans 'File Formats' %}</a></li>
                     <!--li id="features-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#features">{% trans 'Tree Tag' %}</a></li-->
-                    <!--li-- id="upload-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#upload">{% trans 'Preset File' %}</a></li-->
-                    <!--li id="summary-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
-                </ul-->
+                <!--li-- id="upload-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#upload">{% trans 'Preset File' %}</a></li-->
+                <!--li id="summary-tab" role="presentation" class="disabled"><a data-toggle="tab" href="#summary">{% trans 'Export Details' %}</a></li>
+            </ul-->
 
                 <div class="container" style="border-radius: 5px !important; background-color: #ebebeb !important; border: 1px solid #d6d6d6 !important;">
-                <ul>
-                    <li  id="createtab"><a id="createLink" style="top:6px" data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
-                    <li style="position: relative; top: 19px;"><img class="hidden-xs"  src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
-                    <li  id="formatstab"><a id="formatsLink"  style="top:6px" data-toggle="tab" href="#formats">{% trans 'Select Vector Export Formats' %}</a></li>
-                    <li  style="position: relative; top: 19px;"><img class="hidden-xs" src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
-                    <li  id="summarytab"><a id="summaryLink"  style="top:6px" data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></li>
-                </ul>
+                    <ul>
+                        <li  id="createtab"><a id="createLink" style="top:6px" data-toggle="tab" href="#create">{% trans 'Describe Export' %}</a></li>
+                        <li style="position: relative; top: 19px;"><img class="hidden-xs"  src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                        <li  id="formatstab"><a id="formatsLink"  style="top:6px" data-toggle="tab" href="#formats">{% trans 'Select Vector Export Formats' %}</a></li>
+                        <li  style="position: relative; top: 19px;"><img class="hidden-xs" src="{% static 'ui/images/angle-right-128.png' %}" style="vertical-align:bottom; height: 20px; width: 20px;" /></li>
+                        <li  id="summarytab"><a id="summaryLink"  style="top:6px" data-toggle="tab" href="#summary">{% trans 'Preview Summary' %}</a></li>
+                    </ul>
 
-                <ul class="nav nav-pills pager-wizard">
-                    <li class="previous first"><a id="previousFirstArrow" style="text-decoration: none; display:none;" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
-                    <li class="previous"><a id="previousArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
-                    <li class="next last"><a id="nextLastArrow" style="text-decoration: none; display: none;" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
-                    <li class="next"><a id="nextArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
-                </ul>
+                    <ul class="nav nav-pills pager-wizard">
+                        <li class="previous first"><a id="previousFirstArrow" style="text-decoration: none; display:none;" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
+                        <li class="previous"><a id="previousArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-left fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
+                        <li class="next last"><a id="nextLastArrow" style="text-decoration: none; display: none;" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #d6d6d6;" aria-hidden="true"></i></a></li>
+                        <li class="next"><a id="nextArrow" style="text-decoration: none" href="#"><i class="fa fa-arrow-circle-right fa-2x" style="color: #4fd027;" aria-hidden="true"></i></a></li>
+                    </ul>
                 </div>
                 <div class="tab-content">
                     <div id="create" name="create" class="tab-pane fade in active">
@@ -128,16 +128,16 @@
                     <div id="formats" class="tab-pane fade in">
 
                         <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="form-group row" id="form-group-formats">
-                                <div class="col-md-12">
-                                    <label class="control-label" for="formats">{% trans 'Select Vector Export Formats' %}:</label>
-                                    <p>{% trans 'More than one vector export format can be selected. Please note that there are two Esri Shapefile options, as the Thematic Schema provides the data in a set of themed geometry tables (points, lines and polygons), whereas the OSM Schema provides all attributes in layers grouped by geometry type. Raster formats will automatically return Geopackages. A WFS Provider will not export Thematic formats.' %}</p>
-                                    <div id="supported-formats"></div>
+                            <div class="panel-body">
+                                <div class="form-group row" id="form-group-formats">
+                                    <div class="col-md-12">
+                                        <label class="control-label" for="formats">{% trans 'Select Vector Export Formats' %}:</label>
+                                        <p>{% trans 'More than one vector export format can be selected. Please note that there are two Esri Shapefile options, as the Thematic Schema provides the data in a set of themed geometry tables (points, lines and polygons), whereas the OSM Schema provides all attributes in layers grouped by geometry type. Raster formats will automatically return Geopackages.' %}</p>
+                                        <div id="supported-formats"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                      </div>
                     </div>
                     <!--div id="features" class="tab-pane fade in">
                         <div class="panel panel-default">
@@ -155,25 +155,25 @@
                                         <div class="form-group-row" id="form-group-hdm-features">
                                             <div class="col-md-6">
                                                 <!--<h5>Humanitarian Data Model v2.11</h5>-->
-                                                <!--div id="hdm-feature-tree" class="pull-left">
-                                                    <ul class="nav nav-list"></ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group-row" id="form-group-osm-features">
-                                            <div class="col-md-6">
-                                                <!--<h5>OpenStreetMap Data Model</h5>-->
-                                                <!--div id="osm-feature-tree" class="pull-left">
-                                                    <ul class="nav nav-list"></ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                      </div>
-                    </div-->
+                    <!--div id="hdm-feature-tree" class="pull-left">
+                        <ul class="nav nav-list"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group-row" id="form-group-osm-features">
+                <div class="col-md-6">
+                    <!--<h5>OpenStreetMap Data Model</h5>-->
+                    <!--div id="osm-feature-tree" class="pull-left">
+                        <ul class="nav nav-list"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div-->
                     <!--div id="upload" class="tab-pane fade in">
                       <div class="panel panel-default">
                         <div class="panel-body">
@@ -260,69 +260,69 @@
                     </div-->
                     <div id="summary" class="tab-pane fade in">
 
-                      <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="row">
-                                <div id="details" class="col-md-6 pull-left">
-                                    <h4>{% trans 'Export Details' %}</h4>
-                                    <hr/>
-                                    <span><strong>{% trans 'Providers: ' %}</strong></span><span id="summary-providers"></span><br/>
-                                    <span><strong>{% trans 'Name:' %}</strong></span><span id="summary-name"></span><br/>
-                                    <span><strong>{% trans 'Description:' %}</strong></span><span id="summary-description"></span><br/>
-                                    <span><strong>{% trans 'Project:' %}</strong></span><span id="summary-event"></span><br/>
-                                    <span><strong>{% trans 'Export formats:' %}</strong></span></br>
-                                    <span id="summary-formats"></span>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div id="details" class="col-md-6 pull-left">
+                                        <h4>{% trans 'Export Details' %}</h4>
+                                        <hr/>
+                                        <span><strong>{% trans 'Providers: ' %}</strong></span><span id="summary-providers"></span><br/>
+                                        <span><strong>{% trans 'Name:' %}</strong></span><span id="summary-name"></span><br/>
+                                        <span><strong>{% trans 'Description:' %}</strong></span><span id="summary-description"></span><br/>
+                                        <span><strong>{% trans 'Project:' %}</strong></span><span id="summary-event"></span><br/>
+                                        <span><strong>{% trans 'Export formats:' %}</strong></span></br>
+                                        <span id="summary-formats"></span>
+                                    </div>
+                                    <div id="options" class="col-md-6 pull-left">
+                                        <h4>{% trans 'Export Options' %}</h4>
+                                        <hr/>
+                                        <div class="form-group row" id="form-group-featuresave">
+                                            <div class="col-md-12">
+                                                <div class="checkbox">
+                                                    <label class="control-label" for="feature_save">
+                                                        <input id="feature_save" name="feature_save" type="checkbox" value="">
+                                                        {% trans 'Save feature selection privately' %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row" id="form-group-featurepub">
+                                            <div class="col-md-12">
+                                                <div class="checkbox">
+                                                    <label class="control-label" for="feature_pub">
+                                                        <input id="feature_pub" name="feature_pub" type="checkbox" value="">
+                                                        {% trans 'Publish feature selection publicly' %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row" id="form-group-publish">
+                                            <div class="col-md-12">
+                                                <div class="checkbox">
+                                                    <label class="control-label" for="published">
+                                                        <input id="published" name="published" type="checkbox" value="">
+                                                        {% trans 'Publish export publicly' %}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div id="options" class="col-md-6 pull-left">
-                                    <h4>{% trans 'Export Options' %}</h4>
-                                    <hr/>
-                                    <div class="form-group row" id="form-group-featuresave">
-                                        <div class="col-md-12">
-                                            <div class="checkbox">
-                                                <label class="control-label" for="feature_save">
-                                                  <input id="feature_save" name="feature_save" type="checkbox" value="">
-                                                  {% trans 'Save feature selection privately' %}
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row" id="form-group-featurepub">
-                                        <div class="col-md-12">
-                                            <div class="checkbox">
-                                                <label class="control-label" for="feature_pub">
-                                                  <input id="feature_pub" name="feature_pub" type="checkbox" value="">
-                                                  {% trans 'Publish feature selection publicly' %}
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row" id="form-group-publish">
-                                        <div class="col-md-12">
-                                            <div class="checkbox">
-                                                <label class="control-label" for="published">
-                                                  <input id="published" name="published" type="checkbox" value="">
-                                                  {% trans 'Publish export publicly' %}
-                                                </label>
-                                            </div>
+                                <div class="row">
+                                    <div id="summary-configs" class="col-md-12">
+                                        <span><strong>{% trans 'Configurations:' %}</strong></span><br/>
+                                        <div class="table-responsive table-stripped table-condensed">
+                                            <table id="summary-configs" class="table">
+                                                <tr><th>{% trans 'Filename' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Status' %}</th></tr>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
+                                <br/>
+                                <br/>
+                                <button id="btn-submit-job" type="submit" class="btn btn-lg btn-success">{% trans 'Create Export' %}</button>
                             </div>
-                            <div class="row">
-                                <div id="summary-configs" class="col-md-12">
-                                    <span><strong>{% trans 'Configurations:' %}</strong></span><br/>
-                                    <div class="table-responsive table-stripped table-condensed">
-                                        <table id="summary-configs" class="table">
-                                            <tr><th>{% trans 'Filename' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Status' %}</th></tr>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <br/>
-                            <br/>
-                            <button id="btn-submit-job" type="submit" class="btn btn-lg btn-success">{% trans 'Create Export' %}</button>
                         </div>
-                      </div>
                     </div>
                     <!--ul id="create-pager" class="pager wizard">
                         <li class="next"><a href="#">{% trans 'Skip' %}</a></li>
@@ -340,24 +340,44 @@
             </form>
         </div>
     </div>
-    <div id="map-column" class="col-md-6">
+    <div id="mobile-alert" class="visible-xs">
+        <div class="alert-custom alert-success fade in">Click the menu on right to expand map controls</div>
+    </div>
+    <div id="map-column" class="col-md-6" style="min-width: 300px">
         <div id="create-controls">
-            <div class="btn-group" role="group">
-                <button id="select-area" class="btn btn-md btn-primary">{% trans 'Select Export Area' %}</button>
-                <button id="zoom-selection" class="btn btn-md btn-primary">{% trans 'Zoom To Selection' %}</button>
-                <button id="reset-map" class="btn btn-md btn-primary">{% trans 'Reset Map' %}</button>
-            </div>
+            <nav class="navbar navbar-default navbar-custom" role="navigation">
+                <div class="container-fluid container-fluid-custom">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" style="margin-top: 2px" data-toggle="collapse" data-target="#mapcontrols" aria-expanded="false" aria-controls="navbar">
+                            <span  class="sr-only">Toggle navigation</span>
+                            <span  class="icon-bar"></span>
+                            <span  class="icon-bar"></span>
+                            <span  class="icon-bar"></span>
+                        </button>
+
+                    </div>
+
+                    <div id="mapcontrols" class="collapse navbar-collapse navbar-collapse-custom  navbar-left">
+                        <ul class="nav-custom nav navbar-nav">
+                            <li style="height: 38px" id="select-area"><a class='navbar-a-custom' href="#create-controls">{% trans 'Select Export Area' %}</a></li>
+                            <li style="height: 38px" id="zoom-selection"><a class='navbar-a-custom' href="#create-controls">{% trans 'Zoom To Selection' %}</a></li>
+                            <li style="height: 38px" id="reset-map"><a class='navbar-a-custom' href="#create-controls">{% trans 'Reset Map' %}</a></li>
+
+                        </ul>
+                    </div><!--/.nav-collapse -->
+                </div><!--/.container-fluid -->
+            </nav>
             <div id="alert-extents" class="alert alert-danger fade in"></div>
             <div id="valid-extents" class="alert alert-success fade in"></div>
         </div>
 
         <div id="gazetteer" class="col-md-7">
-            <div class="input-group">
+            <div class="input-group" style="margin-top: 20px">
                 <span class="input-group-addon gazetteer"><span class="glyphicon glyphicon-search"></span></span>
-                <input id="nominatim" type="text" class="form-control typeahead" data-provide="typeahead" autocomplete="off" placeholder="{% trans 'Search for a place by name' %}" tabindex="4"/>
+                <input style="width:40px;" id="nominatim" type="text" class="form-control typeahead" data-provide="typeahead" autocomplete="off" placeholder="{% trans 'Search for a place by name' %}" tabindex="4"/>
             </div>
-
         </div>
+
         <div id="create-export-map" style="width: 100%"></div>
     </div>
 </div>
@@ -365,54 +385,54 @@
 <!-- bootstrap modal -->
 <div class="modal fade" id="uploadConfigError" tabindex="-1" role="dialog" aria-labelledby="uploadConfigError" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="myModalLabel">{% trans 'Error Uploading Configuration File' %}</h4>
-        </div>
-        <div class="modal-body" style="font-size: large;">
-         <div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">{% trans 'Error Uploading Configuration File' %}</h4>
+            </div>
+            <div class="modal-body" style="font-size: large;">
+                <div>
             <span class="glyphicon glyphicon-exclamation-sign"
                   style="float:left; font-size: 2.0em; color: red; margin:0 7px 25px 0;">
             </span>
-         </div>
-        <div>
-            <p>{% trans 'There was a problem with your configuration upload.' %}</p>
-            <p id="message"></p>
+                </div>
+                <div>
+                    <p>{% trans 'There was a problem with your configuration upload.' %}</p>
+                    <p id="message"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            </div>
         </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
-        </div>
-      </div>
     </div>
 </div>
 
 <!-- bootstrap modal -->
 <div class="modal fade" id="validationErrorModal" tabindex="-1" role="dialog" aria-labelledby="validationErrorModal" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title" id="myModalLabel">{% trans 'Invalid Form' %}</h4>
-        </div>
-        <div class="modal-body">
-         <p><span class="glyphicon glyphicon-exclamation-sign" style="float:left; font-size: 2.0em; color: red; margin: .3em 7px 25px 0;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">{% trans 'Invalid Form' %}</h4>
+            </div>
+            <div class="modal-body">
+                <p><span class="glyphicon glyphicon-exclamation-sign" style="float:left; font-size: 2.0em; color: red; margin: .3em 7px 25px 0;">
          </span>
-            <div style="font-size: large;">
-             <p id="validation-message"></p>
+                    <div style="font-size: large;">
+                <p id="validation-message"></p>
             </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
         </div>
-      </div>
     </div>
+</div>
 </div>
 
 <!-- configuration select modal dialog -->
 <div id="configSelectionModal" class="modal fade " tabindex="-1" role="dialog" aria-labelledby="configSelectionModal">
-  <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -466,7 +486,7 @@
                                     <div class="table-responsive">
                                         <table id="configurations" class="table table-hover table-condensed">
                                             <thead>
-                                                <tr><th>{% trans 'Name' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Created' %}</th><th>{% trans 'Owner' %}</th><th>{% trans 'Filename' %}</th><th>{% trans 'Select' %}</th></tr>
+                                            <tr><th>{% trans 'Name' %}</th><th>{% trans 'Type' %}</th><th>{% trans 'Created' %}</th><th>{% trans 'Owner' %}</th><th>{% trans 'Filename' %}</th><th>{% trans 'Select' %}</th></tr>
                                             </thead>
                                             <tbody></tbody>
                                         </table>
@@ -496,15 +516,15 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <div class="page-size">
-                                                <label class="control-label" for="page-size">
-                                                    <span class="pull-left"><strong>{% trans 'Display' %}</strong>&nbsp;</span>
-                                                    <select id="page-size" name="page_size" class="pull-left">
-                                                        <option value="5" selected>5</option>
-                                                        <option value="10">10</option>
-                                                        <option value="15">15</option>
-                                                    </select>
-                                                    <span class="pull-left"><strong>{% trans 'presets per page' %}</strong>&nbsp;</span>
-                                                </label>
+                                            <label class="control-label" for="page-size">
+                                                <span class="pull-left"><strong>{% trans 'Display' %}</strong>&nbsp;</span>
+                                                <select id="page-size" name="page_size" class="pull-left">
+                                                    <option value="5" selected>5</option>
+                                                    <option value="10">10</option>
+                                                    <option value="15">15</option>
+                                                </select>
+                                                <span class="pull-left"><strong>{% trans 'presets per page' %}</strong>&nbsp;</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -522,10 +542,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-              <button id="select" type="button" class="btn btn-primary" data-dismiss="modal">{% trans 'Select' %}</button>
+                <button id="select" type="button" class="btn btn-primary" data-dismiss="modal">{% trans 'Select' %}</button>
             </div>
         </div>
-  </div>
+    </div>
 </div>
 
 
