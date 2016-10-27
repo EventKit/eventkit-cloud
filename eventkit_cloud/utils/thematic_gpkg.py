@@ -16,7 +16,7 @@ class ThematicGPKG(object):
     Thin wrapper around ogr2ogr to convert sqlite to shp using thematic layers.
     """
 
-    def __init__(self, gpkg=None, shapefile=None, tags=None, job_name=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, tags=None, job_name=None, zipped=True, debug=False):
         """
         Initialize the ThematicGPKG utility.
 
@@ -38,8 +38,6 @@ class ThematicGPKG(object):
         # create thematic gpkg file
         self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '_thematic.gpkg'
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.update_sql = Template("spatialite $gpkg < $update_sql")
-
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {
@@ -96,7 +94,6 @@ class ThematicGPKG(object):
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
         sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, geom FROM $planet_table WHERE $select_clause')
-        recover_geom_tmpl = Template("SELECT RecoverGeometryColumn($tablename, 'GEOMETRY', 4326, $geom_type, 'XY')") #REPLACE
         for layer, spec in self.thematic_spec.iteritems():
             layer_type = layer.split('_')[-1]
             isPoly = layer_type == 'polygons'
@@ -143,7 +140,6 @@ class ThematicGPKG(object):
                 logger.error("SQL Execute for: {}, has failed.".format(sql))
                 raise
             geom_type = geom_types[layer_type]
-            recover_geom_sql = recover_geom_tmpl.safe_substitute({'tablename': "'" + layer + "'", 'geom_type': "'" + geom_type + "'"})
             conn.commit()
 
             insert_contents_temp = Template("INSERT INTO gpkg_contents VALUES ('$table_name', 'features', '$identifier', '', '$last_change', '$min_x', '$min_y', '$max_x', '$max_y', '$srs');")
@@ -187,28 +183,28 @@ class ThematicGPKG(object):
         cur.close()
         conn.close()
 
-        sql_file = open(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'), 'w+')
-        index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');")
-        for layer in valid_layers:
-            index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
-            sql_file.write(index_cmd)
-        sql_file.close()
-
-        self.update_index = Template("spatialite $gpkg < $update_sql")
-        index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
-                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql')})
-        if(self.debug):
-            print 'Running: %s' % index_cmd
-        proc = subprocess.Popen(index_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if returncode != 0:
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, returncode)
-        if self.debug:
-            print 'spatialite returned: %s' % returncode
-
-        os.remove(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'))
+        # sql_file = open(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'), 'w+')
+        # index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');")
+        # for layer in valid_layers:
+        #     index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
+        #     sql_file.write(index_cmd)
+        # sql_file.close()
+        #
+        # self.update_index = Template("spatialite $gpkg < $update_sql")
+        # index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
+        #                                            'update_sql': os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql')})
+        # if(self.debug):
+        #     print 'Running: %s' % index_cmd
+        # proc = subprocess.Popen(index_cmd, shell=True, executable='/bin/bash',
+        #                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # (stdout, stderr) = proc.communicate()
+        # returncode = proc.wait()
+        # if returncode != 0:
+        #     logger.error('%s', stderr)
+        #     raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, returncode)
+        # if self.debug:
+        #     print 'spatialite returned: %s' % returncode
+        #
+        # os.remove(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'))
 
         return self.thematic_gpkg

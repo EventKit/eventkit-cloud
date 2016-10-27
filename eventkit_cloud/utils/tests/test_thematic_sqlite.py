@@ -12,7 +12,7 @@ from django.test import TestCase
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import Job, Tag
 
-from ..thematic_sqlite import ThematicSqlite
+from ..thematic_gpkg import ThematicSqlite
 
 logger = logging.getLogger(__name__)
 

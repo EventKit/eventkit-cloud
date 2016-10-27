@@ -23,12 +23,12 @@ logger = logging.getLogger(__name__)
 
 export_task_registry = {
     'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
-    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask',
+    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask',
     'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
     'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
     'thematic-shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask',
-    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGeopackageExportTask'
+    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSQLiteExportTask'
 }
 
 thematic_tasks_list = ['thematic-sqlite', 'thematic-shp', 'thematic-gpkg']
@@ -158,16 +158,16 @@ class ExportOSMTaskRunner(TaskRunner):
             if thematic_exports:
                 # if user requested thematic-sqlite do it...if not create the celery task, and store the task in the model.
 
-                thematic_sqlite = thematic_exports.pop('thematic-sqlite', None)
-                if not thematic_sqlite:
-                    thematic_sqlite_task = create_format_task('thematic-sqlite')()
-                    thematic_sqlite = {'obj': thematic_sqlite_task,
-                                       'task_uid': create_export_task(task_name=thematic_sqlite_task.name,
+                thematic_gpkg = thematic_exports.pop('thematic-gpkg', None)
+                if not thematic_gpkg:
+                    thematic_gpkg_task = create_format_task('thematic-gpkg')()
+                    thematic_gpkg = {'obj': thematic_gpkg_task,
+                                       'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
                                                                       export_provider_task=export_provider_task).uid}
-                thematic_tasks = (thematic_sqlite.get('obj').si(run_uid=run.uid,
+                thematic_tasks = (thematic_gpkg.get('obj').si(run_uid=run.uid,
                                                                 stage_dir=stage_dir,
                                                                 job_name=job_name,
-                                                                task_uid=thematic_sqlite.get('task_uid')) |
+                                                                task_uid=thematic_gpkg.get('task_uid')) |
                                   group(task.get('obj').si(run_uid=run.uid,
                                                            stage_dir=stage_dir,
                                                            job_name=job_name,
