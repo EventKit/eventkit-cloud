@@ -184,10 +184,16 @@ class ThematicGPKG(object):
         conn.close()
 
         sql_file = open(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'), 'w+')
-        index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');")
+        convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
+        index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
+        convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
         for layer in valid_layers:
+            convert_to_cmd = convert_to_cmd_temp.safe_substitute({'layer': layer})
             index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
+            convert_from_cmd = convert_from_cmd_temp.safe_substitute({'layer': layer})
+            sql_file.write(convert_to_cmd)
             sql_file.write(index_cmd)
+            sql_file.write(convert_from_cmd)
         sql_file.close()
 
         self.update_index = Template("spatialite $gpkg < $update_sql")
