@@ -34,7 +34,8 @@ clone.job = (function(){
         map = new ol.Map({
             interactions: ol.interaction.defaults({
                 keyboard: false,
-                altShiftDragRotate: false
+                altShiftDragRotate: false,
+                pinchRotate: false
             }),
             target: 'create-export-map',
             view: new ol.View({
@@ -933,11 +934,11 @@ clone.job = (function(){
             fv.validateContainer($bbox);
             var isValidBBox = fv.isValidContainer($bbox);
             if (isValidBBox === false || isValidBBox === null) {
-                if (bboxSource == null) {
-                    validateBounds(null);
-                }
-                else {
+                if (bboxSource.getFeatures().length > 0) {
                     validateBounds(bboxSource.getExtent());
+                }
+                else{
+                    validateBounds(null);
                 }
             }
 
