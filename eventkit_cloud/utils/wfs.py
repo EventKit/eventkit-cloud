@@ -7,20 +7,20 @@ from string import Template
 
 logger = logging.getLogger(__name__)
 
-class WFSToSQLITE(object):
+class WFSToGPKG(object):
     """
-    Convert a WFS services to a sqlite file.
+    Convert a WFS services to a gpkg file.
     """
 
-    def __init__(self, config=None, sqlite=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
+    def __init__(self, config=None, gpkg=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
         """
-        Initialize the WFSToSQLITE utility.
+        Initialize the WFSToGPKG utility.
 
         Args:
-            sqlite: where to write the sqlite output
+            gpkg: where to write the gpkg output
             debug: turn debugging on / off
         """
-        self.sqlite = sqlite
+        self.gpkg = gpkg
         self.bbox = bbox
         self.service_url = service_url
         self.debug = debug
@@ -28,16 +28,16 @@ class WFSToSQLITE(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f SQLite $sqlite WFS:'$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite WFS:'$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg WFS:'$url'")
 
     def convert(self, ):
         """
-        Convert wfs to sqlite.
+        Convert wfs to gpkg.
         """
-        if not os.path.exists(os.path.dirname(self.sqlite)):
-            os.makedirs(os.path.dirname(self.sqlite), 6600)
+        if not os.path.exists(os.path.dirname(self.gpkg)):
+            os.makedirs(os.path.dirname(self.gpkg), 6600)
 
         try:
             # remove any url params so we can add our own
@@ -49,9 +49,9 @@ class WFSToSQLITE(object):
             self.service_url = '{}{}'.format(self.service_url, '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(self.layer))
 
         if self.bbox:
-            convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
+            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
         else:
-            convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url})
+            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
 
         if(self.debug):
             logger.debug('Running: %s' % convert_cmd)
@@ -67,4 +67,4 @@ class WFSToSQLITE(object):
         if(self.debug):
             logger.debug('ogr2ogr returned: %s' % returncode)
 
-        return self.sqlite
+        return self.gpkg

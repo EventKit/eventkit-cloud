@@ -7,20 +7,20 @@ from string import Template
 
 logger = logging.getLogger(__name__)
 
-class ArcGISFeatureServiceToSQLITE(object):
+class ArcGISFeatureServiceToGPKG(object):
     """
-    Convert a Arcgis Feature Service to a sqlite file.
+    Convert a Arcgis Feature Service to a gpkg file.
     """
 
-    def __init__(self, config=None, sqlite=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
+    def __init__(self, config=None, gpkg=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
         """
-        Initialize the ArcFeatureServiceToSQLITE utility.
+        Initialize the ArcFeatureServiceToGPKG utility.
 
         Args:
-            sqlite: where to write the sqlite output
+            gpkg: where to write the gpkg output
             debug: turn debugging on / off
         """
-        self.sqlite = sqlite
+        self.gpkg = gpkg
         self.bbox = bbox
         self.service_url = service_url
         self.debug = debug
@@ -28,16 +28,16 @@ class ArcGISFeatureServiceToSQLITE(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f SQLite $sqlite '$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f GPKG $gpkg '$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite '$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg '$url'")
 
     def convert(self, ):
         """
-        Convert Arc Feature Service to sqlite.
+        Convert Arc Feature Service to gpkg.
         """
-        if not os.path.exists(os.path.dirname(self.sqlite)):
-            os.makedirs(os.path.dirname(self.sqlite), 6600)
+        if not os.path.exists(os.path.dirname(self.gpkg)):
+            os.makedirs(os.path.dirname(self.gpkg), 6600)
 
         try:
             # remove any url query so we can add our own
@@ -49,9 +49,9 @@ class ArcGISFeatureServiceToSQLITE(object):
             self.service_url = '{}{}'.format(self.service_url, '/query?where=objectid%3Dobjectid&outfields=*&f=json')
 
         if self.bbox:
-            convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
+            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
         else:
-            convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url})
+            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
 
         if(self.debug):
             logger.debug('Running: %s' % convert_cmd)
@@ -67,4 +67,4 @@ class ArcGISFeatureServiceToSQLITE(object):
         if(self.debug):
             logger.debug('ogr2ogr returned: %s' % returncode)
 
-        return self.sqlite
+        return self.gpkg
