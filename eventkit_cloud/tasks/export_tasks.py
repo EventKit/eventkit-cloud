@@ -382,9 +382,9 @@ class WFSExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = wfs.WFSToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
+            w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                                       config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
@@ -402,10 +402,10 @@ class ArcGISFeatureServiceExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = arcgis_feature_service.ArcGISFeatureServiceToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                                                   config=config, service_type=service_type)
+            w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                                                    config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -494,7 +494,6 @@ class FinalizeExportProviderTask(Task):
         export_provider_task.save()
         try:
             shutil.rmtree(stage_dir)
-            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         run_complete = True
@@ -531,7 +530,6 @@ class FinalizeRunTask(Task):
         run.save()
         try:
             shutil.rmtree(stage_dir)
-            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 

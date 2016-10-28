@@ -41,15 +41,18 @@ class TestThematicGPKG(TestCase):
                 job=self.job
             )
 
-
-    @patch('shutil.copy')
-    @patch('os.path.exists')
-    @patch('subprocess.PIPE')
-    @patch('subprocess.Popen')
-    @patch('sqlite3.connect')
+    @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
+    @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')
+    @patch('eventkit_cloud.utils.thematic_gpkg.subprocess.PIPE')
+    @patch('eventkit_cloud.utils.thematic_gpkg.subprocess.Popen')
+    @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3.connect')
     def test_convert(self, connect, popen, pipe, exists, copy):
         gpkg = self.path + '/files/test.gpkg'
         thematic_gpkg = self.path + '/files/test_thematic_shp_thematic.gpkg'
+        proc = Mock()
+        popen.return_value = proc
+        proc.communicate.return_value = (Mock(), Mock())
+        proc.wait.return_value = 0
         exists.return_value = True
         conn = Mock()
         conn.enable_load_extention = Mock()
@@ -60,7 +63,7 @@ class TestThematicGPKG(TestCase):
         tags = self.job.categorised_tags
         t2s = ThematicGPKG(
             gpkg=gpkg,
-            tags=tags, job_name='test_thematic_sqlite',
+            tags=tags, job_name='test_thematic_gpkg',
             zipped=False, debug=False
         )
         exists.assert_called_once()

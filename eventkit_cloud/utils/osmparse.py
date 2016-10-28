@@ -72,29 +72,6 @@ class OSMParser(object):
         if(self.debug):
             print 'ogr2ogr returned: %s' % returncode
 
-    # def create_default_schema(self, ):
-    #     """
-    #     Create the default osm sqlite schema.
-    #
-    #     Creates planet_osm_point, planet_osm_line, planet_osm_polygon tables.
-    #     """
-    #     assert os.path.exists(self.sqlite), "No spatialite file. Run 'create_spatialite()' method first."
-    #     # update the spatialite schema
-    #     self.update_sql = Template("spatialite $sqlite < $update_sql")
-    #     sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
-    #                         'update_sql': os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql')})
-    #     if(self.debug):
-    #         print 'Running: %s' % sql_cmd
-    #     proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
-    #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #     (stdout, stderr) = proc.communicate()
-    #     returncode = proc.wait()
-    #     if returncode != 0:
-    #         logger.error('%s', stderr)
-    #         raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
-    #     if self.debug:
-    #         print 'spatialite returned: %s' % returncode
-
     def create_default_schema_gpkg(self,):
         """
         Create the default osm gpkg schema
@@ -109,6 +86,7 @@ class OSMParser(object):
             conn.commit()
         except Exception as e:
             print(e)
+            raise
         finally:
             cur.close()
             conn.close()
