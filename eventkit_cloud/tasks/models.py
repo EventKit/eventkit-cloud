@@ -92,6 +92,7 @@ class ExportTask(models.Model):
     progress = models.IntegerField(default=0, editable=False, null=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     started_at = models.DateTimeField(editable=False, null=True)
+    estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     finished_at = models.DateTimeField(editable=False, null=True)
 
     class Meta:

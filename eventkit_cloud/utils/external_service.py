@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from dateutil import parser
+from datetime import datetime
 from time import sleep
 from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
@@ -28,9 +28,19 @@ class CustomLogger(ProgressLog):
     def __init__(self, progress_tracker=None, *args, **kwargs):
         self.progress_tracker = progress_tracker
         super(CustomLogger, self).__init__(*args, **kwargs)
+        # Log mapproxy status but allow a setting to reduce database writes.
+        self.log_step_step = 1
+        self.log_step_counter = self.log_step_step
 
     def log_step(self, progress):
-        self.progress_tracker(progress.progress*100)
+        if progress.eta.eta():
+            eta_datetime = datetime.utcfromtimestamp(float(progress.eta.eta()))
+            print(str(type(eta_datetime)) + " " + repr(eta_datetime))
+            if self.progress_tracker:
+                if self.log_step_counter == 0:
+                    self.progress_tracker(progress=progress.progress*100, estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
+                    self.log_step_counter = self.log_step_step
+                self.log_step_counter = self.log_step_counter - 1
         super(CustomLogger, self).log_step(progress)
 
 
