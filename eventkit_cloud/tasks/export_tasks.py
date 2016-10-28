@@ -18,7 +18,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service, wfs, arcgis_feature_service,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, external_service, wfs, arcgis_feature_service, sqlite,
 )
 
 # Get an instance of a logger
@@ -227,20 +227,20 @@ class OSMPrepSchemaTask(ExportTask):
     def run(self, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
-        osmparser = osmparse.OSMParser(osm=osm, sqlite=sqlite, osmconf=osmconf)
-        osmparser.create_spatialite()
-        osmparser.create_default_schema()
+        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf)
+        osmparser.create_geopackage()
+        osmparser.create_default_schema_gpkg()
         osmparser.update_zindexes()
-        return {'result': sqlite}
+        return {'result': gpkg}
 
 
 class ThematicShpExportTask(ExportTask):
     """
     Task to export thematic shapefile.
 
-    Requires ThematicSqliteExportTask to be called first.
+    Requires ThematicGPKGExportTask to be called first.
     """
 
     name = "Thematic Shapefile Export"
@@ -249,10 +249,10 @@ class ThematicShpExportTask(ExportTask):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
-        thematic_sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        thematic_gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_thematic_shp'.format(job_name))
         try:
-            t2s = shp.SQliteToShp(sqlite=thematic_sqlite, shapefile=shapefile)
+            t2s = shp.GPKGToShp(gpkg=thematic_gpkg, shapefile=shapefile)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
@@ -260,25 +260,25 @@ class ThematicShpExportTask(ExportTask):
             raise Exception(e)  # hand off to celery..
 
 
-class ThematicSqliteExportTask(ExportTask):
+class ThematicGPKGExportTask(ExportTask):
     """
-    Task to export thematic shapefile.
+    Task to export thematic gpkg.
     """
 
-    name = "SQLITE Format (Thematic)"
+    name = "GPKG Format (Thematic)"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            t2s = thematic_sqlite.ThematicSqlite(sqlite=sqlite, tags=tags, job_name=job_name)
+            t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
-            logger.error('Raised exception in thematic sqlite task, %s', str(e))
+            logger.error('Raised exception in thematic gpkg task, %s', str(e))
             raise Exception(e)  # hand off to celery..
 
 
@@ -290,10 +290,10 @@ class ShpExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
-            s2s = shp.SQliteToShp(sqlite=sqlite, shapefile=shapefile)
+            s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
             out = s2s.convert()
             return {'result': out}
         except Exception as e:
@@ -309,10 +309,10 @@ class KmlExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
-            s2k = kml.SQliteToKml(sqlite=sqlite, kmlfile=kmlfile)
+            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
             out = s2k.convert()
             return {'result': out}
         except Exception as e:
@@ -329,9 +329,15 @@ class SqliteExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        # sqlite already generated by OSMPrepSchema so just return path.
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
-        return {'result': sqlite}
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        try:
+            s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile)
+            out = s2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in sqlite export, %s', str(e))
+            raise Exception(e)
 
 
 class GeopackageExportTask(ExportTask):
@@ -342,18 +348,12 @@ class GeopackageExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
-        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        try:
-            s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
-            out = s2g.convert()
-            return {'result': out}
-        except Exception as e:
-            logger.error('Raised exception in geopackage export, %s', str(e))
-            raise Exception(e)
+        # gpkg already generated by OSMPrepSchema so just return path
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        return {'result': gpkg}
 
 
-class ThematicGeopackageExportTask(ExportTask):
+class ThematicSQLiteExportTask(ExportTask):
     """
     Class defining geopackage export function.
     Requires ThematicSqliteExportTask.
@@ -362,10 +362,10 @@ class ThematicGeopackageExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
         gpkgfile = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
         try:
-            s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
+            s2g = sqlite.GPKGToSQLite(sqlitefile=sqlitefile, gpkg=gpkgfile)
             out = s2g.convert()
             return {'result': out}
         except Exception as e:
@@ -494,6 +494,7 @@ class FinalizeExportProviderTask(Task):
         export_provider_task.save()
         try:
             shutil.rmtree(stage_dir)
+            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         run_complete = True
@@ -530,6 +531,7 @@ class FinalizeRunTask(Task):
         run.save()
         try:
             shutil.rmtree(stage_dir)
+            print('yes')
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 

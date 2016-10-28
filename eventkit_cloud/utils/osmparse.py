@@ -2,6 +2,7 @@
 import argparse
 import logging
 import os
+import sqlite3
 import subprocess
 from string import Template
 
@@ -16,7 +17,7 @@ class OSMParser(object):
     Creates an ouput spatialite file to be used in export pipeline.
     """
 
-    def __init__(self, osm=None, sqlite=None, osmconf=None, debug=None):
+    def __init__(self, osm=None, gpkg=None, osmconf=None, debug=None):
         """
         Initialize the OSMParser.
 
@@ -29,7 +30,7 @@ class OSMParser(object):
         self.osm = osm
         if not os.path.exists(self.osm):
             raise IOError('Cannot find PBF data for this task.')
-        self.sqlite = sqlite
+        self.gpkg = gpkg
         self.debug = debug
         if osmconf:
             self.osmconf = osmconf
@@ -42,7 +43,7 @@ class OSMParser(object):
         See osmconf.ini for details. See gdal config options at http://www.gdal.org/drv_osm.html
         """
         self.ogr_cmd = Template("""
-            ogr2ogr -f SQlite -dsco SPATIALITE=YES $sqlite $osm \
+            ogr2ogr -f GPKG $gpkg $osm \
             --config OSM_CONFIG_FILE $osmconf \
             --config OGR_INTERLEAVED_READING YES \
             --config OSM_MAX_TMPFILE_SIZE 100 -gt 65536
@@ -53,11 +54,11 @@ class OSMParser(object):
         self.srs = osr.SpatialReference()
         self.srs.ImportFromEPSG(4326)  # configurable
 
-    def create_spatialite(self, ):
+    def create_geopackage(self, ):
         """
         Create the spatialite file from the osm data.
         """
-        ogr_cmd = self.ogr_cmd.safe_substitute({'sqlite': self.sqlite,
+        ogr_cmd = self.ogr_cmd.safe_substitute({'gpkg': self.gpkg,
                                                 'osm': self.osm, 'osmconf': self.osmconf})
         if(self.debug):
             print 'Running: %s' % ogr_cmd
@@ -71,17 +72,50 @@ class OSMParser(object):
         if(self.debug):
             print 'ogr2ogr returned: %s' % returncode
 
-    def create_default_schema(self, ):
-        """
-        Create the default osm sqlite schema.
+    # def create_default_schema(self, ):
+    #     """
+    #     Create the default osm sqlite schema.
+    #
+    #     Creates planet_osm_point, planet_osm_line, planet_osm_polygon tables.
+    #     """
+    #     assert os.path.exists(self.sqlite), "No spatialite file. Run 'create_spatialite()' method first."
+    #     # update the spatialite schema
+    #     self.update_sql = Template("spatialite $sqlite < $update_sql")
+    #     sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
+    #                         'update_sql': os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql')})
+    #     if(self.debug):
+    #         print 'Running: %s' % sql_cmd
+    #     proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
+    #                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #     (stdout, stderr) = proc.communicate()
+    #     returncode = proc.wait()
+    #     if returncode != 0:
+    #         logger.error('%s', stderr)
+    #         raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
+    #     if self.debug:
+    #         print 'spatialite returned: %s' % returncode
 
-        Creates planet_osm_point, planet_osm_line, planet_osm_polygon tables.
+    def create_default_schema_gpkg(self,):
         """
-        assert os.path.exists(self.sqlite), "No spatialite file. Run 'create_spatialite()' method first."
-        # update the spatialite schema
-        self.update_sql = Template("spatialite $sqlite < $update_sql")
-        sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
-                            'update_sql': os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql')})
+        Create the default osm gpkg schema
+        Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
+        """
+        assert os.path.exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
+        try:
+            conn = sqlite3.connect(self.gpkg)
+            cur = conn.cursor()
+            sql = open(os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql'), 'r').read()
+            cur.executescript(sql)
+            conn.commit()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+            conn.close()
+
+        self.update_sql = Template("spatialite $gpkg < $update_sql")
+        sql_cmd = self.update_sql.safe_substitute({'gpkg': self.gpkg,
+                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'spatial_index.sql')})
         if(self.debug):
             print 'Running: %s' % sql_cmd
         proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
@@ -94,12 +128,13 @@ class OSMParser(object):
         if self.debug:
             print 'spatialite returned: %s' % returncode
 
+
     def update_zindexes(self, ):
         """
         Update the zindexes on sqlite layers.
         """
-        assert os.path.exists(self.sqlite), "No spatialite file. Run 'create_spatialite()' method first."
-        ds = ogr.Open(self.sqlite, update=True)
+        assert os.path.exists(self.gpkg), "No geopackage file. Run 'create_geopackage()' method first."
+        ds = ogr.Open(self.gpkg, update=True)
         zindexes = {
             3: ('path', 'track', 'footway', 'minor', 'road', 'service', 'unclassified', 'residential'),
             4: ('tertiary_link', 'tertiary'),
@@ -151,13 +186,13 @@ class OSMParser(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description=(
-            'Converts OSM (xml|pbf) to Spatialite. \n'
+            'Converts OSM (xml|pbf) to GPKG. \n'
             'Updates schema to create planet_osm_* tables.\n'
             'Updates z_indexes on all layers.'
         )
     )
     parser.add_argument('-o', '--osm-file', required=True, dest="osm", help='The OSM file to convert (xml or pbf)')
-    parser.add_argument('-s', '--spatialite-file', required=True, dest="sqlite", help='The sqlite output file')
+    parser.add_argument('-f', '--geopackage-file', required=True, dest="gpkg", help='The sqlite output file')
     parser.add_argument('-q', '--schema-sql', required=False, dest="schema", help='A sql file to refactor the output schema')
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
@@ -168,11 +203,11 @@ if __name__ == '__main__':
         else:
             config[k] = v
     osm = config.get('osm')
-    sqlite = config.get('sqlite')
+    gpkg = config.get('gpkg')
     debug = False
     if config.get('debug'):
         debug = True
-    parser = OSMParser(osm=osm, sqlite=sqlite, debug=debug)
-    parser.create_spatialite()
-    parser.create_default_schema()
+    parser = OSMParser(osm=osm, gpkg=gpkg, debug=debug)
+    parser.create_geopackage()
+    parser.create_default_schema_gpkg()
     parser.update_zindexes()
