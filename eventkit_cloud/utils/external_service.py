@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class CustomLogger(ProgressLog):
-    
+
     def __init__(self, progress_tracker=None, *args, **kwargs):
         self.progress_tracker = progress_tracker
         super(CustomLogger, self).__init__(*args, **kwargs)

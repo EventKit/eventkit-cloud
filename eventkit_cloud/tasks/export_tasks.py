@@ -56,6 +56,7 @@ class ExportTask(Task):
         task = ExportTask.objects.get(celery_uid=task_id)
         provider_task_name = task.export_provider_task.name
         task.finished_at = finished
+        task.progress = 100
         # get the output
         output_url = retval['result']
         stat = os.stat(output_url)
@@ -214,9 +215,10 @@ class OverpassQueryTask(ExportTask):
         Runs the query and returns the path to the filtered osm file.
         """
         self.update_task_state(task_uid=task_uid)
+        progress_tracker = get_progress_tracker(task_uid=task_uid)
         op = overpass.Overpass(
             bbox=bbox, stage_dir=stage_dir,
-            job_name=job_name, filters=filters
+            job_name=job_name, filters=filters, progress_tracker=progress_tracker
         )
         op.run_query()  # run the query
         filtered_osm = op.filter()  # filter the results
@@ -619,6 +621,8 @@ class ExportTaskErrorHandler(Task):
 def get_progress_tracker(task_uid=None):
     from eventkit_cloud.tasks.models import ExportTask
     def progress_tracker(progress=None):
+        if progress > 100:
+            progress = 100
         print("UPDATING PROGRESS TO {0}".format(progress))
         export_task = ExportTask.objects.get(uid=task_uid)
         export_task.progress = progress
