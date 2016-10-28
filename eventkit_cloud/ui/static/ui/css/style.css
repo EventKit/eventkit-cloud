@@ -1,18 +1,18 @@
 @media (min-width: 1200px){
     .container, .container-fluid {
-       width: 100% !important;
+        width: 100% !important;
     }
 }
 
 @media (min-width: 992px){
     .container, .container-fluid {
-       width: 100% !important;
+        width: 100% !important;
     }
 }
 
 @media (min-width: 768px){
     .container, .container-fluid {
-       width: 100% !important;
+        width: 100% !important;
     }
     #start-date {
         padding-right: 0px;
@@ -20,9 +20,9 @@
 }
 
 html, body {
-  width: 100%;
-  height: 100%;
-  font-family: 'Lato', sans-serif;
+    width: 100%;
+    height: 100%;
+    font-family: 'Lato', sans-serif;
 }
 
 /* top banner */
@@ -56,10 +56,31 @@ html, body {
 
 
 .navbar {
-    background-color: #000;
+    /* background-color: #000; */
     margin-bottom: 0px !important;
 }
 
+.navbar-custom {
+    top: 9px;
+    z-index: 1000;
+    min-height: 30px!important;
+    height:40px;
+    background-color: #337ab7;
+}
+.navbar-collapse-custom {
+    border: none;
+}
+
+.navbar-a-custom{
+    color: #ffffff!important;
+    padding-top: 8px!important;
+}
+a.navbar-a-custom:hover {
+    color: #000000!important;
+}
+a.navbar-a-custom:active {
+    color: #000000!important;
+}
 .navbar-inverse {
     border: none !important;
 }
@@ -78,6 +99,17 @@ ul.nav {
     float: right !important;
     font-size: large;
     font-weight: 700;
+}
+
+ul.nav-custom {
+    float: left !important;
+    font-size: 15px;
+    font-weight: 700;
+    background-color:#337ab7;
+}
+
+ul.nav-custom>li.active>a, .ul.nav-custom>li.active>a:focus, .ul.nav-custom>li.a:hover {
+    color: #000000;
 }
 
 .navbar-inverse .navbar-nav>.active>a {
@@ -100,6 +132,10 @@ ul.nav {
     padding: 0px !important;
 }
 
+.container-fluid-custom{
+    height: 40px;
+
+}
 
 .row {
     margin: 0px !important;
@@ -117,9 +153,9 @@ ul.nav {
 .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11,
 .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6,
 .col-xs-7, .col-xs-8, .col-xs-9 {
-  position: relative;
-  min-height: 1px;
-  padding: 0px;
+    position: relative;
+    min-height: 1px;
+    padding: 0px;
 }
 
 .glyphicon-heading {
@@ -145,6 +181,12 @@ span.heading {
     overflow-x: visible !important;
 }
 
+.alert-custom {
+    padding: 5px;
+    margin-bottom: 0px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
 
 /* Map styles */
 
@@ -178,6 +220,7 @@ span.heading {
     visibility: hidden;
 }
 
+
 #valid-extents {
     position: absolute;
     top: 90px;
@@ -209,7 +252,7 @@ span.heading {
 }
 
 .olControlDrawFeatureActive {
-  cursor: crosshair;
+    cursor: crosshair;
 }
 
 .olControlAttribution {
@@ -321,7 +364,7 @@ li.next {
 
 div#gazetteer {
     position: absolute;
-    top: 50px;
+    top: 35px;
     left: 50px;
     z-index: 100;
 
@@ -374,7 +417,7 @@ ul.typeahead {
 }
 
 #hdm-feature-tree {
-   margin-right: 5em;
+    margin-right: 5em;
 }
 
 /* hide 'name' tag by default in the feature selection trees */
