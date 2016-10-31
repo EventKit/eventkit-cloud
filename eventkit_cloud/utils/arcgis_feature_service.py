@@ -7,12 +7,16 @@ from string import Template
 
 logger = logging.getLogger(__name__)
 
+
 class ArcGISFeatureServiceToGPKG(object):
+
     """
     Convert a Arcgis Feature Service to a gpkg file.
     """
 
+
     def __init__(self, config=None, gpkg=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
+
         """
         Initialize the ArcFeatureServiceToGPKG utility.
 
@@ -28,9 +32,9 @@ class ArcGISFeatureServiceToGPKG(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f GPKG $gpkg '$url'")
+            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f GPKG $gpkg '$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg '$url'")
+            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg '$url'")
 
     def convert(self, ):
         """
@@ -53,7 +57,7 @@ class ArcGISFeatureServiceToGPKG(object):
         else:
             convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
 
-        if(self.debug):
+        if self.debug:
             logger.debug('Running: %s' % convert_cmd)
 
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/sh',
@@ -61,10 +65,10 @@ class ArcGISFeatureServiceToGPKG(object):
         (stdout, stderr) = proc.communicate()
         returncode = proc.wait()
 
-        if (returncode != 0):
+        if returncode != 0:
             logger.error('%s', stderr)
             raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
-        if(self.debug):
+        if self.debug:
             logger.debug('ogr2ogr returned: %s' % returncode)
 
         return self.gpkg
