@@ -214,6 +214,7 @@ class Job(TimeStampedModelMixin):
     the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
+    zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
 
     class Meta:  # pragma: no cover
         managed = True

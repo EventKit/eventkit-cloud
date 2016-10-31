@@ -529,6 +529,11 @@ class JobSerializer(serializers.Serializer):
         default=serializers.CurrentUserDefault()
     )
     tags = serializers.SerializerMethodField()
+    zipfile_url = serializers.SerializerMethodField()
+
+    def get_zipfile_url(self, obj):
+        request = self.context['request']
+        return request.build_absolute_uri('../../' + obj.zipfile_url) 
 
     def create(self, validated_data):
         """Creates an export Job."""

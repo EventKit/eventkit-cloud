@@ -21,7 +21,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_sqlite, geopackage, external_service, wfs, arcgis_feature_service,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, external_service, wfs, arcgis_feature_service, sqlite,
 )
 
 # Get an instance of a logger
@@ -73,9 +73,6 @@ class ExportTask(Task):
         run_dir = os.path.join(download_root, run_uid)
         provider_dir = os.path.join(run_dir, provider_slug)
         download_path = os.path.join(provider_dir, filename)
-        if 'zip' in retval['result']:
-            from celery.contrib import rdb
-            rdb.set_trace()
 
         try:
             if not os.path.exists(run_dir):
@@ -236,20 +233,20 @@ class OSMPrepSchemaTask(ExportTask):
     def run(self, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
-        osmparser = osmparse.OSMParser(osm=osm, sqlite=sqlite, osmconf=osmconf)
-        osmparser.create_spatialite()
-        osmparser.create_default_schema()
+        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf)
+        osmparser.create_geopackage()
+        osmparser.create_default_schema_gpkg()
         osmparser.update_zindexes()
-        return {'result': sqlite}
+        return {'result': gpkg}
 
 
 class ThematicShpExportTask(ExportTask):
     """
     Task to export thematic shapefile.
 
-    Requires ThematicSqliteExportTask to be called first.
+    Requires ThematicGPKGExportTask to be called first.
     """
 
     name = "Thematic Shapefile Export"
@@ -258,10 +255,10 @@ class ThematicShpExportTask(ExportTask):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
-        thematic_sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        thematic_gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_thematic_shp'.format(job_name))
         try:
-            t2s = shp.SQliteToShp(sqlite=thematic_sqlite, shapefile=shapefile)
+            t2s = shp.GPKGToShp(gpkg=thematic_gpkg, shapefile=shapefile)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
@@ -269,25 +266,25 @@ class ThematicShpExportTask(ExportTask):
             raise Exception(e)  # hand off to celery..
 
 
-class ThematicSqliteExportTask(ExportTask):
+class ThematicGPKGExportTask(ExportTask):
     """
-    Task to export thematic shapefile.
+    Task to export thematic gpkg.
     """
 
-    name = "SQLITE Format (Thematic)"
+    name = "GPKG Format (Thematic)"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            t2s = thematic_sqlite.ThematicSqlite(sqlite=sqlite, tags=tags, job_name=job_name)
+            t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
-            logger.error('Raised exception in thematic sqlite task, %s', str(e))
+            logger.error('Raised exception in thematic gpkg task, %s', str(e))
             raise Exception(e)  # hand off to celery..
 
 
@@ -299,10 +296,10 @@ class ShpExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
-            s2s = shp.SQliteToShp(sqlite=sqlite, shapefile=shapefile)
+            s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
             out = s2s.convert()
             return {'result': out}
         except Exception as e:
@@ -318,10 +315,10 @@ class KmlExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
-            s2k = kml.SQliteToKml(sqlite=sqlite, kmlfile=kmlfile)
+            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
             out = s2k.convert()
             return {'result': out}
         except Exception as e:
@@ -338,9 +335,15 @@ class SqliteExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        # sqlite already generated by OSMPrepSchema so just return path.
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
-        return {'result': sqlite}
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        try:
+            s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile)
+            out = s2g.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in sqlite export, %s', str(e))
+            raise Exception(e)
 
 
 class GeopackageExportTask(ExportTask):
@@ -351,18 +354,12 @@ class GeopackageExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
-        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        try:
-            s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
-            out = s2g.convert()
-            return {'result': out}
-        except Exception as e:
-            logger.error('Raised exception in geopackage export, %s', str(e))
-            raise Exception(e)
+        # gpkg already generated by OSMPrepSchema so just return path
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        return {'result': gpkg}
 
 
-class ThematicGeopackageExportTask(ExportTask):
+class ThematicSQLiteExportTask(ExportTask):
     """
     Class defining geopackage export function.
     Requires ThematicSqliteExportTask.
@@ -371,10 +368,10 @@ class ThematicGeopackageExportTask(ExportTask):
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
         gpkgfile = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
         try:
-            s2g = geopackage.SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile)
+            s2g = sqlite.GPKGToSQLite(sqlitefile=sqlitefile, gpkg=gpkgfile)
             out = s2g.convert()
             return {'result': out}
         except Exception as e:
@@ -391,9 +388,9 @@ class WFSExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = wfs.WFSToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
+            w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                                       config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
@@ -411,10 +408,10 @@ class ArcGISFeatureServiceExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        sqlite = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            w2g = arcgis_feature_service.ArcGISFeatureServiceToSQLITE(sqlite=sqlite, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                                                   config=config, service_type=service_type)
+            w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                                                    config=config, service_type=service_type)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -492,7 +489,9 @@ class FinalizeExportProviderTask(Task):
     name = 'Finalize Export Provider Run'
 
     def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
+
         from eventkit_cloud.tasks.models import ExportProviderTask
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
         export_provider_task.status = 'COMPLETED'
         tasks = []
@@ -501,49 +500,62 @@ class FinalizeExportProviderTask(Task):
             # TODO (mvv): should this also include `PENDING` tasks?
             if task.status == 'FAILED':
                 export_provider_task.status = 'INCOMPLETE'
+
         export_provider_task.save()
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError or OSError:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
         run_complete = True
         for provider_task in export_provider_task.run.provider_tasks.all():
             if provider_task.status in ['PENDING', 'RUNNING']:
                 run_complete = False
+
         if run_complete:
             finalize_run_task = FinalizeRunTask()
             finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
 
+            # TODO get job and check for zip property
+            zipfile_task = ZipFileTask()
+            zipfile_task.si(
+                run_uid=run_uid,
+                stage_dir=stage_dir
+            )()
 
-class ZipFileTask(ExportTask):
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+
+class ZipFileTask(Task):
     """
     rolls up runs into a zip file
     """
     name = 'Zip File Export'
 
 
-    def run(self, run_uid=None, stage_dir=None, task_uid=None, provider_slug=None):
-        self.update_task_state(task_uid=task_uid)
+    def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
-
-        staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+        dl_filepath = os.path.join(download_root, str(run_uid))
 
-        provider_dl_filepath = os.path.join(download_root, str(run_uid), provider_slug )
-        provider_st_filepath = os.path.join(staging_root, str(run_uid), provider_slug )
+        # probably need to recurse
+        files = []
+        for root, dirnames, filenames in os.walk(dl_filepath):
+            files += [os.path.join(root, filename) for filename in filenames]
 
-        files = glob.glob(provider_dl_filepath + '/*')
-
-        zip_filename = provider_slug + '.zip'
-        zip_filepath = os.path.join(provider_st_filepath, zip_filename)
+        zip_filename = 'export.zip'
+        zip_filepath = os.path.join(dl_filepath, zip_filename)
 
         with ZipFile(zip_filepath, 'w') as zipfile:
             for filepath in files:
-                filename = filepath.split('/')[-1]
+                filename = os.path.join(*filepath.split('/')[-2:])
                 zipfile.write(
                     filepath,
-                    arcname=os.path.join(provider_slug, filename)
+                    arcname=filename
                 )
+
+        run = ExportRun.objects.get(uid=run_uid)
+        zipfile_url = ['downloads'] + zip_filepath.split('/')[-2:]
+        run.job.zipfile_url = os.path.join(*zipfile_url)
+        run.job.save()
 
         return {'result': zip_filepath}
 
@@ -561,6 +573,7 @@ class FinalizeRunTask(Task):
 
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
+
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
         provider_tasks = run.provider_tasks.all()
@@ -570,10 +583,11 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-        #try:
-        #    shutil.rmtree(stage_dir)
-        #except IOError or OSError:
-        #    logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+        try:
+            shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME

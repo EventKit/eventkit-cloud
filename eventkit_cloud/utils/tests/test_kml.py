@@ -6,12 +6,12 @@ from mock import Mock, patch
 
 from django.test import SimpleTestCase
 
-from ..kml import SQliteToKml
+from ..kml import GPKGToKml
 
 logger = logging.getLogger(__name__)
 
 
-class TestSQliteToKml(SimpleTestCase):
+class TestGPKGToKml(SimpleTestCase):
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
@@ -20,18 +20,18 @@ class TestSQliteToKml(SimpleTestCase):
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
     def test_convert(self, popen, pipe, exists):
-        sqlite = '/path/to/query.sqlite'
+        gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
-        cmd = "ogr2ogr -f 'KML' {0} {1}".format(kmlfile, sqlite)
+        cmd = "ogr2ogr -f 'KML' {0} {1}".format(kmlfile, gpkg)
         exists.return_value = True
         proc = Mock()
         popen.return_value = proc
         proc.communicate.return_value = (Mock(), Mock())
         proc.wait.return_value = 0
         # set zipped to False for testing
-        s2k = SQliteToKml(sqlite=sqlite, kmlfile=kmlfile,
+        s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile,
                           zipped=False, debug=False)
-        exists.assert_called_once_with(sqlite)
+        exists.assert_called_once_with(gpkg)
         out = s2k.convert()
         popen.assert_called_once_with(cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)
@@ -44,7 +44,7 @@ class TestSQliteToKml(SimpleTestCase):
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
     def test_zip_kml_file(self, popen, pipe, remove, exists):
-        sqlite = '/path/to/query.sqlite'
+        gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
         zipfile = '/path/to/query.kmz'
         zip_cmd = "zip -j {0} {1}".format(zipfile, kmlfile)
@@ -53,10 +53,10 @@ class TestSQliteToKml(SimpleTestCase):
         popen.return_value = proc
         proc.communicate.return_value = (Mock(), Mock())
         proc.wait.return_value = 0
-        s2k = SQliteToKml(sqlite=sqlite, kmlfile=kmlfile,
+        s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile,
                           zipped=False, debug=False)
         result = s2k._zip_kml_file()
-        exists.assert_called_once_with(sqlite)
+        exists.assert_called_once_with(gpkg)
         # test subprocess getting called with correct command
         popen.assert_called_once_with(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)

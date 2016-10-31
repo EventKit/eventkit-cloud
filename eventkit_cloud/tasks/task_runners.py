@@ -23,13 +23,12 @@ logger = logging.getLogger(__name__)
 
 export_task_registry = {
     'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
-    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSqliteExportTask',
+    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask',
     'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
     'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
     'thematic-shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask',
-    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGeopackageExportTask'
-    'zip': 'eventkit_cloud.tasks.export_tasks.ZipFileTask'
+    'thematic-sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSQLiteExportTask'
 }
 
 thematic_tasks_list = ['thematic-sqlite', 'thematic-shp', 'thematic-gpkg']
@@ -67,7 +66,6 @@ class ExportOSMTaskRunner(TaskRunner):
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         export_provider = ExportProvider.objects.get(id=provider_task.provider_id)
 
-        import pdb; pdb.set_trace()
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -85,8 +83,6 @@ class ExportOSMTaskRunner(TaskRunner):
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
 
-        zipfile_task = dict([(key, val) for key, val in export_tasks.iteritems() if key == 'zip'])
-        export_tasks = dict([(key, val) for key, val in export_tasks.iteritems() if key != 'zip'])
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -165,16 +161,16 @@ class ExportOSMTaskRunner(TaskRunner):
             if thematic_exports:
                 # if user requested thematic-sqlite do it...if not create the celery task, and store the task in the model.
 
-                thematic_sqlite = thematic_exports.pop('thematic-sqlite', None)
-                if not thematic_sqlite:
-                    thematic_sqlite_task = create_format_task('thematic-sqlite')()
-                    thematic_sqlite = {'obj': thematic_sqlite_task,
-                                       'task_uid': create_export_task(task_name=thematic_sqlite_task.name,
+                thematic_gpkg = thematic_exports.pop('thematic-gpkg', None)
+                if not thematic_gpkg:
+                    thematic_gpkg_task = create_format_task('thematic-gpkg')()
+                    thematic_gpkg = {'obj': thematic_gpkg_task,
+                                       'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
                                                                       export_provider_task=export_provider_task).uid}
-                thematic_tasks = (thematic_sqlite.get('obj').si(run_uid=run.uid,
+                thematic_tasks = (thematic_gpkg.get('obj').si(run_uid=run.uid,
                                                                 stage_dir=stage_dir,
                                                                 job_name=job_name,
-                                                                task_uid=thematic_sqlite.get('task_uid')) |
+                                                                task_uid=thematic_gpkg.get('task_uid')) |
                                   group(task.get('obj').si(run_uid=run.uid,
                                                            stage_dir=stage_dir,
                                                            job_name=job_name,
@@ -187,32 +183,16 @@ class ExportOSMTaskRunner(TaskRunner):
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
-
-            if zipfile_task:
-                zipfile_task['zip']['task_uid'] = create_export_task(
-                    task_name=zipfile_task['zip']['obj'].name,
-                    export_provider_task=export_provider_task
-                ).uid
-
-                zipfile_task = group(task.get('obj').si(
-                    run_uid=run.uid,
-                    stage_dir=stage_dir,
-                    task_uid=task.get('task_uid'),
-                    provider_slug=export_provider.slug
-                ) for task_name, task in
-                                 zipfile_task.iteritems() if task is not None)
-
             """
             the tasks are chained instead of nested groups.
-            this is because celery3.x has issues with handling these callbacks even using redis as a result backend
+            this is because celery3.x has issues with handling these callbacks 
+            even using redis as a result backend
             """
             task_chain = (initial_tasks | schema_tasks)
             if format_tasks:
                 task_chain = (task_chain | format_tasks)
             if thematic_tasks:
                 task_chain = (task_chain | thematic_tasks)
-            if zipfile_task:
-                task_chain = (task_chain | zipfile_task)
 
             return export_provider_task.uid, task_chain
         else:
