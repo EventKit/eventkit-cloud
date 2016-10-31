@@ -215,6 +215,7 @@ class Job(TimeStampedModelMixin):
     the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
     zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
+    include_zipfile = models.BooleanField(default=False)
 
     class Meta:  # pragma: no cover
         managed = True

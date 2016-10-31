@@ -541,7 +541,7 @@ class ZipFileTask(Task):
         for root, dirnames, filenames in os.walk(dl_filepath):
             files += [os.path.join(root, filename) for filename in filenames]
 
-        zip_filename = 'export.zip'
+        zip_filename = str(run_uid) + '.zip'
         zip_filepath = os.path.join(dl_filepath, zip_filename)
 
         with ZipFile(zip_filepath, 'w') as zipfile:

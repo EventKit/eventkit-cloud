@@ -530,6 +530,7 @@ class JobSerializer(serializers.Serializer):
     )
     tags = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
+    include_zipfile = serializers.BooleanField(required=False, default=False)
 
     def get_zipfile_url(self, obj):
         request = self.context['request']

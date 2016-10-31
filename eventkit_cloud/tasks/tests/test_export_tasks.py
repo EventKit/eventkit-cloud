@@ -21,6 +21,7 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
+    ZipFileTask
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
 
@@ -360,6 +361,50 @@ class TestExportTasks(TestCase):
         expected_path = config.upload.path
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
+
+    @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
+    @patch('os.walk')
+    def test_zipfile_task(self, mock_os_walk, mock_zipfile):
+        class MockZipFile:
+            def __init__(self):
+                self.files = {}
+            def __iter__(self):
+                return iter(self.files)
+            def write(self, fname, **kw):
+                arcname = kw.get('arcname', fname)
+                self.files[arcname] = fname
+
+            def __exit__(self, *args, **kw):
+                pass
+            def __enter__(self, *args, **kw):
+                return self
+
+        celery_uid = str(uuid.uuid4())
+        run_uid = str(self.run.uid)
+        stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
+        
+        zipfile = MockZipFile()
+        mock_zipfile.return_value = zipfile
+        mock_os_walk.return_value = [(
+            '/var/lib/eventkit/exports_staging/' + run_uid + '/osm-vector',
+            None,
+            ['test.gpkg']
+        )]
+
+        task = ZipFileTask()
+        result = task.run(run_uid=run_uid, stage_dir=stage_dir)
+        self.assertEqual(
+             zipfile.files,
+             {'osm-vector/test.gpkg': '/var/lib/eventkit/exports_staging/' + 
+                                      run_uid + '/osm-vector/test.gpkg'
+             }
+        )
+        run = ExportRun.objects.get(uid=run_uid)
+        self.assertEqual(
+            run.job.zipfile_url,
+            'downloads/%s/%s.zip' % (run_uid, run_uid)
+        )
+        assert str(run_uid) in result['result']
 
     @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')
