@@ -28,9 +28,9 @@ class WFSToSQLITE(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f SQLite $sqlite WFS:'$url'")
+            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f SQLite $sqlite WFS:'$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite WFS:'$url'")
+            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite WFS:'$url'")
 
     def convert(self, ):
         """

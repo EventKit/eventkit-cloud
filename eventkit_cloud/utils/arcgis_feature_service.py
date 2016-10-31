@@ -7,12 +7,14 @@ from string import Template
 
 logger = logging.getLogger(__name__)
 
+
 class ArcGISFeatureServiceToSQLITE(object):
     """
     Convert a Arcgis Feature Service to a sqlite file.
     """
 
-    def __init__(self, config=None, sqlite=None, bbox=None, service_url=None, layer=None, debug=None, name=None, service_type=None):
+    def __init__(self, config=None, sqlite=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
+                 service_type=None):
         """
         Initialize the ArcFeatureServiceToSQLITE utility.
 
@@ -28,9 +30,10 @@ class ArcGISFeatureServiceToSQLITE(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f SQLite $sqlite '$url'")
+            self.cmd = Template(
+                "ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f SQLite $sqlite '$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite '$url'")
+            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -f SQLite $sqlite '$url'")
 
     def convert(self, ):
         """
@@ -49,11 +52,13 @@ class ArcGISFeatureServiceToSQLITE(object):
             self.service_url = '{}{}'.format(self.service_url, '/query?where=objectid%3Dobjectid&outfields=*&f=json')
 
         if self.bbox:
-            convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1], 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
+            convert_cmd = self.cmd.safe_substitute(
+                {'sqlite': self.sqlite, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1],
+                 'maxX': self.bbox[2], 'maxY': self.bbox[3]})
         else:
             convert_cmd = self.cmd.safe_substitute({'sqlite': self.sqlite, 'url': self.service_url})
 
-        if(self.debug):
+        if self.debug:
             logger.debug('Running: %s' % convert_cmd)
 
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/sh',
@@ -61,10 +66,10 @@ class ArcGISFeatureServiceToSQLITE(object):
         (stdout, stderr) = proc.communicate()
         returncode = proc.wait()
 
-        if (returncode != 0):
+        if returncode != 0:
             logger.error('%s', stderr)
             raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
-        if(self.debug):
+        if self.debug:
             logger.debug('ogr2ogr returned: %s' % returncode)
 
         return self.sqlite
