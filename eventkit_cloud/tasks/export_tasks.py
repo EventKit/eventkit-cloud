@@ -490,7 +490,7 @@ class FinalizeExportProviderTask(Task):
 
     def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
 
-        from eventkit_cloud.tasks.models import ExportProviderTask
+        from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
         from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
         export_provider_task.status = 'COMPLETED'
@@ -511,12 +511,13 @@ class FinalizeExportProviderTask(Task):
             finalize_run_task = FinalizeRunTask()
             finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
 
-            # TODO get job and check for zip property
-            zipfile_task = ZipFileTask()
-            zipfile_task.si(
-                run_uid=run_uid,
-                stage_dir=stage_dir
-            )()
+            run = ExportRun.objects.get(uid=run_uid)
+            if run.job.include_zipfile:
+                zipfile_task = ZipFileTask()
+                zipfile_task.si(
+                    run_uid=run_uid,
+                    stage_dir=stage_dir
+                )()
 
         try:
             shutil.rmtree(stage_dir)
@@ -553,7 +554,7 @@ class ZipFileTask(Task):
                 )
 
         run = ExportRun.objects.get(uid=run_uid)
-        zipfile_url = ['downloads'] + zip_filepath.split('/')[-2:]
+        zipfile_url = zip_filepath.split('/')[-2:]
         run.job.zipfile_url = os.path.join(*zipfile_url)
         run.job.save()
 

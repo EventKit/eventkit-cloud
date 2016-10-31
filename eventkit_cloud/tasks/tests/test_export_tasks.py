@@ -381,6 +381,8 @@ class TestExportTasks(TestCase):
 
         celery_uid = str(uuid.uuid4())
         run_uid = str(self.run.uid)
+        self.run.job.include_zipfile = True
+        self.run.job.save()
         stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
         
         zipfile = MockZipFile()
@@ -402,7 +404,7 @@ class TestExportTasks(TestCase):
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEqual(
             run.job.zipfile_url,
-            'downloads/%s/%s.zip' % (run_uid, run_uid)
+            '%s/%s.zip' % (run_uid, run_uid)
         )
         assert str(run_uid) in result['result']
 
