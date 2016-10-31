@@ -225,10 +225,10 @@ class ExportWFSTaskRunner(TaskRunner):
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
         for _format in formats:
-            if not format.startswith('thematic-'):
+            if not _format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[_format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[_format] = {'obj': create_format_task(_format)(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:

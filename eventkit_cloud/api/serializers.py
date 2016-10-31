@@ -534,6 +534,9 @@ class JobSerializer(serializers.Serializer):
 
     def get_zipfile_url(self, obj):
         request = self.context['request']
+        if not obj.zipfile_url:
+            return None
+
         return request.build_absolute_uri('../../downloads/' + obj.zipfile_url) 
 
     def create(self, validated_data):
