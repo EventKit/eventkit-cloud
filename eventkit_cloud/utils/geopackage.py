@@ -33,7 +33,7 @@ class SQliteToGeopackage(object):
             root = self.sqlite.split('.')[0]
             self.gpkgfile = root + '.gkpg'
         self.debug = debug
-        self.cmd = Template("ogr2ogr -progress -f 'GPKG' $gpkgfile $sqlite")
+        self.cmd = Template("ogr2ogr -f 'GPKG' $gpkgfile $sqlite")
 
     def convert(self, ):
         """

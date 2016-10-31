@@ -620,6 +620,8 @@ class ExportTaskErrorHandler(Task):
 
 def get_progress_tracker(task_uid=None):
     from eventkit_cloud.tasks.models import ExportTask
+    if not task_uid:
+        return
     def progress_tracker(progress=None, estimated_finish=None):
         if not estimated_finish and not progress:
             return
@@ -627,10 +629,10 @@ def get_progress_tracker(task_uid=None):
             progress = 100
         export_task = ExportTask.objects.get(uid=task_uid)
         if progress:
-            print("UPDATING PROGRESS TO {0}".format(progress))
+            # print("UPDATING PROGRESS TO {0}".format(progress))
             export_task.progress = progress
         if estimated_finish:
-            print("UPDATING estimated_finish TO {0}".format(estimated_finish))
+            # print("UPDATING estimated_finish TO {0}".format(estimated_finish))
             export_task.estimated_finish = estimated_finish
         export_task.save()
     return progress_tracker

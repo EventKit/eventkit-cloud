@@ -32,9 +32,9 @@ class ArcGISFeatureServiceToGPKG(object):
         self.layer = layer
         self.config = config
         if self.bbox:
-            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f GPKG $gpkg '$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat $minX $minY $maxX $maxY -f GPKG $gpkg '$url'")
         else:
-            self.cmd = Template("ogr2ogr -progress -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg '$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg '$url'")
 
     def convert(self, ):
         """

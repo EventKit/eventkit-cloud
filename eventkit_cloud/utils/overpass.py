@@ -87,7 +87,7 @@ class Overpass(object):
             req = requests.post(self.url, data=q, stream=True)
             #Since the request takes a while, jump progress to an arbitrary 50 percent...
             self.progress_tracker(50)
-            size = req.headers.get('content-length') or len(req.content)
+            size = int(req.headers.get('content-length')) or len(req.content)
             inflated_size = size*2
             CHUNK = 1024 * 1024 * 5  # 5MB chunks
             with open(self.raw_osm, 'wb') as fd:
@@ -95,7 +95,7 @@ class Overpass(object):
                     fd.write(chunk)
                     size += CHUNK
                     # Because progress is already at 50, we need to make this part start at 50 percent
-                    self.progress_tracker((float(size)/float(inflated_size))*100)
+                    self.progress_tracker(progress=(float(size)/float(inflated_size))*100)
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)

@@ -21,8 +21,10 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
+    get_progress_tracker
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -409,3 +411,13 @@ class TestExportTasks(TestCase):
         msg.send.assert_called_once()
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEquals('INCOMPLETE', run.status)
+
+    def test_progress_tracker(self):
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='test_provider_task')
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
+                                                      name="test_task")
+        progress_tracker = get_progress_tracker(task_uid=saved_export_task.uid)
+        progress_tracker(progress=50, estimated_finish=datetime(2005, 7, 14, 12, 30))
+        self.assertEquals(saved_export_task.progress, 50)
+        self.assertEquals(saved_export_task.estimated_finish, datetime(2005, 7, 14, 12, 30))
+
