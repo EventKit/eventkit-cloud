@@ -11,7 +11,6 @@ exports.detail = (function(){
             exports.detail.timer = false;
             initMap();
             initPopovers();
-            loadJobDetail();
             loadSubmittedRunDetails();
             loadCompletedRunDetails();
             //loadFailedRunDetails();
@@ -405,6 +404,7 @@ exports.detail = (function(){
      * This occurs initially on page load..
      */
     function loadSubmittedRunDetails(){
+        loadJobDetail();
         var job_uid = exports.detail.job_uid;
         $.ajax({
             cache: false,

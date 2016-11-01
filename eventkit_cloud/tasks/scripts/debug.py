@@ -58,7 +58,7 @@ def create_task_factory(name, job_num):
 
 
 def run_chain():
-    PickUpJobTask().si(job_num=1).apply_async()
-    PickUpJobTask().si(job_num=2).apply_async()
-    PickUpJobTask().si(job_num=3).apply_async()
-    PickUpJobTask().si(job_num=4).apply_async()
+    PickUpJobTask().delay(job_num=1)
+    PickUpJobTask().delay(job_num=2)
+    PickUpJobTask().delay(job_num=3)
+    PickUpJobTask().delay(job_num=4)

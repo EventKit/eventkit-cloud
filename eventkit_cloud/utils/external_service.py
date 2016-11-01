@@ -34,8 +34,6 @@ class CustomLogger(ProgressLog):
 
     def log_step(self, progress):
         if progress.eta.eta():
-            eta_datetime = datetime.utcfromtimestamp(float(progress.eta.eta()))
-            print(str(type(eta_datetime)) + " " + repr(eta_datetime))
             if self.progress_tracker:
                 if self.log_step_counter == 0:
                     self.progress_tracker(progress=progress.progress*100, estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))

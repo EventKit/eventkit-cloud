@@ -25,7 +25,7 @@ services:
         - postgis
         - rabbitmq
       extra_hosts:
-        - "cloud.eventkit.dev:0.0.0.0"
+        - "cloud.eventkit.dev:192.168.99.130"
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
@@ -41,7 +41,7 @@ services:
         - rabbitmq
       environment:
         - LOGLEVEL=warning
-        - CONCURRENCY=2
+        - CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis

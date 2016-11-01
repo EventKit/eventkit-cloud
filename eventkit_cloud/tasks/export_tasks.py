@@ -12,7 +12,6 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError
-from django.template import Context
 from django.template.loader import get_template
 from django.utils import timezone
 
@@ -23,6 +22,7 @@ from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, external_service, wfs, arcgis_feature_service, sqlite,
 )
+import socket
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -442,6 +442,24 @@ class ExternalRasterServiceExportTask(ExportTask):
             raise Exception(e)
 
 
+class PickUpRunTask(Task):
+    """
+    Generates a Celery task to assign a celery pipeline to a specific worker.
+    """
+
+    name = 'Pickup Run'
+
+    def run(self, run_uid=None):
+        from .models import ExportRun
+        from .task_factory import TaskFactory
+
+        worker = socket.gethostname()
+        run = ExportRun.objects.get(uid=run_uid)
+        run.worker = worker
+        run.save()
+        TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
+        return
+
 class GeneratePresetTask(ExportTask):
     """
     Generates a JOSM Preset from the exports selected features.
@@ -449,7 +467,7 @@ class GeneratePresetTask(ExportTask):
 
     name = 'Generate Preset'
 
-    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+    def run(self, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         from eventkit_cloud.jobs.models import ExportConfig
         self.update_task_state(task_uid=task_uid)

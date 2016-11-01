@@ -7,10 +7,8 @@ import json
 from django.conf import settings
 from django.db import DatabaseError
 
-from celery import chain, group
-from celery.canvas import Signature
-
-from eventkit_cloud.jobs.models import ExportProvider, ProviderTask
+from celery import group
+from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
@@ -51,7 +49,7 @@ class ExportOSMTaskRunner(TaskRunner):
     Runs HOT Export Tasks
     """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
         """
         Run export tasks.
 
@@ -64,7 +62,6 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        export_provider = ExportProvider.objects.get(id=provider_task.provider_id)
 
         job = run.job
         job_name = normalize_job_name(job.name)
@@ -135,21 +132,21 @@ class ExportOSMTaskRunner(TaskRunner):
                 osm_tasks.get('conf').get('obj').si(categories=categories,
                                                     task_uid=osm_tasks.get('conf').get('task_uid'),
                                                     job_name=job_name,
-                                                    stage_dir=stage_dir) |
+                                                    stage_dir=stage_dir).set(queue=worker) |
                 osm_tasks.get('query').get('obj').si(stage_dir=stage_dir,
                                                      task_uid=osm_tasks.get('query').get('task_uid'),
                                                      job_name=job_name,
                                                      bbox=bbox,
-                                                     filters=job.filters)
+                                                     filters=job.filters).set(queue=worker)
             )
 
             schema_tasks = (
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
                                                           job_name=job_name,
-                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')) |
+                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')).set(queue=worker) |
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
                                                            job_name=job_name,
-                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid'))
+                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid')).set(queue=worker)
             )
 
             thematic_exports = {}
@@ -170,18 +167,18 @@ class ExportOSMTaskRunner(TaskRunner):
                 thematic_tasks = (thematic_gpkg.get('obj').si(run_uid=run.uid,
                                                                 stage_dir=stage_dir,
                                                                 job_name=job_name,
-                                                                task_uid=thematic_gpkg.get('task_uid')) |
+                                                                task_uid=thematic_gpkg.get('task_uid')).set(queue=worker) |
                                   group(task.get('obj').si(run_uid=run.uid,
                                                            stage_dir=stage_dir,
                                                            job_name=job_name,
-                                                           task_uid=task.get('task_uid')) for task_name, task in
+                                                           task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                         thematic_exports.iteritems())
                                   )
 
             format_tasks = group(task.get('obj').si(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
-                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                                    task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
             """
             the tasks are chained instead of nested groups.
@@ -205,7 +202,7 @@ class ExportWFSTaskRunner(TaskRunner):
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
         """
         Run export tasks.
 
@@ -260,12 +257,12 @@ class ExportWFSTaskRunner(TaskRunner):
                                             name=provider_task.provider.slug,
                                             layer=provider_task.provider.layer,
                                             bbox=bbox,
-                                            service_url=provider_task.provider.url))
+                                            service_url=provider_task.provider.url).set(queue=worker))
 
             format_tasks = group(task.get('obj').si(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
-                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                                    task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
 
             task_chain = (initial_task | format_tasks)
@@ -278,7 +275,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
         """
         Run export tasks.
 
@@ -333,12 +330,12 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                             name=provider_task.provider.slug,
                                             layer=provider_task.provider.layer,
                                             bbox=bbox,
-                                            service_url=provider_task.provider.url))
+                                            service_url=provider_task.provider.url).set(queue=worker))
 
             format_tasks = group(task.get('obj').si(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
-                                                    task_uid=task.get('task_uid')) for task_name, task in
+                                                    task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
 
             task_chain = (initial_task | format_tasks)
@@ -350,7 +347,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
     Runs External Service Export Tasks
     """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
         """
         Run export tasks.
 
@@ -404,9 +401,10 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                              service_url=provider_task.provider.url,
                                                              level_from=provider_task.provider.level_from,
                                                              level_to=provider_task.provider.level_to,
-                                                             service_type=service_type)
+                                                             service_type=service_type).set(queue=worker)
         else:
             return None, None
+
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]
