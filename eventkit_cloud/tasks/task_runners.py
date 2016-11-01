@@ -10,7 +10,7 @@ from django.db import DatabaseError
 from celery import chain, group
 from celery.canvas import Signature
 
-from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.jobs.models import ExportProvider, ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
@@ -64,6 +64,8 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        export_provider = ExportProvider.objects.get(id=provider_task.provider_id)
+
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -80,6 +82,7 @@ class ExportOSMTaskRunner(TaskRunner):
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
+
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -180,16 +183,17 @@ class ExportOSMTaskRunner(TaskRunner):
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
-
             """
-            The tasks are chained instead of nested groups.
-            This is because celery3.x has issues with handling these callbacks even using redis as a result backend
+            the tasks are chained instead of nested groups.
+            this is because celery3.x has issues with handling these callbacks 
+            even using redis as a result backend
             """
             task_chain = (initial_tasks | schema_tasks)
             if format_tasks:
                 task_chain = (task_chain | format_tasks)
             if thematic_tasks:
                 task_chain = (task_chain | thematic_tasks)
+
             return export_provider_task.uid, task_chain
         else:
             return None, False
@@ -220,11 +224,11 @@ class ExportWFSTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        for format in formats:
-            if not format.startswith('thematic-'):
+        for _format in formats:
+            if not _format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[_format] = {'obj': create_format_task(_format)(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:
@@ -403,7 +407,6 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                              service_type=service_type)
         else:
             return None, None
-
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]

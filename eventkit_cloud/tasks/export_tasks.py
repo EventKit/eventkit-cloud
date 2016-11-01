@@ -2,8 +2,11 @@
 from __future__ import absolute_import
 
 import cPickle
+import glob
 import os
+import re
 import shutil
+from zipfile import ZipFile
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -50,10 +53,11 @@ class ExportTask(Task):
             6. create the export task result
             7. update the export task status and save it
         """
-        from eventkit_cloud.tasks.models import ExportTask, ExportTaskResult
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
+        from eventkit_cloud.tasks.models import ExportTaskResult
         # update the task
         finished = timezone.now()
-        task = ExportTask.objects.get(celery_uid=task_id)
+        task = ExportTaskModel.objects.get(celery_uid=task_id)
         provider_task_name = task.export_provider_task.name
         task.finished_at = finished
         task.progress = 100
@@ -70,6 +74,7 @@ class ExportTask(Task):
         run_dir = os.path.join(download_root, run_uid)
         provider_dir = os.path.join(run_dir, provider_slug)
         download_path = os.path.join(provider_dir, filename)
+
         try:
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir)
@@ -78,7 +83,7 @@ class ExportTask(Task):
             # don't copy raw run_dir data
             if (task.name != 'OverpassQuery'):
                 shutil.copy(output_url, download_path)
-        except IOError as e:
+        except IOError:
             logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
         try:
@@ -117,9 +122,10 @@ class ExportTask(Task):
             5. run ExportTaskErrorHandler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from eventkit_cloud.tasks.models import ExportTask, ExportTaskException, ExportProviderTask
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
+        from eventkit_cloud.tasks.models import  ExportTaskException, ExportProviderTask
         logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
-        task = ExportTask.objects.get(celery_uid=task_id)
+        task = ExportTaskModel.objects.get(celery_uid=task_id)
         task.status = 'FAILED'
         task.finished_at = timezone.now()
         task.save()
@@ -145,10 +151,10 @@ class ExportTask(Task):
         Can use the celery uid for diagnostics.
         """
         started = timezone.now()
-        from eventkit_cloud.tasks.models import ExportTask
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
         celery_uid = self.request.id
         try:
-            task = ExportTask.objects.get(uid=task_uid)
+            task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
@@ -509,26 +515,76 @@ class FinalizeExportProviderTask(Task):
     name = 'Finalize Export Provider Run'
 
     def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
-        from eventkit_cloud.tasks.models import ExportProviderTask
+
+        from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
         export_provider_task.status = 'COMPLETED'
         tasks = []
         # mark run as incomplete if any tasks fail
         for task in export_provider_task.tasks.all():
+            # TODO (mvv): should this also include `PENDING` tasks?
             if task.status == 'FAILED':
                 export_provider_task.status = 'INCOMPLETE'
+
         export_provider_task.save()
+        run_complete = True
+        for provider_task in export_provider_task.run.provider_tasks.all():
+            if provider_task.status in ['PENDING', 'RUNNING']:
+                run_complete = False
+
+        if run_complete:
+            finalize_run_task = FinalizeRunTask()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+
+            run = ExportRun.objects.get(uid=run_uid)
+            if run.job.include_zipfile:
+                zipfile_task = ZipFileTask()
+                zipfile_task.si(
+                    run_uid=run_uid,
+                    stage_dir=stage_dir
+                )()
+
         try:
             shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
-        run_complete = True
-        for provider_task in export_provider_task.run.provider_tasks.all():
-            if provider_task.status == 'PENDING' or provider_task.status == 'RUNNING':
-                run_complete = False
-        if run_complete:
-            finalize_run_task = FinalizeRunTask()
-            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+
+
+class ZipFileTask(Task):
+    """
+    rolls up runs into a zip file
+    """
+    name = 'Zip File Export'
+
+
+    def run(self, run_uid=None, stage_dir=None):
+        from eventkit_cloud.tasks.models import ExportRun
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+        dl_filepath = os.path.join(download_root, str(run_uid))
+
+        # probably need to recurse
+        files = []
+        for root, dirnames, filenames in os.walk(dl_filepath):
+            files += [os.path.join(root, filename) for filename in filenames]
+
+        zip_filename = str(run_uid) + '.zip'
+        zip_filepath = os.path.join(dl_filepath, zip_filename)
+
+        with ZipFile(zip_filepath, 'w') as zipfile:
+            for filepath in files:
+                filename = os.path.join(*filepath.split('/')[-2:])
+                zipfile.write(
+                    filepath,
+                    arcname=filename
+                )
+
+        run = ExportRun.objects.get(uid=run_uid)
+        zipfile_url = zip_filepath.split('/')[-2:]
+        run.job.zipfile_url = os.path.join(*zipfile_url)
+        run.job.save()
+
+        return {'result': zip_filepath}
 
 
 class FinalizeRunTask(Task):
@@ -544,16 +600,17 @@ class FinalizeRunTask(Task):
 
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
+
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
         provider_tasks = run.provider_tasks.all()
-        for provider_task in provider_tasks:
         # mark run as incomplete if any tasks fail
-            if provider_task.status == 'INCOMPLETE':
-                run.status = 'INCOMPLETE'
+        if any(task.status == 'INCOMPLETE' for task in provider_tasks):
+            run.status = 'INCOMPLETE'
         finished = timezone.now()
         run.finished_at = finished
         run.save()
+
         try:
             shutil.rmtree(stage_dir)
         except IOError or OSError:
@@ -565,6 +622,7 @@ class FinalizeRunTask(Task):
         addr = run.user.email
         subject = "Your Eventkit Data Pack is ready."
         to = [addr]
+        # TODO: from email address should not be hardcoded
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
         ctx = {
             'url': url,
