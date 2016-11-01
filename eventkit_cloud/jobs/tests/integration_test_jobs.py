@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import requests
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from time import sleep
 import os
@@ -23,8 +24,8 @@ class TestJob(TestCase):
         self.base_url = os.getenv('BASE_URL', 'http://cloud.eventkit.dev')
         self.login_url = self.base_url + '/en/login'
         self.create_export_url = self.base_url + '/en/exports/create'
-        self.jobs_url = self.base_url + '/api/jobs'
-        self.runs_url = self.base_url + '/api/runs'
+        self.jobs_url = self.base_url + reverse('api:jobs-list')
+        self.runs_url = self.base_url + reverse('api:runs-list')
         self.rerun_url = self.base_url + '/api/rerun'
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
@@ -313,13 +314,16 @@ class TestJob(TestCase):
         self.assertEquals(response.status_code, 202)
         self.job_json = job = response.json()
         run = self.wait_for_run(job.get('uid'))
-
         # XXX: we'll get this response before a URL is generated.  serializer should return `None`
-        self.assertEquals(None, job['zipfile_url'])
+        self.assertEquals(
+            'http://cloud.eventkit.dev/downloads/%s/%s.zip' % (run.get('uid'), run.get('uid')),
+            run['zipfile_url']
+        )
 
         orm_job = Job.objects.get(uid=job.get('uid'))
+        orm_run = orm_job.runs.last()
 
-        assert '.zip' in orm_job.zipfile_url
+        assert '.zip' in orm_run.zipfile_url
 
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
