@@ -64,7 +64,6 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        export_provider = ExportProvider.objects.get(id=provider_task.provider_id)
 
         job = run.job
         job_name = normalize_job_name(job.name)
