@@ -164,9 +164,15 @@ class ExportOSMTaskRunner(TaskRunner):
 
             task_chain = (initial_tasks | schema_tasks)
 
-            thematic_tasks = None
-            if osm_thematic:
+            if osm:
+                format_tasks = group(task.get('obj').si(run_uid=run.uid,
+                                                        stage_dir=stage_dir,
+                                                        job_name=job_name,
+                                                        task_uid=task.get('task_uid')) for task_name, task in
+                                     export_tasks.iteritems() if task is not None)
+                task_chain = (task_chain | format_tasks)
 
+            if osm_thematic:
                 thematic_gpkg_task = create_format_thematic_task('thematic-gpkg')()
                 thematic_gpkg = {'obj': thematic_gpkg_task,
                                    'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
@@ -181,24 +187,16 @@ class ExportOSMTaskRunner(TaskRunner):
                                                            task_uid=task.get('task_uid')) for task_name, task in
                                         thematic_exports.iteritems())
                                   )
-
-            if osm:
-                format_tasks = group(task.get('obj').si(run_uid=run.uid,
-                                                        stage_dir=stage_dir,
-                                                        job_name=job_name,
-                                                        task_uid=task.get('task_uid')) for task_name, task in
-                                     export_tasks.iteritems() if task is not None)
-                task_chain = (task_chain | format_tasks)
-            """
-            the tasks are chained instead of nested groups.
-            this is because celery3.x has issues with handling these callbacks
-            even using redis as a result backend
-            """
-
-            if osm_thematic:
                 task_chain = (task_chain | thematic_tasks)
 
+                """
+                the tasks are chained instead of nested groups.
+                this is because celery3.x has issues with handling these callbacks
+                even using redis as a result backend
+                """
+
             return export_provider_task.uid, task_chain
+
         else:
             return None, False
 
