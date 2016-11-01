@@ -21,9 +21,11 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
-    ZipFileTask
+    get_progress_tracker, ZipFileTask
 )
+
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -456,3 +458,15 @@ class TestExportTasks(TestCase):
         msg.send.assert_called_once()
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEquals('INCOMPLETE', run.status)
+
+    def test_progress_tracker(self):
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='test_provider_task')
+        saved_export_task_uid = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
+                                                      name="test_task").uid
+        progress_tracker = get_progress_tracker(task_uid=saved_export_task_uid)
+        estimated = timezone.now()
+        progress_tracker(progress=50, estimated_finish=estimated)
+        export_task = ExportTask.objects.get(uid=saved_export_task_uid)
+        self.assertEquals(export_task.progress, 50)
+        self.assertEquals(export_task.estimated_finish, estimated)
+

@@ -23,7 +23,7 @@ class Overpass(object):
     and filtered by the provided tags.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False):
+    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, progress_tracker=None, debug=False):
         """
         Initialize the Overpass utility.
 
@@ -42,6 +42,7 @@ class Overpass(object):
         self.stage_dir = stage_dir
         self.job_name = job_name
         self.filters = filters
+        self.progress_tracker = progress_tracker
         self.debug = debug
         if url:
             self.url = url
@@ -84,10 +85,17 @@ class Overpass(object):
             print 'Query started at: %s' % datetime.now()
         try:
             req = requests.post(self.url, data=q, stream=True)
+            #Since the request takes a while, jump progress to an arbitrary 50 percent...
+            self.progress_tracker(50)
+            size = int(req.headers.get('content-length')) or len(req.content)
+            inflated_size = size*2
             CHUNK = 1024 * 1024 * 5  # 5MB chunks
             with open(self.raw_osm, 'wb') as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
+                    size += CHUNK
+                    # Because progress is already at 50, we need to make this part start at 50 percent
+                    self.progress_tracker(progress=(float(size)/float(inflated_size))*100)
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
