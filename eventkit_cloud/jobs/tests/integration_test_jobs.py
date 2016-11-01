@@ -316,7 +316,12 @@ class TestJob(TestCase):
         run = self.wait_for_run(job.get('uid'))
         # XXX: we'll get this response before a URL is generated.  serializer should return `None`
         self.assertEquals(
-            '%s/downloads/%s/%s.zip' % (self.base_url, run.get('uid'), run.get('uid')),
+            '%s%s%s/%s.zip' % (
+                self.base_url,
+                settings.EXPORT_DOWNLOAD_ROOT,
+                run.get('uid'),
+                run.get('uid')
+            ),
             run['zipfile_url']
         )
 
