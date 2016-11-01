@@ -11,7 +11,7 @@ from django.db import DatabaseError
 from celery import chain, group
 from celery.canvas import Signature
 
-from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.jobs.models import ExportProvider, ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
@@ -226,11 +226,11 @@ class ExportWFSTaskRunner(TaskRunner):
         formats = [format.slug for format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        for format in formats:
-            if not format.startswith('thematic-'):
+        for _format in formats:
+            if not _format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[_format] = {'obj': create_format_task(_format)(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:
@@ -409,7 +409,6 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                              service_type=service_type)
         else:
             return None, None
-
 
 def create_format_task(format):
     task_fq_name = export_task_registry[format]

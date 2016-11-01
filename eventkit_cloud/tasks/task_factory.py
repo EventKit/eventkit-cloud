@@ -95,7 +95,6 @@ class TaskFactory():
 
     def create_run(self):
         # start the run
-        run = None
         try:
             # enforce max runs
             max_runs = settings.EXPORT_MAX_RUNS

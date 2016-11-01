@@ -197,6 +197,30 @@ class TestJobViewSet(APITestCase):
     #     # test the response headers
     #     self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_zipfile(self):
+        formats = [format.slug for format in ExportFormat.objects.all()]
+        config_uid = self.config.uid
+        request_data = {
+            'name': 'TestJob',
+            'description': 'Test description',
+            'event': 'Test Activation',
+            'xmin': -3.9,
+            'ymin': 16.1,
+            'xmax': 7.0,
+            'ymax': 27.6,
+            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'preset': config_uid,
+            'published': True,
+            'tags': self.tags,
+            'include_zipfile': True
+        }
+        url = reverse('api:jobs-list')
+        response = self.client.post(url, request_data, format='json')
+        job_uid = response.data['uid']
+
+        job = Job.objects.get(uid=job_uid)
+        self.assertEqual(job.include_zipfile, True)
+
     @patch('eventkit_cloud.api.views.TaskFactory')
     def test_create_job_success(self, mock):
         task_factory = mock.return_value

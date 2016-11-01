@@ -6,7 +6,7 @@ from time import sleep
 import os
 import shutil
 import sqlite3
-from ..models import ExportProvider, ExportProviderType
+from ..models import ExportProvider, ExportProviderType, Job
 from django.db import IntegrityError
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class TestJob(TestCase):
         self.csrftoken = self.client.cookies['csrftoken']
 
         login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/')
-        self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
+        ret = self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
                          auth=(username, password))
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
@@ -256,6 +256,7 @@ class TestJob(TestCase):
                                              'Referer': self.create_export_url})
         self.assertEquals(response.status_code, 202)
         job = response.json()
+
         run = self.wait_for_run(job.get('uid'))
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
@@ -266,6 +267,7 @@ class TestJob(TestCase):
             self.assertTrue(os.path.isfile(geopackage_file))
             self.assertTrue(check_content_exists(geopackage_file))
             os.remove(geopackage_file)
+
 
         rerun_response = self.client.get(self.rerun_url,
                                           params={'job_uid':job.get('uid')},
@@ -290,14 +292,25 @@ class TestJob(TestCase):
         self.assertTrue(delete_response)
 
     def run_job(self, data):
+        # include zipfile
+        data['include_zipfile'] = True
 
         response = self.client.post(self.jobs_url,
                                     json=data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
+
         self.assertEquals(response.status_code, 202)
-        job = response.json()
+        self.job_json = job = response.json()
         run = self.wait_for_run(job.get('uid'))
+
+        # XXX: we'll get this response before a URL is generated.  serializer should return `None`
+        self.assertEquals(None, job['zipfile_url'])
+
+        orm_job = Job.objects.get(uid=job.get('uid'))
+
+        assert '.zip' in orm_job.zipfile_url
+
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
@@ -317,9 +330,11 @@ class TestJob(TestCase):
         response = None
         while not finished:
             sleep(5)
-            response = self.client.get(self.runs_url,
-                                       params={"job_uid": job_uid},
-                                       headers={'X-CSRFToken': self.csrftoken}).json()
+            self.run_json = response = self.client.get(
+                self.runs_url,
+                params={"job_uid": job_uid},
+                headers={'X-CSRFToken': self.csrftoken
+            }).json()
             status = response[0].get('status')
             if status == "COMPLETED" or status == "INCOMPLETE":
                 finished = True

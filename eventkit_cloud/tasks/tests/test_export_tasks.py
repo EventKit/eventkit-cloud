@@ -21,8 +21,11 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
+    get_progress_tracker, ZipFileTask
 )
+
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -361,6 +364,52 @@ class TestExportTasks(TestCase):
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
 
+    @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
+    @patch('os.walk')
+    def test_zipfile_task(self, mock_os_walk, mock_zipfile):
+        class MockZipFile:
+            def __init__(self):
+                self.files = {}
+            def __iter__(self):
+                return iter(self.files)
+            def write(self, fname, **kw):
+                arcname = kw.get('arcname', fname)
+                self.files[arcname] = fname
+
+            def __exit__(self, *args, **kw):
+                pass
+            def __enter__(self, *args, **kw):
+                return self
+
+        celery_uid = str(uuid.uuid4())
+        run_uid = str(self.run.uid)
+        self.run.job.include_zipfile = True
+        self.run.job.save()
+        stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
+        
+        zipfile = MockZipFile()
+        mock_zipfile.return_value = zipfile
+        mock_os_walk.return_value = [(
+            '/var/lib/eventkit/exports_staging/' + run_uid + '/osm-vector',
+            None,
+            ['test.gpkg']
+        )]
+
+        task = ZipFileTask()
+        result = task.run(run_uid=run_uid, stage_dir=stage_dir)
+        self.assertEqual(
+             zipfile.files,
+             {'osm-vector/test.gpkg': '/var/lib/eventkit/exports_staging/' + 
+                                      run_uid + '/osm-vector/test.gpkg'
+             }
+        )
+        run = ExportRun.objects.get(uid=run_uid)
+        self.assertEqual(
+            run.job.zipfile_url,
+            '%s/%s.zip' % (run_uid, run_uid)
+        )
+        assert str(run_uid) in result['result']
+
     @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')
     def test_finalize_run_task(self, rmtree, email):
@@ -409,3 +458,15 @@ class TestExportTasks(TestCase):
         msg.send.assert_called_once()
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEquals('INCOMPLETE', run.status)
+
+    def test_progress_tracker(self):
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='test_provider_task')
+        saved_export_task_uid = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
+                                                      name="test_task").uid
+        progress_tracker = get_progress_tracker(task_uid=saved_export_task_uid)
+        estimated = timezone.now()
+        progress_tracker(progress=50, estimated_finish=estimated)
+        export_task = ExportTask.objects.get(uid=saved_export_task_uid)
+        self.assertEquals(export_task.progress, 50)
+        self.assertEquals(export_task.estimated_finish, estimated)
+
