@@ -117,17 +117,6 @@ class JobViewSet(viewsets.ModelViewSet):
             return Job.objects.filter(Q(user=user) | Q(published=True))
         return Job.objects.filter(published=True)
 
-    # def get_formats(self, formats):
-    #     export_formats = []
-    #     for slug in formats:
-    #             # would be good to accept either format slug or uuid here..
-    #             try:
-    #                 export_format = ExportFormat.objects.get(slug=slug)
-    #                 export_formats.append(export_format)
-    #             except ExportFormat.DoesNotExist as e:
-    #                 logger.warn('Export format with uid: {0} does not exist'.format(slug))
-    #     return export_formats
-
     def list(self, request, *args, **kwargs):
         """
         List export jobs.
@@ -293,7 +282,6 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
-
             job_uid = str(job.uid)
             task_factory = TaskFactory(job_uid)
             running = JobSerializer(job, context={'request': request})
