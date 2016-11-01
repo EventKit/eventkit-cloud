@@ -428,7 +428,7 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
         Returns:
             the serialized run data.
         """
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().filter(uid=uid)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -446,7 +446,7 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized run data.
         """
         job_uid = self.request.query_params.get('job_uid', None)
-        queryset = self.filter_queryset(self.get_queryset()).order_by('-started_at')
+        queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 

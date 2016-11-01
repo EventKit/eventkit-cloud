@@ -10,40 +10,40 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-class SQliteToKml(object):
+class GPKGToKml(object):
     """
-    Thin wrapper around ogr2ogr to convert sqlite to KML.
+    Thin wrapper around ogr2ogr to convert GPKG to KML.
     """
 
-    def __init__(self, sqlite=None, kmlfile=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, kmlfile=None, zipped=True, debug=False):
         """
-        Initialize the SQliteToKml utility.
+        Initialize the GPKGToKml utility.
 
         Args:
-            sqlite: the sqlite file to convert
+            gpkg: the gpkg file to convert
             kmlfile: where to write the kml output
             zipped: whether to zip the output
             debug: turn debugging on / off
         """
-        self.sqlite = sqlite
-        if not os.path.exists(self.sqlite):
-            raise IOError('Cannot find sqlite file for this task.')
+        self.gpkg = gpkg
+        if not os.path.exists(self.gpkg):
+            raise IOError('Cannot find GPKG file for this task.')
         self.kmlfile = kmlfile
         self.zipped = zipped
         if not self.kmlfile:
-            # create kml path from sqlite path.
-            root = self.sqlite.split('.')[0]
+            # create kml path from gpkg path.
+            root = self.gpkg.split('.')[0]
             self.kmlfile = root + '.kml'
         self.debug = debug
-        self.cmd = Template("ogr2ogr -f 'KML' $kmlfile $sqlite")
+        self.cmd = Template("ogr2ogr -f 'KML' $kmlfile $gpkg")
         self.zip_cmd = Template("zip -j $zipfile $kmlfile")
 
     def convert(self, ):
         """
-        Convert sqlite to kml.
+        Convert GPKG to kml.
         """
         convert_cmd = self.cmd.safe_substitute({'kmlfile': self.kmlfile,
-                                                'sqlite': self.sqlite})
+                                                'gpkg': self.gpkg})
         if(self.debug):
             print 'Running: %s' % convert_cmd
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
@@ -82,9 +82,9 @@ class SQliteToKml(object):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Converts a SQlite database to KML.')
-    parser.add_argument('-i', '--sqlite-file', required=True,
-                        dest="sqlite", help='The SQlite file to convert.')
+    parser = argparse.ArgumentParser(description='Converts a GPKG database to KML.')
+    parser.add_argument('-i', '--geopackage-file', required=True,
+                        dest="gpkg", help='The GPKG file to convert.')
     parser.add_argument('-k', '--kml-file', required=True,
                         dest="kmlfile", help='The KML file to write to.')
     parser.add_argument('-z', '--zipped', action="store_true",
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             continue
         else:
             config[k] = v
-    sqlite = config['sqlite']
+    gpkg = config['gpkg']
     kmlfile = config['kmlfile']
     debug = False
     zipped = False
@@ -106,5 +106,5 @@ if __name__ == '__main__':
         debug = True
     if config.get('zipped'):
         zipped = True
-    s2k = SQliteToKml(sqlite=sqlite, kmlfile=kmlfile, zipped=zipped, debug=debug)
+    s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, zipped=zipped, debug=debug)
     s2k.convert()

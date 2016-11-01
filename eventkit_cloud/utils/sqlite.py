@@ -10,37 +10,37 @@ from string import Template
 logger = logging.getLogger(__name__)
 
 
-class SQliteToGeopackage(object):
+class GPKGToSQLite(object):
     """
-    Thin wrapper around ogr2ogr to convert sqlite to KML.
+    Thin wrapper around ogr2ogr to convert gpkg to sqlite.
     """
 
-    def __init__(self, sqlite=None, gpkgfile=None, debug=None):
+    def __init__(self, gpkg=None, sqlitefile=None, debug=None):
         """
-        Initialize the SQliteToKml utility.
+        Initialize the GPKGToSQLite utility.
 
         Args:
-            sqlite: the sqlite file to convert
-            gpkgfile: where to write the gpkg output
+            gpgk: the gpkg file to convert
+            sqlite: where to write the sqlite output
             debug: turn debugging on / off
         """
-        self.sqlite = sqlite
-        if not os.path.isfile(self.sqlite):
-            raise IOError('Cannot find sqlite file for this task.')
-        self.gpkgfile = gpkgfile
-        if not self.gpkgfile:
+        self.gpkg = gpkg
+        if not os.path.isfile(self.gpkg):
+            raise IOError('Cannot find gpkg file for this task.')
+        self.sqlitefile = sqlitefile
+        if not self.sqlitefile:
             # create gpkg path from sqlite path.
-            root = self.sqlite.split('.')[0]
-            self.gpkgfile = root + '.gkpg'
+            root = self.gpkg.split('.')[0]
+            self.sqlitefile = root + '.sqlite'
         self.debug = debug
-        self.cmd = Template("ogr2ogr -progress -f 'GPKG' $gpkgfile $sqlite")
+        self.cmd = Template("ogr2ogr -f 'SQLite' $sqlitefile $gpkg")
 
     def convert(self, ):
         """
         Convert sqlite to gpkg.
         """
-        convert_cmd = self.cmd.safe_substitute({'gpkgfile': self.gpkgfile,
-                                                'sqlite': self.sqlite})
+        convert_cmd = self.cmd.safe_substitute({'sqlitefile': self.sqlitefile,
+                                                'gpkg': self.gpkg})
         if(self.debug):
             print 'Running: %s' % convert_cmd
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
@@ -52,15 +52,15 @@ class SQliteToGeopackage(object):
             raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
         if(self.debug):
             print 'ogr2ogr returned: %s' % returncode
-        return self.gpkgfile
+        return self.sqlitefile
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Converts a SQlite database to GPKG.')
-    parser.add_argument('-i', '--sqlite-file', required=True,
-                        dest="sqlite", help='The SQlite file to convert.')
-    parser.add_argument('-g', '--gpkg-file', required=True,
-                        dest="gpkgfile", help='The GPKG file to write to.')
+    parser = argparse.ArgumentParser(description='Converts a GPKG database to SQLite.')
+    parser.add_argument('-i', '--geopackage-file', required=True,
+                        dest="gpkg", help='The GPKG file to convert.')
+    parser.add_argument('-g', '--sqlite-file', required=True,
+                        dest="sqlitefile", help='The SQlite file to write to.')
     parser.add_argument('-d', '--debug', action="store_true",
                         help="Turn on debug output")
     args = parser.parse_args()
@@ -70,13 +70,13 @@ if __name__ == '__main__':
             continue
         else:
             config[k] = v
-    sqlite = config['sqlite']
-    gpkgfile = config['gpkgfile']
+    gpkg = config['gpkg']
+    sqlitefile = config['sqlitefile']
     debug = False
     zipped = False
     if config.get('debug'):
         debug = True
     if config.get('zipped'):
         zipped = True
-    s2g = SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile, debug=debug)
+    s2g = GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, debug=debug)
     s2g.convert()
