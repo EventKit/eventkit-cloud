@@ -729,6 +729,9 @@ class TestExportRunViewSet(APITestCase):
         self.job = Job.objects.create(name='TestJob',
                                       description='Test description', user=self.user,
                                       the_geom=the_geom)
+        self.job.zipfile_url = 'test.zip'
+        self.job.save()
+
         self.job_uid = str(self.job.uid)
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
         self.run_uid = str(self.run.uid)
@@ -742,6 +745,10 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
+        self.assertEquals(
+            'http://testserver/downloads/test.zip',
+            result[0]['job']['zipfile_url']
+        )
 
     def test_retrieve_run_no_permissions(self, ):
         user = User.objects.create_user(

@@ -229,6 +229,7 @@ class SimpleJobSerializer(serializers.Serializer):
        lookup_field='uid'
     )
     extent = serializers.SerializerMethodField()
+    zipfile_url = serializers.SerializerMethodField()
 
     def get_uid(self, obj):
         return obj.uid
@@ -244,6 +245,14 @@ class SimpleJobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+    def get_zipfile_url(self, obj):
+        request = self.context['request']
+        if not obj.zipfile_url:
+            return None
+
+        return request.build_absolute_uri('../../downloads/' + obj.zipfile_url) 
+
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
@@ -386,43 +395,6 @@ class ListJobSerializer(serializers.Serializer):
 
     def get_owner(self, obj):
         return obj.user.username
-
-
-# class FormatSerializer(serializers.ModelSerializer):
-#
-#     slug = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
-#
-#     class Meta:
-#         model = ExportFormat
-#         fields = ('slug',)
-#         read_only = ('slug',)
-#         extra_kwargs = {
-#             'slug': {
-#                 'validators': []
-#             }
-#         }
-#
-# class ProviderSerializer(serializers.ModelSerializer):
-#
-#     type = serializers.ModelSerializer(required=False)
-#     class Meta:
-#         model = ExportProvider
-#         fields = ('name', 'url', 'layer', 'type')
-#         read_only = ('name', 'url', 'layer', 'type')
-#         extra_kwargs = {
-#             'name': {
-#                 'validators': []
-#             },
-#             'url': {
-#                 'validators': []
-#             },
-#             'layer': {
-#                 'validators': []
-#             },
-#             'type': {
-#                 'validators': []
-#             }
-#         }
 
 
 class ProviderTaskSerializer(serializers.ModelSerializer):
