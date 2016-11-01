@@ -41,7 +41,7 @@ services:
         - rabbitmq
       environment:
         - LOGLEVEL=warning
-        - CONCURRENCY=4
+        - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis

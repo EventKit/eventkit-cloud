@@ -59,7 +59,6 @@ class ExportTask(Task):
         # update the task
         finished = timezone.now()
         task = ExportTaskModel.objects.get(celery_uid=task_id)
-        provider_task_name = task.export_provider_task.name
         task.finished_at = finished
         task.progress = 100
         # get the output
@@ -257,7 +256,6 @@ class ThematicShpExportTask(ExportTask):
     def run(self, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
-        run = ExportRun.objects.get(uid=run_uid)
         thematic_gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
         shapefile = os.path.join(stage_dir, '{0}_thematic_shp'.format(job_name))
         try:
@@ -515,18 +513,18 @@ class FinalizeExportProviderTask(Task):
 
     name = 'Finalize Export Provider Run'
 
-    def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None):
+    def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None, worker=None):
 
         from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
         export_provider_task.status = 'COMPLETED'
 
         # mark run as incomplete if any tasks fail
-        for task in export_provider_task.tasks.all():
-            if task.status == 'FAILED':
-                export_provider_task.status = 'INCOMPLETE'
-
+        if any(task.status == 'FAILED' for task in export_provider_task.tasks.all()):
+            export_provider_task.status = 'INCOMPLETE'
         export_provider_task.save()
+
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
         run_complete = False
         if all(provider_task.status in ['COMPLETED', 'INCOMPLETE'] for provider_task in
@@ -535,7 +533,7 @@ class FinalizeExportProviderTask(Task):
 
         if run_complete:
             finalize_run_task = FinalizeRunTask()
-            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir)).set(queue=worker)()
 
             run = ExportRun.objects.get(uid=run_uid)
             if run.job.include_zipfile:
@@ -543,7 +541,7 @@ class FinalizeExportProviderTask(Task):
                 zipfile_task.si(
                     run_uid=run_uid,
                     stage_dir=stage_dir
-                )()
+                ).set(queue=worker)()
 
 
 class ZipFileTask(Task):

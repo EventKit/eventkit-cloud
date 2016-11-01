@@ -52,13 +52,15 @@ class TaskFactory():
                                                                               stage_dir=os.path.join(
                                                                                   stage_dir,
                                                                                   provider_task.provider.slug),
-                                                                              export_provider_task_uid=export_provider_task_uid).set(queue=worker)
+                                                                              export_provider_task_uid=export_provider_task_uid,
+                                                                              worker=worker).set(queue=worker)
                               ).apply_async(interval=1, max_retries=10, expires=datetime.now() + timedelta(days=2),
                                             link_error=[finalize_export_provider_task.si(run_uid=run.uid,
                                                                                          stage_dir=os.path.join(
                                                                                              stage_dir,
                                                                                              provider_task.provider.slug),
-                                                                                         export_provider_task_uid=export_provider_task_uid).set(queue=worker)])
+                                                                                         export_provider_task_uid=export_provider_task_uid,
+                                                                                         worker=worker).set(queue=worker)])
             else:
                 return False
 
