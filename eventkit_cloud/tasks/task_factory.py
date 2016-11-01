@@ -19,13 +19,9 @@ logger = logging.getLogger(__name__)
 class TaskFactory():
 
     def __init__(self, ):
-        # self.job = Job.objects.get(uid=job_uid)
-        # self.job_uid = job_uid
         self.type_task_map = {'osm': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
-        # setup the staging directory
 
     def parse_tasks(self, worker=None, run_uid=None):
-        print("PARSING RUN {0} TASKS FOR WORKER: {1}".format(run_uid, worker))
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
@@ -50,7 +46,6 @@ class TaskFactory():
                         # The FinalizeExportProviderTask will check to see if all of the tasks are done, and if they are
                         #  it will call FinalizeTask which will mark the entire job complete/incomplete.
                         if not task_runner_tasks:
-                            print("NO TASK_RUNNER_TASKS RETURNED")
                             return False
                         finalize_export_provider_task = FinalizeExportProviderTask()
                         (task_runner_tasks | finalize_export_provider_task.si(run_uid=run.uid,
