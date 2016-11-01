@@ -167,29 +167,6 @@ class ExportTask(Task):
             logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
             raise e
 
-    # def update_task_progress(self, task_uid=None, progress=None):
-    #     """
-    #     Update the task state and celery task uid.
-    #     Can use the celery uid for diagnostics.
-    #     """
-    #     if not task_uid and not progress:
-    #         return
-    #     started = timezone.now()
-    #     from eventkit_cloud.tasks.models import ExportTask
-    #     celery_uid = self.request.id
-    #     try:
-    #         task = ExportTask.objects.get(uid=task_uid)
-    #         celery_uid = self.request.id
-    #         task.celery_uid = celery_uid
-    #         task.status = 'RUNNING'
-    #         task.export_provider_task.status = 'RUNNING'
-    #         task.started_at = started
-    #         task.save()
-    #         task.export_provider_task.save()
-    #         logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
-    #     except DatabaseError as e:
-    #         logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
-    #         raise e
 
 class OSMConfTask(ExportTask):
     """
@@ -678,6 +655,8 @@ class ExportTaskErrorHandler(Task):
 
 def get_progress_tracker(task_uid=None):
     from eventkit_cloud.tasks.models import ExportTask
+    if not task_uid:
+        return
     def progress_tracker(progress=None, estimated_finish=None):
         if not estimated_finish and not progress:
             return
@@ -685,10 +664,10 @@ def get_progress_tracker(task_uid=None):
             progress = 100
         export_task = ExportTask.objects.get(uid=task_uid)
         if progress:
-            print("UPDATING PROGRESS TO {0}".format(progress))
+            # print("UPDATING PROGRESS TO {0}".format(progress))
             export_task.progress = progress
         if estimated_finish:
-            print("UPDATING estimated_finish TO {0}".format(estimated_finish))
+            # print("UPDATING estimated_finish TO {0}".format(estimated_finish))
             export_task.estimated_finish = estimated_finish
         export_task.save()
     return progress_tracker

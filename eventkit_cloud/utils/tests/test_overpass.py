@@ -4,7 +4,7 @@ import os
 from unittest import skip
 
 import mock
-from mock import patch
+from mock import patch, MagicMock
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -66,15 +66,18 @@ class TestOverpass(TestCase):
 
     @patch('eventkit_cloud.utils.overpass.requests.post')
     def test_run_query(self, mock_post):
+        progress_tracker = MagicMock(progress=None, estimated_finish=None)
         op = Overpass(
             stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters
+            filters=self.job.filters,
+            progress_tracker=progress_tracker
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'
         mock_response = mock.Mock()
         expected = ['<osm>some data</osm>']
+        mock_response.headers = {'content-length': 20}
         mock_response.iter_content.return_value = expected
         mock_post.return_value = mock_response
         op.run_query()
