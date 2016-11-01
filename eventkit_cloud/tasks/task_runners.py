@@ -17,7 +17,7 @@ from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
                            OSMToPBFConvertTask, OverpassQueryTask,
                            WFSExportTask, ExternalRasterServiceExportTask,
-                           ArcGISFeatureServiceExportTask, ThematicGPKGExportTask, )
+                           ArcGISFeatureServiceExportTask,)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -66,7 +66,8 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-
+        osm = service_type.get('osm')
+        osm_thematic = service_type.get('osm-thematic')
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -78,9 +79,9 @@ class ExportOSMTaskRunner(TaskRunner):
         for format in formats:
             try:
                 # instantiate the required class.
-                if service_type.get('osm'):
+                if osm:
                     export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
-                if format != 'gpkg' and service_type.get('osm-thematic'):
+                if format != 'gpkg' and osm_thematic:
                     thematic_exports[format] = {'obj': create_format_thematic_task(format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
@@ -90,7 +91,7 @@ class ExportOSMTaskRunner(TaskRunner):
 
 
         # run the tasks
-        if service_type.get('osm') or service_type.get('osm-thematic'):
+        if osm or osm_thematic:
 
             # pull out the tags to create the conf file
             categories = job.categorised_tags  # dict of points/lines/polygons
@@ -164,7 +165,7 @@ class ExportOSMTaskRunner(TaskRunner):
             task_chain = (initial_tasks | schema_tasks)
 
             thematic_tasks = None
-            if service_type.get('osm-thematic'):
+            if osm_thematic:
 
                 thematic_gpkg_task = create_format_thematic_task('thematic-gpkg')()
                 thematic_gpkg = {'obj': thematic_gpkg_task,
@@ -181,7 +182,7 @@ class ExportOSMTaskRunner(TaskRunner):
                                         thematic_exports.iteritems())
                                   )
 
-            if service_type.get('osm'):
+            if osm:
                 format_tasks = group(task.get('obj').si(run_uid=run.uid,
                                                         stage_dir=stage_dir,
                                                         job_name=job_name,
@@ -194,7 +195,7 @@ class ExportOSMTaskRunner(TaskRunner):
             even using redis as a result backend
             """
 
-            if service_type.get('osm-thematic'):
+            if osm_thematic:
                 task_chain = (task_chain | thematic_tasks)
 
             return export_provider_task.uid, task_chain
