@@ -243,7 +243,7 @@ class ThematicShpExportTask(ExportTask):
     Requires ThematicGPKGExportTask to be called first.
     """
 
-    name = "Thematic Shapefile Export"
+    name = "ESRI Shapefile Export (Thematic)"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
@@ -272,6 +272,8 @@ class ThematicGPKGExportTask(ExportTask):
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
+        if os.path.isfile(os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))):
+            return {'result': os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))}
         gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name)
@@ -358,7 +360,7 @@ class ThematicSQLiteExportTask(ExportTask):
     Class defining geopackage export function.
     Requires ThematicSqliteExportTask.
     """
-    name = 'Geopackage (Thematic)'
+    name = 'SQLITE Format (Thematic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
@@ -371,6 +373,26 @@ class ThematicSQLiteExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in thematic geopackage export, %s', str(e))
             raise Exception(e)
+
+class ThematicKmlExportTask(ExportTask):
+    """
+    Class defining kml export
+    Requires ThematicGPKGExportTask
+    """
+    name = 'KML Format (Thematic)'
+
+    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+        self.update_task_state(task_uid=task_uid)
+        gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
+        kmlfile = os.path.join(stage_dir, '{0}_thematic.kml'.format(job_name))
+        try:
+            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
+            out = s2k.convert()
+            return {'result': out}
+        except Exception as e:
+            logger.error('Raised exception in kml export, %s', str(e))
+            raise Exception(e)
+
 
 
 class WFSExportTask(ExportTask):
