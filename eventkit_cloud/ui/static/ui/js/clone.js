@@ -1317,6 +1317,9 @@ clone.job = (function(){
                         case 'feature_save':
                             form_data['feature_save'] = true;
                             break;
+                        case 'include_zipfile':
+                            form_data['include_zipfile'] = true;
+                            break;
                         case 'formats':
                             formats.push(field.value);
                             break;
