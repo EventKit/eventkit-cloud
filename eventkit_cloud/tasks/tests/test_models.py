@@ -42,6 +42,7 @@ class TestExportRun(TestCase):
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertIsNotNone(saved_run)
         self.assertEqual(run, saved_run)
+        self.assertEquals('', saved_run.zipfile_url)
 
     def test_get_tasks_for_run(self, ):
         job = Job.objects.all()[0]
