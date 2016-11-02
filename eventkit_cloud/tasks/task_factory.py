@@ -55,6 +55,7 @@ class TaskFactory():
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                         task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
                         os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
+                        # If the provider is osm we need to pass in a dict which indicates which osm providers will be included
                         if provider_task == osm_task:
                             args = {'user': self.job.user,
                                     'provider_task_uid': provider_task.uid,
