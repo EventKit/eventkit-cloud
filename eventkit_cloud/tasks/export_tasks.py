@@ -580,8 +580,8 @@ class ZipFileTask(Task):
 
         run = ExportRun.objects.get(uid=run_uid)
         zipfile_url = zip_filepath.split('/')[-2:]
-        run.job.zipfile_url = os.path.join(*zipfile_url)
-        run.job.save()
+        run.zipfile_url = os.path.join(*zipfile_url)
+        run.save()
 
         return {'result': zip_filepath}
 
