@@ -405,7 +405,7 @@ class TestExportTasks(TestCase):
         )
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEqual(
-            run.job.zipfile_url,
+            run.zipfile_url,
             '%s/%s.zip' % (run_uid, run_uid)
         )
         assert str(run_uid) in result['result']

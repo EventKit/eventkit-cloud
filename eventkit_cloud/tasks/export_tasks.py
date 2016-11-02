@@ -573,8 +573,8 @@ class ZipFileTask(Task):
 
         run = ExportRun.objects.get(uid=run_uid)
         zipfile_url = zip_filepath.split('/')[-2:]
-        run.job.zipfile_url = os.path.join(*zipfile_url)
-        run.job.save()
+        run.zipfile_url = os.path.join(*zipfile_url)
+        run.save()
 
         return {'result': zip_filepath}
 
@@ -686,5 +686,4 @@ def get_progress_tracker(task_uid=None):
             # print("UPDATING estimated_finish TO {0}".format(estimated_finish))
             export_task.estimated_finish = estimated_finish
         export_task.save()
-
     return progress_tracker
