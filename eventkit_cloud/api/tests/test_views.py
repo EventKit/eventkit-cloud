@@ -735,6 +735,10 @@ class TestExportRunViewSet(APITestCase):
 
     def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
+
+        self.run.zipfile_url = 'test.zip'
+        self.run.save()
+
         url = reverse('api:runs-detail', args=[self.run_uid])
         self.assertEquals(expected, url)
         response = self.client.get(url)
@@ -742,6 +746,10 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
+        self.assertEquals(
+            'http://testserver/downloads/test.zip',
+            result[0]['zipfile_url']
+        )
 
     def test_retrieve_run_no_permissions(self, ):
         user = User.objects.create_user(

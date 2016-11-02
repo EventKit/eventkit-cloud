@@ -66,7 +66,6 @@ class TestJob(TestCase):
         self.assertEquals(4, len(tags))
         self.assertEquals('Test description', saved_job.description)
         self.assertEquals(0, saved_job.configs.all().count())
-        self.assertEquals('', saved_job.zipfile_url)
         self.assertEqual(False, saved_job.include_zipfile) # default
 
     def test_job_creation_with_config(self, ):

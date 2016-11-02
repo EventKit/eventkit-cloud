@@ -9,10 +9,14 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 import cPickle
 import json
 import logging
+import os
+from urlparse import urlparse, urlunparse
 
 from rest_framework_gis import serializers as geo_serializers
 
 from django.contrib.gis.geos import GEOSGeometry
+from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -164,7 +168,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportTask
-        fields = ('uid', 'url', 'name', 'status', 'started_at', 'finished_at', 'duration', 'result', 'errors',)
+        fields = ('uid', 'url', 'name', 'status', 'progress', 'estimated_finish', 'started_at', 'finished_at', 'duration', 'result', 'errors',)
 
     def get_result(self, obj):
         """Serialize the ExportTaskResult for this ExportTask."""
@@ -257,10 +261,14 @@ class ExportRunSerializer(serializers.ModelSerializer):
     finished_at = serializers.SerializerMethodField()
     duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    zipfile_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
-        fields = ('uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 'status', 'job', 'provider_tasks')
+        fields = (
+            'uid', 'url', 'started_at', 'finished_at', 'duration', 'user', 
+            'status', 'job', 'provider_tasks', 'zipfile_url'
+        )
 
     def get_finished_at(self, obj):
         if (not obj.finished_at):
@@ -279,6 +287,21 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return obj.user.username
+
+    def get_zipfile_url(self, obj):
+        request = self.context['request']
+        if not obj.zipfile_url:
+            return None
+
+        # get full URL path from current request
+        uri = request.build_absolute_uri() 
+        uri = list(urlparse(uri))
+        # modify path, query parmas, and fragment on the URI to match zipfile URL
+        path = os.path.join(settings.EXPORT_MEDIA_ROOT, obj.zipfile_url)
+        uri[2] = path # path
+        uri[4] = None # fragment
+        uri[5] = None # query
+        return urlunparse(uri)
 
 
 class UserSerializer(serializers.Serializer):
@@ -388,43 +411,6 @@ class ListJobSerializer(serializers.Serializer):
         return obj.user.username
 
 
-# class FormatSerializer(serializers.ModelSerializer):
-#
-#     slug = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
-#
-#     class Meta:
-#         model = ExportFormat
-#         fields = ('slug',)
-#         read_only = ('slug',)
-#         extra_kwargs = {
-#             'slug': {
-#                 'validators': []
-#             }
-#         }
-#
-# class ProviderSerializer(serializers.ModelSerializer):
-#
-#     type = serializers.ModelSerializer(required=False)
-#     class Meta:
-#         model = ExportProvider
-#         fields = ('name', 'url', 'layer', 'type')
-#         read_only = ('name', 'url', 'layer', 'type')
-#         extra_kwargs = {
-#             'name': {
-#                 'validators': []
-#             },
-#             'url': {
-#                 'validators': []
-#             },
-#             'layer': {
-#                 'validators': []
-#             },
-#             'type': {
-#                 'validators': []
-#             }
-#         }
-
-
 class ProviderTaskSerializer(serializers.ModelSerializer):
 
     formats = serializers.SlugRelatedField(many=True,
@@ -529,7 +515,6 @@ class JobSerializer(serializers.Serializer):
         default=serializers.CurrentUserDefault()
     )
     tags = serializers.SerializerMethodField()
-    zipfile_url = serializers.SerializerMethodField()
     include_zipfile = serializers.BooleanField(required=False, default=False)
 
     def get_zipfile_url(self, obj):
