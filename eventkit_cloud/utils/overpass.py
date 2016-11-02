@@ -87,7 +87,13 @@ class Overpass(object):
             req = requests.post(self.url, data=q, stream=True)
             #Since the request takes a while, jump progress to an arbitrary 50 percent...
             self.progress_tracker(50)
-            size = req.headers.get('content-length') or len(req.content)
+            try:
+                size = int(req.headers.get('content-length'))
+            except (ValueError, TypeError):
+                if req.content:
+                    size = len(req.content)
+                else:
+                    raise Exception("Overpass Query failed to return any data")
             inflated_size = size*2
             CHUNK = 1024 * 1024 * 5  # 5MB chunks
             with open(self.raw_osm, 'wb') as fd:
