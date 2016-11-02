@@ -1192,6 +1192,7 @@ create.job = (function(){
                 var tags = [];
                 var formats = [];
                 var providers = [];
+
                 $.each(fields, function(idx, field){
                     // ignore config upload related fields
                     switch (field.name){
@@ -1206,6 +1207,9 @@ create.job = (function(){
                             break;
                         case 'feature_save':
                             form_data['feature_save'] = true;
+                            break;
+                        case 'include_zipfile':
+                            form_data['include_zipfile'] = true;
                             break;
                         case 'formats':
                             formats.push(field.value);
@@ -1243,8 +1247,8 @@ create.job = (function(){
                 });
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
-                form_data["provider_tasks"] = []
-                var provider_tasks = []
+                form_data["provider_tasks"] = [];
+                var provider_tasks = [];
 
                 if(typeof(providers)==='string'){
                     providers = [providers]
@@ -2352,6 +2356,12 @@ create.job = (function(){
         $('label[for="published"]').popover({
             //title: 'Select Formats',
             content: gettext("Publish the export to the global exports for everyone to access"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 0},
+            placement: 'top'
+        });
+        $('label[for="include_zipfile"]').popover({
+            content: gettext("Package the selected export format files as a .zip file"),
             trigger: 'hover',
             delay: {show: 0, hide: 0},
             placement: 'top'

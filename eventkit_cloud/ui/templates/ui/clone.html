@@ -227,7 +227,7 @@
                                             <div class="checkbox">
                                                 <label class="control-label" for="feature_save">
                                                   <input id="feature_save" name="feature_save" type="checkbox" value="">
-                                                  {% trans 'Save feature selection locally' %}
+                                                  {% trans 'Save feature selection privately' %}
                                                 </label>
                                             </div>
                                         </div>
@@ -237,7 +237,7 @@
                                             <div class="checkbox">
                                                 <label class="control-label" for="feature_pub">
                                                   <input id="feature_pub" name="feature_pub" type="checkbox" value="">
-                                                  {% trans 'Publish feature selection globally' %}
+                                                  {% trans 'Publish feature selection publicly' %}
                                                 </label>
                                             </div>
                                         </div>
@@ -247,7 +247,17 @@
                                             <div class="checkbox">
                                                 <label class="control-label" for="published">
                                                   <input id="published" name="published" type="checkbox" value="">
-                                                  {% trans 'Publish export globally' %}
+                                                  {% trans 'Publish export publicly' %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row" id="form-group-zip">
+                                        <div class="col-md-12">
+                                            <div class="checkbox">
+                                                <label class="control-label" for="include_zipfile">
+                                                    <input id="include_zipfile" name="include_zipfile" type="checkbox" value="">
+                                                    {% trans 'Package downloads as a zip' %}
                                                 </label>
                                             </div>
                                         </div>
