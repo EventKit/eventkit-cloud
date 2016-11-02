@@ -2360,6 +2360,12 @@ create.job = (function(){
             delay: {show: 0, hide: 0},
             placement: 'top'
         });
+        $('label[for="include_zipfile"]').popover({
+            content: gettext("Package the selected export format files as a .zip file"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 0},
+            placement: 'top'
+        });
     }
 }());
 

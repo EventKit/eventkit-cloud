@@ -2472,6 +2472,12 @@ clone.job = (function(){
             delay: {show: 0, hide: 0},
             placement: 'top'
         });
+        $('label[for="include_zipfile"]').popover({
+            content: gettext("Package the selected export format files as a .zip file"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 0},
+            placement: 'top'
+        });
     }
 
     /**
@@ -2605,8 +2611,10 @@ clone.job = (function(){
             if (configs.length == 0) {
                 $('input#feature_save').prop('checked', data.feature_save);
                 $('input#feature_pub').prop('checked', data.feature_pub);
+
             }
 
+            $('input#include_zipfile').prop('checked', data.include_zipfile)
             $('input#published').prop('checked', data.published)
             $('#create-job-form').trigger('change');
 
