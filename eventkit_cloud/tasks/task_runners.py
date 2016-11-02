@@ -33,7 +33,6 @@ export_task_registry_thematic = {
     'kml': 'eventkit_cloud.tasks.export_tasks.ThematicKmlExportTask',
     'shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
     'sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSQLiteExportTask',
-    'thematic-gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask'
 }
 
@@ -80,9 +79,9 @@ class ExportOSMTaskRunner(TaskRunner):
             try:
                 # instantiate the required class.
                 if osm:
-                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
                 if format != 'gpkg' and osm_thematic:
-                    thematic_exports[format] = {'obj': create_format_thematic_task(format)(), 'task_uid': None}
+                    thematic_exports[format] = {'obj': create_format_task(format, 'osm-thematic')(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -173,7 +172,7 @@ class ExportOSMTaskRunner(TaskRunner):
                 task_chain = (task_chain | format_tasks)
 
             if osm_thematic:
-                thematic_gpkg_task = create_format_thematic_task('thematic-gpkg')()
+                thematic_gpkg_task = create_format_task('gpkg', 'osm-thematic')()
                 thematic_gpkg = {'obj': thematic_gpkg_task,
                                    'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
                                                                   export_provider_task=export_provider_task).uid}
@@ -230,7 +229,7 @@ class ExportWFSTaskRunner(TaskRunner):
             if not _format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[_format] = {'obj': create_format_task(_format)(), 'task_uid': None}
+                    export_tasks[_format] = {'obj': create_format_task(_format, 'osm')(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:
@@ -303,7 +302,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
             if not format.startswith('thematic-'):
                 try:
                     # instantiate the required class.
-                    export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+                    export_tasks[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
                 except KeyError as e:
                     logger.debug(e)
                 except ImportError as e:
@@ -375,7 +374,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         try:
             # instantiate the required class.
             # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
-            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg', 'osm')(), 'task_uid': None}
         except KeyError as e:
             logger.debug(e)
         except ImportError as e:
@@ -410,17 +409,11 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         else:
             return None, None
 
-def create_format_task(format):
-    task_fq_name = export_task_registry[format]
-    # instantiate the required class.
-    parts = task_fq_name.split('.')
-    module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-    module = importlib.import_module(module_path)
-    CeleryExportTask = getattr(module, class_name)
-    return CeleryExportTask
-
-def create_format_thematic_task(format):
-    task_fq_name = export_task_registry_thematic[format]
+def create_format_task(format, type):
+    if type == 'osm-thematic':
+        task_fq_name = export_task_registry_thematic[format]
+    else:
+        task_fq_name = export_task_registry[format]
     # instantiate the required class.
     parts = task_fq_name.split('.')
     module_path, class_name = '.'.join(parts[:-1]), parts[-1]

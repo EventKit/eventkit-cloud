@@ -28,11 +28,12 @@ class TaskFactory():
 
     def parse_tasks(self):
         if self.run:
-            # provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
             osm_task = None
             osm_types = {'osm': None, 'osm-thematic': None}
             provider_tasks = []
             osm_provider_tasks = {}
+            # Add providers to list.
+            # If both osm and osm-thematic are requested then only add one task which will run both exports
             for provider_task in self.job.provider_tasks.all():
                 provider_type = provider_task.provider.export_provider_type.type_name
                 if provider_type in ['osm', 'osm-thematic']:

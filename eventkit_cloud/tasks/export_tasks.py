@@ -365,8 +365,8 @@ class GeopackageExportTask(ExportTask):
 
 class ThematicSQLiteExportTask(ExportTask):
     """
-    Class defining geopackage export function.
-    Requires ThematicSqliteExportTask.
+    Class defining Thematic SQLite export function.
+    Requires ThematicGPKGExportTask.
     """
     name = 'SQLITE Format (Thematic)'
 
