@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import requests
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from time import sleep
@@ -315,15 +316,13 @@ class TestJob(TestCase):
         self.job_json = job = response.json()
         run = self.wait_for_run(job.get('uid'))
         # XXX: we'll get this response before a URL is generated.  serializer should return `None`
-        self.assertEquals(
-            '%s%s%s/%s.zip' % (
-                self.base_url,
-                settings.EXPORT_DOWNLOAD_ROOT,
-                run.get('uid'),
-                run.get('uid')
-            ),
-            run['zipfile_url']
+        test_zip_url = '%s%s%s/%s.zip' % (
+            self.base_url,
+            settings.EXPORT_MEDIA_ROOT,
+            run.get('uid'),
+            run.get('uid')
         )
+        self.assertEquals(test_zip_url, run['zipfile_url'])
 
         orm_job = Job.objects.get(uid=job.get('uid'))
         orm_run = orm_job.runs.last()
