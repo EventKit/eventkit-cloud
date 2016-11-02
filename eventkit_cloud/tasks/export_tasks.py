@@ -544,10 +544,11 @@ class FinalizeExportProviderTask(Task):
                     stage_dir=stage_dir
                 )()
 
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError or OSError:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        if os.path.isdir(stage_dir):
+            try:
+                shutil.rmtree(stage_dir)
+            except IOError or OSError:
+                logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
 
 class ZipFileTask(Task):
