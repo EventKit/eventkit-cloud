@@ -21,8 +21,11 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, external_service, wfs, arcgis_feature_service, sqlite,
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, 
+    external_service, wfs, arcgis_feature_service, sqlite,
 )
+
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -75,21 +78,22 @@ class ExportTask(Task):
         provider_dir = os.path.join(run_dir, provider_slug)
         download_path = os.path.join(provider_dir, filename)
 
-        try:
-            if not os.path.exists(run_dir):
-                os.makedirs(run_dir)
-            if not os.path.exists(provider_dir):
-                os.makedirs(provider_dir)
-            # don't copy raw run_dir data
-            if (task.name != 'OverpassQuery'):
-                shutil.copy(output_url, download_path)
-        except IOError:
-            logger.error('Error copying output file to: {0}'.format(download_path))
         # construct the download url
         try:
-            if getattr(settings, 'USE_S3', False):
+            if settings.USE_S3:
                 download_url = s3.upload_to_s3(run_uid, provider_slug, filename)
             else:
+                try:
+                    if not os.path.exists(run_dir):
+                        os.makedirs(run_dir)
+                    if not os.path.exists(provider_dir):
+                        os.makedirs(provider_dir)
+                    # don't copy raw run_dir data
+                    if (task.name != 'OverpassQuery'):
+                        shutil.copy(output_url, download_path)
+                except IOError:
+                    logger.error('Error copying output file to: {0}'.format(download_path))
+
                 download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
                 download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
 
@@ -134,9 +138,6 @@ class ExportTask(Task):
         ete.save()
         if self.abort_on_error:
             run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
-            # run.status = 'FAILED'
-            # run.finished_at = timezone.now()
-            # run.save()
             error_handler = ExportTaskErrorHandler()
             # run error handler
             stage_dir = kwargs['stage_dir']
@@ -511,9 +512,6 @@ class FinalizeExportProviderTask(Task):
                 run_complete = False
 
         if run_complete:
-            finalize_run_task = FinalizeRunTask()
-            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
-
             run = ExportRun.objects.get(uid=run_uid)
             if run.job.include_zipfile:
                 zipfile_task = ZipFileTask()
@@ -521,6 +519,9 @@ class FinalizeExportProviderTask(Task):
                     run_uid=run_uid,
                     stage_dir=stage_dir
                 )()
+
+            finalize_run_task = FinalizeRunTask()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
 
         try:
             shutil.rmtree(stage_dir)
@@ -534,32 +535,58 @@ class ZipFileTask(Task):
     """
     name = 'Zip File Export'
 
-
     def run(self, run_uid=None, stage_dir=None):
-        from eventkit_cloud.tasks.models import ExportRun
+        from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         dl_filepath = os.path.join(download_root, str(run_uid))
 
-        # probably need to recurse
         files = []
         for root, dirnames, filenames in os.walk(dl_filepath):
-            files += [os.path.join(root, filename) for filename in filenames]
+            files += [
+                os.path.join(root, filename) for filename in filenames
+                if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS
+            ]
 
-        zip_filename = str(run_uid) + '.zip'
+        run = ExportRunModel.objects.get(uid=run_uid)
+
+        name = run.job.name
+        project = run.job.event
+        date = timezone.now().strftime('%Y%m%d')
+        # XXX: name-project-eventkit-yyyymmdd.zip
+        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
+            name,
+            project,
+            "eventkit",
+            date,
+            'zip'
+        )
+
         zip_filepath = os.path.join(dl_filepath, zip_filename)
-
         with ZipFile(zip_filepath, 'w') as zipfile:
             for filepath in files:
-                filename = os.path.join(*filepath.split('/')[-2:])
+                name, ext = os.path.splitext(filepath)
+                provider_slug, name = os.path.split(name)
+                provider_slug = os.path.split(provider_slug)[1]
+
+                filename = '{0}-{1}-{2}{3}'.format(
+                     name,
+                     provider_slug,
+                     date,
+                     ext
+                )
                 zipfile.write(
                     filepath,
                     arcname=filename
                 )
 
-        run = ExportRun.objects.get(uid=run_uid)
-        zipfile_url = zip_filepath.split('/')[-2:]
-        run.zipfile_url = os.path.join(*zipfile_url)
-        run.save()
+        if settings.USE_S3:
+            # TODO open up a stream directly to the s3 file so no local 
+            #      persistence is required
+            zipfile_url = s3.upload_to_s3(run_uid, None, zip_filename)
+            # TODO: remove the zip file once it's uploaded
+        else:
+            run.zipfile_url = os.path.join(run_uid, zip_filename)
+            run.save()
 
         return {'result': zip_filepath}
 

@@ -536,5 +536,7 @@ def load_providers():
 def delete_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
-            provider = ExportProvider.objects.using('default').get(name=export_provider.get('fields').get('name'))
+            provider = ExportProvider.objects.using('default').get(
+                name=export_provider.get('fields').get('name')
+            )
             provider.delete(using='default')
