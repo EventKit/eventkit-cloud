@@ -296,10 +296,15 @@ exports.detail = (function(){
                         taskDiv+=('</table></div>');
                         $(taskDiv).appendTo('#providers');
                         $providersDiv.append('</table>')
-
-
-
                     });
+                    if(run.zipfile_url)
+                    {
+                        $zipFiletr = $('tr#zipfile_tr');
+                        $zipFiletr.css('display', 'table-row');
+                        $zipFileDiv = $('div').find('#zipfile_div');
+                        var displayText = run.job.description + " ZipFile";
+                        $zipFileDiv.append('<table border="0" width="100%"><tr><td><a href="' + run.zipfile_url + '">' + displayText + '</a></td></tr></table>');
+                    }
 
 
                 });
@@ -335,6 +340,10 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
                                                         <div id="providers"> \
                                                         </div> \
+                                                    </td></tr> \
+                                                    <tr id="zipfile_tr" style="display: none;"><td><strong>' + gettext('ZipFile') + ':</strong></td><td> \
+                                                        <div id="zipfile_div"> \
+                                                        </div>\
                                                     </td></tr> \
                                                     <tr id="exceptions-{{ run_uid }}" style="display: none;"><td><strong>' + gettext('Errors') + ':</strong></td><td> \
                                                         <div id="errors"> \

@@ -115,7 +115,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -152,7 +152,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -208,7 +208,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags,
@@ -236,7 +236,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags
@@ -281,7 +281,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -325,7 +325,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             # 'preset': config_uid,
             'transform': '',
             'translate': '',
@@ -363,7 +363,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -382,7 +382,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -401,7 +401,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -420,7 +420,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -458,7 +458,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': -3.9,  # inverted
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -495,7 +495,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data'}]  # 'formats': formats}]# missing
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -513,7 +513,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': ''}]  # invalid
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -532,7 +532,7 @@ class TestJobViewSet(APITestCase):
             'xmax': 7.0,
             'ymax': 27.6,
             'provider_tasks': [
-                {'provider': 'OpenStreetMap Data', 'formats': ['broken-format-one', 'broken-format-two']}]
+                {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
 
@@ -556,7 +556,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 13.54,
     #         'xmax': 48.52,
     #         'ymax': 20.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data, format='json')
     #
@@ -594,7 +594,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 47.66,
     #         'xmax': 11.61,
     #         'ymax': 54.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data)
     #     self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -615,7 +615,7 @@ class TestJobViewSet(APITestCase):
             'ymin': -10,
             'xmax': 40,
             'ymax': 20,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -662,7 +662,7 @@ class TestBBoxSearch(APITestCase):
                 'ymin': extent[1],
                 'xmax': extent[2],
                 'ymax': extent[3],
-                'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
