@@ -63,6 +63,24 @@ create.job = (function(){
                 ]
             })
         })
+        // On provider select, make call to api and get url + source type, then add a layer to the map.
+        // On deselect remove the layer from the map
+
+        // TYPES: [WMS, WMTS, WFS, XYZ TILE, ArcGIS-Raster, ArcGIS-Feature
+
+        // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
+
+        // http://openlayers.org/en/latest/examples/vector-esri.html ARCGIS FEATURE SERVICE
+
+        // http://openlayers.org/en/latest/examples/vector-wfs.html WFS
+
+        // http://openlayers.org/en/latest/examples/wms-tiled.html WMS
+
+        // http://openlayers.org/en/latest/examples/wmts.html WMTS
+
+        // http://openlayers.org/en/latest/examples/xyz.html TILES
+
+
         var hotosm = Layers.HOT;
         hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
 
@@ -271,6 +289,7 @@ create.job = (function(){
                     + 'data-description="' + provider.name + '"/>'
                     + provider.name
                     + '</label></div>');
+                // TODO add listeners here for map layers? Use provider.source_type?
             }
         })
     }
