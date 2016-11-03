@@ -72,14 +72,15 @@ class ExportTask(Task):
         provider_slug = parts[-2]
         run_uid = parts[-3]
         run_dir = os.path.join(download_root, run_uid)
-        provider_dir = os.path.join(run_dir, provider_slug)
-        download_path = os.path.join(provider_dir, filename)
+        name, ext = os.path.splitext(filename)
+        download_file = '{0}-{1}-{2}{3}'.format(name, provider_slug, finished.strftime('%Y%m%d'), ext)
+        download_path = os.path.join(run_dir, download_file)
 
         try:
             if not os.path.exists(run_dir):
                 os.makedirs(run_dir)
-            if not os.path.exists(provider_dir):
-                os.makedirs(provider_dir)
+            # if not os.path.exists(provider_dir):
+            #     os.makedirs(provider_dir)
             # don't copy raw run_dir data
             if (task.name != 'OverpassQuery'):
                 shutil.copy(output_url, download_path)
@@ -88,10 +89,10 @@ class ExportTask(Task):
         # construct the download url
         try:
             if getattr(settings, 'USE_S3', False):
-                download_url = s3.upload_to_s3(run_uid, provider_slug, filename)
+                download_url = s3.upload_to_s3(run_uid, download_path)
             else:
                 download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-                download_url = '/'.join([download_media_root, run_uid, provider_slug, filename])
+                download_url = '/'.join([download_media_root, run_uid, download_file])
 
             # save the task and task result
             result = ExportTaskResult(
@@ -235,7 +236,7 @@ class OSMPrepSchemaTask(ExportTask):
     def run(self, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
         osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf)
         osmparser.create_geopackage()
@@ -251,14 +252,14 @@ class ThematicShpExportTask(ExportTask):
     Requires ThematicGPKGExportTask to be called first.
     """
 
-    name = "ESRI Shapefile Export (Thematic)"
+    name = "ESRI Shapefile Export"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
-        thematic_gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
-        shapefile = os.path.join(stage_dir,'{0}_thematic_shp'.format(job_name))
+        thematic_gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
         try:
             t2s = shp.GPKGToShp(gpkg=thematic_gpkg, shapefile=shapefile)
             out = t2s.convert()
@@ -273,16 +274,16 @@ class ThematicGPKGExportTask(ExportTask):
     Task to export thematic gpkg.
     """
 
-    name = "GPKG Format (Thematic)"
+    name = "GPKG Format"
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
         run = ExportRun.objects.get(uid=run_uid)
         tags = run.job.categorised_tags
-        if os.path.isfile(os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))):
-            return {'result': os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))}
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        if os.path.isfile(os.path.join(stage_dir, '{0}.gpkg'.format(job_name))):
+            return {'result': os.path.join(stage_dir, '{0}.gpkg'.format(job_name))}
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         try:
             t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name)
             out = t2s.convert()
@@ -296,12 +297,12 @@ class ShpExportTask(ExportTask):
     """
     Class defining SHP export function.
     """
-    name = 'ESRI Shapefile Format'
+    name = 'ESRI Shapefile Format (Generic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
+        shapefile = os.path.join(stage_dir,'{0}_generic_shp'.format(job_name))
         try:
             s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
             out = s2s.convert()
@@ -315,12 +316,12 @@ class KmlExportTask(ExportTask):
     """
     Class defining KML export function.
     """
-    name = 'KML Format'
+    name = 'KML Format (Generic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
+        kmlfile = os.path.join(stage_dir, '{0}_generic.kml'.format(job_name))
         try:
             s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
             out = s2k.convert()
@@ -335,12 +336,12 @@ class SqliteExportTask(ExportTask):
     Class defining SQLITE export function.
     """
 
-    name = 'SQLITE Format'
+    name = 'SQLITE Format (Generic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}_generic.sqlite'.format(job_name))
         try:
             s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile)
             out = s2g.convert()
@@ -354,12 +355,12 @@ class GeopackageExportTask(ExportTask):
     """
     Class defining geopackage export function.
     """
-    name = 'Geopackage'
+    name = 'Geopackage Format (Generic)'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         # gpkg already generated by OSMPrepSchema so just return path
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         return {'result': gpkg}
 
 
@@ -368,12 +369,12 @@ class ThematicSQLiteExportTask(ExportTask):
     Class defining Thematic SQLite export function.
     Requires ThematicGPKGExportTask.
     """
-    name = 'SQLITE Format (Thematic)'
+    name = 'SQLITE Format'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        sqlitefile = os.path.join(stage_dir, '{0}_thematic.sqlite'.format(job_name))
-        gpkgfile = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
+        sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
+        gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
             s2g = sqlite.GPKGToSQLite(sqlitefile=sqlitefile, gpkg=gpkgfile)
             out = s2g.convert()
@@ -387,12 +388,12 @@ class ThematicKmlExportTask(ExportTask):
     Class defining kml export
     Requires ThematicGPKGExportTask
     """
-    name = 'KML Format (Thematic)'
+    name = 'KML Format'
 
     def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}_thematic.gpkg'.format(job_name))
-        kmlfile = os.path.join(stage_dir, '{0}_thematic.kml'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
             s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
             out = s2k.convert()
@@ -412,7 +413,7 @@ class WFSExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         try:
             w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                                       config=config, service_type=service_type)
@@ -432,7 +433,7 @@ class ArcGISFeatureServiceExportTask(ExportTask):
     def run(self, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, bbox=None,
             service_url=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
-        gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         try:
             w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                                                                     config=config, service_type=service_type)

@@ -28,7 +28,7 @@ class TestExportRun(TestCase):
         user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        provider_task = ProviderTask.objects.create(provider=ExportProvider.objects.get(slug='osm-vector'))
+        provider_task = ProviderTask.objects.create(provider=ExportProvider.objects.get(slug='osm-generic'))
         # add the formats to the provider task
         provider_task.formats.add(*formats)
         job = Job.objects.create(name='TestJob',

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class TaskFactory():
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
-        self.type_task_map = {'osm': ExportOSMTaskRunner, 'osm-thematic': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
+        self.type_task_map = {'osm-generic': ExportOSMTaskRunner, 'osm': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
         # setup the staging directory
         self.run = self.create_run()
         if self.run:
@@ -29,24 +29,24 @@ class TaskFactory():
     def parse_tasks(self):
         if self.run:
             osm_task = None
-            osm_types = {'osm': None, 'osm-thematic': None}
+            osm_types = {'osm-generic': None, 'osm': None}
             provider_tasks = []
             osm_provider_tasks = {}
             # Add providers to list.
             # If both osm and osm-thematic are requested then only add one task which will run both exports
             for provider_task in self.job.provider_tasks.all():
                 provider_type = provider_task.provider.export_provider_type.type_name
-                if provider_type in ['osm', 'osm-thematic']:
+                if provider_type in ['osm-generic', 'osm']:
                     osm_types[provider_type] = True
                     osm_provider_tasks[provider_type] = provider_task
                 else:
                     provider_tasks.append(provider_task)
-            if osm_types.get('osm-thematic'):
-                provider_tasks.append(osm_provider_tasks.get('osm-thematic'))
-                osm_task = osm_provider_tasks.get('osm-thematic')
-            elif osm_types.get('osm'):
+            if osm_types.get('osm'):
                 provider_tasks.append(osm_provider_tasks.get('osm'))
                 osm_task = osm_provider_tasks.get('osm')
+            elif osm_types.get('osm-generic'):
+                provider_tasks.append(osm_provider_tasks.get('osm-generic'))
+                osm_task = osm_provider_tasks.get('osm-generic')
 
             if provider_tasks:
                 header_tasks = []
@@ -62,7 +62,7 @@ class TaskFactory():
                                     'run': self.run,
                                     'stage_dir': os.path.join(
                                        self.stage_dir,
-                                       provider_task.provider.slug),
+                                       'osm-data'),
                                     'service_type': osm_types
                                     }
                         else:

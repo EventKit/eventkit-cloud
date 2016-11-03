@@ -37,7 +37,7 @@ class TestJobFilter(APITestCase):
                                  description='Test description', user=self.user2,
                                  the_geom=the_geom)
         format = ExportFormat.objects.get(slug='shp')
-        export_provider = ExportProvider.objects.get(slug='osm-vector')
+        export_provider = ExportProvider.objects.get(slug='osm-generic')
         provider_task = ProviderTask.objects.create(provider=export_provider)
         provider_task.formats.add(format)
         self.job1.provider_tasks.add(provider_task)

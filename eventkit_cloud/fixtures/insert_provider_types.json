@@ -4,12 +4,21 @@
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.104Z",
 			"updated_at" : "2016-10-19T18:01:26.104Z",
-			"type_name" : "osm",
+			"type_name" : "osm-generic",
 			"supported_formats" : []
 		}
 	}, {
+		"model": "jobs.exportprovidertype",
+		"pk": 2,
+		"fields": {
+			"created_at": "2016-10-19T18:01:26.116Z",
+			"updated_at": "2016-10-19T18:01:26.116Z",
+			"type_name": "osm",
+			"supported_formats": []
+		}
+	}, {
 		"model" : "jobs.exportprovidertype",
-		"pk" : 2,
+		"pk" : 3,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.109Z",
 			"updated_at" : "2016-10-19T18:01:26.109Z",
@@ -18,7 +27,7 @@
 		}
 	}, {
 		"model" : "jobs.exportprovidertype",
-		"pk" : 3,
+		"pk" : 4,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.114Z",
 			"updated_at" : "2016-10-19T18:01:26.114Z",
@@ -27,7 +36,7 @@
 		}
 	}, {
 		"model" : "jobs.exportprovidertype",
-		"pk" : 4,
+		"pk" : 5,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.116Z",
 			"updated_at" : "2016-10-19T18:01:26.116Z",
@@ -36,7 +45,7 @@
 		}
 	},{
 		"model" : "jobs.exportprovidertype",
-		"pk" : 5,
+		"pk" : 6,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.116Z",
 			"updated_at" : "2016-10-19T18:01:26.116Z",
@@ -46,22 +55,13 @@
 	},
 	{
 		"model": "jobs.exportprovidertype",
-		"pk": 6,
+		"pk": 7,
 		"fields": {
 			"created_at": "2016-10-19T18:01:26.116Z",
 			"updated_at": "2016-10-19T18:01:26.116Z",
 			"type_name": "arcgis-feature",
 			"supported_formats": []
 		}
-	},
-	{
-		"model": "jobs.exportprovidertype",
-		"pk": 7,
-		"fields": {
-			"created_at": "2016-10-19T18:01:26.116Z",
-			"updated_at": "2016-10-19T18:01:26.116Z",
-			"type_name": "osm-thematic",
-			"supported_formats": []
-		}
 	}
+
 ]
