@@ -65,8 +65,8 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        osm = service_type.get('osm')
-        osm_thematic = service_type.get('osm-thematic')
+        osm = service_type.get('osm-generic')
+        osm_thematic = service_type.get('osm')
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -79,9 +79,9 @@ class ExportOSMTaskRunner(TaskRunner):
             try:
                 # instantiate the required class.
                 if osm:
-                    export_tasks[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
+                    export_tasks[format] = {'obj': create_format_task(format, 'osm-generic')(), 'task_uid': None}
                 if format != 'gpkg' and osm_thematic:
-                    thematic_exports[format] = {'obj': create_format_task(format, 'osm-thematic')(), 'task_uid': None}
+                    thematic_exports[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -172,7 +172,7 @@ class ExportOSMTaskRunner(TaskRunner):
                 task_chain = (task_chain | format_tasks)
 
             if osm_thematic:
-                thematic_gpkg_task = create_format_task('gpkg', 'osm-thematic')()
+                thematic_gpkg_task = create_format_task('gpkg', 'osm')()
                 thematic_gpkg = {'obj': thematic_gpkg_task,
                                    'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
                                                                   export_provider_task=export_provider_task).uid}
@@ -226,15 +226,14 @@ class ExportWFSTaskRunner(TaskRunner):
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
         for _format in formats:
-            if not _format.startswith('thematic-'):
-                try:
-                    # instantiate the required class.
-                    export_tasks[_format] = {'obj': create_format_task(_format, 'osm')(), 'task_uid': None}
-                except KeyError as e:
-                    logger.debug(e)
-                except ImportError as e:
-                    msg = 'Error importing export task: {0}'.format(e)
-                    logger.debug(msg)
+            try:
+                # instantiate the required class.
+                export_tasks[_format] = {'obj': create_format_task(_format, 'osm-generic')(), 'task_uid': None}
+            except KeyError as e:
+                logger.debug(e)
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -299,15 +298,14 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
         for format in formats:
-            if not format.startswith('thematic-'):
-                try:
-                    # instantiate the required class.
-                    export_tasks[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
-                except KeyError as e:
-                    logger.debug(e)
-                except ImportError as e:
-                    msg = 'Error importing export task: {0}'.format(e)
-                    logger.debug(msg)
+            try:
+                # instantiate the required class.
+                export_tasks[format] = {'obj': create_format_task(format, 'osm-generic')(), 'task_uid': None}
+            except KeyError as e:
+                logger.debug(e)
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:
@@ -374,7 +372,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         try:
             # instantiate the required class.
             # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
-            export_tasks['gpkg'] = {'obj': create_format_task('gpkg', 'osm')(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg', 'osm-generic')(), 'task_uid': None}
         except KeyError as e:
             logger.debug(e)
         except ImportError as e:
@@ -410,10 +408,10 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             return None, None
 
 def create_format_task(format, type):
-    if type == 'osm-thematic':
-        task_fq_name = export_task_registry_thematic[format]
-    else:
+    if type == 'osm-generic':
         task_fq_name = export_task_registry[format]
+    else:
+        task_fq_name = export_task_registry_thematic[format]
     # instantiate the required class.
     parts = task_fq_name.split('.')
     module_path, class_name = '.'.join(parts[:-1]), parts[-1]
