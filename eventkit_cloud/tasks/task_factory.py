@@ -62,7 +62,7 @@ class TaskFactory():
                                     'run': self.run,
                                     'stage_dir': os.path.join(
                                        self.stage_dir,
-                                       'osm'),
+                                       'osm-data'),
                                     'service_type': osm_types
                                     }
                         else:
