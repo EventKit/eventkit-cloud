@@ -3,7 +3,6 @@ import importlib
 import logging
 import re
 import json
-import os
 
 from django.conf import settings
 from django.db import DatabaseError
@@ -15,7 +14,7 @@ from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from .export_tasks import (OSMConfTask, OSMPrepSchemaTask,
                            OSMToPBFConvertTask, OverpassQueryTask,
                            WFSExportTask, ExternalRasterServiceExportTask,
-                           ArcGISFeatureServiceExportTask,)
+                           ArcGISFeatureServiceExportTask, GroupSyncTask)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -167,7 +166,7 @@ class ExportOSMTaskRunner(TaskRunner):
                                                         job_name=job_name,
                                                         task_uid=task.get('task_uid')) for task_name, task in
                                      export_tasks.iteritems() if task is not None)
-                task_chain = (task_chain | format_tasks)
+                task_chain = (task_chain | format_tasks | GroupSyncTask().si().set(queue=worker))
 
             if osm_thematic:
                 thematic_gpkg_task = create_format_task('gpkg', 'osm')()
@@ -184,7 +183,7 @@ class ExportOSMTaskRunner(TaskRunner):
                                                            task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                         thematic_exports.iteritems())
                                   )
-                task_chain = (task_chain | thematic_tasks)
+                task_chain = (task_chain | thematic_tasks | GroupSyncTask().si().set(queue=worker))
 
                 """
                 the tasks are chained instead of nested groups.
@@ -266,7 +265,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                                     task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
 
-            task_chain = (initial_task | format_tasks)
+            task_chain = (initial_task | format_tasks | GroupSyncTask().si().set(queue=worker))
             return export_provider_task.uid, task_chain
 
 
@@ -338,7 +337,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                                     task_uid=task.get('task_uid')).set(queue=worker) for task_name, task in
                                  export_tasks.iteritems() if task is not None)
 
-            task_chain = (initial_task | format_tasks)
+            task_chain = (initial_task | format_tasks | GroupSyncTask().si().set(queue=worker))
             return export_provider_task.uid, task_chain
 
 

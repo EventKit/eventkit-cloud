@@ -560,9 +560,6 @@ class FinalizeExportProviderTask(Task):
             run_complete = True
 
         if run_complete:
-            finalize_run_task = FinalizeRunTask()
-            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir)).set(queue=worker)()
-
             run = ExportRun.objects.get(uid=run_uid)
             if run.job.include_zipfile:
                 zipfile_task = ZipFileTask()
@@ -570,6 +567,9 @@ class FinalizeExportProviderTask(Task):
                     run_uid=run_uid,
                     stage_dir=stage_dir
                 ).set(queue=worker)()
+
+            finalize_run_task = FinalizeRunTask()
+            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir)).set(queue=worker)()
 
 
 class ZipFileTask(Task):
@@ -696,6 +696,18 @@ class ExportTaskErrorHandler(Task):
         msg.send()
 
 
+class GroupSyncTask(Task):
+    """
+    A plaeholder task to allow chained groups to synchronize prior to continuing execution.
+
+    http://stackoverflow.com/questions/15123772/celery-chaining-groups-and-subtasks-out-of-order-execution
+    """
+    name = "Group Synchronization"
+
+    def run(self,  *args, **kwargs):
+        return
+
+
 def get_progress_tracker(task_uid=None):
     from eventkit_cloud.tasks.models import ExportTask
     if not task_uid:
@@ -715,3 +727,5 @@ def get_progress_tracker(task_uid=None):
             export_task.estimated_finish = estimated_finish
         export_task.save()
     return progress_tracker
+
+
