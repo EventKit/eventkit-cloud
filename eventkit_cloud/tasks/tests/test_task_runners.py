@@ -12,7 +12,7 @@ from django.test import TestCase
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
 
 from ..task_runners import ExportOSMTaskRunner
-from ..task_factory import TaskFactory
+from ..task_factory import create_run
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class TestExportTaskRunner(TestCase):
         self.job.region = self.region
         self.uid = str(provider_task.uid)
         self.job.save()
-        self.task_factory = TaskFactory(self.job.uid)
+        create_run(job_uid=self.job.uid)
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.ShpExportTask')
@@ -50,19 +50,18 @@ class TestExportTaskRunner(TestCase):
         shp_export_task.run.return_value = Mock(state='PENDING', id=celery_uid)
         type(shp_export_task).name = PropertyMock(return_value='Shapefile Export')
         # celery chain mock
-        celery_chain = mock_chain.return_value
-        celery_chain.apply_async.return_value = Mock()
+        mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.all()[0].formats.add(shp_task)
         runner = ExportOSMTaskRunner()
         #Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            runner.run_task(provider_task_uid=self.uid, run=self.job.runs.all()[0], service_type={'osm-generic': True})
+            runner.run_task(provider_task_uid=self.uid, run=self.job.runs.first(), service_type={'osm-generic': True}, worker="some_worker")
         except TypeError:
             pass
         run = self.job.runs.all()[0]
         self.assertIsNotNone(run)
         # assert delay method called on mock chord..
-        celery_chain.delay.assert_called_once()
+        mock_chain.return_value.delay.assert_called_once()
         tasks = run.provider_tasks.all()[0].tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(5, len(tasks))  # 4 initial tasks + 1 shape export task

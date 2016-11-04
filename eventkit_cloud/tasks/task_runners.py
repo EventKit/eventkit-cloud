@@ -7,7 +7,7 @@ import json
 from django.conf import settings
 from django.db import DatabaseError
 
-from celery import group
+from celery import group, chain # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 

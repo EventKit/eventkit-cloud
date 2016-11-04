@@ -22,7 +22,7 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask
+    get_progress_tracker, ZipFileTask, PickUpRunTask
 )
 
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
@@ -414,6 +414,17 @@ class TestExportTasks(TestCase):
             '%s/%s.zip' % (run_uid, run_uid)
         )
         assert str(run_uid) in result['result']
+
+    @patch('eventkit_cloud.tasks.task_factory.TaskFactory')
+    @patch('eventkit_cloud.tasks.export_tasks.socket')
+    def test_pickup_run_task(self, socket, task_factory):
+        run_uid = self.run.uid
+        socket.gethostname.return_value = "test"
+        task = PickUpRunTask()
+        self.assertEquals('Pickup Run', task.name)
+        task.run(run_uid=run_uid)
+        task_factory.assert_called_once()
+        task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
 
     @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')

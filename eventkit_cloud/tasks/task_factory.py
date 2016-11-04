@@ -48,6 +48,7 @@ class TaskFactory():
                 osm_task = osm_provider_tasks.get('osm-generic')
 
             if provider_tasks:
+                tasks_results = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
@@ -79,7 +80,7 @@ class TaskFactory():
                         if not task_runner_tasks:
                             return False
                         finalize_export_provider_task = FinalizeExportProviderTask()
-                        (task_runner_tasks | finalize_export_provider_task.si(run_uid=run.uid,
+                        tasks_results += [(task_runner_tasks | finalize_export_provider_task.si(run_uid=run.uid,
                                                                               stage_dir=os.path.join(
                                                                                   stage_dir,
                                                                                   provider_task.provider.slug),
@@ -91,7 +92,8 @@ class TaskFactory():
                                                                                              stage_dir,
                                                                                              provider_task.provider.slug),
                                                                                          export_provider_task_uid=export_provider_task_uid,
-                                                                                         worker=worker).set(queue=worker)])
+                                                                                         worker=worker).set(queue=worker)])]
+                return tasks_results
             else:
                 return False
 
@@ -112,8 +114,8 @@ def create_run(job_uid):
         # add the export run to the database
         run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED')  # persist the run
         run.save()
-        run_uid = str(run.uid)
-        logger.debug('Saved run with id: {0}'.format(run_uid))
+        run_uid = run.uid
+        logger.debug('Saved run with id: {0}'.format(str(run_uid)))
         return run_uid
     except DatabaseError as e:
         logger.error('Error saving export run: {0}'.format(e))
