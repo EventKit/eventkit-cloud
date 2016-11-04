@@ -63,22 +63,6 @@ create.job = (function(){
                 ]
             })
         })
-        // On provider select, make call to api and get url + source type, then add a layer to the map.
-        // On deselect remove the layer from the map
-
-        // TYPES: [WMS, WMTS, WFS, XYZ TILE, ArcGIS-Raster, ArcGIS-Feature
-
-        // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
-
-        // http://openlayers.org/en/latest/examples/vector-esri.html ARCGIS FEATURE SERVICE
-
-        // http://openlayers.org/en/latest/examples/vector-wfs.html WFS
-
-        // http://openlayers.org/en/latest/examples/wms-tiled.html WMS
-
-        // http://openlayers.org/en/latest/examples/wmts.html WMTS
-
-        // http://openlayers.org/en/latest/examples/xyz.html TILES
 
 
         var hotosm = Layers.HOT;
@@ -282,16 +266,90 @@ create.job = (function(){
         $.getJSON(Config.PROVIDERS_URL, function(data){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
-                providersDiv.append('<div class="checkbox"><label>'
+                providersDiv.append('<div class="checkbox" id="provider-checkbox"><label>'
                     + '<input type="checkbox"'
                     + 'name="providers"'
                     + 'value="' + provider.name + '"'
-                    + 'data-description="' + provider.name + '"/>'
+                    + 'data-description="' + provider.name + '"'
+                    + 'source-type="' + provider.type + '"'
+                    + 'source-url="' + provider.url + '"/>'
                     + provider.name
                     + '</label></div>');
-                // TODO add listeners here for map layers? Use provider.source_type?
             }
-        })
+              var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
+                    $("#provider-selection input[type='checkbox']").each(function() {
+                        if (this.checked) {
+                            var sourceType = $(this).attr('source-type');
+                            var sourceUrl = $(this).attr('source-url');
+                            var sourceProvider = $(this).val()
+                            if (sourceType != 'osm' && sourceType != 'osm-thematic'){
+                                checkProviderLayer(sourceType, sourceUrl, sourceProvider);
+                            }
+                        }
+                    });
+              });
+        });
+    }
+
+    function checkProviderLayer(type, url, provider) {
+        // On provider select, make call to api and get url + source type, then add a layer to the map.
+        // On deselect remove the layer from the map
+
+        // TYPES: [WMS, WMTS, WFS, XYZ TILE, ArcGIS-Raster, ArcGIS-Feature
+
+        // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
+
+        // http://openlayers.org/en/latest/examples/vector-esri.html ARCGIS FEATURE SERVICE
+
+        // http://openlayers.org/en/latest/examples/vector-wfs.html WFS
+
+        // http://openlayers.org/en/latest/examples/wms-tiled.html WMS
+
+        // http://openlayers.org/en/latest/examples/wmts.html WMTS
+
+        // http://openlayers.org/en/latest/examples/xyz.html TILES
+
+        //http://gis.stackexchange.com/questions/165447/dynamically-add-layers-to-layer-group
+
+        // This function should check if a layer needs to be added or removed from the map
+        // then call the appropriate add/remove funtion
+        
+        // console.log(type);
+        // console.log(url);
+        // console.log(provider);
+        var layers = map.getLayers();
+        var len = layers.getLength();
+        var found = false;
+        for (var i = 0; i < len; i++){
+            layer = layers.item(i);
+            console.log(layer);
+            var title = layer.get('title');
+            console.log(title);
+            if (title == provider) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            //need to remove the layer
+            console.log('removing the layer');
+        }
+        else{
+            //need to add teh layer
+            console.log('adding layer');
+        }
+        if (type == 'wfs') {
+            var vectorSource = new ol.source.Vector({
+                format: new ol.format.GeoJSON(),
+                url: url
+            });
+            var vector = new ol.layer.Vector({
+                source: vectorSource,
+            });
+            map.addLayer(vector);
+        }
+        else if (type == 'wms'){}
+
     }
 
     /*
