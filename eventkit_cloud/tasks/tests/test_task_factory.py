@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-import uuid
-
-from mock import Mock, PropertyMock, patch
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
+from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
 
 from celery.result import AsyncResult
 from ..task_factory import TaskFactory, create_run

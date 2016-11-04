@@ -489,7 +489,6 @@ class PickUpRunTask(Task):
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
-        return
 
 
 class GeneratePresetTask(ExportTask):
@@ -694,18 +693,6 @@ class ExportTaskErrorHandler(Task):
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
-
-
-class GroupSyncTask(Task):
-    """
-    A plaeholder task to allow chained groups to synchronize prior to continuing execution.
-
-    http://stackoverflow.com/questions/15123772/celery-chaining-groups-and-subtasks-out-of-order-execution
-    """
-    name = "Group Synchronization"
-
-    def run(self,  *args, **kwargs):
-        return
 
 
 def get_progress_tracker(task_uid=None):

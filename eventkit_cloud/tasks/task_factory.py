@@ -5,7 +5,7 @@ from ..jobs.models import Job
 from .models import ExportRun
 from .task_runners import ExportOSMTaskRunner, ExportWFSTaskRunner, ExportExternalRasterServiceTaskRunner, ExportArcGISFeatureServiceTaskRunner
 from django.conf import settings
-from .export_tasks import FinalizeExportProviderTask, GroupSyncTask
+from .export_tasks import FinalizeExportProviderTask
 from datetime import datetime, timedelta
 import logging
 import os
@@ -62,7 +62,8 @@ class TaskFactory():
                                     'stage_dir': os.path.join(
                                        stage_dir,
                                        'osm-data'),
-                                    'service_type': osm_types
+                                    'service_type': osm_types,
+                                    'worker': worker
                                     }
                         else:
                             args = {'user': job.user,
@@ -71,7 +72,8 @@ class TaskFactory():
                                     'stage_dir': os.path.join(
                                        stage_dir,
                                        provider_task.provider.slug),
-                                    'service_type': provider_task.provider.export_provider_type.type_name
+                                    'service_type': provider_task.provider.export_provider_type.type_name,
+                                    'worker': worker
                                     }
                         export_provider_task_uid, task_runner_tasks = task_runner.run_task(**args)
                         # Run the task, and when it completes return the status of the task to the model.
