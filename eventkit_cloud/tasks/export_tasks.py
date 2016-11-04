@@ -538,10 +538,13 @@ class ZipFileTask(Task):
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+        staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
+
         dl_filepath = os.path.join(download_root, str(run_uid))
+        st_filepath = os.path.join(staging_root, str(run_uid))
 
         files = []
-        for root, dirnames, filenames in os.walk(dl_filepath):
+        for root, dirnames, filenames in os.walk(st_filepath):
             files += [
                 os.path.join(root, filename) for filename in filenames
                 if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS
@@ -579,14 +582,17 @@ class ZipFileTask(Task):
                     arcname=filename
                 )
 
+        run_uid = str(run_uid)
         if settings.USE_S3:
             # TODO open up a stream directly to the s3 file so no local 
             #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, None, zip_filename)
-            # TODO: remove the zip file once it's uploaded
+            os.remove(zip_filepath)
         else:
-            run.zipfile_url = os.path.join(run_uid, zip_filename)
-            run.save()
+            zipfile_url = os.path.join(run_uid, zip_filename)
+
+        run.zipfile_url = zipfile_url
+        run.save()
 
         return {'result': zip_filepath}
 

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
-import requests
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.test import TestCase
-from time import sleep
 import os
+import requests
 import shutil
 import sqlite3
+from time import sleep
+
 from ..models import ExportProvider, ExportProviderType, Job
+
+from django.conf import settings
+from django.core.urlresolvers import reverse
 from django.db import IntegrityError
+from django.test import TestCase
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -315,17 +318,20 @@ class TestJob(TestCase):
         self.assertEquals(response.status_code, 202)
         self.job_json = job = response.json()
         run = self.wait_for_run(job.get('uid'))
-        # XXX: we'll get this response before a URL is generated.  serializer should return `None`
-        test_zip_url = '%s%s%s/%s.zip' % (
+        orm_job = Job.objects.get(uid=job.get('uid'))
+        orm_run = orm_job.runs.last()
+        date = timezone.now().strftime('%Y%m%d')
+        test_zip_url = '%s%s%s/%s' % (
             self.base_url,
             settings.EXPORT_MEDIA_ROOT,
             run.get('uid'),
-            run.get('uid')
-        )
+            '%s-%s-%s-%s.zip' % (
+                orm_run.job.name,
+                orm_run.job.event,
+                'eventkit',
+                date
+            ))
         self.assertEquals(test_zip_url, run['zipfile_url'])
-
-        orm_job = Job.objects.get(uid=job.get('uid'))
-        orm_run = orm_job.runs.last()
 
         assert '.zip' in orm_run.zipfile_url
 
