@@ -12,14 +12,13 @@ def get_s3_client():
     )
 
 
-def upload_to_s3(run_uuid, slug, filename, client=None):
+def upload_to_s3(run_uuid, filename, client=None):
     if not client:
         client = get_s3_client()
 
     asset_path = os.path.join(
         settings.EXPORT_DOWNLOAD_ROOT,
         run_uuid,
-        slug,
         filename
     )
     # XXX: for the zipfile case at least we dont' want a provider slug, so 

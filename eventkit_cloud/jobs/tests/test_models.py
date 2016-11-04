@@ -34,7 +34,7 @@ class TestJob(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        export_provider = ExportProvider.objects.get(slug='osm-vector')
+        export_provider = ExportProvider.objects.get(slug='osm-generic')
         provider_task = ProviderTask.objects.create(provider=export_provider)
         self.job = Job(name='TestJob',
                                  description='Test description', event='Nepal activation',

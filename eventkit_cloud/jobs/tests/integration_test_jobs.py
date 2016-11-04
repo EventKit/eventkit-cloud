@@ -58,7 +58,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_geopackage_thematic(self):
@@ -68,7 +68,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-gpkg"]}], }
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_sqlite(self):
@@ -78,7 +78,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_sqlite_thematic(self):
@@ -88,7 +88,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-sqlite"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_shp(self):
@@ -98,7 +98,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["shp"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_shp_thematic(self):
@@ -108,7 +108,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["thematic-shp"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_kml(self):
@@ -117,6 +117,16 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_osm_kml_thematic(self):
+        """
+        This test is to ensure that an OSM job will export a kml file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
@@ -209,29 +219,19 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data (Generic)",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "OpenStreetMap Data",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-wmts",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-arc-raster",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-wfs",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-arc-fs",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]}]}
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_rerun_all(self):
@@ -242,29 +242,19 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
                     "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data (Generic)",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "OpenStreetMap Data",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-wmts",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-arc-raster",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-wfs",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]},
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                                         {"provider": "eventkit-integration-test-arc-fs",
-                                                                         "formats": ["shp", "thematic-shp", "gpkg",
-                                                                                     "thematic-gpkg", "kml", "sqlite",
-                                                                                     "thematic-sqlite"]}]}
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
         response = self.client.post(self.jobs_url,
                                     json=job_data,
                                     headers={'X-CSRFToken': self.csrftoken,

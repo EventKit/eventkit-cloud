@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class TaskFactory():
     def __init__(self, job_uid):
         self.job = Job.objects.get(uid=job_uid)
-        self.type_task_map = {'osm': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
+        self.type_task_map = {'osm-generic': ExportOSMTaskRunner, 'osm': ExportOSMTaskRunner, 'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner, 'wmts': ExportExternalRasterServiceTaskRunner, 'arcgis-raster': ExportExternalRasterServiceTaskRunner, 'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
         # setup the staging directory
         self.run = self.create_run()
         if self.run:
@@ -28,7 +28,26 @@ class TaskFactory():
 
     def parse_tasks(self):
         if self.run:
-            provider_tasks = [provider_task for provider_task in self.job.provider_tasks.all()]
+            osm_task = None
+            osm_types = {'osm-generic': None, 'osm': None}
+            provider_tasks = []
+            osm_provider_tasks = {}
+            # Add providers to list.
+            # If both osm and osm-thematic are requested then only add one task which will run both exports
+            for provider_task in self.job.provider_tasks.all():
+                provider_type = provider_task.provider.export_provider_type.type_name
+                if provider_type in ['osm-generic', 'osm']:
+                    osm_types[provider_type] = True
+                    osm_provider_tasks[provider_type] = provider_task
+                else:
+                    provider_tasks.append(provider_task)
+            if osm_types.get('osm'):
+                provider_tasks.append(osm_provider_tasks.get('osm'))
+                osm_task = osm_provider_tasks.get('osm')
+            elif osm_types.get('osm-generic'):
+                provider_tasks.append(osm_provider_tasks.get('osm-generic'))
+                osm_task = osm_provider_tasks.get('osm-generic')
+
             if provider_tasks:
                 header_tasks = []
                 for provider_task in provider_tasks:
@@ -36,13 +55,26 @@ class TaskFactory():
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
                         task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
                         os.makedirs(os.path.join(self.stage_dir, provider_task.provider.slug), 6600)
-                        export_provider_task_uid, task_runner_tasks = task_runner.run_task(user=self.job.user,
-                                                                                           provider_task_uid=provider_task.uid,
-                                                                                           run=self.run,
-                                                                                           stage_dir=os.path.join(
-                                                                                               self.stage_dir,
-                                                                                               provider_task.provider.slug),
-                                                                                           service_type=provider_task.provider.export_provider_type.type_name)
+                        # If the provider is osm we need to pass in a dict which indicates which osm providers will be included
+                        if provider_task == osm_task:
+                            args = {'user': self.job.user,
+                                    'provider_task_uid': provider_task.uid,
+                                    'run': self.run,
+                                    'stage_dir': os.path.join(
+                                       self.stage_dir,
+                                       'osm-data'),
+                                    'service_type': osm_types
+                                    }
+                        else:
+                            args = {'user': self.job.user,
+                                    'provider_task_uid': provider_task.uid,
+                                    'run': self.run,
+                                    'stage_dir': os.path.join(
+                                       self.stage_dir,
+                                       provider_task.provider.slug),
+                                    'service_type': provider_task.provider.export_provider_type.type_name
+                                    }
+                        export_provider_task_uid, task_runner_tasks = task_runner.run_task(**args)
                         # Run the task, and when it completes return the status of the task to the model.
                         # The FinalizeExportProviderTask will check to see if all of the tasks are done, and if they are
                         #  it will call FinalizeTask which will mark the entire job complete/incomplete.
