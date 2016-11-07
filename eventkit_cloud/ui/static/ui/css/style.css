@@ -25,6 +25,21 @@ html, body {
     font-family: 'Lato', sans-serif;
 }
 
+/* Progress bar */
+#myProgress {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    background-color: #ddd;
+}
+
+#myBar {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    background-color: #337ab7;
+}
+
 /* top banner */
 
 #banner {

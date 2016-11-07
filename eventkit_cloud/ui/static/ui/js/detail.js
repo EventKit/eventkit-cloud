@@ -22,19 +22,6 @@ exports.detail = (function(){
      * Initialize the export overview map.
      */
     function initMap(){
-        // maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        // var mapOptions = {
-        //         displayProjection: new OpenLayers.Projection("EPSG:4326"),
-        //         controls: [new OpenLayers.Control.Attribution(),
-        //                    new OpenLayers.Control.ScaleLine()],
-        //         maxExtent: maxExtent,
-        //         scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
-        //         units: 'm',
-        //         sphericalMercator: true,
-        //         noWrap: true // don't wrap world extents
-        // }
-        // map = new OpenLayers.Map('extents', {options: mapOptions});
-
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
         });
@@ -50,25 +37,7 @@ exports.detail = (function(){
                 minZoom: 2,
                 maxZoom: 18,
             })
-        });
-
-        // add base layers
-        // osm = Layers.OSM
-        // osm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
-        // map.addLayer(osm);
-        // map.zoomToMaxExtent();
-
-        // job_extents = new OpenLayers.Layer.Vector('extents', {
-        //     displayInLayerSwitcher: false,
-        //     style: {
-        //         strokeWidth: 3.5,
-        //         strokeColor: '#D73F3F',
-        //         fillColor: 'transparent',
-        //         fillOpacity: 0.8,
-        //     }
-        // });
-
-        // map.addLayer(job_extents);
+        })
 
         job_extents_source = new ol.source.Vector();
 
@@ -83,8 +52,6 @@ exports.detail = (function(){
             })
         });
         map.addLayer(job_extents);
-
-        //map.restrictedExtent = map.getExtent();
         return map;
     }
 
@@ -140,14 +107,6 @@ exports.detail = (function(){
                 default:
                     break;
             }
-
-            // var extent = data.extent;
-            // var geojson = new OpenLayers.Format.GeoJSON({
-            //         'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-            //         'externalProjection': new OpenLayers.Projection("EPSG:4326")
-            // });
-            // var feature = geojson.read(extent, 'Feature');
-            // job_extents.addFeatures(feature);
 
             var extent = data.extent;
             var geojson = new ol.format.GeoJSON();
@@ -284,6 +243,10 @@ exports.detail = (function(){
                                 //var descriptiveName = 'Name Placeholder';
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
+                                    taskDiv += ('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
+                                    var width = task.progress + "%";
+                                    $('#myBar').css("width", width);
+                                   
                                 }
 
                                 if (errors.length > 0) {
@@ -481,14 +444,16 @@ exports.detail = (function(){
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
-                        //var descriptiveName = 'Name Placeholder';
+
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            taskDiv+=('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>')
                         }
                         else {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            taskDiv+=('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>')
                         }
                     }
                 });
@@ -564,19 +529,19 @@ exports.detail = (function(){
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
-                        //var descriptiveName = 'Name Placeholder';
+
                         var $tr = $runDiv.find('table').find('tr#' + uid);
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
-                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td></tr><tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
+
                         }
                         else {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
-                            $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
+                            $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr><tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
                         }
-
                     }
                 });
 
