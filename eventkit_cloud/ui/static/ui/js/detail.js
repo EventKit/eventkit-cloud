@@ -170,6 +170,11 @@ exports.detail = (function(){
             window.location.href = '/exports/clone/' + exports.detail.job_uid;
         });
     }
+    function setProgress(progress)
+    {
+        var progressBarWidth =progress*$(".container").width()/ 100;
+        $(".progressbar").width(progressBarWidth).html(progress + "% ");
+    }
 
     /**
      * Loads the completed run details.
@@ -243,10 +248,12 @@ exports.detail = (function(){
                                 //var descriptiveName = 'Name Placeholder';
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
-                                    taskDiv += ('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
-                                    var width = task.progress + "%";
-                                    $('#myBar').css("width", width);
-                                   
+                                    taskDiv += ('<tr><td colspan="3"><div class="progressContainer"><div class="progressbar"></div></div></td></tr>');
+                                    setProgress(task.progress);
+                                    //taskDiv += ('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
+                                    //var width = task.progress + "%";
+                                    // $('#myBar').css("width", width);
+
                                 }
 
                                 if (errors.length > 0) {

@@ -40,6 +40,24 @@ html, body {
     background-color: #337ab7;
 }
 
+.progressbar {
+    color: #fff;
+    text-align: right;
+    height: 25px;
+    width: 0;
+    background-color: #0ba1b5;
+    border-radius: 3px;
+}
+.progressContainer{
+    width: 300px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+    display:inline-block;
+    margin:0px 10px 5px 5px;
+    vertical-align:top;
+}
+
 /* top banner */
 
 #banner {
