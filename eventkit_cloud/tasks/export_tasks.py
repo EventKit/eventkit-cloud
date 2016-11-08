@@ -82,13 +82,11 @@ class ExportTask(Task):
         # construct the download url
         try:
             if settings.USE_S3:
-                download_url = s3.upload_to_s3(run_uid, provider_slug, filename)
+                download_url = s3.upload_to_s3(run_uid, os.path.join(provider_slug, filename))
             else:
                 try:
                     if not os.path.exists(run_dir):
                         os.makedirs(run_dir)
-                    if not os.path.exists(provider_dir):
-                        os.makedirs(provider_dir)
                     # don't copy raw run_dir data
                     if (task.name != 'OverpassQuery'):
                         shutil.copy(output_url, download_path)
@@ -610,7 +608,7 @@ class ZipFileTask(Task):
         if settings.USE_S3:
             # TODO open up a stream directly to the s3 file so no local 
             #      persistence is required
-            zipfile_url = s3.upload_to_s3(run_uid, None, zip_filename)
+            zipfile_url = s3.upload_to_s3(run_uid, zip_filename)
             os.remove(zip_filepath)
         else:
             zipfile_url = os.path.join(run_uid, zip_filename)

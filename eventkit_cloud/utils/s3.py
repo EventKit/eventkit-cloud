@@ -21,10 +21,7 @@ def upload_to_s3(run_uuid, filename, client=None):
         run_uuid,
         filename
     )
-    # XXX: for the zipfile case at least we dont' want a provider slug, so 
-    #      we're gonna filter out the case where `slug` is `None`.
-    paths = filter(None, (run_uuid, slug, filename))
-    asset_remote_path = os.path.join(*paths)
+    asset_remote_path = os.path.join(run_uuid, filename)
     with open(asset_path, 'rb') as asset_file:
         asset_file.seek(0)
         client.put_object(
