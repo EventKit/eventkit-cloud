@@ -170,10 +170,10 @@ exports.detail = (function(){
             window.location.href = '/exports/clone/' + exports.detail.job_uid;
         });
     }
-    function setProgress(progress)
+    function setProgress(progress, uid)
     {
         var progressBarWidth =progress*$(".container").width()/ 100;
-        $(".progressbar").width(progressBarWidth).html(progress + "% ");
+        $("#progressbar"+uid).width(progressBarWidth).html(progress + "% ");
     }
 
     /**
@@ -248,8 +248,8 @@ exports.detail = (function(){
                                 //var descriptiveName = 'Name Placeholder';
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
-                                    taskDiv += ('<tr><td colspan="3"><div class="progressContainer"><div class="progressbar"></div></div></td></tr>');
-                                    setProgress(task.progress);
+                                    taskDiv += ('<tr><td colspan="3"><div class="progressContainer"><div id="bar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+                                    setProgress(task.progress, task.uid);
                                     //taskDiv += ('<tr><td colspan="3"><div id="myProgress"><div id="myBar"></div></div></td></tr>');
                                     //var width = task.progress + "%";
                                     // $('#myBar').css("width", width);
