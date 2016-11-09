@@ -43,7 +43,6 @@ class TestJob(TestCase):
         self.csrftoken = self.client.cookies['csrftoken']
         self.bbox = ["-0.077419", "50.778155", "-0.037251", "50.818517"]
 
-
     def tearDown(self):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
@@ -277,7 +276,6 @@ class TestJob(TestCase):
                                                    'Referer': self.create_export_url})
 
         self.assertEquals(rerun_response.status_code, 202)
-        rerun_job = rerun_response.json()
         rerun = self.wait_for_run(job.get('uid'))
         self.assertTrue(rerun.get('status') == "COMPLETED")
         for provider_task in rerun.get('provider_tasks'):
@@ -338,7 +336,7 @@ class TestJob(TestCase):
         response = None
         while not finished:
             sleep(5)
-            self.run_json = response = self.client.get(
+            response = self.client.get(
                 self.runs_url,
                 params={"job_uid": job_uid},
                 headers={'X-CSRFToken': self.csrftoken
@@ -357,6 +355,8 @@ class TestJob(TestCase):
                 for chunk in r:
                     f.write(chunk)
             return file_location
+        else:
+            print("Failed to download GPKG, STATUS_CODE: {0}".format(r.status_code))
         return None
 
     def get_gpkg_url(self, run, provider_task_name):

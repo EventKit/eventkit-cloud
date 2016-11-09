@@ -221,9 +221,10 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
         logger.debug(url)
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -243,9 +244,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportOSMTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
@@ -267,9 +268,10 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_config_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -289,9 +291,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -309,11 +311,12 @@ class TestJobViewSet(APITestCase):
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_tags(self, mock):
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_tags(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        task_factory = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -333,9 +336,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
