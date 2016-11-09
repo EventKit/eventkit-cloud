@@ -25,7 +25,7 @@ from eventkit_cloud.utils import (
 )
 import socket
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm']
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
