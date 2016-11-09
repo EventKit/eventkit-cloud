@@ -11,7 +11,6 @@ exports.detail = (function(){
             exports.detail.timer = false;
             initMap();
             initPopovers();
-            loadJobDetail();
             loadSubmittedRunDetails();
             loadCompletedRunDetails();
             //loadFailedRunDetails();
@@ -152,7 +151,7 @@ exports.detail = (function(){
                 url: Config.RERUN_URL + exports.detail.job_uid,
                 success: function(data){
                     // initialize the submitted run panel immediately
-                    initSumtittedRunPanel([data]);
+                    initSubmittedRunPanel([data]);
                     // then start the check interval..
                     startRunCheckInterval();
                 },
@@ -384,6 +383,7 @@ exports.detail = (function(){
      * This occurs initially on page load..
      */
     function loadSubmittedRunDetails(){
+        loadJobDetail();
         var job_uid = exports.detail.job_uid;
         $.ajax({
             cache: false,
@@ -391,7 +391,7 @@ exports.detail = (function(){
             url: Config.RUNS_URL + '?status=SUBMITTED&job_uid=' + job_uid,
             success: function(data){
                 if (data.length > 0) {
-                    initSumtittedRunPanel(data);
+                    // initSubmittedRunPanel(data);
                     startRunCheckInterval();
                 }
             }
@@ -401,7 +401,7 @@ exports.detail = (function(){
     /**
      * Initializes the submitted run panel.
      */
-    function initSumtittedRunPanel(data){
+    function initSubmittedRunPanel(data){
         var $runPanel = $('#submitted_runs > .panel-group');
         $runPanel.empty();
         if (data.length > 0) {
@@ -595,6 +595,7 @@ exports.detail = (function(){
                 dataType: 'json',
                 cache: false,
                 success: function(data, textStatus, jqXhr){
+                    initSubmittedRunPanel(data);
                     updateSubmittedRunDetails(data);
                 }
             });

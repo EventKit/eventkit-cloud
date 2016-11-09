@@ -47,6 +47,7 @@ class ExportRun(RunModelMixin):
     """
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
+    worker = models.CharField(max_length=50, editable=False, default='', null=True)
     zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
     status = models.CharField(
         blank=True, max_length=20,

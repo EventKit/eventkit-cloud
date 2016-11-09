@@ -115,7 +115,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -152,7 +152,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -208,7 +208,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags,
@@ -221,9 +221,10 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
         logger.debug(url)
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -236,16 +237,16 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportOSMTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
@@ -267,9 +268,10 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_config_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -281,7 +283,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -289,9 +291,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -309,11 +311,12 @@ class TestJobViewSet(APITestCase):
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_tags(self, mock):
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_tags(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        task_factory = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -325,7 +328,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             # 'preset': config_uid,
             'transform': '',
             'translate': '',
@@ -333,9 +336,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -363,7 +366,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -382,7 +385,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -401,7 +404,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -420,7 +423,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -458,7 +461,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': -3.9,  # inverted
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -495,7 +498,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data'}]  # 'formats': formats}]# missing
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -513,7 +516,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': ''}]  # invalid
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -532,7 +535,7 @@ class TestJobViewSet(APITestCase):
             'xmax': 7.0,
             'ymax': 27.6,
             'provider_tasks': [
-                {'provider': 'OpenStreetMap Data', 'formats': ['broken-format-one', 'broken-format-two']}]
+                {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
 
@@ -556,7 +559,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 13.54,
     #         'xmax': 48.52,
     #         'ymax': 20.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data, format='json')
     #
@@ -594,7 +597,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 47.66,
     #         'xmax': 11.61,
     #         'ymax': 54.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data)
     #     self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -615,7 +618,7 @@ class TestJobViewSet(APITestCase):
             'ymin': -10,
             'xmax': 40,
             'ymax': 20,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -662,7 +665,7 @@ class TestBBoxSearch(APITestCase):
                 'ymin': extent[1],
                 'xmax': extent[2],
                 'ymax': extent[3],
-                'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)

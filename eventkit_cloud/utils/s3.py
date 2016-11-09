@@ -12,17 +12,16 @@ def get_s3_client():
     )
 
 
-def upload_to_s3(run_uuid, slug, filename, client=None):
+def upload_to_s3(run_uuid, filename, client=None):
     if not client:
         client = get_s3_client()
 
     asset_path = os.path.join(
         settings.EXPORT_DOWNLOAD_ROOT,
         run_uuid,
-        slug,
         filename
     )
-    asset_remote_path = os.path.join(os.path.join(run_uuid, slug), filename)
+    asset_remote_path = os.path.join(run_uuid, filename)
     with open(asset_path, 'rb') as asset_file:
         asset_file.seek(0)
         client.put_object(

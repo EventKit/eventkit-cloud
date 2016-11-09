@@ -37,7 +37,7 @@ class TestJobFilter(APITestCase):
                                  description='Test description', user=self.user2,
                                  the_geom=the_geom)
         format = ExportFormat.objects.get(slug='shp')
-        export_provider = ExportProvider.objects.get(slug='osm-vector')
+        export_provider = ExportProvider.objects.get(slug='osm-generic')
         provider_task = ProviderTask.objects.create(provider=export_provider)
         provider_task.formats.add(format)
         self.job1.provider_tasks.add(provider_task)
@@ -48,20 +48,14 @@ class TestJobFilter(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_filterset_no_user(self, mock):
-        task_factory = mock.return_value
+    def test_filterset_no_user(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
         url += '?start=2015-01-01&end=2030-08-01'
         response = self.client.get(url)
         self.assertEquals(1, len(response.data))
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_filterset_with_user(self, mock):
-        task_factory = mock.return_value
+    def test_filterset_with_user(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
         url += '?start=2015-01-01&end=2030-08-01&user=demo1'
         response = self.client.get(url)
         self.assertEquals(1, len(response.data))

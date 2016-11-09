@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from django.utils import timezone as real_timezone
 
 from celery.datastructures import ExceptionInfo
 
@@ -21,7 +22,7 @@ from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
     GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask
+    get_progress_tracker, ZipFileTask, PickUpRunTask
 )
 
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
@@ -142,7 +143,7 @@ class TestExportTasks(TestCase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.gpkg'.format(job_name))
+                                            '{}_generic.gpkg'.format(job_name))
         prep_schema.instancemethod.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='OSM Schema Prep')
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
@@ -211,7 +212,7 @@ class TestExportTasks(TestCase):
         sqlite_to_gpkg = mock_gpkg.return_value
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.gpkg'.format(job_name))
+                                            '{}_generic.gpkg'.format(job_name))
         sqlite_to_gpkg.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
@@ -275,8 +276,12 @@ class TestExportTasks(TestCase):
     @patch('os.path.exists')
     @patch('shutil.copy')
     @patch('os.stat')
-    def test_task_on_success(self, os_stat, shutil_copy, exists, mkdirs):
+    @patch('django.utils.timezone')
+    def test_task_on_success(self, time, os_stat, shutil_copy, exists, mkdirs):
         exists.return_value = False  # download dir doesn't exist
+        real_time = real_timezone.now()
+        time.now.return_value = real_time
+        expected_time = real_time.strftime('%Y%m%d')
         osstat = os_stat.return_value
         type(osstat).st_size = PropertyMock(return_value=1234567890)
         shp_export_task = ShpExportTask()
@@ -290,28 +295,28 @@ class TestExportTasks(TestCase):
             name=shp_export_task.name
         )
         shp_export_task = ShpExportTask()
-        provider_slug = 'osm-vector'
+        download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
+        expected_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid), download_file])
         download_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid),
-                                 provider_slug, 'file.shp'])
+                                 'osm-generic', 'file.shp'])
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(self.run.uid))
-        provider_dir = os.path.join(run_dir, provider_slug)
         shp_export_task.on_success(retval={'result': download_url}, task_id=celery_uid,
                                    args={}, kwargs={'run_uid': str(self.run.uid)})
         os_stat.assert_called_once_with(download_url)
-        exists.assert_has_calls([call(run_dir), call(provider_dir)])
-        mkdirs.assert_has_calls([call(run_dir), call(provider_dir)])
+        exists.assert_has_calls([call(run_dir)])
+        mkdirs.assert_has_calls([call(run_dir)])
         task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         result = task.result
         self.assertIsNotNone(result)
         self.assertEqual(task, result.task)
         self.assertEquals('SUCCESS', task.status)
-        self.assertEquals('ESRI Shapefile Format', task.name)
+        self.assertEquals('ESRI Shapefile Format (Generic)', task.name)
         # pull out the result and test
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
-        self.assertEquals(download_url, result.download_url)
+        self.assertEquals(expected_url, result.download_url)
 
     def test_task_on_failure(self, ):
         shp_export_task = ShpExportTask()
@@ -409,6 +414,17 @@ class TestExportTasks(TestCase):
             '%s/%s.zip' % (run_uid, run_uid)
         )
         assert str(run_uid) in result['result']
+
+    @patch('eventkit_cloud.tasks.task_factory.TaskFactory')
+    @patch('eventkit_cloud.tasks.export_tasks.socket')
+    def test_pickup_run_task(self, socket, task_factory):
+        run_uid = self.run.uid
+        socket.gethostname.return_value = "test"
+        task = PickUpRunTask()
+        self.assertEquals('Pickup Run', task.name)
+        task.run(run_uid=run_uid)
+        task_factory.assert_called_once()
+        task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
 
     @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')
