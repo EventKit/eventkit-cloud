@@ -367,7 +367,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProvider
-        fields = ('uid', 'model_url', 'url', 'name', 'type')
+        fields = ('uid', 'model_url', 'url', 'name', 'type', 'layer')
 
     def get_type(self, obj):
         return obj.export_provider_type.type_name

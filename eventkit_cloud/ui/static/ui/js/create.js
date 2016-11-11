@@ -272,29 +272,44 @@ create.job = (function(){
                     + 'value="' + provider.name + '"'
                     + 'data-description="' + provider.name + '"'
                     + 'source-type="' + provider.type + '"'
-                    + 'source-url="' + provider.url + '"/>'
+                    + 'source-url="' + provider.url + '"'
+                    + 'source-layer="' + provider.layer + '"/>'
                     + provider.name
                     + '</label></div>');
             }
-              var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
-                    $("#provider-selection input[type='checkbox']").each(function() {
-                        if (this.checked) {
-                            var sourceType = $(this).attr('source-type');
-                            var sourceUrl = $(this).attr('source-url');
-                            var sourceProvider = $(this).val()
-                            if (sourceType != 'osm' && sourceType != 'osm-thematic'){
-                                checkProviderLayer(sourceType, sourceUrl, sourceProvider);
-                            }
+            var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
+                var checkedItem = e.currentTarget.defaultValue;
+                $("#provider-selection input[type='checkbox']").each(function() {
+                    // find the provider that was checked/unchecked then call checkProviderLayer for it
+                    if (this.value == checkedItem) {
+                        var checked = this.checked;
+                        var sourceType = $(this).attr('source-type');
+                        var sourceUrl = $(this).attr('source-url');
+                        var sourceLayer = $(this).attr('source-layer');
+                        var sourceProvider = this.value
+                        if (sourceType != 'osm' && sourceType != 'osm-thematic'){
+                            checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
                         }
-                    });
-              });
+                    }
+                });
+            });
         });
     }
 
-    function checkProviderLayer(type, url, provider) {
-        // On provider select, make call to api and get url + source type, then add a layer to the map.
-        // On deselect remove the layer from the map
+    function checkProviderLayer(type, url, provider, layer, checked) {
+        if (checked) {
+            //need to add teh layer
+            console.log('adding layer');
+            addProviderLayer(type, url, layer, provider);
+        }
+        else {
+            //need to remove the layer
+            console.log('removing the layer');
+            removeProviderLayer(type, url, provider);
+        }
+    }
 
+    function addProviderLayer(type, url, layer, provider){
         // TYPES: [WMS, WMTS, WFS, XYZ TILE, ArcGIS-Raster, ArcGIS-Feature
 
         // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
@@ -308,48 +323,158 @@ create.job = (function(){
         // http://openlayers.org/en/latest/examples/wmts.html WMTS
 
         // http://openlayers.org/en/latest/examples/xyz.html TILES
-
-        //http://gis.stackexchange.com/questions/165447/dynamically-add-layers-to-layer-group
-
-        // This function should check if a layer needs to be added or removed from the map
-        // then call the appropriate add/remove funtion
-        
-        // console.log(type);
-        // console.log(url);
-        // console.log(provider);
-        var layers = map.getLayers();
-        var len = layers.getLength();
-        var found = false;
-        for (var i = 0; i < len; i++){
-            layer = layers.item(i);
-            console.log(layer);
-            var title = layer.get('title');
-            console.log(title);
-            if (title == provider) {
-                found = true;
-                break;
-            }
-        }
-        if (found) {
-            //need to remove the layer
-            console.log('removing the layer');
-        }
-        else{
-            //need to add teh layer
-            console.log('adding layer');
-        }
         if (type == 'wfs') {
+            geojsonFormat = new ol.format.GeoJSON();
+            url = url.split('?')[0];
             var vectorSource = new ol.source.Vector({
-                format: new ol.format.GeoJSON(),
-                url: url
+                loader: function(extent, resolution, projection) {
+                    $.ajax({
+                        // type: 'GET',
+                        url: url,
+                        data: {
+                            outputFormat: 'text/javascript',
+                            service: 'WFS',
+                            version: '1.0.0',
+                            request: 'GetFeature',
+                            typename: layer,
+                            srsname: 'EPSG:3857',
+                            format_options: 'callback:mycallback'
+                        },
+                        dataType: 'jsonp',
+                        jsonp: false,
+                        success: function(response) {
+                            console.log(this);
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            else {
+                                var features = geojsonFormat.readFeatures(response, {
+                                    featureProjection: projection
+                                });
+                                if (features.length > 0) {
+                                    featureSource.addFeatures(features);
+                                }
+                            }
+                        },
+                        error: function(){
+                            console.log(this);
+                        }
+                    });
+                },
+                //url: url,
+                strategy: ol.loadingstrategy.bbox
             });
             var vector = new ol.layer.Vector({
+                title: provider,
                 source: vectorSource,
             });
             map.addLayer(vector);
         }
-        else if (type == 'wms'){}
+        else if (type == 'wms'){
+            var wmsSource = new ol.source.TileWMS({
+                url: url,
+                params: {'LAYERS': layer, 'TILED': true}
+            });
+            var wms = new ol.layer.Tile({
+                title: provider,
+                source: wmsSource,
+            });
+            map.addLayer(wms);
+        }
+        else if (type == 'wmts') {
+            var projection = ol.proj.get('EPSG:3857');
+            var projectionExtent = projection.getExtent();
+            var size = ol.extent.getWidth(projectionExtent) / 256;
+            var resolutions = new Array(18);
+            var matrixIds = new Array(18);
+            for (var z = 0; z < 18; ++z) {
+                resolutions[z] = size / Math.pow(2, z);
+                matrixIds[z] = z;
+            }
 
+            var wmtsSource = new ol.source.WMTS({
+                url: url,
+                // layer: layer,
+                matrixSet: 'EPSG:3857',
+                format: 'image/png',
+                projection: projection,
+                tileGrid: new ol.tilegrid.WMTS({
+                    origin: ol.extent.getTopLeft(projectionExtent),
+                    resolutions: resolutions,
+                    matrixIds: matrixIds
+                }),
+                style: 'default',
+                wrapX: true
+            });
+            var wmts = new ol.layer.Tile({
+                title: provider,
+                source: wmtsSource
+            });
+            map.addLayer(wmts);
+        }
+        else if (type == 'arcgis-raster') {
+            var rasterSource = new ol.source.ImageArcGISRest({
+                url: url
+            });
+            var raster = new ol.layer.Image({
+                title: provider,
+                source: rasterSource
+            });
+            map.addLayer(raster);
+        }
+        else if (type == 'arcgis-feature') {
+            baseUrl = url.split('/query?')[0];
+
+            var esrijsonFormat = new ol.format.EsriJSON();
+            var featureSource = new ol.source.Vector({
+                loader: function(extent, resolution, projection) {
+                    var url = baseUrl + '/query/?f=json&' +
+                      'returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=' +
+                      encodeURIComponent('{"xmin":' + extent[0] + ',"ymin":' +
+                          extent[1] + ',"xmax":' + extent[2] + ',"ymax":' + extent[3] +
+                          ',"spatialReference":{"wkid":102100}}') +
+                      '&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*' +
+                      '&outSR=102100';
+                    $.ajax({url: url, dataType: 'jsonp', success: function(response) {
+                        if (response.error) {
+                            console.log(response.error.message + '\n' + response.error.details.join('\n'));
+                        }
+                        else {
+                            var features = esrijsonFormat.readFeatures(response, {
+                                featureProjection: projection
+                            });
+                            if (features.length > 0) {
+                                featureSource.addFeatures(features);
+                            }
+                        }
+                    }});
+                },
+                strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+                    tileSize: 512
+                }))
+            });
+            var feature = new ol.layer.Vector({
+                title: provider,
+                source: featureSource
+            });
+            map.addLayer(feature);
+        }
+        console.log('added');
+    }
+
+    function removeProviderLayer(type, url, provider){
+        // find and remove layer
+        var layers = map.getLayers();
+        var len = layers.getLength();
+        for (var i = 0; i < len; i++){
+            layer = layers.item(i);
+            var title = layer.get('title');
+            if (title == provider) {
+                map.removeLayer(layer);
+                break;
+            }
+        }
+        console.log('removed');
     }
 
     /*
