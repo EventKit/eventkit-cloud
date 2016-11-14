@@ -360,6 +360,21 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         fields = ('uid', 'url', 'slug', 'name', 'description')
 
 
+class ExportProviderJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExportProvider
+        exclude = ('id', 'level_from', 'level_to')
+        read_only_fields = ('uid',)
+
+    def create(self, validated_data):
+        # try to get existing export Provider
+        ep = ExportProvider.objects.filter(**validated_data).first()
+        if not ep:
+            ep = ExportProvider(**validated_data)
+            ep.save()
+        return ep
+
+
 class ExportProviderSerializer(serializers.ModelSerializer):
     """Return a representation of the ExportProvider model."""
     model_url = serializers.HyperlinkedIdentityField(

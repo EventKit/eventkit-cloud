@@ -1,14 +1,13 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 import logging
 import os
-from collections import OrderedDict
 
 from django.db import Error, transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
-
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
@@ -23,7 +22,8 @@ from eventkit_cloud.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
-    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer,
+    ExportProviderJobSerializer
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
@@ -197,11 +197,17 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            provider_tasks = request.data.get('provider_tasks')
+
+            export_providers = request.data.get('export_providers', [])
+            provider_tasks = request.data.get('provider_tasks', [])
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
             transform = request.data.get('transform')
+            if len(export_providers):
+                provider_serializer = ExportProviderJobSerializer(data=export_providers, many=True)
+                if provider_serializer.is_valid():
+                    provider_serializer.save()
             if len(provider_tasks) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
