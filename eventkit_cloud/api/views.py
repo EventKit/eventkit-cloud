@@ -26,7 +26,9 @@ from serializers import (
     RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
-from eventkit_cloud.tasks.task_factory import TaskFactory
+from eventkit_cloud.tasks.task_factory import create_run
+
+from ..tasks.export_tasks import PickUpRunTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -200,9 +202,6 @@ class JobViewSet(viewsets.ModelViewSet):
             preset = request.data.get('preset')
             translation = request.data.get('translation')
             transform = request.data.get('transform')
-            featuresave = request.data.get('featuresave')
-            featurepub = request.data.get('featurepub')
-            job = None
             if len(provider_tasks) > 0:
                 """Save the job and make sure it's committed before running tasks."""
                 try:
@@ -283,9 +282,11 @@ class JobViewSet(viewsets.ModelViewSet):
 
             # run the tasks
             job_uid = str(job.uid)
-            task_factory = TaskFactory(job_uid)
+            # run needs to be created so that the UI can be updated with the task list.
+            run_uid = create_run(job_uid=job_uid)
             running = JobSerializer(job, context={'request': request})
-            task_factory.parse_tasks()
+            # Run is passed to celery to start the tasks.
+            PickUpRunTask().delay(run_uid=run_uid)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -320,10 +321,13 @@ class RunJob(views.APIView):
         if (job_uid):
             # run the tasks
             job = Job.objects.get(uid=job_uid)
-            task_factory = TaskFactory(job_uid)
-            if task_factory:
-                task_factory.parse_tasks()
-                running = ExportRunSerializer(task_factory.run, context={'request': request})
+            # run needs to be created so that the UI can be updated with the task list.
+            run_uid = create_run(job_uid=job_uid)
+            # Run is passed to celery to start the tasks.
+            run = ExportRun.objects.get(uid=run_uid)
+            if run:
+                PickUpRunTask().delay(run_uid=run_uid)
+                running = ExportRunSerializer(run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
                 return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
@@ -594,3 +598,4 @@ def get_provider_task(export_provider, export_formats):
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
+
