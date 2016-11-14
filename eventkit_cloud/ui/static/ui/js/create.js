@@ -279,11 +279,13 @@ create.job = (function(){
                     + provider.name
                     + '</label></div>');
             }
+            // Add listener to check boxes for displaying provider data on the map
             var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
                 var checkedItem = e.currentTarget.defaultValue;
+                // find the provider that was checked/unchecked then call checkProviderLayer for it
                 $("#provider-selection input[type='checkbox']").each(function() {
-                    // find the provider that was checked/unchecked then call checkProviderLayer for it
                     if (this.value == checkedItem) {
+                        // get the needed information then pass to a handler function
                         var checked = this.checked;
                         var sourceType = $(this).attr('source-type');
                         var sourceUrl = $(this).attr('source-url');
@@ -298,6 +300,7 @@ create.job = (function(){
         });
     }
 
+    // handler function for adding or removing provider layers
     function checkProviderLayer(type, url, provider, layer, checked) {
         if (checked) {
             addProviderLayer(type, url, layer, provider);
@@ -308,27 +311,47 @@ create.job = (function(){
     }
 
     function addProviderLayer(type, url, layer, provider){
-        // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
-        // http://openlayers.org/en/latest/examples/vector-esri.html ARCGIS FEATURE SERVICE
-        // http://openlayers.org/en/latest/examples/vector-wfs.html WFS
-        // http://openlayers.org/en/latest/examples/wms-tiled.html WMS
-        // http://openlayers.org/en/latest/examples/wmts.html WMTS
-        // http://openlayers.org/en/latest/examples/xyz.html TILES
         if (type == 'wfs') {
+            // try adding wfs layer
             var vectorSource = new ol.source.Vector({
-                format: new ol.format.GeoJSON(),
-                url: url.split('?')[0] + '?service=WFS&version=1.1.0&request=GetFeature&typename=' + layer + '&outputFormat=application/json&srsname=EPSG:3857'
+                loader: function(extent) {
+                    $.ajax(url.split('?')[0], {
+                        type: 'GET',
+                        data: {
+                            service: 'WFS',
+                            version: '1.1.0',
+                            request: 'GetFeature',
+                            typename: layer,
+                            srsname: 'EPSG:3857'
+                        }
+                    // if successful, add the data to the source
+                    }).done(function(response){
+                            formatWFS = new ol.format.WFS();
+                            vectorSource.addFeatures(formatWFS.readFeatures(response));
+                        })
+                        // if failed, try making a jsonp request
+                        .fail(function(){ 
+                            // remove the layer from the map before trying again
+                            map.removeLayer(vector);
+                            loadJSONP(type, url, layer, provider);
+                        });
+                }
             });
-            if (vectorSource.getFeatures().length != 0) {
-                var vector = new ol.layer.Vector({
-                    title: provider,
-                    source: vectorSource
-                });
-                map.addLayer(vector);
-            }
-            else {
-                window.wfsProvider = provider
-                window.addWFS = function(response){
+
+            var vector = new ol.layer.Vector({
+                title: provider,
+                source: vectorSource
+            });
+            map.addLayer(vector);
+            
+            // try getting wfs data by using JSONP to avoid CORS error
+            function loadJSONP(type, url, layer, provider){
+                // need to track the provider name in a global var
+                window.wfsProvider = provider 
+                // Function is used as a callback in jsonp request so it must be global.
+                // Cant use default jquery call back because if the source is from geoserver
+                // the url callback param is different.
+                window.addWFS = function(response){ 
                     var geojsonFormat = new ol.format.GeoJSON();
                     var vectorSource = new ol.source.Vector()
                     var map = $('#create-export-map').data('storedMap');
@@ -345,15 +368,14 @@ create.job = (function(){
                         }
                     }
                     var vector = new ol.layer.Vector({
-                        title: wfsProvider,
+                        title: window.wfsProvider,
                         source: vectorSource,
                     });
                     map.addLayer(vector);
                 }
             
-                url = url.split('?')[0];
                 $.ajax({
-                    url: url,
+                    url: url.split('?')[0],
                     data: {
                         outputFormat: 'text/javascript',
                         service: 'WFS',
@@ -397,7 +419,6 @@ create.job = (function(){
 
             var wmtsSource = new ol.source.WMTS({
                 url: url,
-                // layer: layer,
                 matrixSet: 'EPSG:3857',
                 format: 'image/png',
                 projection: projection,
@@ -465,6 +486,7 @@ create.job = (function(){
     }
 
     function removeProviderLayer(provider){
+        // get all layers and check the titles for match to provider name
         var layers = map.getLayers();
         var len = layers.getLength();
         for (var i = 0; i < len; i++){
