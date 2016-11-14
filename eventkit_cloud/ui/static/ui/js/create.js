@@ -47,6 +47,8 @@ create.job = (function(){
             })
         });
 
+        $('#create-export-map').data('storedMap', map);
+
         //add base layers
         var osm = new ol.layer.Tile({
             title: "OpenStreetMap",
@@ -298,77 +300,78 @@ create.job = (function(){
 
     function checkProviderLayer(type, url, provider, layer, checked) {
         if (checked) {
-            //need to add teh layer
-            console.log('adding layer');
             addProviderLayer(type, url, layer, provider);
         }
         else {
-            //need to remove the layer
-            console.log('removing the layer');
-            removeProviderLayer(type, url, provider);
+            removeProviderLayer(provider);
         }
     }
 
     function addProviderLayer(type, url, layer, provider){
-        // TYPES: [WMS, WMTS, WFS, XYZ TILE, ArcGIS-Raster, ArcGIS-Feature
-
         // http://openlayers.org/en/latest/examples/arcgis-image.html ARCGIS RASTER
-
         // http://openlayers.org/en/latest/examples/vector-esri.html ARCGIS FEATURE SERVICE
-
         // http://openlayers.org/en/latest/examples/vector-wfs.html WFS
-
         // http://openlayers.org/en/latest/examples/wms-tiled.html WMS
-
         // http://openlayers.org/en/latest/examples/wmts.html WMTS
-
         // http://openlayers.org/en/latest/examples/xyz.html TILES
         if (type == 'wfs') {
-            geojsonFormat = new ol.format.GeoJSON();
-            url = url.split('?')[0];
             var vectorSource = new ol.source.Vector({
-                loader: function(extent, resolution, projection) {
-                    $.ajax({
-                        // type: 'GET',
-                        url: url,
-                        data: {
-                            outputFormat: 'text/javascript',
-                            service: 'WFS',
-                            version: '1.0.0',
-                            request: 'GetFeature',
-                            typename: layer,
-                            srsname: 'EPSG:3857',
-                            format_options: 'callback:mycallback'
-                        },
-                        dataType: 'jsonp',
-                        jsonp: false,
-                        success: function(response) {
-                            console.log(this);
-                            if (response.error) {
-                                alert(response.error);
-                            }
-                            else {
-                                var features = geojsonFormat.readFeatures(response, {
-                                    featureProjection: projection
-                                });
-                                if (features.length > 0) {
-                                    featureSource.addFeatures(features);
-                                }
-                            }
-                        },
-                        error: function(){
-                            console.log(this);
+                format: new ol.format.GeoJSON(),
+                url: url.split('?')[0] + '?service=WFS&version=1.1.0&request=GetFeature&typename=' + layer + '&outputFormat=application/json&srsname=EPSG:3857'
+            });
+            if (vectorSource.getFeatures().length != 0) {
+                var vector = new ol.layer.Vector({
+                    title: provider,
+                    source: vectorSource
+                });
+                map.addLayer(vector);
+            }
+            else {
+                window.wfsProvider = provider
+                window.addWFS = function(response){
+                    var geojsonFormat = new ol.format.GeoJSON();
+                    var vectorSource = new ol.source.Vector()
+                    var map = $('#create-export-map').data('storedMap');
+
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                    else {
+                        var features = geojsonFormat.readFeatures(response, {
+                            featureProjection: ol.proj.get('EPSG:3857')
+                        });
+                        if (features.length > 0) {
+                            vectorSource.addFeatures(features);
                         }
+                    }
+                    var vector = new ol.layer.Vector({
+                        title: wfsProvider,
+                        source: vectorSource,
                     });
-                },
-                //url: url,
-                strategy: ol.loadingstrategy.bbox
-            });
-            var vector = new ol.layer.Vector({
-                title: provider,
-                source: vectorSource,
-            });
-            map.addLayer(vector);
+                    map.addLayer(vector);
+                }
+            
+                url = url.split('?')[0];
+                $.ajax({
+                    url: url,
+                    data: {
+                        outputFormat: 'text/javascript',
+                        service: 'WFS',
+                        version: '1.0.0',
+                        request: 'GetFeature',
+                        typename: layer,
+                        srsname: 'EPSG:3857',
+                        // need two different parameters because geoserver expects the callback differently
+                        format_options: 'callback:addWFS',
+                        callback: 'addWFS'
+                    },
+                    dataType: 'jsonp',
+                    jsonp: false,
+                    error: function (xhr, ajaxOptions, thrownError) {
+                        console.log(thrownError);
+                    }
+                });
+            }
         }
         else if (type == 'wms'){
             var wmsSource = new ol.source.TileWMS({
@@ -459,11 +462,9 @@ create.job = (function(){
             });
             map.addLayer(feature);
         }
-        console.log('added');
     }
 
-    function removeProviderLayer(type, url, provider){
-        // find and remove layer
+    function removeProviderLayer(provider){
         var layers = map.getLayers();
         var len = layers.getLength();
         for (var i = 0; i < len; i++){
@@ -474,7 +475,6 @@ create.job = (function(){
                 break;
             }
         }
-        console.log('removed');
     }
 
     /*
