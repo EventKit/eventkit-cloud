@@ -151,7 +151,7 @@ exports.detail = (function(){
                 url: Config.RERUN_URL + exports.detail.job_uid,
                 success: function(data){
                     // initialize the submitted run panel immediately
-                    initSubmittedRunPanel([data]);
+                    //initSubmittedRunPanel([data]);
                     // then start the check interval..
                     startRunCheckInterval();
                 },
@@ -232,9 +232,6 @@ exports.detail = (function(){
                     var html = template(context);
                     $runPanel.append(html);
 
-                    var progressValue = [];
-                    var index = [];
-
                     // add data provider info
                     $providersDiv = $('div#' + run.uid).find('#providers');
                     var providers = run.provider_tasks;
@@ -243,7 +240,6 @@ exports.detail = (function(){
                         $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
 
                         // add task info
-
                         var taskDiv = '<div><table border=0 class="table table-condensed">';
                         var tasks = provider.tasks;
 
@@ -255,12 +251,9 @@ exports.detail = (function(){
                                 var status = task.status;
                                 var duration = numeral(task.duration).format("HH:mm:ss.SSS");
                                 var descriptiveName = task.name;
-                                //var descriptiveName = 'Name Placeholder';
-                                progressValue.push(task.progress);
-                                index.push(i);
+
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
-                                    taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
                                 }
 
                                 if (errors.length > 0) {
@@ -275,10 +268,7 @@ exports.detail = (function(){
                         $(taskDiv).appendTo('#providers');
                         $providersDiv.append('</table>')
 
-                        for (j = 0; j <= progressValue.length; j++)
-                        {
-                            setProgress(progressValue[j],index[j])
-                        }
+
                     });
                     if(run.zipfile_url)
                     {
@@ -416,7 +406,7 @@ exports.detail = (function(){
      */
     function initSubmittedRunPanel(data){
         var $runPanel = $('#submitted_runs > .panel-group');
-        $runPanel.empty();
+        //$runPanel.empty();
         if (data.length > 0) {
             // display the submitted run
             $('#submitted_runs').css('display', 'block');
@@ -476,13 +466,13 @@ exports.detail = (function(){
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
 
                         }
                         else {
                             cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
+                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
 
                         }
                     }
@@ -550,50 +540,77 @@ exports.detail = (function(){
         if (data.length > 0) {
             var run = data[0];
             var run_uid = run.uid;
+            var $runDiv = $('#' + run_uid);
             var progressValue = [];
             var index = [];
 
             // add data provider info
-            $providersDiv = $('div#' + run.uid).find('#providers');
-            $providersDiv.empty();
+            //$providersDiv = $('div#' + run.uid).find('#providers');
+            //$providersDiv.empty();
+
             var providers = run.provider_tasks;
             $.each(providers, function (i, provider) {
+                var provideruid = provider.uid;
                 var name = provider.name;
-                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
-                // add task info
 
-                var taskDiv = '<div><table border=0 class="table table-condensed">';
+                //$providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
+                // add task info
+                //var taskDiv = '<div><table border=0 class="table table-condensed">';
+
                 var tasks = provider.tasks;
+                var $tr = $runDiv.find('table').find('tr#' + provideruid);
+                $tr.html('<td>' + name + '</td></tr>');
+
                 $.each(tasks, function (i, task) {
 
                     progressValue.push(task.progress);
-                    index.push(i);
+                    index.push(task.uid);
 
                     //not showing OSMConf files
                     if (task.name != "OSMConf" && task.name != "WFSExport" && task.name != "ArcFeatureServiceExport") {
+                        var uid = task.uid;
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
 
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
-                            cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
+                        var $tr = $runDiv.find('table').find('tr#' + uid);
+                        var $barTr = $runDiv.find('table').find('tr#bar' + uid);
 
+                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                            //cls = status.toLowerCase();
+                            //taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            //taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
+
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            console.log($tr.html());
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            console.log($tr.html());
+                            console.log($barTr.html());
+                            $barTr.html('<td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
+                            console.log($barTr.html());
                         }
                         else {
-                            cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
+                            //cls = status.toLowerCase();
+                            //taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            //taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
 
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            console.log($tr.html());
+                            $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
+                            //console.log($tr.html());
+                            //console.log($barTr.html());
+                            $barTr.html('')
+                            //console.log($barTr.html());
                         }
                     }
                 });
 
-                taskDiv+=('</table></div>');
-                $(taskDiv).appendTo('#providers');
-                $providersDiv.append('</table>')
+                //taskDiv+=('</table></div>');
+                //$(taskDiv).appendTo('#providers');
+                //$providersDiv.append('</table>')
 
                 for (j = 0; j <= progressValue.length; j++)
                 {
@@ -621,6 +638,7 @@ exports.detail = (function(){
      */
     function startRunCheckInterval(){
         var job_uid = exports.detail.job_uid;
+        var completedInit = false;
         /*
          * Collapse the completed run panels before
          * updating the submitted run panel.
@@ -637,16 +655,23 @@ exports.detail = (function(){
         exports.detail.timer = setInterval(function(){
             var job_uid = exports.detail.job_uid;
             var url = Config.RUNS_URL + '?job_uid=' +  job_uid + '&status=SUBMITTED&format=json';
+
+            //var url = Config.RUNS_URL + '?job_uid=' +  job_uid;
             $.ajax({
                 url: url,
                 dataType: 'json',
                 cache: false,
                 success: function(data, textStatus, jqXhr){
-                    initSubmittedRunPanel(data);
-                    updateSubmittedRunDetails(data);
+                    if (!completedInit){
+                        initSubmittedRunPanel(data);
+                        completedInit = true;
+                    }
+                    else {
+                        updateSubmittedRunDetails(data);
+                    }
                 }
             });
-        }, 300);
+        }, 1000);
     }
 
     function buildDeleteDialog(){
