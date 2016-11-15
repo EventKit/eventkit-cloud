@@ -466,13 +466,13 @@ exports.detail = (function(){
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
 
                         }
                         else {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
 
                         }
                     }
@@ -588,7 +588,7 @@ exports.detail = (function(){
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             console.log($tr.html());
                             console.log($barTr.html());
-                            $barTr.html('<td colspan="4">File Progress<div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
+                            $barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
                             console.log($barTr.html());
                         }
                         else {
