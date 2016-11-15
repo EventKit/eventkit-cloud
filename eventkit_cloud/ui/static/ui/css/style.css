@@ -29,13 +29,13 @@ html, body {
 .progressbar {
     color: #fff;
     text-align: right;
-    height: 25px;
+    height: 20px;
     width: 0%;
     background-color: #337ab7;
     border-radius: 3px;
 }
 .progressContainer{
-    width: 450px;
+    width: 300px;
     border: 1px solid #ddd;
     border-radius: 5px;
     overflow: hidden;
