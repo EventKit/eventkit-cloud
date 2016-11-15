@@ -268,29 +268,53 @@ create.job = (function(){
         $.getJSON(Config.PROVIDERS_URL, function(data){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
-                providersDiv.append('<div class="checkbox" id="provider-checkbox"><label>'
-                    + '<input type="checkbox"'
-                    + 'name="providers"'
-                    + 'value="' + provider.name + '"'
-                    + 'data-description="' + provider.name + '"'
-                    + 'source-type="' + provider.type + '"'
-                    + 'source-url="' + provider.url + '"'
-                    + 'source-layer="' + provider.layer + '"/>'
-                    + provider.name
-                    + '</label></div>');
+                if (provider.type == 'osm' || provider.type == 'osm-thematic') {
+                    // Add invisible icon to keep formatting but not show a preview 
+                    providersDiv.append('<div class="checkbox" id="provider-checkbox">'
+                        + '<label><input type="checkbox" style="display:none;"'
+                        // + 'value="' + provider.name + '"'
+                        // + 'source-type="' + provider.type + '"'
+                        // + 'source-url="' + provider.url + '"'
+                        // + 'source-layer="' + provider.layer + '"/>' 
+                        + '"/>'
+                        + '<i class="fa fa-eye-slash" style="opacity:0; cursor:default;"/><label>'
+                        + '<label><input type="checkbox"'
+                        + 'name="providers"'
+                        + 'value="' + provider.name + '"'
+                        + 'data-description="' + provider.name + '"/>'
+                        + provider.name
+                        + '</label>'
+                        + '</div>');
+
+                }
+                else {
+                    providersDiv.append('<div class="checkbox" id="provider-checkbox">'
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'_preview" '
+                        + 'value="' + provider.name + '"'
+                        + 'source-type="' + provider.type + '"'
+                        + 'source-url="' + provider.url + '"'
+                        + 'source-layer="' + provider.layer + '"/>' 
+                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"/><label>'
+                        + '<label><input type="checkbox"'
+                        + 'name="providers"'
+                        + 'value="' + provider.name + '"'
+                        + 'data-description="' + provider.name + '"/>'
+                        + provider.name
+                        + '</label>'
+                        + '</div>');
+                }
             }
-            // Add listener to check boxes for displaying provider data on the map
+
             var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
                 var checkedItem = e.currentTarget.defaultValue;
-                // find the provider that was checked/unchecked then call checkProviderLayer for it
-                $("#provider-selection input[type='checkbox']").each(function() {
+                $("#provider-selection input[id][type='checkbox']").each(function(){
                     if (this.value == checkedItem) {
-                        // get the needed information then pass to a handler function
-                        var checked = this.checked;
                         var sourceType = $(this).attr('source-type');
                         var sourceUrl = $(this).attr('source-url');
                         var sourceLayer = $(this).attr('source-layer');
-                        var sourceProvider = this.value
+                        var sourceProvider = this.value;
+                        var checked = this.checked;
+
                         if (sourceType != 'osm' && sourceType != 'osm-thematic'){
                             checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
                         }
@@ -303,9 +327,17 @@ create.job = (function(){
     // handler function for adding or removing provider layers
     function checkProviderLayer(type, url, provider, layer, checked) {
         if (checked) {
+            // Enforce only one checked item at a time
+            $("#provider-selection input[id][type='checkbox']").each(function(){
+                if (this.value != provider && this.checked) {
+                    $(this).trigger("click");
+                }
+            });
+            $("#provider-selection i[id='" + provider + "']").removeClass('fa fa-eye-slash').addClass('fa fa-eye');
             addProviderLayer(type, url, layer, provider);
         }
         else {
+            $("#provider-selection i[id='" + provider + "']").removeClass('fa fa-eye').addClass('fa fa-eye-slash');
             removeProviderLayer(provider);
         }
     }
@@ -340,7 +372,7 @@ create.job = (function(){
 
             var vector = new ol.layer.Vector({
                 title: provider,
-                source: vectorSource
+                source: vectorSource,
             });
             map.addLayer(vector);
             
@@ -432,7 +464,7 @@ create.job = (function(){
             });
             var wmts = new ol.layer.Tile({
                 title: provider,
-                source: wmtsSource
+                source: wmtsSource,
             });
             map.addLayer(wmts);
         }
@@ -442,7 +474,7 @@ create.job = (function(){
             });
             var raster = new ol.layer.Image({
                 title: provider,
-                source: rasterSource
+                source: rasterSource,
             });
             map.addLayer(raster);
         }
@@ -479,7 +511,7 @@ create.job = (function(){
             });
             var feature = new ol.layer.Vector({
                 title: provider,
-                source: featureSource
+                source: featureSource,
             });
             map.addLayer(feature);
         }
