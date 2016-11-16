@@ -360,9 +360,15 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         fields = ('uid', 'url', 'slug', 'name', 'description')
 
 
-class ExportProviderJobSerializer(serializers.ModelSerializer):
+class ExportProviderSerializer(serializers.ModelSerializer):
+    model_url = serializers.HyperlinkedIdentityField(
+       view_name='api:providers-detail',
+       lookup_field='id'
+    )
+
     class Meta:
         model = ExportProvider
+        #fields = ('uid', 'model_url', 'url', 'name')
         exclude = ('id', 'level_from', 'level_to')
         read_only_fields = ('uid',)
 
@@ -375,18 +381,6 @@ class ExportProviderJobSerializer(serializers.ModelSerializer):
         if not ep:
             ep = ExportProvider.objects.create(**validated_data)
         return ep
-
-
-class ExportProviderSerializer(serializers.ModelSerializer):
-    """Return a representation of the ExportProvider model."""
-    model_url = serializers.HyperlinkedIdentityField(
-       view_name='api:providers-detail',
-       lookup_field='id'
-    )
-
-    class Meta:
-        model = ExportProvider
-        fields = ('uid', 'model_url', 'url', 'name')
 
 
 class ListJobSerializer(serializers.Serializer):
@@ -436,7 +430,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
                                            queryset=ExportFormat.objects.all(),
                                            slug_field='slug',
                                            error_messages={'non_field_errors': _('Select an export format.')})
-    #provider = serializers.SlugRelatedField(many=False, queryset=ExportProvider.objects.all(), slug_field='name')
     provider = serializers.CharField()
     class Meta:
         model = ProviderTask

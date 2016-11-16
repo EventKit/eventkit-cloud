@@ -23,7 +23,7 @@ from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
     RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer,
-    ExportProviderJobSerializer
+    ExportProviderSerializer
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
@@ -209,7 +209,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 if export_providers:
                     for ep in export_providers:
                         ep['user'] = request.user.id
-                    provider_serializer = ExportProviderJobSerializer(
+                    provider_serializer = ExportProviderSerializer(
                         data=export_providers,
                         many=True
                     )
