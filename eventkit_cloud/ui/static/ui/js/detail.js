@@ -584,7 +584,7 @@ exports.detail = (function(){
                         }
                         else{
                             estimatedFinish = new Date(task.estimated_finish);
-                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + estimatedFinish.getMonth() + 1) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
+                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth()+1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
                         if (status === 'PENDING' ||  status === 'FAILED') {
@@ -686,9 +686,18 @@ exports.detail = (function(){
             dataType: 'json',
             cache: false,
             success: function (job_data, textStatus, jqXhr) {
-                //Check for OSM(Generic task) which doesn't get counted in the run as a separate provider task.
-                var osm_generic_index = job_data.provider_tasks.indexOf("OpenStreetMap Data (Generic)");
-                if (osm_generic_index > -1 ){
+                // Check for OSM(Generic task) which doesn't get counted in the run as a separate provider task.
+                var osm_generic_index = null;
+                var osm_index = null;
+                $.each(job_data.provider_tasks, function (index, provider_task) {
+                    if (provider_task.provider.localeCompare("OpenStreetMap Data (Generic)") == 0) {
+                        osm_generic_index = index;
+                    }
+                    if (provider_task.provider.localeCompare("OpenStreetMap Data") == 0) {
+                        osm_index = index;
+                    }
+                });
+                if (osm_generic_index && osm_index) {
                     job_data.provider_tasks.splice(osm_generic_index, 1);
                 }
                 if (compareRunJobProviderTasks(run_data, job_data)) {
