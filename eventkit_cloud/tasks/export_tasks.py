@@ -684,8 +684,6 @@ class FinalizeRunTask(Task):
             'url': url,
             'status': run.status
         }
-        # text = get_template('email/email.txt').render(Context(ctx))
-        # html = get_template('email/email.html').render(Context(ctx))
         text = get_template('email/email.txt').render(ctx)
         html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)

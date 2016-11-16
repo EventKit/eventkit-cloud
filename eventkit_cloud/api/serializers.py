@@ -447,8 +447,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
         See api/validators.py for validation code.
         """
-        # validators.validate_formats(data)
-        # validators.validate_providers(data)
         return data
 
 

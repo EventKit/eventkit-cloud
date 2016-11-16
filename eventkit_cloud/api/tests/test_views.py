@@ -178,25 +178,6 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
 
-    # This test is will not work while the viewsets get_queryset prevents users from viewing queries they don't own.
-
-    # def test_delete_no_permissions(self, ):
-    #     url = reverse('api:jobs-detail', args=[self.job.uid])
-    #     # create another user with token
-    #     user = User.objects.create_user(
-    #         username='other_user', email='other_user@demo.com', password='demo'
-    #     )
-    #     token = Token.objects.create(user=user)
-    #     # reset the client credentials to the new user
-    #     self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-    #                             HTTP_ACCEPT='application/json; version=1.0',
-    #                             HTTP_ACCEPT_LANGUAGE='en',
-    #                             HTTP_HOST='testserver')
-    #     # try to delete a job belonging to self.user
-    #     response = self.client.delete(url)
-    #     # test the response headers
-    #     self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_create_zipfile(self):
         formats = [format.slug for format in ExportFormat.objects.all()]
         config_uid = self.config.uid
@@ -1021,6 +1002,12 @@ class TestExportTaskViewSet(APITestCase):
         data = json.loads(result)
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
+
+    def test_delete(self, ):
+        url = reverse('api:tasks-detail', args=[self.task_uid])
+        response = self.client.delete(url)
+        et = ExportTask.objects.get(uid=self.task_uid)
+        self.assertEqual(et.status, 'CANCELED')
 
     def test_list(self, ):
         expected = '/api/tasks'.format(self.task_uid)

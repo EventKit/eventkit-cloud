@@ -20,12 +20,19 @@ from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import Job, Tag
 from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
-    GeneratePresetTask, KmlExportTask, OSMConfTask, ExternalRasterServiceExportTask, GeopackageExportTask,
-    OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask, ShpExportTask, ArcGISFeatureServiceExportTask,
+    GeneratePresetTask, KmlExportTask, OSMConfTask, 
+    ExternalRasterServiceExportTask, GeopackageExportTask,
+    OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
+    ShpExportTask, ArcGISFeatureServiceExportTask,
     get_progress_tracker, ZipFileTask, PickUpRunTask
 )
 
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
+from eventkit_cloud.tasks.models import (
+    ExportRun,
+    ExportTask,
+    ExportTaskResult,
+    ExportProviderTask
+)
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
@@ -70,8 +77,11 @@ class TestExportTasks(TestCase):
         osm_conf = mock_config.return_value
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid))
         job_name = self.job.name.lower()
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.ini'.format(job_name))
+        expected_output_path = os.path.join(
+            os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'),
+            str(self.run.uid)),
+            '{}.ini'.format(job_name)
+        )
         osm_conf.create_osm_conf.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='osmconf')
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
