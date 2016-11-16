@@ -583,7 +583,7 @@ exports.detail = (function(){
                         }
                         else{
                             estimatedFinish = new Date(task.estimated_finish);
-                            estimatedFinish = (estimatedFinish.getMonth() + 1) + "/" + estimatedFinish.getDate() + "/" + estimatedFinish.getFullYear() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
+                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + estimatedFinish.getMonth() + 1) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
                         if (status === 'PENDING' ||  status === 'FAILED') {
