@@ -171,6 +171,8 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
+        response = json.loads(response.content)
+        self.assertEqual(response['exports'][0]['provider'], 'test')
         # should be idempontent
         response = self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
