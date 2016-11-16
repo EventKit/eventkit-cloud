@@ -35,7 +35,7 @@ html, body {
     border-radius: 3px;
 }
 .progressContainer{
-    width: 300px;
+    width: 400px;
     border: 1px solid #ddd;
     border-radius: 5px;
     overflow: hidden;
