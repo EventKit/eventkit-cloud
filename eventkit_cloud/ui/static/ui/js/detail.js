@@ -9,6 +9,7 @@ exports.detail = (function(){
             var job_uid = parts[parts.length -2];
             exports.detail.job_uid = job_uid;
             exports.detail.timer = false;
+            exports.detail.run_ready = false;
             initMap();
             initPopovers();
             loadSubmittedRunDetails();
@@ -21,19 +22,6 @@ exports.detail = (function(){
      * Initialize the export overview map.
      */
     function initMap(){
-        // maxExtent = new OpenLayers.Bounds(-180,-90,180,90).transform("EPSG:4326", "EPSG:3857");
-        // var mapOptions = {
-        //         displayProjection: new OpenLayers.Projection("EPSG:4326"),
-        //         controls: [new OpenLayers.Control.Attribution(),
-        //                    new OpenLayers.Control.ScaleLine()],
-        //         maxExtent: maxExtent,
-        //         scales:[500000,350000,250000,100000,25000,20000,15000,10000,5000,2500,1250],
-        //         units: 'm',
-        //         sphericalMercator: true,
-        //         noWrap: true // don't wrap world extents
-        // }
-        // map = new OpenLayers.Map('extents', {options: mapOptions});
-
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
         });
@@ -49,25 +37,7 @@ exports.detail = (function(){
                 minZoom: 2,
                 maxZoom: 18,
             })
-        });
-
-        // add base layers
-        // osm = Layers.OSM
-        // osm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
-        // map.addLayer(osm);
-        // map.zoomToMaxExtent();
-
-        // job_extents = new OpenLayers.Layer.Vector('extents', {
-        //     displayInLayerSwitcher: false,
-        //     style: {
-        //         strokeWidth: 3.5,
-        //         strokeColor: '#D73F3F',
-        //         fillColor: 'transparent',
-        //         fillOpacity: 0.8,
-        //     }
-        // });
-
-        // map.addLayer(job_extents);
+        })
 
         job_extents_source = new ol.source.Vector();
 
@@ -82,8 +52,6 @@ exports.detail = (function(){
             })
         });
         map.addLayer(job_extents);
-
-        //map.restrictedExtent = map.getExtent();
         return map;
     }
 
@@ -140,14 +108,6 @@ exports.detail = (function(){
                     break;
             }
 
-            // var extent = data.extent;
-            // var geojson = new OpenLayers.Format.GeoJSON({
-            //         'internalProjection': new OpenLayers.Projection("EPSG:3857"),
-            //         'externalProjection': new OpenLayers.Projection("EPSG:4326")
-            // });
-            // var feature = geojson.read(extent, 'Feature');
-            // job_extents.addFeatures(feature);
-
             var extent = data.extent;
             var geojson = new ol.format.GeoJSON();
             var feature = geojson.readFeature(extent, {
@@ -192,7 +152,7 @@ exports.detail = (function(){
                 url: Config.RERUN_URL + exports.detail.job_uid,
                 success: function(data){
                     // initialize the submitted run panel immediately
-                    initSubmittedRunPanel([data]);
+                    //initSubmittedRunPanel([data]);
                     // then start the check interval..
                     startRunCheckInterval();
                 },
@@ -210,6 +170,15 @@ exports.detail = (function(){
             window.location.href = '/exports/clone/' + exports.detail.job_uid;
         });
     }
+    function setProgress(progress, uid)
+    {
+        $("#progressContainer").html("");
+        var progressBarWidth =$("#progressContainer"+uid).width() * (progress/ 100);
+        $("#progressbar"+uid).width(progressBarWidth).html(progress + "% ");
+
+
+    }
+
 
     /**
      * Loads the completed run details.
@@ -263,16 +232,19 @@ exports.detail = (function(){
                     var template = run.status == 'COMPLETED' || run.status == 'INCOMPLETE' ? getCompletedRunTemplate() : getFailedRunTemplate();
                     var html = template(context);
                     $runPanel.append(html);
+
                     // add data provider info
                     $providersDiv = $('div#' + run.uid).find('#providers');
                     var providers = run.provider_tasks;
                     $.each(providers, function (i, provider) {
                         var name = provider.name;
                         $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
-                        // add task info
 
+                        // add task info
                         var taskDiv = '<div><table border=0 class="table table-condensed">';
                         var tasks = provider.tasks;
+
+
                         $.each(tasks, function (i, task) {
                             if (task.name != "OSMConf" && task.name != 'OSMSchema' && task.name != 'OverpassQuery' && task.name != 'WFSExport' && task.name != "ArcFeatureServiceExport") {
                                 var errors = task.errors;
@@ -280,7 +252,7 @@ exports.detail = (function(){
                                 var status = task.status;
                                 var duration = numeral(task.duration).format("HH:mm:ss.SSS");
                                 var descriptiveName = task.name;
-                                //var descriptiveName = 'Name Placeholder';
+
                                 if (status === 'SUCCESS') {
                                     taskDiv += ('<tr><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td></tr>');
                                 }
@@ -296,6 +268,8 @@ exports.detail = (function(){
                         taskDiv+=('</table></div>');
                         $(taskDiv).appendTo('#providers');
                         $providersDiv.append('</table>')
+
+
                     });
                     if(run.zipfile_url)
                     {
@@ -433,7 +407,7 @@ exports.detail = (function(){
      */
     function initSubmittedRunPanel(data){
         var $runPanel = $('#submitted_runs > .panel-group');
-        $runPanel.empty();
+        //$runPanel.empty();
         if (data.length > 0) {
             // display the submitted run
             $('#submitted_runs').css('display', 'block');
@@ -464,6 +438,10 @@ exports.detail = (function(){
             var template = getSubmittedRunTemplate();
             var html = template(context);
             $runPanel.append(html);
+
+            var progressValue = [];
+            var index = [];
+
             // add data provider info
             $providersDiv = $('div#' + run.uid).find('#providers');
             var providers = run.provider_tasks;
@@ -475,20 +453,28 @@ exports.detail = (function(){
                 var taskDiv = '<div><table border=0 class="table table-condensed">';
                 var tasks = provider.tasks;
                 $.each(tasks, function (i, task) {
+
+                    progressValue.push(task.progress);
+                    index.push(i);
+
                     //not showing OSMConf files
                     if (task.name != "OSMConf" && task.name != "WFSExport" && task.name != "ArcFeatureServiceExport") {
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
-                        //var descriptiveName = 'Name Placeholder';
+
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+
                         }
                         else {
                             cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+
                         }
                     }
                 });
@@ -496,6 +482,11 @@ exports.detail = (function(){
                 taskDiv+=('</table></div>');
                 $(taskDiv).appendTo('#providers');
                 $providersDiv.append('</table>')
+
+                for (j = 0; j <= progressValue.length; j++)
+                {
+                    setProgress(progressValue[j],index[j])
+                }
             });
         });
     }
@@ -546,40 +537,83 @@ exports.detail = (function(){
      * data: the data to update
      */
     function updateSubmittedRunDetails(data){
+
         if (data.length > 0) {
             var run = data[0];
             var run_uid = run.uid;
             var $runDiv = $('#' + run_uid);
+            var progressValue = [];
+            var index = [];
+
+            // add data provider info
+            //$providersDiv = $('div#' + run.uid).find('#providers');
+            //$providersDiv.empty();
+
             var providers = run.provider_tasks;
-            $.each(providers, function(i, provider){
+            $.each(providers, function (i, provider) {
                 var provideruid = provider.uid;
                 var name = provider.name;
+
+                //$providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
+                // add task info
+                //var taskDiv = '<div><table border=0 class="table table-condensed">';
+
                 var tasks = provider.tasks;
                 var $tr = $runDiv.find('table').find('tr#' + provideruid);
                 $tr.html('<td>' + name + '</td></tr>');
-                $.each(tasks, function(i, task) {
+
+                $.each(tasks, function (i, task) {
+
+                    progressValue.push(task.progress);
+                    index.push(task.uid);
+
+                    //not showing OSMConf files
                     if (task.name != "OSMConf" && task.name != "WFSExport" && task.name != "ArcFeatureServiceExport") {
                         var uid = task.uid;
                         var result = task.result;
                         var status = task.status;
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
-                        //var descriptiveName = 'Name Placeholder';
+
                         var $tr = $runDiv.find('table').find('tr#' + uid);
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                        var $barTr = $runDiv.find('table').find('tr#bar' + uid);
+                        var estimatedFinish = "";
+                        
+                        if (task.estimated_finish == null){
+                            estimatedFinish = " -- -- --";
+                        }
+                        else{
+                            estimatedFinish = new Date(task.estimated_finish);
+                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth()+1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
+                        }
+
+                        if (status === 'PENDING' ||  status === 'FAILED') {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $barTr.html('');
+                            //$barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
+                        }
+                            else if (status === 'RUNNING' ){
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $barTr.html('<td colspan="3"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td><td align="right">Est. Finish: '+estimatedFinish+'  </td>')
+
                         }
                         else {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
+                            $barTr.html('')
                         }
-
                     }
                 });
 
+                for (j = 0; j <= progressValue.length; j++)
+                {
+                    setProgress(progressValue[j],index[j])
+                }
             });
         }
         else {
@@ -602,6 +636,7 @@ exports.detail = (function(){
      */
     function startRunCheckInterval(){
         var job_uid = exports.detail.job_uid;
+        var completedInit = false;
         /*
          * Collapse the completed run panels before
          * updating the submitted run panel.
@@ -617,17 +652,77 @@ exports.detail = (function(){
          */
         exports.detail.timer = setInterval(function(){
             var job_uid = exports.detail.job_uid;
-            var url = Config.RUNS_URL + '?job_uid=' +  job_uid + '&status=SUBMITTED&format=json';
+            var url = Config.RUNS_URL + '?job_uid=' + job_uid + '&status=SUBMITTED&format=json';
+
+            //var url = Config.RUNS_URL + '?job_uid=' +  job_uid;
             $.ajax({
                 url: url,
                 dataType: 'json',
                 cache: false,
-                success: function(data, textStatus, jqXhr){
-                    initSubmittedRunPanel(data);
-                    updateSubmittedRunDetails(data);
+                success: function (run_data, textStatus, jqXhr) {
+                    if (!completedInit) {
+                        areRunTasksCreated(run_data);
+                        if (exports.detail.run_ready) {
+                            initSubmittedRunPanel(run_data);
+                            completedInit = true;
+                        }
+                    }
+                    else {
+                        updateSubmittedRunDetails(run_data);
+                    }
                 }
             });
-        }, 3000);
+        }, 2000);
+    }
+
+    // Checks to see if all backend tasks have been created and added to the run. The UI shouldn't be loaded until
+    // these are ready, otherwise the tasks won't get updated.
+    function areRunTasksCreated(run_data) {
+        var job_uid = exports.detail.job_uid;
+        var url = Config.JOBS_URL + '/' + job_uid + '?format=json';
+        var job_data = null;
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            cache: false,
+            success: function (job_data, textStatus, jqXhr) {
+                // Check for OSM(Generic task) which doesn't get counted in the run as a separate provider task.
+                var osm_generic_index = null;
+                var osm_index = null;
+                $.each(job_data.provider_tasks, function (index, provider_task) {
+                    if (provider_task.provider.localeCompare("OpenStreetMap Data (Generic)") == 0) {
+                        osm_generic_index = index;
+                    }
+                    if (provider_task.provider.localeCompare("OpenStreetMap Data") == 0) {
+                        osm_index = index;
+                    }
+                });
+                if (osm_generic_index && osm_index) {
+                    job_data.provider_tasks.splice(osm_generic_index, 1);
+                }
+                if (compareRunJobProviderTasks(run_data, job_data)) {
+                    exports.detail.run_ready = true;
+                }
+            }
+        });
+    }
+
+    function compareRunJobProviderTasks(run_data, job_data) {
+
+        var run_ready = true;
+        //Multiple runs may exist so check the submitted runs specifically
+        $.each(run_data, function (index, run) {
+            if (run.status === 'SUBMITTED') {
+                console.log(job_data.provider_tasks.length);
+                console.log(run.provider_tasks.length);
+                if (job_data.provider_tasks.length == run.provider_tasks.length) {
+                    run_ready = true;
+                } else {
+                    run_ready = false;
+                }
+            }
+        });
+        return run_ready;
     }
 
     function buildDeleteDialog(){
