@@ -432,13 +432,12 @@ class ListJobSerializer(serializers.Serializer):
 
 
 class ProviderTaskSerializer(serializers.ModelSerializer):
-
     formats = serializers.SlugRelatedField(many=True,
                                            queryset=ExportFormat.objects.all(),
                                            slug_field='slug',
                                            error_messages={'non_field_errors': _('Select an export format.')})
-    provider = serializers.SlugRelatedField(many=False, queryset=ExportProvider.objects.all(), slug_field='name')
-
+    #provider = serializers.SlugRelatedField(many=False, queryset=ExportProvider.objects.all(), slug_field='name')
+    provider = serializers.CharField()
     class Meta:
         model = ProviderTask
         fields = ('provider', 'formats')

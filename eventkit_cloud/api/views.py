@@ -204,19 +204,20 @@ class JobViewSet(viewsets.ModelViewSet):
             preset = request.data.get('preset')
             translation = request.data.get('translation')
             transform = request.data.get('transform')
-            if len(export_providers):
-                for ep in export_providers:
-                    ep['user'] = request.user.id
-                provider_serializer = ExportProviderJobSerializer(
-                    data=export_providers,
-                    many=True
-                )
-                if provider_serializer.is_valid():
-                    provider_serializer.save()
-            if len(provider_tasks) > 0:
-                """Save the job and make sure it's committed before running tasks."""
-                try:
-                    with transaction.atomic():
+
+            with transaction.atomic():
+                if len(export_providers):
+                    for ep in export_providers:
+                        ep['user'] = request.user.id
+                    provider_serializer = ExportProviderJobSerializer(
+                        data=export_providers,
+                        many=True
+                    )
+                    if provider_serializer.is_valid():
+                        provider_serializer.save()
+                if len(provider_tasks) > 0:
+                    """Save the job and make sure it's committed before running tasks."""
+                    try:
                         job = serializer.save()
                         provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
                         try:
@@ -281,15 +282,15 @@ class JobViewSet(viewsets.ModelViewSet):
                         if transform:
                             config = ExportConfig.objects.get(uid=transform)
                             job.configs.add(config)
-                except Exception as e:
+                    except Exception as e:
+                        error_data = OrderedDict()
+                        error_data['id'] = _('server_error')
+                        error_data['message'] = _('Error creating export job: %(error)s') % {'error': e}
+                        return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                else:
                     error_data = OrderedDict()
-                    error_data['id'] = _('server_error')
-                    error_data['message'] = _('Error creating export job: %(error)s') % {'error': e}
-                    return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            else:
-                error_data = OrderedDict()
-                error_data['provider_tasks'] = [_('Invalid provider task.')]
-                return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                    error_data['provider_tasks'] = [_('Invalid provider task.')]
+                    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
             job_uid = str(job.uid)

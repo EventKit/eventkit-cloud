@@ -161,7 +161,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'provider_tasks': [{'provider': 'test', 'formats': formats}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0}],
             'preset': config_uid,
             'transform': '',
