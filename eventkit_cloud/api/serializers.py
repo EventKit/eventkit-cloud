@@ -361,7 +361,6 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 
 
 class ExportProviderSerializer(serializers.ModelSerializer):
-    """Return a representation of the ExportProvider model."""
     model_url = serializers.HyperlinkedIdentityField(
        view_name='api:providers-detail',
        lookup_field='id'
@@ -370,7 +369,18 @@ class ExportProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProvider
-        fields = ('uid', 'model_url', 'url', 'name', 'type', 'layer')
+        exclude = ('id', 'level_from', 'level_to')
+        read_only_fields = ('uid',)
+
+    def create(self, validated_data):
+        # try to get existing export Provider
+        url = validated_data.get('url')
+        user = validated_data.get('user')
+
+        ep = ExportProvider.objects.filter(url=url, user=user).first()
+        if not ep:
+            ep = ExportProvider.objects.create(**validated_data)
+        return ep
 
     def get_type(self, obj):
         return obj.export_provider_type.type_name
@@ -419,13 +429,11 @@ class ListJobSerializer(serializers.Serializer):
 
 
 class ProviderTaskSerializer(serializers.ModelSerializer):
-
     formats = serializers.SlugRelatedField(many=True,
                                            queryset=ExportFormat.objects.all(),
                                            slug_field='slug',
                                            error_messages={'non_field_errors': _('Select an export format.')})
-    provider = serializers.SlugRelatedField(many=False, queryset=ExportProvider.objects.all(), slug_field='name')
-
+    provider = serializers.CharField()
     class Meta:
         model = ProviderTask
         fields = ('provider', 'formats')
@@ -451,8 +459,6 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
         See api/validators.py for validation code.
         """
-        # validators.validate_formats(data)
-        # validators.validate_providers(data)
         return data
 
 
@@ -550,11 +556,6 @@ class JobSerializer(serializers.Serializer):
         extents = validators.validate_bbox_params(data)
         the_geom = validators.validate_bbox(extents, user=user)
         data['the_geom'] = the_geom
-        # regions = Region.objects.filter(the_geom__intersects=the_geom).intersection(the_geom, field_name='the_geom')
-        # sort the returned regions by area of intersection, largest first.
-        # sorted_regions = sorted(regions.all(), key=lambda a: a.intersection.area, reverse=True)
-        # data['region'] = validators.validate_region(sorted_regions)
-        # remove unwanted fields, these are pulled from the request in the view if the serializer is valid
         data.pop('xmin'), data.pop('ymin'), data.pop('xmax'), data.pop('ymax'), data.pop('provider_tasks')
         return data
 

@@ -1,14 +1,13 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 import logging
 import os
-from collections import OrderedDict
 
 from django.db import Error, transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
-
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
@@ -23,7 +22,8 @@ from eventkit_cloud.jobs.presets import PresetParser, UnfilteredPresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
-    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer
+    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer,
+    ExportProviderSerializer
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
@@ -197,15 +197,27 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if (serializer.is_valid()):
             """Get the required data from the validated request."""
-            provider_tasks = request.data.get('provider_tasks')
+
+            export_providers = request.data.get('export_providers', [])
+            provider_tasks = request.data.get('provider_tasks', [])
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
             transform = request.data.get('transform')
-            if len(provider_tasks) > 0:
-                """Save the job and make sure it's committed before running tasks."""
-                try:
-                    with transaction.atomic():
+
+            with transaction.atomic():
+                if export_providers:
+                    for ep in export_providers:
+                        ep['user'] = request.user.id
+                    provider_serializer = ExportProviderSerializer(
+                        data=export_providers,
+                        many=True
+                    )
+                    if provider_serializer.is_valid():
+                        provider_serializer.save()
+                if len(provider_tasks) > 0:
+                    """Save the job and make sure it's committed before running tasks."""
+                    try:
                         job = serializer.save()
                         provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
                         try:
@@ -270,15 +282,15 @@ class JobViewSet(viewsets.ModelViewSet):
                         if transform:
                             config = ExportConfig.objects.get(uid=transform)
                             job.configs.add(config)
-                except Exception as e:
+                    except Exception as e:
+                        error_data = OrderedDict()
+                        error_data['id'] = _('server_error')
+                        error_data['message'] = _('Error creating export job: %(error)s') % {'error': e}
+                        return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                else:
                     error_data = OrderedDict()
-                    error_data['id'] = _('server_error')
-                    error_data['message'] = _('Error creating export job: %(error)s') % {'error': e}
-                    return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            else:
-                error_data = OrderedDict()
-                error_data['provider_tasks'] = [_('Invalid provider task.')]
-                return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                    error_data['provider_tasks'] = [_('Invalid provider task.')]
+                    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
             # run the tasks
             job_uid = str(job.uid)
