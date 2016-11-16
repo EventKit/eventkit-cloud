@@ -24,7 +24,7 @@ from rest_framework import serializers
 
 import validators
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider,ExportProviderType ,ProviderTask
 )
 from eventkit_cloud.tasks.models import (
     ExportRun, ExportTask, ExportTaskException, ExportTaskResult, ExportProviderTask
@@ -365,10 +365,10 @@ class ExportProviderSerializer(serializers.ModelSerializer):
        view_name='api:providers-detail',
        lookup_field='id'
     )
+    type = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ExportProvider
-        #fields = ('uid', 'model_url', 'url', 'name')
         exclude = ('id', 'level_from', 'level_to')
         read_only_fields = ('uid',)
 
@@ -381,6 +381,9 @@ class ExportProviderSerializer(serializers.ModelSerializer):
         if not ep:
             ep = ExportProvider.objects.create(**validated_data)
         return ep
+
+    def get_type(self, obj):
+        return obj.export_provider_type.type_name
 
 
 class ListJobSerializer(serializers.Serializer):
