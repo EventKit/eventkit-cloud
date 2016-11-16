@@ -268,24 +268,14 @@ create.job = (function(){
         $.getJSON(Config.PROVIDERS_URL, function(data){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
-                if (provider.type == 'osm' || provider.type == 'osm-thematic') {
+                if (provider.type == 'osm' || provider.type == 'osm-generic') {
                     // Add invisible icon to keep formatting but not show a preview 
                     providersDiv.append('<div class="checkbox" id="provider-checkbox">'
-                        + '<label><input type="checkbox" style="display:none;"'
-                        // + 'value="' + provider.name + '"'
-                        // + 'source-type="' + provider.type + '"'
-                        // + 'source-url="' + provider.url + '"'
-                        // + 'source-layer="' + provider.layer + '"/>' 
-                        + '"/>'
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"/>'
                         + '<i class="fa fa-eye-slash" style="opacity:0; cursor:default;"/></label>'
-                        + '<label style="padding-left: 2em;"><input type="checkbox"'
-                        + 's'
-                        + 'name="providers"'
-                        + 'value="' + provider.name + '"'
-                        + 'data-description="' + provider.name + '"/>'
-                        + provider.name
-                        + '</label>'
-                        + '</div>');
+                        + '<label style="padding-left: .3em;"><input type="checkbox" name="providers"'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + provider.name + '</label></div>');
 
                 }
                 else {
@@ -295,16 +285,10 @@ create.job = (function(){
                         + 'source-type="' + provider.type + '"'
                         + 'source-url="' + provider.url + '"'
                         + 'source-layer="' + provider.layer + '"/>' 
-                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"'
-                        + '/></label>'
-                        + '<label style="padding-left: 2em;"><input type="checkbox"'
-                        + ''
-                        + 'name="providers"'
-                        + 'value="' + provider.name + '"'
-                        + 'data-description="' + provider.name + '"/>'
-                        + provider.name
-                        + '</label>'
-                        + '</div>');
+                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + provider.name + '</label></div>');
                 }
             }
 
@@ -318,7 +302,7 @@ create.job = (function(){
                         var sourceProvider = this.value;
                         var checked = this.checked;
 
-                        if (sourceType != 'osm' && sourceType != 'osm-thematic'){
+                        if (sourceType != 'osm' && sourceType != 'osm-generic'){
                             checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
                         }
                     }
