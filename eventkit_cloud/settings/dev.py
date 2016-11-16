@@ -184,10 +184,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-if os.environ.get('USE_S3'):
-    USE_S3 = True
-else:
-    USE_S3 = False
+
+USE_S3 = os.environ.get('USE_S3', False)
 
 AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')

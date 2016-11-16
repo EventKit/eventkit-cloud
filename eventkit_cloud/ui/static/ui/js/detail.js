@@ -9,6 +9,7 @@ exports.detail = (function(){
             var job_uid = parts[parts.length -2];
             exports.detail.job_uid = job_uid;
             exports.detail.timer = false;
+            exports.detail.run_ready = false;
             initMap();
             initPopovers();
             loadSubmittedRunDetails();
@@ -651,24 +652,68 @@ exports.detail = (function(){
          */
         exports.detail.timer = setInterval(function(){
             var job_uid = exports.detail.job_uid;
-            var url = Config.RUNS_URL + '?job_uid=' +  job_uid + '&status=SUBMITTED&format=json';
+            var url = Config.RUNS_URL + '?job_uid=' + job_uid + '&status=SUBMITTED&format=json';
 
             //var url = Config.RUNS_URL + '?job_uid=' +  job_uid;
             $.ajax({
                 url: url,
                 dataType: 'json',
                 cache: false,
-                success: function(data, textStatus, jqXhr){
-                    if (!completedInit){
-                        initSubmittedRunPanel(data);
-                        completedInit = true;
+                success: function (run_data, textStatus, jqXhr) {
+                    if (!completedInit) {
+                        areRunTasksCreated(run_data);
+                        if (exports.detail.run_ready) {
+                            initSubmittedRunPanel(run_data);
+                            completedInit = true;
+                        }
                     }
                     else {
-                        updateSubmittedRunDetails(data);
+                        updateSubmittedRunDetails(run_data);
                     }
                 }
             });
-        }, 1000);
+        }, 2000);
+    }
+
+    // Checks to see if all backend tasks have been created and added to the run. The UI shouldn't be loaded until
+    // these are ready, otherwise the tasks won't get updated.
+    function areRunTasksCreated(run_data) {
+        var job_uid = exports.detail.job_uid;
+        var url = Config.JOBS_URL + '/' + job_uid + '?format=json';
+        var job_data = null;
+        $.ajax({
+            url: url,
+            dataType: 'json',
+            cache: false,
+            success: function (job_data, textStatus, jqXhr) {
+                //Check for OSM(Generic task) which doesn't get counted in the run as a separate provider task.
+                var osm_generic_index = job_data.provider_tasks.indexOf("OpenStreetMap Data (Generic)");
+                if (osm_generic_index > -1 ){
+                    job_data.provider_tasks.splice(osm_generic_index, 1);
+                }
+                if (compareRunJobProviderTasks(run_data, job_data)) {
+                    exports.detail.run_ready = true;
+                }
+            }
+        });
+    }
+
+    function compareRunJobProviderTasks(run_data, job_data) {
+
+        var run_ready = true;
+        //Multiple runs may exist so check the submitted runs specifically
+        $.each(run_data, function (index, run) {
+            if (run.status === 'SUBMITTED') {
+                console.log(job_data.provider_tasks.length);
+                console.log(run.provider_tasks.length);
+                if (job_data.provider_tasks.length == run.provider_tasks.length) {
+                    run_ready = true;
+                } else {
+                    run_ready = false;
+                }
+            }
+        });
+        return run_ready;
     }
 
     function buildDeleteDialog(){

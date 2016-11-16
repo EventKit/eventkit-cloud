@@ -389,6 +389,7 @@ class TestExportTasks(TestCase):
         celery_uid = str(uuid.uuid4())
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
+        self.run.job.event = 'test'
         self.run.job.save()
         stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
         
@@ -397,21 +398,23 @@ class TestExportTasks(TestCase):
         mock_os_walk.return_value = [(
             '/var/lib/eventkit/exports_staging/' + run_uid + '/osm-vector',
             None,
-            ['test.gpkg']
+            ['test.gpkg', 'test.osm'] # osm should get filtered out
         )]
-
+        date = timezone.now().strftime('%Y%m%d')
+        fname = 'test-osm-vector-%s.gpkg' % (date,)
         task = ZipFileTask()
         result = task.run(run_uid=run_uid, stage_dir=stage_dir)
+
         self.assertEqual(
              zipfile.files,
-             {'osm-vector/test.gpkg': '/var/lib/eventkit/exports_staging/' + 
-                                      run_uid + '/osm-vector/test.gpkg'
+             {fname: '/var/lib/eventkit/exports_staging/' + 
+                     run_uid + '/osm-vector/test.gpkg',
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEqual(
             run.zipfile_url,
-            '%s/%s.zip' % (run_uid, run_uid)
+            '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
         )
         assert str(run_uid) in result['result']
 
