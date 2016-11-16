@@ -107,7 +107,8 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-list')
         self.assertEquals(expected, url)
 
-    def test_make_job(self, ):
+    def test_make_job_with_export_providers(self, ):
+        """tests job creation with export providers"""
         export_providers = ExportProvider.objects.all()
         export_providers_start_len = len(export_providers)
         config_uid = self.config.uid
