@@ -277,8 +277,9 @@ create.job = (function(){
                         // + 'source-url="' + provider.url + '"'
                         // + 'source-layer="' + provider.layer + '"/>' 
                         + '"/>'
-                        + '<i class="fa fa-eye-slash" style="opacity:0; cursor:default;"/><label>'
-                        + '<label><input type="checkbox"'
+                        + '<i class="fa fa-eye-slash" style="opacity:0; cursor:default;"/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox"'
+                        + 's'
                         + 'name="providers"'
                         + 'value="' + provider.name + '"'
                         + 'data-description="' + provider.name + '"/>'
@@ -289,13 +290,15 @@ create.job = (function(){
                 }
                 else {
                     providersDiv.append('<div class="checkbox" id="provider-checkbox">'
-                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'_preview" '
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"'
                         + 'value="' + provider.name + '"'
                         + 'source-type="' + provider.type + '"'
                         + 'source-url="' + provider.url + '"'
                         + 'source-layer="' + provider.layer + '"/>' 
-                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"/><label>'
-                        + '<label><input type="checkbox"'
+                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"'
+                        + '/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox"'
+                        + ''
                         + 'name="providers"'
                         + 'value="' + provider.name + '"'
                         + 'data-description="' + provider.name + '"/>'
@@ -305,7 +308,7 @@ create.job = (function(){
                 }
             }
 
-            var getCheckedItem = $("#provider-selection input[type='checkbox']").click(function(e) {
+            var getCheckedItem = $("#provider-selection input[id][type='checkbox']").click(function(e) {
                 var checkedItem = e.currentTarget.defaultValue;
                 $("#provider-selection input[id][type='checkbox']").each(function(){
                     if (this.value == checkedItem) {
@@ -326,6 +329,8 @@ create.job = (function(){
 
     // handler function for adding or removing provider layers
     function checkProviderLayer(type, url, provider, layer, checked) {
+        // remove any error messages
+        $("#wfsErrorMessage").remove();
         if (checked) {
             // Enforce only one checked item at a time
             $("#provider-selection input[id][type='checkbox']").each(function(){
@@ -333,11 +338,11 @@ create.job = (function(){
                     $(this).trigger("click");
                 }
             });
-            $("#provider-selection i[id='" + provider + "']").removeClass('fa fa-eye-slash').addClass('fa fa-eye');
+            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
             addProviderLayer(type, url, layer, provider);
         }
         else {
-            $("#provider-selection i[id='" + provider + "']").removeClass('fa fa-eye').addClass('fa fa-eye-slash');
+            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye-slash');
             removeProviderLayer(provider);
         }
     }
@@ -355,6 +360,13 @@ create.job = (function(){
                             request: 'GetFeature',
                             typename: layer,
                             srsname: 'EPSG:3857'
+                        },
+                        timeout: 15000,
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
+                        success: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
                         }
                     // if successful, add the data to the source
                     }).done(function(response){
@@ -365,6 +377,7 @@ create.job = (function(){
                         .fail(function(){ 
                             // remove the layer from the map before trying again
                             map.removeLayer(vector);
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye-slash');
                             loadJSONP(type, url, layer, provider);
                         });
                 }
@@ -378,53 +391,78 @@ create.job = (function(){
             
             // try getting wfs data by using JSONP to avoid CORS error
             function loadJSONP(type, url, layer, provider){
-                // need to track the provider name in a global var
-                window.wfsProvider = provider 
-                // Function is used as a callback in jsonp request so it must be global.
-                // Cant use default jquery call back because if the source is from geoserver
-                // the url callback param is different.
-                window.addWFS = function(response){ 
-                    var geojsonFormat = new ol.format.GeoJSON();
-                    var vectorSource = new ol.source.Vector()
-                    var map = $('#create-export-map').data('storedMap');
+                // check if the user changed their mind, if not try jsonp request
+                if ($("#provider-selection input[id='" + provider + "'][type='checkbox']").is(":checked")) {
+                    // need to track the provider name in a global var
+                    window.wfsProvider = provider 
+                    // Function is used as a callback in jsonp request so it must be global.
+                    // Cant use default jquery call back because if the source is from geoserver
+                    // the url callback param is different.
+                    window.addWFS = function(response){
+                        if ($("#provider-selection input[id='" + window.wfsProvider + "'][type='checkbox']").is(":checked")) {
+                        var geojsonFormat = new ol.format.GeoJSON();
+                            var vectorSource = new ol.source.Vector()
+                            var map = $('#create-export-map').data('storedMap');
 
-                    if (response.error) {
-                        alert(response.error);
-                    }
-                    else {
-                        var features = geojsonFormat.readFeatures(response, {
-                            featureProjection: ol.proj.get('EPSG:3857')
-                        });
-                        if (features.length > 0) {
-                            vectorSource.addFeatures(features);
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            else {
+                                var features = geojsonFormat.readFeatures(response, {
+                                    featureProjection: ol.proj.get('EPSG:3857')
+                                });
+                                if (features.length > 0) {
+                                    vectorSource.addFeatures(features);
+                                }
+                            }
+                            var vector = new ol.layer.Vector({
+                                title: window.wfsProvider,
+                                source: vectorSource,
+                            });
+                            map.addLayer(vector);
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
                         }
                     }
-                    var vector = new ol.layer.Vector({
-                        title: window.wfsProvider,
-                        source: vectorSource,
+                    $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                    $.ajax({
+                        url: url.split('?')[0],
+                        data: {
+                            outputFormat: 'text/javascript',
+                            service: 'WFS',
+                            version: '1.0.0',
+                            request: 'GetFeature',
+                            typename: layer,
+                            srsname: 'EPSG:3857',
+                            // need two different parameters because geoserver expects the callback differently
+                            format_options: 'callback:addWFS',
+                            callback: 'addWFS'
+                        },
+                        timeout: 15000,
+                        dataType: 'jsonp',
+                        jsonp: false,
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            if ($("#provider-selection input[id='" + window.wfsProvider + "'][type='checkbox']").is(":checked")){
+                                $("#wfsErrorMessage").remove();
+                                // need to check if layer exists because ajax throws errors even when features are succesfully requested
+                                found = false;
+                                map.getLayers().forEach(function(layer) {
+                                    if (layer.get('title') == provider) {
+                                        found = true;
+                                    }
+                                });
+                                if (!found){
+                                    $("#provider-selection input[type='checkbox'][name='providers'][value='" + provider + "']").parent()
+                                    .after('<div class="help-block" id="wfsErrorMessage" style="padding-left: 20px;">'
+                                        + '<small>Error retrieving "' + provider + '" for display.</small></div>');
+                                    $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+                                }
+                            }
+                        },
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
                     });
-                    map.addLayer(vector);
                 }
-            
-                $.ajax({
-                    url: url.split('?')[0],
-                    data: {
-                        outputFormat: 'text/javascript',
-                        service: 'WFS',
-                        version: '1.0.0',
-                        request: 'GetFeature',
-                        typename: layer,
-                        srsname: 'EPSG:3857',
-                        // need two different parameters because geoserver expects the callback differently
-                        format_options: 'callback:addWFS',
-                        callback: 'addWFS'
-                    },
-                    dataType: 'jsonp',
-                    jsonp: false,
-                    error: function (xhr, ajaxOptions, thrownError) {
-                        console.log(thrownError);
-                    }
-                });
             }
         }
         else if (type == 'wms'){
@@ -491,19 +529,29 @@ create.job = (function(){
                           ',"spatialReference":{"wkid":102100}}') +
                       '&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*' +
                       '&outSR=102100';
-                    $.ajax({url: url, dataType: 'jsonp', success: function(response) {
-                        if (response.error) {
-                            console.log(response.error.message + '\n' + response.error.details.join('\n'));
-                        }
-                        else {
-                            var features = esrijsonFormat.readFeatures(response, {
-                                featureProjection: projection
-                            });
-                            if (features.length > 0) {
-                                featureSource.addFeatures(features);
+                    $.ajax({
+                        url: url, 
+                        dataType: 'jsonp', 
+                        success: function(response) {
+                            if (response.error) {
+                                console.log(response.error.message + '\n' + response.error.details.join('\n'));
                             }
+                            else {
+                                var features = esrijsonFormat.readFeatures(response, {
+                                    featureProjection: projection
+                                });
+                                if (features.length > 0) {
+                                    featureSource.addFeatures(features);
+                                }
+                            }
+                        },
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
+                        complete: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
                         }
-                    }});
+                    });
                 },
                 strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
                     tileSize: 512
@@ -929,14 +977,14 @@ create.job = (function(){
                 'name': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The export job name is required and cannot be empty')
+                            message: gettext('The export job name is required and cannot be empty.')
                         },
                     }
                 },
                 'description': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The description is required and cannot be empty')
+                            message: gettext('The description is required and cannot be empty.')
                         }
                     }
                 },
@@ -944,7 +992,7 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            message: gettext('At least one export format must be selected')
+                            message: gettext('At least one export format must be selected.')
                         }
                     }
                 },
@@ -952,7 +1000,7 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            message: gettext('At least one export provider must be selected')
+                            message: gettext('At least one export provider must be selected.')
                         }
                     }
                 },
@@ -987,7 +1035,7 @@ create.job = (function(){
                 'filename': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The preset name is required and cannot be empty')
+                            message: gettext('The preset name is required and cannot be empty.')
                         },
                     }
                 },
