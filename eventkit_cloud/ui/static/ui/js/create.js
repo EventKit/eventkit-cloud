@@ -47,9 +47,11 @@ create.job = (function(){
             })
         });
 
-        //add base layers
+        $('#create-export-map').data('storedMap', map);
+
+        // add initial layer
         var osm = new ol.layer.Tile({
-            title: "OpenStreetMap",
+            title: "OpenStreetMap Data",
             source: new ol.source.OSM({
                 wrapX: false,
                 noWrap: true,
@@ -62,7 +64,9 @@ create.job = (function(){
                     ol.source.OSM.ATTRIBUTION
                 ]
             })
-        })
+        });
+
+
         var hotosm = Layers.HOT;
         hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
 
@@ -76,7 +80,7 @@ create.job = (function(){
 
         buildProviderFormats();
         buildExportFormats();
-
+        
 
         // OL3 add bounding box selection layer
 
@@ -264,15 +268,329 @@ create.job = (function(){
         $.getJSON(Config.PROVIDERS_URL, function(data){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
-                providersDiv.append('<div class="checkbox"><label>'
-                    + '<input type="checkbox"'
-                    + 'name="providers"'
-                    + 'value="' + provider.name + '"'
-                    + 'data-description="' + provider.name + '"/>'
-                    + provider.name
-                    + '</label></div>');
+                if (provider.name == 'OpenStreetMap Data') {
+                    providersDiv.append('<div class="checkbox" id="provider-checkbox">'
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"'
+                        + 'value="' + provider.name + '"'
+                        + 'source-type="' + provider.type + '"'
+                        + 'source-url="' + provider.url + '"'
+                        + 'source-layer="' + provider.layer + '" checked="checked"/>' 
+                        + '<i class="fa fa-eye" id="' + provider.name + '"/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + provider.name + '</label></div>');
+                }
+                else {
+                    providersDiv.append('<div class="checkbox" id="provider-checkbox">'
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"'
+                        + 'value="' + provider.name + '"'
+                        + 'source-type="' + provider.type + '"'
+                        + 'source-url="' + provider.url + '"'
+                        + 'source-layer="' + provider.layer + '"/>' 
+                        + '<i class="fa fa-eye-slash" id="' + provider.name + '"/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + provider.name + '</label></div>');
+                }
             }
-        })
+
+            var getCheckedItem = $("#provider-selection input[id][type='checkbox']").click(function(e) {
+                var checkedItem = e.currentTarget.defaultValue;
+                $("#provider-selection input[id][type='checkbox']").each(function(){
+                    if (this.value == checkedItem) {
+                        var sourceType = $(this).attr('source-type');
+                        var sourceUrl = $(this).attr('source-url');
+                        var sourceLayer = $(this).attr('source-layer');
+                        var sourceProvider = this.value;
+                        var checked = this.checked;
+                        checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
+
+                    }
+                });
+            });
+        });
+    }
+
+    // handler function for adding or removing provider layers
+    function checkProviderLayer(type, url, provider, layer, checked) {
+        // remove any error messages
+        $("#wfsErrorMessage").remove();
+        if (checked) {
+            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+            addProviderLayer(type, url, layer, provider);
+        }
+        else {
+            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye-slash');
+            removeProviderLayer(provider);
+        }
+    }
+
+    function addProviderLayer(type, url, layer, provider){
+        if (type == 'osm'){
+            var osm = new ol.layer.Tile({
+                title: provider,
+                source: new ol.source.OSM({
+                    wrapX: false,
+                    noWrap: true,
+                    attributions: [
+                        new ol.Attribution({
+                            html: '&copy ' +
+                            '<a href="//www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.'
+                        }),
+
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                })
+            });
+            map.addLayer(osm);
+        }
+        else if (type == 'osm-generic'){
+            var osm = new ol.layer.Tile({
+                title: provider,
+                source: new ol.source.OSM({
+                    wrapX: false,
+                    noWrap: true,
+                    attributions: [
+                        new ol.Attribution({
+                            html: '&copy ' +
+                            '<a href="//www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.'
+                        }),
+
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                })
+            });
+            map.addLayer(osm);
+        }
+        else if (type == 'wfs') {
+            // try adding wfs layer
+            var vectorSource = new ol.source.Vector({
+                loader: function(extent) {
+                    $.ajax(url.split('?')[0], {
+                        type: 'GET',
+                        data: {
+                            service: 'WFS',
+                            version: '1.1.0',
+                            request: 'GetFeature',
+                            typename: layer,
+                            srsname: 'EPSG:3857'
+                        },
+                        timeout: 15000,
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
+                        success: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+                        }
+                    // if successful, add the data to the source
+                    }).done(function(response){
+                            formatWFS = new ol.format.WFS();
+                            vectorSource.addFeatures(formatWFS.readFeatures(response));
+                        })
+                        // if failed, try making a jsonp request
+                        .fail(function(){ 
+                            // remove the layer from the map before trying again
+                            map.removeLayer(vector);
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye-slash');
+                            loadJSONP(type, url, layer, provider);
+                        });
+                }
+            });
+
+            var vector = new ol.layer.Vector({
+                title: provider,
+                source: vectorSource,
+            });
+            map.addLayer(vector);
+            
+            // try getting wfs data by using JSONP to avoid CORS error
+            function loadJSONP(type, url, layer, provider){
+                // check if the user changed their mind, if not try jsonp request
+                if ($("#provider-selection input[id='" + provider + "'][type='checkbox']").is(":checked")) {
+                    // need to track the provider name in a global var
+                    window.wfsProvider = provider 
+                    // Function is used as a callback in jsonp request so it must be global.
+                    // Cant use default jquery call back because if the source is from geoserver
+                    // the url callback param is different.
+                    window.addWFS = function(response){
+                        if ($("#provider-selection input[id='" + window.wfsProvider + "'][type='checkbox']").is(":checked")) {
+                        var geojsonFormat = new ol.format.GeoJSON();
+                            var vectorSource = new ol.source.Vector()
+                            var map = $('#create-export-map').data('storedMap');
+
+                            if (response.error) {
+                                alert(response.error);
+                            }
+                            else {
+                                var features = geojsonFormat.readFeatures(response, {
+                                    featureProjection: ol.proj.get('EPSG:3857')
+                                });
+                                if (features.length > 0) {
+                                    vectorSource.addFeatures(features);
+                                }
+                            }
+                            var vector = new ol.layer.Vector({
+                                title: window.wfsProvider,
+                                source: vectorSource,
+                            });
+                            map.addLayer(vector);
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+                        }
+                    }
+                    $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                    $.ajax({
+                        url: url.split('?')[0],
+                        data: {
+                            outputFormat: 'text/javascript',
+                            service: 'WFS',
+                            version: '1.0.0',
+                            request: 'GetFeature',
+                            typename: layer,
+                            srsname: 'EPSG:3857',
+                            // need two different parameters because geoserver expects the callback differently
+                            format_options: 'callback:addWFS',
+                            callback: 'addWFS'
+                        },
+                        timeout: 15000,
+                        dataType: 'jsonp',
+                        jsonp: false,
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            if ($("#provider-selection input[id='" + window.wfsProvider + "'][type='checkbox']").is(":checked")){
+                                $("#wfsErrorMessage").remove();
+                                // need to check if layer exists because ajax throws errors even when features are succesfully requested
+                                found = false;
+                                map.getLayers().forEach(function(layer) {
+                                    if (layer.get('title') == provider) {
+                                        found = true;
+                                    }
+                                });
+                                if (!found){
+                                    $("#provider-selection input[type='checkbox'][name='providers'][value='" + provider + "']").parent()
+                                    .after('<div class="help-block" id="wfsErrorMessage" style="padding-left: 20px;">'
+                                        + '<small>Error retrieving "' + provider + '" for display.</small></div>');
+                                    $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+                                }
+                            }
+                        },
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
+                    });
+                }
+            }
+        }
+        else if (type == 'wms'){
+            var wmsSource = new ol.source.TileWMS({
+                url: url,
+                params: {'LAYERS': layer, 'TILED': true}
+            });
+            var wms = new ol.layer.Tile({
+                title: provider,
+                source: wmsSource,
+            });
+            map.addLayer(wms);
+        }
+        else if (type == 'wmts') {
+            var projection = ol.proj.get('EPSG:3857');
+            var projectionExtent = projection.getExtent();
+            var size = ol.extent.getWidth(projectionExtent) / 256;
+            var resolutions = new Array(18);
+            var matrixIds = new Array(18);
+            for (var z = 0; z < 18; ++z) {
+                resolutions[z] = size / Math.pow(2, z);
+                matrixIds[z] = z;
+            }
+
+            var wmtsSource = new ol.source.WMTS({
+                url: url,
+                matrixSet: 'EPSG:3857',
+                format: 'image/png',
+                projection: projection,
+                tileGrid: new ol.tilegrid.WMTS({
+                    origin: ol.extent.getTopLeft(projectionExtent),
+                    resolutions: resolutions,
+                    matrixIds: matrixIds
+                }),
+                style: 'default',
+                wrapX: true
+            });
+            var wmts = new ol.layer.Tile({
+                title: provider,
+                source: wmtsSource,
+            });
+            map.addLayer(wmts);
+        }
+        else if (type == 'arcgis-raster') {
+            var rasterSource = new ol.source.ImageArcGISRest({
+                url: url
+            });
+            var raster = new ol.layer.Image({
+                title: provider,
+                source: rasterSource,
+            });
+            map.addLayer(raster);
+        }
+        else if (type == 'arcgis-feature') {
+            baseUrl = url.split('/query?')[0];
+
+            var esrijsonFormat = new ol.format.EsriJSON();
+            var featureSource = new ol.source.Vector({
+                loader: function(extent, resolution, projection) {
+                    var url = baseUrl + '/query/?f=json&' +
+                      'returnGeometry=true&spatialRel=esriSpatialRelIntersects&geometry=' +
+                      encodeURIComponent('{"xmin":' + extent[0] + ',"ymin":' +
+                          extent[1] + ',"xmax":' + extent[2] + ',"ymax":' + extent[3] +
+                          ',"spatialReference":{"wkid":102100}}') +
+                      '&geometryType=esriGeometryEnvelope&inSR=102100&outFields=*' +
+                      '&outSR=102100';
+                    $.ajax({
+                        url: url, 
+                        dataType: 'jsonp', 
+                        success: function(response) {
+                            if (response.error) {
+                                console.log(response.error.message + '\n' + response.error.details.join('\n'));
+                            }
+                            else {
+                                var features = esrijsonFormat.readFeatures(response, {
+                                    featureProjection: projection
+                                });
+                                if (features.length > 0) {
+                                    featureSource.addFeatures(features);
+                                }
+                            }
+                        },
+                        beforeSend: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-cog fa-spin');
+                        },
+                        complete: function() {
+                            $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
+                        }
+                    });
+                },
+                strategy: ol.loadingstrategy.tile(ol.tilegrid.createXYZ({
+                    tileSize: 512
+                }))
+            });
+            var feature = new ol.layer.Vector({
+                title: provider,
+                source: featureSource,
+            });
+            map.addLayer(feature);
+        }
+    }
+
+    function removeProviderLayer(provider){
+        // get all layers and check the titles for match to provider name
+        var layers = map.getLayers();
+        var len = layers.getLength();
+        for (var i = 0; i < len; i++){
+            layer = layers.item(i);
+            var title = layer.get('title');
+            if (title == provider) {
+                map.removeLayer(layer);
+                break;
+            }
+        }
     }
 
     /*
@@ -673,14 +991,14 @@ create.job = (function(){
                 'name': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The export job name is required and cannot be empty')
+                            message: gettext('The export job name is required and cannot be empty.')
                         },
                     }
                 },
                 'description': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The description is required and cannot be empty')
+                            message: gettext('The description is required and cannot be empty.')
                         }
                     }
                 },
@@ -688,7 +1006,7 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            message: gettext('At least one export format must be selected')
+                            message: gettext('At least one export format must be selected.')
                         }
                     }
                 },
@@ -696,7 +1014,7 @@ create.job = (function(){
                     validators: {
                         choice: {
                             min: 1,
-                            message: gettext('At least one export provider must be selected')
+                            message: gettext('At least one export provider must be selected.')
                         }
                     }
                 },
@@ -731,7 +1049,7 @@ create.job = (function(){
                 'filename': {
                     validators: {
                         notEmpty: {
-                            message: gettext('The preset name is required and cannot be empty')
+                            message: gettext('The preset name is required and cannot be empty.')
                         },
                     }
                 },
