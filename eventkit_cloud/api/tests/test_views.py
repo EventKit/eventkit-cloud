@@ -115,7 +115,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -152,7 +152,7 @@ class TestJobViewSet(APITestCase):
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
                 "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data',
+                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
                              'formats': [
                                  {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
                                   "url": "http://testserver/api/formats/gpkg",
@@ -208,7 +208,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags,
@@ -221,9 +221,10 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
         logger.debug(url)
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -236,16 +237,16 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
             'tags': self.tags
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportOSMTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
@@ -267,9 +268,10 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_config_success(self, mock):
-        task_factory = mock.return_value
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -281,7 +283,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -289,9 +291,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -309,11 +311,12 @@ class TestJobViewSet(APITestCase):
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('eventkit_cloud.api.views.TaskFactory')
-    def test_create_job_with_tags(self, mock):
+    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.create_run')
+    def test_create_job_with_tags(self, create_run_mock, pickup_mock):
+        create_run_mock.return_value = "some_run_uid"
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        task_factory = mock.return_value
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [format.slug for format in ExportFormat.objects.all()]
@@ -325,7 +328,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}],
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             # 'preset': config_uid,
             'transform': '',
             'translate': '',
@@ -333,9 +336,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
-        # test the ExportTaskRunner.run_task(job_id) method gets called.
-        task_factory(job_uid)
-        task_factory.parse_tasks.assert_called_once()
+        # test that the mock methods get called.
+        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -363,7 +366,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -382,7 +385,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -401,7 +404,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -420,7 +423,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -458,7 +461,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': -3.9,  # inverted
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -495,7 +498,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data'}]  # 'formats': formats}]# missing
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -513,7 +516,7 @@ class TestJobViewSet(APITestCase):
             'ymin': 16.1,
             'xmax': 7.0,
             'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': ''}]  # invalid
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -532,7 +535,7 @@ class TestJobViewSet(APITestCase):
             'xmax': 7.0,
             'ymax': 27.6,
             'provider_tasks': [
-                {'provider': 'OpenStreetMap Data', 'formats': ['broken-format-one', 'broken-format-two']}]
+                {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
 
@@ -556,7 +559,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 13.54,
     #         'xmax': 48.52,
     #         'ymax': 20.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data, format='json')
     #
@@ -594,7 +597,7 @@ class TestJobViewSet(APITestCase):
     #         'ymin': 47.66,
     #         'xmax': 11.61,
     #         'ymax': 54.24,
-    #         'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+    #         'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
     #     }
     #     response = self.client.post(url, request_data)
     #     self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -615,7 +618,7 @@ class TestJobViewSet(APITestCase):
             'ymin': -10,
             'xmax': 40,
             'ymax': 20,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -662,7 +665,7 @@ class TestBBoxSearch(APITestCase):
                 'ymin': extent[1],
                 'xmax': extent[2],
                 'ymax': extent[3],
-                'provider_tasks': [{'provider': 'OpenStreetMap Data', 'formats': formats}]
+                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
@@ -732,6 +735,19 @@ class TestExportRunViewSet(APITestCase):
         self.job_uid = str(self.job.uid)
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
         self.run_uid = str(self.run.uid)
+
+    def test_zipfile_url_s3(self):
+        self.run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
+        self.run.save()
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        response = self.client.get(url)
+        result = response.data
+
+        self.assertEquals(
+            self.run.zipfile_url,
+            result[0]['zipfile_url']
+        )
 
     def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
@@ -916,7 +932,11 @@ class TestExportConfigViewSet(APITestCase):
 
     def test_invalid_upload(self, ):
         url = reverse('api:configs-list')
-        response = self.client.post(url, {'upload': '', 'config_type': 'TRANSFORM-WRONG'}, format='json')
+        response = self.client.post(
+            url,
+            {'upload': '', 'config_type': 'TRANSFORM-WRONG'},
+            format='json'
+        )
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @skip('Transform not implemented.')
@@ -926,7 +946,11 @@ class TestExportConfigViewSet(APITestCase):
         path = os.path.dirname(os.path.realpath(__file__))
         f = File(open(path + '/files/Example Transform.sql', 'r'))
         name = 'Test Export Config'
-        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM'}, format='JSON')
+        response = self.client.post(
+            url,
+            {'name': name, 'upload': f, 'config_type': 'TRANSFORM'},
+            format='JSON'
+        )
         data = response.data
         saved_uid = data['uid']
         saved_config = ExportConfig.objects.get(uid=saved_uid)
@@ -935,7 +959,11 @@ class TestExportConfigViewSet(APITestCase):
         url = reverse('api:configs-detail', args=[saved_uid])
         f = File(open(path + '/files/hdm_presets.xml', 'r'))
         updated_name = 'Test Export Config Updated'
-        response = self.client.put(url, {'name': updated_name, 'upload': f, 'config_type': 'PRESET'}, format='json')
+        response = self.client.put(
+            url,
+            {'name': updated_name, 'upload': f, 'config_type': 'PRESET'},
+            format='json'
+        )
         data = response.data
         updated_uid = data['uid']
         self.assertEquals(saved_uid, updated_uid)  # check its the same uid
@@ -973,9 +1001,10 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         self.run = ExportRun.objects.create(job=self.job)
         self.celery_uid = str(uuid.uuid4())
-        # provider = ExportProvider.objects.first()
-        # provider_task = ProviderTask.objects.create(provider=provider)
-        self.export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        self.export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='Shapefile Export'
+        )
         self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task,
                                               name='Shapefile Export',
                                               celery_uid=self.celery_uid, status='SUCCESS')
@@ -1033,71 +1062,14 @@ class TestStaticFunctions(APITestCase):
         provider_type.save()
 
         # Assign the type to an arbitrary provider.
-        export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
-
-        # Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
+        export_provider = ExportProvider.objects.create(
+            name="provider1",
+            export_provider_type=provider_type
+        )
+        # Get a ProviderTask object to ensure that it is only trying to process 
+        # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)
         assert len(provider_task.formats.all()) == 1
-
-
-#
-# from eventkit_cloud.api.serializers import *
-# from eventkit_cloud.jobs.models import *
-# from eventkit_cloud.api.views import get_provider_task
-#
-#
-# # format_test1 = ExportFormat.objects.create(name="Test1", slug="Test1")
-# # format_test2 = ExportFormat.objects.create(name="Test2", slug="Test2")
-# # format_test3 = ExportFormat.objects.create(name="Test3", slug="Test3")
-# #
-# # #Formats we want to process
-# # requested_types = (format_test1, format_test2)
-# #
-# # # An arbitrary provider type...
-# # provider_type = ExportProviderType.objects.create(type_name="test")
-# # # ... and the formats it actually supports.
-# # supported_formats = [format_test2, format_test3]
-# # provider_type.supported_formats.add(*supported_formats)
-# # provider_type.save()
-# #
-# # #Assign the type to an arbitrary provider.
-# # export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
-# #
-# # #Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
-# # provider_task = get_provider_task(export_provider, requested_types)
-# # assert len(provider_task.formats.all()) == 1
-#
-# format_test1 = ExportFormat.objects.filter(slug="test1")[0]
-# format_test2 = ExportFormat.objects.filter(slug="test2")[0]
-# format_test3 = ExportFormat.objects.filter(slug="test3")[0]
-#
-# #Formats we want to process
-# requested_types = (format_test1, format_test2)
-#
-# # An arbitrary provider type...
-# provider_type = ExportProviderType.objects.filter(type_name="test")[0]
-# # ... and the formats it actually supports.
-# supported_formats = [format_test2, format_test3]
-# provider_type.supported_formats.add(*supported_formats)
-# provider_type.save()
-#
-# #Assign the type to an arbitrary provider.
-# export_provider = ExportProvider.objects.filter(name="provider1", export_provider_type=provider_type)[0]
-#
-# #Get a ProviderTask object to ensure that it is only trying to process what it actually supports (1).
-# provider_task = get_provider_task(export_provider, requested_types)
-# assert len(provider_task.formats.all()) == 1
-# pts = ProviderTaskSerializer(instance=provider_task)
-# #
-# # data = {"provider": "OpenStreetMap", "formats": [{"name": "Test2", "slug": "test2"}]}
-#
-# data = [{"provider": "OpenStreetMap", "formats": ["shp", "kml", "gpkg"]}, {"provider": "provider1", "formats": ["kml", "gpkg"]}]
-# new_pts = ProviderTaskSerializer(data=data, many=True)
-# new_pts.is_valid()
-# test = new_pts.save()
-
-
-
 
 
 def date_handler(obj):

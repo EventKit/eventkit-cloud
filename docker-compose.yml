@@ -39,9 +39,12 @@ services:
       links:
         - postgis
         - rabbitmq
+      environment:
+        - LOGLEVEL=error
+        - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
-    image: mdillon/postgis
+    image: mdillon/postgis:9.5
     environment:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASSWORD=eventkit_exports
@@ -49,7 +52,7 @@ services:
     ports:
      - "5432:5432"
   rabbitmq:
-     image: rabbitmq
+     image: rabbitmq:3.6.5
      expose:
        - "5672"
   httpd:
@@ -59,6 +62,6 @@ services:
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
        - ./exports_download:/var/lib/eventkit/exports_download
-     image: httpd
+     image: httpd:2.4.23
      ports:
         - "80:80"

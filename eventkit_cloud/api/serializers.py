@@ -293,6 +293,9 @@ class ExportRunSerializer(serializers.ModelSerializer):
         if not obj.zipfile_url:
             return None
 
+        if obj.zipfile_url.startswith('http'):
+            return obj.zipfile_url
+
         # get full URL path from current request
         uri = request.build_absolute_uri() 
         uri = list(urlparse(uri))
