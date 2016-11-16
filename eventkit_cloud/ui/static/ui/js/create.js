@@ -49,9 +49,9 @@ create.job = (function(){
 
         $('#create-export-map').data('storedMap', map);
 
-        //add base layers
+        // add initial layer
         var osm = new ol.layer.Tile({
-            title: "OpenStreetMap",
+            title: "OpenStreetMap Data",
             source: new ol.source.OSM({
                 wrapX: false,
                 noWrap: true,
@@ -64,7 +64,7 @@ create.job = (function(){
                     ol.source.OSM.ATTRIBUTION
                 ]
             })
-        })
+        });
 
 
         var hotosm = Layers.HOT;
@@ -80,7 +80,7 @@ create.job = (function(){
 
         buildProviderFormats();
         buildExportFormats();
-
+        
 
         // OL3 add bounding box selection layer
 
@@ -268,15 +268,17 @@ create.job = (function(){
         $.getJSON(Config.PROVIDERS_URL, function(data){
             for (i = 0; i < data.length; i++){
                 provider = data[i];
-                if (provider.type == 'osm' || provider.type == 'osm-generic') {
-                    // Add invisible icon to keep formatting but not show a preview 
+                if (provider.name == 'OpenStreetMap Data') {
                     providersDiv.append('<div class="checkbox" id="provider-checkbox">'
-                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"/>'
-                        + '<i class="fa fa-eye-slash" style="opacity:0; cursor:default;"/></label>'
-                        + '<label style="padding-left: .3em;"><input type="checkbox" name="providers"'
+                        + '<label><input type="checkbox" style="display:none;" id="' + provider.name +'"'
+                        + 'value="' + provider.name + '"'
+                        + 'source-type="' + provider.type + '"'
+                        + 'source-url="' + provider.url + '"'
+                        + 'source-layer="' + provider.layer + '" checked="checked"/>' 
+                        + '<i class="fa fa-eye" id="' + provider.name + '"/></label>'
+                        + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
                         + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
                         + provider.name + '</label></div>');
-
                 }
                 else {
                     providersDiv.append('<div class="checkbox" id="provider-checkbox">'
@@ -301,10 +303,8 @@ create.job = (function(){
                         var sourceLayer = $(this).attr('source-layer');
                         var sourceProvider = this.value;
                         var checked = this.checked;
+                        checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
 
-                        if (sourceType != 'osm' && sourceType != 'osm-generic'){
-                            checkProviderLayer(sourceType, sourceUrl, sourceProvider, sourceLayer, checked);
-                        }
                     }
                 });
             });
@@ -316,12 +316,6 @@ create.job = (function(){
         // remove any error messages
         $("#wfsErrorMessage").remove();
         if (checked) {
-            // Enforce only one checked item at a time
-            $("#provider-selection input[id][type='checkbox']").each(function(){
-                if (this.value != provider && this.checked) {
-                    $(this).trigger("click");
-                }
-            });
             $("#provider-selection i[id='" + provider + "']").removeClass().addClass('fa fa-eye');
             addProviderLayer(type, url, layer, provider);
         }
@@ -332,7 +326,43 @@ create.job = (function(){
     }
 
     function addProviderLayer(type, url, layer, provider){
-        if (type == 'wfs') {
+        if (type == 'osm'){
+            var osm = new ol.layer.Tile({
+                title: provider,
+                source: new ol.source.OSM({
+                    wrapX: false,
+                    noWrap: true,
+                    attributions: [
+                        new ol.Attribution({
+                            html: '&copy ' +
+                            '<a href="//www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.'
+                        }),
+
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                })
+            });
+            map.addLayer(osm);
+        }
+        else if (type == 'osm-generic'){
+            var osm = new ol.layer.Tile({
+                title: provider,
+                source: new ol.source.OSM({
+                    wrapX: false,
+                    noWrap: true,
+                    attributions: [
+                        new ol.Attribution({
+                            html: '&copy ' +
+                            '<a href="//www.openstreetmap.org/copyright">OpenStreetMap</a> contributors.'
+                        }),
+
+                        ol.source.OSM.ATTRIBUTION
+                    ]
+                })
+            });
+            map.addLayer(osm);
+        }
+        else if (type == 'wfs') {
             // try adding wfs layer
             var vectorSource = new ol.source.Vector({
                 loader: function(extent) {
