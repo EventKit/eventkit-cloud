@@ -206,7 +206,7 @@ class JobViewSet(viewsets.ModelViewSet):
             transform = request.data.get('transform')
 
             with transaction.atomic():
-                if len(export_providers):
+                if export_providers:
                     for ep in export_providers:
                         ep['user'] = request.user.id
                     provider_serializer = ExportProviderJobSerializer(
