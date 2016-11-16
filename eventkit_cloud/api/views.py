@@ -205,7 +205,12 @@ class JobViewSet(viewsets.ModelViewSet):
             translation = request.data.get('translation')
             transform = request.data.get('transform')
             if len(export_providers):
-                provider_serializer = ExportProviderJobSerializer(data=export_providers, many=True)
+                for ep in export_providers:
+                    ep['user'] = request.user.id
+                provider_serializer = ExportProviderJobSerializer(
+                    data=export_providers,
+                    many=True
+                )
                 if provider_serializer.is_valid():
                     provider_serializer.save()
             if len(provider_tasks) > 0:
