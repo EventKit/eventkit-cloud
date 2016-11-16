@@ -576,41 +576,37 @@ exports.detail = (function(){
 
                         var $tr = $runDiv.find('table').find('tr#' + uid);
                         var $barTr = $runDiv.find('table').find('tr#bar' + uid);
+                        var estimatedFinish = "";
+                        
+                        if (task.estimated_finish == null){
+                            estimatedFinish = " -- -- --";
+                        }
+                        else{
+                            estimatedFinish = task.estimated_finish;
+                        }
 
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
-                            //cls = status.toLowerCase();
-                            //taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
-                            //taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
-
+                        if (status === 'PENDING' ||  status === 'FAILED') {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
-                            console.log($tr.html());
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                            console.log($tr.html());
-                            console.log($barTr.html());
-                            $barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
-                            console.log($barTr.html());
+                            $barTr.html('');
+                            //$barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
+                        }
+                            else if (status === 'RUNNING' ){
+                            $tr.removeClass();
+                            $tr.addClass(status.toLowerCase());
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $barTr.html('<td colspan="3"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td><td>Estimated Finish: '+estimatedFinish+'  </td>')
+
                         }
                         else {
-                            //cls = status.toLowerCase();
-                            //taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
-                            //taskDiv += ('<tr><td colspan="3">File Progress<div id="progressContainer'+i+'" class="progressContainer"><div id="progressbar'+i+'" class="progressbar"></div></div></td></tr>');
-
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
-                            console.log($tr.html());
                             $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
-                            //console.log($tr.html());
-                            //console.log($barTr.html());
                             $barTr.html('')
-                            //console.log($barTr.html());
                         }
                     }
                 });
-
-                //taskDiv+=('</table></div>');
-                //$(taskDiv).appendTo('#providers');
-                //$providersDiv.append('</table>')
 
                 for (j = 0; j <= progressValue.length; j++)
                 {
