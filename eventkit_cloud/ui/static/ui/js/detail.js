@@ -583,7 +583,8 @@ exports.detail = (function(){
                             estimatedFinish = " -- -- --";
                         }
                         else{
-                            estimatedFinish = task.estimated_finish;
+                            estimatedFinish = new Date(task.estimated_finish);
+                            estimatedFinish = (estimatedFinish.getMonth() + 1) + "/" + estimatedFinish.getDate() + "/" + estimatedFinish.getFullYear() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
                         if (status === 'PENDING' ||  status === 'FAILED') {
@@ -597,7 +598,7 @@ exports.detail = (function(){
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                            $barTr.html('<td colspan="3"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td><td>Estimated Finish: '+estimatedFinish+'  </td>')
+                            $barTr.html('<td colspan="3"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td><td align="right">Est. Finish: '+estimatedFinish+'  </td>')
 
                         }
                         else {
