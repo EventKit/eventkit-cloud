@@ -107,47 +107,6 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-list')
         self.assertEquals(expected, url)
 
-    def test_make_job_dup_url(self, ):
-        export_providers = ExportProvider.objects.all()
-        export_providers_start_len = len(export_providers)
-        config_uid = self.config.uid
-        formats = [format.slug for format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
-            'provider_tasks': [{
-                'provider': 'OpenStreetMap Data (Generic)',
-                'formats': formats,
-            }],
-            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0, 
-                'url': 'http://coolproviderurl.to'
-            }],
-            'preset': config_uid,
-            'transform': '',
-            'translation': ''
-	}
-        url = reverse('api:jobs-list')
-
-        response = self.client.post(url, request_data, format='json')
-        export_providers = ExportProvider.objects.all()
-        self.assertEqual(len(export_providers), export_providers_start_len + 1)
-        self.assertEqual(
-            export_providers[len(export_providers) - 1].user,
-            self.user
-        )
-
-        # should be idempontent
-        request_data['export_providers'][0]['name'] = 'test 2'
-        response = self.client.post(url, request_data, format='json')
-
-        export_providers = ExportProvider.objects.all()
-        self.assertEqual(len(export_providers), export_providers_start_len + 1)
-
     def test_make_job(self, ):
         export_providers = ExportProvider.objects.all()
         export_providers_start_len = len(export_providers)
@@ -162,7 +121,7 @@ class TestJobViewSet(APITestCase):
             'xmax': 7.0,
             'ymax': 27.6,
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
-            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0}],
+            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0, 'url': 'http://coolproviderurl.to'}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -173,6 +132,8 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
         response = json.loads(response.content)
         self.assertEqual(response['exports'][0]['provider'], 'test')
+
+        request_data['export_providers'][0]['name'] = 'test 2'
         # should be idempontent
         response = self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
