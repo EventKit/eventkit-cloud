@@ -733,6 +733,11 @@ class ExportTaskErrorHandler(Task):
 
 
 def get_progress_tracker(task_uid=None):
+    """
+    Takes a task uid to create a closure that can be updated to change the status in the ExportTask object.
+    :param task_uid: A uid to reference the ExportTask.
+    :return: A function which can be called to update the progress on an ExportTask.
+    """
     from eventkit_cloud.tasks.models import ExportTask
     if not task_uid:
         return

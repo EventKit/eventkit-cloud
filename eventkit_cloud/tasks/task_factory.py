@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class TaskFactory:
+    """
+    A class create Task Runners based on an Export Run.
+    """
     def __init__(self, ):
         self.type_task_map = {'osm-generic': ExportOSMTaskRunner, 'osm': ExportOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
@@ -25,6 +28,13 @@ class TaskFactory:
                               'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
 
     def parse_tasks(self, worker=None, run_uid=None):
+        """
+
+        :param worker: A worker node (hostname) for a celery worker, this should match the node name used when starting,
+         the celery worker.
+        :param run_uid: A uid to reference an ExportRun.
+        :return:The results from the celery chain or False.
+        """
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
@@ -107,6 +117,12 @@ class TaskFactory:
 
 
 def create_run(job_uid):
+    """
+    This will create a new Run based on the provided job uid.
+    :param job_uid: The UID to reference the Job model.
+    :return: An ExportRun object.
+    """
+
     # start the run
     try:
         # enforce max runs

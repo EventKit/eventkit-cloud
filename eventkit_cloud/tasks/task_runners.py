@@ -390,10 +390,8 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         # get the formats to export
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        # for format in formats:
         try:
             # instantiate the required class.
-            # export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
             export_tasks['gpkg'] = {'obj': create_format_task('gpkg', 'osm-generic')(), 'task_uid': None}
         except KeyError as e:
             logger.debug(e)

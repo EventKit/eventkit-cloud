@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 class TestExportTaskFactory(TestCase):
+    """
+    Test cases for the TaskFactory.
+    """
+
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
     def setUp(self, ):
