@@ -1,6 +1,6 @@
 [run]
-
 omit = */migrations/*, api/renderers.py, */__init__.py, */admin.py
+source = eventkit_cloud
 
 [report]
 exclude_lines =
@@ -26,4 +26,4 @@ exclude_lines =
 ignore_errors = True
 
 [html]
-directory = cover
+directory = coverage
