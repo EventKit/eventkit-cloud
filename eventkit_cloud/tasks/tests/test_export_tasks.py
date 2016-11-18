@@ -39,8 +39,7 @@ class TestExportTasks(TestCase):
         # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                      description='Test description', user=self.user,
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         self.job.feature_save = True
         self.job.feature_pub = True
@@ -52,13 +51,8 @@ class TestExportTasks(TestCase):
         self.assertEquals(238, len(tags))
         # save all the tags from the preset
         for tag_dict in tags:
-            tag = Tag.objects.create(
-                key=tag_dict['key'],
-                value=tag_dict['value'],
-                job=self.job,
-                data_model='osm',
-                geom_types=tag_dict['geom_types']
-            )
+            Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
+                               data_model='osm', geom_types=tag_dict['geom_types'])
         self.assertEquals(238, self.job.tags.all().count())
 
     @patch('celery.app.task.Task.request')
@@ -288,12 +282,8 @@ class TestExportTasks(TestCase):
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            celery_uid=celery_uid,
-            status='RUNNING',
-            name=shp_export_task.name
-        )
+        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                  status='RUNNING', name=shp_export_task.name)
         shp_export_task = ShpExportTask()
         download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
         expected_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid), download_file])
@@ -306,6 +296,7 @@ class TestExportTasks(TestCase):
         os_stat.assert_called_once_with(download_url)
         exists.assert_has_calls([call(run_dir)])
         mkdirs.assert_has_calls([call(run_dir)])
+        shutil_copy.assert_called_once()
         task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         result = task.result
@@ -323,14 +314,8 @@ class TestExportTasks(TestCase):
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            celery_uid=celery_uid,
-            status='RUNNING',
-            name=shp_export_task.name
-        )
-        exc = None
-        exc_info = None
+        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                  status='RUNNING', name=shp_export_task.name)
         try:
             raise ValueError('some unexpected error')
         except ValueError as e:
@@ -355,15 +340,10 @@ class TestExportTasks(TestCase):
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         celery_uid = str(uuid.uuid4())
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            celery_uid=celery_uid,
-            status='RUNNING',
-            name=task.name
-        )
+        succeeded_task = ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                                   status='RUNNING', name=task.name)
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         result = task.run(run_uid=run_uid, task_uid=succeeded_task.uid, job_name='testjob')
-        expected_result = stage_dir + 'testjob_preset.xml'
         config = self.job.configs.all()[0]
         expected_path = config.upload.path
         self.assertEquals(result['result'], expected_path)
@@ -375,30 +355,32 @@ class TestExportTasks(TestCase):
         class MockZipFile:
             def __init__(self):
                 self.files = {}
+
             def __iter__(self):
                 return iter(self.files)
-            def write(self, fname, **kw):
-                arcname = kw.get('arcname', fname)
-                self.files[arcname] = fname
+
+            def write(self, filename, **kw):
+                arcname = kw.get('arcname', filename)
+                self.files[arcname] = filename
 
             def __exit__(self, *args, **kw):
                 pass
+
             def __enter__(self, *args, **kw):
                 return self
 
-        celery_uid = str(uuid.uuid4())
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
         self.run.job.save()
         stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
-        
+
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         mock_os_walk.return_value = [(
             '/var/lib/eventkit/exports_staging/' + run_uid + '/osm-vector',
             None,
-            ['test.gpkg', 'test.osm'] # osm should get filtered out
+            ['test.gpkg', 'test.osm']  # osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = 'test-osm-vector-%s.gpkg' % (date,)
@@ -406,9 +388,9 @@ class TestExportTasks(TestCase):
         result = task.run(run_uid=run_uid, stage_dir=stage_dir)
 
         self.assertEqual(
-             zipfile.files,
-             {fname: '/var/lib/eventkit/exports_staging/' + 
-                     run_uid + '/osm-vector/test.gpkg',
+            zipfile.files,
+            {fname: '/var/lib/eventkit/exports_staging/' +
+                    run_uid + '/osm-vector/test.gpkg',
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
@@ -436,12 +418,8 @@ class TestExportTasks(TestCase):
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            celery_uid=celery_uid,
-            status='SUCCESS',
-            name='Default Shapefile Export'
-        )
+        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                  status='SUCCESS', name='Default Shapefile Export')
         task = FinalizeRunTask()
         self.assertEquals('Finalize Export Run', task.name)
         task.run(run_uid=run_uid, stage_dir=stage_dir)
@@ -449,7 +427,6 @@ class TestExportTasks(TestCase):
         msg = Mock()
         email.return_value = msg
         msg.send.assert_called_once()
-        # self.assertEquals('SUCCESS', self.run.status)
 
     @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')
@@ -462,13 +439,9 @@ class TestExportTasks(TestCase):
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            uid=task_id,
-            celery_uid=celery_uid,
-            status='FAILED',
-            name='Default Shapefile Export'
-        )
+        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_id,
+                                  celery_uid=celery_uid, status='FAILED',
+                                  name='Default Shapefile Export')
         task = ExportTaskErrorHandler()
         self.assertEquals('Export Task Error Handler', task.name)
         task.run(run_uid=run_uid, task_id=task_id, stage_dir=stage_dir)
@@ -481,11 +454,10 @@ class TestExportTasks(TestCase):
     def test_progress_tracker(self):
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='test_provider_task')
         saved_export_task_uid = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
-                                                      name="test_task").uid
+                                                          name="test_task").uid
         progress_tracker = get_progress_tracker(task_uid=saved_export_task_uid)
         estimated = timezone.now()
         progress_tracker(progress=50, estimated_finish=estimated)
         export_task = ExportTask.objects.get(uid=saved_export_task_uid)
         self.assertEquals(export_task.progress, 50)
         self.assertEquals(export_task.estimated_finish, estimated)
-

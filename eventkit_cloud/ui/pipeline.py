@@ -39,17 +39,18 @@ def email_validation(strategy, backend, code):  # pragma: no cover
     """
     signature = signing.dumps({"session_key": strategy.session.session_key, "email": code.email},
                               key=settings.SECRET_KEY)
-    verifyURL = "{0}?verification_code={1}&signature={2}".format(
+    verify_url = "{0}?verification_code={1}&signature={2}".format(
         reverse('osm:complete', args=(backend.name,)),
         code.code, signature)
-    verifyURL = strategy.request.build_absolute_uri(verifyURL)
+    verify_url = strategy.request.build_absolute_uri(verify_url)
     ctx = {
-            'verifyUrl': verifyURL,
+        'verifyUrl': verify_url,
     }
     subject = "Please verify your email address"
     text = get_template('osm/verify_osm_email.txt').render(Context(ctx))
     html = get_template('osm/verify_osm_email.html').render(Context(ctx))
-    msg = EmailMultiAlternatives(subject, text, to=[code.email], from_email="HOT Exports <exports@hotosm.org>")
+    msg = EmailMultiAlternatives(subject, text, to=[code.email], from_email=getattr(settings, "DEFAULT_FROM_EMAIL",
+                                                                                    "Eventkit Team <eventkit.team@gmail.com>"))
     msg.attach_alternative(html, "text/html")
     msg.send()
 
@@ -87,5 +88,6 @@ def partial_pipeline_data(backend, user=None, *args, **kwargs):  # pragma: no co
             return xargs, xkwargs
         else:
             backend.strategy.clean_partial_pipeline()
+
 
 utils.partial_pipeline_data = partial_pipeline_data

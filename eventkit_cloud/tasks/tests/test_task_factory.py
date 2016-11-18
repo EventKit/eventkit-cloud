@@ -16,19 +16,16 @@ logger = logging.getLogger(__name__)
 
 
 class TestExportTaskFactory(TestCase):
-
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', user=self.user,
-                                 the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
+                                      the_geom=the_geom)
         provider = ExportProvider.objects.first()
         provider_task = ProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)

@@ -10,4 +10,26 @@ if __name__ == "__main__":
 
     from django.core.management import execute_from_command_line
 
-    execute_from_command_line(sys.argv)
+    if os.getenv("COVERAGE"):
+        is_testing = 'test' in sys.argv
+
+        if is_testing:
+            import coverage
+
+            cov = coverage.coverage(source=['eventkit_cloud.api',
+                                            'eventkit_cloud.jobs',
+                                            'eventkit_cloud.tasks',
+                                            'eventkit_cloud.ui'],
+                                    omit=['*/tests/*', '*/migrations/*'])
+            cov.erase()
+            cov.start()
+
+        execute_from_command_line(sys.argv)
+
+        if is_testing:
+            cov.stop()
+            cov.save()
+            cov.report()
+            cov.html_report(directory='coverage')
+    else:
+        execute_from_command_line(sys.argv)

@@ -20,7 +20,7 @@ from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg, 
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite,
 )
 import socket
@@ -37,6 +37,9 @@ class ExportTask(Task):
     """
     Abstract base class for export tasks.
     """
+
+    def run(self, *args, **kwargs):
+        pass
 
     # whether to abort the whole run if this task fails.
     abort_on_error = False
@@ -87,7 +90,7 @@ class ExportTask(Task):
                     if not os.path.exists(run_dir):
                         os.makedirs(run_dir)
                     # don't copy raw run_dir data
-                    if (task.name != 'OverpassQuery'):
+                    if task.name != 'OverpassQuery':
                         shutil.copy(output_url, download_path)
                 except IOError:
                     logger.error('Error copying output file to: {0}'.format(download_path))
@@ -151,7 +154,7 @@ class ExportTask(Task):
         """
         started = timezone.now()
         from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
-        celery_uid = self.request.id
+        self.request.id
         try:
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
@@ -163,7 +166,7 @@ class ExportTask(Task):
             task.export_provider_task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
         except DatabaseError as e:
-            logger.error('Updating task {0} state throws: {1}'.format(task.name, e))
+            logger.error('Updating task {0} state throws: {1}'.format(task_uid, e))
             raise e
 
 
@@ -235,8 +238,8 @@ class OSMPrepSchemaTask(ExportTask):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
-        osmconf = os.path.join(stage_dir, '{0}.ini'.format(job_name))
-        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf)
+        osmconf_ini = os.path.join(stage_dir, '{0}.ini'.format(job_name))
+        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf_ini)
         osmparser.create_geopackage()
         osmparser.create_default_schema_gpkg()
         osmparser.update_zindexes()
@@ -256,12 +259,12 @@ class ThematicShpExportTask(ExportTask):
 
         from eventkit_cloud.tasks.models import ExportRun
         self.update_task_state(task_uid=task_uid)
-        run = ExportRun.objects.get(uid=run_uid)
-        thematic_gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        shapefile = os.path.join(stage_dir,'{0}_shp'.format(job_name))
+        ExportRun.objects.get(uid=run_uid)
+        thematic_gpkg_file = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
         try:
-            t2s = shp.GPKGToShp(gpkg=thematic_gpkg, shapefile=shapefile)
+            t2s = shp.GPKGToShp(gpkg=thematic_gpkg_file, shapefile=shapefile)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
@@ -303,7 +306,7 @@ class ShpExportTask(ExportTask):
 
         self.update_task_state(task_uid=task_uid)
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
-        shapefile = os.path.join(stage_dir,'{0}_generic_shp'.format(job_name))
+        shapefile = os.path.join(stage_dir, '{0}_generic_shp'.format(job_name))
 
         try:
             s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
@@ -385,6 +388,7 @@ class ThematicSQLiteExportTask(ExportTask):
             logger.error('Raised exception in thematic geopackage export, %s', str(e))
             raise Exception(e)
 
+
 class ThematicKmlExportTask(ExportTask):
     """
     Class defining kml export
@@ -392,7 +396,7 @@ class ThematicKmlExportTask(ExportTask):
     """
     name = 'KML Format'
 
-    def run(self, run_uid=None, task_uid= None, stage_dir=None, job_name=None):
+    def run(self, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
         self.update_task_state(task_uid=task_uid)
         gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
@@ -403,7 +407,6 @@ class ThematicKmlExportTask(ExportTask):
         except Exception as e:
             logger.error('Raised exception in kml export, %s', str(e))
             raise Exception(e)
-
 
 
 class WFSExportTask(ExportTask):
@@ -514,11 +517,8 @@ class GeneratePresetTask(ExportTask):
             name = job.name
             filename = job_name + '_preset.xml'
             content_type = 'application/xml'
-            config = ExportConfig.objects.create(
-                name=name, filename=filename,
-                config_type='PRESET', content_type=content_type,
-                user=user, published=feature_pub
-            )
+            config = ExportConfig.objects.create(name=name, filename=filename, config_type='PRESET',
+                                                 content_type=content_type, user=user, published=feature_pub)
             config.upload.save(filename, preset_file)
 
             output_path = config.upload.path
@@ -594,7 +594,7 @@ class ZipFileTask(Task):
             files += [
                 os.path.join(root, filename) for filename in filenames
                 if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS
-            ]
+                ]
 
         run = ExportRunModel.objects.get(uid=run_uid)
 
@@ -618,10 +618,10 @@ class ZipFileTask(Task):
                 provider_slug = os.path.split(provider_slug)[1]
 
                 filename = '{0}-{1}-{2}{3}'.format(
-                     name,
-                     provider_slug,
-                     date,
-                     ext
+                    name,
+                    provider_slug,
+                    date,
+                    ext
                 )
                 zipfile.write(
                     filepath,
@@ -712,7 +712,7 @@ class ExportTaskErrorHandler(Task):
                 # leave the stage_dir in place for debugging
                 shutil.rmtree(stage_dir)
                 # pass
-        except IOError as e:
+        except IOError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
@@ -744,12 +744,9 @@ def get_progress_tracker(task_uid=None):
             progress = 100
         export_task = ExportTask.objects.get(uid=task_uid)
         if progress:
-            # print("UPDATING PROGRESS TO {0}".format(progress))
             export_task.progress = progress
         if estimated_finish:
-            # print("UPDATING estimated_finish TO {0}".format(estimated_finish))
             export_task.estimated_finish = estimated_finish
         export_task.save()
+
     return progress_tracker
-
-

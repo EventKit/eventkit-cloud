@@ -1,12 +1,13 @@
 from django.contrib import admin
-from django.template import RequestContext  
+from django.template import RequestContext
 from django.conf.urls import patterns, url
 from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
-from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, ProviderTask
+from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
+    ProviderTask
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProvider)
@@ -39,39 +40,41 @@ class JobAdmin(OSMGeoAdmin):
     list_display = ['uid', 'name', 'user', 'region']
     exclude = ['the_geom', 'the_geog']
     actions = ['select_exports']
-    
+
     update_template = 'admin/update_regions.html'
     update_complete_template = 'admin/update_complete.html'
-    
-    def select_exports(self, request, queryset):
+
+    def select_exports(self, request):
         """
         Select exports to update.
         """
         selected = ','.join(request.POST.getlist(admin.ACTION_CHECKBOX_NAME))
         regions = Region.objects.all()
-        
+
+        # noinspection PyProtectedMember
         return render_to_response(self.update_template, {
             'regions': regions,
             'selected': selected,
             'opts': self.model._meta,
         }, context_instance=RequestContext(request))
-    
+
     select_exports.short_description = "Assign a region to the selected exports"
-    
+
     def update_exports(self, request):
         """
         Update selected exports.
         """
-        selected = request.POST.get('selected','')
+        selected = request.POST.get('selected', '')
         num_selected = len(selected.split(','))
-        region_uid = request.POST.get('region','')
+        region_uid = request.POST.get('region', '')
         region = Region.objects.get(uid=region_uid)
-        for id in selected.split(','):
-            export = Job.objects.get(id=id)
+        for selected_id in selected.split(','):
+            export = Job.objects.get(id=selected_id)
             export.region = region
             export.save()
-            
+
         messages.success(request, '{0} exports updated.'.format(num_selected))
+        # noinspection PyProtectedMember
         return render_to_response(self.update_complete_template, {
             'num_selected': len(selected.split(',')),
             'region': region.name,
@@ -81,11 +84,11 @@ class JobAdmin(OSMGeoAdmin):
     def get_urls(self):
         urls = super(JobAdmin, self).get_urls()
         update_urls = patterns('',
-            url(r'^select/$', self.admin_site.admin_view(self.select_exports)),
-            url(r'^update/$', self.admin_site.admin_view(self.update_exports), name="update_regions"),
-        )
+                               url(r'^select/$', self.admin_site.admin_view(self.select_exports)),
+                               url(r'^update/$', self.admin_site.admin_view(self.update_exports),
+                                   name="update_regions"),
+                               )
         return update_urls + urls
-
 
 
 class ExportConfigAdmin(admin.ModelAdmin):

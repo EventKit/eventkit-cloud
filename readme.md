@@ -1,6 +1,8 @@
 Eventkit-Cloud
 ==============
 
+[![Coverage Status](https://coveralls.io/repos/github/terranodo/eventkit-cloud/badge.svg?branch=master)](https://coveralls.io/github/terranodo/eventkit-cloud?branch=master)
+
 Eventkit-cloud is based on the [HOT OSM Export Tool 2](https://github.com/hotosm/osm-export-tool2).  It allows the user to select data from different sources to export into a variety of formats.
   
 ## Getting Started
