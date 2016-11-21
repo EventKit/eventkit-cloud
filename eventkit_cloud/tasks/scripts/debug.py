@@ -9,6 +9,9 @@ import socket
 
 
 class TestTask(ExportTask):
+    def run(self, *args, **kwargs):
+        super(TestTask, self).run(*args, **kwargs)
+
     def on_success(self, retval, task_id, args, kwargs):
         print("SUCCESS FOR {0}".format(task_id))
 
@@ -26,7 +29,7 @@ class ExampleTask(TestTask):
 class FailureTask(TestTask):
     def run(self, job_num=None, task_num=None, result=None):
         print("RUNNING TASK {0}.{1}".format(job_num, task_num))
-        raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
+        # raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
         return {'result': result}
 
 
@@ -53,7 +56,8 @@ def create_task_factory(name, job_num):
 
     return chord(group([run_1, run_2, run_3]),
                  body=FinalTask().si(job_num=job_num, task_num=8, result="File8").set(queue=name,
-                     link_error=[FinalTask().si().set(queue=name)])).apply_async(
+                                                                                      link_error=[FinalTask().si().set(
+                                                                                          queue=name)])).apply_async(
         expires=datetime.now() + timedelta(days=1))
 
 

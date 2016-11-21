@@ -7,7 +7,7 @@ var Layers = {};
 
 Layers.OSM = new ol.layer.Tile({
     title: "OpenStreetMap",
-    source: new ol.source.OSM()})
+    source: new ol.source.OSM()});
 //Layers.OSM = new OpenLayers.Layer.OSM("OpenStreetMap");
 
 

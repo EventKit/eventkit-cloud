@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
 import logging
 import os
 from StringIO import StringIO
-from unittest import skip
 
 from lxml import etree
 
@@ -23,11 +21,10 @@ logger = logging.getLogger(__name__)
 
 
 class TestPresetParser(TestCase):
-
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
 
-    def test_parse_preset(self,):
+    def test_parse_preset(self, ):
         parser = PresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
@@ -60,37 +57,31 @@ class TestPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_build_hdm_preset_dict(self,):
+    def test_build_hdm_preset_dict(self, ):
         parser = PresetParser(self.path + '/files/hdm_presets.xml')
-        group_dict = parser.build_hdm_preset_dict()
-        # logger.debug(group_dict)
-        # logger.debug(json.dumps(group_dict, indent=4, sort_keys=True))
+        parser.build_hdm_preset_dict()
 
-    def test_build_osm_preset_dict(self,):
+    def test_build_osm_preset_dict(self, ):
         parser = PresetParser(self.path + '/files/osm_presets.xml')
-        group_dict = parser.build_hdm_preset_dict()
-        # logger.debug(group_dict)
-        # logger.debug(json.dumps(group_dict, indent=4, sort_keys=True))
+        parser.build_hdm_preset_dict()
 
 
 class TestUnfilteredPresetParser(TestCase):
-
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', event='Nepal activation',
-                                 user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description',
+                                      event='Nepal activation', user=self.user, the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
         self.job.save()
 
-    def test_parse_preset(self,):
+    def test_parse_preset(self, ):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
@@ -114,17 +105,13 @@ class TestUnfilteredPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_build_hdm_preset_dict(self,):
+    def test_build_hdm_preset_dict(self, ):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
-        group_dict = parser.build_hdm_preset_dict()
-        # logger.debug(group_dict)
-        # logger.debug(json.dumps(group_dict, indent=4, sort_keys=True))
+        parser.build_hdm_preset_dict()
 
-    def test_build_osm_preset_dict(self,):
+    def test_build_osm_preset_dict(self, ):
         parser = UnfilteredPresetParser(self.path + '/files/osm_presets.xml')
-        group_dict = parser.build_hdm_preset_dict()
-        # logger.debug(group_dict)
-        # logger.debug(json.dumps(group_dict, indent=4, sort_keys=True))
+        parser.build_hdm_preset_dict()
 
     def test_save_tags(self, ):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
@@ -132,15 +119,9 @@ class TestUnfilteredPresetParser(TestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
         for tag_dict in tags:
-            tag = Tag.objects.create(
-                name=tag_dict['name'],
-                key=tag_dict['key'],
-                value=tag_dict['value'],
-                job=self.job,
-                data_model='PRESET',
-                geom_types=tag_dict['geom_types'],
-                groups=tag_dict['groups']
-            )
+            Tag.objects.create(name=tag_dict['name'], key=tag_dict['key'], value=tag_dict['value'],
+                               job=self.job, data_model='PRESET', geom_types=tag_dict['geom_types'],
+                               groups=tag_dict['groups'])
         self.assertEquals(233, self.job.tags.all().count())
 
 
@@ -154,9 +135,8 @@ class TestTagParser(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', event='Nepal activation',
-                                 user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description',
+                                      event='Nepal activation', user=self.user, the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
@@ -168,18 +148,12 @@ class TestTagParser(TestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(238, len(tags))
         for tag_dict in tags:
-            tag = Tag.objects.create(
-                name=tag_dict['name'],
-                key=tag_dict['key'],
-                value=tag_dict['value'],
-                job=self.job,
-                data_model='PRESET',
-                geom_types=tag_dict['geom_types'],
-                groups=tag_dict['groups']
-            )
+            Tag.objects.create(name=tag_dict['name'], key=tag_dict['key'], value=tag_dict['value'],
+                               job=self.job, data_model='PRESET', geom_types=tag_dict['geom_types'],
+                               groups=tag_dict['groups'])
         self.assertEquals(238, self.job.tags.all().count())
 
-    def test_parse_tags(self,):
+    def test_parse_tags(self, ):
         job = Job.objects.all()[0]
         tag_parser = TagParser(tags=job.tags.all())
         xml = tag_parser.parse_tags()
@@ -187,11 +161,8 @@ class TestTagParser(TestCase):
         name = 'Custom HDM Preset'
         filename = 'hdm_custom_preset.xml'
         content_type = 'application/xml'
-        config = ExportConfig.objects.create(
-            name=name, filename=filename,
-            config_type='PRESET', content_type=content_type,
-            user=self.user
-        )
+        config = ExportConfig.objects.create(name=name, filename=filename, config_type='PRESET',
+                                             content_type=content_type, user=self.user)
         config.upload.save(filename, test_file)
         self.assertIsNotNone(config)
         uid = config.uid

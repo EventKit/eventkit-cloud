@@ -27,19 +27,12 @@ class TestThematicGPKG(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', event='Nepal activation',
-                                 user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description',
+                                      event='Nepal activation', user=self.user, the_geom=the_geom)
         tags_dict = parser.parse()
         for entry in self.tags:
-            tag = Tag.objects.create(
-                name=entry['name'],
-                key=entry['key'],
-                value=entry['value'],
-                geom_types=entry['geom_types'],
-                data_model='PRESET',
-                job=self.job
-            )
+            tag = Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
+                                     geom_types=entry['geom_types'], data_model='PRESET', job=self.job)
 
     @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
     @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')

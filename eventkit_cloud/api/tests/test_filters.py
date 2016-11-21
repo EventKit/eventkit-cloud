@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from mock import patch
-
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 
@@ -16,30 +14,34 @@ logger = logging.getLogger(__name__)
 
 
 class TestJobFilter(APITestCase):
-
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
-    def setUp(self,):
+    def __init__(self, *args, **kwargs):
+        self.user1 = None
+        self.user2 = None
+        self.job1 = None
+        self.job2 = None
+        super(TestJobFilter, self).__init__(*args, **kwargs)
+
+    def setUp(self, ):
         Group.objects.create(name='TestDefaultExportExtentGroup')
+        extents = (-3.9, 16.1, 7.0, 27.6)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
         self.user1 = User.objects.create_user(
             username='demo1', email='demo@demo.com', password='demo'
         )
         self.user2 = User.objects.create_user(
             username='demo2', email='demo@demo.com', password='demo'
         )
-        extents = (-3.9, 16.1, 7.0, 27.6)
-        bbox = Polygon.from_bbox(extents)
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job1 = Job.objects.create(name='TestJob1',
-                                 description='Test description', user=self.user1,
-                                 the_geom=the_geom)
-        self.job2 = Job.objects.create(name='TestJob2',
-                                 description='Test description', user=self.user2,
-                                 the_geom=the_geom)
-        format = ExportFormat.objects.get(slug='shp')
+        self.job1 = Job.objects.create(name='TestJob1', description='Test description', user=self.user1,
+                                       the_geom=the_geom)
+        self.job2 = Job.objects.create(name='TestJob2', description='Test description', user=self.user2,
+                                       the_geom=the_geom)
+        export_format = ExportFormat.objects.get(slug='shp')
         export_provider = ExportProvider.objects.get(slug='osm-generic')
         provider_task = ProviderTask.objects.create(provider=export_provider)
-        provider_task.formats.add(format)
+        provider_task.formats.add(export_format)
         self.job1.provider_tasks.add(provider_task)
         self.job2.provider_tasks.add(provider_task)
         token = Token.objects.create(user=self.user1)
