@@ -22,7 +22,9 @@ before_install:
     - sudo mkdir -p /home/ubuntu/export_staging
     - sudo chmod 777 /home/ubuntu/export_staging
 
-install: pip install --user -r requirements-dev.txt
+install:
+    - pip install --user -r requirements-dev.txt
+    - pip install coveralls
 
 before_script:
     - sudo -u postgres psql -c 'create database eventkit_exports;'
