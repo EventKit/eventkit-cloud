@@ -5,7 +5,6 @@ import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
 import sys
-from .voyagersearch import export_voyager_data
 from django.db import IntegrityError
 from django.conf import settings
 
@@ -24,15 +23,6 @@ def create_conf_from_wms(wms_url, name="Eventkit", bbox=None):
     except yaml.YAMLError as exc:
         log.error(exc)
     # Need function to load mapproxy yaml
-
-
-def create_confs_from_voyager(service_list, base_url, bbox=None):
-    service_list = export_voyager_data(service_list, base_url)
-    for service in service_list:
-        if 'wms' in service.get('format'):
-            if not service.get('url'):
-                return
-            create_conf_from_wms(service.get('url'), name=service.get('title'))
 
 
 def get_layers(layers):
