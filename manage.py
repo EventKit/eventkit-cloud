@@ -16,11 +16,6 @@ if __name__ == "__main__":
         if is_testing:
             import coverage
 
-            # cov = coverage.coverage(source=['eventkit_cloud.api',
-            #                                 'eventkit_cloud.jobs',
-            #                                 'eventkit_cloud.tasks',
-            #                                 'eventkit_cloud.ui'],
-            #                         omit=['*/tests/*', '*/migrations/*'])
             cov = coverage.coverage(config_file=".coveragerc",
                                     source=["eventkit_cloud"])
             cov.erase()
