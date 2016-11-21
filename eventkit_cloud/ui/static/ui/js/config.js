@@ -14,7 +14,8 @@ Config.JOBS_URL = '/api/jobs';
 Config.RUNS_URL = '/api/runs';
 Config.RERUN_URL = '/api/rerun?job_uid=';
 Config.EXPORT_FORMATS_URL = '/api/formats.json';
-Config.PROVIDERS_URL = '/api/providers.json';
+Config.PROVIDER_TAKS_URL = '/api/provider_tasks';
+Config.RUNS_URL = '/api/runs';
 Config.CONFIGURATION_URL = '/api/configurations';
 
 

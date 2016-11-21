@@ -447,8 +447,10 @@ exports.detail = (function(){
             var providers = run.provider_tasks;
             $.each(providers, function (i, provider) {
                 var name = provider.name;
-                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
+                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td><i class="fa fa-times" style="color:red; right:100%;" id="cancel-' + provider.uid + '"/></tr>');
                 // add task info
+
+                $("cancel-" + provider.uid).click(cancelProvider(provider.uid, name));
 
                 var taskDiv = '<div><table border=0 class="table table-condensed">';
                 var tasks = provider.tasks;
@@ -489,6 +491,29 @@ exports.detail = (function(){
                 }
             });
         });
+    }
+
+    function cancelProvider(provider_uid, provider_name) {
+        var url = Config.PROVIDER_TAKS_URL + '/' + provider_uid;
+        $("cancel-" + provider_uid).removeClass().addClass('fa fa-cog fa-spin');
+        if (confirm("Are you sure you want to cancel the " + provider_name + " task?")) {
+            $.ajax({
+                url: url,
+                data: {'cancel': true},
+                dataType: 'json',
+                cache: false,
+                method: 'patch',
+                success: function () {
+                    startRunCheckInterval();
+                },
+                failure: function () {
+                    alert(provider_name + " could not be canceled at this time.");
+                    $("cancel-" + provider_uid).removeClass().addClass('fa fa-cog fa-spin');
+                }
+            });
+        }
+    }
+        return false;
     }
 
     /**
