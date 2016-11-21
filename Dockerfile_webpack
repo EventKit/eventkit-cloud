@@ -1,0 +1,13 @@
+FROM node:7.1.0-slim
+
+# Create app directory
+WORKDIR /var/lib/eventkit
+COPY ./config/package.json /var/lib/eventkit/
+RUN npm install npm@4.0.2
+RUN npm install
+RUN npm install webpack -g
+
+COPY ./config/webpack.config.js /var/lib/eventkit/
+
+# CMD ["sh", "-c", "tail -f /dev/null"]
+CMD ["webpack"]

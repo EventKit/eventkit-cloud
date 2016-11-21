@@ -65,3 +65,9 @@ services:
      image: httpd:2.4.23
      ports:
         - "80:80"
+  webpack:
+     build:
+       context: .
+       dockerfile: Dockerfile_webpack
+     volumes:
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
