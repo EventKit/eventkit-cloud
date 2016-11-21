@@ -47,7 +47,7 @@ addons:
     - cloud.eventkit.dev
 
 env:
-  - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports BROKER_URL=amqp://guest:guest@rabbitmq:5672/ DEBUG=True C_FORCE_ROOT=True PRODUCTION=True SITE_NAME=cloud.eventkit.dev EXPORT_STAGING_ROOT=/home/ubuntu/export_staging/ EXPORT_DOWNLOAD_ROOT=/home/ubuntu/exports_download/ AWS_BUCKET_NAME='eventkit'
+  - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports BROKER_URL=amqp://guest:guest@rabbitmq:5672/ DEBUG=True C_FORCE_ROOT=True PRODUCTION=True SITE_NAME=cloud.eventkit.dev EXPORT_STAGING_ROOT=/home/ubuntu/export_staging/ EXPORT_DOWNLOAD_ROOT=/home/ubuntu/exports_download/ AWS_BUCKET_NAME='eventkit' COVERAGE='True'
 
 after_success:
   - coveralls
