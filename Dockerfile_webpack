@@ -5,9 +5,14 @@ WORKDIR /var/lib/eventkit
 COPY ./config/package.json /var/lib/eventkit/
 RUN npm install npm@4.0.2
 RUN npm install
-RUN npm install webpack -g
+RUN npm install webpack webpack-dev-server -g
 
 COPY ./config/webpack.config.js /var/lib/eventkit/
+COPY ./scripts/webpack-entrypoint.sh /var/lib/eventkit/scripts/
 
-# CMD ["sh", "-c", "tail -f /dev/null"]
-CMD ["webpack"]
+
+ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/webpack-entrypoint.sh"]
+CMD ["echo", "Override this command in the docker-compose.yaml"]
+# ENTRYPOINT ["webpack-dev-server"]
+# CMD ["--host", "0.0.0.0", "--port", "8080", "--content-base", "eventkit_cloud/ui/static/ui", "--inline", "--hot"]
+#webpack-dev-server --content-base build/
