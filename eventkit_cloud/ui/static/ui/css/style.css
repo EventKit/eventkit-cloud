@@ -311,8 +311,6 @@ span#submit-spinner i {
 }
 
 #create-job-wizard ul.nav-pills {
-    font-size: medium ;
-    float: left ;
     font-size: small;
     font-weight: 500;
     position: relative !important;

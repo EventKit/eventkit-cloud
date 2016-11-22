@@ -7,23 +7,24 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import RequestContext, redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from ..jobs.models import user_owns_job
 from functools import wraps
 
 
-def user_verification_required(func=None):
-    """
-
-    :param func: A view with a signature (request, uuid) where uuid is a job_uid.
-    :return: The view if the user is authorized, else an unauthorized view.
-    """
-    @wraps(func)
-    def wrapper(request, uuid):
-        # if user_owns_job(request.user, job_uid=uuid):
-            return func(request, uuid)
-        # else:
-        #     return not_allowed_error_view(request)
-    return wrapper
+# def user_verification_required(func=None):
+#     """
+#     This is currently not implemented, but left here so that if it was to be added it would be straight forward.
+#     :param func: A view with a signature (request, uuid) where uuid is a job_uid.
+#     :return: The view if the user is authorized, else an unauthorized view.
+#     """
+#
+#     @wraps(func)
+#     def wrapper(request, uuid):
+#         # if user_owns_job(request.user, job_uid=uuid):
+#         return func(request, uuid)
+#         # else:
+#         #     return not_allowed_error_view(request)
+#
+#     return wrapper
 
 
 @require_http_methods(['GET'])
@@ -42,13 +43,12 @@ def create_export(request):
     return render_to_response('ui/create.html', context, RequestContext(request))
 
 
-@user_verification_required
+# @user_verification_required
 @require_http_methods(['GET'])
 def clone_export(request, uuid=None):
     """
     Handles display of the clone export page.
     """
-    user = request.user
     max_extent = {'extent': settings.JOB_MAX_EXTENT}  # default
     user = request.user
     for group in user.groups.all():
@@ -60,9 +60,9 @@ def clone_export(request, uuid=None):
     return render_to_response('ui/clone.html', context, RequestContext(request))
 
 
-@user_verification_required
+# @user_verification_required
 @require_http_methods(['GET'])
-def view_export(request, uuid=None):
+def view_export(request, uuid=None):  # NOQA
     """
     Handles display of the clone export page.
     """
@@ -72,8 +72,6 @@ def view_export(request, uuid=None):
 
 
 def login(request):
-    exports_url = reverse('list')
-    help_url = reverse('help')
     if not request.user.is_authenticated():
         return redirect('login')
     else:
@@ -82,10 +80,9 @@ def login(request):
 
 def logout(request):
     """Logs out user"""
-    exports_url = reverse('list')
-    help_url = reverse('help')
     auth_logout(request)
     return redirect('login')
+
 
 def require_email(request):
     """
@@ -131,7 +128,6 @@ def help_features(request):
 
 @require_http_methods(['GET'])
 def help_exports(request):
-    help_main_url = reverse('help')
     export_url = reverse('list')
     return render_to_response(
         'help/help_exports.html', {'export_url': export_url}, RequestContext(request)
@@ -173,5 +169,3 @@ def not_found_error_view(request):
 
 def not_allowed_error_view(request):
     return render_to_response('ui/403.html', {}, RequestContext(request), status=403)
-
-

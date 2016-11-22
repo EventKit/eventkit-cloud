@@ -8,7 +8,7 @@ from lxml import etree
 logger = logging.getLogger(__name__)
 
 
-class PresetParser():
+class PresetParser:
     """
     Create Tag model instances from HDM or OSM presets.
 
@@ -36,7 +36,7 @@ class PresetParser():
         self.preset = preset
         self.tags = []
 
-    def parse(self,):
+    def parse(self, ):
         """Read in the JOSM Preset and processes the 'item' elements."""
         f = open(self.preset)
         xml = f.read()
@@ -77,10 +77,7 @@ class PresetParser():
         if len(keys) > 0 and geometrytypes:
             key = keys[0].get('key')
             value = keys[0].get('value')
-            tag = {}
-            tag['name'] = item.get('name')
-            tag['key'] = key
-            tag['value'] = value
+            tag = {'name': item.get('name'), 'key': key, 'value': value}
             geom_types = []
             for geomtype in geometrytypes:
                 geom_types.append(geomtype)
@@ -130,7 +127,7 @@ class PresetParser():
             item_dict = {}
             name = item.get('name')
             types = item.get('type')  # get the type attr on the item element
-            if types == None:
+            if types is None:
                 continue  # pass those items with no geom type
             geom_types = self.get_geometrytype(types)
             keys = item.xpath('./ns:key', namespaces=self.namespaces)
@@ -150,7 +147,7 @@ class PresetParser():
             self._parse_group(sub_group, sub_group_dict)
 
 
-class UnfilteredPresetParser():
+class UnfilteredPresetParser:
     """
     Parses uploaded JOSM Presets and creates Tag model instances based on
     the contents of the preset file. See jobs.models.Tag for the instance fields.
@@ -178,7 +175,7 @@ class UnfilteredPresetParser():
         self.tags = []
         self.keys = []
 
-    def parse(self,):
+    def parse(self, ):
         """Read in the JOSM Preset and processes the 'item' elements."""
         f = open(self.preset)
         xml = f.read()
@@ -225,10 +222,7 @@ class UnfilteredPresetParser():
                     key = element.get('key')
                     if key in self.keys:
                         continue  # skip key if already parsed
-                    tag = {}
-                    tag['name'] = item.get('name')
-                    tag['key'] = key
-                    tag['value'] = ''  # select all not-null values
+                    tag = {'name': item.get('name'), 'key': key, 'value': ''}
                     geom_types = []
                     for geomtype in geometrytypes:
                         geom_types.append(geomtype)
@@ -286,7 +280,7 @@ class UnfilteredPresetParser():
             item_dict = {}
             name = item.get('name')
             types = item.get('type')  # get the type attr on the item element
-            if types == None:
+            if types is None:
                 continue  # pass those items with no geom type
 
             # map osm geomtypes to point, line, polygon geom types
@@ -308,7 +302,7 @@ class UnfilteredPresetParser():
             self._parse_group(sub_group, sub_group_dict)
 
 
-class TagParser():
+class TagParser:
     """
     Reconstruct a JOSM Preset from the users selected Tag's.
 
@@ -341,7 +335,7 @@ class TagParser():
         root = etree.Element('presets', nsmap=self.nsmap)
         doc = etree.ElementTree(root)
         for tag in self.tags:
-            groups = self._add_groups(root, tag)
+            self._add_groups(root, tag)
         xml = etree.tostring(doc, xml_declaration=True, encoding='UTF-8', pretty_print=True)
         return xml
 
@@ -360,7 +354,7 @@ class TagParser():
                 # create a new group element on the document
                 grp = etree.SubElement(parent, 'group', name=group)
                 # remove this group from the tag so we don't duplicate it
-                tag.groups.pop(0) 
+                tag.groups.pop(0)
                 if len(tag.groups) == 0:
                     # get the osm geometry types for this tag
                     geom_types = self._get_types(tag.geom_types)
