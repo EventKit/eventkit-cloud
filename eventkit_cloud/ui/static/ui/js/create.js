@@ -122,6 +122,7 @@ create.job = (function(){
         var translate;
 
         dragBox.on('drawend',function(e) {
+            $("#estimatedSize").remove();
             map.removeInteraction(dragBox);
             var bounds = e.feature.getGeometry().getExtent();
             //bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
