@@ -8,20 +8,27 @@ language: generic
 services:
   - docker
 
-before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+#before_install:
+#  - sudo rm /usr/local/bin/docker-compose
+#  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+#  - chmod +x docker-compose
+#  - sudo mv docker-compose /usr/local/bin
 
-before_script:
-    - docker-compose build
-    - docker-compose up -d
+#before_script:
+#    - docker-compose build
+#    - docker-compose up -d
+
+
 
 script:
-    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
-    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
-    - docker-compose run webpack npm test
+  - ss -an
+  - hostname
+  - cat /etc/hosts
+  - iptables
+  - dpkg --get-selections | grep -v deinstall
+#    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
+#    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
+#    - docker-compose run webpack npm test
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports BROKER_URL=amqp://guest:guest@rabbitmq:5672/ DEBUG=True C_FORCE_ROOT=True PRODUCTION=True SITE_NAME=cloud.eventkit.dev EXPORT_STAGING_ROOT=/home/ubuntu/export_staging/ EXPORT_DOWNLOAD_ROOT=/home/ubuntu/exports_download/ AWS_BUCKET_NAME='eventkit'
+  - DOCKER_COMPOSE_VERSION=1.9.0
