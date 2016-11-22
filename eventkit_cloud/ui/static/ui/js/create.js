@@ -297,17 +297,9 @@ create.job = (function(){
 
             var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function(e){
                 $("#estimatedSize").remove();
-                var xmin = $('#xmin').val();
-                var ymin = $('#ymin').val();
-                var xmax = $('#xmax').val();
-                var ymax = $('#ymax').val();
-                if(xmin != "" && ymin != "" && xmax != "" && ymax != "") {
-                    xmin = parseFloat(xmin);
-                    ymin = parseFloat(ymin);
-                    xmax = parseFloat(xmax);
-                    ymax = parseFloat(ymax);
-                    bbox = [xmin, ymin, xmax, ymax]
-                    getTileEstimates(bbox);
+                bounds = bboxSource.getExtent();
+                if(bboxSource.getFeatures().length == 1 && validateBounds(bounds)) {
+                    getTileEstimates(bounds);
                 }
             });
 
