@@ -1003,12 +1003,6 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
 
-    def test_delete(self, ):
-        url = reverse('api:tasks-detail', args=[self.task_uid])
-        response = self.client.delete(url)
-        et = ExportTask.objects.get(uid=self.task_uid)
-        self.assertEqual(et.status, 'CANCELED')
-
     def test_list(self, ):
         expected = '/api/tasks'.format(self.task_uid)
         url = reverse('api:tasks-list')

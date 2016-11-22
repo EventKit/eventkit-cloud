@@ -25,7 +25,6 @@ class TestRevokeTask(ExportTaskBase):
             status='PENDING',
             name="test_task"
         ).uid
-        import pdb; pdb.set_trace()
 
         rt = RevokeTask()
         rt.run(export_provider_task.uid)
