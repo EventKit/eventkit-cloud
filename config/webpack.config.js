@@ -10,7 +10,7 @@ var config = {
     entry: [
         'webpack-dev-server/client?http://0.0.0.0:8080', // WebpackDevServer host and port
         'webpack/hot/dev-server', // "only" prevents reload on syntax errors
-        APP_DIR + '/main.js',
+        APP_DIR + '/index.js',
     ],
     output: {
         path: BUILD_DIR,
@@ -27,13 +27,17 @@ var config = {
             {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
-                loaders: ['react-hot-loader/webpack', 'babel?presets[]=es2015,presets[]=react']
+                loader: ['babel-loader'],
+                query:
+                    {
+                        presets: ['es2015','react']
+                    }
             },
         ],
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
-        new WriteFilePlugin()
+        new WriteFilePlugin(),
     ],
     devServer: {
         hot: true,
@@ -46,6 +50,5 @@ var config = {
         poll: true
     },
 };
-
 
 module.exports = config;
