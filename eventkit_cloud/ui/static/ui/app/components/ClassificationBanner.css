@@ -1,0 +1,11 @@
+.root {
+    z-index: 9999;
+    position: absolute;
+    left: 0;
+    right: 0;
+    line-height:25px;
+    background-color: #eee;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+}
