@@ -6,15 +6,14 @@ import os
 import sys
 import uuid
 
-from mock import call, Mock, PropertyMock, patch
-
+from celery.datastructures import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.utils import timezone as real_timezone
-
-from celery.datastructures import ExceptionInfo
+from django.utils import timezone
+from mock import call, Mock, PropertyMock, patch
 
 from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import Job, Tag
@@ -26,29 +25,33 @@ from eventkit_cloud.tasks.export_tasks import (
     ShpExportTask, ArcGISFeatureServiceExportTask,
     get_progress_tracker, ZipFileTask, PickUpRunTask
 )
-
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
     ExportTaskResult,
     ExportProviderTask
 )
-from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
 
-class TestExportTasks(TestCase):
+class ExportTaskBase(TestCase):
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        self.user = User.objects.create(
+            username='demo',
+            email='demo@demo.com',
+            password='demo'
+        )
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                      description='Test description', user=self.user,
-                                      the_geom=the_geom)
+        self.job = Job.objects.create(
+            name='TestJob',
+            description='Test description',
+            user=self.user,
+            the_geom=the_geom
+        )
         self.job.feature_save = True
         self.job.feature_pub = True
         self.job.save()
@@ -68,6 +71,8 @@ class TestExportTasks(TestCase):
             )
         self.assertEquals(238, self.job.tags.all().count())
 
+
+class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.osmconf.OSMConfig')
     def test_run_osmconf_task(self, mock_config, mock_request):
@@ -489,9 +494,15 @@ class TestExportTasks(TestCase):
         self.assertEquals('INCOMPLETE', run.status)
 
     def test_progress_tracker(self):
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='test_provider_task')
-        saved_export_task_uid = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
-                                                      name="test_task").uid
+        export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='test_provider_task'
+        )
+        saved_export_task_uid = ExportTask.objects.create(
+            export_provider_task=export_provider_task,
+            status='PENDING',
+            name="test_task"
+        ).uid
         progress_tracker = get_progress_tracker(task_uid=saved_export_task_uid)
         estimated = timezone.now()
         progress_tracker(progress=50, estimated_finish=estimated)

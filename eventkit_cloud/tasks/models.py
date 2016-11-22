@@ -51,14 +51,7 @@ class ExportRun(RunModelMixin):
     zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
     status = models.CharField(
         blank=True, max_length=20,
-        db_index=True, default='',
-        choices=(
-            ("COMPLETED", "Completed"),
-            ("SUBMITTED", "Submitted"),
-            ("INCOMPLETE", "Incomplete"),
-            ("FAILED", "Failed"),
-            ("CANCELED", "Canceled"),
-        )
+        db_index=True, default=''
     )
 
     class Meta:

@@ -494,11 +494,6 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def delete(self, request, uid=None, *args, **kwargs):
-        rt = RevokeTask()
-        rt.run(uid)
-        return Response({'success': True}, status=status.HTTP_200_OK)
-
 
 class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -507,7 +502,7 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportProviderTaskSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    #permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = ExportTask.objects.all()
     lookup_field = 'uid'
 
@@ -519,11 +514,19 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
             request: the http request.
             uid: the uid of the export task to GET.
         Returns:
-            the serialized ExportTask data.
-        """
+            the serialized ExportTask data """
         queryset = ExportProviderTask.objects.filter(uid=uid)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, uid=None, *args, **kwargs):
+        rt = RevokeTask()
+        rt.run(uid)
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
