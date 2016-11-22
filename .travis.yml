@@ -8,27 +8,25 @@ language: generic
 services:
   - docker
 
-#before_install:
-#  - sudo rm /usr/local/bin/docker-compose
-#  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-#  - chmod +x docker-compose
-#  - sudo mv docker-compose /usr/local/bin
+before_install:
+#  - sudo apt-get update
+#  - sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+#  - echo "deb https://apt.dockerproject.org/repo ubuntu-xenial main" | sudo tee /etc/apt/sources.list.d/docker.list
+#  - sudo apt-get update
+#  - sudo apt-get install --only-upgrade docker-engine
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
 
-#before_script:
-#    - docker-compose build
+before_script:
+    - sudo docker-compose build
 #    - docker-compose up -d
 
-
-
 script:
-  - ss -an
-  - hostname
-  - cat /etc/hosts
-  - iptables
-  - dpkg --get-selections | grep -v deinstall
-#    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
+    - sudo docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
 #    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
-#    - docker-compose run webpack npm test
+    - sudo docker-compose run webpack npm test
 
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0
