@@ -49,8 +49,8 @@ services:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASSWORD=eventkit_exports
       - POSTGRES_DB=eventkit_exports
-    ports:
-     - "5432:5432"
+    expose:
+      - "5432"
   rabbitmq:
      image: rabbitmq:3.6.5
      expose:
