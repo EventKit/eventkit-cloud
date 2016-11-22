@@ -130,6 +130,7 @@ create.job = (function(){
             // validate the selected extents
             if (validateBounds(bounds)) {
                 setBounds(bounds);
+                getTileEstimates(bounds);
             }
             else {
                 unsetBounds();
@@ -277,7 +278,7 @@ create.job = (function(){
                         + 'source-layer="' + provider.layer + '" checked="checked"/>' 
                         + '<i class="fa fa-eye" id="' + provider.name + '"/></label>'
                         + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
-                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '" source-type="' + provider.type + '"/>'
                         + provider.name + '</label></div>');
                 }
                 else {
@@ -289,12 +290,28 @@ create.job = (function(){
                         + 'source-layer="' + provider.layer + '"/>' 
                         + '<i class="fa fa-eye-slash" id="' + provider.name + '"/></label>'
                         + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
-                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '" source-type="' + provider.type + '"/>'
                         + provider.name + '</label></div>');
                 }
             }
 
-            var getCheckedItem = $("#provider-selection input[id][type='checkbox']").click(function(e) {
+            var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function(e){
+                $("#estimatedSize").remove();
+                var xmin = $('#xmin').val();
+                var ymin = $('#ymin').val();
+                var xmax = $('#xmax').val();
+                var ymax = $('#ymax').val();
+                if(xmin != "" && ymin != "" && xmax != "" && ymax != "") {
+                    xmin = parseFloat(xmin);
+                    ymin = parseFloat(ymin);
+                    xmax = parseFloat(xmax);
+                    ymax = parseFloat(ymax);
+                    bbox = [xmin, ymin, xmax, ymax]
+                    getTileEstimates(bbox);
+                }
+            });
+
+            var getProviderPreview = $("#provider-selection input[id][type='checkbox']").click(function(e) {
                 var checkedItem = e.currentTarget.defaultValue;
                 $("#provider-selection input[id][type='checkbox']").each(function(){
                     if (this.value == checkedItem) {
@@ -310,6 +327,65 @@ create.job = (function(){
             });
         });
     }
+
+    function getTileEstimates(bounds) {
+        bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+        console.log(bounds);
+        providers = []
+        $("#provider-selection input[name='providers'][type='checkbox']").each(function(){
+            type = $(this).attr('source-type');
+            if(type != 'osm' && type != 'osm-generic' && type != 'wfs' && type != 'argis-feature') {
+                if ($(this).is(":checked")) {
+                    providers.push(this.value);
+                }
+            }
+        });
+        if (providers.length > 0) {
+            console.log(providers);
+            var csrftoken = getCookie('csrftoken');
+            json_data = {"providers": providers, "bbox": bounds}
+            $.ajax({
+                // post json to the api endpoint
+                url: '/en/exports/estimator',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'providers': providers,
+                    'bbox': bounds
+                }),
+                processData: false, // send as json
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function(result) {
+                    console.log(result);
+                    $("#estimatedSize").remove();
+                    var size = result;
+                    var sizeText = ""
+                    if (size < 1) {
+                        sizes = ['MB', 'KB', 'Byte'];
+                        for (i=0; i < sizes.length; i++) {
+                            size = size * 1000;
+                            sizeText = "Estimated Tile Size: " + size.toFixed(2) + " " + sizes[i];
+                            if (size >= 1) {break;}
+                        }
+                    }
+                    else if(size >= 1000){
+                        size = size / 1000;
+                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " TB";
+                    }
+                    else {
+                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " GB";
+                    }
+                    $("#provider-selection").after('<div id="estimatedSize" class="help-block">' + sizeText + '</div>');
+                },
+            });
+        }
+    }
+
 
     // handler function for adding or removing provider layers
     function checkProviderLayer(type, url, provider, layer, checked) {
@@ -2684,6 +2760,25 @@ create.job = (function(){
             delay: {show: 0, hide: 0},
             placement: 'top'
         });
+    }
+    function csrfSafeMethod(method) {
+                // these HTTP methods do not require CSRF protection
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 }());
 
