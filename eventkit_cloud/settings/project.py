@@ -86,6 +86,8 @@ else:
     import socket
     HOSTNAME = os.getenv('HOSTNAME', socket.gethostname())
     SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
+    if SITE_NAME == '':
+        SITE_NAME = 'localhost'
     SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
 SITE_ID = 1
 
