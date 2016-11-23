@@ -177,8 +177,7 @@ def data_estimator(request):
         # tiles += estimates[0]
         # size += estimates[1]
         tiles_.append(estimates[2])
-        bbox = estimates[3]
-    return HttpResponse(json.dumps([tiles, size, tiles_, bbox]))
+    return HttpResponse(json.dumps([tiles, size, tiles_]))
     return HttpResponse([size])
 
 

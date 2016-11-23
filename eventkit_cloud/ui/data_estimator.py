@@ -32,7 +32,7 @@ def get_size_estimate(provider, bbox):
             result = tile_grid.get_affected_level_tiles(bbox, level)
             total_tiles += result[1][0]*result[1][1]
             tiles.append(result[1][0]*result[1][1])
-        return [total_tiles, get_gb_estimate(total_tiles), tiles, bbox]
+        return [total_tiles, get_gb_estimate(total_tiles), tiles]
 
 
 def get_gb_estimate(total_tiles, tile_width=256, tile_height=256):
