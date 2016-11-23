@@ -26,3 +26,4 @@ script:
 
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0
+  - SITE_NAME=cloud.eventkit.dev
