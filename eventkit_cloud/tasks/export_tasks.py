@@ -26,6 +26,7 @@ from eventkit_cloud.utils import (
 import socket
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
+COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELED']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -78,13 +79,21 @@ class ExportTask(Task):
         run_uid = parts[-3]
         run_dir = os.path.join(download_root, run_uid)
         name, ext = os.path.splitext(filename)
-        download_file = '{0}-{1}-{2}{3}'.format(name, provider_slug, finished.strftime('%Y%m%d'), ext)
+        download_file = '{0}-{1}-{2}{3}'.format(
+            name,
+            provider_slug,
+            finished.strftime('%Y%m%d'),
+            ext
+        )
         download_path = os.path.join(run_dir, download_file)
 
         # construct the download url
         try:
             if settings.USE_S3:
-                download_url = s3.upload_to_s3(run_uid, os.path.join(provider_slug, filename))
+                download_url = s3.upload_to_s3(
+                    run_uid,
+                    os.path.join(provider_slug, filename)
+                )
             else:
                 try:
                     if not os.path.exists(run_dir):
@@ -142,7 +151,11 @@ class ExportTask(Task):
             error_handler = ExportTaskErrorHandler()
             # run error handler
             stage_dir = kwargs['stage_dir']
-            error_handler.si(run_uid=str(run.uid), task_id=task_id, stage_dir=stage_dir).delay()
+            error_handler.si(
+                run_uid=str(run.uid),
+                task_id=task_id,
+                stage_dir=stage_dir
+            ).delay()
 
     def after_return(self, *args, **kwargs):
         logger.debug('Task returned: {0}'.format(self.request))
@@ -539,21 +552,24 @@ class FinalizeExportProviderTask(Task):
     name = 'Finalize Export Provider Run'
 
     def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None, worker=None):
-
         from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-        export_provider_task.status = 'COMPLETED'
+
+        if export_provider_task.status != "CANCELED":
+            export_provider_task.status = 'COMPLETED'
 
         # mark run as incomplete if any tasks fail
         if any(task.status == 'FAILED' for task in export_provider_task.tasks.all()):
             export_provider_task.status = 'INCOMPLETE'
         export_provider_task.save()
 
-        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task = ExportProviderTask.objects.get(
+            uid=export_provider_task_uid
+        )
 
         run_complete = False
-        if all(provider_task.status in ['COMPLETED', 'INCOMPLETE'] for provider_task in
-               export_provider_task.run.provider_tasks.all()):
+        provider_tasks = export_provider_task.run.provider_tasks.all()
+        if all(pt.status in COMPLETE_STATES for pt in provider_tasks):
             run_complete = True
 
         if run_complete:
@@ -566,7 +582,10 @@ class FinalizeExportProviderTask(Task):
                 ).set(queue=worker)()
 
             finalize_run_task = FinalizeRunTask()
-            finalize_run_task.si(run_uid=run_uid, stage_dir=os.path.dirname(stage_dir))()
+            finalize_run_task.si(
+                run_uid=run_uid,
+                stage_dir=os.path.dirname(stage_dir)
+            )()
 
         if os.path.isdir(stage_dir):
             try:
@@ -679,13 +698,13 @@ class FinalizeRunTask(Task):
         subject = "Your Eventkit Data Pack is ready."
         to = [addr]
         # TODO: from email address should not be hardcoded
-        from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
-        ctx = {
-            'url': url,
-            'status': run.status
-        }
-        # text = get_template('email/email.txt').render(Context(ctx))
-        # html = get_template('email/email.html').render(Context(ctx))
+        from_email = getattr(
+            settings,
+            'DEFAULT_FROM_EMAIL',
+            'Eventkit Team <eventkit.team@gmail.com>'
+        )
+        ctx = {'url': url, 'status': run.status}
+        
         text = get_template('email/email.txt').render(ctx)
         html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)

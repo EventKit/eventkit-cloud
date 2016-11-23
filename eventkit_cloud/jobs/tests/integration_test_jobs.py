@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import os
 import requests
@@ -6,6 +7,8 @@ import shutil
 import sqlite3
 from time import sleep
 
+from eventkit_cloud.tasks.util_tasks import RevokeTask
+from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from ..models import ExportProvider, ExportProviderType, Job
 
 from django.conf import settings
@@ -60,6 +63,52 @@ class TestJob(TestCase):
                     "ymax": self.bbox[3], "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
+
+    def test_cancel_job(self):
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
+                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data (Generic)",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "OpenStreetMap Data",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-wmts",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-arc-raster",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-wfs",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                                        {"provider": "eventkit-integration-test-arc-fs",
+                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+        self.run_job(job_data, wait_for_run=False)
+
+        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
+        self.orm_run = self.orm_job.runs.last()
+
+        pt = self.orm_run.provider_tasks.last()
+        pt_id = pt.id
+
+        et = pt.tasks.last()
+
+        provider_url = self.base_url + reverse('api:provider_tasks-list') + '/%s' % (pt.uid,)
+        response = self.client.patch(provider_url,
+                                    json={"csrfmiddlewaretoken": self.csrftoken},
+                                    headers={'X-CSRFToken': self.csrftoken,
+                                             'Referer': self.create_export_url})
+        self.assertEqual(200, response.status_code)
+        self.assertEqual({'success': True}, json.loads(response.content))
+        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
+        self.orm_run = self.orm_job.runs.last()
+
+        pt = ExportProviderTask.objects.get(id=pt_id)
+
+        self.assertTrue(all(_.status == 'CANCELED' for _ in pt.tasks.all()))
+        self.assertEqual(pt.status, 'CANCELED')
+
+        self.wait_for_run(self.orm_job.uid)
+        self.orm_run = self.orm_job.runs.last()
+        self.assertEqual(self.orm_run.status, 'COMPLETED')
 
     def test_osm_geopackage_thematic(self):
         """
@@ -315,7 +364,7 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def run_job(self, data):
+    def run_job(self, data, wait_for_run=True):
         # include zipfile
         data['include_zipfile'] = True
 
@@ -326,9 +375,14 @@ class TestJob(TestCase):
 
         self.assertEquals(response.status_code, 202)
         self.job_json = job = response.json()
+
+        if not wait_for_run:
+             return
+
+
         run = self.wait_for_run(job.get('uid'))
-        orm_job = Job.objects.get(uid=job.get('uid'))
-        orm_run = orm_job.runs.last()
+        self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
+        self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
         test_zip_url = '%s%s%s/%s' % (
             self.base_url,

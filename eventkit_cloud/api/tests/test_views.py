@@ -42,11 +42,6 @@ class TestJobViewSet(APITestCase):
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
-        # profile = ExportProfile.objects.create(
-        #     name='DefaultExportProfile',
-        #     max_extent=2500000,
-        #     group=self.group
-        # )
         self.user = User.objects.create_user(
             username='demo', email='demo@demo.com', password='demo'
         )
@@ -1012,6 +1007,16 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEquals(1, len(data))
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
+
+    def test_patch_cancel_task(self, ):
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
+        response = self.client.patch(url)
+
+        pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
+        et = pt.tasks.last()
+
+        self.assertEqual(pt.status, 'CANCELED')
+        self.assertEqual(et.status, 'CANCELED')
 
 
 class TestStaticFunctions(APITestCase):
