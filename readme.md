@@ -7,6 +7,8 @@ Eventkit-cloud is based on the [HOT OSM Export Tool 2](https://github.com/hotosm
 ## Getting Started
 Eventkit-cloud requires [Vagrant](https://www.vagrantup.com/), which itself requires [Virtualbox](https://www.virtualbox.org/wiki/Downloads) or [Docker](https://docs.docker.com/engine/installation/)
 
+A setup guide for running vagrant and docker in the [windows setup guide](windows.md).
+
 ### Vagrant
 After installing the dependencies open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
