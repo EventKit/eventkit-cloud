@@ -15,14 +15,14 @@ from django.db.models.signals import (
 )
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
-from functools import wraps
 
 logger = logging.getLogger(__name__)
+
 
 # construct the upload path for export config files..
 
 
-def get_upload_path(instance, filename):
+def get_upload_path(instance, *args):
     """
     Construct the path to where the uploaded config file is to be stored.
     """
@@ -118,12 +118,12 @@ class ExportProviderType(TimeStampedModelMixin):
     supported_formats = models.ManyToManyField(ExportFormat,
                                                verbose_name="Supported Export Formats",
                                                blank=True)
+
     def __str__(self):
         return '{0}'.format(self.type_name)
 
     def __unicode__(self, ):
         return '{0}'.format(self.type_name)
-
 
 
 class ExportProvider(TimeStampedModelMixin):
@@ -138,13 +138,14 @@ class ExportProvider(TimeStampedModelMixin):
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
-                                    help_text="This determines the starting zoom level a tile export will seed from")
+                                     help_text="This determines the starting zoom level a tile export will seed from")
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
-                                  help_text="This determine what zoom level your tile export will seed to")
+                                   help_text="This determine what zoom level your tile export will seed to")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Mapproxy Configuration",
                               help_text="This is an optional field which is needed if the service "
                                         "requires authentication.")
+    user = models.ForeignKey(User, related_name='+', null=True, default=None)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -240,7 +241,7 @@ class Job(TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def tag_dict(self,):
+    def tag_dict(self, ):
         """
         Return the unique set of Tag keys from this export
         with their associated geometry types.
@@ -263,7 +264,7 @@ class Job(TimeStampedModelMixin):
         return tag_dict
 
     @property
-    def filters(self,):
+    def filters(self, ):
         """
         Return key=value pairs for each tag in this export.
 
@@ -276,7 +277,7 @@ class Job(TimeStampedModelMixin):
         return filters
 
     @property
-    def categorised_tags(self,):
+    def categorised_tags(self, ):
         """
         Return tags mapped according to their geometry types.
         """

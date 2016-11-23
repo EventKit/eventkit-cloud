@@ -31,7 +31,8 @@ class JobFilter(django_filters.FilterSet):
                   'user', 'user_private', 'feature', 'published')
         order_by = ('-created_at',)
 
-    def user_private_filter(self, queryset, value):
+    @staticmethod
+    def user_private_filter(queryset, value):
         """
         Filter export results by user and/or published status.
 
@@ -69,7 +70,8 @@ class ExportConfigFilter(django_filters.FilterSet):
         fields = ('name', 'config_type', 'start', 'end', 'user', 'published', 'user_private')
         order_by = ('-created_at',)
 
-    def user_private_filter(self, queryset, value):
+    @staticmethod
+    def user_private_filter(queryset, value):
         """
         Filter export configurations by user and/or published status.
 

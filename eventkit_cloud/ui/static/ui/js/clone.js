@@ -22,7 +22,7 @@ clone.job = (function(){
             initPresetSelectionHandler();
             initConfigSelectionHandler();
         }
-    }
+    };
 
     /*
      * Initialize the map
@@ -45,7 +45,7 @@ clone.job = (function(){
                 minZoom: 2,
                 maxZoom: 18,
             })
-        })
+        });
 
 
         //add base layers
@@ -63,7 +63,7 @@ clone.job = (function(){
                     ol.source.OSM.ATTRIBUTION
                 ]
             })
-        })
+        });
         var hotosm = Layers.HOT;
         hotosm.options = {layers: "basic", isBaseLayer: true, visibility: true, displayInLayerSwitcher: true};
 
@@ -398,7 +398,7 @@ clone.job = (function(){
      */
     function setBounds(bounds) {
         var bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
-        fmt = '0.000000' // format to 6 decimal places .11 metre precision
+        fmt = '0.000000'; // format to 6 decimal places .11 metre precision
         var xmin = numeral(bounds[0]).format(fmt);
         var ymin = numeral(bounds[1]).format(fmt);
         var xmax = numeral(bounds[2]).format(fmt);
@@ -509,7 +509,7 @@ clone.job = (function(){
             validateBBox(); // trigger validation on extents
             $('#valid-extents').css('visibility','hidden');
             $('#alert-extents').css('visibility','visible');
-            $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is outside') + '<br/>' + gettext('a valid HOT Export Region'))
+            $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is outside') + '<br/>' + gettext('a valid HOT Export Region'));
             return false;
         } else if (area > max_bounds_area) {
             // area too large
@@ -663,7 +663,7 @@ clone.job = (function(){
 
                 if (index == 2){
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
-                    $('#nextLastArrow').prop('visibility', 'hidden')
+                    $('#nextLastArrow').prop('visibility', 'hidden');
                     $('#nextLastArrow').addClass('visibility');
                 }
 
@@ -944,13 +944,8 @@ clone.job = (function(){
 
             // validate the form panel contents
             fv.validateContainer($tab);
-            var isValidStep = fv.isValidContainer($tab);
-            if ((isValidStep === false) ||
-                (isValidBBox === false || isValidBBox === null)) {
-                // stay on this tab
-                return false;
-            }
-            return true;
+            return !((isValidStep === false) ||
+            (isValidBBox === false || isValidBBox === null));
         }
 
         /*
@@ -1114,7 +1109,7 @@ clone.job = (function(){
                     var modalOpts = {
                         keyboard: true,
                         backdrop: 'static',
-                    }
+                    };
                     var message = jqxhr.responseJSON.message[0];
                     $('p#message').html(message);
                     $("#uploadConfigError").modal(modalOpts, 'show');
@@ -1130,7 +1125,7 @@ clone.job = (function(){
             var modalOpts = {
                 keyboard: true,
                 backdrop: 'static',
-            }
+            };
             // reset the input field validation
             var fv = $('#create-job-form').data('formValidation');
             fv.resetField($('input#filename'));
@@ -1276,8 +1271,8 @@ clone.job = (function(){
                 var modalOpts = {
                     keyboard: true,
                     backdrop: 'static',
-                }
-                var message = ''
+                };
+                var message = '';
                 var fields = fv.getInvalidFields();
                 var field = $(fields[0]).attr('name');
                 if (field === 'formats') {
@@ -1356,8 +1351,8 @@ clone.job = (function(){
                 });
                 // add tags and formats to the form data
                 form_data["tags"] = tags;
-                form_data["provider_tasks"] = []
-                var provider_tasks = []
+                form_data["provider_tasks"] = [];
+                var provider_tasks = [];
 
                 if(typeof(providers)==='string'){
                     providers = [providers]
@@ -1375,8 +1370,8 @@ clone.job = (function(){
                 }
                 form_data["provider_tasks"] = provider_tasks;
                 form_data["formats"] = formats;
-                delete form_data["providers"]
-                delete form_data["formats"]
+                delete form_data["providers"];
+                delete form_data["formats"];
                 // convert to json string for submission.
                 var json_data = JSON.stringify(form_data);
                 $.ajax({
@@ -1486,7 +1481,7 @@ clone.job = (function(){
                 });
                 $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function(i, level){
                     $input = $(level).find('input.level:first');
-                    var childrenChecked = $(level).find('ul input.level:checked').length > 0 ? true : false;
+                    var childrenChecked = $(level).find('ul input.level:checked').length > 0;
                     if (childrenChecked) {
                         $input.prop('checked', true);
                     }
@@ -1511,7 +1506,7 @@ clone.job = (function(){
              */
             $('#hdm-feature-tree input.level').on("entry:changed", function(e){
                 var $currentLevel = $(this).parent().parent();
-                var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0 ? true : false;
+                var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0;
                 if (hasCheckedChildren) {
                     var $input = $currentLevel.find('input:first');
                     $input.prop('checked', true);
@@ -1609,7 +1604,7 @@ clone.job = (function(){
                 });
                 $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function(i, level){
                     $input = $(level).find('input.level:first');
-                    var childrenChecked = $(level).find('ul input.level:checked').length > 0 ? true : false;
+                    var childrenChecked = $(level).find('ul input.level:checked').length > 0;
                     if (childrenChecked) {
                         $input.prop('checked', true);
                     }
@@ -1634,7 +1629,7 @@ clone.job = (function(){
              */
             $('#osm-feature-tree input.level').on("entry:changed", function(e){
                 var $currentLevel = $(this).parent().parent();
-                var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0 ? true : false;
+                var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0;
                 if (hasCheckedChildren) {
                     var $input = $currentLevel.find('input:first');
                     $input.prop('checked', true);
@@ -1773,7 +1768,7 @@ clone.job = (function(){
                 var lat = coordinate[0];
                 var lon = coordinate[1];
 
-                var circle = new ol.geom.Circle([lat, lon])
+                var circle = new ol.geom.Circle([lat, lon]);
                 circle.transform('EPSG:4326', 'EPSG:3857');
                 formattedCoords.push(circle.getCenter());
             });
@@ -1783,7 +1778,7 @@ clone.job = (function(){
             merc_bounds.push(formattedCoords[2][0]);
             merc_bounds.push(formattedCoords[3][1]);
 
-            var polygonGeometry = new ol.geom.Polygon([formattedCoords])
+            var polygonGeometry = new ol.geom.Polygon([formattedCoords]);
             var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
 
             //var vectorSource = new ol.source.Vector();
@@ -2055,7 +2050,7 @@ clone.job = (function(){
                             var modalOpts = {
                                 keyboard: true,
                                 backdrop: 'static',
-                            }
+                            };
                             var message = '';
                             if (status === 404) {
                                 message = gettext('Requested file not found')
@@ -2081,7 +2076,7 @@ clone.job = (function(){
                         $(upload).remove();
                         filesSelected -= 1;
                     }
-                })
+                });
 
                 // add the selected config from config-browser to the table
                 var $tr = $('<tr id="' + selection.uid + '" data-filename="' + selection.filename + '" data-source="' + source + '"' +
@@ -2602,7 +2597,7 @@ clone.job = (function(){
                 selection['filename'] = config.filename;
                 selection['published'] = config.published ? 'Published' : 'Private';
                 // notify the config-browser
-                $('#filelist').trigger({type: 'config:added', selection: selection})
+                $('#filelist').trigger({type: 'config:added', selection: selection});
                 $('table#configurations').trigger({type: 'config:added', selection:selection});
                 $(document).trigger({type: 'preset:selected', source: 'config-browser'});
             });
@@ -2614,8 +2609,8 @@ clone.job = (function(){
 
             }
 
-            $('input#include_zipfile').prop('checked', data.include_zipfile)
-            $('input#published').prop('checked', data.published)
+            $('input#include_zipfile').prop('checked', data.include_zipfile);
+            $('input#published').prop('checked', data.published);
             $('#create-job-form').trigger('change');
 
             // trigger validation on the form

@@ -77,9 +77,7 @@ class ExternalRasterServiceToGeopackage(object):
             conf_dict = yaml.load(self.config)
         else:
             conf_dict = create_conf_from_url(self.service_url)
-        sources = []
-        # for source in conf_dict.get('sources'):
-        #     sources.append(source)
+
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
                                                   'tile_size': [256, 256],
@@ -106,9 +104,6 @@ class ExternalRasterServiceToGeopackage(object):
         # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
             progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
-            # seed(seed_tasks, progress_logger=logger, dry_run=options.dry_run,
-            #      concurrency=options.concurrency, cache_locker=cache_locker,
-            #      skip_geoms_for_last_levels=options.geom_levels)
             p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
                                                                   "concurrency": 1,
                                                                   "progress_logger": progress_logger})

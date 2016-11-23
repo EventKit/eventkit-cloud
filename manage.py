@@ -10,4 +10,24 @@ if __name__ == "__main__":
 
     from django.core.management import execute_from_command_line
 
-    execute_from_command_line(sys.argv)
+    if os.getenv("COVERAGE"):
+        is_testing = 'test' in sys.argv
+
+        if is_testing:
+            import coverage
+
+            cov = coverage.coverage(config_file=".coveragerc",
+                                    source=["eventkit_cloud"])
+            cov.erase()
+            cov.start()
+
+        execute_from_command_line(sys.argv)
+
+        if is_testing:
+            cov.stop()
+            cov.save()
+            cov.report()
+            cov.html_report()
+
+    else:
+        execute_from_command_line(sys.argv)

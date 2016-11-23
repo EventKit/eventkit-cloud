@@ -30,9 +30,8 @@ class TestOverpass(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', event='Nepal activation',
-                                 user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description',
+                                      event='Nepal activation', user=self.user, the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
@@ -46,13 +45,8 @@ class TestOverpass(TestCase):
         self.assertEquals(256, len(tags))
         # save all the tags from the preset
         for tag_dict in tags:
-            tag = Tag.objects.create(
-                key=tag_dict['key'],
-                value=tag_dict['value'],
-                job=self.job,
-                data_model='osm',
-                geom_types=tag_dict['geom_types']
-            )
+            tag = Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
+                                     data_model='osm', geom_types=tag_dict['geom_types'])
         self.assertEquals(256, self.job.tags.all().count())
 
     def test_get_query(self,):
