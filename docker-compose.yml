@@ -12,8 +12,8 @@ services:
         - DEBUG=True
         - C_FORCE_ROOT=True
         - DEVELOPMENT=True
-        - SITE_NAME=cloud.eventkit.dev
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
+        - SITE_NAME=localhost
      command: echo 'Base box is not used, exiting now'
   eventkit:
       extends:
@@ -24,8 +24,6 @@ services:
       links:
         - postgis
         - rabbitmq
-      extra_hosts:
-        - "cloud.eventkit.dev:192.168.99.130"
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
