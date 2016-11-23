@@ -343,7 +343,7 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def run_job(self, data, wait_for_run=False):
+    def run_job(self, data, wait_for_run=True):
         # include zipfile
         data['include_zipfile'] = True
 
@@ -358,10 +358,10 @@ class TestJob(TestCase):
         if not wait_for_run:
              return
 
-        self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
-        self.orm_run = orm_run = orm_job.runs.last()
 
         run = self.wait_for_run(job.get('uid'))
+        self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
+        self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
         test_zip_url = '%s%s%s/%s' % (
             self.base_url,
