@@ -13,7 +13,7 @@ services:
         - C_FORCE_ROOT=True
         - DEVELOPMENT=True
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
-        - SITE_NAME=localhost
+        - SITE_NAME=${SITE_NAME}
      command: echo 'Base box is not used, exiting now'
   eventkit:
       extends:
