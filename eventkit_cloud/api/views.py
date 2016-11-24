@@ -497,7 +497,7 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportProviderTaskSerializer
-    #permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = ExportTask.objects.all()
     lookup_field = 'uid'
 
@@ -509,7 +509,8 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
             request: the http request.
             uid: the uid of the export task to GET.
         Returns:
-            the serialized ExportTask data """
+            the serialized ExportTask data
+        """
         queryset = ExportProviderTask.objects.filter(uid=uid)
         serializer = self.get_serializer(
             queryset,
@@ -575,6 +576,7 @@ class OSMDataModelView(views.APIView):
 
     @staticmethod
     def get(request, format='json'):
+        # TODO: move __file__ reference to pkgutil
         path = os.path.dirname(os.path.realpath(__file__))
         parser = PresetParser(path + '/presets/osm_presets.xml')
         data = parser.build_hdm_preset_dict()
@@ -586,12 +588,17 @@ def get_models(model_list, model_object, model_index):
     if not model_list:
         return models
     for model_id in model_list:
-        # would be good to accept either format slug or uuid here..
+        # TODO: would be good to accept either format slug or uuid here..
         try:
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
+            logger.warn(
+                '%s with %s: %s does not exist',
+                str(model_object),
+                model_index,
+                model_id
+            )
     return models
 
 
@@ -607,7 +614,9 @@ def get_provider_task(export_provider, export_formats):
     """
     provider_task = ProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
-        if export_format in export_provider.export_provider_type.supported_formats.all():
+        supported_formats = \
+            export_provider.export_provider_type.supported_formats.all()
+        if export_format in supported_formats:
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
