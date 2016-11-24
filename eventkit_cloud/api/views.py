@@ -497,7 +497,7 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportProviderTaskSerializer
-    #permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = ExportTask.objects.all()
     lookup_field = 'uid'
 
