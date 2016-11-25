@@ -29,6 +29,7 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTas
 from eventkit_cloud.tasks.task_factory import create_run
 
 from ..tasks.export_tasks import PickUpRunTask
+from eventkit_cloud.tasks.util_tasks import RevokeTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -219,7 +220,10 @@ class JobViewSet(viewsets.ModelViewSet):
                     """Save the job and make sure it's committed before running tasks."""
                     try:
                         job = serializer.save()
-                        provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
+                        provider_serializer = ProviderTaskSerializer(
+                            data=provider_tasks,
+                            many=True
+                        )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
                         except ValidationError:
@@ -478,7 +482,11 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized ExportTask data.
         """
         queryset = ExportTask.objects.filter(uid=uid)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -501,11 +509,20 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
             request: the http request.
             uid: the uid of the export task to GET.
         Returns:
-            the serialized ExportTask data.
+            the serialized ExportTask data
         """
         queryset = ExportProviderTask.objects.filter(uid=uid)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, uid=None, *args, **kwargs):
+        rt = RevokeTask()
+        rt.run(uid)
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
@@ -559,6 +576,7 @@ class OSMDataModelView(views.APIView):
 
     @staticmethod
     def get(request, format='json'):
+        # TODO: move __file__ reference to pkgutil
         path = os.path.dirname(os.path.realpath(__file__))
         parser = PresetParser(path + '/presets/osm_presets.xml')
         data = parser.build_hdm_preset_dict()
@@ -570,12 +588,17 @@ def get_models(model_list, model_object, model_index):
     if not model_list:
         return models
     for model_id in model_list:
-        # would be good to accept either format slug or uuid here..
+        # TODO: would be good to accept either format slug or uuid here..
         try:
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
         except model_object.DoesNotExist:
-            logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
+            logger.warn(
+                '%s with %s: %s does not exist',
+                str(model_object),
+                model_index,
+                model_id
+            )
     return models
 
 
@@ -591,7 +614,9 @@ def get_provider_task(export_provider, export_formats):
     """
     provider_task = ProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
-        if export_format in export_provider.export_provider_type.supported_formats.all():
+        supported_formats = \
+            export_provider.export_provider_type.supported_formats.all()
+        if export_format in supported_formats:
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task

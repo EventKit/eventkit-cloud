@@ -18,15 +18,25 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-
 from rest_framework import serializers
 
 import validators
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
+    ExportConfig,
+    ExportFormat,
+    Job,
+    Region,
+    RegionMask,
+    Tag,
+    ExportProvider,
+    ProviderTask
 )
 from eventkit_cloud.tasks.models import (
-    ExportRun, ExportTask, ExportTaskException, ExportTaskResult, ExportProviderTask
+    ExportRun,
+    ExportTask,
+    ExportTaskException,
+    ExportTaskResult,
+    ExportProviderTask
 )
 
 try:
@@ -235,7 +245,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
 
 
 class ExportProviderTaskSerializer(serializers.ModelSerializer):
-    tasks = ExportTaskSerializer(many=True)
+    tasks = ExportTaskSerializer(many=True, required=False)
     url = serializers.HyperlinkedIdentityField(
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
@@ -244,6 +254,8 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportProviderTask
         fields = ('uid', 'url', 'name', 'tasks',)
+
+
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -475,10 +487,12 @@ class ListJobSerializer(serializers.Serializer):
 
 
 class ProviderTaskSerializer(serializers.ModelSerializer):
-    formats = serializers.SlugRelatedField(many=True,
-                                           queryset=ExportFormat.objects.all(),
-                                           slug_field='slug',
-                                           error_messages={'non_field_errors': _('Select an export format.')})
+    formats = serializers.SlugRelatedField(
+        many=True,
+        queryset=ExportFormat.objects.all(),
+        slug_field='slug',
+        error_messages={'non_field_errors': _('Select an export format.')}
+    )
     provider = serializers.CharField()
 
     class Meta:
@@ -502,7 +516,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         """Not implemented.
         :param **kwargs:
         """
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def validate(data, **kwargs):
@@ -602,7 +616,7 @@ class JobSerializer(serializers.Serializer):
         """Not implemented as Jobs are cloned rather than updated.
         :param **kwargs:
         """
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def validate(data, **kwargs):
@@ -612,11 +626,12 @@ class JobSerializer(serializers.Serializer):
         See api/validators.py for validation code.
         """
         user = data['user']
-        # validators.validate_formats(data)
         extents = validators.validate_bbox_params(data)
         the_geom = validators.validate_bbox(extents, user=user)
         data['the_geom'] = the_geom
-        data.pop('xmin'), data.pop('ymin'), data.pop('xmax'), data.pop('ymax'), data.pop('provider_tasks')
+        for _key in ['xmin', 'ymin', 'xmax', 'ymax', 'provider_tasks']:
+            data.pop(_key)
+
         return data
 
     @staticmethod
