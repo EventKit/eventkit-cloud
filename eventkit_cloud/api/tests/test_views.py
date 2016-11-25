@@ -1019,6 +1019,11 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(et.status, 'CANCELED')
 
 
+    def test_export_provider_task_get(self):
+        url = reverse('api:provider_tasks-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
 class TestStaticFunctions(APITestCase):
     def test_get_models(self):
         ExportFormat.objects.create(name="Test1", slug="Test1")
