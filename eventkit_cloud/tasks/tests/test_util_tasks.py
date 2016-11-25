@@ -33,9 +33,9 @@ class TestRevokeTask(ExportTaskBase):
               uid=export_provider_task.uid
         )
 
-        self.assertEqual(export_provider_task.status, 'CANCELED')
+        self.assertEqual(export_provider_task.status, 'CANCELLED')
         self.assertTrue(all(
-            _.status == 'CANCELED' for _ in export_provider_task.tasks.all()
+            _.status == 'CANCELLED' for _ in export_provider_task.tasks.all()
         ))
 
         fept = FinalizeExportProviderTask()
@@ -51,9 +51,9 @@ class TestRevokeTask(ExportTaskBase):
               uid=export_provider_task.uid
         )
 
-        self.assertEqual(export_provider_task.status, 'CANCELED')
+        self.assertEqual(export_provider_task.status, 'CANCELLED')
         self.assertTrue(all(
-            _.status == 'CANCELED' for _ in export_provider_task.tasks.all()
+            _.status == 'cancelled' for _ in export_provider_task.tasks.all()
         ))
 
         self.run = ExportRun.objects.get(uid=self.run.uid)

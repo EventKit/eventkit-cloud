@@ -13,6 +13,7 @@ Config.REGION_MASK_URL = '/api/maskregions.json';
 Config.JOBS_URL = '/api/jobs';
 Config.RUNS_URL = '/api/runs';
 Config.RERUN_URL = '/api/rerun?job_uid=';
+Config.PROVIDERS_URL = '/api/providers.json';
 Config.EXPORT_FORMATS_URL = '/api/formats.json';
 Config.PROVIDER_TAKS_URL = '/api/provider_tasks';
 Config.RUNS_URL = '/api/runs';

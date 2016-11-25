@@ -26,7 +26,7 @@ from eventkit_cloud.utils import (
 import socket
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
-COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELED']
+COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -555,7 +555,7 @@ class FinalizeExportProviderTask(Task):
         from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-        if export_provider_task.status != "CANCELED":
+        if export_provider_task.status != "CANCELLED":
             export_provider_task.status = 'COMPLETED'
 
         # mark run as incomplete if any tasks fail

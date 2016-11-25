@@ -17,8 +17,8 @@ class RevokeTask(Task):
                 signal='SIGKILL'
             )
 
-            et.status = 'CANCELED'
+            et.status = 'CANCELLED'
             et.save()
 
-        pt.status = 'CANCELED'
+        pt.status = 'CANCELLED'
         pt.save()

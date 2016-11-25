@@ -1015,8 +1015,8 @@ class TestExportTaskViewSet(APITestCase):
         pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
         et = pt.tasks.last()
 
-        self.assertEqual(pt.status, 'CANCELED')
-        self.assertEqual(et.status, 'CANCELED')
+        self.assertEqual(pt.status, 'CANCELLED')
+        self.assertEqual(et.status, 'CANCELLED')
 
 
     def test_export_provider_task_get(self):
