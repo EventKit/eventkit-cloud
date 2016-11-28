@@ -762,9 +762,10 @@ class RevokeTask(Task):
 
     def run(self, task_uid):
         from eventkit_cloud.tasks.models import ExportProviderTask
+        from eventkit_cloud.celery import app
+
         export_provider_task = ExportProviderTask.objects.filter(uid=task_uid).first()
         export_tasks = export_provider_task.tasks.all()
-        app = app_or_default()
 
         for export_task in export_tasks:
             app.control.revoke(

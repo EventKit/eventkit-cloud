@@ -28,8 +28,7 @@ from serializers import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
-from ..tasks.export_tasks import PickUpRunTask
-from eventkit_cloud.tasks.util_tasks import RevokeTask
+from ..tasks.export_tasks import PickUpRunTask, RevokeTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -519,7 +518,7 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, uid=None, *args, **kwargs):
+    def update(self, request, uid=None, *args, **kwargs):
         rt = RevokeTask()
         rt.run(uid)
         return Response({'success': True}, status=status.HTTP_200_OK)

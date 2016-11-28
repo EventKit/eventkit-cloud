@@ -484,9 +484,9 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(export_task.progress, 50)
         self.assertEquals(export_task.estimated_finish, estimated)
 
-    @patch('eventkit_cloud.tasks.export_tasks.app_or_default')
+    @patch('eventkit_cloud.celery.app')
     @patch('shutil.rmtree')
-    def test_revoke_task(self, rmtree, app_or_default):
+    def test_revoke_task(self, rmtree, app):
 
         export_provider_task = ExportProviderTask.objects.create(
             run=self.run,
@@ -503,7 +503,7 @@ class TestExportTasks(ExportTaskBase):
         revoke_task = RevokeTask()
         revoke_task.run(export_provider_task.uid)
 
-        app_or_default.return_value.control.revoke.assert_called_once_with(str(export_task.celery_uid),
+        app.control.revoke.assert_called_once_with(str(export_task.celery_uid),
                                                                            signal='SIGKILL',
                                                                            terminate=True)
 
