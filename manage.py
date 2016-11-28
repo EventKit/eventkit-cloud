@@ -15,9 +15,11 @@ if __name__ == "__main__":
 
         if is_testing:
             import coverage
-
+            os.mkdir('./coverage')
+            os.chmod('./coverage', 0755)
             cov = coverage.coverage(config_file=".coveragerc",
-                                    source=["eventkit_cloud"])
+                                    source=["eventkit_cloud"],
+                                    directory='./coverage')
             cov.erase()
             cov.start()
 
