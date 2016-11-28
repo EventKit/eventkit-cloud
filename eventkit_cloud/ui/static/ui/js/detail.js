@@ -529,7 +529,10 @@ exports.detail = (function () {
             });
             $.ajax({
                 url: url,
-                data: {'cancel': true},
+                data: {
+                    'cancel': true,
+                    'uid': provider_uid
+                },
                 dataType: 'json',
                 cache: false,
                 method: 'patch',

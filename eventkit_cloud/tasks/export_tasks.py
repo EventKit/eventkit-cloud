@@ -159,8 +159,15 @@ class ExportTask(Task):
                 stage_dir=stage_dir
             ).delay()
 
-    def after_return(self, *args, **kwargs):
+    def after_return(self, exc, task_id, args, kwargs, einfo):
+        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
+        from eventkit_cloud.tasks.models import ExportTaskException, ExportProviderTask
         logger.debug('Task returned: {0}'.format(self.request))
+        task = ExportTaskModel.objects.get(celery_uid=task_id)
+        exception = cPickle.dumps(einfo)
+        ete = ExportTaskException(task=task, exception="Task was cancelled.")
+        ete.save()
+
 
     def update_task_state(self, task_uid=None):
         """
@@ -764,12 +771,12 @@ class RevokeTask(Task):
         from eventkit_cloud.tasks.models import ExportProviderTask
         from eventkit_cloud.celery import app
 
-        export_provider_task = ExportProviderTask.objects.filter(uid=task_uid).first()
+        export_provider_task = ExportProviderTask.objects.get(uid=task_uid)
         export_tasks = export_provider_task.tasks.all()
 
         for export_task in export_tasks:
             app.control.revoke(
-                str(export_task.celery_uid),
+                task_id=str(export_task.celery_uid),
                 terminate=True,
                 signal='SIGKILL'
             )
