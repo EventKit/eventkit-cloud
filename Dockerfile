@@ -73,7 +73,6 @@ RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
-RUN mkdir /var/lib/eventkit/staticfiles
 RUN mkdir /var/lib/eventkit/db_dir
 RUN chown eventkit:eventkit -R /var/lib/eventkit/
 RUN mkdir /var/log/eventkit
