@@ -23,7 +23,7 @@ from eventkit_cloud.tasks.export_tasks import (
     ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
     ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask, PickUpRunTask
+    get_progress_tracker, ZipFileTask, PickUpRunTask, RevokeTask, FinalizeExportProviderTask
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -483,3 +483,57 @@ class TestExportTasks(ExportTaskBase):
         export_task = ExportTask.objects.get(uid=saved_export_task_uid)
         self.assertEquals(export_task.progress, 50)
         self.assertEquals(export_task.estimated_finish, estimated)
+
+    @patch('eventkit_cloud.tasks.export_tasks.app_or_default')
+    @patch('shutil.rmtree')
+    def test_revoke_task(self, rmtree, app_or_default):
+
+        export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='test_provider_task'
+        )
+
+        export_task = ExportTask.objects.create(
+            export_provider_task=export_provider_task,
+            status='PENDING',
+            name="test_task",
+            celery_uid=uuid.uuid4()
+        )
+
+        revoke_task = RevokeTask()
+        revoke_task.run(export_provider_task.uid)
+
+        app_or_default.return_value.control.revoke.assert_called_once_with(str(export_task.celery_uid),
+                                                                           signal='SIGKILL',
+                                                                           terminate=True)
+
+        export_provider_task = ExportProviderTask.objects.get(
+            uid=export_provider_task.uid
+        )
+
+        self.assertEqual(export_provider_task.status, 'CANCELLED')
+        self.assertTrue(all(
+            export_provider_task.status == 'CANCELLED' for export_provider_task in export_provider_task.tasks.all()
+        ))
+
+        finalize_export_provider_task = FinalizeExportProviderTask()
+        finalize_export_provider_task.run(
+            run_uid=self.run.uid,
+            export_provider_task_uid=export_provider_task.uid,
+            stage_dir='/tmp/notreal'
+        )
+        finalize_run_task = FinalizeRunTask()
+        finalize_run_task.run(run_uid=self.run.uid, stage_dir='/tmp/notreal')
+        rmtree.assert_called_once()
+
+        export_provider_task = ExportProviderTask.objects.get(
+            uid=export_provider_task.uid
+        )
+
+        self.assertEqual(export_provider_task.status, 'CANCELLED')
+        self.assertTrue(all(
+            export_task.status == 'CANCELLED' for export_task in export_provider_task.tasks.all()
+        ))
+
+        self.run = ExportRun.objects.get(uid=self.run.uid)
+        self.assertEqual(self.run.status, 'COMPLETED')

@@ -17,12 +17,14 @@ from django.utils import timezone
 
 from celery import Task
 from celery.utils.log import get_task_logger
+from celery.app import app_or_default
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite,
 )
+
 import socket
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
@@ -749,6 +751,33 @@ class ExportTaskErrorHandler(Task):
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
         msg.attach_alternative(html, "text/html")
         msg.send()
+
+
+class RevokeTask(Task):
+    """
+    Revokes an ExportProviderTask and terminates each subtasks execution.
+    """
+
+    name = "Revoke Task"
+
+    def run(self, task_uid):
+        from eventkit_cloud.tasks.models import ExportProviderTask
+        export_provider_task = ExportProviderTask.objects.filter(uid=task_uid).first()
+        export_tasks = export_provider_task.tasks.all()
+        app = app_or_default()
+
+        for export_task in export_tasks:
+            app.control.revoke(
+                str(export_task.celery_uid),
+                terminate=True,
+                signal='SIGKILL'
+            )
+
+            export_task.status = 'CANCELLED'
+            export_task.save()
+
+        export_provider_task.status = 'CANCELLED'
+        export_provider_task.save()
 
 
 def get_progress_tracker(task_uid=None):
