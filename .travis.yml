@@ -24,4 +24,4 @@ script:
     - docker-compose run -T webpack npm test
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev AWS_BUCKET_NAME=test_bucket
