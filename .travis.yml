@@ -24,7 +24,7 @@ script:
     - docker-compose run -T webpack npm test
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev COVERAGE='True'
 
 after_success:
   - coveralls
