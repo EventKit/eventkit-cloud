@@ -1,16 +1,9 @@
-import React from 'react'
-import { render } from 'react-dom'
-import { createStore } from 'redux'
-import { Provider } from 'react-redux'
-import App from './components/App'
-import Application from './components/Application'
-import reducer from './reducers'
-
-const store = createStore(reducer)
+import React from 'react';
+import { render } from 'react-dom';
+import { Router, browserHistory } from 'react-router';
+import routes from './routes';
 
 render(
-  <Provider store={store}>
-    <Application />
-  </Provider>,
-  document.getElementById('root')
-)
+    <Router history={browserHistory} routes={routes} />,
+    document.getElementById('root')
+);
