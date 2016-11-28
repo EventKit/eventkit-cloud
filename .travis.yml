@@ -19,12 +19,12 @@ before_script:
 #    - docker-compose up -d
 
 script:
-    - docker-compose run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
-#    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
+    - docker-compose run -T -e COVERAGE=True eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
+    - docker-compose run eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
     - docker-compose run -T webpack npm test
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev COVERAGE='True'
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
 
 after_success:
   - coveralls
