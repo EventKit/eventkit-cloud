@@ -4,7 +4,6 @@ from __future__ import absolute_import
 from .project import *  # NOQA
 import dj_database_url
 import os
-import json
 
 
 # Authentication Settings
@@ -22,7 +21,6 @@ if os.environ.get('LDAP_SERVER_URI'):
     AUTHENTICATION_BACKENDS = (
       'django_auth_ldap.backend.LDAPBackend',
       'django.contrib.auth.backends.ModelBackend',
-      #'guardian.backends.ObjectPermissionBackend',
     )
     AUTH_LDAP_USER_ATTR_MAP = {
       'first_name': 'givenName',
@@ -98,95 +96,6 @@ SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
 SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', SITE_NAME)
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'verbose': {
-#             'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-#             'datefmt': "%d/%b/%Y %H:%M:%S"
-#         },
-#         'simple': {
-#             'format': '%(levelname)s %(message)s'
-#         },
-#     },
-#     'handlers': {
-#         'console': {
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'simple',
-#             'level': 'DEBUG',
-#         }
-#     },
-#     'loggers': {
-#         'django': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#            # 'level': 'DEBUG',
-#             'level': 'ERROR',
-#         },
-#         'eventkit_cloud.api': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.api.tests': {
-#             'handlers': ['console'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.tasks.tests': {
-#             'handlers': ['console'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.tasks': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.celery.task': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.jobs': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.jobs.tests': {
-#             'handlers': ['console', 'file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.utils': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud.utils.tests': {
-#             'handlers': ['console', 'file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'eventkit_cloud': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'tasks': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG',
-#         },
-#         'celery.task': {
-#             'handlers': ['file'],
-#             'propagate': True,
-#             'level': 'DEBUG'
-#         }
-#     }
-# }
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'

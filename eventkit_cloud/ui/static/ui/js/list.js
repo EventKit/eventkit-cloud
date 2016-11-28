@@ -66,7 +66,7 @@ jobs.list = (function(){
             initSearch();
             runSearch();
         },
-    }
+    };
 
 
     /**
@@ -159,12 +159,7 @@ jobs.list = (function(){
             style: getExtentStyles().select,
             condition: ol.events.condition.click,
             filter: function(feature, layer) {
-                if(feature.getStyle().getZIndex() != -1) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return feature.getStyle().getZIndex() != -1;
             }
         });
         map.addInteraction(selectControl);
@@ -184,18 +179,13 @@ jobs.list = (function(){
         $(map.getViewport()).on('mousemove', function(e) {
             var pixel = map.getEventPixel(e.originalEvent);
             var hit = map.forEachFeatureAtPixel(pixel, function(feature, layer) {
-                if (layer == job_extents && feature.getStyle().getZIndex() != -1) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return !!(layer == job_extents && feature.getStyle().getZIndex() != -1);
             });
-            if (hit) {
-                //display the featureover event!
-            } else {
-                //do nothing
-            }
+            // if (hit) {
+            //     //display the featureover event!
+            // } else {
+            //     //do nothing
+            // }
         });
 
         //OL3 double click handler:
@@ -255,7 +245,7 @@ jobs.list = (function(){
         // dblClickHandler.activate();
 
         // add filter selection layer
-        bboxSource = new ol.source.Vector()
+        bboxSource = new ol.source.Vector();
         bbox = new ol.layer.Vector({
             name: 'Filter',
             source: bboxSource,
@@ -941,7 +931,7 @@ jobs.list = (function(){
      * used in bbox filtering of results.
      */
     function setBounds(bounds) {
-        fmt = '0.0000000000' // format to 10 decimal places
+        fmt = '0.0000000000'; // format to 10 decimal places
         //bounds.transform('EPSG:3857', 'EPSG:4326');
         bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
         var xmin = numeral(bounds[0]).format(fmt);

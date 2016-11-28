@@ -1,25 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import os
-from django.db import models, migrations
-from django.contrib.auth.models import Group
-from eventkit_cloud.jobs.models import ExportProfile
+from django.db import migrations
 
 
 class Migration(migrations.Migration):
 
-    def insert_default_group(apps, schema_editor):
+    def insert_default_group(apps, schema_editor):  # NOQA
         """
         Set up the default group and group profile.
         """
-        Group = apps.get_model('auth', 'Group')
-        ExportProfile = apps.get_model('jobs', 'ExportProfile')
+        Group = apps.get_model('auth', 'Group')  # NOQA
+        ExportProfile = apps.get_model('jobs', 'ExportProfile')  # NOQA
         group = Group.objects.create(name='DefaultExportExtentGroup')
-        profile = ExportProfile.objects.create(
-            name='DefaultExportProfile',
-            max_extent=2500000,
-            group=group
-        )
+        ExportProfile.objects.create(name='DefaultExportProfile', max_extent=2500000, group=group)
 
     dependencies = [
         ('jobs', 'install_region_mask'),

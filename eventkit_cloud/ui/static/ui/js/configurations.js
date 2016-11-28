@@ -16,7 +16,7 @@ configurations.list = (function(){
             initSearch();
             runSearch();
         },
-    }
+    };
 
     /*
      * Initialize the configuration upload form.
@@ -261,7 +261,7 @@ configurations.list = (function(){
                     var modalOpts = {
                         keyboard: true,
                         backdrop: 'static',
-                    }
+                    };
                     var message = jqxhr.responseJSON.message[0];
                     $('p#message').html(message);
                     $("#uploadConfigError").modal(modalOpts, 'show');
