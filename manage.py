@@ -19,7 +19,7 @@ if __name__ == "__main__":
             import coverage
             if not os.path.exists('./coverage'):
                 os.mkdir('./coverage')
-                os.chmod('./coverage', 0775)
+                os.chmod('./coverage', 0777)
                 uid = pwd.getpwnam('eventkit').pw_uid
                 gid = grp.getgrnam('eventkit').gr_uid
                 os.chown('./coverage', uid, gid)
