@@ -2,13 +2,14 @@ import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import * as exportActions from '../actions/exportsActions';
 import JobList from './JobList';
+import styles from './Exports.css'
 
 class Exports extends React.Component {
     render() {
         return (
-            <div className="col-md-12">
+            <div className="div">
                 <h1>Jobs</h1>
-                <div className="col-md-4">
+                <div className="div2">
                     <JobList jobs={this.props.jobs} />
                 </div>
             </div>

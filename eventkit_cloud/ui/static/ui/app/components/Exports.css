@@ -1,0 +1,17 @@
+.div {
+    z-index: 9999;
+    position: absolute;
+    left: 0;
+    right: 30px;
+    top: 100px;
+    font-size: 14px;
+}
+
+.div2 {
+    z-index: 9999;
+    position: absolute;
+    left: 50%;
+    right: 0;
+    top: 300px;
+    font-size: 14px;
+}
