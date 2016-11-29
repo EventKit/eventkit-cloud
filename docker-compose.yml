@@ -17,6 +17,8 @@ services:
         - PRODUCTION=True
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
+     extra_hosts:
+        - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
   eventkit:
       extends:
