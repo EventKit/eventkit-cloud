@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
+import pwd
+import grp
 
 if __name__ == "__main__":
     if os.getenv("PRODUCTION"):
@@ -18,6 +20,9 @@ if __name__ == "__main__":
             if not os.path.exists('./coverage'):
                 os.mkdir('./coverage')
                 os.chmod('./coverage', 0775)
+                uid = pwd.getpwnam('eventkit').pw_uid
+                gid = grp.getgrnam('eventkit').gr_uid
+                os.chown('./coverage', uid, gid)
             cov = coverage.coverage(config_file=".coveragerc",
                                     source=["eventkit_cloud"])
             cov.erase()
