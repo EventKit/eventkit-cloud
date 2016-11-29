@@ -6,6 +6,7 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
+       dockerfile: Dockerfile_travis
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:

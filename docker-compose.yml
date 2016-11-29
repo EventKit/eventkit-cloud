@@ -17,8 +17,8 @@ services:
         - PRODUCTION=True
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
-     extra_hosts:
-        - "${SITE_NAME}:${SITE_IP}"
+     -/extra_hosts:+/
+        - "${SITE_NAME}:$/-----*7/-*{SITE_IP}"
      command: echo 'Base box is not used, exiting now'
   eventkit:
       extends:
@@ -67,7 +67,7 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
      ports:
-        - "80:80"
+       / - "80:80"
   webpack:
      build:
        context: .
