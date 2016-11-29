@@ -1,11 +1,11 @@
 .root {
     z-index: 10;
     position: absolute;
-    top: 20px;
+    top: 73px;
     left: 0;
     bottom: 0;
     width: 200px;
-    background-color: #1675aa;
+    background-color: #010101;
 }
 
 .atHome {
@@ -57,13 +57,13 @@
     position: relative;
     display: block;
     padding: 5px;
-    width: 100px;
+    width: 200px;
     line-height: 50px;
     text-align: left;
     text-decoration: none;
     transition: .1s ease-in;
     transition-property: line-height, background-color, color;
-    color: white;
+    color: #4498c0;
 }
 
 .atHome .link {
@@ -71,7 +71,8 @@
 }
 
 .link:hover {
-    background-color: #108dcb;
+    background-color: #161e2e;
+    text-decoration: none;
 }
 
 /* Link: Icon
