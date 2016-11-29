@@ -15,13 +15,14 @@ if __name__ == "__main__":
 
         if is_testing:
             import coverage
+            print("Yaba daba dooooo")
             if not os.path.exists('./coverage'):
                 os.mkdir('./coverage')
-            os.chmod('./coverage', 0755)
             cov = coverage.coverage(config_file=".coveragerc",
                                     source=["eventkit_cloud"],
                                     directory='./coverage')
             cov.erase()
+            os.chmod('./coverage', 0775)
             cov.start()
 
         execute_from_command_line(sys.argv)
