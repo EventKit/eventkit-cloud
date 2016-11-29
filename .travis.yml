@@ -15,7 +15,7 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 install:
-    - pip install coveralls
+    - sudo pip install coveralls
 
 before_script:
     - docker-compose -f docker-compose-travis.yml build
