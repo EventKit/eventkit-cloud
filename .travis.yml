@@ -25,7 +25,7 @@ before_script:
 script:
     - echo $SITE_IP
     - docker-compose -f docker-compose-travis.yml run -T -e COVERAGE=True eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
-    - docker-compose -f docker-compose-travis.yml run -T -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} TRAVIS=True TRAVIS_JOB_ID=${TRAVIS_JOB_ID} TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
+    - docker-compose -f docker-compose-travis.yml run -T -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
     - docker-compose -f docker-compose-travis.yml run -T webpack npm test
 
 env:
