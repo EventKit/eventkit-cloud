@@ -165,7 +165,7 @@ class ExportTask(Task):
         logger.debug('Task returned: {0}'.format(self.request))
         task = ExportTaskModel.objects.get(celery_uid=task_id)
         exception = cPickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=cpickle.dumps("Task was cancelled."))
+        ete = ExportTaskException(task=task, exception=cPickle.dumps("Task was cancelled."))
         ete.save()
 
 
