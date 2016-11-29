@@ -4,6 +4,7 @@ import sys
 import pwd
 import grp
 import subprocess
+from django.conf import settings
 
 if __name__ == "__main__":
     if os.getenv("PRODUCTION"):
@@ -33,7 +34,8 @@ if __name__ == "__main__":
             cov.html_report(directory='./coverage')
 
             if os.getenv("TRAVIS"):
-                subprocess.call(['coveralls'])
+                coveralls = os.path.join(os.path.pardir(settings.BASE_DIR), '/.virtualenvs/eventkit/bin/coveralls')
+                subprocess.call([coveralls])
                 # token = os.getenv("COVERALLS_REPO_TOKEN")
                 # subprocess.call(['COVERALLS_REPO_TOKEN={}'.format(token), 'coveralls'])
 
