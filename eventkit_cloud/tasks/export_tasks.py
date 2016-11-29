@@ -159,16 +159,6 @@ class ExportTask(Task):
                 stage_dir=stage_dir
             ).delay()
 
-    def after_return(self, status, exc, task_id, args, kwargs, einfo):
-        from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
-        from eventkit_cloud.tasks.models import ExportTaskException, ExportProviderTask
-        logger.debug('Task returned: {0}'.format(self.request))
-        task = ExportTaskModel.objects.get(celery_uid=task_id)
-        exception = cPickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=cPickle.dumps("Task was cancelled."))
-        ete.save()
-
-
     def update_task_state(self, task_uid=None):
         """
         Update the task state and celery task uid.
