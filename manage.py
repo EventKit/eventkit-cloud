@@ -3,6 +3,7 @@ import os
 import sys
 import pwd
 import grp
+import subprocess
 
 if __name__ == "__main__":
     if os.getenv("PRODUCTION"):
@@ -30,6 +31,13 @@ if __name__ == "__main__":
             cov.save()
             cov.report()
             cov.html_report(directory='./coverage')
+
+            if os.getenv("TRAVIS"):
+                subprocess.call(['coveralls'])
+                # token = os.getenv("COVERALLS_REPO_TOKEN")
+                # subprocess.call(['COVERALLS_REPO_TOKEN={}'.format(token), 'coveralls'])
+
+
 
     else:
         execute_from_command_line(sys.argv)
