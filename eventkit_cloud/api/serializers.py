@@ -179,9 +179,14 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
-        return str(exc_info[1])
-
+        exception = obj.exception
+        try:
+            exc_info = cPickle.loads(str(exception))
+            if exc_info:
+                exc_info = exc_info.exc_info
+            return str(exc_info[1])
+        except:
+            return exception
 
 class ExportTaskSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
