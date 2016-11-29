@@ -17,12 +17,7 @@ if __name__ == "__main__":
 
         if is_testing:
             import coverage
-            if not os.path.exists('./coverage'):
-                os.mkdir('./coverage')
-                os.chmod('./coverage', 0777)
-                uid = pwd.getpwnam('eventkit').pw_uid
-                gid = grp.getgrnam('eventkit').gr_gid
-                os.chown('./coverage', uid, gid)
+
             cov = coverage.coverage(config_file=".coveragerc",
                                     source=["eventkit_cloud"])
             cov.erase()

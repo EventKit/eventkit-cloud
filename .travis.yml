@@ -15,13 +15,13 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 before_script:
-    - docker-compose build
-    - docker-compose up -d
+    - docker-compose -f docker-compose-travis.yml build
+    - docker-compose -f docker-compose-travis.yml up -d
 
 script:
-    - docker-compose run -T -e COVERAGE=True eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
-    - docker-compose run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
-    - docker-compose run -T webpack npm test
+    - docker-compose -f docker-compose-travis.yml run -T -e COVERAGE=True eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
+    - docker-compose -f docker-compose-travis.yml run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
+    - docker-compose -f docker-compose-travis.yml run -T webpack npm test
 
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
