@@ -1,10 +1,13 @@
 Eventkit-Cloud
 ==============
+[![Build Status](https://travis-ci.org/terranodo/eventkit-cloud.svg?branch=master)](https://travis-ci.org/terranodo/eventkit-cloud) [![Coverage Status](https://coveralls.io/repos/github/terranodo/eventkit-cloud/badge.svg?branch=master)](https://coveralls.io/github/terranodo/eventkit-cloud?branch=master)
 
 Eventkit-cloud is based on the [HOT OSM Export Tool 2](https://github.com/hotosm/osm-export-tool2).  It allows the user to select data from different sources to export into a variety of formats.
   
 ## Getting Started
 Eventkit-cloud requires [Vagrant](https://www.vagrantup.com/), which itself requires [Virtualbox](https://www.virtualbox.org/wiki/Downloads) or [Docker](https://docs.docker.com/engine/installation/)
+
+A setup guide for running vagrant and docker in the [windows setup guide](windows.md).
 
 ### Vagrant
 After installing the dependencies open an elevated shell/command prompt and enter:

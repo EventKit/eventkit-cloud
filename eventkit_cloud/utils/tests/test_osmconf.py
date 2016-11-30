@@ -25,21 +25,15 @@ class TestOSMConf(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', event='Nepal activation',
-                                 user=self.user, the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description',
+                                      event='Nepal activation', user=self.user, the_geom=the_geom)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
         self.job.save()
         for tag in self.tags:
-            Tag.objects.create(
-                key=tag['key'],
-                value=tag['value'],
-                job=self.job,
-                data_model='osm',
-                geom_types=tag['geom_types']
-            )
+            Tag.objects.create(name=tag['key'], value=tag['value'], job=self.job, data_model='osm',
+                               geom_types=tag['geom_types'])
         self.categories = self.job.categorised_tags
 
     def test_create_osm_conf(self,):

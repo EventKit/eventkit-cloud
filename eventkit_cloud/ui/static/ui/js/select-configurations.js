@@ -24,7 +24,7 @@ configurations.list = (function(){
             // run the default search
             //runSearch();
         },
-    }
+    };
 
 
     /**
@@ -70,7 +70,7 @@ configurations.list = (function(){
                 var filename = e.target.getAttribute('data-filename');
                 var published = e.target.getAttribute('data-published') === true ? 'Published' : 'Private';
                 if (isSelected) {
-                    var selection = {}
+                    var selection = {};
                     selection['uid'] = uid;
                     selection['config_type'] = type;
                     selection['filename'] = filename;

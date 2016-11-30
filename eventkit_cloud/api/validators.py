@@ -20,29 +20,6 @@ from rest_framework import serializers
 logger = logging.getLogger(__name__)
 
 
-def validate_conifg(uid):
-    pass
-
-
-def validate_region(regions):
-    """
-    Return the first region found.
-
-    Args:
-        regions: a list of Regions.
-
-    Raises:
-        ValidationError: if no regions are found.
-
-    if len(regions) == 0:
-        detail = OrderedDict()
-        detail['id'] = _('invalid_region')
-        detail['message'] = _('Job extent is not within a valid region.')
-        raise serializers.ValidationError(detail)
-    return regions[0]
-    """
-
-
 def validate_formats(data):
     """
     Validate the selected export formats.
@@ -53,7 +30,7 @@ def validate_formats(data):
     Raises:
         ValidationError: if there are no formats selected.
     """
-    if data.get('formats') == None or len(data.get('formats')) == 0:
+    if data.get('formats') is None or len(data.get('formats')) == 0:
         raise serializers.ValidationError({'formats': [_('invalid export format.')]})
 
 
@@ -67,7 +44,7 @@ def validate_provider_tasks(data):
     Raises:
         ValidationError: if there are no formats selected.
     """
-    if data.get('formats') == None or len(data.get('formats')) == 0:
+    if data.get('formats') is None or len(data.get('formats')) == 0:
         raise serializers.ValidationError({'formats': [_('invalid export format.')]})
 
 
@@ -82,7 +59,7 @@ def validate_providers(data):
         ValidationError: if there are no formats selected.
     """
     for provider_task in data.get('provider_tasks', {"provider": None}):
-        if provider_task.get('provider') == None or len(provider_task.get('provider')) == 0:
+        if provider_task.get('provider') is None or len(provider_task.get('provider')) == 0:
             raise serializers.ValidationError({'provider': [_('Select a provider.')]})
 
 
@@ -106,11 +83,11 @@ def validate_search_bbox(extents):
     detail['message'] = _('Invalid bounding box.')
     try:
         bbox = Polygon.from_bbox(extents)
-        if (bbox.valid):
+        if bbox.valid:
             return bbox
         else:
             raise serializers.ValidationError(detail)
-    except GEOSException as e:
+    except GEOSException:
         raise serializers.ValidationError(detail)
 
 
@@ -140,7 +117,7 @@ def validate_bbox(extents, user=None):
     detail['message'] = _('Invalid bounding box.')
     try:
         bbox = GEOSGeometry(Polygon.from_bbox(extents), srid=4326)
-        if (bbox.valid):
+        if bbox.valid:
             area = get_geodesic_area(bbox) / 1000000
             if area > max_extent:
                 detail['id'] = _('invalid_extents')
@@ -149,7 +126,7 @@ def validate_bbox(extents, user=None):
             return bbox
         else:
             raise serializers.ValidationError(detail)
-    except GEOSException as e:
+    except GEOSException:
         raise serializers.ValidationError(detail)
 
 
@@ -173,30 +150,30 @@ def validate_bbox_params(data):
     lat_coords = [float(data['ymin']), float(data['ymax'])]
     # test lat long value order
     if ((lon_coords[0] >= 0 and lon_coords[0] > lon_coords[1]) or
-            (lon_coords[0] < 0 and lon_coords[0] > lon_coords[1])):
+            (0 > lon_coords[0] > lon_coords[1])):
         detail['id'] = _('inverted_coordinates')
         detail['message'] = _('xmin greater than xmax.')
         raise serializers.ValidationError(detail)
 
     if ((lat_coords[0] >= 0 and lat_coords[0] > lat_coords[1]) or
-            (lat_coords[0] < 0 and lat_coords[0] > lat_coords[1])):
+            (0 > lat_coords[0] > lat_coords[1])):
         detail['id'] = _('inverted_coordinates')
         detail['message'] = _('ymin greater than ymax.')
         raise serializers.ValidationError(detail)
 
     # test lat long extents
     for lon in lon_coords:
-        if (lon < -180 or lon > 180):
+        if lon < -180 or lon > 180:
             detail['id'] = _('invalid_longitude')
             detail['message'] = _('Invalid longitude coordinate: %(lon)s') % {'lon': lon}
             raise serializers.ValidationError(detail)
     for lat in lat_coords:
-        if (lat < -90 and lat > 90):
+        if -90 > lat > 90:
             detail['id'] = _('invalid_latitude')
             detail['message'] = _('Invalid latitude coordinate: %(lat)s') % {'lat': lat}
             raise serializers.ValidationError(detail)
 
-    return (data['xmin'], data['ymin'], data['xmax'], data['ymax'])
+    return data['xmin'], data['ymin'], data['xmax'], data['ymax']
 
 
 def validate_string_field(name=None, data=None):
@@ -219,7 +196,7 @@ def validate_string_field(name=None, data=None):
     detail['param'] = name
     try:
         value = data[name]
-        if value == None or value == '':
+        if value is None or value == '':
             raise serializers.ValidationError(detail)
         else:
             return value
@@ -242,13 +219,14 @@ def validate_content_type(upload, config_type):
         ValidationError: if the uploaded file has invalid content for the provided config_type.
     """
     ACCEPT_MIME_TYPES = {'PRESET': ('application/xml',),
-                        'TRANSFORM': ('application/x-sql', 'text/plain'),
-                        'TRANSLATION': ('text/plain',)}
+                         'TRANSFORM': ('application/x-sql', 'text/plain'),
+                         'TRANSLATION': ('text/plain',)}
     content_type = magic.from_buffer(upload.read(1024), mime=True)
-    if (content_type not in ACCEPT_MIME_TYPES[config_type]):
+    if content_type not in ACCEPT_MIME_TYPES[config_type]:
         detail = OrderedDict()
         detail['id'] = _('invalid_content')
-        detail['message'] = _('Uploaded config file has invalid content: %(content_type)s') % {'content_type': content_type}
+        detail['message'] = _('Uploaded config file has invalid content: %(content_type)s') % {
+            'content_type': content_type}
         raise serializers.ValidationError(detail)
     return content_type
 
@@ -305,7 +283,7 @@ def get_geodesic_area(geom):
     if length > 2:
         for x in range(length - 1):
             p1 = coords[x]
-            p2 = coords[x+1]
+            p2 = coords[x + 1]
             area += math.radians(p2[0] - p1[0]) * (2 + math.sin(math.radians(p1[1]))
                                                    + math.sin(math.radians(p2[1])))
         area = area * 6378137 * 6378137 / 2.0

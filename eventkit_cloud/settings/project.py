@@ -34,15 +34,6 @@ EXPORT_TASKS = {
 }
 
 
-# CLASSIFICATION_TEXT = 'Unclassified//FOUO'
-# CLASSIFICATION_TEXT_COLOR = 'black'
-# CLASSIFICATION_BACKGROUND_COLOR = 'green'
-#
-# SETTINGS_EXPORT = [
-#     'CLASSIFICATION_TEXT',
-#     'CLASSIFICATION_TEXT_COLOR',
-#     'CLASSIFICATION_BACKGROUND_COLOR',
-# ]
 
 CLASSIFICATION_TEXT = os.getenv('CLASSIFICATION_TEXT', 'Unclassified//FOUO')
 CLASSIFICATION_TEXT_COLOR = os.getenv('CLASSIFICATION_TEXT_COLOR', 'black')
@@ -80,13 +71,15 @@ EXPORT_MAX_RUNS = 1
 if os.environ.get('VCAP_APPLICATION'):
     env = json.loads(os.environ.get('VCAP_APPLICATION'))
     HOSTNAME = os.getenv('HOSTNAME', env['application_uris'][0])
-    # HOSTNAME = "eventkit.cfapps.io"
     SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
     SITE_URL = os.getenv('SITE_URL', "https://{0}".format(SITE_NAME))
 else:
-    HOSTNAME = os.getenv('HOSTNAME', 'cloud.eventkit.dev')
-    SITE_NAME = os.getenv('SITE_NAME', 'cloud.eventkit.dev')
-    SITE_URL = os.getenv('SITE_URL', 'http://cloud.eventkit.dev')
+    import socket
+    HOSTNAME = os.getenv('HOSTNAME', socket.gethostname())
+    SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
+    if SITE_NAME == '':
+        SITE_NAME = 'localhost'
+    SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
 SITE_ID = 1
 
 """

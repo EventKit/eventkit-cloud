@@ -1,4 +1,4 @@
-exports = {}
+exports = {};
 exports.detail = (function(){
     var map;
     var job_extents_source;
@@ -16,7 +16,7 @@ exports.detail = (function(){
             loadCompletedRunDetails();
             //loadFailedRunDetails();
         },
-    }
+    };
 
     /**
      * Initialize the export overview map.
@@ -37,7 +37,7 @@ exports.detail = (function(){
                 minZoom: 2,
                 maxZoom: 18,
             })
-        })
+        });
 
         job_extents_source = new ol.source.Vector();
 
@@ -189,7 +189,7 @@ exports.detail = (function(){
     function loadCompletedRunDetails(expand_first){
         var job_uid = exports.detail.job_uid;
         var $runPanel = $('#completed_runs > .panel-group');
-        var url = Config.RUNS_URL + '?job_uid=' + job_uid
+        var url = Config.RUNS_URL + '?job_uid=' + job_uid;
         $.ajax({
             cache: false,
             url: url,
@@ -481,7 +481,7 @@ exports.detail = (function(){
 
                 taskDiv+=('</table></div>');
                 $(taskDiv).appendTo('#providers');
-                $providersDiv.append('</table>')
+                $providersDiv.append('</table>');
 
                 for (j = 0; j <= progressValue.length; j++)
                 {
@@ -715,11 +715,7 @@ exports.detail = (function(){
             if (run.status === 'SUBMITTED') {
                 console.log(job_data.provider_tasks.length);
                 console.log(run.provider_tasks.length);
-                if (job_data.provider_tasks.length == run.provider_tasks.length) {
-                    run_ready = true;
-                } else {
-                    run_ready = false;
-                }
+                run_ready = job_data.provider_tasks.length == run.provider_tasks.length;
             }
         });
         return run_ready;
@@ -741,15 +737,15 @@ exports.detail = (function(){
                 }
             },
             error: function(xhr, status, error){
-                var json = xhr.responseJSON
+                var json = xhr.responseJSON;
                 console.log(error);
             },
-        }
+        };
 
         var modalOpts = {
             keyboard: true,
             backdrop: 'static',
-        }
+        };
 
         $("button#delete").bind('click', function(e){
             // stop form getting posted..
@@ -768,7 +764,7 @@ exports.detail = (function(){
         var modalOpts = {
             keyboard: true,
             backdrop: 'static',
-        }
+        };
         $("button#features").bind('click', function(e){
             $("#featuresModal").modal(modalOpts, 'show');
         });

@@ -14,7 +14,6 @@ from ..models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
 logger = logging.getLogger(__name__)
 
 
-
 class TestExportRun(TestCase):
     """
     Test cases for ExportRun model
@@ -31,9 +30,7 @@ class TestExportRun(TestCase):
         provider_task = ProviderTask.objects.create(provider=ExportProvider.objects.get(slug='osm-generic'))
         # add the formats to the provider task
         provider_task.formats.add(*formats)
-        job = Job.objects.create(name='TestJob',
-                                 description='Test description', user=user,
-                                 the_geom=the_geom)
+        job = Job.objects.create(name='TestJob', description='Test description', user=user, the_geom=the_geom)
         job.provider_tasks.add(provider_task)
 
     def test_export_run(self, ):
@@ -103,9 +100,7 @@ class TestExportTask(TestCase):
         user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        Job.objects.create(name='TestJob',
-                           description='Test description', user=user,
-                           the_geom=the_geom)
+        Job.objects.create(name='TestJob', description='Test description', user=user, the_geom=the_geom)
         self.job = Job.objects.all()[0]
         # add the formats to the job
         self.job.formats = formats

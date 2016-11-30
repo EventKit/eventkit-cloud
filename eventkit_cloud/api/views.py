@@ -4,7 +4,7 @@ from collections import OrderedDict
 import logging
 import os
 
-from django.db import Error, transaction
+from django.db import transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
@@ -18,17 +18,18 @@ from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import (
     ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
 )
-from eventkit_cloud.jobs.presets import PresetParser, UnfilteredPresetParser
+from eventkit_cloud.jobs.presets import PresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
-    RegionSerializer, ListJobSerializer, ExportProviderSerializer, ProviderTaskSerializer,
+    RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
     ExportProviderSerializer
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
 from ..tasks.export_tasks import PickUpRunTask
+from eventkit_cloud.tasks.util_tasks import RevokeTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -140,7 +141,7 @@ class JobViewSet(viewsets.ModelViewSet):
             ValidationError: if the supplied extents are invalid.
         """
         params = self.request.query_params.get('bbox', None)
-        if params == None:
+        if params is None:
             queryset = self.filter_queryset(self.get_queryset())
             page = self.paginate_queryset(queryset)
             if page is not None:
@@ -149,7 +150,7 @@ class JobViewSet(viewsets.ModelViewSet):
             else:
                 serializer = ListJobSerializer(queryset, many=True, context={'request': request})
                 return Response(serializer.data)
-        if (len(params.split(',')) < 4):
+        if len(params.split(',')) < 4:
             errors = OrderedDict()
             errors['id'] = _('missing_bbox_parameter')
             errors['message'] = _('Missing bounding box parameter')
@@ -195,7 +196,7 @@ class JobViewSet(viewsets.ModelViewSet):
             ValidationError: in case of validation errors.
         """
         serializer = self.get_serializer(data=request.data)
-        if (serializer.is_valid()):
+        if serializer.is_valid():
             """Get the required data from the validated request."""
 
             export_providers = request.data.get('export_providers', [])
@@ -219,7 +220,10 @@ class JobViewSet(viewsets.ModelViewSet):
                     """Save the job and make sure it's committed before running tasks."""
                     try:
                         job = serializer.save()
-                        provider_serializer = ProviderTaskSerializer(data=provider_tasks, many=True)
+                        provider_serializer = ProviderTaskSerializer(
+                            data=provider_tasks,
+                            many=True
+                        )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
                         except ValidationError:
@@ -237,26 +241,14 @@ class JobViewSet(viewsets.ModelViewSet):
                             parser = presets.UnfilteredPresetParser(preset=preset_path)
                             tags_dict = parser.parse()
                             for entry in tags_dict:
-                                tag = Tag.objects.create(
-                                    name=entry['name'],
-                                    key=entry['key'],
-                                    value=entry['value'],
-                                    geom_types=entry['geom_types'],
-                                    data_model='PRESET',
-                                    job=job
-                                )
+                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
+                                                   geom_types=entry['geom_types'], data_model='PRESET', job=job)
                         elif tags:
                             """Get tags from request."""
                             for entry in tags:
-                                tag = Tag.objects.create(
-                                    name=entry['name'],
-                                    key=entry['key'],
-                                    value=entry['value'],
-                                    job=job,
-                                    data_model=entry['data_model'],
-                                    geom_types=entry['geom_types'],
-                                    groups=entry['groups']
-                                )
+                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
+                                                   job=job, data_model=entry['data_model'],
+                                                   geom_types=entry['geom_types'], groups=entry['groups'])
                         else:
                             """
                             Use hdm preset as default tags if no preset or tags
@@ -266,14 +258,8 @@ class JobViewSet(viewsets.ModelViewSet):
                             parser = presets.PresetParser(preset=path + '/presets/hdm_presets.xml')
                             tags_dict = parser.parse()
                             for entry in tags_dict:
-                                tag = Tag.objects.create(
-                                    name=entry['name'],
-                                    key=entry['key'],
-                                    value=entry['value'],
-                                    geom_types=entry['geom_types'],
-                                    data_model='HDM',
-                                    job=job
-                                )
+                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
+                                                   geom_types=entry['geom_types'], data_model='HDM', job=job)
                         # check for translation file
                         if translation:
                             config = ExportConfig.objects.get(uid=translation)
@@ -314,7 +300,8 @@ class RunJob(views.APIView):
 
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, uid=None, format=None):
+    @staticmethod
+    def get(request):
         """
         Re-runs the job.
 
@@ -329,10 +316,10 @@ class RunJob(views.APIView):
             the serialized run data.
         """
         job_uid = request.query_params.get('job_uid', None)
-        user = request.user
-        if (job_uid):
+        # user = request.user
+        if job_uid:
             # run the tasks
-            job = Job.objects.get(uid=job_uid)
+            # job = Job.objects.get(uid=job_uid)
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=job_uid)
             # Run is passed to celery to start the tasks.
@@ -495,7 +482,11 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized ExportTask data.
         """
         queryset = ExportTask.objects.filter(uid=uid)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -518,11 +509,20 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
             request: the http request.
             uid: the uid of the export task to GET.
         Returns:
-            the serialized ExportTask data.
+            the serialized ExportTask data
         """
         queryset = ExportProviderTask.objects.filter(uid=uid)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        serializer = self.get_serializer(
+            queryset,
+            many=True,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, uid=None, *args, **kwargs):
+        rt = RevokeTask()
+        rt.run(uid)
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
@@ -562,7 +562,8 @@ class HDMDataModelView(views.APIView):
     """Endpoint exposing the HDM Data Model."""
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get(self, request, format='json'):
+    @staticmethod
+    def get(request, format='json'):
         path = os.path.dirname(os.path.realpath(__file__))
         parser = PresetParser(path + '/presets/hdm_presets.xml')
         data = parser.build_hdm_preset_dict()
@@ -573,7 +574,9 @@ class OSMDataModelView(views.APIView):
     """Endpoint exposing the OSM Data Model."""
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get(self, request, format='json'):
+    @staticmethod
+    def get(request, format='json'):
+        # TODO: move __file__ reference to pkgutil
         path = os.path.dirname(os.path.realpath(__file__))
         parser = PresetParser(path + '/presets/osm_presets.xml')
         data = parser.build_hdm_preset_dict()
@@ -585,12 +588,17 @@ def get_models(model_list, model_object, model_index):
     if not model_list:
         return models
     for model_id in model_list:
-        # would be good to accept either format slug or uuid here..
+        # TODO: would be good to accept either format slug or uuid here..
         try:
             model = model_object.objects.get(**{model_index: model_id})
             models.append(model)
-        except model_object.DoesNotExist as e:
-            logger.warn('{0} with {1}: {2} does not exist'.format(str(model_object), model_index, model_id))
+        except model_object.DoesNotExist:
+            logger.warn(
+                '%s with %s: %s does not exist',
+                str(model_object),
+                model_index,
+                model_id
+            )
     return models
 
 
@@ -598,16 +606,17 @@ def get_provider_task(export_provider, export_formats):
     """
 
     Args:
-        ExportProvider: An ExportProvider model for the content provider (i.e. osm or wms service)
-        ExportFormat: An ExportFormat model for the geospatial data format (i.e. shapefile or geopackage)
+        export_provider: An ExportProvider model for the content provider (i.e. osm or wms service)
+        export_formats: An ExportFormat model for the geospatial data format (i.e. shapefile or geopackage)
 
     Returns:
 
     """
     provider_task = ProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
-        if export_format in export_provider.export_provider_type.supported_formats.all():
+        supported_formats = \
+            export_provider.export_provider_type.supported_formats.all()
+        if export_format in supported_formats:
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
-
