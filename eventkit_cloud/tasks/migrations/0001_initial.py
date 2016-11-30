@@ -10,7 +10,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -41,8 +40,10 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('status', models.CharField(blank=True, db_index=True, default='', max_length=20)),
-                ('job', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='runs', to='jobs.Job')),
-                ('user', models.ForeignKey(default=0, on_delete=django.db.models.deletion.CASCADE, related_name='runs', to=settings.AUTH_USER_MODEL)),
+                ('job',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='runs', to='jobs.Job')),
+                ('user', models.ForeignKey(default=0, on_delete=django.db.models.deletion.CASCADE, related_name='runs',
+                                           to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'export_runs',
@@ -82,7 +83,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ExportTaskResult',
             fields=[
-                ('task', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='result', serialize=False, to='tasks.ExportTask')),
+                ('task', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True,
+                                              related_name='result', serialize=False, to='tasks.ExportTask')),
                 ('filename', models.CharField(blank=True, editable=False, max_length=100)),
                 ('size', models.FloatField(editable=False, null=True)),
                 ('download_url', models.URLField(max_length=254, verbose_name='Url to export task result output.')),
@@ -95,16 +97,19 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exporttaskexception',
             name='task',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='exceptions', to='tasks.ExportTask'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='exceptions',
+                                    to='tasks.ExportTask'),
         ),
         migrations.AddField(
             model_name='exporttask',
             name='export_provider_task',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='tasks.ExportProviderTask'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks',
+                                    to='tasks.ExportProviderTask'),
         ),
         migrations.AddField(
             model_name='exportprovidertask',
             name='run',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='provider_tasks', to='tasks.ExportRun'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='provider_tasks',
+                                    to='tasks.ExportRun'),
         ),
     ]

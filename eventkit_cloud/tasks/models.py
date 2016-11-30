@@ -43,7 +43,12 @@ class RunModelMixin(TimeStampedModelMixin):
 
 class ExportRun(RunModelMixin):
     """
-    Model for export task runs.
+    ExportRun is the main structure for storing export information.
+
+    A Job provides information for the ExportRun.
+    Many ExportRuns can map to a Job.
+    Many ExportProviderTasks can map to an ExportRun.
+    Many ExportTasks can map to an ExportProviderTask.
     """
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
@@ -64,7 +69,7 @@ class ExportRun(RunModelMixin):
 
 class ExportProviderTask(models.Model):
     """
-    Model for an ExportTask.
+    The ExportProviderTask stores the task information for a specific provider.
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
@@ -83,7 +88,7 @@ class ExportProviderTask(models.Model):
 
 class ExportTask(models.Model):
     """
-    Model for an ExportTask.
+     An ExportTask holds the information about the process doing the actual work for a task.
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
@@ -107,6 +112,9 @@ class ExportTask(models.Model):
 
 
 class ExportTaskResult(models.Model):
+    """
+         An ExportTaskResult holds the information from the task, i.e. the reason for executing the task.
+    """
     task = models.OneToOneField(ExportTask, primary_key=True, related_name='result')
     filename = models.CharField(max_length=100, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)

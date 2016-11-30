@@ -1,7 +1,6 @@
-FROM scratch
+FROM ubuntu:16.04
 ARG MKGMAP_VERSION=r3693
 ARG SPLITTER_VERSION=r437
-ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
 
 # a few minor docker-specific tweaks
 # see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
@@ -61,10 +60,7 @@ RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspa
 #RUN mkdir /var/lib/eventkit/tmp
 #RUN cd /var/lib/eventkit/tmp
 
-COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
-COPY ./requirements.txt /var/lib/eventkit/requirements.txt
-COPY ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
-COPY ./manage.py /var/lib/eventkit/manage.py
+COPY ./ /var/lib/eventkit/
 
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\

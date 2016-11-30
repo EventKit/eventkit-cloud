@@ -17,7 +17,8 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, ExportProviderType, \
+from eventkit_cloud.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, \
+    ExportProviderType, \
     ProviderTask
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.api.views import get_models, get_provider_task
@@ -26,26 +27,29 @@ logger = logging.getLogger(__name__)
 
 
 class TestJobViewSet(APITestCase):
-
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+
+    def __init__(self, *args, **kwargs):
+        super(TestJobViewSet, self).__init__(*args, **kwargs)
+        self.path = None
+        self.group = None
+        self.user = None
+        self.job = None
+        self.client = None
+        self.config = None
+        self.tags = None
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
-        profile = ExportProfile.objects.create(
-            name='DefaultExportProfile',
-            max_extent=2500000,
-            group=self.group
-        )
         self.user = User.objects.create_user(
             username='demo', email='demo@demo.com', password='demo'
         )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob', event='Test Activation',
-                                      description='Test description', user=self.user,
-                                      the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', event='Test Activation', description='Test description',
+                                      user=self.user, the_geom=the_geom)
 
         formats = ExportFormat.objects.all()
         provider = ExportProvider.objects.first()
@@ -62,7 +66,7 @@ class TestJobViewSet(APITestCase):
         # create a test config
         f = File(open(self.path + '/files/hdm_presets.xml'))
         filename = f.name.split('/')[-1]
-        name = 'Test Configuration File'
+        # name = 'Test Configuration File'
         self.config = ExportConfig.objects.create(name='Test Preset Config', filename=filename, upload=f,
                                                   config_type='PRESET', user=self.user)
         f.close()
@@ -112,7 +116,7 @@ class TestJobViewSet(APITestCase):
         export_providers = ExportProvider.objects.all()
         export_providers_start_len = len(export_providers)
         config_uid = self.config.uid
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -126,7 +130,7 @@ class TestJobViewSet(APITestCase):
             'preset': config_uid,
             'transform': '',
             'translation': ''
-	}
+        }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
@@ -136,7 +140,7 @@ class TestJobViewSet(APITestCase):
 
         request_data['export_providers'][0]['name'] = 'test 2'
         # should be idempontent
-        response = self.client.post(url, request_data, format='json')
+        self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
@@ -181,19 +185,6 @@ class TestJobViewSet(APITestCase):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEquals(expected, url)
-        data = {"uid": str(self.job.uid),
-                "name": "TestJob",
-                "url": 'http://testserver{0}'.format(url),
-                "description": "Test Description",
-                "exports": [{'provider': 'OpenStreetMap Data (Generic)',
-                             'formats': [
-                                 {"uid": "8611792d-3d99-4c8f-a213-787bc7f3066",
-                                  "url": "http://testserver/api/formats/gpkg",
-                                  "name": "Geopackage",
-                                  "description": "Geopackage"}]}],
-                "created_at": "2015-05-21T19:46:37.163749Z",
-                "updated_at": "2015-05-21T19:46:47.207111Z",
-                "status": "SUCCESS"}
         response = self.client.get(url)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -212,7 +203,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
     def test_create_zipfile(self):
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         config_uid = self.config.uid
         request_data = {
             'name': 'TestJob',
@@ -241,7 +232,7 @@ class TestJobViewSet(APITestCase):
         create_run_mock.return_value = "some_run_uid"
         url = reverse('api:jobs-list')
         logger.debug(url)
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         config_uid = self.config.uid
         request_data = {
             'name': 'TestJob',
@@ -288,7 +279,7 @@ class TestJobViewSet(APITestCase):
         create_run_mock.return_value = "some_run_uid"
         config_uid = self.config.uid
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -331,9 +322,9 @@ class TestJobViewSet(APITestCase):
         create_run_mock.return_value = "some_run_uid"
         # delete the existing tags and test adding them with json
         self.job.tags.all().delete()
-        config_uid = self.config.uid
+        # config_uid = self.config.uid
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -366,12 +357,12 @@ class TestJobViewSet(APITestCase):
                          request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
-        configs = self.job.configs.all()
+        # configs = self.job.configs.all()
         # self.assertIsNotNone(configs[0])
 
     def test_missing_bbox_param(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -390,7 +381,7 @@ class TestJobViewSet(APITestCase):
 
     def test_invalid_bbox_param(self, ):
         url = reverse('api:jobs-list')
-        formats = [str(format.uid) for format in ExportFormat.objects.all()]
+        formats = [str(export_format.uid) for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -409,7 +400,7 @@ class TestJobViewSet(APITestCase):
 
     def test_invalid_bbox(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -428,7 +419,7 @@ class TestJobViewSet(APITestCase):
 
     def test_lat_lon_bbox(self, ):
         url = reverse('api:jobs-list')
-        formats = [str(format.uid) for format in ExportFormat.objects.all()]
+        formats = [str(export_format.uid) for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -447,7 +438,7 @@ class TestJobViewSet(APITestCase):
 
     def test_coord_nan(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -466,7 +457,7 @@ class TestJobViewSet(APITestCase):
 
     def test_inverted_coords(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
@@ -485,7 +476,7 @@ class TestJobViewSet(APITestCase):
 
     def test_empty_string_param(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': '',  # empty
@@ -561,7 +552,7 @@ class TestJobViewSet(APITestCase):
 
     def test_extents_too_large(self, ):
         url = reverse('api:jobs-list')
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         # job outside any region
         request_data = {
             'name': 'TestJob',
@@ -587,6 +578,11 @@ class TestBBoxSearch(APITestCase):
 
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
+    def __init__(self, *args, **kwargs):
+        super(TestBBoxSearch, self).__init__(*args, **kwargs)
+        self.user = None
+        self.client = None
+
     @patch('eventkit_cloud.tasks.task_runners.ExportOSMTaskRunner')
     def setUp(self, mock):
         task_runner = mock.return_value
@@ -603,7 +599,7 @@ class TestBBoxSearch(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
         # pull out the formats
-        formats = [format.slug for format in ExportFormat.objects.all()]
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         # create test jobs
         extents = [(-3.9, 16.1, 7.0, 27.6), (36.90, 13.54, 48.52, 20.24),
                    (-71.79, -49.57, -67.14, -46.16), (-61.27, -6.49, -56.20, -2.25),
@@ -622,6 +618,7 @@ class TestBBoxSearch(APITestCase):
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
+        task_runner.assert_called_once()
         self.assertEquals(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
@@ -671,6 +668,15 @@ class TestExportRunViewSet(APITestCase):
     Test cases for ExportRunViewSet
     """
 
+    def __init__(self, *args, **kwargs):
+        super(TestExportRunViewSet, self).__init__(*args, **kwargs)
+        self.user = None
+        self.client = None
+        self.job = None
+        self.job_uid = None
+        self.export_run = None
+        self.run_uid = None
+
     def setUp(self, ):
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -682,31 +688,30 @@ class TestExportRunViewSet(APITestCase):
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                      description='Test description', user=self.user,
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         self.job_uid = str(self.job.uid)
-        self.run = ExportRun.objects.create(job=self.job, user=self.user)
-        self.run_uid = str(self.run.uid)
+        self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
+        self.run_uid = str(self.export_run.uid)
 
     def test_zipfile_url_s3(self):
-        self.run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
-        self.run.save()
+        self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
+        self.export_run.save()
 
         url = reverse('api:runs-detail', args=[self.run_uid])
         response = self.client.get(url)
         result = response.data
 
         self.assertEquals(
-            self.run.zipfile_url,
+            self.export_run.zipfile_url,
             result[0]['zipfile_url']
         )
 
     def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
-        self.run.zipfile_url = 'test.zip'
-        self.run.save()
+        self.export_run.zipfile_url = 'test.zip'
+        self.export_run.save()
 
         url = reverse('api:runs-detail', args=[self.run_uid])
         self.assertEquals(expected, url)
@@ -786,14 +791,21 @@ class TestExportConfigViewSet(APITestCase):
     Test cases for ExportConfigViewSet
     """
 
+    def __init__(self, *args, **kwargs):
+        super(TestExportConfigViewSet, self).__init__(*args, **kwargs)
+        self.user = None
+        self.path = None
+        self.job = None
+        self.uid = None
+        self.client = None
+
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                      description='Test description', user=self.user,
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         self.uid = self.job.uid
         # setup token authentication
@@ -819,7 +831,6 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals('example_transform.sql', saved_config.filename)
         self.assertEquals('text/plain', saved_config.content_type)
         saved_config.delete()
-
 
     def test_delete_no_permissions(self, ):
         """
@@ -906,7 +917,7 @@ class TestExportConfigViewSet(APITestCase):
         )
         data = response.data
         saved_uid = data['uid']
-        saved_config = ExportConfig.objects.get(uid=saved_uid)
+        # saved_config = ExportConfig.objects.get(uid=saved_uid)
 
         # update the config
         url = reverse('api:configs-detail', args=[saved_uid])
@@ -927,7 +938,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals('Test Export Config Updated', updated_config.name)
         updated_config.delete()
         try:
-            f = File(open(path + '/files/Example Transform.sql', 'r'))
+            File(open(path + '/files/Example Transform.sql', 'r'))
         except IOError:
             pass  # expected.. old file has been deleted during update.
 
@@ -937,14 +948,25 @@ class TestExportTaskViewSet(APITestCase):
     Test cases for ExportTaskViewSet
     """
 
+    def __init__(self, *args, **kwargs):
+        super(TestExportTaskViewSet, self).__init__(*args, **kwargs)
+        self.user = None
+        self.path = None
+        self.job = None
+        self.celery_uid = None
+        self.client = None
+        self.export_run = None
+        self.export_provider_task = None
+        self.task = None
+        self.task_uid = None
+
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                      description='Test description', user=self.user,
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         # setup token authentication
         token = Token.objects.create(user=self.user)
@@ -952,14 +974,11 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
-        self.run = ExportRun.objects.create(job=self.job)
+        self.export_run = ExportRun.objects.create(job=self.job)
         self.celery_uid = str(uuid.uuid4())
-        self.export_provider_task = ExportProviderTask.objects.create(
-            run=self.run,
-            name='Shapefile Export'
-        )
-        self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task,
-                                              name='Shapefile Export',
+        self.export_provider_task = ExportProviderTask.objects.create(run=self.export_run,
+                                                                      name='Shapefile Export')
+        self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
                                               celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 
@@ -989,6 +1008,21 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
 
+    def test_patch_cancel_task(self, ):
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
+        response = self.client.patch(url)
+
+        pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
+        et = pt.tasks.last()
+
+        self.assertEqual(pt.status, 'CANCELED')
+        self.assertEqual(et.status, 'CANCELED')
+
+
+    def test_export_provider_task_get(self):
+        url = reverse('api:provider_tasks-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
 class TestStaticFunctions(APITestCase):
     def test_get_models(self):
@@ -1015,10 +1049,7 @@ class TestStaticFunctions(APITestCase):
         provider_type.save()
 
         # Assign the type to an arbitrary provider.
-        export_provider = ExportProvider.objects.create(
-            name="provider1",
-            export_provider_type=provider_type
-        )
+        export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
         # Get a ProviderTask object to ensure that it is only trying to process 
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)

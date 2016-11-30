@@ -8,7 +8,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('jobs', '0007_remove_job_zipfile_url'),
@@ -18,6 +17,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='exportprovider',
             name='user',
-            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='+', to=settings.AUTH_USER_MODEL),
         ),
     ]

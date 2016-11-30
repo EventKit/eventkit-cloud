@@ -13,7 +13,6 @@ import uuid
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -26,7 +25,8 @@ class Migration(migrations.Migration):
             name='RegionMask',
             fields=[
                 ('id', models.IntegerField(primary_key=True, serialize=False)),
-                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326, verbose_name='Mask for export regions')),
+                ('the_geom', django.contrib.gis.db.models.fields.MultiPolygonField(srid=4326,
+                                                                                   verbose_name='Mask for export regions')),
             ],
             options={
                 'db_table': 'region_mask',
@@ -41,12 +41,15 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(db_index=True, default='', max_length=255)),
-                ('config_type', models.CharField(choices=[('PRESET', 'Preset'), ('TRANSLATION', 'Translation'), ('TRANSFORM', 'Transform')], default='PRESET', max_length=11)),
+                ('config_type', models.CharField(
+                    choices=[('PRESET', 'Preset'), ('TRANSLATION', 'Translation'), ('TRANSFORM', 'Transform')],
+                    default='PRESET', max_length=11)),
                 ('filename', models.CharField(max_length=255)),
                 ('upload', models.FileField(max_length=255, upload_to=eventkit_cloud.jobs.models.get_upload_path)),
                 ('content_type', models.CharField(editable=False, max_length=30)),
                 ('published', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user', to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='user',
+                                           to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'db_table': 'export_configurations',
@@ -76,7 +79,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(default='', max_length=100)),
                 ('max_extent', models.IntegerField()),
-                ('group', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='export_profile', to='auth.Group')),
+                ('group',
+                 models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='export_profile',
+                                      to='auth.Group')),
             ],
             options={
                 'db_table': 'export_profiles',
@@ -92,11 +97,16 @@ class Migration(migrations.Migration):
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(max_length=100, unique=True, verbose_name='Service Name')),
                 ('slug', eventkit_cloud.jobs.models.LowerCaseCharField(default='', max_length=20, unique=True)),
-                ('url', models.CharField(blank=True, default='', max_length=1000, null=True, verbose_name='Service URL')),
+                ('url',
+                 models.CharField(blank=True, default='', max_length=1000, null=True, verbose_name='Service URL')),
                 ('layer', models.CharField(blank=True, max_length=100, null=True, verbose_name='Service Layer')),
-                ('level_from', models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True, help_text="This determines the starting zoom level a tile export will seed from")),
-                ('level_to', models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True, help_text="This determine what zoom level your tile export will seed to")),
-                ('config', models.TextField(blank=True, default='', help_text='This is an optional field which is needed if the service requires authentication.', null=True, verbose_name='Mapproxy Configuration')),
+                ('level_from', models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
+                                                   help_text="This determines the starting zoom level a tile export will seed from")),
+                ('level_to', models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
+                                                 help_text="This determine what zoom level your tile export will seed to")),
+                ('config', models.TextField(blank=True, default='',
+                                            help_text='This is an optional field which is needed if the service requires authentication.',
+                                            null=True, verbose_name='Mapproxy Configuration')),
             ],
             options={
                 'db_table': 'export_provider',
@@ -110,7 +120,8 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('type_name', models.CharField(default='', max_length=4, unique=True, verbose_name='Type Name')),
-                ('supported_formats', models.ManyToManyField(blank=True, to='jobs.ExportFormat', verbose_name='Supported Export Formats')),
+                ('supported_formats',
+                 models.ManyToManyField(blank=True, to='jobs.ExportFormat', verbose_name='Supported Export Formats')),
             ],
             options={
                 'abstract': False,
@@ -129,9 +140,12 @@ class Migration(migrations.Migration):
                 ('published', models.BooleanField(db_index=True, default=False)),
                 ('feature_save', models.BooleanField(db_index=True, default=False)),
                 ('feature_pub', models.BooleanField(db_index=True, default=False)),
-                ('the_geom', django.contrib.gis.db.models.fields.PolygonField(default='', srid=4326, verbose_name='Extent for export')),
-                ('the_geom_webmercator', django.contrib.gis.db.models.fields.PolygonField(default='', srid=3857, verbose_name='Mercator extent for export')),
-                ('the_geog', django.contrib.gis.db.models.fields.PolygonField(default='', geography=True, srid=4326, verbose_name='Geographic extent for export')),
+                ('the_geom', django.contrib.gis.db.models.fields.PolygonField(default='', srid=4326,
+                                                                              verbose_name='Extent for export')),
+                ('the_geom_webmercator', django.contrib.gis.db.models.fields.PolygonField(default='', srid=3857,
+                                                                                          verbose_name='Mercator extent for export')),
+                ('the_geog', django.contrib.gis.db.models.fields.PolygonField(default='', geography=True, srid=4326,
+                                                                              verbose_name='Geographic extent for export')),
                 ('configs', models.ManyToManyField(blank=True, related_name='configs', to='jobs.ExportConfig')),
             ],
             options={
@@ -145,7 +159,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
                 ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
                 ('formats', models.ManyToManyField(related_name='formats', to='jobs.ExportFormat')),
-                ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='provider', to='jobs.ExportProvider')),
+                ('provider', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='provider',
+                                               to='jobs.ExportProvider')),
             ],
         ),
         migrations.CreateModel(
@@ -157,9 +172,12 @@ class Migration(migrations.Migration):
                 ('uid', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
                 ('name', models.CharField(db_index=True, max_length=100)),
                 ('description', models.CharField(blank=True, max_length=1000)),
-                ('the_geom', django.contrib.gis.db.models.fields.PolygonField(default='', srid=4326, verbose_name='HOT Export Region')),
-                ('the_geom_webmercator', django.contrib.gis.db.models.fields.PolygonField(default='', srid=3857, verbose_name='Mercator extent for export region')),
-                ('the_geog', django.contrib.gis.db.models.fields.PolygonField(default='', geography=True, srid=4326, verbose_name='Geographic extent for export region')),
+                ('the_geom', django.contrib.gis.db.models.fields.PolygonField(default='', srid=4326,
+                                                                              verbose_name='HOT Export Region')),
+                ('the_geom_webmercator', django.contrib.gis.db.models.fields.PolygonField(default='', srid=3857,
+                                                                                          verbose_name='Mercator extent for export region')),
+                ('the_geog', django.contrib.gis.db.models.fields.PolygonField(default='', geography=True, srid=4326,
+                                                                              verbose_name='Geographic extent for export region')),
             ],
             options={
                 'db_table': 'regions',
@@ -174,9 +192,12 @@ class Migration(migrations.Migration):
                 ('key', models.CharField(db_index=True, default='', max_length=50)),
                 ('value', models.CharField(db_index=True, default='', max_length=50)),
                 ('data_model', models.CharField(db_index=True, default='', max_length=10)),
-                ('geom_types', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, default='', max_length=10), default=[], size=None)),
-                ('groups', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, default='', max_length=100), default=[], size=None)),
-                ('job', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tags', to='jobs.Job')),
+                ('geom_types', django.contrib.postgres.fields.ArrayField(
+                    base_field=models.CharField(blank=True, default='', max_length=10), default=[], size=None)),
+                ('groups', django.contrib.postgres.fields.ArrayField(
+                    base_field=models.CharField(blank=True, default='', max_length=100), default=[], size=None)),
+                ('job',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tags', to='jobs.Job')),
             ],
             options={
                 'db_table': 'tags',
@@ -196,11 +217,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='job',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='owner', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='owner',
+                                    to=settings.AUTH_USER_MODEL),
         ),
         migrations.AddField(
             model_name='exportprovider',
             name='export_provider_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.ExportProviderType', verbose_name='Service Type'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    to='jobs.ExportProviderType', verbose_name='Service Type'),
         ),
     ]
