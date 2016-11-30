@@ -1,6 +1,7 @@
 
 import * as React from 'react'
 import styles from './TitleBar.css';
+import logo from '../../images/logo_white_medium.png'
 
 
 export const TitleBar = () => (
@@ -9,8 +10,7 @@ export const TitleBar = () => (
             {'MAIN MENU'}
         </div>
         <div className={styles.logo}>
-            
-            {'I AM A LOGO!!!'}
+            <img src={logo}/>
         </div>
     </div>
 )
