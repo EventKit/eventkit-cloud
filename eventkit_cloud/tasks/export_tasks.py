@@ -799,7 +799,7 @@ class RevokeTask(Task):
                 signal='SIGQUIT'
             )
 
-        for export_task in uid_export_tasks:
+        for export_task in export_tasks:
             export_task.status = 'CANCELLED'
             export_task.save()
 
