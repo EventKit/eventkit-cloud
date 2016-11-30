@@ -762,8 +762,19 @@ class RevokeTask(Task):
         from eventkit_cloud.celery import app
 
         export_provider_task = ExportProviderTask.objects.get(uid=task_uid)
+        # XXX: revoke the provider-task level task
+        assert export_provider_task.celery_uid, "should have a celery_uid"
+        app.control.revoke(
+            task_id=str(export_provider_task.celery_uid),
+            wait=True,
+            terminate=True,
+            signal='SIGQUIT'
+        )
         export_tasks = export_provider_task.tasks.all()
+        export_tasks = [_ for _ in export_tasks if _.celery_uid]
 
+        # XXX: go ahead and try to revoke any currently running export tasks 
+        #      for the provider task
         for export_task in export_tasks:
             app.control.revoke(
                 task_id=str(export_task.celery_uid),

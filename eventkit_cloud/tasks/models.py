@@ -55,8 +55,10 @@ class ExportRun(RunModelMixin):
     worker = models.CharField(max_length=50, editable=False, default='', null=True)
     zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
     status = models.CharField(
-        blank=True, max_length=20,
-        db_index=True, default=''
+        blank=True,
+        max_length=20,
+        db_index=True,
+        default=''
     )
 
     class Meta:
@@ -76,6 +78,7 @@ class ExportProviderTask(models.Model):
     name = models.CharField(max_length=50, blank=True)
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
+    celery_uid = models.UUIDField(null=True)  # celery task uid
 
     class Meta:
         ordering = ['name']
