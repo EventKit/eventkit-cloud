@@ -4,6 +4,7 @@
     left: 0;
     right: 0;
     top: 25px;
+    height:75px;
     line-height:50px;
     background-color: #010101;
     color: #3e3f3f;
@@ -12,14 +13,16 @@
 
 .mainMenu {
     position: fixed;
-    left: 30px;
+    left: 10px;
+    top: 45px;
     color: #3e3f3f;
     font-size: 25px;
 }
 
 .logo {
-    position: relative;
+    position: fixed;
     left: 50%;
+    top: 40px;
     transform: translate(50, -50%);
     color: #3e3f3f;
 }
