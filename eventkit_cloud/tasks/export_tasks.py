@@ -29,7 +29,9 @@ from eventkit_cloud.utils import (
 import socket
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
-COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED']
+# TODO: enum the states
+FINISHED_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED']
+INCOMPLETE_STATES = ['FAILED']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -183,7 +185,7 @@ class ExportTask(Task):
                     terminate=True,
                     signal='SIGQUIT'
                 )
-                raise Reject(exc, requeue=False)
+                raise Reject(None, requeue=False)
 
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
@@ -544,8 +546,14 @@ class GeneratePresetTask(ExportTask):
             name = job.name
             filename = job_name + '_preset.xml'
             content_type = 'application/xml'
-            config = ExportConfig.objects.create(name=name, filename=filename, config_type='PRESET',
-                                                 content_type=content_type, user=user, published=feature_pub)
+            config = ExportConfig.objects.create(
+                name=name,
+                filename=filename,
+                config_type='PRESET',
+                content_type=content_type,
+		user=user,
+		published=feature_pub
+	    )
             config.upload.save(filename, preset_file)
 
             output_path = config.upload.path
@@ -573,20 +581,22 @@ class FinalizeExportProviderTask(Task):
             export_provider_task.status = 'COMPLETED'
 
         # mark run as incomplete if any tasks fail
-        if any(task.status == 'FAILED' for task in export_provider_task.tasks.all()):
+        export_tasks = export_provider_task.tasks.all()
+        if any(task.status in INCOMPLETE_STATES for task in export_tasks):
             export_provider_task.status = 'INCOMPLETE'
+
         export_provider_task.save()
 
         export_provider_task = ExportProviderTask.objects.get(
             uid=export_provider_task_uid
         )
 
-        run_complete = False
+        run_finished = False
         provider_tasks = export_provider_task.run.provider_tasks.all()
-        if all(pt.status in COMPLETE_STATES for pt in provider_tasks):
-            run_complete = True
+        if all(pt.status in FINISHED_STATES for pt in provider_tasks):
+            run_finished = True
 
-        if run_complete:
+        if run_finished:
             run = ExportRun.objects.get(uid=run_uid)
             if run.job.include_zipfile:
                 zipfile_task = ZipFileTask()
@@ -742,11 +752,14 @@ class ExportTaskErrorHandler(Task):
         run.save()
         try:
             if os.path.isdir(stage_dir):
-                # leave the stage_dir in place for debugging
+                # DON'T leave the stage_dir in place for debugging
                 shutil.rmtree(stage_dir)
-                # pass
         except IOError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+        if any(_.status == "CANCELLED" for _ in run.provider_tasks):
+            raise Reject(None, requeue=False)
+
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
@@ -805,7 +818,6 @@ class RevokeTask(Task):
 
         export_provider_task.status = 'CANCELLED'
         export_provider_task.save()
-
 
 def get_progress_tracker(task_uid=None):
     """
