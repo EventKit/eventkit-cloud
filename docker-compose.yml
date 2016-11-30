@@ -67,7 +67,7 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
      ports:
-       / - "80:80"
+       - "80:80"
   webpack:
      build:
        context: .
