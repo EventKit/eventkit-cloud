@@ -6,7 +6,6 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
-       dockerfile: Dockerfile_travis
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
@@ -61,7 +60,6 @@ services:
   httpd:
      build:
        context: .
-       dockerfile: Dockerfile_httpd
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
        - ./exports_download:/var/lib/eventkit/exports_download
@@ -71,7 +69,6 @@ services:
   webpack:
      build:
        context: .
-       dockerfile: Dockerfile_webpack
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
      ports:

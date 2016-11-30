@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import os
 import sys
-import pwd
-import grp
 import subprocess
 from django.conf import settings
 
@@ -36,10 +34,6 @@ if __name__ == "__main__":
             if os.getenv("TRAVIS"):
                 coveralls = os.path.join(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit/eventkit')), '.virtualenvs/eventkit/bin/coveralls')
                 subprocess.call([coveralls])
-                # token = os.getenv("COVERALLS_REPO_TOKEN")
-                # subprocess.call(['COVERALLS_REPO_TOKEN={}'.format(token), 'coveralls'])
-
-
 
     else:
         execute_from_command_line(sys.argv)

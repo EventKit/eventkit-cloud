@@ -18,15 +18,13 @@ install:
     - sudo pip install coveralls
 
 before_script:
-    - docker-compose -f docker-compose-travis.yml build
-    - docker-compose -f docker-compose-travis.yml up -d
+    - docker-compose -f docker-compose-test.yml build
+    - docker-compose -f docker-compose-test.yml up -d
     - export SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
 script:
-    - echo $SITE_IP
-    - docker-compose -f docker-compose-travis.yml run -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
-    - travis_wait 30 docker-compose -f docker-compose-travis.yml run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
-    - docker-compose -f docker-compose-travis.yml run -T webpack npm test
+    - docker-compose -f docker-compose-test.yml run -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
+    - docker-compose -f docker-compose-test.yml run -T webpack npm test
 
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
