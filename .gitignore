@@ -93,3 +93,8 @@ core/settings/secret.py
 
 exports_download
 *~
+
+eventkit_cloud/ui/static/ui/node_modules
+eventkit_cloud/ui/static/ui/webpack.config.js
+coverage
+eventkit_cloud/ui/static/ui/build/*

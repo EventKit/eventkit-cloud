@@ -18,6 +18,7 @@ from eventkit_cloud.utils.s3 import (
 
 # TODO: override settings.EXPORT_DOWNLOAD_ROOT to be test dir?
 
+@override_settings(AWS_BUCKET_NAME='test-bucket')
 @override_settings(AWS_ACCESS_KEY='d3adb33f')
 @override_settings(AWS_SECRET_KEY='d3adb33f')
 class TestS3Util(TestCase):
