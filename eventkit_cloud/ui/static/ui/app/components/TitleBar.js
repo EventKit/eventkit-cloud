@@ -9,7 +9,8 @@ export const TitleBar = () => (
             {'MAIN MENU'}
         </div>
         <div className={styles.logo}>
-            <img src={require('../../images/eventkit_logo.png')}/>
+            
+            {'I AM A LOGO!!!'}
         </div>
     </div>
 )
