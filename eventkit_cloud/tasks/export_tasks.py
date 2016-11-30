@@ -787,11 +787,11 @@ class RevokeTask(Task):
         )
         logging.info('revoked provider task uid %s', str(export_provider_task.celery_uid))
         export_tasks = export_provider_task.tasks.all()
-        export_tasks = [_ for _ in export_tasks if _.celery_uid]
+        uid_export_tasks = [_ for _ in export_tasks if _.celery_uid]
 
         # XXX: go ahead and try to revoke any currently running export tasks 
         #      for the provider task
-        for export_task in export_tasks:
+        for export_task in uid_export_tasks:
             app.control.revoke(
                 task_id=str(export_task.celery_uid),
                 wait=True,
@@ -799,6 +799,7 @@ class RevokeTask(Task):
                 signal='SIGQUIT'
             )
 
+        for export_task in uid_export_tasks:
             export_task.status = 'CANCELLED'
             export_task.save()
 
