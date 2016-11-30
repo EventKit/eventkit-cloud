@@ -43,7 +43,7 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=debug
+        - LOGLEVEL=DEBUG
         - CONCURRENCY=2
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:

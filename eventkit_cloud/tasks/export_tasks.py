@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import cPickle
 import glob
+import logging
 import os
 import re
 import shutil
@@ -166,10 +167,24 @@ class ExportTask(Task):
         """
         started = timezone.now()
         from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
-        self.request.id
+        from eventkit_cloud.celery import app
         try:
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
+
+            if task.status == 'CANCELLED' or task.export_provider_task.status == "CANCELLED":
+                logging.info('cancelling before run %s', celery_uid)
+                task.celery_uid = celery_uid
+                task.save()
+                app.control.revoke(
+                    task_id=str(celery_uid),
+                    wait=True,
+                    timeout=1,
+                    terminate=True,
+                    signal='SIGQUIT'
+                )
+                raise Reject(exc, requeue=False)
+
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
             task.export_provider_task.status = 'RUNNING'
@@ -770,6 +785,7 @@ class RevokeTask(Task):
             terminate=True,
             signal='SIGQUIT'
         )
+        logging.info('revoked provider task uid %s', str(export_provider_task.celery_uid))
         export_tasks = export_provider_task.tasks.all()
         export_tasks = [_ for _ in export_tasks if _.celery_uid]
 
