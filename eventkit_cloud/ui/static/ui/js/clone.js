@@ -1,5 +1,5 @@
 clone = {};
-clone.job = (function () {
+clone.job = (function(){
     var map;
     var regions;
     var regionsSource;
@@ -13,7 +13,7 @@ clone.job = (function () {
     var max_bounds_area = $('#user-max-extent').text();
 
     return {
-        init: function () {
+        init: function(){
             initMap();
             initPopovers();
             initHDMFeatureTree();
@@ -175,7 +175,7 @@ clone.job = (function () {
         var dragBox = new ol.interaction.Draw({
             source: bbox.getSource(),
             type: /** @type {ol.geom.GeometryType} */ "LineString",
-            geometryFunction: function (coordinates, geometry) {
+            geometryFunction: function(coordinates, geometry) {
                 if (!geometry) {
                     geometry = new ol.geom.Polygon(null);
                 }
@@ -192,17 +192,17 @@ clone.job = (function () {
 
         var translate;
 
-        dragBox.on('drawend', function (e) {
+        dragBox.on('drawend',function(e) {
             $("#estimatedSize").remove();
             map.removeInteraction(dragBox);
             var bounds = e.feature.getGeometry().getExtent();
             // validate the selected extents
             if (validateBounds(bounds)) {
                 setBounds(bounds);
-                getTileEstimates(bounds);
             }
             else {
                 unsetBounds();
+                getTileEstimates(bounds);
             }
             map.getView().fit(bounds, map.getSize());
         });
@@ -254,24 +254,24 @@ clone.job = (function () {
         // });
 
         // handles click on select area button
-        $("#select-area").bind('click', function (e) {
+        $("#select-area").bind('click', function(e){
             /*
              * unset bounds on form,
              * clear transform control
              * activate the draw bbox control
              */
-            $('#valid-extents').css('visibility', 'hidden');
-            $('#alert-extents').css('visibility', 'hidden');
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','hidden');
 
             $('#nominatim').val('');
             map.removeInteraction(dragBox);
 
-            if (bboxSource == null) {
+            if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
             unsetBounds();
-            $('#valid-extents').css('visibility', 'visible');
+            $('#valid-extents').css('visibility','visible');
             $('#valid-extents').html('<span>' + gettext('Double click map after selecting bounding box area.') + '&nbsp;&nbsp;</span>');
             //bbox.removeAllFeatures();
             //transform.unsetFeature();
@@ -281,21 +281,21 @@ clone.job = (function () {
             map.addInteraction(dragBox);
         });
 
-        $('#zoom-selection').bind('click', function (e) {
+        $('#zoom-selection').bind('click', function(e){
             // zoom to the bounding box extent
-            if (bboxSource == null) {
+            if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
             if (bboxSource.getFeatures().length > 0) {
                 map.getView().fit(bboxSource.getExtent(), map.getSize());
             }
-            else {
+            else{
                 zoomtoextent();
             }
         });
 
-        $('#reset-map').bind('click', function (e) {
+        $('#reset-map').bind('click', function(e){
             /*
              * Unsets the bounds on the form
              * remove features and transforms
@@ -303,83 +303,24 @@ clone.job = (function () {
              */
             $('#nominatim').val('');
             unsetBounds();
-            if (bboxSource == null) {
+            if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
             bboxSource.clear();
 
             zoomtoextent();
-            $('#alert-extents').css('visibility', 'hidden');
-            $('#valid-extents').css('visibility', 'hidden');
+            $('#alert-extents').css('visibility','hidden');
+            $('#valid-extents').css('visibility','hidden');
             //validateBounds();
             map.removeInteraction(dragBox);
         });
 
-        $('.navbar-collapse a:not(.dropdown-toggle)').click(function () {
+        $('.navbar-collapse a:not(.dropdown-toggle)').click(function(){
             $(".navbar-collapse").collapse('hide');
         });
-        zoomtoextent();
-    }
 
-    function getTileEstimates(bounds) {
-        bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
-        console.log(bounds);
-        providers = []
-        $("#provider-selection input[name='providers'][type='checkbox']").each(function () {
-            type = $(this).attr('source-type');
-            if (type != 'osm' && type != 'osm-generic' && type != 'wfs' && type != 'argis-feature') {
-                if ($(this).is(":checked")) {
-                    providers.push(this.value);
-                }
-            }
-        });
-        if (providers.length > 0) {
-            console.log(providers);
-            var csrftoken = getCookie('csrftoken');
-            json_data = {"providers": providers, "bbox": bounds}
-            $.ajax({
-                // post json to the api endpoint
-                url: '/en/exports/estimator',
-                type: 'POST',
-                dataType: 'json',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    'providers': providers,
-                    'bbox': bounds
-                }),
-                processData: false, // send as json
-                beforeSend: function (xhr, settings) {
-                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
-                },
-                success: function (result) {
-                    console.log(result);
-                    $("#estimatedSize").remove();
-                    var size = result;
-                    var sizeText = ""
-                    if (size < 1) {
-                        sizes = ['MB', 'KB', 'Byte'];
-                        for (i = 0; i < sizes.length; i++) {
-                            size = size * 1000;
-                            sizeText = "Estimated Tile Size: " + size.toFixed(2) + " " + sizes[i];
-                            if (size >= 1) {
-                                break;
-                            }
-                        }
-                    }
-                    else if (size >= 1000) {
-                        size = size / 1000;
-                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " TB";
-                    }
-                    else {
-                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " GB";
-                    }
-                    $("#provider-selection").after('<div id="estimatedSize" class="help-block">' + sizeText + '</div>');
-                },
-            });
-        }
+        zoomtoextent();
     }
 
     /*
@@ -402,18 +343,18 @@ clone.job = (function () {
     // }
 
     function zoomtoextent() {
-        var extent = [-20037508.34, -20037508.34, 20037508.34, 20037508.34];
+        var extent = [-20037508.34,-20037508.34, 20037508.34, 20037508.34];
         map.getView().fit(extent, map.getSize());
     }
 
     /*
      * build the providers checkboxes.
      */
-    function buildProviderFormats() {
+    function buildProviderFormats(){
 
         var providersDiv = $('#provider-selection');
-        $.getJSON(Config.PROVIDERS_URL, function (data) {
-            for (i = 0; i < data.length; i++) {
+        $.getJSON(Config.PROVIDERS_URL, function(data){
+            for (i = 0; i < data.length; i++){
                 provider = data[i];
                 providersDiv.append('<div class="checkbox"><label>'
                     + '<input type="checkbox"'
@@ -423,22 +364,22 @@ clone.job = (function () {
                     + provider.name
                     + '</label></div>');
             }
-            var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function (e) {
+            var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function(e){
                 $("#estimatedSize").remove();
                 bounds = bboxSource.getExtent();
-                if (bboxSource.getFeatures().length == 1 && validateBounds(bounds)) {
+                if(bboxSource.getFeatures().length == 1 && validateBounds(bounds)) {
                     getTileEstimates(bounds);
                 }
             });
-        });
+        })
     }
 
     /*
      * build the export format checkboxes.
      */
-    function buildExportFormats() {
+    function buildExportFormats(){
         var formatsDiv = $('#supported-formats');
-        $.getJSON(Config.EXPORT_FORMATS_URL, function (data) {
+        $.getJSON(Config.EXPORT_FORMATS_URL, function(data){
             for (i = 0; i < data.length; i++) {
                 format = data[i];
 
@@ -484,7 +425,7 @@ clone.job = (function () {
     /*
      * clear extents from the form.
      */
-    function unsetBounds() {
+    function unsetBounds(){
         // fire input event here to make sure fields validate..
         $('#xmin').val('').trigger('input');
         $('#ymin').val('').trigger('input');
@@ -496,7 +437,7 @@ clone.job = (function () {
     /*
      * triggers validation of the extents on the form.
      */
-    function validateBBox() {
+    function validateBBox(){
         $('#create-job-form').data('formValidation').validateContainer('#form-group-bbox');
     }
 
@@ -510,8 +451,8 @@ clone.job = (function () {
         if (!bounds) {
             // no extents selected..
             validateBBox(); // trigger form validation.
-            $('#valid-extents').css('visibility', 'hidden');
-            $('#alert-extents').css('visibility', 'visible');
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','visible');
             //$('#alert-extents').html('<span>Select area to export.&nbsp;&nbsp;</span><span class="glyphicon glyphicon-remove">&nbsp;</span>');
             $('#alert-extents').html('<span>' + gettext('Select area to export') + '&nbsp;&nbsp;</span>');
             return false;
@@ -582,15 +523,15 @@ clone.job = (function () {
         } else if (area > max_bounds_area) {
             // area too large
             validateBBox(); // trigger validation on extents
-            $('#valid-extents').css('visibility', 'hidden');
-            $('#alert-extents').css('visibility', 'visible');
+            $('#valid-extents').css('visibility','hidden');
+            $('#alert-extents').css('visibility','visible');
             $('#alert-extents').html('<strong>' + gettext('Invalid Extent') + '</strong><br/>' + gettext('Selected area is ') + area_str
                 + gettext(' sq km.') + '<br/>' + gettext('Must be less than ') + max_bounds_area + gettext(' sq km.'));
             return false;
         } else {
             // extents are valid so display success message..
-            $('#alert-extents').css('visibility', 'hidden');
-            $('#valid-extents').css('visibility', 'visible');
+            $('#alert-extents').css('visibility','hidden');
+            $('#valid-extents').css('visibility','visible');
             $('#valid-extents').html('<span class="glyphicon glyphicon-ok"></span>');
             return true;
         }
@@ -635,7 +576,7 @@ clone.job = (function () {
     /*
      * Initialize the form validation.
      */
-    function initForm() {
+    function initForm(){
 
         /*
          * Initialize the bootstrap form wizard.
@@ -649,7 +590,7 @@ clone.job = (function () {
             if (e.target.hash == "#summary")
                 index = 2;
 
-            if (index == 0) {
+            if (index == 0){
                 $('#create-job-wizard').bootstrapWizard('enable', 1);
                 $('#create-job-wizard').bootstrapWizard('disable', 2);
                 $('#previousFirstArrow').hide();
@@ -658,7 +599,7 @@ clone.job = (function () {
                 $('#nextLastArrow').hide();
 
             }
-            if (index == 1) {
+            if (index == 1){
                 $('#previousFirstArrow').show();
                 $('#previousArrow').hide();
                 $('#nextArrow').show();
@@ -668,7 +609,7 @@ clone.job = (function () {
                 $('#create-job-wizard').bootstrapWizard('enable', 3);
 
             }
-            if (index == 2) {
+            if (index == 2){
                 $('#nextArrow').hide();
                 $('#nextLastArrow').show();
                 $('#create-job-wizard').bootstrapWizard('enable', 1);
@@ -682,19 +623,19 @@ clone.job = (function () {
             tabClass: 'nav nav-pills',
             'nextSelector': '.next',
             'previousSelector': '.previous',
-            onTabClick: function (tab, navigation, index) {
+            onTabClick: function(tab, navigation, index){
 
                 var valid = validateTab(index);
 
                 //validation was not happening correct in this event.  Index always seemed to be 0.
-                if (valid) {
-                    if (index == 0) {
+                if (valid){
+                    if (index == 0){
 
                     }
-                    if (index == 1) {
+                    if (index == 1){
 
                     }
-                    if (index == 2) {
+                    if (index == 2){
 
 
                     }
@@ -717,9 +658,9 @@ clone.job = (function () {
                 }
 
             },
-            onTabShow: function (tab, navigation, index) {
+            onTabShow: function(tab, navigation, index){
 
-                if (index == 0) {
+                if (index == 0){
                     $('#create-job-wizard').bootstrapWizard('disable', 1);
                     $('#create-job-wizard').bootstrapWizard('disable', 2);
                 }
@@ -729,31 +670,31 @@ clone.job = (function () {
 
                 }
 
-                if (index == 2) {
+                if (index == 2){
                     $('#create-job-wizard').bootstrapWizard('enable', 3);
                     $('#nextLastArrow').prop('visibility', 'hidden');
                     $('#nextLastArrow').addClass('visibility');
                 }
 
             },
-            onNext: function (tab, navigation, index) {
+            onNext: function(tab, navigation, index){
 
                 var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
 
-                if (valid) {
-                    if (index == 0) {
+                if (valid){
+                    if (index == 0){
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
                         $('#previousFirstArrow').show();
                         $('#previousArrow').hide();
                     }
-                    if (index == 1) {
+                    if (index == 1){
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('enable', 2);
                         $('#previousFirstArrow').show();
                         $('#previousArrow').hide();
                     }
-                    if (index == 2) {
+                    if (index == 2){
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('enable', 2);
                         $('#create-job-wizard').bootstrapWizard('enable', 3);
@@ -761,9 +702,9 @@ clone.job = (function () {
                         $('#nextLastArrow').show();
                     }
                 }
-                else {
+                else{
                     //not valid so change links of tabs to be disabled and next button to be disabled
-                    if (index == 0) {
+                    if (index == 0){
                         //2nd and 3rd tab should not be able to be clicked along with next button
                         $('#create-job-wizard').bootstrapWizard('disable', 1);
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
@@ -772,7 +713,7 @@ clone.job = (function () {
 
 
                     }
-                    if (index == 1) {
+                    if (index == 1){
                         //third tab should not be able to be clicked along with next button
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
                         $('#nextArrow').prop('disabled', true);
@@ -782,19 +723,19 @@ clone.job = (function () {
                     return false;
                 }
             },
-            onPrevious: function (tab, navigation, index) {
+            onPrevious: function(tab, navigation, index){
 
                 var valid = validateTab($('#create-job-wizard').bootstrapWizard('currentIndex'));
 
-                if (valid) {
-                    if (index == 0) {
+                if (valid){
+                    if (index == 0){
                         //TODO: change buttons to both green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
                         $('#previousFirstArrow').hide();
                         $('#previousArrow').show();
                     }
-                    if (index == 1) {
+                    if (index == 1){
                         //TODO: change next botton to gray
                         //TODO: change previous button to green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
@@ -802,7 +743,7 @@ clone.job = (function () {
                         $('#nextArrow').show();
                         $('#nextLastArrow').hide();
                     }
-                    if (index == 2) {
+                    if (index == 2){
                         //TODO: change next botton to gray
                         //TODO: change previous button to green
                         $('#create-job-wizard').bootstrapWizard('enable', 1);
@@ -812,9 +753,9 @@ clone.job = (function () {
                         $('#nextLastArrow').show();
                     }
                 }
-                else {
+                else{
                     //not valid so change links of tabs to be disabled and next button to be disabled
-                    if (index == 0) {
+                    if (index == 0){
                         //2nd and 3rd tab should not be able to be clicked along with next button
                         $('#create-job-wizard').bootstrapWizard('disable', 1);
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
@@ -823,7 +764,7 @@ clone.job = (function () {
 
 
                     }
-                    if (index == 1) {
+                    if (index == 1){
                         //third tab should not be able to be clicked along with next button
                         $('#create-job-wizard').bootstrapWizard('disable', 2);
                         $('#nextArrow').prop('disabled', true);
@@ -881,28 +822,28 @@ clone.job = (function () {
                         }
                     }
                 },
-                'xmin': {
+                'xmin':{
                     validators: {
                         notEmpty: {
                             message: 'not empty'
                         }
                     }
                 },
-                'ymin': {
+                'ymin':{
                     validators: {
                         notEmpty: {
                             message: 'not empty'
                         }
                     }
                 },
-                'xmax': {
+                'xmax':{
                     validators: {
                         notEmpty: {
                             message: 'not empty'
                         }
                     }
                 },
-                'ymax': {
+                'ymax':{
                     validators: {
                         notEmpty: {
                             message: 'not empty'
@@ -927,7 +868,7 @@ clone.job = (function () {
                  */
             }
         })
-            .on('success.form.fv', function (e) {
+            .on('success.form.fv', function(e){
                 e.preventDefault();
                 /*
                  * Enable the submit button, but prevent automatic form submission
@@ -937,20 +878,20 @@ clone.job = (function () {
                 $('#btn-submit-job').prop('disabled', false);
                 $('#btn-submit-job').removeClass('disabled');
             })
-            .on('err.form.fv', function (e) {
+            .on('err.form.fv', function(e){
                 /*
                  * Disable submit button when form is invalid.
                  */
                 $('#btn-submit-job').prop('disabled', true);
                 $('#btn-submit-job').addClass('disabled');
             })
-            .on('success.field.fv', function (e) {
+            .on('success.field.fv', function(e) {
                 // re-enable the file upload button when field is valid
                 if (e.target.id === 'filename' || e.target.id === 'config_type') {
                     $('button#upload').prop('disabled', false);
                     $('#select-file').prop('disabled', false);
                 }
-            }).on('err.field.fv', function (e) {
+            }).on('err.field.fv', function(e) {
             // re-enable the file upload button when field is valid
             if (e.target.id === 'filename' || e.target.id === 'config_type') {
                 $('button#upload').prop('disabled', true);
@@ -964,7 +905,7 @@ clone.job = (function () {
          */
         function validateTab(index) {
             var fv = $('#create-job-form').data('formValidation'), // FormValidation instance
-                // The current tab
+            // The current tab
                 $tab = $('#create-job-form').find('.tab-pane').eq(index),
                 $bbox = $('#bbox');
 
@@ -1005,7 +946,7 @@ clone.job = (function () {
                 if (bboxSource.getFeatures().length > 0) {
                     validateBounds(bboxSource.getExtent());
                 }
-                else {
+                else{
                     validateBounds(null);
                 }
             }
@@ -1021,13 +962,13 @@ clone.job = (function () {
          */
         function validateFileUploadTab() {
             var fv = $('#create-job-form').data('formValidation'), // FormValidation instance
-                // The current tab
+            // The current tab
                 $tab = $('#create-job-form').find('.tab-pane').eq(3);
 
             // validate the form panel contents
             fv.validateContainer($tab);
             var isValid = fv.isValidContainer($tab);
-            if ((isValid === false || isValid === null)) {
+            if ((isValid === false || isValid === null)){
                 // stay on this tab
                 $('button#upload').prop('disabled', true);
                 return false;
@@ -1043,7 +984,7 @@ clone.job = (function () {
 
         // ----- UPLOAD TAB ----- //
 
-        $('#select-file').on('click', function (e) {
+        $('#select-file').on('click', function(e){
             var fv = $('#create-job-form').data('formValidation');
             fv.enableFieldValidators('filename', true);
             $(this).popover('hide');
@@ -1056,12 +997,12 @@ clone.job = (function () {
         /*
          * Listen for changes on file selection button.
          */
-        $('#select-file :file').on('change', function () {
+        $('#select-file :file').on('change', function(){
             var $input = $(this),
                 filename = $input.val().replace(/\\/g, '/').replace(/.*\//, ''),
                 $filelist = $('#filelist'),
                 selection = {},
-                //type = $('option:selected').val(),
+            //type = $('option:selected').val(),
                 type = $('input#config_type').val(),
                 published = $('input#publish_config').is(':checked') ? 'Published' : 'Private';
             selection['filename'] = filename;
@@ -1087,8 +1028,8 @@ clone.job = (function () {
         /*
          * Handle config file upload.
          */
-        $('button#upload').bind('click', function (e) {
-            if (!validateFileUploadTab()) {
+        $('button#upload').bind('click', function(e){
+            if (!validateFileUploadTab()){
                 e.preventDefault();
                 return;
             }
@@ -1100,7 +1041,7 @@ clone.job = (function () {
             $('button#select-config').prop('disabled', true);
 
             // disable selected config remove buttons until file uploaded
-            $(this).find('tr.config').find('button').each(function (idx, btn) {
+            $(this).find('tr.config').find('button').each(function(idx, btn){
                 $(btn).prop('disabled', true);
             });
 
@@ -1141,9 +1082,9 @@ clone.job = (function () {
                 type: 'POST',
                 contentType: false,
                 data: data,
-                xhr: function () {
+                xhr: function() {
                     var xhr = $.ajaxSettings.xhr();
-                    if (xhr.upload) { // Check if upload property exists
+                    if(xhr.upload){ // Check if upload property exists
                         xhr.upload.addEventListener('progress', handleProgress, false); // For handling the progress of the upload
                     }
                     else {
@@ -1153,11 +1094,11 @@ clone.job = (function () {
                     return xhr;
                 },
                 processData: false, // send as multipart
-                beforeSend: function (jqxhr) {
+                beforeSend: function(jqxhr){
                     // set the crsf token header for authentication
                     jqxhr.setRequestHeader("X-CSRFToken", csrftoken);
                 },
-                success: function (result, textStatus, jqxhr) {
+                success: function(result, textStatus, jqxhr) {
 
                     // trigger preset:selected event
                     if (result.config_type === 'PRESET') {
@@ -1172,7 +1113,7 @@ clone.job = (function () {
                     $('#filelist').trigger({type: 'config:uploaded', source: 'config-upload', selection: selection});
 
                 },
-                error: function (jqxhr, textStatus, errorThrown) {
+                error: function(jqxhr, textStatus, errorThrown){
                     resetUploadConfigTab(textStatus);
                     var modalOpts = {
                         keyboard: true,
@@ -1188,7 +1129,7 @@ clone.job = (function () {
         /*
          * Handle click on select config button (config-browser)
          */
-        $('button#select-config').on('click', function (e) {
+        $('button#select-config').on('click', function(e){
             $(this).popover('hide');
             var modalOpts = {
                 keyboard: true,
@@ -1205,10 +1146,10 @@ clone.job = (function () {
         /*
          * Updates progressbar on file upload.
          */
-        function handleProgress(e) {
-            if (e.lengthComputable) {
+        function handleProgress(e){
+            if(e.lengthComputable){
                 var percent = e.loaded / e.total * 100;
-                $('.progress-bar').attr({value: e.loaded, max: e.total});
+                $('.progress-bar').attr({value:e.loaded,max:e.total});
                 $('.progress-bar').css('width', percent + '%');
             }
         }
@@ -1220,10 +1161,10 @@ clone.job = (function () {
          * Listen for changes to the form
          * and update the export summary tab.
          */
-        $('#create-job-form').bind('change', function (e) {
+        $('#create-job-form').bind('change', function(e){
             var providers = [];
             var $providerUl = $('<ul>');
-            $.each($(this).find('input[name="providers"]:checked'), function (p, provider) {
+            $.each($(this).find('input[name="providers"]:checked'), function(p, provider){
                 var providers = provider.getAttribute('data-description');
                 $providerUl.append($('<li>' + providers + '</li>'));
             });
@@ -1237,7 +1178,7 @@ clone.job = (function () {
             $('#summary-event').html(event);
             var formats = [];
             var $ul = $('<ul>');
-            $.each($(this).find('input[name="formats"]:checked'), function (i, format) {
+            $.each($(this).find('input[name="formats"]:checked'), function(i, format){
                 var description = format.getAttribute('data-description');
                 $ul.append($('<li>' + description + '</li>'));
             });
@@ -1248,10 +1189,10 @@ clone.job = (function () {
          * Listen for configurations being added to the filelist
          * and update state on this.
          */
-        $('table#summary-configs').on('config:added', function (e) {
+        $('table#summary-configs').on('config:added', function(e){
             $('div#summary-configs').css('visibility', 'visible');
             var selection = e.selection;
-            $('#filelist tr.config').each(function (idx, config) {
+            $('#filelist tr.config').each(function(idx, config){
                 var filename = $(config).find('td').eq(0).find('span').html();
                 var config_type = $(config).find('td').eq(1).html();
                 var status = $(config).find('td').eq(2).html();
@@ -1259,7 +1200,7 @@ clone.job = (function () {
             });
         });
 
-        $('table#summary-configs').on('config:removed', function (e) {
+        $('table#summary-configs').on('config:removed', function(e){
             var selection = e.selection;
             // remove the selected config from the table
             var configs = $('table#summary-configs tr.config').length;
@@ -1280,9 +1221,9 @@ clone.job = (function () {
          * Handle selection events on config publish options.
          * Only one can be selected at at time.
          */
-        $('input#feature_save').on('change', function (e) {
+        $('input#feature_save').on('change', function(e){
             var checked = $(this).is(':checked');
-            $featPub = $('input#feature_pub');
+            $featPub =  $('input#feature_pub');
             if (checked) {
                 $featPub.prop('checked', false);
                 $featPub.prop('disabled', true);
@@ -1293,9 +1234,9 @@ clone.job = (function () {
             }
         });
 
-        $('input#feature_pub').on('change', function (e) {
+        $('input#feature_pub').on('change', function(e){
             var checked = $(this).is(':checked');
-            $featSave = $('input#feature_save');
+            $featSave =  $('input#feature_save');
             if (checked) {
                 $featSave.prop('checked', false);
                 $featSave.prop('disabled', true);
@@ -1311,7 +1252,7 @@ clone.job = (function () {
         /*
          * Submits the export job.
          */
-        $('#create-job-form').submit(function (e) {
+        $('#create-job-form').submit(function(e){
             // check that the form is valid..
             var $form = $('#create-job-form'),
                 fv = $($form).data('formValidation'),
@@ -1365,15 +1306,12 @@ clone.job = (function () {
                 var tags = [];
                 var formats = [];
                 var providers = [];
-                $.each(fields, function (idx, field) {
+                $.each(fields, function(idx, field){
                     // ignore config upload related fields
-                    switch (field.name) {
-                        case 'filename':
-                            break;
-                        case 'config_type':
-                            break;
-                        case 'publishconfig':
-                            break;
+                    switch (field.name){
+                        case 'filename': break;
+                        case 'config_type': break;
+                        case 'publishconfig': break;
                         case 'published':
                             form_data['published'] = true;
                             break;
@@ -1398,12 +1336,12 @@ clone.job = (function () {
                 });
                 // get the selected tags
                 var selected_tags = $('input.entry:checked');
-                $.each(selected_tags, function (idx, entry) {
+                $.each(selected_tags, function(idx, entry){
                     var data_model = entry.getAttribute('data-model');
                     var levels = $(entry).parentsUntil('#' + data_model.toLowerCase() + '-feature-tree', 'li.level');
                     var groups = [];
                     var labels = $(levels).find('label:first');
-                    $.each(labels, function (idx, label) {
+                    $.each(labels, function(idx, label){
                         var group = $(label).text();
                         groups.push(group);
                     });
@@ -1425,18 +1363,18 @@ clone.job = (function () {
                 form_data["provider_tasks"] = [];
                 var provider_tasks = [];
 
-                if (typeof(providers) === 'string') {
+                if(typeof(providers)==='string'){
                     providers = [providers]
                 }
-                if (typeof(formats) === 'string') {
+                if(typeof(formats)==='string'){
                     formats = [formats]
                 }
 
                 var formatArray = [];
-                for (var format in formats) {
+                for(var format in formats) {
                     formatArray.push(formats[format]);
                 }
-                for (var provider in providers) {
+                for(var provider in providers){
                     provider_tasks.push({'provider': providers[provider], 'formats': formatArray});
                 }
                 form_data["provider_tasks"] = provider_tasks;
@@ -1453,17 +1391,17 @@ clone.job = (function () {
                     contentType: 'application/json',
                     data: json_data,
                     processData: false, // send as json
-                    beforeSend: function (jqxhr) {
+                    beforeSend: function(jqxhr){
                         // set the crsf token header for authentication
                         var csrftoken = form_data['csrfmiddlewaretoken'];
                         jqxhr.setRequestHeader("X-CSRFToken", csrftoken);
                     },
-                    success: function (result) {
+                    success: function(result) {
                         var uid = result.uid;
                         var url = '/exports/' + uid;
-                        window.location.href = url;
+                        window.location.href=url;
                     },
-                    error: function (jqXHR, textStatus, errorThrown) {
+                    error: function(jqXHR, textStatus, errorThrown){
                         if (jqXHR.status == 500 || jqXHR.status == 400) {
                             window.location.href = Config.CREATE_ERROR_URL;
                         }
@@ -1479,7 +1417,7 @@ clone.job = (function () {
     /*
      * Initialises the HDM feature tree.
      */
-    function initHDMFeatureTree() {
+    function initHDMFeatureTree(){
         // turn off preset selection on config upload
         //$('option#select-preset').prop('disabled', true);
         /*
@@ -1488,7 +1426,7 @@ clone.job = (function () {
          */
         $(document).trigger({type: 'preset:selected', source: 'hdm-feature-tree'});
 
-        $.get(Config.HDM_TAGS_URL, function (data) {
+        $.get(Config.HDM_TAGS_URL, function(data){
             var level_idx = 0;
             var $tree = $('#hdm-feature-tree ul.nav-list');
             if (typeof data == 'object') {
@@ -1498,18 +1436,18 @@ clone.job = (function () {
             /*
              * Recursively builds the feature tree.
              */
-            function traverse(data, $level, level_idx) {
-                $.each(data, function (k, v) {
-                    if ($(v).attr('displayName')) {
+            function traverse(data, $level, level_idx){
+                $.each(data, function(k,v){
+                    if ($(v).attr('displayName')){
                         var name = $(v).attr('displayName');
                         var tag = $(v).attr('tag');
                         var key = tag.split('=')[0];
                         var val = tag.split('=')[1];
                         var geom = $(v).attr('geom');
-                        geom_str = geom.join([separator = ',']);
+                        geom_str = geom.join([separator=',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
                             '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="HDM" data-geom="' +
-                            geom_str + '" data-key="' + key + '" data-val="' + val + '" data-name="' + name + '" checked/></div>' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" checked/></div>' +
                             '</li>');
                         $level.append($entry);
                     }
@@ -1530,7 +1468,7 @@ clone.job = (function () {
             }
 
             // toggle level collapse
-            $('#hdm-feature-tree li.level > label').bind('click', function (e) {
+            $('#hdm-feature-tree li.level > label').bind('click', function(e){
                 if ($(this).parent().hasClass('open')) {
                     $(this).parent().removeClass('open').addClass('closed');
                     $(this).find('i.level').removeClass('fa-plus-minus-o').addClass('fa-plus-square-o');
@@ -1545,12 +1483,12 @@ clone.job = (function () {
             /*
              * Handle events on sub-level checkboxes.
              */
-            $('#hdm-feature-tree input.level').on('change', function (e) {
+            $('#hdm-feature-tree input.level').on('change', function(e){
                 var checked = $(this).is(':checked');
-                $(this).parent().parent().find('ul input').each(function (i, input) {
+                $(this).parent().parent().find('ul input').each(function(i, input){
                     $(input).prop('checked', checked);
                 });
-                $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function (i, level) {
+                $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function(i, level){
                     $input = $(level).find('input.level:first');
                     var childrenChecked = $(level).find('ul input.level:checked').length > 0;
                     if (childrenChecked) {
@@ -1566,7 +1504,7 @@ clone.job = (function () {
             /*
              * Handle events on entry checkboxes.
              */
-            $('#hdm-feature-tree input.entry').on("change", function (e) {
+            $('#hdm-feature-tree input.entry').on("change", function(e){
                 // fire changed event on levels
                 $('#hdm-feature-tree input.level').trigger("entry:changed", e);
             });
@@ -1575,7 +1513,7 @@ clone.job = (function () {
              * Listen for changes on entry level checkboxes
              * and update levels accordingly.
              */
-            $('#hdm-feature-tree input.level').on("entry:changed", function (e) {
+            $('#hdm-feature-tree input.level').on("entry:changed", function(e){
                 var $currentLevel = $(this).parent().parent();
                 var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0;
                 if (hasCheckedChildren) {
@@ -1592,9 +1530,9 @@ clone.job = (function () {
              * Listen for changes to the HDM root node.
              * Trigger preset selection / deselection events.
              */
-            $('#hdm-feature-tree li.root').on('change', function (e) {
+            $('#hdm-feature-tree li.root').on('change', function(e){
                 var checked = $(this).find('input.level:first').is(':checked');
-                $('#osm-feature-tree').find('input').each(function (idx, input) {
+                $('#osm-feature-tree').find('input').each(function(idx, input){
                     $(input).prop('disabled', checked);
                 });
                 if (checked) {
@@ -1610,8 +1548,8 @@ clone.job = (function () {
     /*
      * Initialises the OSM feature tree.
      */
-    function initOSMFeatureTree() {
-        $.get(Config.OSM_TAGS_URL, function (data) {
+    function initOSMFeatureTree(){
+        $.get(Config.OSM_TAGS_URL, function(data){
             var level_idx = 0;
             var $tree = $('#osm-feature-tree ul.nav-list');
             if (typeof data == 'object') {
@@ -1621,18 +1559,18 @@ clone.job = (function () {
             /*
              * Recursively builds the feature tree.
              */
-            function traverse(data, $level, level_idx) {
-                $.each(data, function (k, v) {
-                    if ($(v).attr('displayName')) {
+            function traverse(data, $level, level_idx){
+                $.each(data, function(k,v){
+                    if ($(v).attr('displayName')){
                         var name = $(v).attr('displayName');
                         var tag = $(v).attr('tag');
                         var key = tag.split('=')[0];
                         var val = tag.split('=')[1];
                         var geom = $(v).attr('geom');
-                        geom_str = geom.join([separator = ',']);
+                        geom_str = geom.join([separator=',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
                             '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="OSM" data-geom="' +
-                            geom_str + '" data-key="' + key + '" data-val="' + val + '" data-name="' + name + '" disabled/></div>' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" disabled/></div>' +
                             '</li>');
                         $level.append($entry);
                     }
@@ -1653,7 +1591,7 @@ clone.job = (function () {
             }
 
             // toggle level collapse
-            $('#osm-feature-tree li.level > label').bind('click', function (e) {
+            $('#osm-feature-tree li.level > label').bind('click', function(e){
                 if ($(this).parent().hasClass('open')) {
                     $(this).parent().removeClass('open').addClass('closed');
                     $(this).find('i.level').removeClass('fa-plus-minus-o').addClass('fa-plus-square-o');
@@ -1668,12 +1606,12 @@ clone.job = (function () {
             /*
              * Handle events on sub-level checkboxes.
              */
-            $('#osm-feature-tree input.level').on('change', function (e) {
+            $('#osm-feature-tree input.level').on('change', function(e){
                 var checked = $(this).is(':checked');
-                $(this).parent().parent().find('ul input').each(function (i, input) {
+                $(this).parent().parent().find('ul input').each(function(i, input){
                     $(input).prop('checked', checked);
                 });
-                $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function (i, level) {
+                $(this).parentsUntil('#hdm-feature-tree', 'li.level').slice(1).each(function(i, level){
                     $input = $(level).find('input.level:first');
                     var childrenChecked = $(level).find('ul input.level:checked').length > 0;
                     if (childrenChecked) {
@@ -1689,7 +1627,7 @@ clone.job = (function () {
             /*
              * Handle events on entry checkboxes.
              */
-            $('#osm-feature-tree input.entry').on("change", function (e) {
+            $('#osm-feature-tree input.entry').on("change", function(e){
                 // fire changed event on levels
                 $('#osm-feature-tree input.level').trigger("entry:changed", e);
             });
@@ -1698,7 +1636,7 @@ clone.job = (function () {
              * Listen for changes on entry level checkboxes
              * and update levels accordingly.
              */
-            $('#osm-feature-tree input.level').on("entry:changed", function (e) {
+            $('#osm-feature-tree input.level').on("entry:changed", function(e){
                 var $currentLevel = $(this).parent().parent();
                 var hasCheckedChildren = $currentLevel.find('input.entry:checked').length > 0;
                 if (hasCheckedChildren) {
@@ -1714,9 +1652,9 @@ clone.job = (function () {
             /*
              * Listen for changes to the OSM root node.
              */
-            $('#osm-feature-tree li.root').on('change', function (e) {
+            $('#osm-feature-tree li.root').on('change', function(e){
                 var checked = $(this).find('input.level:first').is(':checked');
-                $('#hdm-feature-tree').find('input').each(function (idx, input) {
+                $('#hdm-feature-tree').find('input').each(function(idx, input){
                     $(input).prop('disabled', checked);
                 });
                 if (checked) {
@@ -1733,7 +1671,7 @@ clone.job = (function () {
      * Handles placename lookups using nominatim.
      * Only interested in relations.
      */
-    function initNominatim() {
+    function initNominatim(){
         window.query_cache = {};
         $('#nominatim').typeahead({
             source: function (query, process) {
@@ -1744,7 +1682,7 @@ clone.job = (function () {
                 else {
                     // clear any existing features and reset the map extents
                     //bbox.removeAllFeatures();
-                    if (bboxSource == null) {
+                    if (bboxSource == null){
                         bboxSource = new ol.source.Vector();
                         bbox.setSource(bboxSource);
                     }
@@ -1757,15 +1695,15 @@ clone.job = (function () {
 
                 }
                 // if in cache use cached value
-                if (query_cache[query]) {
+                if(query_cache[query]){
                     process(query_cache[query]);
                     return;
                 }
-                if (typeof searching != "undefined") {
+                if( typeof searching != "undefined") {
                     clearTimeout(searching);
                     process([]);
                 }
-                searching = setTimeout(function () {
+                searching = setTimeout(function() {
                     return $.getJSON(
                         Config.GEONAMES_SEARCH_URL,
                         {
@@ -1774,11 +1712,11 @@ clone.job = (function () {
                             username: 'hotexports',
                             style: 'full'
                         },
-                        function (data) {
+                        function(data){
                             // build list of suggestions
                             var suggestions = [];
                             var geonames = data.geonames;
-                            $.each(geonames, function (i, place) {
+                            $.each(geonames, function(i, place){
                                 // only interested in features with a bounding box
                                 if (place.bbox) {
                                     suggestions.push(place);
@@ -1791,16 +1729,16 @@ clone.job = (function () {
                     );
                 }, 200); // timeout before initiating search..
             },
-            displayText: function (item) {
+            displayText: function(item){
                 //return item.display_name;
                 names = [];
                 item.name.trim() != "" ? names.push(item.name) : null;
                 item.adminName1.trim() != "" ? names.push(item.adminName1) : null;
                 item.adminName2.trim() != "" ? names.push(item.adminName2) : null;
                 item.countryName.trim() != "" ? names.push(item.countryName) : null;
-                return names.join(separator = ', ');
+                return names.join(separator=', ');
             },
-            afterSelect: function (item) {
+            afterSelect: function(item){
                 var boundingbox = item.bbox;
                 var bottom = boundingbox.south, top = boundingbox.north,
                     left = boundingbox.east, right = boundingbox.west;
@@ -1818,9 +1756,9 @@ clone.job = (function () {
         /**
          * Tests if the query is a float
          */
-        function checkQueryRegex(query) {
+        function checkQueryRegex(query){
             var reg = new RegExp('[-+]?([0-9]*.[0-9]+|[0-9]+)');
-            if (reg.test(query)) {
+            if (reg.test(query)){
                 return true;
             }
         }
@@ -1828,14 +1766,14 @@ clone.job = (function () {
         /**
          * Construct the feature from the bounds.
          */
-        function buildBBoxFeature(bounds) {
+        function buildBBoxFeature(bounds){
 
             var formattedCoords = [];
             var merc_bounds = [];
             //var unformattedCoordinates = [[175, 70], [175, 60], [-160, 60], [-160, 70]];
-            var unformatedCoords = [[bounds[0], bounds[3]], [bounds[0], bounds[1]], [bounds[2], bounds[1]], [bounds[2], bounds[3]]];
+            var unformatedCoords = [[bounds[0],bounds[3]],[bounds[0], bounds[1]],[bounds[2], bounds[1]],[bounds[2], bounds[3]]];
 
-            $(unformatedCoords).each(function (index, coordinate) {
+            $(unformatedCoords).each(function(index, coordinate){
                 var lat = coordinate[0];
                 var lon = coordinate[1];
 
@@ -1853,7 +1791,7 @@ clone.job = (function () {
             var polygonFeature = new ol.Feature({ geometry : polygonGeometry });
 
             //var vectorSource = new ol.source.Vector();
-            if (bboxSource == null) {
+            if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
@@ -1876,13 +1814,13 @@ clone.job = (function () {
         /**
          * Validate manually entered bounding box.
          */
-        $('#nominatim').bind('input', function (e) {
+        $('#nominatim').bind('input', function(e){
             var val = $(this).val();
             // if search field is empty, reset map
             if (val === '') {
                 unsetBounds();
                 //bbox.removeAllFeatures();
-                if (bboxSource == null) {
+                if (bboxSource == null){
                     bboxSource = new ol.source.Vector();
                     bbox.setSource(bboxSource);
                 }
@@ -1899,7 +1837,7 @@ clone.job = (function () {
             if (isEnterBBox) {
                 // remove existing features
                 //bbox.removeAllFeatures();
-                if (bboxSource == null) {
+                if (bboxSource == null){
                     bboxSource = new ol.source.Vector();
                     bbox.setSource(bboxSource);
                 }
@@ -1913,7 +1851,7 @@ clone.job = (function () {
                     return;
                 }
                 // test for empty or invalid coords
-                for (i = 0; i < coords.length; i++) {
+                for (i = 0; i < coords.length; i++){
                     coords[i] = parseFloat(coords[i]);
                     if (coords[i] === '' || !checkQueryRegex(coords[i])) {
                         //bbox.removeAllFeatures();
@@ -1929,9 +1867,9 @@ clone.job = (function () {
                 if ((parseFloat(left) < -180 || parseFloat(left) > 180) ||
                     (parseFloat(right) < -180 || parseFloat(right) > 180) ||
                     (parseFloat(bottom) < -90 || parseFloat(bottom) > 90) ||
-                    (parseFloat(top) < -90 || parseFloat(top) > 90)) {
+                    (parseFloat(top) < -90 || parseFloat(top) > 90)){
                     //bbox.removeAllFeatures();
-                    if (bboxSource == null) {
+                    if (bboxSource == null){
                         bboxSource = new ol.source.Vector();
                         bbox.setSource(bboxSource);
                     }
@@ -1957,10 +1895,10 @@ clone.job = (function () {
      *  - config-upload
      *  - config-browser
      */
-    function initPresetSelectionHandler() {
+    function initPresetSelectionHandler(){
         // handle preset selections
-        $(document).on('preset:selected', function (e) {
-            switch (e.source) {
+        $(document).on('preset:selected', function(e){
+            switch (e.source){
                 case 'feature-tree':
                     // enable feature save and publish inputs
                     $('input#feature_save').prop('disabled', false);
@@ -1968,13 +1906,13 @@ clone.job = (function () {
                     break;
                 case 'config-upload':
                     // disable the selection trees
-                    $('#hdm-feature-tree, #osm-feature-tree').find('input').each(function (idx, input) {
+                    $('#hdm-feature-tree, #osm-feature-tree').find('input').each(function(idx, input){
                         $(input).prop('checked', false);
                         $(input).prop('disabled', true);
                     });
                     // disable preset config types in the config browser
                     $('input[data-type="PRESET"]')
-                        .each(function (i, input) {
+                        .each(function(i, input){
                             $(input).prop('disabled', true);
                             $(input).closest('tr').css('opacity', .5);
                         });
@@ -1985,7 +1923,7 @@ clone.job = (function () {
                     // disable the preset option on the config type selection control
                     $('option#select-preset').prop('disabled', true);
                     // clear and disable the feature selection trees
-                    $('#hdm-feature-tree, #osm-feature-tree').find('input').each(function (idx, input) {
+                    $('#hdm-feature-tree, #osm-feature-tree').find('input').each(function(idx, input){
                         $(input).prop('checked', false);
                         $(input).prop('disabled', true);
                     });
@@ -1997,8 +1935,8 @@ clone.job = (function () {
         });
 
         // handle deselections
-        $(document).on('preset:deselected', function (e) {
-            switch (e.source) {
+        $(document).on('preset:deselected', function(e){
+            switch (e.source){
                 case 'feature-tree':
                     // disable and uncheck feature save and publish inputs
                     $('input#feature_save').prop('disabled', true);
@@ -2010,21 +1948,21 @@ clone.job = (function () {
                     //$('option#select-preset').prop('disabled', false);
                     // enable preset config types in the config browser
                     $('input[data-type="PRESET"]')
-                        .each(function (i, input) {
+                        .each(function(i, input){
                             $(input).prop('disabled', false);
                             $(input).closest('tr').css('opacity', 1);
                         });
                     break;
                 case 'config-upload':
                     // re-enable the hdm-feature-tree and select all by default
-                    $('#hdm-feature-tree').find('input').each(function (idx, input) {
+                    $('#hdm-feature-tree').find('input').each(function(idx, input){
                         $(input).prop('disabled', false);
                         $(input).prop('checked', true);
 
                     });
                     // enable preset config types in the config browser
                     $('input[data-type="PRESET"]')
-                        .each(function (i, input) {
+                        .each(function(i, input){
                             $(input).prop('disabled', false);
                             $(input).closest('tr').css('opacity', 1);
                         });
@@ -2035,7 +1973,7 @@ clone.job = (function () {
                     // enable the preset option on the config type selection control
                     $('option#select-preset').prop('disabled', false);
                     // enable the hdm feature selection tree
-                    $('#hdm-feature-tree').find('input').each(function (idx, input) {
+                    $('#hdm-feature-tree').find('input').each(function(idx, input){
                         $(input).prop('disabled', false);
                         $(input).prop('checked', true);
                     });
@@ -2062,11 +2000,11 @@ clone.job = (function () {
      *  -   notification to the config-browser that a file is removed = filelist:removed
      *
      */
-    function initConfigSelectionHandler() {
+    function initConfigSelectionHandler(){
 
         var filesSelected = 0;
 
-        $('#filelist').on('config:added config:uploaded', function (e) {
+        $('#filelist').on('config:added config:uploaded', function(e){
             var selection = e.selection;
             var source = e.source;
             var uid = selection.uid;
@@ -2077,7 +2015,7 @@ clone.job = (function () {
                 $tr.attr('id', selection.uid);
 
                 // re-enable any remove buttons on the filelist
-                $(this).find('tr.config').find('button').each(function (idx, btn) {
+                $(this).find('tr.config').find('button').each(function(idx, btn){
                     $(btn).prop('disabled', false);
                 });
 
@@ -2093,10 +2031,10 @@ clone.job = (function () {
                 resetUploadConfigTab('success');
 
                 // notify the config-browser
-                $('table#configurations').trigger({type: 'config:added', selection: selection});
+                $('table#configurations').trigger({type: 'config:added', selection:selection});
 
                 // handle delete events
-                $tr.on('click', 'button#' + selection.uid, function (e) {
+                $tr.on('click', 'button#' + selection.uid, function(e){
                     var data = new FormData();
                     data.append('_method', 'DELETE');
                     $.ajax({
@@ -2105,17 +2043,17 @@ clone.job = (function () {
                         data: data,
                         contentType: false,
                         processData: false,
-                        beforeSend: function (jqxhr) {
+                        beforeSend: function(jqxhr){
                             // set the crsf token header for authentication
                             var csrftoken = $('input[name="csrfmiddlewaretoken"]').val();
                             jqxhr.setRequestHeader("X-CSRFToken", csrftoken);
                         },
-                        success: function (result, textStatus, jqxhr) {
+                        success: function(result, textStatus, jqxhr) {
                             // notify the config-browser
                             $('table#configurations').trigger({type: 'config:removed', selection: selection});
                             $('#filelist').trigger({type: 'config:delete-upload', selection: selection});
                         },
-                        error: function (jqxhr, textStatus, errorThrown) {
+                        error: function(jqxhr, textStatus, errorThrown){
                             var status = jqxhr.status;
                             resetUploadConfigTab(textStatus);
                             var modalOpts = {
@@ -2141,7 +2079,7 @@ clone.job = (function () {
                  * check that a file with the same id is not already on the list,
                  * e.g. from a user upload.
                  */
-                $(this).find('tr[data-source="config-upload"]').each(function (idx, upload) {
+                $(this).find('tr[data-source="config-upload"]').each(function(idx, upload){
                     var uid = $(upload).attr('id');
                     if (uid == selection.uid) {
                         $(upload).remove();
@@ -2156,7 +2094,7 @@ clone.job = (function () {
                     '<td>' + selection.config_type + '</td><td>' + selection.published + '</td>' +
                     '<td><button id="' + selection.uid + '" type="button" class="btn btn-warning btn-sm pull-right">Remove&nbsp;&nbsp;<span class="glyphicon glyphicon-remove"></span></button></td></tr>');
                 $(this).append($tr);
-                $tr.on('click', 'button#' + selection.uid, function (e) {
+                $tr.on('click', 'button#' + selection.uid, function(e){
                     // notify the config-browser of removal
                     $('table#configurations').trigger({type: 'filelist:removed', selection: selection});
                     // remove from filelist
@@ -2164,7 +2102,7 @@ clone.job = (function () {
                 });
 
                 // notify the config-browser
-                $('table#configurations').trigger({type: 'config:added', selection: selection});
+                $('table#configurations').trigger({type: 'config:added', selection:selection});
             }
 
             $(this).css('display', 'block');
@@ -2172,7 +2110,7 @@ clone.job = (function () {
             updateConfigInputs(selection);
 
             // notify the summary config table on the summary tab
-            $('table#summary-configs').trigger({type: 'config:added', selection: selection});
+            $('table#summary-configs').trigger({type: 'config:added', selection:selection});
 
             // trigger max files check
             $(document).trigger({type: 'config:checkmaxfiles', filesSelected: filesSelected});
@@ -2180,7 +2118,7 @@ clone.job = (function () {
         });
 
         // a configuration file is selected for upload
-        $('#filelist').on('config:fileselected', function (e) {
+        $('#filelist').on('config:fileselected', function(e){
             var selection = e.selection;
             var source = e.source;
             var html = '<tr id="upload" data-filename="' + selection.filename + '" data-source="' + source + '"' +
@@ -2192,13 +2130,13 @@ clone.job = (function () {
             $(this).css('display', 'block');
 
             // handle events on the remove button
-            $('button#remove-upload').bind('click', function (e) {
+            $('button#remove-upload').bind('click', function(e){
                 $('#filelist').trigger({type: 'config:remove-upload'});
             });
         });
 
         // handle config selection removal from file list
-        $('#filelist').on('config:removed', function (e) {
+        $('#filelist').on('config:removed', function(e){
             filesSelected -= 1;
             var selection = e.selection;
 
@@ -2226,7 +2164,7 @@ clone.job = (function () {
             var configs = $('#filelist tr.config').length;
             var $tr = $(this).find('tr#' + selection.uid);
             if (configs == 1) {
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                     // hide the file list
@@ -2235,7 +2173,7 @@ clone.job = (function () {
             }
             else {
                 // just remove this row..
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                 });
@@ -2251,7 +2189,7 @@ clone.job = (function () {
         });
 
         // handle pending upload selection removal
-        $('#filelist').on('config:remove-upload', function (e) {
+        $('#filelist').on('config:remove-upload', function(e){
             // re-enable the upload input fields to allow another upload
             $('input#filename').prop('disabled', false);
             $('select#config_type').prop('disabled', false);
@@ -2283,7 +2221,7 @@ clone.job = (function () {
             var configs = $('#filelist tr.config').length;
             var $tr = $(this).find('tr#upload');
             if (configs == 1) {
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                     // hide the file list
@@ -2292,7 +2230,7 @@ clone.job = (function () {
             }
             else {
                 // just remove this row..
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                 });
@@ -2303,7 +2241,7 @@ clone.job = (function () {
         });
 
         // an uploaded file is deleted
-        $('#filelist').on('config:delete-upload', function (e) {
+        $('#filelist').on('config:delete-upload', function(e){
             var selection = e.selection;
 
             // get the row being deleted.
@@ -2341,7 +2279,7 @@ clone.job = (function () {
             var configs = $('#filelist tr.config').length;
             if (configs == 1) {
                 // remove the row and hide the table
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     // remove the upload from the table
                     $(this).remove();
                     // hide the file list
@@ -2352,7 +2290,7 @@ clone.job = (function () {
             }
             else {
                 // just remove the deleted row
-                $tr.fadeOut(300, function () {
+                $tr.fadeOut(300, function(){
                     $(this).remove();
                     // trigger change event on form when config deleted
                     $('#create-job-form').trigger('change');
@@ -2367,7 +2305,7 @@ clone.job = (function () {
         });
 
 
-        $(document).on('config:checkmaxfiles', function (e) {
+        $(document).on('config:checkmaxfiles', function(e){
             var maxFiles = 1;
             var filesSelected = e.filesSelected;
             if (filesSelected >= maxFiles) {
@@ -2393,9 +2331,9 @@ clone.job = (function () {
     /*
      * Updates the form with the uploaded config ids
      */
-    function updateConfigInputs(selection) {
+    function updateConfigInputs(selection){
         var uid = selection.uid;
-        switch (selection.config_type) {
+        switch (selection.config_type){
             case "PRESET":
                 $('option#select-preset').prop('disabled', true);
                 $('input#preset').val(uid);
@@ -2414,7 +2352,7 @@ clone.job = (function () {
     /*
      * Resets the upload config tab on success or failure.
      */
-    function resetUploadConfigTab(textStatus) {
+    function resetUploadConfigTab(textStatus){
         // hide the progress bar
         $('.progress').css('display', 'none');
         $('.progress-bar').css('width', '0%');
@@ -2438,7 +2376,7 @@ clone.job = (function () {
             var $fileupload = $('#fileupload');
             $fileupload.val('');
             // get number of selected files in the table
-            var selected = $('#filelist tr').length - 1; // exclude <th>
+            var selected = $('#filelist tr').length  -1; // exclude <th>
             if (selected == 1) {
                 // remove the last entry in the table
                 $('#filelist tr').last().remove();
@@ -2550,17 +2488,17 @@ clone.job = (function () {
      * Pre-populates the form with details of
      * the export to clone.
      */
-    function populateForm() {
+    function populateForm(){
         var url = document.URL;
         var parts = url.split('/');
         var job_uid = parts[parts.length - 2];
-        $.getJSON(Config.JOBS_URL + '/' + job_uid, function (data, success, jqXHR) {
+        $.getJSON(Config.JOBS_URL + '/' + job_uid, function(data, success, jqXHR){
 
             // -- describe export tab -- //
 
             // // -- Providers Checkboxes -- //
             var providers = data.provider_tasks;
-            for (i = 0; i < providers.length; i++) {
+            for (i = 0; i < providers.length; i++){
                 $('#provider-selection input[value="' + providers[i].provider + '"]').prop('checked', true);
             }
 
@@ -2576,7 +2514,7 @@ clone.job = (function () {
                 'featureProjection': "EPSG:3857",
                 'dataProjection': "EPSG:4326"
             });
-            if (bboxSource == null) {
+            if (bboxSource == null){
                 bboxSource = new ol.source.Vector();
                 bbox.setSource(bboxSource);
             }
@@ -2590,7 +2528,7 @@ clone.job = (function () {
 
             // // -- select formats tab -- //
             var formats = data.exports;
-            for (i = 0; i < formats[0].formats.length; i++) {
+            for (i = 0; i < formats[0].formats.length; i++){
                 $('#supported-formats input[value="' + formats[0].formats[i].slug + '"]').prop('checked', true);
             }
 
@@ -2611,25 +2549,25 @@ clone.job = (function () {
                 switch (dm) {
                     case 'OSM':
                         $osmtree = $('#osm-feature-tree');
-                        $osmtree.find('input').each(function (idx, input) {
+                        $osmtree.find('input').each(function(idx, input){
                             $(input).prop('checked', false);
                             $(input).prop('disabled', false);
                         });
                         // clear and disable the other tree
                         $hdmtree = $('#hdm-feature-tree');
-                        $hdmtree.find('input').each(function (idx, input) {
+                        $hdmtree.find('input').each(function(idx, input){
                             $(input).prop('checked', false);
                             $(input).prop('disabled', true);
                         });
                         break;
                     case 'HDM':
                         $hdmtree = $('#hdm-feature-tree');
-                        $hdmtree.find('input').each(function (idx, input) {
+                        $hdmtree.find('input').each(function(idx, input){
                             $(input).prop('checked', false);
                             $(input).prop('disabled', false);
                         });
                         $osmtree = $('#osm-feature-tree');
-                        $osmtree.find('input').each(function (idx, input) {
+                        $osmtree.find('input').each(function(idx, input){
                             $(input).prop('checked', false);
                             $(input).prop('disabled', true);
                         });
@@ -2641,7 +2579,7 @@ clone.job = (function () {
                  * check correspoing checkbox on selection tree.
                  * Check parent levels also.
                  */
-                $.each(data.tags, function (idx, tag) {
+                $.each(data.tags, function(idx, tag){
                     var key = tag.key;
                     var val = tag.value;
                     // check the corresponding input on the tree
@@ -2650,24 +2588,17 @@ clone.job = (function () {
                     $input.prop('disabled', false);
                     // check the parent levels
                     $.each($input.parentsUntil('#' + dm.toLowerCase() + '-feature-tree', 'li.level'),
-                        function (idx, level) {
+                        function(idx, level){
                             $(level).children('div.tree-checkbox').find('input.level').prop('checked', true);
                             $(level).children('div.tree-checkbox').find('input.level').prop('disabled', false);
                         });
                 });
             }
 
-            var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function (e) {
-                $("#estimatedSize").remove();
-                bounds = bboxSource.getExtent();
-                if (bboxSource.getFeatures().length == 1 && validateBounds(bounds)) {
-                    getTileEstimates(bounds);
-                }
-            });
 
             // -- configuration tab -- //
             var configs = data.configurations;
-            $(configs).each(function (idx, config) {
+            $(configs).each(function(idx, config){
                 var $filelist = $('#filelist');
                 var selection = {};
                 selection['uid'] = config.uid;
@@ -2705,15 +2636,72 @@ clone.job = (function () {
         });
     }
 
+    function getTileEstimates(bounds) {
+        bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+        providers = []
+        $("#provider-selection input[name='providers'][type='checkbox']").each(function(){
+            type = $(this).attr('source-type');
+            if(type != 'osm' && type != 'osm-generic' && type != 'wfs' && type != 'argis-feature') {
+                if ($(this).is(":checked")) {
+                    providers.push(this.value);
+                }
+            }
+        });
+        if (providers.length > 0) {
+            var csrftoken = getCookie('csrftoken');
+            json_data = {"providers": providers, "bbox": bounds}
+            $.ajax({
+                // post json to the api endpoint
+                url: '/en/exports/estimator',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'providers': providers,
+                    'bbox': bounds
+                }),
+                processData: false, // send as json
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function(result) {
+                    console.log(result);
+                    $("#estimatedSize").remove();
+                    var size = result;
+                    var sizeText = ""
+                    if (size < 1) {
+                        sizes = ['MB', 'KB', 'Byte'];
+                        for (i=0; i < sizes.length; i++) {
+                            size = size * 1000;
+                            sizeText = "Estimated Tile Size: " + size.toFixed(2) + " " + sizes[i];
+                            if (size >= 1) {break;}
+                        }
+                    }
+                    else if(size >= 1000){
+                        size = size / 1000;
+                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " TB";
+                    }
+                    else {
+                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " GB";
+                    }
+                    $("#provider-selection").after('<div id="estimatedSize" class="help-block">' + sizeText + '</div>');
+                },
+            });
+        }
+    }
+
+
 }());
 
-$(document).ready(function () {
+$(document).ready(function() {
     // construct the UI app
-    $('li#create-tab').bind('click', function (e) {
+    $('li#create-tab').bind('click', function(e){
         $('#create-export-map').css('visibility', 'visible');
-        $('#create-controls').css('display', 'block');
+        $('#create-controls').css('display','block');
         $('#list-export-map').css('visibility', 'hidden');
-        $('#list-controls').css('display', 'none');
+        $('#list-controls').css('display','none');
     });
     clone.job.init();
 });

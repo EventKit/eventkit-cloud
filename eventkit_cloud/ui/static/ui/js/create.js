@@ -323,7 +323,6 @@ create.job = (function(){
 
     function getTileEstimates(bounds) {
         bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
-        console.log(bounds);
         providers = []
         $("#provider-selection input[name='providers'][type='checkbox']").each(function(){
             type = $(this).attr('source-type');
@@ -334,7 +333,6 @@ create.job = (function(){
             }
         });
         if (providers.length > 0) {
-            console.log(providers);
             var csrftoken = getCookie('csrftoken');
             json_data = {"providers": providers, "bbox": bounds}
             $.ajax({
