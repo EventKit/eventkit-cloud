@@ -18,6 +18,7 @@ from django.utils import timezone
 
 from celery import Task
 from celery.utils.log import get_task_logger
+from celery.exceptions import TaskRevokedError
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
@@ -161,6 +162,13 @@ class ExportTask(Task):
                     task_id=task_id,
                     stage_dir=stage_dir
                 ).delay()
+
+    from celery.signals import task_revoked
+    @staticmethod
+    @task_revoked.connect
+    def on_task_revoke_sig(signal=None, sender=None, **kwargs):
+        logger.info("TASK REVOKED")
+        raise TaskRevokedError
 
     def update_task_state(self, task_uid=None):
         """
@@ -797,6 +805,13 @@ class RevokeTask(Task):
         export_tasks = export_provider_task.tasks.all()
         uid_export_tasks = [export_task for export_task in export_tasks if export_task.celery_uid]
 
+        for export_task in export_tasks:
+            export_task.status = 'CANCELLED'
+            export_task.save()
+
+        export_provider_task.status = 'CANCELLED'
+        export_provider_task.save()
+
         # XXX: go ahead and try to revoke any currently running export tasks 
         #      for the provider task
         for export_task in uid_export_tasks:
@@ -808,12 +823,6 @@ class RevokeTask(Task):
                 signal='SIGQUIT'
             )
 
-        for export_task in export_tasks:
-            export_task.status = 'CANCELLED'
-            export_task.save()
-
-        export_provider_task.status = 'CANCELLED'
-        export_provider_task.save()
 
 def get_progress_tracker(task_uid=None):
     """

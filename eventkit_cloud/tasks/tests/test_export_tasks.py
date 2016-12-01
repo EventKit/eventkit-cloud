@@ -503,8 +503,8 @@ class TestExportTasks(ExportTaskBase):
         revoke_task = RevokeTask()
         revoke_task.run(export_provider_task.uid)
 
-        app.control.revoke.assert_called_once_with(str(export_task.celery_uid),
-                                                                           signal='SIGKILL',
+        app.control.revoke.assert_called_once_with(task_id=str(export_task.celery_uid),
+                                                                           signal='SIGQUIT',
                                                                            terminate=True)
 
         export_provider_task = ExportProviderTask.objects.get(
