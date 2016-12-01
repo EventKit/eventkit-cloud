@@ -162,22 +162,15 @@ def help_presets(request):
 def data_estimator(request):
     request_data = json.loads(request.body)
     # example request_data = {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
-    size = []
-    tiles = []
+    size = 0
     providers = request_data.get('providers')
     bbox = request_data.get('bbox')
-    tiles_ = []
     if not providers and not bbox:
         return HttpResponse("Providers or BBOX were not supplied in the request", status=400)
 
     for provider in providers:
         estimates = get_size_estimate(provider, bbox)
-        tiles.append(estimates[0])
-        size.append(estimates[1])
-        # tiles += estimates[0]
-        # size += estimates[1]
-        tiles_.append(estimates[2])
-    return HttpResponse(json.dumps([tiles, size, tiles_]))
+        size += estimates[1]
     return HttpResponse([size])
 
 
