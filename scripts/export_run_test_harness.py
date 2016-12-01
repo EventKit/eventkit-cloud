@@ -22,9 +22,7 @@ def run(*script_args):
     bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))  # monrovia
     # bbox = Polygon.from_bbox((13.84,-33.87,34.05,-25.57))  #(w,s,e,n) horn of africa
     the_geom = GEOSGeometry(bbox, srid=4326)
-    job = Job.objects.create(name='TestJob',
-                             description='Test description', user=user,
-                             the_geom=the_geom)
+    job = Job.objects.create(name='TestJob', description='Test description', user=user, the_geom=the_geom)
     region = Region.objects.get(name='Africa')
     job.region = region
     job.save()
@@ -39,13 +37,8 @@ def run(*script_args):
     parser = PresetParser(preset='./tasks/tests/files/hdm_presets.xml')
     tags_dict = parser.parse()
     for entry in tags_dict:
-        tag = Tag.objects.create(
-            key=entry['key'],
-            value=entry['value'],
-            geom_types=entry['geom_types'],
-            data_model='HDM',
-            job=job
-        )
+        tag = Tag.objects.create(name=entry['key'], value=entry['value'], geom_types=entry['geom_types'],
+                                 data_model='HDM', job=job)
     # run the export.. tasks processed on celery queue
     # results available at /api/runs url
     runner = ExportTaskRunner()

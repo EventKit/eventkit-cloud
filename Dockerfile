@@ -65,6 +65,7 @@ COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
 COPY ./requirements.txt /var/lib/eventkit/requirements.txt
 COPY ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
 COPY ./manage.py /var/lib/eventkit/manage.py
+COPY ./.coveragerc /var/lib/eventkit/.coveragerc
 
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\

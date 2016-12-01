@@ -18,19 +18,17 @@ logger = logging.getLogger(__name__)
 
 
 class TestExportTaskRunner(TestCase):
-
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob',
-                                 description='Test description', user=self.user,
-                                 the_geom=the_geom)
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
+                                      the_geom=the_geom)
         provider = ExportProvider.objects.first()
         provider_task = ProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
@@ -53,9 +51,10 @@ class TestExportTaskRunner(TestCase):
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.all()[0].formats.add(shp_task)
         runner = ExportOSMTaskRunner()
-        #Even though code using pipes seems to be supported here it is throwing an error.
+        # Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            runner.run_task(provider_task_uid=self.uid, run=self.job.runs.first(), service_type={'osm-generic': True}, worker="some_worker")
+            runner.run_task(provider_task_uid=self.uid, run=self.job.runs.first(), service_type={'osm-generic': True},
+                            worker="some_worker")
         except TypeError:
             pass
         run = self.job.runs.all()[0]

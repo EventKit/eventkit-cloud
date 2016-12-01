@@ -9,7 +9,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
     operations on models to the owner of the object.
     """
 
-    def has_object_permission(self, request, view, obj):
+    @staticmethod
+    def has_object_permission(request, view, obj, **kwargs):
         # Read permissions are allowed to any request,
         # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
