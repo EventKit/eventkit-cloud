@@ -12,13 +12,12 @@ from zipfile import ZipFile
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
 from celery.utils.log import get_task_logger
-from celery.app import app_or_default
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
@@ -30,7 +29,7 @@ import socket
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
 # TODO: enum the states
-FINISHED_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED']
+FINISHED_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED', 'SUCCESS']
 INCOMPLETE_STATES = ['FAILED']
 
 # Get an instance of a logger
@@ -55,10 +54,10 @@ class ExportTask(Task):
 
     def on_success(self, retval, task_id, args, kwargs):
         """
-        Update the successfuly completed task as follows:
+        Update the successfully completed task as follows:
 
             1. update the time the task completed
-            2. caclulate the size of the output file
+            2. calculate the size of the output file
             3. calculate the download path of the export
             4. create the export download directory
             5. copy the export file to the download directory
@@ -143,24 +142,25 @@ class ExportTask(Task):
         """
         from eventkit_cloud.tasks.models import ExportTask as ExportTaskModel
         from eventkit_cloud.tasks.models import ExportTaskException, ExportProviderTask
-        logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
         task = ExportTaskModel.objects.get(celery_uid=task_id)
-        task.status = 'FAILED'
         task.finished_at = timezone.now()
         task.save()
         exception = cPickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
-        if self.abort_on_error:
-            run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
-            error_handler = ExportTaskErrorHandler()
-            # run error handler
-            stage_dir = kwargs['stage_dir']
-            error_handler.si(
-                run_uid=str(run.uid),
-                task_id=task_id,
-                stage_dir=stage_dir
-            ).delay()
+        if task.status != 'CANCELLED':
+            task.status = 'FAILED'
+            logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
+            if self.abort_on_error:
+                run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
+                error_handler = ExportTaskErrorHandler()
+                # run error handler
+                stage_dir = kwargs['stage_dir']
+                error_handler.si(
+                    run_uid=str(run.uid),
+                    task_id=task_id,
+                    stage_dir=stage_dir
+                ).delay()
 
     def update_task_state(self, task_uid=None):
         """
@@ -180,13 +180,11 @@ class ExportTask(Task):
                 task.save()
                 app.control.revoke(
                     task_id=str(celery_uid),
-                    wait=True,
                     timeout=1,
                     terminate=True,
-                    signal='SIGQUIT'
+                    # signal='SIGQUIT'
                 )
-                raise Reject(None, requeue=False)
-
+                raise Exception("{0} was cancelled by {1}.".format(task.export_provider_task.name, "user"))
             task.celery_uid = celery_uid
             task.status = 'RUNNING'
             task.export_provider_task.status = 'RUNNING'
@@ -575,26 +573,26 @@ class FinalizeExportProviderTask(Task):
 
     def run(self, run_uid=None, export_provider_task_uid=None, stage_dir=None, worker=None):
         from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
-        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-        if export_provider_task.status != "CANCELLED":
-            export_provider_task.status = 'COMPLETED'
+        with transaction.atomic():
+            export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-        # mark run as incomplete if any tasks fail
-        export_tasks = export_provider_task.tasks.all()
-        if any(task.status in INCOMPLETE_STATES for task in export_tasks):
-            export_provider_task.status = 'INCOMPLETE'
+            if export_provider_task.status != "CANCELLED":
+                export_provider_task.status = 'COMPLETED'
+            export_provider_task.save()
 
-        export_provider_task.save()
+            # mark run as incomplete if any tasks fail
+            export_tasks = export_provider_task.tasks.all()
+            if export_provider_task.status != "CANCELLED" and any(task.status in INCOMPLETE_STATES for task in export_tasks):
+                export_provider_task.status = 'INCOMPLETE'
+            export_provider_task.save()
 
-        export_provider_task = ExportProviderTask.objects.get(
-            uid=export_provider_task_uid
-        )
+            export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-        run_finished = False
-        provider_tasks = export_provider_task.run.provider_tasks.all()
-        if all(pt.status in FINISHED_STATES for pt in provider_tasks):
-            run_finished = True
+            run_finished = False
+            provider_tasks = export_provider_task.run.provider_tasks.all()
+            if all(provider_task.status in FINISHED_STATES for provider_task in provider_tasks):
+                run_finished = True
 
         if run_finished:
             run = ExportRun.objects.get(uid=run_uid)
@@ -757,9 +755,6 @@ class ExportTaskErrorHandler(Task):
         except IOError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
-        if any(_.status == "CANCELLED" for _ in run.provider_tasks):
-            raise Reject(None, requeue=False)
-
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
@@ -791,23 +786,24 @@ class RevokeTask(Task):
 
         export_provider_task = ExportProviderTask.objects.get(uid=task_uid)
         # XXX: revoke the provider-task level task
-        assert export_provider_task.celery_uid, "should have a celery_uid"
-        app.control.revoke(
-            task_id=str(export_provider_task.celery_uid),
-            wait=True,
-            terminate=True,
-            signal='SIGQUIT'
-        )
-        logging.info('revoked provider task uid %s', str(export_provider_task.celery_uid))
+        # assert export_provider_task.celery_uid, "should have a celery_uid"
+        # app.control.revoke(
+        #     task_id=str(export_provider_task.celery_uid),
+        #     wait=True,
+        #     terminate=True,
+        #     signal='SIGQUIT'
+        # )
+        # logging.info('revoked provider task uid %s', str(export_provider_task.celery_uid))
         export_tasks = export_provider_task.tasks.all()
-        uid_export_tasks = [_ for _ in export_tasks if _.celery_uid]
+        uid_export_tasks = [export_task for export_task in export_tasks if export_task.celery_uid]
 
         # XXX: go ahead and try to revoke any currently running export tasks 
         #      for the provider task
         for export_task in uid_export_tasks:
+            import signal
             app.control.revoke(
                 task_id=str(export_task.celery_uid),
-                wait=True,
+                # destination=export_task.worker,
                 terminate=True,
                 signal='SIGQUIT'
             )

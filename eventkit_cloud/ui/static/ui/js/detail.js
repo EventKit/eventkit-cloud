@@ -446,12 +446,13 @@ exports.detail = (function () {
             $providersDiv = $('div#' + run.uid).find('#providers');
             var providers = run.provider_tasks;
             $.each(providers, function (i, provider) {
+                provider.run_uid = run.uid;
                 var name = provider.name;
                 $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong><i class="fa fa-times" style="color:red; float: right; cursor: pointer" id="cancel-' + provider.uid + '"/></td></tr>');
 
 
                 $("#cancel-" + provider.uid).click(function () {
-                    cancelProvider(provider.uid, name)
+                    cancelProvider(provider)
                 });
 
                 // add task info
@@ -469,7 +470,7 @@ exports.detail = (function () {
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
 
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
+                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED' || status === 'CANCELLED') {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
@@ -516,10 +517,10 @@ exports.detail = (function () {
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     }
 
-    function cancelProvider(provider_uid, provider_name) {
-        var url = Config.PROVIDER_TAKS_URL + '/' + provider_uid;
-        $("#cancel-" + provider_uid).removeClass().addClass('fa fa-cog fa-spin');
-        if (confirm("Are you sure you want to cancel the " + provider_name + " task?")) {
+    function cancelProvider(provider) {
+        var url = Config.PROVIDER_TAKS_URL + '/' + provider.uid;
+        $("#cancel-" + provider.uid).removeClass().addClass('fa fa-cog fa-spin');
+        if (confirm("Are you sure you want to cancel the " + provider.name + " task?")) {
             $.ajaxSetup({
                 beforeSend: function (xhr, settings) {
                     if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -531,19 +532,24 @@ exports.detail = (function () {
                 url: url,
                 data: {
                     'cancel': true,
-                    'uid': provider_uid
                 },
                 dataType: 'json',
                 cache: false,
                 method: 'patch',
                 success: function () {
-                    $("#" + provider_uid).remove();
-                    $("#info-" + provider.uid).remove();
-                    startRunCheckInterval();
+                    for (task in provider.tasks){
+                        task.status = "CANCELLING";
+                        var $runDiv = $('#' + provider.run_uid);
+                        var $tr = $runDiv.find('table').find('tr#' + task.uid);
+                        $tr.removeClass();
+                        $tr.addClass(status.toLowerCase());
+                        $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                        $barTr.html('');
+                    }
                 },
                 failure: function () {
-                    alert(provider_name + " could not be canceled at this time.");
-                    $("#cancel-" + provider_uid).removeClass().addClass('fa fa-times');
+                    alert(provider.name + " could not be canceled at this time.");
+                    $("#cancel-" + provider.uid).removeClass().addClass('fa fa-times');
                 }
             });
         } else {
@@ -613,6 +619,7 @@ exports.detail = (function () {
             $.each(providers, function (i, provider) {
                 var provideruid = provider.uid;
                 var name = provider.name;
+                provider.run_uid = run.uid;
 
                 //$providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
                 // add task info
@@ -647,7 +654,7 @@ exports.detail = (function () {
                             estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth() + 1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
-                        if (status === 'PENDING' || status === 'FAILED') {
+                        if (status === 'PENDING' || status === 'FAILED' || status == 'CANCELLED') {
                             $tr.removeClass();
                             $tr.addClass(status.toLowerCase());
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');

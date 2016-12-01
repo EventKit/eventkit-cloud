@@ -18,7 +18,7 @@ import logging
 import sys
 from django.db import IntegrityError
 from django.conf import settings
-from billiard import Process
+from billiard import Process, Pipe
 
 logger = logging.getLogger(__name__)
 

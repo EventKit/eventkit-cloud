@@ -27,6 +27,7 @@ class TaskFactory:
     """
     A class create Task Runners based on an Export Run.
     """
+
     def __init__(self, ):
         self.type_task_map = {'osm-generic': ExportOSMTaskRunner, 'osm': ExportOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
@@ -103,17 +104,17 @@ class TaskFactory:
                         #  it will call FinalizeTask which will mark the entire job complete/incomplete.
                         if not task_runner_tasks:
                             return False
-                        trt_res = task_runner_tasks.freeze()
-                        assert trt_res.task_id, "task_id must be populated"
-                        ept = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-                        ept.celery_uid = UUID(trt_res.task_id)
-                        ept.save()
-                        
+                        # trt_res = task_runner_tasks.freeze()
+                        # assert trt_res.task_id, "task_id must be populated"
+                        # ept = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+                        # ept.celery_uid = UUID(trt_res.task_id)
+                        # ept.save()
+
                         finalize_export_provider_task = FinalizeExportProviderTask()
                         tasks_results += [
-			    (task_runner_tasks | finalize_export_provider_task.si(
+                            (task_runner_tasks | finalize_export_provider_task.si(
                                 run_uid=run.uid,
-                                stage_dir=os.path.join(stage_dir,provider_task.provider.slug),
+                                stage_dir=os.path.join(stage_dir, provider_task.provider.slug),
                                 export_provider_task_uid=export_provider_task_uid,
                                 worker=worker
                             ).set(queue=worker)).apply_async(
@@ -121,11 +122,11 @@ class TaskFactory:
                                 max_retries=10,
                                 expires=datetime.now() + timedelta(days=2),
                                 link_error=[finalize_export_provider_task.si(
-			            run_uid=run.uid,
-                                    stage_dir=os.path.join(stage_dir,provider_task.provider.slug),
-			            export_provider_task_uid=export_provider_task_uid,
+                                    run_uid=run.uid,
+                                    stage_dir=os.path.join(stage_dir, provider_task.provider.slug),
+                                    export_provider_task_uid=export_provider_task_uid,
                                     worker=worker).set(queue=worker)]
-	                        )
+                            )
                         ]
 
                 return tasks_results
