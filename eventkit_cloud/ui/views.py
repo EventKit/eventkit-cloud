@@ -153,7 +153,7 @@ def help_presets(request):
         RequestContext(request)
     )
 
-@csrf_exempt
+
 @require_http_methods(['POST'])
 def data_estimator(request):
     request_data = json.loads(request.body)

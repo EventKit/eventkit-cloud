@@ -2069,6 +2069,7 @@ create.job = (function(){
             // validate the selected extents
             if (validateBounds(merc_bounds)) {
                 setBounds(merc_bounds);
+                getTileEstimates(merc_bounds);
                 return polygonFeature;
             }
             else {

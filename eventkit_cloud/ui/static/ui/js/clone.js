@@ -199,10 +199,10 @@ clone.job = (function(){
             // validate the selected extents
             if (validateBounds(bounds)) {
                 setBounds(bounds);
+                getTileEstimates(bounds);
             }
             else {
                 unsetBounds();
-                getTileEstimates(bounds);
             }
             map.getView().fit(bounds, map.getSize());
         });
@@ -1689,6 +1689,7 @@ clone.job = (function(){
                     bboxSource.clear();
                     //transform.unsetFeature();
                     unsetBounds();
+                    $("#estimatedSize").remove();
                     //p.getView().fit(regions.getExtent(), map.getSize());
                     // map.zoomToExtent(regions.getDataExtent());
                     zoomtoextent();
@@ -1803,6 +1804,7 @@ clone.job = (function(){
             // validate the selected extents
             if (validateBounds(merc_bounds)) {
                 setBounds(merc_bounds);
+                getTileEstimates(merc_bounds);
                 return polygonFeature;
             }
             else {
@@ -2525,6 +2527,7 @@ clone.job = (function(){
 
             // set the bounds on the form
             setBounds(bounds);
+            getTileEstimates(bounds);
 
             // // -- select formats tab -- //
             var formats = data.exports;
@@ -2690,6 +2693,27 @@ clone.job = (function(){
                 },
             });
         }
+    }
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
 

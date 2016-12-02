@@ -39,6 +39,6 @@ def get_size_estimate(provider, bbox, srs='3857'):
 
 def get_gb_estimate(total_tiles, tile_width=256, tile_height=256):
     # the literal number there is the average pixels/GB ratio for tiles.
-    gigs_per_pixel_constant = 0.0000000006
+    gigs_per_pixel_constant = 0.0000000005
     return total_tiles*tile_width*tile_height*gigs_per_pixel_constant
 
