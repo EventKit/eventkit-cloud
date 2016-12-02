@@ -352,7 +352,7 @@ create.job = (function(){
                     }
                 },
                 success: function(result) {
-                    console.log(result);
+                    baseText = "Estimated Raster Tile Size: ";
                     $("#estimatedSize").remove();
                     var size = result;
                     var sizeText = ""
@@ -360,16 +360,16 @@ create.job = (function(){
                         sizes = ['MB', 'KB', 'Byte'];
                         for (i=0; i < sizes.length; i++) {
                             size = size * 1000;
-                            sizeText = "Estimated Tile Size: " + size.toFixed(2) + " " + sizes[i];
+                            sizeText = baseText + size.toFixed(2) + " " + sizes[i];
                             if (size >= 1) {break;}
                         }
                     }
                     else if(size >= 1000){
                         size = size / 1000;
-                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " TB";
+                        sizeText = baseText + size.toFixed(2) + " TB";
                     }
                     else {
-                        sizeText = "Estimated Tile Size: " + size.toFixed(2) + " GB";
+                        sizeText = baseText + size.toFixed(2) + " GB";
                     }
                     $("#provider-selection").after('<div id="estimatedSize" class="help-block">' + sizeText + '</div>');
                 },
