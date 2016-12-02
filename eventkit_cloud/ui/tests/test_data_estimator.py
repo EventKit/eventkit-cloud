@@ -9,7 +9,7 @@ from mock import Mock, patch
 logger = logging.getLogger(__name__)
 
 
-class TestExportTaskFactory(TestCase):
+class TestDataEstimation(TestCase):
 
     def test_get_gb_estimate(self):
         expected_return_value = 0.000131072
