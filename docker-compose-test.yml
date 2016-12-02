@@ -3,11 +3,10 @@ services:
   base:
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./coverage:/var/lib/eventkit/coverage
        - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
-       dockerfile: config/Dockerfile
+       dockerfile: config/Dockerfile_test
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
@@ -68,4 +67,4 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
      ports:
-       - "80:80"
+        - "80:80"

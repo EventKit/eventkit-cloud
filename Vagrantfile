@@ -41,14 +41,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
 
     docker.vm.box = "ubuntu/trusty64"
-    
-    img_file = "ubuntu-xenial-core-cloudimg-amd64-root.tar.gz"
-    unless File.exists?(img_file)
-      require "open-uri"
-      open(img_file, 'wb') do |file|
-        file << open('https://partner-images.canonical.com/core/xenial/current/ubuntu-xenial-core-cloudimg-amd64-root.tar.gz').read
-      end
-    end
+
     ## create a private network visible only to the host machine
     #config.vm.network :private_network, ip: "127.0.0.1"
     docker.vm.provision :shell, path: "scripts/setup_dependencies.sh"
