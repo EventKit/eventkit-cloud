@@ -3,7 +3,9 @@ import * as types from './actionTypes'
 import ExportApi from '../api/ExportsApi';
 
 export function loadJobsSuccess(jobs) {
-    return {type: types.LOAD_JOBS_SUCCESS, jobs};
+    return {
+        type: types.LOAD_JOBS_SUCCESS,
+        jobs};
 }
 
 
