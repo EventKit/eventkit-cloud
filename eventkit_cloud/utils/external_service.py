@@ -130,9 +130,10 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error(seed_dict)
                 raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
-        if p.exitcode != 0:
+        if p.pid != 0:
+            export_task = ExportTask.objects.get(uid=self.task_uid)
             if export_task.status == "CANCELLED":
-                raise CancelException(self.task_uid)
+                raise CancelException(task_name=export_task.export_provider_task.name, user_name=export_task.cancel_user.username)
         return self.gpkgfile
 
 

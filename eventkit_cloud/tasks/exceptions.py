@@ -1,19 +1,15 @@
 class CancelException(Exception):
     """Used to indicate when a user calls for cancellation."""
 
-    def __init__(self, task_uid, message=None, *args):
+    def __init__(self, message=None, task_name=None, user_name=None, *args, **kwargs):
         """
 
-        :param message: A nondefault message
+        :param message: A non-default message
         :param task_uid: Task_uid to look up user and task name.
-        :param args:
         """
         from .models import ExportTask
         self.message = message  # without this you may get DeprecationWarning
         if not self.message:
-            if task_uid:
-                export_task = ExportTask.objects.get(uid=task_uid)
-                message = "{0} was cancelled by {1}.".format(export_task.export_provider_task.name, export_task.cancel_user.name)
+                message = "{0} was cancelled by {1}.".format(task_name, user_name)
 
-        # allow users initialize misc. arguments as any other builtin Error
-        super(CancelException, self).__init__(message, *args)
+        super(CancelException, self).__init__(message, *args, **kwargs)
