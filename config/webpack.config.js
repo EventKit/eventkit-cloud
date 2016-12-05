@@ -8,6 +8,7 @@ var BUILD_DIR = path.resolve(BASE_DIR, 'build');
 var APP_DIR = path.resolve(BASE_DIR, 'app');
 
 var config = {
+    devtool: 'inline-source-map',
     entry: [
         'webpack-dev-server/client?http://0.0.0.0:8080', // WebpackDevServer host and port
         'webpack/hot/dev-server', // "only" prevents reload on syntax errors

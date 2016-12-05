@@ -1,6 +1,6 @@
 import * as api from '../config'
-class ExportsApi {
 
+class ExportsApi {
 
     static getAllJobs() {
         return fetch(api.Config.JOBS_URL).then(response => {

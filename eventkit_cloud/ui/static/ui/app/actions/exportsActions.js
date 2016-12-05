@@ -8,7 +8,6 @@ export function loadJobsSuccess(jobs) {
 
 
 export function loadExports() {
-
     // make async call to api, handle promise, dispatch action when promise is resolved
     return function(dispatch) {
         return ExportApi.getAllJobs().then(jobs => {
