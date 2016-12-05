@@ -47,24 +47,34 @@ services:
         - CONCURRENCY=2
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
-    image: mdillon/postgis:9.5
-    environment:
-      - POSTGRES_USER=eventkit
-      - POSTGRES_PASSWORD=eventkit_exports
-      - POSTGRES_DB=eventkit_exports
-    ports:
-     - "5432:5432"
+      image: mdillon/postgis:9.5
+      environment:
+        - POSTGRES_USER=eventkit
+        - POSTGRES_PASSWORD=eventkit_exports
+        - POSTGRES_DB=eventkit_exports
+      ports:
+       - "5432:5432"
   rabbitmq:
-     image: rabbitmq:3.6.5
-     expose:
-       - "5672"
+       image: rabbitmq:3.6.6-management
   httpd:
-     build:
-       context: .
-       dockerfile: Dockerfile_httpd
-     volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./exports_download:/var/lib/eventkit/exports_download
-     image: httpd:2.4.23
-     ports:
-        - "80:80"
+       build:
+         context: .
+         dockerfile: Dockerfile_httpd
+       volumes:
+         - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+         - ./exports_download:/var/lib/eventkit/exports_download
+       image: httpd:2.4.23
+       ports:
+          - "80:80"
+  flower:
+       extends:
+          service: base
+       depends_on:
+          - rabbitmq
+       links:
+          - rabbitmq
+       ports:
+         - "49555:5555"
+       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
+       extra_hosts:
+        - "cloud.eventkit.dev:192.168.99.130"

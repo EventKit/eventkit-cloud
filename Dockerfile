@@ -79,17 +79,8 @@ RUN mkdir /var/lib/eventkit/db_dir
 RUN chown eventkit:eventkit -R /var/lib/eventkit/
 RUN mkdir /var/log/eventkit
 
-RUN chmod 755 /home
-RUN chmod 755 /var/lib/eventkit
-RUN chmod 755 /var/lib/eventkit
-RUN chmod 775 /var/log/eventkit
+RUN chmod 755 /var/lib/eventkit /var/log/eventkit /home
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
-
-EXPOSE 80
-#RUN rm -rf /var/lib/eventkit/tmp
-
-#RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-#RUN /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 
 COPY ./scripts /var/lib/eventkit/scripts
 

@@ -27,6 +27,7 @@ from eventkit_cloud.utils import (
 )
 
 import socket
+from celery.signals import task_revoked
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
 # TODO: enum the states
@@ -130,6 +131,8 @@ class ExportTask(Task):
         task.status = 'SUCCESS'
         task.save()
 
+    @staticmethod
+    @task_revoked.connect
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
         Update the failed task as follows:
@@ -162,13 +165,6 @@ class ExportTask(Task):
                     task_id=task_id,
                     stage_dir=stage_dir
                 ).delay()
-
-    from celery.signals import task_revoked
-    @staticmethod
-    @task_revoked.connect
-    def on_task_revoke_sig(signal=None, sender=None, **kwargs):
-        logger.info("TASK REVOKED")
-        raise TaskRevokedError
 
     def update_task_state(self, task_uid=None):
         """
@@ -819,8 +815,8 @@ class RevokeTask(Task):
             app.control.revoke(
                 task_id=str(export_task.celery_uid),
                 # destination=export_task.worker,
-                terminate=True,
-                signal='SIGQUIT'
+                # terminate=True,
+                signal='SIGINT'
             )
 
 
