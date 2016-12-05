@@ -954,6 +954,7 @@ clone.job = (function(){
 
             // validate the form panel contents
             fv.validateContainer($tab);
+            var isValidStep = fv.isValidContainer($tab);
             return !((isValidStep === false) ||
             (isValidBBox === false || isValidBBox === null));
         }
