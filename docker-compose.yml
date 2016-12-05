@@ -44,7 +44,8 @@ services:
         - rabbitmq
       environment:
         - LOGLEVEL=INFO
-        - CONCURRENCY=2
+        # Concurrency needs to be at least three to support Task Cancellation.
+        - CONCURRENCY=3
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
       image: mdillon/postgis:9.5

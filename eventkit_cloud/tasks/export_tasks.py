@@ -20,11 +20,12 @@ from celery import Task
 from celery.utils.log import get_task_logger
 from celery.exceptions import TaskRevokedError
 
-from eventkit_cloud.jobs.presets import TagParser
-from eventkit_cloud.utils import (
+from ..jobs.presets import TagParser
+from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite,
 )
+from .exceptions import CancelException
 
 import socket
 from celery.signals import task_revoked
@@ -32,7 +33,7 @@ from celery.signals import task_revoked
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
 # TODO: enum the states
 FINISHED_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELLED', 'SUCCESS']
-INCOMPLETE_STATES = ['FAILED']
+INCOMPLETE_STATES = ['FAILED', 'INCOMPLETE', 'CANCELLED']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -44,9 +45,6 @@ class ExportTask(Task):
     """
     Abstract base class for export tasks.
     """
-
-    def run(self, *args, **kwargs):
-        pass
 
     # whether to abort the whole run if this task fails.
     abort_on_error = False
@@ -131,8 +129,6 @@ class ExportTask(Task):
         task.status = 'SUCCESS'
         task.save()
 
-    @staticmethod
-    @task_revoked.connect
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
         Update the failed task as follows:
@@ -166,6 +162,7 @@ class ExportTask(Task):
                     stage_dir=stage_dir
                 ).delay()
 
+
     def update_task_state(self, task_uid=None):
         """
         Update the task state and celery task uid.
@@ -182,14 +179,15 @@ class ExportTask(Task):
                 logging.info('cancelling before run %s', celery_uid)
                 task.celery_uid = celery_uid
                 task.save()
-                app.control.revoke(
-                    task_id=str(celery_uid),
-                    timeout=1,
-                    terminate=True,
-                    # signal='SIGQUIT'
-                )
-                raise Exception("{0} was cancelled by {1}.".format(task.export_provider_task.name, "user"))
+                # app.control.revoke(
+                #     task_id=str(celery_uid),
+                #     timeout=1,
+                #     terminate=True,
+                #     # signal='SIGQUIT'
+                # )
+                raise CancelException(task_uid=task_uid)
             task.celery_uid = celery_uid
+            task.pid = os.getpid()
             task.status = 'RUNNING'
             task.export_provider_task.status = 'RUNNING'
             task.started_at = started
@@ -497,7 +495,7 @@ class ExternalRasterServiceExportTask(ExportTask):
                                                                      service_url=service_url, name=name, layer=layer,
                                                                      config=config, level_from=level_from,
                                                                      level_to=level_to, service_type=service_type,
-                                                                     progress_tracker=progress_tracker)
+                                                                     progress_tracker=progress_tracker, task_uid=task_uid)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -706,8 +704,10 @@ class FinalizeRunTask(Task):
         run.status = 'COMPLETED'
         provider_tasks = run.provider_tasks.all()
         # mark run as incomplete if any tasks fail
-        if any(task.status == 'INCOMPLETE' for task in provider_tasks):
+        if any(task.status in INCOMPLETE_STATES for task in provider_tasks):
             run.status = 'INCOMPLETE'
+        if all(task.status == 'CANCELLED' for task in provider_tasks):
+            run.status = 'CANCELLED'
         finished = timezone.now()
         run.finished_at = finished
         run.save()
@@ -721,7 +721,10 @@ class FinalizeRunTask(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        subject = "Your Eventkit Data Pack is ready."
+        if run.status == 'CANCELLED':
+            subject = "Your Eventkit Data Pack was cancelled."
+        else:
+            subject = "Your Eventkit Data Pack is ready."
         to = [addr]
         # TODO: from email address should not be hardcoded
         from_email = getattr(
@@ -777,18 +780,18 @@ class ExportTaskErrorHandler(Task):
         msg.send()
 
 
-class RevokeTask(Task):
+class CancelTask(Task):
     """
-    Revokes an ExportProviderTask and terminates each subtasks execution.
+    Cancels an ExportProviderTask and terminates each subtasks execution.
     """
 
-    name = "Revoke Task"
+    name = "Cancel Task"
 
-    def run(self, task_uid):
+    def run(self, export_provider_task_uid, cancelling_user):
         from eventkit_cloud.tasks.models import ExportProviderTask
         from eventkit_cloud.celery import app
 
-        export_provider_task = ExportProviderTask.objects.get(uid=task_uid)
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
         # XXX: revoke the provider-task level task
         # assert export_provider_task.celery_uid, "should have a celery_uid"
         # app.control.revoke(
@@ -799,25 +802,54 @@ class RevokeTask(Task):
         # )
         # logging.info('revoked provider task uid %s', str(export_provider_task.celery_uid))
         export_tasks = export_provider_task.tasks.all()
-        uid_export_tasks = [export_task for export_task in export_tasks if export_task.celery_uid]
+        # uid_export_tasks = [export_task for export_task in export_tasks if export_task.celery_uid]
 
         for export_task in export_tasks:
+            import sys
+            print("CANCELLING {0}".format(export_task.name))
             export_task.status = 'CANCELLED'
+            export_task.cancel_user = cancelling_user
             export_task.save()
+            if export_task.pid and export_task.worker:
+                print("Calling Kill Task").format(export_task.pid)
+                KillTask().apply_async(kwargs={"task_pid": export_task.pid}, queue="{0}-cancel".format(export_task.worker))
+            print("EXPORT TASK PID ({0}) ").format(export_task.pid)
+            print("WORKER ({0})".format(export_task.worker))
 
+        print("CANCELLING PROVIDER TASK {0}".format(export_provider_task_uid))
         export_provider_task.status = 'CANCELLED'
         export_provider_task.save()
+        sys.stdout.flush()
 
         # XXX: go ahead and try to revoke any currently running export tasks 
         #      for the provider task
-        for export_task in uid_export_tasks:
-            import signal
-            app.control.revoke(
-                task_id=str(export_task.celery_uid),
-                # destination=export_task.worker,
-                # terminate=True,
-                signal='SIGINT'
-            )
+        # for export_task in uid_export_tasks:
+        #     import signal
+        #     app.control.revoke(
+        #         task_id=str(export_task.celery_uid),
+        #         # destination=export_task.worker,
+        #         # terminate=True,
+        #         signal='SIGINT'
+        #     )
+
+
+class KillTask(Task):
+    """
+        Asks a worker to kill a task.
+    """
+
+    name = "Kill Task"
+
+    def run(self, task_pid=None):
+        import os, signal, sys
+        from time import sleep
+        if task_pid:
+            print("KILLING PID {0} WITH SIGTERM".format(task_pid))
+            os.kill(task_pid, signal.SIGTERM)
+            sleep(5)
+        else:
+            print("KILL TASK CALLED WITH NO PID!")
+        sys.stdout.flush()
 
 
 def get_progress_tracker(task_uid=None):

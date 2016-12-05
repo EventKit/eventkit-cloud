@@ -19,6 +19,7 @@ import sys
 from django.db import IntegrityError
 from django.conf import settings
 from billiard import Process, Pipe
+from ..tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class ExternalRasterServiceToGeopackage(object):
     """
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None, service_type=None, progress_tracker=None):
+                 level_from=None, level_to=None, service_type=None, progress_tracker=None, task_uid=None):
         """
         Initialize the ExternalServiceToGeopackage utility.
 
@@ -67,6 +68,7 @@ class ExternalRasterServiceToGeopackage(object):
         self.config = config
         self.service_type = service_type
         self.progress_tracker = progress_tracker
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -108,6 +110,11 @@ class ExternalRasterServiceToGeopackage(object):
                                                                   "concurrency": 1,
                                                                   "progress_logger": progress_logger})
             p.start()
+            if self.task_uid:
+                from ..tasks.models import ExportTask
+                export_task = ExportTask.objects.get(uid=self.task_uid)
+                export_task.pid = p.pid
+                export_task.save()
             p.join()
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
@@ -123,6 +130,9 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error(seed_dict)
                 raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
+        if p.exitcode != 0:
+            if export_task.status == "CANCELLED":
+                raise CancelException(self.task_uid)
         return self.gpkgfile
 
 

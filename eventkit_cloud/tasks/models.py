@@ -103,6 +103,9 @@ class ExportTask(models.Model):
     started_at = models.DateTimeField(editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     finished_at = models.DateTimeField(editable=False, null=True)
+    pid = models.IntegerField(blank=True, editable=False, default=-1)
+    worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
+    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
 
     class Meta:
         ordering = ['created_at']

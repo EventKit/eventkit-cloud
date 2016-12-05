@@ -19,11 +19,11 @@ from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import Job, Tag
 from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
-    GeneratePresetTask, KmlExportTask, OSMConfTask, 
+    GeneratePresetTask, KmlExportTask, OSMConfTask,
     ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
     ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask, PickUpRunTask, RevokeTask, FinalizeExportProviderTask
+    get_progress_tracker, ZipFileTask, PickUpRunTask, CancelTask, FinalizeExportProviderTask
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -500,7 +500,7 @@ class TestExportTasks(ExportTaskBase):
             celery_uid=uuid.uuid4()
         )
 
-        revoke_task = RevokeTask()
+        revoke_task = CancelTask()
         revoke_task.run(export_provider_task.uid)
 
         app.control.revoke.assert_called_once_with(task_id=str(export_task.celery_uid),
