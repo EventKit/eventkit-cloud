@@ -41,8 +41,8 @@ RUN export PATH=/usr/local/bin:$PATH
 RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
 RUN groupadd eventkit
 RUN useradd -g eventkit eventkit
-RUN apt-get update
-RUN apt-get -y install python-pip
+# Python dependecies needed for python-ldap
+RUN apt-get update && apt-get -y install python-pip libsasl2-dev python-dev libldap2-dev libssl-dev
 RUN pip install virtualenv
 RUN virtualenv /var/lib/eventkit/.virtualenvs/eventkit
 
