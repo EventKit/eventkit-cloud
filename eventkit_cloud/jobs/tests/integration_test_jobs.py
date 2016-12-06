@@ -64,51 +64,51 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_cancel_job(self):
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "OpenStreetMap Data (Generic)",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "OpenStreetMap Data",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wmts",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arc-raster",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wfs",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arc-fs",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
-        self.run_job(job_data, wait_for_run=False)
-
-        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
-        self.orm_run = self.orm_job.runs.last()
-
-        pt = self.orm_run.provider_tasks.last()
-        pt_id = pt.id
-
-        et = pt.tasks.last()
-
-        provider_url = self.base_url + reverse('api:provider_tasks-list') + '/%s' % (pt.uid,)
-        response = self.client.patch(provider_url,
-                                    json={"csrfmiddlewaretoken": self.csrftoken},
-                                    headers={'X-CSRFToken': self.csrftoken,
-                                             'Referer': self.create_export_url})
-        self.assertEqual(200, response.status_code)
-        self.assertEqual({'success': True}, json.loads(response.content))
-        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
-        self.orm_run = self.orm_job.runs.last()
-
-        pt = ExportProviderTask.objects.get(id=pt_id)
-
-        self.assertTrue(all(_.status == 'CANCELLED' for _ in pt.tasks.all()))
-        self.assertEqual(pt.status, 'CANCELLED')
-
-        self.wait_for_run(self.orm_job.uid)
-        self.orm_run = self.orm_job.runs.last()
-        self.assertEqual(self.orm_run.status, 'COMPLETED')
+    # def test_cancel_job(self):
+    #     job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+    #                 "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
+    #                 "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "OpenStreetMap Data (Generic)",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "OpenStreetMap Data",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "eventkit-integration-test-wmts",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "eventkit-integration-test-arc-raster",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "eventkit-integration-test-wfs",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]},
+    #                                                                     {"provider": "eventkit-integration-test-arc-fs",
+    #                                                                      "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+    #     self.run_job(job_data, wait_for_run=False)
+    #
+    #     self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
+    #     self.orm_run = self.orm_job.runs.last()
+    #
+    #     pt = self.orm_run.provider_tasks.last()
+    #     pt_id = pt.id
+    #
+    #     et = pt.tasks.last()
+    #
+    #     provider_url = self.base_url + reverse('api:provider_tasks-list') + '/%s' % (pt.uid,)
+    #     response = self.client.patch(provider_url,
+    #                                 json={"csrfmiddlewaretoken": self.csrftoken},
+    #                                 headers={'X-CSRFToken': self.csrftoken,
+    #                                          'Referer': self.create_export_url})
+    #     self.assertEqual(200, response.status_code)
+    #     self.assertEqual({'success': True}, json.loads(response.content))
+    #     self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
+    #     self.orm_run = self.orm_job.runs.last()
+    #
+    #     pt = ExportProviderTask.objects.get(id=pt_id)
+    #
+    #     self.assertTrue(all(_.status == 'CANCELLED' for _ in pt.tasks.all()))
+    #     self.assertEqual(pt.status, 'CANCELLED')
+    #
+    #     self.wait_for_run(self.orm_job.uid)
+    #     self.orm_run = self.orm_job.runs.last()
+    #     self.assertEqual(self.orm_run.status, 'COMPLETED')
 
     def test_osm_geopackage_thematic(self):
         """
