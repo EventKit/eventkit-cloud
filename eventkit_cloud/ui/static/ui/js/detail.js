@@ -452,7 +452,21 @@ exports.detail = (function () {
 
 
                 $("#cancel-" + provider.uid).click(function () {
-                    cancelProvider(provider)
+                    $('<div title="Confirm Cancel">' +
+                        '<p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>' +
+                        'Are you sure you want to cancel the task ' + name + ' ?</p></div>').dialog({
+                        resizable: false,
+                        height: "auto",
+                        modal: true,
+                        buttons: {
+                            "Confirm": function () {
+                                $(this).dialog("close");
+                            },
+                            "Cancel": function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    });
                 });
 
                 // add task info
@@ -520,6 +534,7 @@ exports.detail = (function () {
     function cancelProvider(provider) {
         var url = Config.PROVIDER_TAKS_URL + '/' + provider.uid;
         $("#cancel-" + provider.uid).removeClass().addClass('fa fa-cog fa-spin');
+
         if (confirm("Are you sure you want to cancel the " + provider.name + " task?")) {
             $.ajaxSetup({
                 beforeSend: function (xhr, settings) {
@@ -537,7 +552,7 @@ exports.detail = (function () {
                 cache: false,
                 method: 'patch',
                 success: function () {
-                    for (task in provider.tasks){
+                    for (task in provider.tasks) {
                         task.status = "CANCELLING";
                         var $runDiv = $('#' + provider.run_uid);
                         var $tr = $runDiv.find('table').find('tr#' + task.uid);

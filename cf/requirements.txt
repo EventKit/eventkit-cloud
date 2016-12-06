@@ -11,7 +11,6 @@ configparser==3.5.0
 decorator==4.0.10
 dj-database-url==0.4.1
 Django==1.9
-django-auth-ldap
 django-celery==3.1.17
 django-classification-banner==0.1.5
 django-filter==0.14.0
