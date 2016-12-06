@@ -15,14 +15,15 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 before_script:
-    - docker-compose -f docker-compose-test.yml build
-    - docker-compose -f docker-compose-test.yml up -d
     - export SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
     - echo $SITE_IP
+    - docker-compose -f docker-compose-test.yml build
+    - docker-compose -f docker-compose-test.yml up -d
 
 script:
     - docker-compose -f docker-compose-test.yml run -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py test eventkit_cloud
     - docker-compose -f docker-compose-test.yml run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py run_integration_tests
+
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev
 
