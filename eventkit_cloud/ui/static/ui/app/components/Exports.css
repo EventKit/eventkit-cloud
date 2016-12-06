@@ -1,17 +1,10 @@
-.div {
-    z-index: 9999;
-    position: absolute;
-    left: 0;
-    right: 30px;
+div.fixed {
     top: 100px;
-    font-size: 14px;
+    margin-top: 110px;
+    margin-left: 210px;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    border: 0px solid;
 }
 
-.div2 {
-    z-index: 9999;
-    position: absolute;
-    left: 50%;
-    right: 0;
-    top: 300px;
-    font-size: 14px;
-}
