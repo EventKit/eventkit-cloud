@@ -25,7 +25,7 @@ from eventkit_cloud.utils import (
 )
 import socket
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5']
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm']
 COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELED']
 
 # Get an instance of a logger
