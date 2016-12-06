@@ -15,7 +15,7 @@ class GPKGToKml(object):
     Thin wrapper around ogr2ogr to convert GPKG to KML.
     """
 
-    def __init__(self, gpkg=None, kmlfile=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, kmlfile=None, zipped=True, debug=False, task_uid=None):
         """
         Initialize the GPKGToKml utility.
 
@@ -37,6 +37,7 @@ class GPKGToKml(object):
         self.debug = debug
         self.cmd = Template("ogr2ogr -f 'KML' $kmlfile $gpkg")
         self.zip_cmd = Template("zip -j $zipfile $kmlfile")
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -44,16 +45,27 @@ class GPKGToKml(object):
         """
         convert_cmd = self.cmd.safe_substitute({'kmlfile': self.kmlfile,
                                                 'gpkg': self.gpkg})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % convert_cmd
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
+        if self.task_uid:
+            from ..tasks.models import ExportTask
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            export_task.pid = proc.pid
+            export_task.save()
         returncode = proc.wait()
         if (returncode != 0):
+            from ..tasks.export_tasks import TaskStates
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            if export_task.status == TaskStates.CANCELLED.value:
+                from ..tasks.exceptions import CancelException
+                raise CancelException(task_name=export_task.export_provider_task.name,
+                                      user_name=export_task.cancel_user.username)
             logger.error('%s', stderr)
             raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
-        if(self.debug):
+        if (self.debug):
             print 'ogr2ogr returned: %s' % returncode
         if self.zipped and returncode == 0:
             kmzfile = self._zip_kml_file()
@@ -69,6 +81,11 @@ class GPKGToKml(object):
         proc = subprocess.Popen(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
+        if self.task_uid:
+            from ..tasks.models import ExportTask
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            export_task.pid = proc.pid
+            export_task.save()
         returncode = proc.wait()
         if returncode != 0:
             logger.error('%s', stderr)

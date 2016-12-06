@@ -17,7 +17,7 @@ class TransformSQlite(object):
     NOT IMPLEMENTED YET
     """
 
-    def __init__(self, sqlite=None, transform=None, transform_sqlite=None, debug=None):
+    def __init__(self, sqlite=None, transform=None, transform_sqlite=None, debug=None, task_uid=None):
         self.sqlite = sqlite
         self.transform = transform
         if not os.path.exists(self.sqlite):
@@ -25,6 +25,7 @@ class TransformSQlite(object):
         if not os.path.exists(self.transform):
             raise IOError('Cannot find transform file for this task.')
         self.debug = debug
+        self.task_uid = task_uid
         """
             OGR Command to run.
         """
@@ -42,14 +43,25 @@ class TransformSQlite(object):
         # transform the spatialite schema
         self.update_sql = Template("spatialite $sqlite < $transform_sql")
         sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
-                            'transform_sql': self.transform})
-        if(self.debug):
+                                                   'transform_sql': self.transform})
+        if (self.debug):
             print 'Running: %s' % sql_cmd
         proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
+        if self.task_uid:
+            from ..tasks.models import ExportTask
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            export_task.pid = proc.pid
+            export_task.save()
         returncode = proc.wait()
         if returncode != 1:
+            from ..tasks.export_tasks import TaskStates
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            if export_task.status == TaskStates.CANCELLED.value:
+                from ..tasks.exceptions import CancelException
+                raise CancelException(task_name=export_task.export_provider_task.name,
+                                      user_name=export_task.cancel_user.username)
             logger.error('%s', stderr)
             raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
         if self.debug:
@@ -66,7 +78,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('-o', '--osm-file', required=True, dest="osm", help='The OSM file to convert (xml or pbf)')
     parser.add_argument('-s', '--spatialite-file', required=True, dest="sqlite", help='The sqlite output file')
-    parser.add_argument('-q', '--schema-sql', required=False, dest="schema", help='A sql file to refactor the output schema')
+    parser.add_argument('-q', '--schema-sql', required=False, dest="schema",
+                        help='A sql file to refactor the output schema')
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}

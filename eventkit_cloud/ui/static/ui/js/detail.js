@@ -386,6 +386,7 @@ exports.detail = (function () {
      */
     function loadSubmittedRunDetails() {
         loadJobDetail();
+
         var job_uid = exports.detail.job_uid;
         $.ajax({
             cache: false,
@@ -405,7 +406,8 @@ exports.detail = (function () {
      */
     function initSubmittedRunPanel(data) {
         var $runPanel = $('#submitted_runs > .panel-group');
-        //$runPanel.empty();
+        // $runPanel.empty();
+        // $('#submitted_runs').empty()
         if (data.length > 0) {
             // display the submitted run
             $('#submitted_runs').css('display', 'block');
@@ -476,14 +478,16 @@ exports.detail = (function () {
                 $("#cancel-" + provider.uid).bind('click', function (e) {
                     // stop form getting posted..
                     e.preventDefault();
-                    $(".modal-footer").append('<button id="cancelConfirm-' + provider.uid + '" type="button" class="btn btn-danger">Confirm</button>')
+                    $(".modal-footer").html('<button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>' +
+                        '<button id="cancelConfirm" type="button" class="btn btn-danger">Confirm</button>')
                     $("#cancelExportModal").modal(modalOpts, 'show');
-                })
-
-                $("#cancelConfirm-" + provider.uid).click(function (provider) {
-                    cancelProvider(provider);
-                    $("#cancelExportModal").modal('hide');
+                    $(".modal-footer").on('click', "#cancelConfirm", function () {
+                        $("#cancelExportModal").modal('hide');
+                        cancelProvider(provider);
+                    });
                 });
+
+
 
                 // add task info
                 var taskDiv = '<div id="info-' + provider.uid + '"><table border=0 class="table table-condensed">';
@@ -508,7 +512,7 @@ exports.detail = (function () {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
-                            $("#cancel-" + provider.uid).removeClass();
+                            $("#cancel-" + provider.uid).removeClass("fa fa-times");
                         } else {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
@@ -574,7 +578,7 @@ exports.detail = (function () {
                     task.status = "CANCELLING";
                     var $runDiv = $('#' + provider.run_uid);
                     var $tr = $runDiv.find('table').find('tr#' + task.uid);
-                    $tr.removeClass();
+                    $("#cancel-" + provider.uid).removeClass('fa fa-cog fa-spin');
                     $tr.addClass(status.toLowerCase());
                     $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                     $barTr.html('');
@@ -684,24 +688,23 @@ exports.detail = (function () {
                             estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth() + 1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
-                        if (status === 'PENDING' || status === 'FAILED' || status == 'CANCELLED') {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                        $tr.removeClass();
+                        $tr.addClass(status.toLowerCase());
+                        if (status === 'PENDING'){
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             $barTr.html('');
                             //$barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
-                        }
-                        else if (status === 'RUNNING') {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                        } else if (status === 'RUNNING') {
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             $barTr.html('<td colspan="3"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td><td align="right">Est. Finish: ' + estimatedFinish + '  </td>')
-                        }
-                        else {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                        } else if (status == 'CANCELLED' || status === 'FAILED'){
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $barTr.html('');
+                            $("#cancel-" + provider.uid).removeClass("fa fa-times");
+                        } else {
                             $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
-                            $barTr.html('')
+                            $barTr.html('');
+                            // $("#cancel-" + provider.uid).removeClass("fa fa-times");
                         }
                     }
                 });
@@ -760,6 +763,9 @@ exports.detail = (function () {
                         if (exports.detail.run_ready) {
                             initSubmittedRunPanel(run_data);
                             completedInit = true;
+                        } else {
+                            // $('#submitted_runs').css('display', 'block');
+                            // $('#submitted_runs').html('<i class="fa fa-cog fa-spin"/> Your tasks are pending, this could take awhile...')
                         }
                     }
                     else {
@@ -808,8 +814,7 @@ exports.detail = (function () {
         //Multiple runs may exist so check the submitted runs specifically
         $.each(run_data, function (index, run) {
             if (run.status === 'SUBMITTED') {
-                console.log(job_data.provider_tasks.length);
-                console.log(run.provider_tasks.length);
+                console.log("Run details will be displayed when job tasks ("+job_data.provider_tasks.length+") == run tasks ("+run.provider_tasks.length+")");
                 run_ready = job_data.provider_tasks.length == run.provider_tasks.length;
             }
         });

@@ -15,7 +15,7 @@ class SQliteToGeopackage(object):
     Thin wrapper around ogr2ogr to convert sqlite to KML.
     """
 
-    def __init__(self, sqlite=None, gpkgfile=None, debug=None):
+    def __init__(self, sqlite=None, gpkgfile=None, debug=None, task_uid=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -34,6 +34,7 @@ class SQliteToGeopackage(object):
             self.gpkgfile = root + '.gkpg'
         self.debug = debug
         self.cmd = Template("ogr2ogr -f 'GPKG' $gpkgfile $sqlite")
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -41,16 +42,27 @@ class SQliteToGeopackage(object):
         """
         convert_cmd = self.cmd.safe_substitute({'gpkgfile': self.gpkgfile,
                                                 'sqlite': self.sqlite})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % convert_cmd
         proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         (stdout, stderr) = proc.communicate()
+        if self.task_uid:
+            from ..tasks.models import ExportTask
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            export_task.pid = proc.pid
+            export_task.save()
         returncode = proc.wait()
         if (returncode != 0):
+            from ..tasks.export_tasks import TaskStates
+            export_task = ExportTask.objects.get(uid=self.task_uid)
+            if export_task.status == TaskStates.CANCELLED.value:
+                from ..tasks.exceptions import CancelException
+                raise CancelException(task_name=export_task.export_provider_task.name,
+                                      user_name=export_task.cancel_user.username)
             logger.error('%s', stderr)
             raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
-        if(self.debug):
+        if (self.debug):
             print 'ogr2ogr returned: %s' % returncode
         return self.gpkgfile
 

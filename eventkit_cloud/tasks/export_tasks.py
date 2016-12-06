@@ -42,7 +42,8 @@ class TaskStates(Enum):
     CANCELLED = "CANCELLED"  # Used for tasks that have been cancelled by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
-                # or a non-zero exit code was returned.)
+
+    # or a non-zero exit code was returned.)
 
     @staticmethod
     def get_finished_states():
@@ -51,6 +52,7 @@ class TaskStates(Enum):
     @staticmethod
     def get_incomplete_states():
         return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELLED]
+
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -190,7 +192,7 @@ class ExportTask(Task):
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
 
-            if task.status == TaskStates.CANCELLED.value or task.export_provider_task.status == TaskStates.CANCELLED.value:
+            if TaskStates.CANCELLED.value in [task.status, task.export_provider_task.status]:
                 logging.info('cancelling before run %s', celery_uid)
                 task.celery_uid = celery_uid
                 task.save()
@@ -221,7 +223,7 @@ class OSMConfTask(ExportTask):
             job_name=None,
             task_uid=None):
         self.update_task_state(task_uid=task_uid)
-        conf = osmconf.OSMConfig(categories, job_name=job_name)
+        conf = osmconf.OSMConfig(categories, job_name=job_name, task_uid=task_uid)
         configfile = conf.create_osm_conf(stage_dir=stage_dir)
         return {'result': configfile}
 
@@ -241,7 +243,7 @@ class OverpassQueryTask(ExportTask):
         progress_tracker = get_progress_tracker(task_uid=task_uid)
         op = overpass.Overpass(
             bbox=bbox, stage_dir=stage_dir,
-            job_name=job_name, filters=filters, progress_tracker=progress_tracker
+            job_name=job_name, filters=filters, progress_tracker=progress_tracker, task_uid=task_uid
         )
         op.run_query()  # run the query
         filtered_osm = op.filter()  # filter the results
@@ -260,7 +262,7 @@ class OSMToPBFConvertTask(ExportTask):
         self.update_task_state(task_uid=task_uid)
         osm = os.path.join(stage_dir, '{0}.osm'.format(job_name))
         pbffile = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
-        o2p = pbf.OSMToPBF(osm=osm, pbffile=pbffile)
+        o2p = pbf.OSMToPBF(osm=osm, pbffile=pbffile, task_uid=task_uid)
         pbffile = o2p.convert()
         return {'result': pbffile}
 
@@ -277,7 +279,7 @@ class OSMPrepSchemaTask(ExportTask):
         osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         osmconf_ini = os.path.join(stage_dir, '{0}.ini'.format(job_name))
-        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf_ini)
+        osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf_ini, task_uid=task_uid)
         osmparser.create_geopackage()
         osmparser.create_default_schema_gpkg()
         osmparser.update_zindexes()
@@ -302,7 +304,7 @@ class ThematicShpExportTask(ExportTask):
         shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
         try:
-            t2s = shp.GPKGToShp(gpkg=thematic_gpkg_file, shapefile=shapefile)
+            t2s = shp.GPKGToShp(gpkg=thematic_gpkg_file, shapefile=shapefile, task_uid=task_uid)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
@@ -326,7 +328,7 @@ class ThematicGPKGExportTask(ExportTask):
             return {'result': os.path.join(stage_dir, '{0}.gpkg'.format(job_name))}
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         try:
-            t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name)
+            t2s = thematic_gpkg.ThematicGPKG(gpkg=gpkg, tags=tags, job_name=job_name, task_uid=task_uid)
             out = t2s.convert()
             return {'result': out}
         except Exception as e:
@@ -347,7 +349,7 @@ class ShpExportTask(ExportTask):
         shapefile = os.path.join(stage_dir, '{0}_generic_shp'.format(job_name))
 
         try:
-            s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile)
+            s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
             out = s2s.convert()
             return {'result': out}
         except Exception as e:
@@ -366,7 +368,7 @@ class KmlExportTask(ExportTask):
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         kmlfile = os.path.join(stage_dir, '{0}_generic.kml'.format(job_name))
         try:
-            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
+            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
             out = s2k.convert()
             return {'result': out}
         except Exception as e:
@@ -386,7 +388,7 @@ class SqliteExportTask(ExportTask):
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         sqlitefile = os.path.join(stage_dir, '{0}_generic.sqlite'.format(job_name))
         try:
-            s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile)
+            s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
             out = s2g.convert()
             return {'result': out}
         except Exception as e:
@@ -419,7 +421,7 @@ class ThematicSQLiteExportTask(ExportTask):
         sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         try:
-            s2g = sqlite.GPKGToSQLite(sqlitefile=sqlitefile, gpkg=gpkgfile)
+            s2g = sqlite.GPKGToSQLite(sqlitefile=sqlitefile, gpkg=gpkgfile, task_uid=task_uid)
             out = s2g.convert()
             return {'result': out}
         except Exception as e:
@@ -439,7 +441,7 @@ class ThematicKmlExportTask(ExportTask):
         gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
         try:
-            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile)
+            s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
             out = s2k.convert()
             return {'result': out}
         except Exception as e:
@@ -459,7 +461,7 @@ class WFSExportTask(ExportTask):
         gpkg = os.path.join(stage_dir, '{0}_generic.gpkg'.format(job_name))
         try:
             w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                config=config, service_type=service_type)
+                                config=config, service_type=service_type, task_uid=task_uid)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -480,7 +482,8 @@ class ArcGISFeatureServiceExportTask(ExportTask):
         try:
             w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url,
                                                                     name=name, layer=layer,
-                                                                    config=config, service_type=service_type)
+                                                                    config=config, service_type=service_type,
+                                                                    task_uid=task_uid)
             out = w2g.convert()
             return {'result': out}
         except Exception as e:
@@ -596,7 +599,7 @@ class FinalizeExportProviderTask(Task):
             # mark run as incomplete if any tasks fail
             export_tasks = export_provider_task.tasks.all()
             if TaskStates[export_provider_task.status] != TaskStates.CANCELLED and any(
-                    TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
+                            TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
                 export_provider_task.status = TaskStates.INCOMPLETE.value
             export_provider_task.save()
 
@@ -604,7 +607,8 @@ class FinalizeExportProviderTask(Task):
 
             run_finished = False
             provider_tasks = export_provider_task.run.provider_tasks.all()
-            if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in provider_tasks):
+            if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
+                   provider_tasks):
                 run_finished = True
 
         if run_finished:
@@ -826,14 +830,15 @@ class KillTask(Task):
 
     def run(self, task_pid=None):
         import os, signal, sys
-        from time import sleep
         if task_pid:
-            print("KILLING PID {0} WITH SIGTERM".format(task_pid))
-            os.kill(task_pid, signal.SIGTERM)
-            sleep(5)
-        else:
-            print("KILL TASK CALLED WITH NO PID!")
-        sys.stdout.flush()
+            # Don't kill tasks with default pid.
+            if task_pid <= 0:
+                return
+            try:
+                # If the task finished prior to receiving this kill message it could throw an OSError.
+                os.kill(task_pid, signal.SIGTERM)
+            except OSError:
+                logger.info("{0} PID does not exist.")
 
 
 def get_progress_tracker(task_uid=None):

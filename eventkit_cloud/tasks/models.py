@@ -53,7 +53,7 @@ class ExportRun(RunModelMixin):
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
     worker = models.CharField(max_length=50, editable=False, default='', null=True)
-    zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True)
+    zipfile_url = models.CharField(max_length=1000, db_index=False, blank=True, null=True)
     status = models.CharField(
         blank=True,
         max_length=20,
@@ -103,7 +103,7 @@ class ExportTask(models.Model):
     started_at = models.DateTimeField(editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     finished_at = models.DateTimeField(editable=False, null=True)
-    pid = models.IntegerField(blank=True, editable=False, default=-1)
+    pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
 
