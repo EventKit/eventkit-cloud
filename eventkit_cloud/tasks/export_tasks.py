@@ -32,15 +32,25 @@ from celery.signals import task_revoked
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
 
-class TaskStates(Enum):
-    COMPLETED = 1
-    INCOMPLETE = 2
-    CANCELLED = 3
-    SUCCESS = 4
-    FAILED = 5
 
-FINISHED_STATES = [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELLED, TaskStates.SUCCESS]
-INCOMPLETE_STATES = [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELLED]
+class TaskStates(Enum):
+    COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
+    INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
+    SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
+    PENDING = "PENDING"  # Used for tasks that have not been started
+    RUNNING = "RUNNING"  # Used for tasks that have been started
+    CANCELLED = "CANCELLED"  # Used for tasks that have been cancelled by the user
+    SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
+    FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
+                # or a non-zero exit code was returned.)
+
+    @staticmethod
+    def get_finished_states():
+        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELLED, TaskStates.SUCCESS]
+
+    @staticmethod
+    def get_incomplete_states():
+        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELLED]
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -155,8 +165,8 @@ class ExportTask(Task):
         exception = cPickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
-        if task.status != 'CANCELLED':
-            task.status = 'FAILED'
+        if task.status != TaskStates.CANCELLED.value:
+            task.status = TaskStates.FAILED.value
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
@@ -180,15 +190,15 @@ class ExportTask(Task):
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
 
-            if task.status == 'CANCELLED' or task.export_provider_task.status == "CANCELLED":
+            if task.status == TaskStates.CANCELLED.value or task.export_provider_task.status == TaskStates.CANCELLED.value:
                 logging.info('cancelling before run %s', celery_uid)
                 task.celery_uid = celery_uid
                 task.save()
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.celery_uid = celery_uid
             task.pid = os.getpid()
-            task.status = 'RUNNING'
-            task.export_provider_task.status = 'RUNNING'
+            task.status = TaskStates.RUNNING.value
+            task.export_provider_task.status = TaskStates.RUNNING.value
             task.started_at = started
             task.save()
             task.export_provider_task.save()
@@ -579,22 +589,22 @@ class FinalizeExportProviderTask(Task):
         with transaction.atomic():
             export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-            if export_provider_task.status != "CANCELLED":
-                export_provider_task.status = 'COMPLETED'
+            if export_provider_task.status != TaskStates.CANCELLED.value:
+                export_provider_task.status = TaskStates.COMPLETED.value
             export_provider_task.save()
 
             # mark run as incomplete if any tasks fail
             export_tasks = export_provider_task.tasks.all()
             if TaskStates[export_provider_task.status] != TaskStates.CANCELLED and any(
-                    TaskStates[task.status] in INCOMPLETE_STATES for task in export_tasks):
-                export_provider_task.status = 'INCOMPLETE'
+                    TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
+                export_provider_task.status = TaskStates.INCOMPLETE.value
             export_provider_task.save()
 
             export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
             run_finished = False
             provider_tasks = export_provider_task.run.provider_tasks.all()
-            if all(TaskStates[provider_task.status] in FINISHED_STATES for provider_task in provider_tasks):
+            if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in provider_tasks):
                 run_finished = True
 
         if run_finished:
@@ -702,13 +712,13 @@ class FinalizeRunTask(Task):
         from eventkit_cloud.tasks.models import ExportRun
 
         run = ExportRun.objects.get(uid=run_uid)
-        run.status = 'COMPLETED'
+        run.status = TaskStates.COMPLETED.value
         provider_tasks = run.provider_tasks.all()
         # mark run as incomplete if any tasks fail
-        if any(task.status in INCOMPLETE_STATES for task in provider_tasks):
-            run.status = 'INCOMPLETE'
-        if all(task.status == 'CANCELLED' for task in provider_tasks):
-            run.status = 'CANCELLED'
+        if any(task.status in TaskStates.get_incomplete_states() for task in provider_tasks):
+            run.status = TaskStates.INCOMPLETE.value
+        if all(task.status == TaskStates.CANCELLED.value for task in provider_tasks):
+            run.status = TaskStates.CANCELLED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
@@ -722,7 +732,7 @@ class FinalizeRunTask(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        if run.status == 'CANCELLED':
+        if run.status == TaskStates.CANCELLED.value:
             subject = "Your Eventkit Data Pack was cancelled."
         else:
             subject = "Your Eventkit Data Pack is ready."
@@ -754,7 +764,7 @@ class ExportTaskErrorHandler(Task):
         finished = timezone.now()
         run = ExportRun.objects.get(uid=run_uid)
         run.finished_at = finished
-        run.status = 'INCOMPLETE'
+        run.status = TaskStates.INCOMPLETE.value
         run.save()
         try:
             if os.path.isdir(stage_dir):
@@ -796,14 +806,14 @@ class CancelTask(Task):
         export_tasks = export_provider_task.tasks.all()
 
         for export_task in export_tasks:
-            export_task.status = 'CANCELLED'
+            export_task.status = TaskStates.CANCELLED.value
             export_task.cancel_user = cancelling_user
             export_task.save()
             if export_task.pid and export_task.worker:
                 KillTask().apply_async(kwargs={"task_pid": export_task.pid},
                                        queue="{0}-cancel".format(export_task.worker))
 
-        export_provider_task.status = 'CANCELLED'
+        export_provider_task.status = TaskStates.CANCELLED.value
         export_provider_task.save()
 
 

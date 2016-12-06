@@ -450,23 +450,39 @@ exports.detail = (function () {
                 var name = provider.name;
                 $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong><i class="fa fa-times" style="color:red; float: right; cursor: pointer" id="cancel-' + provider.uid + '"/></td></tr>');
 
+                // $("#cancel-" + provider.uid).click(function () {
+                //     $('<div title="Confirm Cancel">' +
+                //         '<p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>' +
+                //         'Are you sure you want to cancel the task ' + name + ' ?</p></div>').dialog({
+                //         resizable: false,
+                //         height: "auto",
+                //         modal: true,
+                //         buttons: {
+                //             "Confirm": function () {
+                //                 $(this).dialog("close");
+                //             },
+                //             "Cancel": function () {
+                //                 $(this).dialog("close");
+                //             }
+                //         }
+                //     });
+                // });
 
-                $("#cancel-" + provider.uid).click(function () {
-                    $('<div title="Confirm Cancel">' +
-                        '<p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>' +
-                        'Are you sure you want to cancel the task ' + name + ' ?</p></div>').dialog({
-                        resizable: false,
-                        height: "auto",
-                        modal: true,
-                        buttons: {
-                            "Confirm": function () {
-                                $(this).dialog("close");
-                            },
-                            "Cancel": function () {
-                                $(this).dialog("close");
-                            }
-                        }
-                    });
+                var modalOpts = {
+                    keyboard: true,
+                    backdrop: 'static',
+                };
+
+                $("#cancel-" + provider.uid).bind('click', function (e) {
+                    // stop form getting posted..
+                    e.preventDefault();
+                    $(".modal-footer").append('<button id="cancelConfirm-' + provider.uid + '" type="button" class="btn btn-danger">Confirm</button>')
+                    $("#cancelExportModal").modal(modalOpts, 'show');
+                })
+
+                $("#cancelConfirm-" + provider.uid).click(function (provider) {
+                    cancelProvider(provider);
+                    $("#cancelExportModal").modal('hide');
                 });
 
                 // add task info
@@ -484,13 +500,16 @@ exports.detail = (function () {
                         var duration = task.duration ? numeral(task.duration).format("HH:mm:ss.SSS") : ' -- ';
                         var descriptiveName = task.name;
 
-                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED' || status === 'CANCELLED') {
+                        if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
-
-                        }
-                        else {
+                        } else if (status === 'CANCELLED'){
+                            cls = status.toLowerCase();
+                            taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
+                            $("#cancel-" + provider.uid).removeClass();
+                        } else {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
@@ -535,41 +554,37 @@ exports.detail = (function () {
         var url = Config.PROVIDER_TAKS_URL + '/' + provider.uid;
         $("#cancel-" + provider.uid).removeClass().addClass('fa fa-cog fa-spin');
 
-        if (confirm("Are you sure you want to cancel the " + provider.name + " task?")) {
-            $.ajaxSetup({
-                beforeSend: function (xhr, settings) {
-                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
-                    }
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
                 }
-            });
-            $.ajax({
-                url: url,
-                data: {
-                    'cancel': true,
-                },
-                dataType: 'json',
-                cache: false,
-                method: 'patch',
-                success: function () {
-                    for (task in provider.tasks) {
-                        task.status = "CANCELLING";
-                        var $runDiv = $('#' + provider.run_uid);
-                        var $tr = $runDiv.find('table').find('tr#' + task.uid);
-                        $tr.removeClass();
-                        $tr.addClass(status.toLowerCase());
-                        $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                        $barTr.html('');
-                    }
-                },
-                failure: function () {
-                    alert(provider.name + " could not be canceled at this time.");
-                    $("#cancel-" + provider.uid).removeClass().addClass('fa fa-times');
+            }
+        });
+        $.ajax({
+            url: url,
+            data: {
+                'cancel': true,
+            },
+            dataType: 'json',
+            cache: false,
+            method: 'patch',
+            success: function () {
+                for (task in provider.tasks) {
+                    task.status = "CANCELLING";
+                    var $runDiv = $('#' + provider.run_uid);
+                    var $tr = $runDiv.find('table').find('tr#' + task.uid);
+                    $tr.removeClass();
+                    $tr.addClass(status.toLowerCase());
+                    $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                    $barTr.html('');
                 }
-            });
-        } else {
-            return false;
-        }
+            },
+            failure: function () {
+                alert(provider.name + " could not be canceled at this time.");
+                $("#cancel-" + provider.uid).removeClass().addClass('fa fa-times');
+            }
+        });
     }
 
     /**
