@@ -19,13 +19,12 @@ import sys
 from django.db import IntegrityError
 from django.conf import settings
 from billiard import Process, Pipe
-from ..tasks.exceptions import CancelException
+from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
 
 class CustomLogger(ProgressLog):
-
     def __init__(self, progress_tracker=None, *args, **kwargs):
         self.progress_tracker = progress_tracker
         super(CustomLogger, self).__init__(*args, **kwargs)
@@ -37,7 +36,8 @@ class CustomLogger(ProgressLog):
         if progress.eta.eta():
             if self.progress_tracker:
                 if self.log_step_counter == 0:
-                    self.progress_tracker(progress=progress.progress*100, estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
+                    self.progress_tracker(progress=progress.progress * 100,
+                                          estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
                     self.log_step_counter = self.log_step_step
                 self.log_step_counter = self.log_step_counter - 1
         super(CustomLogger, self).log_step(progress)
@@ -106,21 +106,16 @@ class ExternalRasterServiceToGeopackage(object):
         # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
             progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
-            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
-                                                                  "concurrency": 1,
-                                                                  "progress_logger": progress_logger})
-            p.start()
-            if self.task_uid:
-                from ..tasks.models import ExportTask
-                export_task = ExportTask.objects.get(uid=self.task_uid)
-                export_task.pid = p.pid
-                export_task.save()
-            p.join()
+            task_process = TaskProcess(task_uid=self.task_uid)
+            task_process.start_process(billiard=True, target=seeder.seed,
+                        kwargs={"tasks": seed_configuration.seeds(['seed']),
+                                "concurrency": 1,
+                                "progress_logger": progress_logger})
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)
             if not informal_only:
-                logger.error("Mapproxy configuration failed.")
+                logger.error("MapProxy configuration failed.")
                 logger.error("Using Configuration:")
                 logger.error(mapproxy_config)
             errors, informal_only = validate_seed_conf(seed_dict)
@@ -128,15 +123,8 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error("Mapproxy Seed failed.")
                 logger.error("Using Seed Configuration:")
                 logger.error(seed_dict)
-                raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
+                raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
-        if p.pid != 0:
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
         return self.gpkgfile
 
 

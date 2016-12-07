@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 logger = logging.getLogger(__name__)
@@ -46,21 +47,15 @@ class GPKGToShp(object):
         convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'gpkg': self.gpkg})
         if (self.debug):
             print 'Running: %s' % convert_cmd
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
         if (self.debug):
-            print 'ogr2ogr returned: %s' % returncode
-        if self.zipped and returncode == 0:
+            print 'ogr2ogr returned: %s' % task_process.exitcode
+        if self.zipped and task_process.exitcode == 0:
             zipfile = self._zip_shape_dir()
             return zipfile
         else:
@@ -72,26 +67,13 @@ class GPKGToShp(object):
         """
         zipfile = self.shapefile + '.zip'
         zip_cmd = self.zip_cmd.safe_substitute({'zipfile': zipfile, 'shp_dir': self.shapefile})
-        proc = subprocess.Popen(zip_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-
-        if (returncode != 0):
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(returncode)
-        if returncode == 0:
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(task_process.exitcode)
+        if task_process.exitcode == 0:
             # remove the shapefile directory
             shutil.rmtree(self.shapefile)
         if self.debug:

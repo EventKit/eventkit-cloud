@@ -6,6 +6,7 @@ import os
 import shutil
 import sqlite3
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 logger = logging.getLogger(__name__)
@@ -221,26 +222,14 @@ class ThematicGPKG(object):
                                                                                   'thematic_spatial_index.sql')})
         if (self.debug):
             print 'Running: %s' % index_cmd
-        proc = subprocess.Popen(index_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(index_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-        if returncode != 0:
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, returncode)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, task_process.exitcode)
         if self.debug:
-            print 'spatialite returned: %s' % returncode
+            print 'spatialite returned: %s' % task_process.exitcode
 
         os.remove(os.path.join(os.path.join(self.path, 'sql'), 'thematic_spatial_index.sql'))
 

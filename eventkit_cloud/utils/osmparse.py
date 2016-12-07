@@ -5,6 +5,7 @@ import os
 import sqlite3
 import subprocess
 from string import Template
+from ..tasks.task_process import TaskProcess
 
 from osgeo import gdal, ogr, osr
 
@@ -63,26 +64,14 @@ class OSMParser(object):
                                                 'osm': self.osm, 'osmconf': self.osmconf})
         if (self.debug):
             print 'Running: %s' % ogr_cmd
-        proc = subprocess.Popen(ogr_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(ogr_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-        if returncode != 0:
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
         if (self.debug):
-            print 'ogr2ogr returned: %s' % returncode
+            print 'ogr2ogr returned: %s' % task_process.exitcode
 
     def create_default_schema_gpkg(self, ):
         """

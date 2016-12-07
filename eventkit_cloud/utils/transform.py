@@ -3,6 +3,7 @@ import argparse
 import logging
 import os
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 from osgeo import gdal, ogr, osr
@@ -46,26 +47,14 @@ class TransformSQlite(object):
                                                    'transform_sql': self.transform})
         if (self.debug):
             print 'Running: %s' % sql_cmd
-        proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-        if returncode != 1:
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
+        if task_process.exitcode != 1:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode)
         if self.debug:
-            print 'spatialite returned: %s' % returncode
+            print 'spatialite returned: %s' % task_process.exitcode
 
 
 if __name__ == '__main__':

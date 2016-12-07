@@ -3,6 +3,7 @@ import argparse
 import logging
 import shutil
 import subprocess
+from ..tasks.task_process import TaskProcess
 from datetime import datetime
 from string import Template
 import os
@@ -139,18 +140,12 @@ class Overpass(object):
             filter_cmd = filter_tmpl.safe_substitute({'om5': om5,
                                                       'params': self.filter_params,
                                                       'filtered_osm': self.filtered_osm})
-            proc = subprocess.Popen(filter_cmd, shell=True, executable='/bin/bash',
+            task_process = TaskProcess(task_uid=self.task_uid)
+            task_process.start_process(filter_cmd, shell=True, executable='/bin/bash',
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (stdout, stderr) = proc.communicate()
-            if self.task_uid:
-                from ..tasks.models import ExportTask
-                export_task = ExportTask.objects.get(uid=self.task_uid)
-                export_task.pid = proc.pid
-                export_task.save()
-            returncode = proc.wait()
-            if (returncode != 0):
-                logger.error('%s', stderr)
-                raise Exception, "osmfilter process failed with returncode {0}".format(returncode)
+            if task_process.exitcode != 0:
+                logger.error('%s', task_process.stderr)
+                raise Exception, "osmfilter process failed with returncode {0}".format(task_process.exitcode)
             return self.filtered_osm
 
         else:
@@ -165,24 +160,13 @@ class Overpass(object):
         om5 = os.path.join(self.stage_dir, 'query.om5')
         convert_tmpl = Template('osmconvert $raw_osm -o=$om5')
         convert_cmd = convert_tmpl.safe_substitute({'raw_osm': self.raw_osm, 'om5': om5})
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-        if (returncode != 0):
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, "osmconvert process failed with returncode {0}: {1}".format(returncode, stderr)
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "osmconvert process failed with returncode {0}: {1}".format(task_process.exitcode,
+                                                                                         task_process.stderr)
         return om5
 
     def _build_overpass_query(self, ):  # pragma: no cover

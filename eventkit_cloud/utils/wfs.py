@@ -4,6 +4,7 @@ import logging
 import os
 import subprocess
 from string import Template
+from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
@@ -63,27 +64,13 @@ class WFSToGPKG(object):
 
         if (self.debug):
             logger.debug('Running: %s' % convert_cmd)
-
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/sh',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        if self.task_uid:
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = proc.pid
-            export_task.save()
-        returncode = proc.wait()
-
-        if (returncode != 0):
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELLED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
-        if (self.debug):
-            logger.debug('ogr2ogr returned: %s' % returncode)
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+        if self.debug:
+            logger.debug('ogr2ogr returned: %s' % task_process.exitcode)
 
         return self.gpkg

@@ -5,7 +5,6 @@ import cPickle
 import glob
 import logging
 import os
-import re
 import shutil
 from zipfile import ZipFile
 
@@ -15,10 +14,10 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.template.loader import get_template
 from django.utils import timezone
+from enum import Enum
 
 from celery import Task
 from celery.utils.log import get_task_logger
-from celery.exceptions import TaskRevokedError
 
 from ..jobs.presets import TagParser
 from ..utils import (
@@ -26,11 +25,12 @@ from ..utils import (
     external_service, wfs, arcgis_feature_service, sqlite,
 )
 from .exceptions import CancelException
-from enum import Enum
 import socket
-from celery.signals import task_revoked
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
+
+# Get an instance of a logger
+logger = get_task_logger(__name__)
 
 
 class TaskStates(Enum):
@@ -53,9 +53,6 @@ class TaskStates(Enum):
     def get_incomplete_states():
         return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELLED]
 
-
-# Get an instance of a logger
-logger = get_task_logger(__name__)
 
 
 # ExportTask abstract base class and subclasses.
@@ -145,7 +142,7 @@ class ExportTask(Task):
                 run_uid
             )
 
-        task.status = 'SUCCESS'
+        task.status = TaskStates.SUCCESS.value
         task.save()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -223,7 +220,7 @@ class OSMConfTask(ExportTask):
             job_name=None,
             task_uid=None):
         self.update_task_state(task_uid=task_uid)
-        conf = osmconf.OSMConfig(categories, job_name=job_name, task_uid=task_uid)
+        conf = osmconf.OSMConfig(categories, job_name=job_name)
         configfile = conf.create_osm_conf(stage_dir=stage_dir)
         return {'result': configfile}
 
@@ -624,13 +621,7 @@ class FinalizeExportProviderTask(Task):
             finalize_run_task.si(
                 run_uid=run_uid,
                 stage_dir=os.path.dirname(stage_dir)
-            )()
-
-        if os.path.isdir(stage_dir):
-            try:
-                shutil.rmtree(stage_dir)
-            except IOError or OSError:
-                logger.error('Error removing {0} during export finalize'.format(stage_dir))
+            ).set(queue=worker)()
 
 
 class ZipFileTask(Task):
@@ -727,10 +718,12 @@ class FinalizeRunTask(Task):
         run.finished_at = finished
         run.save()
 
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError or OSError:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+        ## TODO: This appears to be called prior to the on_success handler finishing.
+        # try:
+        #     shutil.rmtree(stage_dir)
+        # except IOError or OSError:
+        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
@@ -828,15 +821,20 @@ class KillTask(Task):
 
     name = "Kill Task"
 
-    def run(self, task_pid=None):
-        import os, signal, sys
+    def run(self, task_pid=None, celery_uid=None):
+        import os, signal
+        from eventkit_cloud.celery import app
+        from celery.result import AsyncResult
+        import celery.states
         if task_pid:
             # Don't kill tasks with default pid.
             if task_pid <= 0:
                 return
             try:
-                # If the task finished prior to receiving this kill message it could throw an OSError.
-                os.kill(task_pid, signal.SIGTERM)
+                # Ensure the task is still running otherwise the wrong process will be killed
+                if AsyncResult(celery_uid, app=app).state not in [celery.states.SUCCESS, celery.states.FAILURE]:
+                    # If the task finished prior to receiving this kill message it could throw an OSError.
+                    os.kill(task_pid, signal.SIGTERM)
             except OSError:
                 logger.info("{0} PID does not exist.")
 
