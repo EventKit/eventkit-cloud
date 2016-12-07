@@ -193,11 +193,13 @@ clone.job = (function(){
         var translate;
 
         dragBox.on('drawend',function(e) {
+            $("#estimatedSize").remove();
             map.removeInteraction(dragBox);
             var bounds = e.feature.getGeometry().getExtent();
             // validate the selected extents
             if (validateBounds(bounds)) {
                 setBounds(bounds);
+                getTileEstimates(bounds);
             }
             else {
                 unsetBounds();
@@ -358,10 +360,18 @@ clone.job = (function(){
                     + '<input type="checkbox"'
                     + 'name="providers"'
                     + 'value="' + provider.name + '"'
-                    + 'data-description="' + provider.name + '"/>'
+                    + 'data-description="' + provider.name + '"'
+                    + 'source-type="' + provider.type + '"/>'
                     + provider.name
                     + '</label></div>');
             }
+            var getProviderExport = $("#provider-selection input[type='checkbox'][name='providers']").click(function(e){
+                $("#estimatedSize").remove();
+                bounds = bboxSource.getExtent();
+                if(bboxSource.getFeatures().length == 1 && validateBounds(bounds)) {
+                    getTileEstimates(bounds);
+                }
+            });
         })
     }
 
@@ -1680,6 +1690,7 @@ clone.job = (function(){
                     bboxSource.clear();
                     //transform.unsetFeature();
                     unsetBounds();
+                    $("#estimatedSize").remove();
                     //p.getView().fit(regions.getExtent(), map.getSize());
                     // map.zoomToExtent(regions.getDataExtent());
                     zoomtoextent();
@@ -1794,6 +1805,7 @@ clone.job = (function(){
             // validate the selected extents
             if (validateBounds(merc_bounds)) {
                 setBounds(merc_bounds);
+                getTileEstimates(merc_bounds);
                 return polygonFeature;
             }
             else {
@@ -2516,6 +2528,7 @@ clone.job = (function(){
 
             // set the bounds on the form
             setBounds(bounds);
+            getTileEstimates(bounds);
 
             // // -- select formats tab -- //
             var formats = data.exports;
@@ -2626,6 +2639,84 @@ clone.job = (function(){
             map.getView().fit(bounds, map.getSize());
         });
     }
+
+    function getTileEstimates(bounds) {
+        bounds = ol.proj.transformExtent(bounds, 'EPSG:3857', 'EPSG:4326');
+        providers = []
+        $("#provider-selection input[name='providers'][type='checkbox']").each(function(){
+            type = $(this).attr('source-type');
+            if(type != 'osm' && type != 'osm-generic' && type != 'wfs' && type != 'argis-feature') {
+                if ($(this).is(":checked")) {
+                    providers.push(this.value);
+                }
+            }
+        });
+        if (providers.length > 0) {
+            var csrftoken = getCookie('csrftoken');
+            json_data = {"providers": providers, "bbox": bounds}
+            $.ajax({
+                // post json to the api endpoint
+                url: '/en/exports/estimator',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    'providers': providers,
+                    'bbox': bounds
+                }),
+                processData: false, // send as json
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function(result) {
+                    baseText = "Estimated Raster Tile Size: ";
+                    $("#estimatedSize").remove();
+                    var size = result;
+                    var sizeText = ""
+                    if (size < 1) {
+                        sizes = ['MB', 'KB', 'Byte'];
+                        for (i=0; i < sizes.length; i++) {
+                            size = size * 1000;
+                            sizeText = baseText + size.toFixed(2) + " " + sizes[i];
+                            if (size >= 1) {break;}
+                        }
+                    }
+                    else if(size >= 1000){
+                        size = size / 1000;
+                        sizeText = baseText + size.toFixed(2) + " TB";
+                    }
+                    else {
+                        sizeText = baseText + size.toFixed(2) + " GB";
+                    }
+                    $("#provider-selection").after('<div id="estimatedSize" class="help-block">' + sizeText + '</div>');
+                },
+            });
+        }
+    }
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
 
 }());
 

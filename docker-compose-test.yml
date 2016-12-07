@@ -3,11 +3,10 @@ services:
   base:
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./coverage:/var/lib/eventkit/coverage
        - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
-       dockerfile: config/Dockerfile
+       dockerfile: config/Dockerfile_test
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
@@ -44,9 +43,8 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=INFO
-        # Concurrency needs to be greater than 1 to support Task Cancellation.
-        - CONCURRENCY=3
+        - LOGLEVEL=error
+        - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
@@ -57,27 +55,16 @@ services:
     expose:
       - "5432"
   rabbitmq:
-       image: rabbitmq:3.6.6-management
+     image: rabbitmq:3.6.5
+     expose:
+       - "5672"
   httpd:
-       build:
-         context: .
-         dockerfile: Dockerfile_httpd
-       volumes:
-         - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-         - ./exports_download:/var/lib/eventkit/exports_download
-       image: httpd:2.4.23
-       ports:
-          - "80:80"
-  flower:
-       extends:
-          service: base
-       depends_on:
-          - rabbitmq
-       links:
-          - rabbitmq
-       ports:
-         - "49555:5555"
-       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
-       extra_hosts:
-        - "cloud.eventkit.dev:192.168.99.130"
-
+     build:
+       context: .
+       dockerfile: config/Dockerfile_httpd
+     volumes:
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+       - ./exports_download:/var/lib/eventkit/exports_download
+     image: httpd:2.4.23
+     ports:
+        - "80:80"

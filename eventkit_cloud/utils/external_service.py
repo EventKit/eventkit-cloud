@@ -131,9 +131,10 @@ class ExternalRasterServiceToGeopackage(object):
 def get_cache_template(sources, grids, geopackage):
     return {'cache': {
         "sources": sources,
+        "meta_size": [1, 1],
         "cache": {
             "type": "geopackage",
-            "filename": str(geopackage)
+            "filename": str(geopackage),
         },
         "grids": grids
     }}

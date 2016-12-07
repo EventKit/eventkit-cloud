@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
-
+import json
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
@@ -8,6 +8,9 @@ from django.shortcuts import RequestContext, redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from functools import wraps
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from .data_estimator import get_size_estimate
 
 
 # def user_verification_required(func=None):
@@ -149,6 +152,23 @@ def help_presets(request):
         {'configurations_url': configurations_url},
         RequestContext(request)
     )
+
+
+@require_http_methods(['POST'])
+def data_estimator(request):
+    request_data = json.loads(request.body)
+    # example request_data = {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
+    size = 0
+    providers = request_data.get('providers')
+    bbox = request_data.get('bbox')
+    if not providers and not bbox:
+        return HttpResponse("Providers or BBOX were not supplied in the request", status=400)
+
+    for provider in providers:
+        estimates = get_size_estimate(provider, bbox)
+        size += estimates[1]
+    return HttpResponse([size])
+
 
 
 # error views

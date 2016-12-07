@@ -93,3 +93,5 @@ core/settings/secret.py
 
 exports_download
 *~
+
+coverage

@@ -27,7 +27,7 @@ from ..utils import (
 from .exceptions import CancelException
 import socket
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -679,7 +679,7 @@ class ZipFileTask(Task):
 
         run_uid = str(run_uid)
         if settings.USE_S3:
-            # TODO open up a stream directly to the s3 file so no local 
+            # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, zip_filename)
             os.remove(zip_filepath)

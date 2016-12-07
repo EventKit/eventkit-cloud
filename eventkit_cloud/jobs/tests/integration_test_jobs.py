@@ -7,7 +7,6 @@ import shutil
 import sqlite3
 from time import sleep
 
-from eventkit_cloud.tasks.util_tasks import RevokeTask
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from ..models import ExportProvider, ExportProviderType, Job
 
@@ -28,7 +27,7 @@ class TestJob(TestCase):
     def setUp(self):
         username = 'admin'
         password = '@dm1n'
-        self.base_url = os.getenv('BASE_URL', 'http://cloud.eventkit.dev')
+        self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings,"SITE_NAME", "cloud.eventkit.dev")))
         self.login_url = self.base_url + '/en/login'
         self.create_export_url = self.base_url + '/en/exports/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
@@ -378,7 +377,6 @@ class TestJob(TestCase):
 
         if not wait_for_run:
              return
-
 
         run = self.wait_for_run(job.get('uid'))
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))

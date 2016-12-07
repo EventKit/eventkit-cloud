@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
+import subprocess
+from django.conf import settings
 
 if __name__ == "__main__":
     if os.getenv("PRODUCTION"):
@@ -27,7 +29,11 @@ if __name__ == "__main__":
             cov.stop()
             cov.save()
             cov.report()
-            cov.html_report()
+            cov.html_report(directory='./coverage')
+
+            if os.getenv("TRAVIS"):
+                coveralls = os.path.join(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit/eventkit')), '.virtualenvs/eventkit/bin/coveralls')
+                subprocess.call([coveralls])
 
     else:
         execute_from_command_line(sys.argv)
