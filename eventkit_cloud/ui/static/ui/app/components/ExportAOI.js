@@ -1,29 +1,34 @@
 import 'openlayers/dist/ol.css'
 import React, {Component} from 'react'
-import {findDOMNode} from 'react-dom'
 import ol from 'openlayers'
+import styles from './CreateExport.css'
 
-export default class PrimaryMap extends Component {
+
+export default class ExportAOI extends Component {
 
     componentDidMount() {
-        this._initializeOpenLayers()
-         
-        window.ol = ol
-        window.map = this._map
-        window.primaryMap = this
-       
+
+        let map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                })
+            ],
+            target: 'map',
+            view: new ol.View({
+                center: [0, 0],
+                zoom: 2
+            })
+        });
+
     }
 
     render() {
-               return (
-            <main ref="container" tabIndex="1">
-                
-            </main>
-        )
+        return (
+            
+                <div id="map" className={styles.map} ref="olmap"></div>
+            
+        );
     }
 
-    _initializeOpenLayers() {
-        
-
-    }
 }
