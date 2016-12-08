@@ -47,6 +47,23 @@ services:
         - LOGLEVEL=error
         - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
+
+  celery-beat:
+      extends:
+        service: base
+      depends_on:
+        - postgis
+        - rabbitmq
+        - celery
+        - eventkit
+      links:
+        - postgis
+        - rabbitmq
+      environment:
+        - LOGLEVEL=error
+        - CONCURRENCY=1
+      command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
+
   postgis:
     image: mdillon/postgis:9.5
     environment:
