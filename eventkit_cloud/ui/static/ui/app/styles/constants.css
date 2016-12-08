@@ -4,8 +4,10 @@ div.primaryDiv {
 }
 
 div.sectionBar {
-    background-color: #171717;
+    background-color: #161e2e;
     padding: 5px;
+    border-width: 2px;
+    border-color: white;
     line-height: 10px;
     top: 100px;
     margin-top: 100px;

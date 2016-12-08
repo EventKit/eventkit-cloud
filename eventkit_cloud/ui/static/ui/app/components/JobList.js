@@ -3,6 +3,7 @@ import React, {PropTypes} from 'react';
 
 const JobList = ({jobs}) => {
     return (
+
         <ul className="list-group">
             {jobs.map(job =>
                 <li className="list-group-item" key={job.uid}>

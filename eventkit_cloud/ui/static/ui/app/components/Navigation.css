@@ -119,6 +119,7 @@ a:link {
 .active,
 .active:hover {
     box-shadow: 0 5px rgba(0,0,0,.1);
+    background-color: #161e2e;
     text-decoration: none;
 }
 
@@ -130,6 +131,7 @@ a:link {
     fill: #1675aa;
     filter: none;
     -webkit-filter: none;
+    box-shadow: 0 5px rgba(0,0,0,.1);
     text-decoration: none;
 }
 
