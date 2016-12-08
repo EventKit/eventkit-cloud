@@ -1,0 +1,23 @@
+div.sectionBar {
+    top:100px;
+    margin-top: 100px;
+    margin-left: 200px;
+    bottom: 0;
+    right: 0;
+    height: 25px;
+    width: 100%;
+    border: 0px solid;
+    background-color: #161e2e;
+    color: white;
+    font-size: 18px;
+}
+
+div.fixed {
+    top: 100px;
+    margin-top: 110px;
+    margin-left: 210px;
+    bottom: 0;
+    right: 0;
+    width: 300px;
+    border: 0px solid;
+}
