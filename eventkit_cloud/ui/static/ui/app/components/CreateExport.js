@@ -1,7 +1,7 @@
 import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import styles from './CreateExport.css'
-import primaryStyle from '../styles/constants.css'
+import primaryStyles from '../styles/constants.css'
 import ExportAOI from './ExportAOI'
 
 
@@ -18,12 +18,12 @@ class CreateExport extends React.Component {
         jobs[6]  = {uid: '33430', name: 'alksdfjlkasjdf'}
         console.log(jobs);
         return (
-<div className={styles.primaryDiv}>
-            <div className={styles.sectionBar}>
-                <p className={styles.heading}>Create DataPack</p>
+        <div className={primaryStyles.primaryDiv}>
+            <div className={primaryStyles.sectionBar}>
+                <p className={primaryStyles.heading}>Create DataPack</p>
             </div>
-            <div className={styles.sectionMenu}>
-                <p className={styles.heading}>MENU > MENU > MENU > MENU</p>
+            <div className={primaryStyles.sectionMenu}>
+                <p className={primaryStyles.heading}>MENU > MENU > MENU > MENU</p>
             </div>
                 <div>
                     <ExportAOI />
@@ -32,7 +32,7 @@ class CreateExport extends React.Component {
                     {this.props.children}
                 </div>
 
-    </div>
+        </div>
 
 
         );
