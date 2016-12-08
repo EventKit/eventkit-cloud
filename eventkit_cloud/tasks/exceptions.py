@@ -10,6 +10,5 @@ class CancelException(Exception):
         from .models import ExportTask
         self.message = message  # without this you may get DeprecationWarning
         if not self.message:
-                message = "{0} was cancelled by {1}.".format(task_name, user_name)
-
-        super(CancelException, self).__init__(message, *args, **kwargs)
+                self.message = "{0} was cancelled by {1}.".format(task_name, user_name)
+        super(CancelException, self).__init__(self.message, *args, **kwargs)

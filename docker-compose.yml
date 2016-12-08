@@ -61,7 +61,7 @@ services:
   httpd:
        build:
          context: .
-         dockerfile: Dockerfile_httpd
+         dockerfile: config/Dockerfile_httpd
        volumes:
          - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
          - ./exports_download:/var/lib/eventkit/exports_download

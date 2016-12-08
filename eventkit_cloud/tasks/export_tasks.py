@@ -832,7 +832,7 @@ class KillTask(Task):
                 return
             try:
                 # Ensure the task is still running otherwise the wrong process will be killed
-                if AsyncResult(celery_uid, app=app).state not in [celery.states.SUCCESS, celery.states.FAILURE]:
+                if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
                     # If the task finished prior to receiving this kill message it could throw an OSError.
                     os.kill(task_pid, signal.SIGTERM)
             except OSError:
