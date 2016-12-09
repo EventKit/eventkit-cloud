@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from celery import Task
 from celery.utils.log import get_task_logger
+from celery.app.registry import TaskRegistry
 
 logger = get_task_logger(__name__)
 
@@ -22,3 +23,4 @@ class PurgeUnpublishedExportsTask(Task):
         logger.debug('Purging {0} unpublished exports.'.format(count))
         expired_jobs.delete()
 
+TaskRegistry().register(PurgeUnpublishedExportsTask())
