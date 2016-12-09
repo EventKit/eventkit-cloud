@@ -421,7 +421,6 @@ class TestJob(TestCase):
                 headers={'X-CSRFToken': self.csrftoken}).json()
             if response[0].get('provider_tasks'):
                 picked_up = True
-        print("TASK PICKED UP")
         return response[0]
 
     def wait_for_run(self, job_uid):
