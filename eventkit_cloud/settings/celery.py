@@ -22,8 +22,8 @@ CELERY_CHORD_PROPAGATES = False
 # CELERYD_PREFETCH_MULTIPLIER limits the amount of tasks per worker, 0 means unlimited this is required so that a
 # worker can take a whole task chain, otherwise "out-of-order" issues occur.
 CELERYD_PREFETCH_MULTIPLIER = 0
-CELERYBEAT_SCHEDULER='djcelery.schedulers.DatabaseScheduler'
-CELERY_RESULT_BACKEND=os.environ.get('CELERY_RESULT_BACKEND', 'djcelery.backends.database:DatabaseBackend')
+# CELERYBEAT_SCHEDULER='djcelery.schedulers.DatabaseScheduler'
+CELERY_RESULT_BACKEND=os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
 # configure periodic task
 CELERYBEAT_SCHEDULE = {
     'purge-unpublished-exports': {

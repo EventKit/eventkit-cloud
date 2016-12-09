@@ -18,9 +18,7 @@ INSTALLED_APPS += (
     'django_classification_banner',
 )
 
-INSTALLED_APPS += ("djcelery", )
-import djcelery
-djcelery.setup_loader()
+INSTALLED_APPS += ("django_celery_results", )
 
 LOGIN_URL = '/login/'
 
