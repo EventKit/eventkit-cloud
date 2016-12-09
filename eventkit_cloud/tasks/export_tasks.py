@@ -16,6 +16,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
+from celery.app.registry import TaskRegistry
 from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
@@ -31,7 +32,6 @@ COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELED']
 # Get an instance of a logger
 logger = get_task_logger(__name__)
 
-
 # ExportTask abstract base class and subclasses.
 
 class ExportTask(Task):
@@ -44,9 +44,6 @@ class ExportTask(Task):
 
     # whether to abort the whole run if this task fails.
     abort_on_error = False
-
-    class Meta:
-        abstract = True
 
     def on_success(self, retval, task_id, args, kwargs):
         """
@@ -774,3 +771,28 @@ def get_progress_tracker(task_uid=None):
         export_task.save()
 
     return progress_tracker
+
+tr = TaskRegistry()
+tr.register(ExportTask())
+tr.register(OSMConfTask())
+tr.register(OSMConfTask())
+tr.register(OverpassQueryTask())
+tr.register(OSMToPBFConvertTask())
+tr.register(OSMPrepSchemaTask())
+tr.register(ThematicShpExportTask())
+tr.register(ThematicGPKGExportTask())
+tr.register(ShpExportTask())
+tr.register(KmlExportTask())
+tr.register(SqliteExportTask())
+tr.register(GeopackageExportTask())
+tr.register(ThematicSQLiteExportTask())
+tr.register(ThematicKmlExportTask())
+tr.register(WFSExportTask())
+tr.register(ArcGISFeatureServiceExportTask())
+tr.register(ExternalRasterServiceExportTask())
+tr.register(PickUpRunTask())
+tr.register(GeneratePresetTask())
+tr.register(FinalizeExportProviderTask())
+tr.register(ZipFileTask())
+tr.register(FinalizeRunTask())
+tr.register(ExportTaskErrorHandler())

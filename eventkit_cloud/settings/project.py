@@ -18,7 +18,7 @@ INSTALLED_APPS += (
     'django_classification_banner',
 )
 
-INSTALLED_APPS += ("django_celery_results", )
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
 LOGIN_URL = '/login/'
 

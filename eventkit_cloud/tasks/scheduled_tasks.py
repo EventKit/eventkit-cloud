@@ -21,3 +21,4 @@ class PurgeUnpublishedExportsTask(Task):
         count = expired_jobs.count()
         logger.debug('Purging {0} unpublished exports.'.format(count))
         expired_jobs.delete()
+
