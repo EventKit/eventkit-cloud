@@ -1,0 +1,28 @@
+.titleBar {
+    z-index: 9999;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 25px;
+    height:75px;
+    line-height:50px;
+    background-color: #010101;
+    color: #3e3f3f;
+    font-size: 25px;
+}
+
+.mainMenu {
+    position: fixed;
+    left: 10px;
+    top: 45px;
+    color: #3e3f3f;
+    font-size: 25px;
+}
+
+.logo {
+    position: fixed;
+    left: 50%;
+    top: 40px;
+    transform: translate(50, -50%);
+    color: #3e3f3f;
+}
