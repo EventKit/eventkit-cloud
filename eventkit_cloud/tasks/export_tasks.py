@@ -25,7 +25,7 @@ from eventkit_cloud.utils import (
 )
 import socket
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.osm', '.ini', '.txt', 'om5']
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm']
 COMPLETE_STATES = ['COMPLETED', 'INCOMPLETE', 'CANCELED']
 
 # Get an instance of a logger
@@ -649,7 +649,7 @@ class ZipFileTask(Task):
 
         run_uid = str(run_uid)
         if settings.USE_S3:
-            # TODO open up a stream directly to the s3 file so no local 
+            # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, zip_filename)
             os.remove(zip_filepath)
@@ -704,7 +704,7 @@ class FinalizeRunTask(Task):
             'Eventkit Team <eventkit.team@gmail.com>'
         )
         ctx = {'url': url, 'status': run.status}
-        
+
         text = get_template('email/email.txt').render(ctx)
         html = get_template('email/email.html').render(ctx)
         msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)

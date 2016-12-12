@@ -19,7 +19,7 @@ from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import Job, Tag
 from eventkit_cloud.tasks.export_tasks import (
     ExportTaskErrorHandler, FinalizeRunTask,
-    GeneratePresetTask, KmlExportTask, OSMConfTask, 
+    GeneratePresetTask, KmlExportTask, OSMConfTask,
     ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
     ShpExportTask, ArcGISFeatureServiceExportTask,
@@ -396,7 +396,7 @@ class TestExportTasks(ExportTaskBase):
         mock_os_walk.return_value = [(
             '/var/lib/eventkit/exports_staging/' + run_uid + '/osm-vector',
             None,
-            ['test.gpkg', 'test.osm']  # osm should get filtered out
+            ['test.gpkg', 'test.om5', 'test.osm']  # om5 and osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = 'test-osm-vector-%s.gpkg' % (date,)
