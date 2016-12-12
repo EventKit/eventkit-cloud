@@ -96,6 +96,7 @@ create.job = (function(){
             })
         });
         map.addLayer(bbox);
+        bbox.setZIndex(99);
 
         bboxSource = new ol.source.Vector();
         bbox.setSource(bboxSource);
