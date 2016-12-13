@@ -16,7 +16,7 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
-from celery.app.registry import TaskRegistry
+from eventkit_cloud.celery import app
 from celery.utils.log import get_task_logger
 
 from eventkit_cloud.jobs.presets import TagParser
@@ -772,8 +772,6 @@ def get_progress_tracker(task_uid=None):
 
     return progress_tracker
 
-from ..celery import app
-app.tasks.register(ExportTask())
 # tr = TaskRegistry()
 # app.tasks.register(ExportTask())
 app.tasks.register(OSMConfTask())
