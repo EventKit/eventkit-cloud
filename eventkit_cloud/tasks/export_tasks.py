@@ -16,8 +16,8 @@ from django.template.loader import get_template
 from django.utils import timezone
 
 from celery import Task
-from eventkit_cloud.celery import app
 from celery.utils.log import get_task_logger
+from eventkit_cloud.celery import app
 
 from eventkit_cloud.jobs.presets import TagParser
 from eventkit_cloud.utils import (
@@ -772,27 +772,26 @@ def get_progress_tracker(task_uid=None):
 
     return progress_tracker
 
-# tr = TaskRegistry()
-# app.tasks.register(ExportTask())
-app.tasks.register(OSMConfTask())
-app.tasks.register(OSMConfTask())
-app.tasks.register(OverpassQueryTask())
-app.tasks.register(OSMToPBFConvertTask())
-app.tasks.register(OSMPrepSchemaTask())
-app.tasks.register(ThematicShpExportTask())
-app.tasks.register(ThematicGPKGExportTask())
-app.tasks.register(ShpExportTask())
-app.tasks.register(KmlExportTask())
-app.tasks.register(SqliteExportTask())
-app.tasks.register(GeopackageExportTask())
-app.tasks.register(ThematicSQLiteExportTask())
-app.tasks.register(ThematicKmlExportTask())
-app.tasks.register(WFSExportTask())
-app.tasks.register(ArcGISFeatureServiceExportTask())
-app.tasks.register(ExternalRasterServiceExportTask())
-app.tasks.register(PickUpRunTask())
-app.tasks.register(GeneratePresetTask())
-app.tasks.register(FinalizeExportProviderTask())
-app.tasks.register(ZipFileTask())
-app.tasks.register(FinalizeRunTask())
-app.tasks.register(ExportTaskErrorHandler())
+app.register_task(ExportTask())
+app.register_task(OSMConfTask())
+app.register_task(OSMConfTask())
+app.register_task(OverpassQueryTask())
+app.register_task(OSMToPBFConvertTask())
+app.register_task(OSMPrepSchemaTask())
+app.register_task(ThematicShpExportTask())
+app.register_task(ThematicGPKGExportTask())
+app.register_task(ShpExportTask())
+app.register_task(KmlExportTask())
+app.register_task(SqliteExportTask())
+app.register_task(GeopackageExportTask())
+app.register_task(ThematicSQLiteExportTask())
+app.register_task(ThematicKmlExportTask())
+app.register_task(WFSExportTask())
+app.register_task(ArcGISFeatureServiceExportTask())
+app.register_task(ExternalRasterServiceExportTask())
+app.register_task(PickUpRunTask())
+app.register_task(GeneratePresetTask())
+app.register_task(FinalizeExportProviderTask())
+app.register_task(ZipFileTask())
+app.register_task(FinalizeRunTask())
+app.register_task(ExportTaskErrorHandler())
