@@ -4,7 +4,9 @@ import {ClassificationBanner} from './ClassificationBanner'
 import {TitleBar} from './TitleBar'
 import {Navigation} from './Navigation'
 import styles from './Application.css'
+import injectTapEventPlugin from 'react-tap-event-plugin'
 
+injectTapEventPlugin();
 
 class Application extends React.Component {
     render() {
