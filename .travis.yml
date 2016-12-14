@@ -5,6 +5,10 @@ sudo: required
 dist: trusty
 language: generic
 
+addons:
+  hosts:
+    - eventkit
+
 services:
   - docker
 
@@ -27,5 +31,5 @@ script:
     - docker-compose -f docker-compose-test.yml run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python manage.py run_integration_tests
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=eventkit SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
