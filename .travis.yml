@@ -15,8 +15,8 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 before_script:
-    - export SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-    - sudo echo "${SITE_IP} cloud.eventkit.dev" >> /etc/hosts
+   # - export SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+   # - sudo echo "${SITE_IP} cloud.eventkit.dev" >> /etc/hosts
     - docker-compose -f docker-compose-test.yml build
     - docker-compose -f docker-compose-test.yml up -d
 
@@ -27,5 +27,5 @@ script:
     - docker-compose -f docker-compose-test.yml run -T eventkit /var/lib/eventkit/.virtualenvs/eventkit/bin/python manage.py run_integration_tests
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+  - DOCKER_COMPOSE_VERSION=1.9.0
 
