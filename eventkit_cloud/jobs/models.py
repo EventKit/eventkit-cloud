@@ -145,7 +145,7 @@ class ExportProvider(TimeStampedModelMixin):
                               verbose_name="Mapproxy Configuration",
                               help_text="This is an optional field which is needed if the service "
                                         "requires authentication.")
-    user = models.ForeignKey(User, related_name='+', null=True, default=None)
+    user = models.ForeignKey(User, related_name='+', null=True, blank=True, default=None)
 
     class Meta:  # pragma: no cover
         managed = True
