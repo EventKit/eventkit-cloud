@@ -502,6 +502,7 @@ class PickUpRunTask(Task):
         run = ExportRun.objects.get(uid=run_uid)
         run.worker = worker
         run.save()
+        # clear_stage = ClearStageDirectoryTask()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
 
 
@@ -587,11 +588,11 @@ class FinalizeExportProviderTask(Task):
                 stage_dir=os.path.dirname(stage_dir)
             )()
 
-        if os.path.isdir(stage_dir):
-            try:
-                shutil.rmtree(stage_dir)
-            except IOError or OSError:
-                logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        # if os.path.isdir(stage_dir):
+        #     try:
+        #         shutil.rmtree(stage_dir)
+        #     except IOError or OSError:
+        #         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
 
 class ZipFileTask(Task):
@@ -686,30 +687,57 @@ class FinalizeRunTask(Task):
         run.finished_at = finished
         run.save()
 
+        # try:
+        #     shutil.rmtree(stage_dir)
+        # except IOError or OSError:
+        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+        # send notification email to user
+        # hostname = settings.HOSTNAME
+        # url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+        # addr = run.user.email
+        # subject = "Your Eventkit Data Pack is ready."
+        # to = [addr]
+        # # TODO: from email address should not be hardcoded
+        # from_email = getattr(
+        #     settings,
+        #     'DEFAULT_FROM_EMAIL',
+        #     'Eventkit Team <eventkit.team@gmail.com>'
+        # )
+        # ctx = {'url': url, 'status': run.status}
+        #
+        # text = get_template('email/email.txt').render(ctx)
+        # html = get_template('email/email.html').render(ctx)
+        # msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+        # msg.attach_alternative(html, "text/html")
+        # msg.send()
+
+
+class ClearStageDirectoryTask(Task):
+    """
+    Cleans up the stage directory when export tasks are finished
+    """
+    name = "Clear Stage Directory"
+
+    def run(self, stage_dir=None, export_provider_task_uid=None):
+        from eventkit_cloud.tasks.models import ExportProviderTask
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+
+        run_complete = False
+        provider_tasks = export_provider_task.run.provider_tasks.all()
+        for task in provider_tasks:
+            logger.error(task.status)
+        if all(pt.status in COMPLETE_STATES for pt in provider_tasks):
+            run_complete = True
+
+        if run_complete:
+            stage_dir = os.path.dirname(stage_dir)
+
+        logger.error("REMOVING {}".format(stage_dir))
         try:
             shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
-
-        # send notification email to user
-        hostname = settings.HOSTNAME
-        url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
-        addr = run.user.email
-        subject = "Your Eventkit Data Pack is ready."
-        to = [addr]
-        # TODO: from email address should not be hardcoded
-        from_email = getattr(
-            settings,
-            'DEFAULT_FROM_EMAIL',
-            'Eventkit Team <eventkit.team@gmail.com>'
-        )
-        ctx = {'url': url, 'status': run.status}
-
-        text = get_template('email/email.txt').render(ctx)
-        html = get_template('email/email.html').render(ctx)
-        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-        msg.attach_alternative(html, "text/html")
-        msg.send()
 
 
 class ExportTaskErrorHandler(Task):

@@ -45,7 +45,7 @@ services:
         - rabbitmq
       environment:
         - LOGLEVEL=error
-        - CONCURRENCY=1
+        - CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
 
   celery-beat:
