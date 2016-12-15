@@ -690,14 +690,14 @@ exports.detail = (function(){
                 var osm_generic_index = null;
                 var osm_index = null;
                 $.each(job_data.provider_tasks, function (index, provider_task) {
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data (Generic)") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data (Generic)") {
                         osm_generic_index = index;
                     }
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data") {
                         osm_index = index;
                     }
                 });
-                if (osm_generic_index && osm_index) {
+                if (osm_generic_index != null && osm_index != null) {
                     job_data.provider_tasks.splice(osm_generic_index, 1);
                 }
                 if (compareRunJobProviderTasks(run_data, job_data)) {
@@ -713,13 +713,8 @@ exports.detail = (function(){
         //Multiple runs may exist so check the submitted runs specifically
         $.each(run_data, function (index, run) {
             if (run.status === 'SUBMITTED') {
-                console.log(job_data.provider_tasks.length);
-                console.log(run.provider_tasks.length);
-                if (job_data.provider_tasks.length == run.provider_tasks.length) {
-                    run_ready = true;
-                } else {
-                    run_ready = false;
-                }
+                console.log("Run details will be displayed when job tasks ("+job_data.provider_tasks.length+") == run tasks ("+run.provider_tasks.length+")");
+                run_ready = job_data.provider_tasks.length == run.provider_tasks.length;
             }
         });
         return run_ready;
