@@ -110,8 +110,7 @@ class TaskFactory:
                                                                                                           provider_task.provider.slug),
                                                                                                       export_provider_task_uid=export_provider_task_uid,
                                                                                                       worker=worker).set(
-                                                             queue=worker)]
-                                                         )]
+                                                             queue=worker)])]
                 return tasks_results
             else:
                 return False

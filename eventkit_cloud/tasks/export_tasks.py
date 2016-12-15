@@ -502,7 +502,6 @@ class PickUpRunTask(Task):
         run = ExportRun.objects.get(uid=run_uid)
         run.worker = worker
         run.save()
-        # clear_stage = ClearStageDirectoryTask()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
 
 
@@ -677,6 +676,7 @@ class FinalizeRunTask(Task):
 
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
+
         run = ExportRun.objects.get(uid=run_uid)
         run.status = 'COMPLETED'
         provider_tasks = run.provider_tasks.all()
