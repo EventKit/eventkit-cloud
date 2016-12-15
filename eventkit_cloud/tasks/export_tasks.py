@@ -585,13 +585,7 @@ class FinalizeExportProviderTask(Task):
             finalize_run_task.si(
                 run_uid=run_uid,
                 stage_dir=os.path.dirname(stage_dir)
-            )()
-
-        if os.path.isdir(stage_dir):
-            try:
-                shutil.rmtree(stage_dir)
-            except IOError or OSError:
-                logger.error('Error removing {0} during export finalize'.format(stage_dir))
+            ).apply_async(queue=worker)
 
 
 class ZipFileTask(Task):
@@ -673,6 +667,13 @@ class FinalizeRunTask(Task):
 
     name = 'Finalize Export Run'
 
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        try:
+            stage_dir = retval['stage_dir']
+            shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
 
@@ -685,11 +686,6 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-
-        try:
-            shutil.rmtree(stage_dir)
-        except IOError or OSError:
-            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
@@ -707,9 +703,14 @@ class FinalizeRunTask(Task):
 
         text = get_template('email/email.txt').render(ctx)
         html = get_template('email/email.html').render(ctx)
-        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-        msg.attach_alternative(html, "text/html")
-        msg.send()
+        try:
+            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+            msg.attach_alternative(html, "text/html")
+            msg.send()
+        except Exception as e:
+            logger.error("Encountered an error when sending status email: {}".format(e))
+
+        return {'stage_dir': stage_dir}
 
 
 class ExportTaskErrorHandler(Task):
