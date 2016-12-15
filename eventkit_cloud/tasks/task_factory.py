@@ -95,8 +95,6 @@ class TaskFactory:
                         if not task_runner_tasks:
                             return False
                         finalize_export_provider_task = FinalizeExportProviderTask()
-                        from .export_tasks import ClearStageDirectoryTask
-                        clear_stage_dir = ClearStageDirectoryTask()
                         tasks_results += [(task_runner_tasks | finalize_export_provider_task.si(run_uid=run.uid,
                                                                                                 stage_dir=os.path.join(
                                                                                                     stage_dir,
@@ -112,15 +110,8 @@ class TaskFactory:
                                                                                                           provider_task.provider.slug),
                                                                                                       export_provider_task_uid=export_provider_task_uid,
                                                                                                       worker=worker).set(
-                                                             queue=worker)],
-                                                         link=[clear_stage_dir.si(stage_dir=os.path.join(
-                                                                                      stage_dir,
-                                                                                      provider_task.provider.slug),
-                                                                                    export_provider_task_uid=export_provider_task_uid)]
+                                                             queue=worker)]
                                                          )]
-                # from .export_tasks import ClearStageDirectoryTask
-                # clear_stage = ClearStageDirectoryTask()
-                # clear_stage.si(stage_dir).set(queue=worker).apply_async()
                 return tasks_results
             else:
                 return False
