@@ -796,7 +796,9 @@ class CancelTask(Task):
     name = "Cancel Task"
 
     def run(self, export_provider_task_uid, cancelling_user):
-        from eventkit_cloud.tasks.models import ExportProviderTask
+        from ..tasks.models import ExportProviderTask, ExportTaskException
+        from ..tasks.exceptions import CancelException
+        from
 
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
@@ -807,9 +809,12 @@ class CancelTask(Task):
             export_task.cancel_user = cancelling_user
             export_task.save()
             if export_task.pid and export_task.worker:
-                KillTask().apply_async(kwargs={"task_pid": export_task.pid},
+                KillTask().apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                                        queue="{0}-cancel".format(export_task.worker))
-
+                ExportTaskException.objects.create(task=export_task,
+                                                   exception=CancelException(task_name=export_task.name,
+                                                                             user_name=cancelling_user).message)
+                # KillTask().run(task_pid=export_task.pid, celery_uid=export_task.celery_uid)
         export_provider_task.status = TaskStates.CANCELLED.value
         export_provider_task.save()
 
@@ -823,18 +828,21 @@ class KillTask(Task):
 
     def run(self, task_pid=None, celery_uid=None):
         import os, signal
-        from eventkit_cloud.celery import app
         from celery.result import AsyncResult
         import celery.states
+        from ..celery import app
+
+
         if task_pid:
             # Don't kill tasks with default pid.
             if task_pid <= 0:
                 return
             try:
+                app.control.revoke(celery_uid, terminate=True)
                 # Ensure the task is still running otherwise the wrong process will be killed
-                if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
-                    # If the task finished prior to receiving this kill message it could throw an OSError.
-                    os.kill(task_pid, signal.SIGTERM)
+                # if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
+                #     # If the task finished prior to receiving this kill message it could throw an OSError.
+                #     os.kill(task_pid, signal.SIGTERM)
             except OSError:
                 logger.info("{0} PID does not exist.")
 

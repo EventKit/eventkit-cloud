@@ -791,14 +791,15 @@ exports.detail = (function () {
                 var osm_generic_index = null;
                 var osm_index = null;
                 $.each(job_data.provider_tasks, function (index, provider_task) {
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data (Generic)") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data (Generic)") {
                         osm_generic_index = index;
                     }
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data") {
                         osm_index = index;
                     }
                 });
-                if (osm_generic_index && osm_index) {
+                if (osm_generic_index != null && osm_index != null) {
+                    console.log("Removing duplicate OSM provider.")
                     job_data.provider_tasks.splice(osm_generic_index, 1);
                 }
                 if (compareRunJobProviderTasks(run_data, job_data)) {
