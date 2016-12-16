@@ -17,7 +17,7 @@ def upload_to_s3(run_uuid, filename, client=None):
         client = get_s3_client()
 
     asset_path = os.path.join(
-        settings.EXPORT_DOWNLOAD_ROOT,
+        settings.EXPORT_STAGING_ROOT,
         run_uuid,
         filename
     )
