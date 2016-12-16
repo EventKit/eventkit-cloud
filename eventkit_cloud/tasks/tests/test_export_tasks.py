@@ -295,7 +295,8 @@ class TestExportTasks(ExportTaskBase):
         expected_time = real_time.strftime('%Y%m%d')
         download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
         osstat = os_stat.return_value
-        s3.return_value = 'cloud.eventkit.dev/{},{},{}'.format(str(self.run.uid), 'osm-generic', download_file)
+        s3_url = 'cloud.eventkit.dev/{},{},{}'.format(str(self.run.uid), 'osm-generic', download_file)
+        s3.return_value = s3_url
         type(osstat).st_size = PropertyMock(return_value=1234567890)
         shp_export_task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
@@ -327,7 +328,6 @@ class TestExportTasks(ExportTaskBase):
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
         if settings.USE_S3:
-            s3_url = 'cloud.eventkit.dev/{},{},{}'.format(str(self.run.uid), 'osm-generic', download_file)
             self.assertEqual(s3_url, str(result.download_url))
         else:
             self.assertEquals(expected_url, str(result.download_url))
