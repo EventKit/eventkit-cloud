@@ -365,9 +365,11 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
 
+    @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
-    def test_zipfile_task(self, mock_os_walk, mock_zipfile):
+    @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
+    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove):
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -390,7 +392,6 @@ class TestExportTasks(ExportTaskBase):
         self.run.job.event = 'test'
         self.run.job.save()
         stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
-
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         mock_os_walk.return_value = [(
@@ -400,6 +401,8 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = 'test-osm-vector-%s.gpkg' % (date,)
+        zipfile_name = '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
+        s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         task = ZipFileTask()
         result = task.run(run_uid=run_uid, stage_dir=stage_dir)
 
@@ -410,10 +413,17 @@ class TestExportTasks(ExportTaskBase):
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
-        self.assertEqual(
-            run.zipfile_url,
-            '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
-        )
+        if settings.USE_S3:
+
+            self.assertEqual(
+                run.zipfile_url,
+                "www.s3.eventkit-cloud/{}".format(zipfile_name)
+            )
+        else:
+            self.assertEqual(
+                run.zipfile_url,
+                zipfile_name
+            )
         assert str(run_uid) in result['result']
 
     @patch('eventkit_cloud.tasks.task_factory.TaskFactory')
