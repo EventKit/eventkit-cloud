@@ -89,7 +89,7 @@ class ExportTask(Task):
 
         # construct the download url
         try:
-            if settings.USE_S3:
+            if getattr(settings, "USE_S3", False):
                 download_url = s3.upload_to_s3(
                     run_uid,
                     os.path.join(provider_slug, filename),
@@ -644,7 +644,7 @@ class ZipFileTask(Task):
                 )
 
         run_uid = str(run_uid)
-        if settings.USE_S3:
+        if getattr(settings, "USE_S3", False):
             # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
