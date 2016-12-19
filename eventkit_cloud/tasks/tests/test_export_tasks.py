@@ -284,17 +284,21 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')
     @patch('os.path.exists')
     @patch('shutil.copy')
     @patch('os.stat')
     @patch('django.utils.timezone')
-    def test_task_on_success(self, time, os_stat, shutil_copy, exists, mkdirs):
+    def test_task_on_success(self, time, os_stat, shutil_copy, exists, mkdirs, s3):
         exists.return_value = False  # download dir doesn't exist
         real_time = real_timezone.now()
         time.now.return_value = real_time
         expected_time = real_time.strftime('%Y%m%d')
+        download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
         osstat = os_stat.return_value
+        s3_url = 'cloud.eventkit.dev/{},{},{}'.format(str(self.run.uid), 'osm-generic', download_file)
+        s3.return_value = s3_url
         type(osstat).st_size = PropertyMock(return_value=1234567890)
         shp_export_task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
@@ -303,7 +307,6 @@ class TestExportTasks(ExportTaskBase):
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.RUNNING.value, name=shp_export_task.name)
         shp_export_task = ShpExportTask()
-        download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
         expected_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid), download_file])
         download_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid),
                                  'osm-generic', 'file.shp'])
@@ -312,9 +315,10 @@ class TestExportTasks(ExportTaskBase):
         shp_export_task.on_success(retval={'result': download_url}, task_id=celery_uid,
                                    args={}, kwargs={'run_uid': str(self.run.uid)})
         os_stat.assert_called_once_with(download_url)
-        exists.assert_has_calls([call(run_dir)])
-        mkdirs.assert_has_calls([call(run_dir)])
-        shutil_copy.assert_called_once()
+        if not getattr(settings, "USE_S3", False):
+            exists.assert_has_calls([call(run_dir)])
+            mkdirs.assert_has_calls([call(run_dir)])
+            shutil_copy.assert_called_once()
         task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         result = task.result
@@ -325,7 +329,10 @@ class TestExportTasks(ExportTaskBase):
         # pull out the result and test
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
-        self.assertEquals(expected_url, result.download_url)
+        if getattr(settings, "USE_S3", False):
+            self.assertEqual(s3_url, str(result.download_url))
+        else:
+            self.assertEquals(expected_url, str(result.download_url))
 
     def test_task_on_failure(self, ):
         shp_export_task = ShpExportTask()
@@ -367,9 +374,12 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
 
+    @patch('shutil.copy')
+    @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
-    def test_zipfile_task(self, mock_os_walk, mock_zipfile):
+    @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
+    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -392,7 +402,6 @@ class TestExportTasks(ExportTaskBase):
         self.run.job.event = 'test'
         self.run.job.save()
         stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
-
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         mock_os_walk.return_value = [(
@@ -402,6 +411,8 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = 'test-osm-vector-%s.gpkg' % (date,)
+        zipfile_name = '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
+        s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         task = ZipFileTask()
         result = task.run(run_uid=run_uid, stage_dir=stage_dir)
 
@@ -412,10 +423,17 @@ class TestExportTasks(ExportTaskBase):
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
-        self.assertEqual(
-            run.zipfile_url,
-            '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
-        )
+        if getattr(settings, "USE_S3", False):
+
+            self.assertEqual(
+                run.zipfile_url,
+                "www.s3.eventkit-cloud/{}".format(zipfile_name)
+            )
+        else:
+            self.assertEqual(
+                run.zipfile_url,
+                zipfile_name
+            )
         assert str(run_uid) in result['result']
 
     @patch('eventkit_cloud.tasks.task_factory.TaskFactory')
@@ -429,9 +447,20 @@ class TestExportTasks(ExportTaskBase):
         task_factory.assert_called_once()
         task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
 
-    @patch('django.core.mail.EmailMessage')
     @patch('shutil.rmtree')
-    def test_finalize_run_task(self, rmtree, email):
+    def test_finalize_run_task_after_return(self, rmtree):
+        celery_uid = str(uuid.uuid4())
+        run_uid = self.run.uid
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                  status='SUCCESS', name='Default Shapefile Export')
+        task = FinalizeRunTask()
+        task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+        rmtree.assert_called_once_with(stage_dir)
+
+    @patch('django.core.mail.EmailMessage')
+    def test_finalize_run_task(self, email):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
@@ -441,7 +470,10 @@ class TestExportTasks(ExportTaskBase):
         task = FinalizeRunTask()
         self.assertEquals('Finalize Export Run', task.name)
         task.run(run_uid=run_uid, stage_dir=stage_dir)
+<<<<<<< HEAD
         # rmtree.assert_called_once_with(stage_dir)
+=======
+>>>>>>> github/master
         msg = Mock()
         email.return_value = msg
         msg.send.assert_called_once()

@@ -540,7 +540,7 @@ def get_providers_list():
             "uid": "5e3d76cb-09aa-42ac-96f3-2663e06ac81a",
             "name": "eventkit-integration-test-wmts",
             "slug": "eventkit-integration-test-wmts",
-            "url": "http://a.tile.openstreetmap.fr/hot/",
+            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
             "layer": "imagery",
             "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wmts'),
             "level_from": 0,
@@ -550,7 +550,7 @@ def get_providers_list():
                       "  imagery_wmts:\r\n"
                       "    type: tile\r\n"
                       "    grid: webmercator\r\n"
-                      "    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\n"
+                      "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
                       "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         }
     }, {

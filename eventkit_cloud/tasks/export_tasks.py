@@ -109,10 +109,11 @@ class ExportTask(Task):
 
         # construct the download url
         try:
-            if settings.USE_S3:
+            if getattr(settings, "USE_S3", False):
                 download_url = s3.upload_to_s3(
                     run_uid,
-                    os.path.join(provider_slug, filename)
+                    os.path.join(provider_slug, filename),
+                    download_file
                 )
             else:
                 try:
@@ -621,7 +622,7 @@ class FinalizeExportProviderTask(Task):
             finalize_run_task.si(
                 run_uid=run_uid,
                 stage_dir=os.path.dirname(stage_dir)
-            ).set(queue=worker)()
+            ).apply_async(queue=worker)
 
 
 class ZipFileTask(Task):
@@ -659,8 +660,9 @@ class ZipFileTask(Task):
             'zip'
         )
 
-        zip_filepath = os.path.join(dl_filepath, zip_filename)
-        with ZipFile(zip_filepath, 'w') as zipfile:
+        zip_st_filepath = os.path.join(st_filepath, zip_filename)
+        zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
+        with ZipFile(zip_st_filepath, 'w') as zipfile:
             for filepath in files:
                 name, ext = os.path.splitext(filepath)
                 provider_slug, name = os.path.split(name)
@@ -678,18 +680,19 @@ class ZipFileTask(Task):
                 )
 
         run_uid = str(run_uid)
-        if settings.USE_S3:
+        if getattr(settings, "USE_S3", False):
             # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
-            zipfile_url = s3.upload_to_s3(run_uid, zip_filename)
-            os.remove(zip_filepath)
+            zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
+            os.remove(zip_st_filepath)
         else:
+            shutil.copy(zip_st_filepath, zip_dl_filepath)
             zipfile_url = os.path.join(run_uid, zip_filename)
 
         run.zipfile_url = zipfile_url
         run.save()
 
-        return {'result': zip_filepath}
+        return {'result': zip_st_filepath}
 
 
 class FinalizeRunTask(Task):
@@ -702,6 +705,13 @@ class FinalizeRunTask(Task):
     """
 
     name = 'Finalize Export Run'
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        try:
+            stage_dir = retval['stage_dir']
+            shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
     def run(self, run_uid=None, stage_dir=None):
         from eventkit_cloud.tasks.models import ExportRun
@@ -717,13 +727,6 @@ class FinalizeRunTask(Task):
         finished = timezone.now()
         run.finished_at = finished
         run.save()
-
-
-        ## TODO: This appears to be called prior to the on_success handler finishing.
-        # try:
-        #     shutil.rmtree(stage_dir)
-        # except IOError or OSError:
-        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
         # send notification email to user
         hostname = settings.HOSTNAME
@@ -744,9 +747,14 @@ class FinalizeRunTask(Task):
 
         text = get_template('email/email.txt').render(ctx)
         html = get_template('email/email.html').render(ctx)
-        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-        msg.attach_alternative(html, "text/html")
-        msg.send()
+        try:
+            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+            msg.attach_alternative(html, "text/html")
+            msg.send()
+        except Exception as e:
+            logger.error("Encountered an error when sending status email: {}".format(e))
+
+        return {'stage_dir': stage_dir}
 
 
 class ExportTaskErrorHandler(Task):
@@ -798,7 +806,6 @@ class CancelTask(Task):
     def run(self, export_provider_task_uid, cancelling_user):
         from ..tasks.models import ExportProviderTask, ExportTaskException
         from ..tasks.exceptions import CancelException
-        from
 
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
