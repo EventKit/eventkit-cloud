@@ -56,7 +56,7 @@ class TestS3Util(TestCase):
             {'ACL': 'public-read', 'Bucket': ANY, 'Key': ANY}
         )
         with patch('eventkit_cloud.utils.s3.open', mock_open(read_data='test'), create=True) as mock_open_obj:
-            upload_to_s3(self._uuid, self._filename, client=client)
+            upload_to_s3(self._uuid, self._filename, self._filename,client=client)
 
     def test_s3_delete(self):
         client = get_s3_client()
@@ -114,6 +114,6 @@ class TestS3Util(TestCase):
             })
 
         with patch('eventkit_cloud.utils.s3.open', mock_open(read_data='test'), create=True) as mock_open_obj:
-            upload_to_s3(self._uuid, self._filename, client=client)
+            upload_to_s3(self._uuid, self._filename, self._filename, client=client)
 
         delete_from_s3(self._uuid, client=client)

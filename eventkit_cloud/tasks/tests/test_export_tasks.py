@@ -372,11 +372,12 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
 
+    @patch('shutil.copy')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove):
+    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
         class MockZipFile:
             def __init__(self):
                 self.files = {}
