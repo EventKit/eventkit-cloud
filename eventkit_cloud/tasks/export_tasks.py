@@ -623,8 +623,9 @@ class ZipFileTask(Task):
             'zip'
         )
 
-        zip_filepath = os.path.join(dl_filepath, zip_filename)
-        with ZipFile(zip_filepath, 'w') as zipfile:
+        zip_st_filepath = os.path.join(st_filepath, zip_filename)
+        zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
+        with ZipFile(zip_st_filepath, 'w') as zipfile:
             for filepath in files:
                 name, ext = os.path.splitext(filepath)
                 provider_slug, name = os.path.split(name)
@@ -646,14 +647,15 @@ class ZipFileTask(Task):
             # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, zip_filename)
-            os.remove(zip_filepath)
+            os.remove(zip_st_filepath)
         else:
+            shutil.copy(zip_st_filepath, zip_dl_filepath)
             zipfile_url = os.path.join(run_uid, zip_filename)
 
         run.zipfile_url = zipfile_url
         run.save()
 
-        return {'result': zip_filepath}
+        return {'result': zip_st_filepath}
 
 
 class FinalizeRunTask(Task):
