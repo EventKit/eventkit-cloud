@@ -313,7 +313,7 @@ class TestExportTasks(ExportTaskBase):
         shp_export_task.on_success(retval={'result': download_url}, task_id=celery_uid,
                                    args={}, kwargs={'run_uid': str(self.run.uid)})
         os_stat.assert_called_once_with(download_url)
-        if not settings.USE_S3:
+        if not getattr(settings, "USE_S3", False):
             exists.assert_has_calls([call(run_dir)])
             mkdirs.assert_has_calls([call(run_dir)])
             shutil_copy.assert_called_once()
@@ -327,7 +327,7 @@ class TestExportTasks(ExportTaskBase):
         # pull out the result and test
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
-        if settings.USE_S3:
+        if getattr(settings, "USE_S3", False):
             self.assertEqual(s3_url, str(result.download_url))
         else:
             self.assertEquals(expected_url, str(result.download_url))
@@ -372,11 +372,12 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(result['result'], expected_path)
         os.remove(expected_path)
 
+    @patch('shutil.copy')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove):
+    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -420,7 +421,7 @@ class TestExportTasks(ExportTaskBase):
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
-        if settings.USE_S3:
+        if getattr(settings, "USE_S3", False):
 
             self.assertEqual(
                 run.zipfile_url,
