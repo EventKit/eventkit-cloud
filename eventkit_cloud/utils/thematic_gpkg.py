@@ -7,6 +7,7 @@ import shutil
 import sqlite3
 import subprocess
 from string import Template
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class ThematicGPKG(object):
         # create thematic gpkg file
         self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '.gpkg'
         self.path = os.path.dirname(os.path.realpath(__file__))
+        self.stage_dir = settings.EXPORT_STAGING_ROOT
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {
@@ -183,7 +185,8 @@ class ThematicGPKG(object):
         cur.close()
         conn.close()
 
-        sql_file = open(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'), 'w+')
+        thematic_spatial_index_file = os.path.join(self.stage_dir ,'thematic_spatial_index.sql')
+        sql_file = open(thematic_spatial_index_file, 'w+')
         convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
         index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
         convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
@@ -198,7 +201,7 @@ class ThematicGPKG(object):
 
         self.update_index = Template("spatialite $gpkg < $update_sql")
         index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
-                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql')})
+                                                   'update_sql': thematic_spatial_index_file})
         if(self.debug):
             print 'Running: %s' % index_cmd
         proc = subprocess.Popen(index_cmd, shell=True, executable='/bin/bash',
@@ -211,6 +214,6 @@ class ThematicGPKG(object):
         if self.debug:
             print 'spatialite returned: %s' % returncode
 
-        os.remove(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'))
+        os.remove(thematic_spatial_index_file)
 
         return self.thematic_gpkg
