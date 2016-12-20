@@ -5,22 +5,23 @@ import styles from './CreateExport.css'
 import DrawControl from './openlayers.DrawControl.js'
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
+export const MODE_NORMAL = 'MODE_NORMAL'
 const WGS84 = 'EPSG:4326'
 const WEB_MERCATOR = 'EPSG:3857'
 
 export default class ExportAOI extends Component {
 
-    constructor() {
-        super()
+    constructor(props) {
+        super(props)
         this._handleDrawStart = this._handleDrawStart.bind(this)
         this._handleDrawEnd = this._handleDrawEnd.bind(this)
+        this.drawClicked = this.drawClicked.bind(this);
+        this.state = {mode: MODE_NORMAL}
     }
 
     componentDidMount() {
         this._initializeOpenLayers()
-            .then(() => {
-            this._updateInteractions()
-        })
+        this._updateInteractions()
 
     }
 
@@ -39,12 +40,12 @@ export default class ExportAOI extends Component {
     _handleDrawEnd(event) {
         const geometry = event.feature.getGeometry()
         const bbox = serialize(geometry.getExtent())
-        //this.props.onBoundingBoxChange(bbox)
+        this.props.onBoundingBoxChange(bbox)
     }
 
     _handleDrawStart() {
         this._clearDraw()
-        //this.props.onBoundingBoxChange(null)
+        this.props.onBoundingBoxChange(null)
     }
 
     _initializeOpenLayers() {
@@ -55,45 +56,87 @@ export default class ExportAOI extends Component {
         this._drawInteraction.on('drawend', this._handleDrawEnd)
 
         this._map = new ol.Map({
-            controls: generateControls(),
-            interactions: generateBaseInteractions().extend([this._drawInteraction]),
+            interactions: ol.interaction.defaults({
+                keyboard: false,
+                altShiftDragRotate: false,
+                pinchRotate: false
+            }),
             layers: [
                 // Order matters here
                 new ol.layer.Tile({
                     source: new ol.source.OSM()
                 }),
-                ...this._drawLayer,
             ],
             target: 'map',
             view: new ol.View({
-                center: [0,0],
-                zoom: 2
+                projection: "EPSG:3857",
+                center: [110, 0],
+                zoom: 2.5,
+                minZoom: 2.5,
+                maxZoom: 22,
             })
         })
+        const scaleLine = new ol.control.ScaleLine();
+        this._map.addControl(scaleLine);
+
+        const attribution = new ol.control.Attribution();
+        this._map.addControl(attribution);
+
+        const zoomSlider = new ol.control.ZoomSlider();
+        this._map.addControl(zoomSlider);
+
+        const mousePosition = new ol.control.MousePosition({
+            coordinateFormat: ol.coordinate.toStringHDMS,
+            projection: 'EPSG:4326'
+        });
+        this._map.addControl(mousePosition);
+
+        const fullScreen = new ol.control.FullScreen();
+        this._map.addControl(fullScreen);
+
+        this._map.addInteraction(this._drawInteraction);
+        this._map.addLayer(this._drawLayer);
     }
 
+
     render() {
+        let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
+
         return (
-            
-                <div id="map" className={styles.map} ref="olmap"></div>
-            
+            <div>
+                <div id="map" className={styles.map} ref="olmap">
+
+                </div>
+                <div className={buttonClass}><button onClick={this.drawClicked} style={{width:'80px'}}><i className="fa fa-plus fa-1x">  DRAW</i></button></div>
+                </div>
         );
     }
 
+
+    drawClicked() {
+
+        this.setState({mode: MODE_DRAW_BBOX})
+        this._updateInteractions();
+        console.log(this.state.mode + "I was clicked!")
+    }
+
     _updateInteractions() {
-        switch (this.props.mode) {
+        switch (this.state.mode) {
             case MODE_DRAW_BBOX:
                 this._activateDrawInteraction()
                 break
-            default:
-                console.warn('wat mode=%s', this.props.mode)
+            case MODE_NORMAL:
+                this._clearDraw()
+                this._deactivateDrawInteraction()
                 break
         }
     }
 }
 
 ExportAOI.propTypes = {
-    bbox:                React.PropTypes.arrayOf(React.PropTypes.number)
+    bbox:                React.PropTypes.arrayOf(React.PropTypes.number),
+    mode:                React.PropTypes.string.isRequired,
+    onBoundingBoxChange: React.PropTypes.func.isRequired,
 }
 
 function generateDrawLayer() {
@@ -150,31 +193,7 @@ function generateDrawInteraction(drawLayer) {
     return draw
 }
 
-function generateBaseInteractions() {
-    return ol.interaction.defaults().extend([
-        new ol.interaction.DragRotate({
-            condition: ol.events.condition.altKeyOnly
-        })
-    ])
-}
 
-function generateControls() {
-    return ol.control.defaults({
-        attributionOptions: {collapsible: false}
-    }).extend([
-        new ol.control.ScaleLine({
-            minWidth: 250,
-            units: 'metric'
-        }),
-        new ol.control.ZoomSlider(),
-        new ol.control.MousePosition({
-            coordinateFormat: ol.coordinate.toStringHDMS,
-            projection: 'EPSG:4326'
-        }),
-        new ol.control.FullScreen(),
-        new DrawControl(styles.draw)
-    ])
-}
 
 function truncate(number) {
     return Math.round(number * 100) / 100

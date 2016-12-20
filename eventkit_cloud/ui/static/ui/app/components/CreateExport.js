@@ -2,11 +2,23 @@ import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import styles from './CreateExport.css'
 import primaryStyles from '../styles/constants.css'
-import ExportAOI from './ExportAOI'
+import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
+import {
+updateBbox
+} from '../actions'
 
 
 class CreateExport extends React.Component {
+
+    constructor() {
+        super()
+        this._handleBoundingBoxChange = this._handleBoundingBoxChange(this)
+
+    }
+
     render() {
+        let location = this.props.location
+
         //const jobs = this.props.jobs;
         let jobs = []
         jobs[0]  = {uid: '33434', name: 'alksdfjlkasjdf'}
@@ -26,7 +38,8 @@ class CreateExport extends React.Component {
                 <p className={primaryStyles.heading}>MENU > MENU > MENU > MENU</p>
             </div>
                 <div>
-                    <ExportAOI />
+                    <ExportAOI mode={this._mapMode} 
+                               onBoundingBoxChange={this._handleBoundingBoxChange}/>
                 </div>
                 <div >
                     {this.props.children}
@@ -37,16 +50,33 @@ class CreateExport extends React.Component {
 
         );
     }
+
+    //
+    // Internal API
+    //
+
+    get _mapMode() {
+        if (this.props.location === 'exportAOI') {
+            return MODE_DRAW_BBOX
+        }
+        return MODE_NORMAL
+    }
+
+    _handleBoundingBoxChange(bbox) {
+        //this.props.dispatch(updateBbox(bbox))
+    }
 }
 
 
 CreateExport.propTypes = {
-    //jobs: PropTypes.array.isRequired
+    location:        React.PropTypes.object.isRequired,
+    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
 };
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
     return {
-        //jobs: state.jobs
+        location: state.location,
+        bbox: state.bbox
     };
 }
 

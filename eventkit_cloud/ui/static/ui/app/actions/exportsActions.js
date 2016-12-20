@@ -8,6 +8,13 @@ export function loadJobsSuccess(jobs) {
         jobs};
 }
 
+export function updateBbox(bbox) {
+    return {
+        type: types.UPDATE_BBOX,
+        bbox: bbox || null
+    }
+}
+
 
 export function loadExports() {
     // make async call to api, handle promise, dispatch action when promise is resolved
