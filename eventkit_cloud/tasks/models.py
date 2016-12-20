@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 import shutil
 import uuid
-
+import os
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -151,20 +151,34 @@ class ExportTaskException(models.Model):
         db_table = 'export_task_exceptions'
 
 
-@receiver(post_delete, sender=ExportRun)
-def exportrun_delete_exports(sender, instance, **kwargs):
-    """
-    Delete the associated export files when a ExportRun is deleted.
-    """
-    download_root = settings.EXPORT_DOWNLOAD_ROOT
-    run_uid = instance.uid
-    run_dir = '{0}{1}'.format(download_root, run_uid)
-    shutil.rmtree(run_dir, ignore_errors=True)
-
-
 @receiver(pre_delete, sender=ExportRun)
-def delete_s3_pre_delete(sender, instance, *args, **kwargs):
+def exportrun_delete_exports(sender, instance, *args, **kwargs):
+    """
+    Delete the associated export files when an ExportRun is deleted.
+    """
     if getattr(settings, 'USE_S3', False):
-        delete_from_s3(str(instance.uid))
+        delete_from_s3(run_uid=str(instance.uid))
+    else:
+        run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), instance.uid)
+        try:
+            shutil.rmtree(run_dir, ignore_errors=True)
+        except OSError as os_error:
+            logger.warn("Could not remove the directory {0}.".format(run_dir))
+            logger.warn(os_error)
 
 
+@receiver(pre_delete, sender=ExportTaskResult)
+def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
+    """
+    Delete associated files when deleting the ExportTaskResult.
+    """
+    # The url should be constructed as [download context, run_uid, filename]
+    if getattr(settings, 'USE_S3', False):
+        delete_from_s3(download_url=instance.download_url)
+    else:
+        url_parts = instance.download_url.split('/')
+        try:
+            os.remove('/'.join([settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]]))
+        except OSError as os_error:
+            logger.warn("Could not remove the file {0}.".format(url_parts[-1]))
+            logger.warn(os_error)

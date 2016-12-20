@@ -97,12 +97,12 @@ class TestJob(TestCase):
 
         pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
 
-        self.assertTrue(all(_.status == TaskStates.CANCELLED.value for _ in pt.tasks.all()))
-        self.assertEqual(pt.status, TaskStates.CANCELLED.value)
+        self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
+        self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
         self.wait_for_run(self.orm_job.uid)
         self.orm_run = self.orm_job.runs.last()
-        self.assertEqual(self.orm_run.status, TaskStates.CANCELLED.value)
+        self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
 
         # update provider to original setting.
         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
@@ -434,7 +434,7 @@ class TestJob(TestCase):
                 headers={'X-CSRFToken': self.csrftoken
                          }).json()
             status = response[0].get('status')
-            if status in [TaskStates.COMPLETED.value, TaskStates.INCOMPLETE.value, TaskStates.CANCELLED.value]:
+            if status in [TaskStates.COMPLETED.value, TaskStates.INCOMPLETE.value, TaskStates.CANCELED.value]:
                 finished = True
         return response[0]
 

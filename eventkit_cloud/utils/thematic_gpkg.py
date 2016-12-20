@@ -41,6 +41,7 @@ class ThematicGPKG(object):
         self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '.gpkg'
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.stage_dir = settings.EXPORT_STAGING_ROOT
+        self.task_uid = task_uid
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {

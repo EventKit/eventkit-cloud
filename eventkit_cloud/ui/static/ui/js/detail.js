@@ -478,10 +478,10 @@ exports.detail = (function () {
                 $("#cancel-" + provider.uid).bind('click', function (e) {
                     // stop form getting posted..
                     e.preventDefault();
-                    $(".modal-footer").html('<button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>' +
+                    $(".cancel-modal-footer").html('<button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>' +
                         '<button id="cancelConfirm" type="button" class="btn btn-danger">Confirm</button>')
                     $("#cancelExportModal").modal(modalOpts, 'show');
-                    $(".modal-footer").on('click', "#cancelConfirm", function () {
+                    $(".cancel-modal-footer").on('click', "#cancelConfirm", function () {
                         $("#cancelExportModal").modal('hide');
                         cancelProvider(provider);
                     });
@@ -508,7 +508,7 @@ exports.detail = (function () {
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
-                        } else if (status === 'CANCELLED'){
+                        } else if (status === 'CANCELED'){
                             cls = status.toLowerCase();
                             taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
                             taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
@@ -575,7 +575,7 @@ exports.detail = (function () {
             method: 'patch',
             success: function () {
                 for (task in provider.tasks) {
-                    task.status = "CANCELLING";
+                    task.status = "CANCELING";
                     var $runDiv = $('#' + provider.run_uid);
                     var $tr = $runDiv.find('table').find('tr#' + task.uid);
                     $("#cancel-" + provider.uid).removeClass('fa fa-cog fa-spin');
@@ -697,7 +697,7 @@ exports.detail = (function () {
                         } else if (status === 'RUNNING') {
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             $barTr.html('<td colspan="3"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td><td align="right">Est. Finish: ' + estimatedFinish + '  </td>')
-                        } else if (status == 'CANCELLED' || status === 'FAILED'){
+                        } else if (status == 'CANCELED' || status === 'FAILED'){
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             $barTr.html('');
                             $("#cancel-" + provider.uid).removeClass("fa fa-times");

@@ -86,7 +86,7 @@ class TestExportRun(TestCase):
         ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
         with self.settings(USE_S3=True):
             run.delete()
-        del_fun.assert_called_once_with(str(run_uid))
+        del_fun.assert_called_once_with(run_uid=str(run_uid))
 
 
 class TestExportTask(TestCase):

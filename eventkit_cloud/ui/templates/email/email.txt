@@ -3,8 +3,8 @@
 
 {% trans 'Your Eventkit Data Pack is finished.' %}
 
-{% if status == 'CANCELLED' %}
-{% trans 'Your data pack was cancelled.' %}
+{% if status == 'CANCELED' %}
+{% trans 'Your data pack was CANCELED.' %}
 
 {% else %}
 {% trans 'Please copy and paste this link' %} {{ url }}/ {% trans ' into your browser to download your files.' %}

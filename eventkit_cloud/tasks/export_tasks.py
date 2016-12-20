@@ -39,7 +39,7 @@ class TaskStates(Enum):
     SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
     PENDING = "PENDING"  # Used for tasks that have not been started
     RUNNING = "RUNNING"  # Used for tasks that have been started
-    CANCELLED = "CANCELLED"  # Used for tasks that have been cancelled by the user
+    CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
 
@@ -47,11 +47,11 @@ class TaskStates(Enum):
 
     @staticmethod
     def get_finished_states():
-        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELLED, TaskStates.SUCCESS]
+        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS]
 
     @staticmethod
     def get_incomplete_states():
-        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELLED]
+        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
 
@@ -165,7 +165,7 @@ class ExportTask(Task):
         exception = cPickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
-        if task.status != TaskStates.CANCELLED.value:
+        if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
@@ -190,7 +190,7 @@ class ExportTask(Task):
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
 
-            if TaskStates.CANCELLED.value in [task.status, task.export_provider_task.status]:
+            if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info('cancelling before run %s', celery_uid)
                 task.celery_uid = celery_uid
                 task.save()
@@ -590,13 +590,13 @@ class FinalizeExportProviderTask(Task):
         with transaction.atomic():
             export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-            if export_provider_task.status != TaskStates.CANCELLED.value:
+            if export_provider_task.status != TaskStates.CANCELED.value:
                 export_provider_task.status = TaskStates.COMPLETED.value
             export_provider_task.save()
 
             # mark run as incomplete if any tasks fail
             export_tasks = export_provider_task.tasks.all()
-            if TaskStates[export_provider_task.status] != TaskStates.CANCELLED and any(
+            if TaskStates[export_provider_task.status] != TaskStates.CANCELED and any(
                             TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
                 export_provider_task.status = TaskStates.INCOMPLETE.value
             export_provider_task.save()
@@ -722,8 +722,8 @@ class FinalizeRunTask(Task):
         # mark run as incomplete if any tasks fail
         if any(task.status in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
-        if all(task.status == TaskStates.CANCELLED.value for task in provider_tasks):
-            run.status = TaskStates.CANCELLED.value
+        if all(task.status == TaskStates.CANCELED.value for task in provider_tasks):
+            run.status = TaskStates.CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
@@ -732,8 +732,8 @@ class FinalizeRunTask(Task):
         hostname = settings.HOSTNAME
         url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
         addr = run.user.email
-        if run.status == TaskStates.CANCELLED.value:
-            subject = "Your Eventkit Data Pack was cancelled."
+        if run.status == TaskStates.CANCELED.value:
+            subject = "Your Eventkit Data Pack was CANCELED."
         else:
             subject = "Your Eventkit Data Pack is ready."
         to = [addr]
@@ -796,33 +796,47 @@ class ExportTaskErrorHandler(Task):
         msg.send()
 
 
-class CancelTask(Task):
+class CancelExportProviderTask(Task):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
     """
 
-    name = "Cancel Task"
+    name = "Cancel Export Provider Task"
 
-    def run(self, export_provider_task_uid, cancelling_user):
-        from ..tasks.models import ExportProviderTask, ExportTaskException
+    def run(self, export_provider_task_uid, canceling_user):
+        from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult
         from ..tasks.exceptions import CancelException
+        from billiard.einfo import ExceptionInfo
 
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
         export_tasks = export_provider_task.tasks.all()
 
         for export_task in export_tasks:
-            export_task.status = TaskStates.CANCELLED.value
-            export_task.cancel_user = cancelling_user
+            export_task.status = TaskStates.CANCELED.value
+            export_task.cancel_user = canceling_user
             export_task.save()
+            # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
+            # to pass task information to the users, then it may make sense to replace this.
+            try:
+                raise CancelException(task_name=export_provider_task.name, user_name=canceling_user)
+            except CancelException as ce:
+                einfo = ExceptionInfo()
+                einfo.exception = ce
+                ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
+
+            # Remove the ExportTaskResult, which will clean up the files.
+            task_result = ExportTaskResult.objects.filter(task=export_task).first()
+            if task_result:
+                task_result.delete()
+
+            # This part uses celery to revoke the task, which has no need to rely on specific pid information and
+            # may be removed or simplified in the future.
             if export_task.pid and export_task.worker:
                 KillTask().apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                                        queue="{0}-cancel".format(export_task.worker))
-                ExportTaskException.objects.create(task=export_task,
-                                                   exception=CancelException(task_name=export_task.name,
-                                                                             user_name=cancelling_user).message)
                 # KillTask().run(task_pid=export_task.pid, celery_uid=export_task.celery_uid)
-        export_provider_task.status = TaskStates.CANCELLED.value
+        export_provider_task.status = TaskStates.CANCELED.value
         export_provider_task.save()
 
 
@@ -834,24 +848,26 @@ class KillTask(Task):
     name = "Kill Task"
 
     def run(self, task_pid=None, celery_uid=None):
-        import os, signal
-        from celery.result import AsyncResult
-        import celery.states
         from ..celery import app
+        app.control.revoke(celery_uid, terminate=True)
 
-
-        if task_pid:
-            # Don't kill tasks with default pid.
-            if task_pid <= 0:
-                return
-            try:
-                app.control.revoke(celery_uid, terminate=True)
-                # Ensure the task is still running otherwise the wrong process will be killed
-                # if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
-                #     # If the task finished prior to receiving this kill message it could throw an OSError.
-                #     os.kill(task_pid, signal.SIGTERM)
-            except OSError:
-                logger.info("{0} PID does not exist.")
+        # This all works but isn't helpful until priority queues are supported.
+        # import os, signal
+        # from celery.result import AsyncResult
+        # import celery.states
+        #
+        # if task_pid:
+        #     # Don't kill tasks with default pid.
+        #     if task_pid <= 0:
+        #         return
+        #     try:
+        #
+        #         # Ensure the task is still running otherwise the wrong process will be killed
+        #         # if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
+        #             # If the task finished prior to receiving this kill message it could throw an OSError.
+        #             os.kill(task_pid, signal.SIGTERM)
+        #     except OSError:
+        #         logger.info("{0} PID does not exist.")
 
 
 def get_progress_tracker(task_uid=None):

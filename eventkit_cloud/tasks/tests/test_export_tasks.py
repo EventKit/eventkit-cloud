@@ -25,7 +25,7 @@ from ..export_tasks import (
     ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
     ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask, PickUpRunTask, CancelTask, KillTask, TaskStates
+    get_progress_tracker, ZipFileTask, PickUpRunTask, CancelExportProviderTask, KillTask, TaskStates
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -470,10 +470,6 @@ class TestExportTasks(ExportTaskBase):
         task = FinalizeRunTask()
         self.assertEquals('Finalize Export Run', task.name)
         task.run(run_uid=run_uid, stage_dir=stage_dir)
-<<<<<<< HEAD
-        # rmtree.assert_called_once_with(stage_dir)
-=======
->>>>>>> github/master
         msg = Mock()
         email.return_value = msg
         msg.send.assert_called_once()
@@ -522,6 +518,7 @@ class TestExportTasks(ExportTaskBase):
     def test_cancel_task(self, kill_task):
         worker_name = "test_worker"
         task_pid = 55
+        celery_uid = uuid.uuid4()
         user = User.objects.create(username="test_user", password="test_password", email="test@email.com")
         export_provider_task = ExportProviderTask.objects.create(
             run=self.run,
@@ -531,45 +528,55 @@ class TestExportTasks(ExportTaskBase):
             export_provider_task=export_provider_task,
             status=TaskStates.PENDING.value,
             name="test_task",
+            celery_uid=celery_uid,
             pid=task_pid,
             worker=worker_name
         ).uid
 
-        task = CancelTask()
-        self.assertEquals('Cancel Task', task.name)
+        task = CancelExportProviderTask()
+        self.assertEquals('Cancel Export Provider Task', task.name)
         task.run(export_provider_task.uid, user)
-        kill_task.return_value.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid},
+        kill_task.return_value.apply_async.assert_called_once_with(kwargs={"celery_uid": celery_uid,
+                                                                           "task_pid": task_pid},
                                        queue="{0}-cancel".format(worker_name))
         export_task = ExportTask.objects.get(uid=task_uid)
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task.uid)
-        self.assertEquals(export_task.status, TaskStates.CANCELLED.value)
-        self.assertEquals(export_provider_task.status, TaskStates.CANCELLED.value)
+        self.assertEquals(export_task.status, TaskStates.CANCELED.value)
+        self.assertEquals(export_provider_task.status, TaskStates.CANCELED.value)
 
-    @patch('os.kill')
-    @patch('celery.result.AsyncResult')
-    # @patch('eventkit_cloud.tasks.export_tasks.KillTask.AsyncResult')
-    def test_kill_task(self, AsyncResult, kill):
+    # app.control.revoke(celery_uid, terminate=True)
+    @patch('eventkit_cloud.celery.app')
+    def test_kill_task(self, app):
+        celery_uid = uuid.uuid4()
+        task = KillTask()
+        self.assertEquals('Kill Task', task.name)
+        task.run(celery_uid=celery_uid)
+        app.control.revoke.assert_called_once_with(celery_uid, terminate=True)
+
+    # @patch('os.kill')
+    # @patch('celery.result.AsyncResult')
+    # def test_kill_task(self, AsyncResult):
         from uuid import uuid4
         from eventkit_cloud.celery import app
         #Ensure that kill isn't called with default.
-        task_pid = -1
-        task = KillTask()
-        self.assertEquals('Kill Task', task.name)
-        task.run(task_pid)
-        kill.assert_not_called()
+        # task_pid = -1
+        # task = KillTask()
+        # self.assertEquals('Kill Task', task.name)
+        # task.run(task_pid)
+        # kill.assert_not_called()
 
         # Ensure that kill is not called with an invalid state
-        task_pid = 55
-        AsyncResult.return_value = Mock(state=celery.states.FAILURE)
-        task = KillTask()
-        self.assertEquals('Kill Task', task.name)
-        task.run(task_pid)
-        kill.assert_not_called()
+        # task_pid = 55
+        # AsyncResult.return_value = Mock(state=celery.states.FAILURE)
+        # task = KillTask()
+        # self.assertEquals('Kill Task', task.name)
+        # task.run(task_pid)
+        # kill.assert_not_called()
 
         #Ensure that kill is called with a valid pid
-        task_pid = 55
-        AsyncResult.return_value = Mock(state=celery.states.STARTED)
-        task = KillTask()
-        self.assertEquals('Kill Task', task.name)
-        task.run(task_pid)
-        kill.assert_called_once_with(task_pid, signal.SIGTERM)
+        # task_pid = 55
+        # AsyncResult.return_value = Mock(state=celery.states.STARTED)
+        # task = KillTask()
+        # self.assertEquals('Kill Task', task.name)
+        # task.run(task_pid)
+        # kill.assert_called_once_with(task_pid, signal.SIGTERM)

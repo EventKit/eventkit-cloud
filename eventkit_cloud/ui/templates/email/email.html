@@ -5,8 +5,8 @@
     </head>
     <body>
         <p>{% trans 'This is an automated email from the Eventkit Team.' %}</p>
-        {% if status == 'CANCELLED' %}
-        <p>{% trans 'Your data pack was cancelled.' %}</p>
+        {% if status == 'CANCELED' %}
+        <p>{% trans 'Your data pack was CANCELED.' %}</p>
         {% else %}
         <p>{% trans 'Your Eventkit Data Pack is finished.' %}</p>
         <p>{% trans 'Please follow this link ' %}<a href="{{ url }}/">{{ url }}</a>{% trans ' to download your files.' %}</p>
