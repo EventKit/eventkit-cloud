@@ -16,7 +16,7 @@ import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
 import sys
-from django.db import IntegrityError
+from django.db import IntegrityError, connections
 from django.conf import settings
 from billiard import Process, Pipe
 from ..tasks.task_process import TaskProcess
@@ -125,6 +125,8 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error(seed_dict)
                 raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
+        finally:
+            connections.close_all()
         return self.gpkgfile
 
 
