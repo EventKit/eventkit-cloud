@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class GPKGToShp(object):
     Convert GPKG to shapefile.
     """
 
-    def __init__(self, gpkg=None, shapefile=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, shapefile=None, zipped=True, debug=False, task_uid=None):
         """
         Initialize the GPKGToShp utility.
 
@@ -37,24 +38,24 @@ class GPKGToShp(object):
         self.debug = debug
         self.cmd = Template("ogr2ogr -f 'ESRI Shapefile' $shp $gpkg -lco ENCODING=UTF-8")
         self.zip_cmd = Template("zip -j -r $zipfile $shp_dir")
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
         Convert the sqlite to shape.
         """
         convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'gpkg': self.gpkg})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % convert_cmd
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(returncode)
-        if(self.debug):
-            print 'ogr2ogr returned: %s' % returncode
-        if self.zipped and returncode == 0:
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+        if (self.debug):
+            print 'ogr2ogr returned: %s' % task_process.exitcode
+        if self.zipped and task_process.exitcode == 0:
             zipfile = self._zip_shape_dir()
             return zipfile
         else:
@@ -66,15 +67,13 @@ class GPKGToShp(object):
         """
         zipfile = self.shapefile + '.zip'
         zip_cmd = self.zip_cmd.safe_substitute({'zipfile': zipfile, 'shp_dir': self.shapefile})
-        proc = subprocess.Popen(zip_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(returncode)
-        if returncode == 0:
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(task_process.exitcode)
+        if task_process.exitcode == 0:
             # remove the shapefile directory
             shutil.rmtree(self.shapefile)
         if self.debug:
@@ -85,8 +84,10 @@ class GPKGToShp(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Converts a SQlite database to ESRI Shapefile.')
     parser.add_argument('-i', '--geopackage-file', required=True, dest="gpkg", help='The GPKG file to convert.')
-    parser.add_argument('-o', '--shp-dir', required=True, dest="shp", help='The directory to write the Shapefile(s) to.')
-    parser.add_argument('-z', '--zipped', action="store_true", help="Whether to zip the shapefile directory. Default true.")
+    parser.add_argument('-o', '--shp-dir', required=True, dest="shp",
+                        help='The directory to write the Shapefile(s) to.')
+    parser.add_argument('-z', '--zipped', action="store_true",
+                        help="Whether to zip the shapefile directory. Default true.")
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}

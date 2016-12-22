@@ -180,8 +180,8 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_exception(obj):
         exc_info = cPickle.loads(str(obj.exception)).exc_info
+        
         return str(exc_info[1])
-
 
 class ExportTaskSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
@@ -253,7 +253,7 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProviderTask
-        fields = ('uid', 'url', 'name', 'tasks',)
+        fields = ('uid', 'url', 'name', 'tasks', 'status')
 
 
 
