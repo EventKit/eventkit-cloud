@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 import logging
 import os
 from django.db import DatabaseError
+from django.utils import timezone
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -136,7 +138,7 @@ def create_run(job_uid):
                 job.runs.earliest(field_name='started_at').delete()  # delete earliest
                 run_count -= 1
         # add the export run to the database
-        run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED')  # persist the run
+        run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED', expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
         run.save()
         run_uid = run.uid
         logger.debug('Saved run with id: {0}'.format(str(run_uid)))

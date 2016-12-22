@@ -169,7 +169,53 @@ exports.detail = (function(){
         $('button#clone').bind('click', function(e){
             window.location.href = '/exports/clone/' + exports.detail.job_uid;
         });
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+
+        $('button#expiration').bind('click', function(e){
+            $.ajax({
+                cache: false,
+                url: Config.EXPORT_RUN_URL + exports.detail.job_uid + '&field=expiration',
+                method: 'patch',
+                // data: {'field': 'expiration'},
+                // dataType: 'json',
+                cache: false,
+                success: function(data){
+                    console.log(data);
+                    var expiration = moment(data['expiration']).format('h:mm:ss a, MMMM Do YYYY');
+                    $('div').find('#expiration_time').text(expiration);
+                }
+            })
+        });
     }
+
     function setProgress(progress, uid)
     {
         $("#progressContainer").html("");
@@ -222,12 +268,14 @@ exports.detail = (function(){
                         default:
                             break;
                     }
+                    var expiration = moment(run.expiration).format('h:mm:ss a, MMMM Do YYYY');
                     var expanded = !exports.detail.timer && index === 0 ? 'in' : '';
                     var context = {
                         'run_uid': run.uid, 'status': run.status, 'user': run.user,
                         'started': started, 'finished': finished,
                         'duration': duration, 'status_class': status_class,
-                        'expanded': expanded
+                        'expanded': expanded,
+                        'expiration': expiration
                     };
                     var template = run.status == 'COMPLETED' || run.status == 'INCOMPLETE' ? getCompletedRunTemplate() : getFailedRunTemplate();
                     var html = template(context);
@@ -311,6 +359,7 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Started') + ' :</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Finished') + ':</strong></td><td><div id="finished">{{ finished }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
+                                                   <tr><td><strong>' + gettext('Expiration') + ':</strong></td><td><div id="expiration_time">{{ expiration }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
                                                         <div id="providers"> \
                                                         </div> \
@@ -362,6 +411,7 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Started') + ' :</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Finished') + ':</strong></td><td><div id="finished">{{ finished }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
+                                                   <tr><td><strong>' + gettext('Expiration') + ':</strong></td><td><div id="expiration_time">{{ expiration }}</div></td></tr> \
                                                     <tr id="exceptions-{{ run_uid }}"><td><strong>' + gettext('Errors') + ':</strong></td><td> \
                                                         <div id="errors"> \
                                                             <table class="table table-condensed" width="100%"> \
@@ -785,6 +835,12 @@ exports.detail = (function(){
         });
         $('button#features').popover({
             content: gettext("Show the selected features for this export"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 0},
+            placement: 'top'
+        });
+        $('button#expiration').popover({
+            content: gettext("Reset the expiration countdown to 2 weeks"),
             trigger: 'hover',
             delay: {show: 0, hide: 0},
             placement: 'top'

@@ -45,6 +45,9 @@
                             <button id="clone" class="btn btn-primary pull-left">{% trans 'Clone Export' %}&nbsp;&nbsp;<span class="glyphicon glyphicon-asterisk"></span></button>
                         </div>
                         <div>
+                            <button id="expiration" class="btn btn-primary pull-left">{% trans 'Reset Expiration' %}&nbsp;&nbsp;<span class="glyphicon glyphicon-asterisk"></span></button>
+                        </div>
+                        <div>
                             <form id="deleteForm" method="post" action="" role="form" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <input type="hidden" value="DELETE" name="_method"/>
