@@ -5,6 +5,7 @@ import argparse
 import logging
 import os
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,7 @@ class GPKGToSQLite(object):
     Thin wrapper around ogr2ogr to convert gpkg to sqlite.
     """
 
-    def __init__(self, gpkg=None, sqlitefile=None, debug=None):
+    def __init__(self, gpkg=None, sqlitefile=None, debug=None, task_uid=None):
         """
         Initialize the GPKGToSQLite utility.
 
@@ -34,6 +35,7 @@ class GPKGToSQLite(object):
             self.sqlitefile = root + '.sqlite'
         self.debug = debug
         self.cmd = Template("ogr2ogr -f 'SQLite' $sqlitefile $gpkg")
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -41,17 +43,16 @@ class GPKGToSQLite(object):
         """
         convert_cmd = self.cmd.safe_substitute({'sqlitefile': self.sqlitefile,
                                                 'gpkg': self.gpkg})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % convert_cmd
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
-        if(self.debug):
-            print 'ogr2ogr returned: %s' % returncode
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+        if (self.debug):
+            print 'ogr2ogr returned: %s' % task_process.exitcode
         return self.sqlitefile
 
 

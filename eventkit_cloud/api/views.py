@@ -29,8 +29,7 @@ from serializers import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
-from ..tasks.export_tasks import PickUpRunTask
-from eventkit_cloud.tasks.util_tasks import RevokeTask
+from ..tasks.export_tasks import PickUpRunTask, CancelExportProviderTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -504,7 +503,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportProviderTaskViewSet(viewsets.ModelViewSet):
     """
     ###ExportTask API endpoint.
 
@@ -512,8 +511,14 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderTaskSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    queryset = ExportTask.objects.all()
     lookup_field = 'uid'
+
+    def get_queryset(self):
+        """Return all objects user can view."""
+        user = self.request.user
+        if user.is_authenticated():
+            return ExportProviderTask.objects.filter(Q(run__user=user) | Q(run__job__published=True))
+        return ExportProviderTask.objects.filter(run__job__published=True)
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -521,21 +526,20 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
 
         Args:
             request: the http request.
-            uid: the uid of the export task to GET.
+            uid: the uid of the export provider task to GET.
         Returns:
             the serialized ExportTask data
         """
-        queryset = ExportProviderTask.objects.filter(uid=uid)
         serializer = self.get_serializer(
-            queryset,
+            self.get_queryset().filter(uid=uid),
             many=True,
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, uid=None, *args, **kwargs):
-        rt = RevokeTask()
-        rt.run(uid)
+    def partial_update(self, request, uid=None, *args, **kwargs):
+        rt = CancelExportProviderTask()
+        rt.run(uid, request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 
