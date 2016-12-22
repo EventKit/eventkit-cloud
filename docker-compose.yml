@@ -83,16 +83,16 @@ services:
        image: httpd:2.4.23
        ports:
           - "80:80"
-  flower:
-       extends:
-          service: base
-       depends_on:
-          - rabbitmq
-       links:
-          - rabbitmq
-       ports:
-         - "49555:5555"
-       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
-       extra_hosts:
-        - "cloud.eventkit.dev:192.168.99.130"
+#  flower:
+#       extends:
+#          service: base
+#       depends_on:
+#          - rabbitmq
+#       links:
+#          - rabbitmq
+#       ports:
+#         - "49555:5555"
+#       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
+#       extra_hosts:
+#        - "cloud.eventkit.dev:192.168.99.130"
 
