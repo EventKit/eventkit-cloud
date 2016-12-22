@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def get_s3_client():
     return boto3.client(
         's3',
@@ -51,6 +52,7 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
     :param client: An S3 Client, if not provided one will be created based on django settings if available.
     :return: None
     """
+
     if not client:
         client = get_s3_client()
 
@@ -69,4 +71,4 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
         _key = item['Key']
         response = client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
         if not response.get("DeleteMarker"):
-            logger.error("Failed to delete {0} from S3.".format(_key))
+            logger.warn("Could not delete {0} from S3.".format(_key))

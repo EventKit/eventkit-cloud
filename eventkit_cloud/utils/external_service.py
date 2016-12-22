@@ -15,11 +15,10 @@ from mapproxy.seed import util
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
-import sys
-from django.db import IntegrityError, connections
-from django.conf import settings
-from billiard import Process, Pipe
+import os
+from django.db import connections
 from ..tasks.task_process import TaskProcess
+from ..tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
@@ -101,9 +100,6 @@ class ExternalRasterServiceToGeopackage(object):
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
         logger.info("Beginning seeding to {}".format(self.gpkgfile))
-        logger.error(conf_dict)
-        logger.error(seed_dict)
-        # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
             progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
             task_process = TaskProcess(task_uid=self.task_uid)

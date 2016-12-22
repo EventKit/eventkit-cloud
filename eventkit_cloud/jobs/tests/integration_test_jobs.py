@@ -109,6 +109,10 @@ class TestJob(TestCase):
         export_provider.level_to = original_level_to
         export_provider.save()
 
+        delete_response = self.client.delete(self.jobs_url + '/' + job_json.get('uid'),
+                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+        self.assertTrue(delete_response)
+
     def test_osm_geopackage_thematic(self):
         """
         This test is to ensure that an OSM job will export a thematic GeoPackage.
@@ -376,7 +380,7 @@ class TestJob(TestCase):
         job = response.json()
 
         if not wait_for_run:
-             return job
+            return job
 
         run = self.wait_for_run(job.get('uid'))
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
@@ -392,7 +396,9 @@ class TestJob(TestCase):
                 'eventkit',
                 date
             ))
-        self.assertEquals(test_zip_url, run['zipfile_url'])
+
+        if not getattr(settings, "USE_S3", False):
+            self.assertEquals(test_zip_url, run['zipfile_url'])
 
         assert '.zip' in orm_run.zipfile_url
 
@@ -408,6 +414,14 @@ class TestJob(TestCase):
         delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
+        for provider_task in run.get('provider_tasks'):
+            geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
+            if not geopackage_url:
+                continue
+            geopackage_file = self.download_file(geopackage_url)
+            self.assertNotTrue(os.path.isfile(geopackage_file))
+            if os.path.isfile(geopackage_file):
+                os.remove(geopackage_file)
         return True
 
     def wait_for_task_pickup(self, job_uid):

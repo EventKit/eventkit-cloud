@@ -115,7 +115,9 @@ class ExportOSMTaskRunner(TaskRunner):
             translate = provider_task.configs.filter(config_type='TRANSLATION')
             """
             export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name, status="PENDING")
+                                                                     name=provider_task.provider.name,
+                                                                     slug=provider_task.provider.slug,
+                                                                     status="PENDING")
             # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
             for task_type, task in osm_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
@@ -247,7 +249,9 @@ class ExportWFSTaskRunner(TaskRunner):
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name, status="PENDING")
+                                                                     name=provider_task.provider.name,
+                                                                     slug=provider_task.provider.slug,
+                                                                     status="PENDING")
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
@@ -328,7 +332,9 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name, status="PENDING")
+                                                                     name=provider_task.provider.name,
+                                                                     slug=provider_task.provider.slug,
+                                                                     status="PENDING")
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
@@ -406,7 +412,9 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name, status="PENDING")
+                                                                     name=provider_task.provider.name,
+                                                                     slug=provider_task.provider.slug,
+                                                                     status="PENDING")
 
             service_task = ExternalRasterServiceExportTask()
             export_task = create_export_task(task_name=service_task.name,

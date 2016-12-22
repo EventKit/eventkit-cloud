@@ -15,6 +15,7 @@ from django.db import DatabaseError, transaction
 from django.template.loader import get_template
 from django.utils import timezone
 from enum import Enum
+from time import sleep
 
 from celery import Task
 from celery.utils.log import get_task_logger
@@ -27,7 +28,7 @@ from ..utils import (
 from .exceptions import CancelException
 import socket
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm']
+BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -612,16 +613,35 @@ class FinalizeExportProviderTask(Task):
         if run_finished:
             run = ExportRun.objects.get(uid=run_uid)
             if run.job.include_zipfile:
+                # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+                # deleted during cancellation.
+                include_files = []
+                for export_provider_task in provider_tasks:
+                    if TaskStates[export_provider_task.status] != TaskStates.CANCELED:
+                        for export_task in export_provider_task.tasks.all():
+                            # Need to refactor OSM pipeline to remove things like this....
+                            export_provider_task_slug = 'osm-data' \
+                                if export_provider_task.slug == 'osm-generic' or export_provider_task.slug == 'osm' \
+                                else export_provider_task.slug
+                            try:
+                                filename = export_task.result.filename
+                            except Exception as e:
+                                continue
+                            full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                          export_provider_task_slug, filename)
+                            if not os.path.isfile(full_file_path):
+                                continue
+                            include_files += [full_file_path]
                 zipfile_task = ZipFileTask()
                 zipfile_task.si(
                     run_uid=run_uid,
-                    stage_dir=stage_dir
+                    include_files=include_files
                 ).set(queue=worker)()
 
             finalize_run_task = FinalizeRunTask()
             finalize_run_task.si(
                 run_uid=run_uid,
-                stage_dir=os.path.dirname(stage_dir)
+                stage_dir=stage_dir,
             ).apply_async(queue=worker)
 
 
@@ -631,7 +651,7 @@ class ZipFileTask(Task):
     """
     name = 'Zip File Export'
 
-    def run(self, run_uid=None, stage_dir=None):
+    def run(self, run_uid=None, include_files=None):
         from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
@@ -640,11 +660,9 @@ class ZipFileTask(Task):
         st_filepath = os.path.join(staging_root, str(run_uid))
 
         files = []
-        for root, dirnames, filenames in os.walk(st_filepath):
-            files += [
-                os.path.join(root, filename) for filename in filenames
-                if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS
-                ]
+        if not include_files:
+            return {'result': None}
+        files += [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
         run = ExportRunModel.objects.get(uid=run_uid)
 
@@ -807,6 +825,7 @@ class CancelExportProviderTask(Task):
         from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult
         from ..tasks.exceptions import CancelException
         from billiard.einfo import ExceptionInfo
+        from datetime import datetime, timedelta
 
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
@@ -833,11 +852,38 @@ class CancelExportProviderTask(Task):
             # This part uses celery to revoke the task, which has no need to rely on specific pid information and
             # may be removed or simplified in the future.
             if export_task.pid and export_task.worker:
-                KillTask().apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                                       queue="{0}-cancel".format(export_task.worker))
-                # KillTask().run(task_pid=export_task.pid, celery_uid=export_task.celery_uid)
+                # If using revoke there isn't a need to put the kill task on the correct queue, because celery will
+                # broadcast the message.
+                KillTask().run(celery_uid=export_task.celery_uid)
+                # KillTask().apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
+                #                        queue="{0}-cancel".format(export_task.worker))
         export_provider_task.status = TaskStates.CANCELED.value
         export_provider_task.save()
+
+        # Becuase the task is revoked the follow on is never run... if using revoke this is required, if using kill,
+        # this can probably be removed as the task will simply fail and the follow on task from the task_factory will
+        # pick up the task.
+        run_uid = export_provider_task.run.uid
+        worker = export_provider_task.tasks.first().worker
+        # Because we don't care about the files in a canceled task the stage dir can be the run dir,
+        # which will be cleaned up in final steps.
+        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run_uid))
+        finalize_export_provider_task = FinalizeExportProviderTask()
+        finalize_export_provider_task.si(
+                run_uid=run_uid,
+                stage_dir=stage_dir,
+                export_provider_task_uid=export_provider_task_uid,
+                worker=worker
+            ).set(queue=worker).apply_async(
+                interval=1,
+                max_retries=10,
+                expires=datetime.now() + timedelta(days=2),
+                link_error=[finalize_export_provider_task.si(
+                    run_uid=run_uid,
+                    stage_dir=stage_dir,
+                    export_provider_task_uid=export_provider_task_uid,
+                    worker=worker).set(queue=worker)]
+            )
 
 
 class KillTask(Task):
@@ -849,7 +895,7 @@ class KillTask(Task):
 
     def run(self, task_pid=None, celery_uid=None):
         from ..celery import app
-        app.control.revoke(celery_uid, terminate=True)
+        app.control.revoke(str(celery_uid), terminate=True)
 
         # This all works but isn't helpful until priority queues are supported.
         # import os, signal

@@ -410,21 +410,19 @@ class TestExportTasks(ExportTaskBase):
             ['test.gpkg', 'test.om5', 'test.osm']  # om5 and osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
-        fname = 'test-osm-vector-%s.gpkg' % (date,)
-        zipfile_name = '%s/TestJob-test-eventkit-%s.zip' % (run_uid, date)
+        fname = 'test-osm-vector-{0}.gpkg'.format(date,)
+        zipfile_name = '{0}/TestJob-test-eventkit-{1}.zip'.format(run_uid, date)
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         task = ZipFileTask()
-        result = task.run(run_uid=run_uid, stage_dir=stage_dir)
+        result = task.run(run_uid=run_uid, include_files=['/var/lib/eventkit/exports_staging/{0}/osm-vector/test.gpkg'.format(run_uid)])
 
         self.assertEqual(
             zipfile.files,
-            {fname: '/var/lib/eventkit/exports_staging/' +
-                    run_uid + '/osm-vector/test.gpkg',
+            {fname: '/var/lib/eventkit/exports_staging/{0}/osm-vector/test.gpkg'.format(run_uid),
              }
         )
         run = ExportRun.objects.get(uid=run_uid)
         if getattr(settings, "USE_S3", False):
-
             self.assertEqual(
                 run.zipfile_url,
                 "www.s3.eventkit-cloud/{}".format(zipfile_name)
@@ -536,9 +534,7 @@ class TestExportTasks(ExportTaskBase):
         task = CancelExportProviderTask()
         self.assertEquals('Cancel Export Provider Task', task.name)
         task.run(export_provider_task.uid, user)
-        kill_task.return_value.apply_async.assert_called_once_with(kwargs={"celery_uid": celery_uid,
-                                                                           "task_pid": task_pid},
-                                       queue="{0}-cancel".format(worker_name))
+        kill_task.return_value.run.assert_called_once_with(celery_uid=celery_uid)
         export_task = ExportTask.objects.get(uid=task_uid)
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task.uid)
         self.assertEquals(export_task.status, TaskStates.CANCELED.value)
@@ -551,7 +547,7 @@ class TestExportTasks(ExportTaskBase):
         task = KillTask()
         self.assertEquals('Kill Task', task.name)
         task.run(celery_uid=celery_uid)
-        app.control.revoke.assert_called_once_with(celery_uid, terminate=True)
+        app.control.revoke.assert_called_once_with(str(celery_uid), terminate=True)
 
     # @patch('os.kill')
     # @patch('celery.result.AsyncResult')

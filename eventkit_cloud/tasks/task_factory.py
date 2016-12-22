@@ -7,7 +7,7 @@ import os
 from uuid import UUID
 
 from eventkit_cloud.jobs.models import Job
-from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
+from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.export_tasks import FinalizeExportProviderTask
 from .task_runners import (
     ExportOSMTaskRunner,
@@ -69,6 +69,7 @@ class TaskFactory:
                 osm_task = osm_provider_tasks.get('osm-generic')
 
             if provider_tasks:
+                tasks_results = []
                 tasks_results = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name

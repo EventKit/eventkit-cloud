@@ -14,8 +14,9 @@ services:
         - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
-        - C_FORCE_ROOT=True
         - PRODUCTION=True
+        - DJANGO_LOG_LEVEL=ERROR
+        - LOG_LEVEL=ERROR
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
      extra_hosts:
@@ -44,11 +45,9 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=INFO
         # Concurrency needs to be greater than 1 to support Task Cancellation.
-        - CONCURRENCY=1
+        - CONCURRENCY=2
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
-
   celery-beat:
       extends:
         service: base
@@ -61,10 +60,9 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=error
+        - LOGLEVEL=ERROR
         - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
-
   postgis:
     image: mdillon/postgis:9.5
     environment:

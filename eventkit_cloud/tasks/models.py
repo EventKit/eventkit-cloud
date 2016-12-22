@@ -13,8 +13,8 @@ from django.db.models.signals import post_delete, pre_delete
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
-from eventkit_cloud.jobs.models import Job
-from eventkit_cloud.utils.s3 import delete_from_s3
+from ..jobs.models import Job, ExportProvider, LowerCaseCharField
+from ..utils.s3 import delete_from_s3
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,7 @@ class ExportProviderTask(models.Model):
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, blank=True)
+    slug = LowerCaseCharField(max_length=40, default='')
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
 
@@ -158,13 +159,12 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     """
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(run_uid=str(instance.uid))
-    else:
-        run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), instance.uid)
-        try:
-            shutil.rmtree(run_dir, ignore_errors=True)
-        except OSError as os_error:
-            logger.warn("Could not remove the directory {0}.".format(run_dir))
-            logger.warn(os_error)
+    run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), instance.uid)
+    try:
+        shutil.rmtree(run_dir, ignore_errors=True)
+        logger.info("The directory {0} was deleted.".format(run_dir))
+    except OSError as os_error:
+        logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
 
 
 @receiver(pre_delete, sender=ExportTaskResult)
@@ -175,10 +175,10 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     # The url should be constructed as [download context, run_uid, filename]
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(download_url=instance.download_url)
-    else:
-        url_parts = instance.download_url.split('/')
-        try:
-            os.remove('/'.join([settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]]))
-        except OSError as os_error:
-            logger.warn("Could not remove the file {0}.".format(url_parts[-1]))
-            logger.warn(os_error)
+    url_parts = instance.download_url.split('/')
+    full_file_download_path = '/'.join([settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), url_parts[-2], url_parts[-1]])
+    try:
+        os.remove(full_file_download_path)
+        logger.info("The directory {0} was deleted.".format(full_file_download_path))
+    except OSError:
+        logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))

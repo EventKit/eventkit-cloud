@@ -19,6 +19,9 @@ class TaskProcess(object):
         self.stderr = None
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
+        from .models import ExportTask
+        from ..tasks.export_tasks import TaskStates
+
         if billiard:
             proc = Process(daemon=False, *args, **kwargs)
             proc.start()
@@ -30,16 +33,12 @@ class TaskProcess(object):
             (self.stdout, self.stderr) = proc.communicate()
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
-        if self.exitcode != 0:
-            if not self.task_uid:
-                return
-            from .models import ExportTask
-            from ..tasks.export_tasks import TaskStates
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            if export_task.status == TaskStates.CANCELED.value:
-                from ..tasks.exceptions import CancelException
-                raise CancelException(task_name=export_task.export_provider_task.name,
-                                      user_name=export_task.cancel_user.username)
+
+        export_task = ExportTask.objects.get(uid=self.task_uid)
+        if export_task.status == TaskStates.CANCELED.value:
+            from ..tasks.exceptions import CancelException
+            raise CancelException(task_name=export_task.export_provider_task.name,
+                                  user_name=export_task.cancel_user.username)
 
     def store_pid(self, pid=None):
         """
