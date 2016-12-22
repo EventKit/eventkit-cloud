@@ -14,11 +14,11 @@ class TestOSMParser(TestCase):
     def setUp(self,):
         self.path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir))
 
-
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_create_spatialite(self, popen, pipe, exists):
+    def test_create_spatialite(self, popen, pipe, exists, export_task):
         ogr_cmd = """
             ogr2ogr -f GPKG /path/to/query.gpkg /path/to/query.pbf \
             --config OSM_CONFIG_FILE {0} \
@@ -33,6 +33,7 @@ class TestOSMParser(TestCase):
         parser = OSMParser(osm='/path/to/query.pbf', gpkg='/path/to/query.gpkg')
         exists.assert_called_twice_with('/path/to/query.pbf')
         parser.create_geopackage()
+        export_task.assert_called_once()
         popen.assert_called_once_with(ogr_cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)
         proc.communicate.assert_called_once()

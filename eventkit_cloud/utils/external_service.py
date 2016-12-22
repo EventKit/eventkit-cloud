@@ -15,16 +15,15 @@ from mapproxy.seed import util
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
-import sys
-from django.db import IntegrityError, connections
-from django.conf import settings
-from billiard import Process
+import os
+from django.db import connections
+from ..tasks.task_process import TaskProcess
+from ..tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
 
 class CustomLogger(ProgressLog):
-
     def __init__(self, progress_tracker=None, *args, **kwargs):
         self.progress_tracker = progress_tracker
         super(CustomLogger, self).__init__(*args, **kwargs)
@@ -36,7 +35,8 @@ class CustomLogger(ProgressLog):
         if progress.eta.eta():
             if self.progress_tracker:
                 if self.log_step_counter == 0:
-                    self.progress_tracker(progress=progress.progress*100, estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
+                    self.progress_tracker(progress=progress.progress * 100,
+                                          estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
                     self.log_step_counter = self.log_step_step
                 self.log_step_counter = self.log_step_counter - 1
         super(CustomLogger, self).log_step(progress)
@@ -48,7 +48,7 @@ class ExternalRasterServiceToGeopackage(object):
     """
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None, service_type=None, progress_tracker=None):
+                 level_from=None, level_to=None, service_type=None, progress_tracker=None, task_uid=None):
         """
         Initialize the ExternalServiceToGeopackage utility.
 
@@ -67,6 +67,7 @@ class ExternalRasterServiceToGeopackage(object):
         self.config = config
         self.service_type = service_type
         self.progress_tracker = progress_tracker
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -106,21 +107,18 @@ class ExternalRasterServiceToGeopackage(object):
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
         logger.info("Beginning seeding to {}".format(self.gpkgfile))
-        logger.error(conf_dict)
-        logger.error(seed_dict)
-        # Call seeder using billiard without daemon, because of limitations of running child processes in python.
         try:
             progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
-            p = Process(target=seeder.seed, daemon=False, kwargs={"tasks": seed_configuration.seeds(['seed']),
-                                                                  "concurrency": 1,
-                                                                  "progress_logger": progress_logger})
-            p.start()
-            p.join()
+            task_process = TaskProcess(task_uid=self.task_uid)
+            task_process.start_process(billiard=True, target=seeder.seed,
+                        kwargs={"tasks": seed_configuration.seeds(['seed']),
+                                "concurrency": 1,
+                                "progress_logger": progress_logger})
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)
             if not informal_only:
-                logger.error("Mapproxy configuration failed.")
+                logger.error("MapProxy configuration failed.")
                 logger.error("Using Configuration:")
                 logger.error(mapproxy_config)
             errors, informal_only = validate_seed_conf(seed_dict)
@@ -128,7 +126,7 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error("Mapproxy Seed failed.")
                 logger.error("Using Seed Configuration:")
                 logger.error(seed_dict)
-                raise SeedConfigurationError('Mapproxy seed configuration error  - {}'.format(', '.join(errors)))
+                raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
             raise e
         finally:
             connections.close_all()

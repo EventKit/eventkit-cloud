@@ -111,3 +111,24 @@ AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
+        },
+        'eventkit_cloud': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': os.getenv('LOG_LEVEL', 'INFO'),
+        },
+    },
+}
