@@ -447,7 +447,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if field == 'expiration' and job_uid:
             updated_time = timezone.now() + timezone.timedelta(days=14)
             run = ExportRun.objects.get(job__uid=job_uid)
-            if not run.expiration > timezone.timedelta(days=14):
+            if not run.expiration > updated_time:
                 run.expiration = updated_time
                 run.save()
             return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
