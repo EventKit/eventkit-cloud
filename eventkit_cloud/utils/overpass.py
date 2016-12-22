@@ -3,6 +3,7 @@ import argparse
 import logging
 import shutil
 import subprocess
+from ..tasks.task_process import TaskProcess
 from datetime import datetime
 from string import Template
 import os
@@ -23,7 +24,8 @@ class Overpass(object):
     and filtered by the provided tags.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, progress_tracker=None, debug=False):
+    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, progress_tracker=None,
+                 debug=False, task_uid=None):
         """
         Initialize the Overpass utility.
 
@@ -44,6 +46,7 @@ class Overpass(object):
         self.filters = filters
         self.progress_tracker = progress_tracker
         self.debug = debug
+        self.task_uid = task_uid
         if url:
             self.url = url
         if bbox:
@@ -68,11 +71,11 @@ class Overpass(object):
         self.raw_osm = os.path.join(self.stage_dir, 'query.osm')
         self.filtered_osm = os.path.join(self.stage_dir, '{0}.osm'.format(job_name))
 
-    def get_query(self,):
+    def get_query(self, ):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self,):
+    def run_query(self, ):
         """
         Run the overpass query.
 
@@ -85,7 +88,7 @@ class Overpass(object):
             print 'Query started at: %s' % datetime.now()
         try:
             req = requests.post(self.url, data=q, stream=True)
-            #Since the request takes a while, jump progress to an arbitrary 50 percent...
+            # Since the request takes a while, jump progress to an arbitrary 50 percent...
             self.progress_tracker(50)
             try:
                 size = int(req.headers.get('content-length'))
@@ -94,14 +97,14 @@ class Overpass(object):
                     size = len(req.content)
                 else:
                     raise Exception("Overpass Query failed to return any data")
-            inflated_size = size*2
+            inflated_size = size * 2
             CHUNK = 1024 * 1024 * 5  # 5MB chunks
             with open(self.raw_osm, 'wb') as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
                     size += CHUNK
                     # Because progress is already at 50, we need to make this part start at 50 percent
-                    self.progress_tracker(progress=(float(size)/float(inflated_size))*100)
+                    self.progress_tracker(progress=(float(size) / float(inflated_size)) * 100)
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
@@ -137,13 +140,12 @@ class Overpass(object):
             filter_cmd = filter_tmpl.safe_substitute({'om5': om5,
                                                       'params': self.filter_params,
                                                       'filtered_osm': self.filtered_osm})
-            proc = subprocess.Popen(filter_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            (stdout, stderr) = proc.communicate()
-            returncode = proc.wait()
-            if (returncode != 0):
-                logger.error('%s', stderr)
-                raise Exception, "osmfilter process failed with returncode {0}".format(returncode)
+            task_process = TaskProcess(task_uid=self.task_uid)
+            task_process.start_process(filter_cmd, shell=True, executable='/bin/bash',
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if task_process.exitcode != 0:
+                logger.error('%s', task_process.stderr)
+                raise Exception, "osmfilter process failed with returncode {0}".format(task_process.exitcode)
             return self.filtered_osm
 
         else:
@@ -151,20 +153,20 @@ class Overpass(object):
             shutil.copy(self.raw_osm, self.filtered_osm)
             return self.filtered_osm
 
-    def _convert_om5(self,):
+    def _convert_om5(self, ):
         """
         Convert to om5 for faster filter processing.
         """
         om5 = os.path.join(self.stage_dir, 'query.om5')
         convert_tmpl = Template('osmconvert $raw_osm -o=$om5')
         convert_cmd = convert_tmpl.safe_substitute({'raw_osm': self.raw_osm, 'om5': om5})
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "osmconvert process failed with returncode {0}: {1}".format(returncode, stderr)
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "osmconvert process failed with returncode {0}: {1}".format(task_process.exitcode,
+                                                                                         task_process.stderr)
         return om5
 
     def _build_overpass_query(self, ):  # pragma: no cover
@@ -214,13 +216,14 @@ class Overpass(object):
         rel_filter = '\n'.join(relations)
 
         q = template.safe_substitute({'bbox': self.bbox, 'nodes': node_filter, 'ways': way_filter,
-                                                 'relations': rel_filter})
+                                      'relations': rel_filter})
         return q
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Runs an overpass query using the provided bounding box')
-    parser.add_argument('-o', '--osm-file', required=False, dest="osm", help='The OSM file to write the query results to')
+    parser.add_argument('-o', '--osm-file', required=False, dest="osm",
+                        help='The OSM file to write the query results to')
     parser.add_argument('-b', '--bounding-box', required=True, dest="bbox",
                         help='A comma separated list of coordinates in the format: miny,minx,maxy,maxx')
     parser.add_argument('-u', '--url', required=False, dest="url", help='The url endpoint of the overpass interpreter')

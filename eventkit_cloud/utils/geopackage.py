@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 from string import Template
+from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class SQliteToGeopackage(object):
     Thin wrapper around ogr2ogr to convert sqlite to KML.
     """
 
-    def __init__(self, sqlite=None, gpkgfile=None, debug=None):
+    def __init__(self, sqlite=None, gpkgfile=None, debug=None, task_uid=None):
         """
         Initialize the SQliteToKml utility.
 
@@ -34,6 +35,7 @@ class SQliteToGeopackage(object):
             self.gpkgfile = root + '.gkpg'
         self.debug = debug
         self.cmd = Template("ogr2ogr -f 'GPKG' $gpkgfile $sqlite")
+        self.task_uid = task_uid
 
     def convert(self, ):
         """
@@ -41,17 +43,16 @@ class SQliteToGeopackage(object):
         """
         convert_cmd = self.cmd.safe_substitute({'gpkgfile': self.gpkgfile,
                                                 'sqlite': self.sqlite})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % convert_cmd
-        proc = subprocess.Popen(convert_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if (returncode != 0):
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
-        if(self.debug):
-            print 'ogr2ogr returned: %s' % returncode
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+        if (self.debug):
+            print 'ogr2ogr returned: %s' % task_process.exitcode
         return self.gpkgfile
 
 
