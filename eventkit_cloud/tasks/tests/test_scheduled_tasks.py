@@ -39,6 +39,7 @@ class TestPurgeUnpublishedExportsTask(TestCase):
         self.assertEquals(1, jobs.count())
         self.assertTrue(jobs[0].published)
 
+
 class TestExpireRunsTask(TestCase):
     def setUp(self,):
         Group.objects.create(name='TestExpireRunsTaskGroup')
@@ -73,25 +74,24 @@ class TestExpireRunsTask(TestCase):
             self.assertEqual(3, ExportRun.objects.all().count())
 
 
-@patch('eventkit_cloud.tasks.scheduled_tasks.getattr')
-@patch('eventkit_cloud.tasks.scheduled_tasks.EmailMultiAlternatives')
-def test_send_warning_email(alternatives, mock_getattr):
-    now = timezone.now()
-    mock_getattr.return_value = 'Eventkit Team <eventkit.team@gmail.com>'
-    site_name = getattr(settings, "SITE_NAME", "cloud.eventkit.dev")
-    url = 'http://{0}/exports/1234'.format(site_name)
-    addr = 'test@test.com'
+class TestEmailNotifications(TestCase):
 
-    ctx = {'url': url, 'date': str(now)}
+    @patch('eventkit_cloud.tasks.scheduled_tasks.EmailMultiAlternatives')
+    def test_send_warning_email(self, alternatives):
+        now = timezone.now()
+        site_name = getattr(settings, "SITE_NAME", "cloud.eventkit.dev")
+        url = 'http://{0}/exports/1234'.format(site_name)
+        addr = 'test@test.com'
 
-    text = get_template('email/expiration_warning.txt').render(ctx)
-    html = get_template('email/expiration_warning.html').render(ctx)
+        ctx = {'url': url, 'date': str(now)}
 
-    send_warning_email(now, url, addr)
-    alternatives.assert_called_once_with("Your Eventkit Data Pack is set to expire.",
-                                             text, to=[addr], from_email='Eventkit Team <eventkit.team@gmail.com>')
-    alternatives.attach_alternative.assert_called_once_with(html, "text/html")
-    alternatives.send.assert_called_once()
+        text = get_template('email/expiration_warning.txt').render(ctx)
+        html = get_template('email/expiration_warning.html').render(ctx)
+
+        send_warning_email(now, url, addr)
+        alternatives.assert_called_once_with("Your Eventkit Data Pack is set to expire.",
+                                                 text, to=[addr], from_email='Eventkit Team <eventkit.team@gmail.com>')
+        alternatives.send.assert_called_once()
 
 
 
