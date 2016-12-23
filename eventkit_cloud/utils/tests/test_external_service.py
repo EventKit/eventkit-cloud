@@ -119,8 +119,9 @@ class TestWMTSToGeopackage(TransactionTestCase):
         cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')], gpkgfile)
         json_config['caches'] = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
         json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
+        json_config['sources']['imagery_wmts']['transparent'] = True
+        json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
 
         load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
 
-        seed_dict = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
         seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
