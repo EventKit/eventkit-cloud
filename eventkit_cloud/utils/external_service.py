@@ -83,9 +83,16 @@ class ExternalRasterServiceToGeopackage(object):
             conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
                                                   'tile_size': [256, 256],
                                                   'origin': 'nw'}}
-        conf_dict['caches'] = get_cache_template(["{}_{}".format(self.layer, self.service_type)],
+        conf_dict['caches'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
                                                  [grids for grids in conf_dict.get('grids')],
                                                  self.gpkgfile)
+
+        # Prevent the service from failing if source has missing tiles.
+        for source in conf_dict.get('sources'):
+            if 'wmts' in source:
+                conf_dict['sources'][source]['transparent'] = True
+                conf_dict['sources'][source]['on_error'] = {"other": {"response": "transparent", "cache": False}}
+
         # disable SSL cert checks
         conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
@@ -127,6 +134,15 @@ class ExternalRasterServiceToGeopackage(object):
 
 
 def get_cache_template(sources, grids, geopackage):
+    """
+    Returns the cache template which is "controlled" settings for the application.
+
+    The intent is to allow the user to configure certain things but impose specific behavior.
+    :param sources: A name for the source
+    :param grids: specific grid for the data source
+    :param geopackage: Location for the geopackage
+    :return: The dict template
+    """
     return {'cache': {
         "sources": sources,
         "meta_size": [1, 1],
