@@ -622,19 +622,28 @@ ul.sub-level {
 }
 
 button#rerun {
+    margin-top: .5em;
     margin-right: .5em;
 }
 
 button#clone {
+    margin-top: .5em;
     margin-right: .5em;
 }
 
 button#delete {
+    margin-top: .5em;
     margin-right: .5em;
     display: none;
 }
 
 button#features {
+    margin-top: .5em;
+    margin-right: .5em;
+}
+
+button#expiration {
+    margin-top: .5em;
     margin-right: .5em;
 }
 
