@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+import uuid
 
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import Job, Tag
@@ -37,15 +38,14 @@ class TestThematicGPKG(TestCase):
     @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
     @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')
     @patch('eventkit_cloud.utils.thematic_gpkg.subprocess.PIPE')
-    @patch('eventkit_cloud.utils.thematic_gpkg.subprocess.Popen')
+    @patch('eventkit_cloud.utils.thematic_gpkg.TaskProcess')
     @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3.connect')
-    def test_convert(self, connect, popen, pipe, exists, copy):
+    def test_convert(self, connect, task_process, pipe, exists, copy):
         gpkg = self.path + '/files/test.gpkg'
         thematic_gpkg = self.path + '/files/test_thematic_shp_thematic.gpkg'
-        proc = Mock()
-        popen.return_value = proc
-        proc.communicate.return_value = (Mock(), Mock())
-        proc.wait.return_value = 0
+        # proc = Mock()
+        # proc.communicate.return_value = (Mock(), Mock())
+        # proc.wait.return_value = 0
         exists.return_value = True
         conn = Mock()
         conn.enable_load_extention = Mock()
@@ -54,14 +54,19 @@ class TestThematicGPKG(TestCase):
         conn.cursor = cur
         cur.execute = MagicMock()
         tags = self.job.categorised_tags
+        generated_task_uid = task_uid=uuid.uuid4()
         t2s = ThematicGPKG(
             gpkg=gpkg,
             tags=tags, job_name='test_thematic_gpkg',
-            zipped=False, debug=False
+            zipped=False, debug=False,
+            task_uid=generated_task_uid
         )
+        task_process.return_value = MagicMock(exitcode=0)
         exists.assert_called_once()
         copy.assert_called_once()
         t2s.convert()
+        task_process.start_process.assert_called_once()
+        task_process.assert_called_with(task_uid=generated_task_uid)
         connect.assert_called_once()
         conn.load_extention.assert_called_once()
         conn.cursor.assert_called_once()

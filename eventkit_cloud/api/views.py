@@ -8,6 +8,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
@@ -28,8 +29,7 @@ from serializers import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
-from ..tasks.export_tasks import PickUpRunTask
-from eventkit_cloud.tasks.util_tasks import RevokeTask
+from ..tasks.export_tasks import PickUpRunTask, CancelExportProviderTask
 
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
@@ -384,7 +384,7 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RegionMask.objects.all()
 
 
-class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportRunViewSet(viewsets.ModelViewSet):
     """
     ###Export Run API Endpoint.
 
@@ -441,6 +441,20 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def patch(self, request, uid=None, *args, **kwargs):
+        field = self.request.query_params.get('field', None)
+        job_uid = self.request.query_params.get('job_uid', None)
+        if field == 'expiration' and job_uid:
+            updated_time = timezone.now() + timezone.timedelta(days=14)
+            run = ExportRun.objects.get(job__uid=job_uid)
+            if not run.expiration > updated_time:
+                run.expiration = updated_time
+                run.save()
+            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class ExportConfigViewSet(viewsets.ModelViewSet):
     """
@@ -490,7 +504,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportProviderTaskViewSet(viewsets.ModelViewSet):
     """
     ###ExportTask API endpoint.
 
@@ -498,8 +512,14 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderTaskSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    queryset = ExportTask.objects.all()
     lookup_field = 'uid'
+
+    def get_queryset(self):
+        """Return all objects user can view."""
+        user = self.request.user
+        if user.is_authenticated():
+            return ExportProviderTask.objects.filter(Q(run__user=user) | Q(run__job__published=True))
+        return ExportProviderTask.objects.filter(run__job__published=True)
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -507,21 +527,20 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
 
         Args:
             request: the http request.
-            uid: the uid of the export task to GET.
+            uid: the uid of the export provider task to GET.
         Returns:
             the serialized ExportTask data
         """
-        queryset = ExportProviderTask.objects.filter(uid=uid)
         serializer = self.get_serializer(
-            queryset,
+            self.get_queryset().filter(uid=uid),
             many=True,
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, uid=None, *args, **kwargs):
-        rt = RevokeTask()
-        rt.run(uid)
+    def partial_update(self, request, uid=None, *args, **kwargs):
+        rt = CancelExportProviderTask()
+        rt.run(uid, request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 

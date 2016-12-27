@@ -30,6 +30,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'Purge Unpublished Exports',
         'schedule': crontab(minute='0', hour='*', day_of_week='*')
     },
+    'expire-runs': {
+        'task': 'Expire Runs',
+        'schedule': crontab(minute='0', hour='0', day_of_week='*')
+    }
 }
 
 if os.environ.get('VCAP_SERVICES'):

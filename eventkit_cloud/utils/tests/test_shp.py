@@ -5,22 +5,23 @@ import os
 from mock import Mock, patch
 
 from django.conf import settings
-from django.test import SimpleTestCase
+from django.test import TransactionTestCase
 
 from ..shp import GPKGToShp
 
 logger = logging.getLogger(__name__)
 
 
-class TestGPKGToShp(SimpleTestCase):
+class TestGPKGToShp(TransactionTestCase):
 
     def setUp(self, ):
         self.path = settings.ABS_PATH()
 
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_convert(self, popen, pipe, exists):
+    def test_convert(self, popen, pipe, exists, export_task):
         gpkg = self.path + '/utils/tests/files/test.gpkg'
         shapefile = self.path + '/utils/tests/files/shp'
         cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8".format(shapefile, gpkg)
@@ -33,16 +34,18 @@ class TestGPKGToShp(SimpleTestCase):
         s2s = GPKGToShp(gpkg=gpkg, shapefile=shapefile,
                           zipped=False, debug=False)
         out = s2s.convert()
+        export_task.assert_called_once()
         exists.assert_called_once_with(gpkg)
         popen.assert_called_once_with(cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)
         self.assertEquals(out, shapefile)
 
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('shutil.rmtree')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_zip_img_file(self, popen, pipe, rmtree, exists):
+    def test_zip_img_file(self, popen, pipe, rmtree, exists, export_task):
         gpkg = self.path + '/utils/tests/files/test.gpkg'
         shapefile = self.path + '/utils/tests/files/shp'
         zipfile = self.path + '/utils/tests/files/shp.zip'
@@ -56,6 +59,7 @@ class TestGPKGToShp(SimpleTestCase):
                           zipped=False, debug=False)
         result = s2s._zip_shape_dir()
         exists.assert_called_once_with(gpkg)
+        export_task.assert_called_once()
         # test subprocess getting called with correct command
         popen.assert_called_once_with(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)

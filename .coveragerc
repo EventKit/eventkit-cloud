@@ -1,5 +1,5 @@
 [run]
-omit = */migrations/*, api/renderers.py, */__init__.py, */admin.py
+omit = */migrations/*, api/renderers.py, */__init__.py, */admin.py, */scripts/*, */management/commands/*
 source = eventkit_cloud
 
 [report]

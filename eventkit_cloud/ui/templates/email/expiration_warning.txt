@@ -1,0 +1,11 @@
+{% load i18n %}
+{% trans 'This is an automated email from the Eventkit Team.' %}
+
+{% trans 'Your Export Run is set to expire on' %} {{ date }}/{% trans '.' %}
+
+{% trans 'If you would like to reset the expiration countdown timer to 2 weeks, please go to the export summary page and click "Reset Expiration" ' %} {{ url }}
+{% trans 'If you require an expiration of  more than 2 weeks, please contact the administrator.' %}
+
+{% trans 'Thank you for using Eventkit.' %}
+
+{% trans 'Eventkit Team' %}

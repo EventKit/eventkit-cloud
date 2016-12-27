@@ -3,22 +3,22 @@ import logging
 import os
 from mock import Mock, patch
 from django.conf import settings
-from django.test import SimpleTestCase
+from django.test import TransactionTestCase
 from string import Template
 from ..wfs import WFSToGPKG
 
 logger = logging.getLogger(__name__)
 
 
-class TestWFSToGPKG(SimpleTestCase):
+class TestWFSToGPKG(TransactionTestCase):
     def setUp(self, ):
         self.path = settings.ABS_PATH()
 
-
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('eventkit_cloud.utils.wfs.os.path.exists')
     @patch('eventkit_cloud.utils.wfs.subprocess.PIPE')
     @patch('eventkit_cloud.utils.wfs.subprocess.Popen')
-    def test_create_convert(self, popen, pipe, exists):
+    def test_create_convert(self, popen, pipe, exists, export_task):
         gpkg = '/path/to/sqlite.gpkg'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
@@ -40,6 +40,7 @@ class TestWFSToGPKG(SimpleTestCase):
                           name=name,
                           service_type=None)
         out = w2g.convert()
+        export_task.assert_called_once()
         exists.assert_called_once_with(os.path.dirname(gpkg))
         popen.assert_called_once_with(cmd, shell=True, executable='/bin/sh',
                                 stdout=pipe, stderr=pipe)

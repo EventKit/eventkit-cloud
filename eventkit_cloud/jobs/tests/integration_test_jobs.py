@@ -7,8 +7,8 @@ import shutil
 import sqlite3
 from time import sleep
 
-from eventkit_cloud.tasks.util_tasks import RevokeTask
-from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
+from ...tasks.models import ExportTask, ExportProviderTask
+from ...tasks.export_tasks import TaskStates
 from ..models import ExportProvider, ExportProviderType, Job
 
 from django.conf import settings
@@ -65,50 +65,53 @@ class TestJob(TestCase):
         self.assertTrue(self.run_job(job_data))
 
     def test_cancel_job(self):
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2], "ymax": self.bbox[3],
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "OpenStreetMap Data (Generic)",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "OpenStreetMap Data",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wmts",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arc-raster",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-wfs",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                                        {"provider": "eventkit-integration-test-arc-fs",
-                                                                         "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
-        self.run_job(job_data, wait_for_run=False)
 
-        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
-        self.orm_run = self.orm_job.runs.last()
+        #update provider to ensure it runs long enough to cancel...
+        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        original_level_to = export_provider.level_to
+        export_provider.level_to = 19
+        export_provider.save()
 
-        pt = self.orm_run.provider_tasks.last()
-        pt_id = pt.id
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "eventkit-integration-test-wms", "description": "Test Description",
+                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
+                    "ymax": self.bbox[3], "tags": [],
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
 
-        et = pt.tasks.last()
+        job_json = self.run_job(job_data, wait_for_run=False)
 
-        provider_url = self.base_url + reverse('api:provider_tasks-list') + '/%s' % (pt.uid,)
+        run_json = self.wait_for_task_pickup(job_uid=job_json.get('uid'))
+
+        export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
+
+        self.client.get(self.create_export_url) 
+        self.csrftoken = self.client.cookies['csrftoken']
+
+        provider_url = self.base_url + reverse('api:provider_tasks-list') + '/{0}'.format(export_provider_task.uid)
         response = self.client.patch(provider_url,
-                                    json={"csrfmiddlewaretoken": self.csrftoken},
                                     headers={'X-CSRFToken': self.csrftoken,
-                                             'Referer': self.create_export_url})
+                                             'referer': self.create_export_url})
         self.assertEqual(200, response.status_code)
         self.assertEqual({'success': True}, json.loads(response.content))
-        self.orm_job = Job.objects.get(uid=self.job_json.get('uid'))
+        self.orm_job = Job.objects.get(uid=job_json.get('uid'))
         self.orm_run = self.orm_job.runs.last()
 
-        pt = ExportProviderTask.objects.get(id=pt_id)
+        pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
 
-        self.assertTrue(all(_.status == 'CANCELLED' for _ in pt.tasks.all()))
-        self.assertEqual(pt.status, 'CANCELLED')
+        self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
+        self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
         self.wait_for_run(self.orm_job.uid)
         self.orm_run = self.orm_job.runs.last()
-        self.assertEqual(self.orm_run.status, 'COMPLETED')
+        self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
+
+        # update provider to original setting.
+        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        export_provider.level_to = original_level_to
+        export_provider.save()
+
+        delete_response = self.client.delete(self.jobs_url + '/' + job_json.get('uid'),
+                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+        self.assertTrue(delete_response)
 
     def test_osm_geopackage_thematic(self):
         """
@@ -374,10 +377,10 @@ class TestJob(TestCase):
                                              'Referer': self.create_export_url})
 
         self.assertEquals(response.status_code, 202)
-        self.job_json = job = response.json()
+        job = response.json()
 
         if not wait_for_run:
-             return
+            return job
 
         run = self.wait_for_run(job.get('uid'))
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
@@ -393,7 +396,9 @@ class TestJob(TestCase):
                 'eventkit',
                 date
             ))
-        self.assertEquals(test_zip_url, run['zipfile_url'])
+
+        if not getattr(settings, "USE_S3", False):
+            self.assertEquals(test_zip_url, run['zipfile_url'])
 
         assert '.zip' in orm_run.zipfile_url
 
@@ -409,20 +414,41 @@ class TestJob(TestCase):
         delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
+        for provider_task in run.get('provider_tasks'):
+            geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
+            if not geopackage_url:
+                continue
+            geopackage_file = self.download_file(geopackage_url)
+            self.assertNotTrue(os.path.isfile(geopackage_file))
+            if os.path.isfile(geopackage_file):
+                os.remove(geopackage_file)
         return True
+
+    def wait_for_task_pickup(self, job_uid):
+        picked_up = False
+        response = None
+        while not picked_up:
+            sleep(1)
+            response = self.client.get(
+                self.runs_url,
+                params={"job_uid": job_uid},
+                headers={'X-CSRFToken': self.csrftoken}).json()
+            if response[0].get('provider_tasks'):
+                picked_up = True
+        return response[0]
 
     def wait_for_run(self, job_uid):
         finished = False
         response = None
         while not finished:
-            sleep(5)
+            sleep(1)
             response = self.client.get(
                 self.runs_url,
                 params={"job_uid": job_uid},
                 headers={'X-CSRFToken': self.csrftoken
                          }).json()
             status = response[0].get('status')
-            if status == "COMPLETED" or status == "INCOMPLETE":
+            if status in [TaskStates.COMPLETED.value, TaskStates.INCOMPLETE.value, TaskStates.CANCELED.value]:
                 finished = True
         return response[0]
 
