@@ -24,8 +24,8 @@ from ..export_tasks import (
     GeneratePresetTask, KmlExportTask, OSMConfTask,
     ExternalRasterServiceExportTask, GeopackageExportTask,
     OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
-    ShpExportTask, ArcGISFeatureServiceExportTask,
-    get_progress_tracker, ZipFileTask, PickUpRunTask, CancelExportProviderTask, KillTask, TaskStates
+    ShpExportTask, ArcGISFeatureServiceExportTask, update_progress,
+    ZipFileTask, PickUpRunTask, CancelExportProviderTask, KillTask, TaskStates
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -495,7 +495,7 @@ class TestExportTasks(ExportTaskBase):
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEquals(TaskStates.INCOMPLETE.value, run.status)
 
-    def test_progress_tracker(self):
+    def test_update_progress(self):
         export_provider_task = ExportProviderTask.objects.create(
             run=self.run,
             name='test_provider_task'
@@ -505,9 +505,8 @@ class TestExportTasks(ExportTaskBase):
             status=TaskStates.PENDING.value,
             name="test_task"
         ).uid
-        progress_tracker = get_progress_tracker(task_uid=saved_export_task_uid)
         estimated = timezone.now()
-        progress_tracker(progress=50, estimated_finish=estimated)
+        update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
         export_task = ExportTask.objects.get(uid=saved_export_task_uid)
         self.assertEquals(export_task.progress, 50)
         self.assertEquals(export_task.estimated_finish, estimated)

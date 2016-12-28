@@ -60,12 +60,10 @@ class TestOverpass(TestCase):
 
     @patch('eventkit_cloud.utils.overpass.requests.post')
     def test_run_query(self, mock_post):
-        progress_tracker = MagicMock(progress=None, estimated_finish=None)
         op = Overpass(
             stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters,
-            progress_tracker=progress_tracker
+            filters=self.job.filters
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'

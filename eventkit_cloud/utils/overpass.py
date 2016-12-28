@@ -24,8 +24,7 @@ class Overpass(object):
     and filtered by the provided tags.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, progress_tracker=None,
-                 debug=False, task_uid=None):
+    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False, task_uid=None):
         """
         Initialize the Overpass utility.
 
@@ -44,7 +43,6 @@ class Overpass(object):
         self.stage_dir = stage_dir
         self.job_name = job_name
         self.filters = filters
-        self.progress_tracker = progress_tracker
         self.debug = debug
         self.task_uid = task_uid
         if url:
@@ -82,6 +80,8 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
+        from ..tasks.export_tasks import update_progress
+
         q = self.get_query()
         logger.debug(q)
         if self.debug:
@@ -89,7 +89,7 @@ class Overpass(object):
         try:
             req = requests.post(self.url, data=q, stream=True)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
-            self.progress_tracker(50)
+            update_progress(self.task_uid, progress=50)
             try:
                 size = int(req.headers.get('content-length'))
             except (ValueError, TypeError):
@@ -98,13 +98,13 @@ class Overpass(object):
                 else:
                     raise Exception("Overpass Query failed to return any data")
             inflated_size = size * 2
-            CHUNK = 1024 * 1024 * 5  # 5MB chunks
+            CHUNK = 1024 * 1024 * 2  # 2MB chunks
             with open(self.raw_osm, 'wb') as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
                     size += CHUNK
                     # Because progress is already at 50, we need to make this part start at 50 percent
-                    self.progress_tracker(progress=(float(size) / float(inflated_size)) * 100)
+                    update_progress(self.task_uid, progress=(float(size) / float(inflated_size)) * 100)
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
@@ -119,7 +119,7 @@ class Overpass(object):
 
         See jobs.models.Job.filters
         """
-        if (self.filters and len(self.filters) > 0):
+        if self.filters and len(self.filters) > 0:
             self.filter_params = os.path.join(self.stage_dir, 'filters.txt')
             try:
                 with open(self.filter_params, 'w') as f:

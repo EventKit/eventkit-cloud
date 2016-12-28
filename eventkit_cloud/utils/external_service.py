@@ -24,21 +24,22 @@ logger = logging.getLogger(__name__)
 
 
 class CustomLogger(ProgressLog):
-    def __init__(self, progress_tracker=None, *args, **kwargs):
-        self.progress_tracker = progress_tracker
+    def __init__(self, task_uid=None, *args, **kwargs):
+        self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
         # Log mapproxy status but allow a setting to reduce database writes.
         self.log_step_step = 1
         self.log_step_counter = self.log_step_step
 
     def log_step(self, progress):
+        from ..tasks.export_tasks import update_progress
         if progress.eta.eta():
-            if self.progress_tracker:
+            if self.task_uid:
                 if self.log_step_counter == 0:
-                    self.progress_tracker(progress=progress.progress * 100,
-                                          estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
+                    update_progress(self.task_uid, progress=progress.progress * 100,
+                                    estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
                     self.log_step_counter = self.log_step_step
-                self.log_step_counter = self.log_step_counter - 1
+                self.log_step_counter -= 1
         super(CustomLogger, self).log_step(progress)
 
 
@@ -48,7 +49,7 @@ class ExternalRasterServiceToGeopackage(object):
     """
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None, service_type=None, progress_tracker=None, task_uid=None):
+                 level_from=None, level_to=None, service_type=None, task_uid=None):
         """
         Initialize the ExternalServiceToGeopackage utility.
 
@@ -66,7 +67,6 @@ class ExternalRasterServiceToGeopackage(object):
         self.layer = layer
         self.config = config
         self.service_type = service_type
-        self.progress_tracker = progress_tracker
         self.task_uid = task_uid
 
     def convert(self, ):
@@ -108,7 +108,7 @@ class ExternalRasterServiceToGeopackage(object):
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
         logger.info("Beginning seeding to {}".format(self.gpkgfile))
         try:
-            progress_logger = CustomLogger(verbose=True, progress_tracker=self.progress_tracker)
+            progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
                         kwargs={"tasks": seed_configuration.seeds(['seed']),

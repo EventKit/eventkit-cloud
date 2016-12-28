@@ -239,10 +239,9 @@ class OverpassQueryTask(ExportTask):
         Runs the query and returns the path to the filtered osm file.
         """
         self.update_task_state(task_uid=task_uid)
-        progress_tracker = get_progress_tracker(task_uid=task_uid)
         op = overpass.Overpass(
             bbox=bbox, stage_dir=stage_dir,
-            job_name=job_name, filters=filters, progress_tracker=progress_tracker, task_uid=task_uid
+            job_name=job_name, filters=filters, task_uid=task_uid
         )
         op.run_query()  # run the query
         filtered_osm = op.filter()  # filter the results
@@ -500,13 +499,11 @@ class ExternalRasterServiceExportTask(ExportTask):
             service_url=None, level_from=None, level_to=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        progress_tracker = get_progress_tracker(task_uid=task_uid)
         try:
             w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
                                                                      service_url=service_url, name=name, layer=layer,
                                                                      config=config, level_from=level_from,
                                                                      level_to=level_to, service_type=service_type,
-                                                                     progress_tracker=progress_tracker,
                                                                      task_uid=task_uid)
             out = w2g.convert()
             return {'result': out}
@@ -916,26 +913,25 @@ class KillTask(Task):
         #         logger.info("{0} PID does not exist.")
 
 
-def get_progress_tracker(task_uid=None):
+def update_progress(task_uid, progress=None, estimated_finish=None):
     """
-    Takes a task uid to create a closure that can be updated to change the status in the ExportTask object.
-    :param task_uid: A uid to reference the ExportTask.
-    :return: A function which can be called to update the progress on an ExportTask.
-    """
+       Updates the progress of the ExportTask from the given task_uid.
+       :param task_uid: A uid to reference the ExportTask.
+       :return: A function which can be called to update the progress on an ExportTask.
+       """
+
     from eventkit_cloud.tasks.models import ExportTask
-    if not task_uid:
+
+    if not estimated_finish and not progress:
         return
-
-    def progress_tracker(progress=None, estimated_finish=None):
-        if not estimated_finish and not progress:
-            return
-        if progress > 100:
-            progress = 100
+    if progress > 100:
+        progress = 100
+    try:
         export_task = ExportTask.objects.get(uid=task_uid)
-        if progress:
-            export_task.progress = progress
-        if estimated_finish:
-            export_task.estimated_finish = estimated_finish
-        export_task.save()
-
-    return progress_tracker
+    except ExportTask.DoesNotExist:
+        return
+    if progress:
+        export_task.progress = progress
+    if estimated_finish:
+        export_task.estimated_finish = estimated_finish
+    export_task.save()
