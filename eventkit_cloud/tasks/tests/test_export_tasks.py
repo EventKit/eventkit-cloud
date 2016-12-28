@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-# test cases for HOT Export Tasks
+# test cases for Export Tasks
 import cPickle
 import logging
 import os
 import sys
 import uuid
 
-from celery.datastructures import ExceptionInfo
-import celery.states
+from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -15,7 +14,7 @@ from django.test import TestCase
 from django.utils import timezone as real_timezone
 from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch
-import signal
+
 
 from ...jobs import presets
 from ...jobs.models import Job, Tag
