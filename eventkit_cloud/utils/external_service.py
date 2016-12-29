@@ -111,8 +111,6 @@ class ExternalRasterServiceToGeopackage(object):
                         kwargs={"tasks": seed_configuration.seeds(['seed']),
                                 "concurrency": 1,
                                 "progress_logger": progress_logger})
-        except OperationalError as oe:
-            raise oe
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)
