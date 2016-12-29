@@ -495,7 +495,9 @@ class TestExportTasks(ExportTaskBase):
         run = ExportRun.objects.get(uid=run_uid)
         self.assertEquals(TaskStates.INCOMPLETE.value, run.status)
 
-    def test_update_progress(self):
+    @patch('django.db.connection.close')
+    @patch('eventkit_cloud.tasks.models.ExportTask')
+    def test_update_progress(self, export_task, mock_close):
         export_provider_task = ExportProviderTask.objects.create(
             run=self.run,
             name='test_provider_task'
@@ -506,10 +508,12 @@ class TestExportTasks(ExportTaskBase):
             name="test_task"
         ).uid
         estimated = timezone.now()
+        export_task_instance = Mock(progress=0, estimated_finish=None)
+        export_task.objects.get.return_value = export_task_instance
         update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
-        export_task = ExportTask.objects.get(uid=saved_export_task_uid)
-        self.assertEquals(export_task.progress, 50)
-        self.assertEquals(export_task.estimated_finish, estimated)
+        mock_close.assert_called_once()
+        self.assertEquals(export_task_instance.progress, 50)
+        self.assertEquals(export_task_instance.estimated_finish, estimated)
 
     @patch('eventkit_cloud.tasks.export_tasks.KillTask')
     def test_cancel_task(self, kill_task):
