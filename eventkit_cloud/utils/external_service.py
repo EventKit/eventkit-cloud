@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 from datetime import datetime
-from time import sleep
 from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError, ConfigurationError
@@ -11,14 +10,12 @@ from mapproxy.config.spec import validate_options
 from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
-from mapproxy.seed import util
+from billiard.util import register_after_fork
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
-import os
-from django.db import connections
+from django.db import connection, connections, OperationalError
 from ..tasks.task_process import TaskProcess
-from ..tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +111,8 @@ class ExternalRasterServiceToGeopackage(object):
                         kwargs={"tasks": seed_configuration.seeds(['seed']),
                                 "concurrency": 1,
                                 "progress_logger": progress_logger})
+        except OperationalError as oe:
+            raise oe
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)

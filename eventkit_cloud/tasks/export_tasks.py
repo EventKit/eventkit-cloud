@@ -920,13 +920,17 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
        :return: A function which can be called to update the progress on an ExportTask.
        """
 
-    from eventkit_cloud.tasks.models import ExportTask
+    from ..tasks.models import ExportTask
+    from django.db import connection
 
     if not estimated_finish and not progress:
         return
     if progress > 100:
         progress = 100
     try:
+        # We need to close the existing connection because the logger could be using a forked process which,
+        # will be invalid and throw an error.
+        connection.close()
         export_task = ExportTask.objects.get(uid=task_uid)
     except ExportTask.DoesNotExist:
         return
