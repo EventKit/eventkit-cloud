@@ -32,7 +32,7 @@ if __name__ == "__main__":
             cov.html_report(directory='./coverage')
 
             if os.getenv("TRAVIS"):
-                coveralls = os.path.join(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit')), '.virtualenvs/eventkit/bin/coveralls')
+                coveralls = os.path.join(os.path.dirname(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit'))), '.virtualenvs/eventkit/bin/coveralls')
                 subprocess.call([coveralls])
 
     else:
