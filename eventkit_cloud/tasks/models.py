@@ -61,6 +61,8 @@ class ExportRun(RunModelMixin):
         db_index=True,
         default=''
     )
+    expiration = models.DateTimeField(default=timezone.now, editable=True)
+    notified = models.DateTimeField(default=None, blank=True, null=True)
 
     class Meta:
         managed = True

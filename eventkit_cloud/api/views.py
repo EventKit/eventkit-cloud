@@ -8,6 +8,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
@@ -383,7 +384,7 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = RegionMask.objects.all()
 
 
-class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportRunViewSet(viewsets.ModelViewSet):
     """
     ###Export Run API Endpoint.
 
@@ -439,6 +440,20 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, uid=None, *args, **kwargs):
+        field = self.request.query_params.get('field', None)
+        job_uid = self.request.query_params.get('job_uid', None)
+        if field == 'expiration' and job_uid:
+            updated_time = timezone.now() + timezone.timedelta(days=14)
+            run = ExportRun.objects.get(job__uid=job_uid)
+            if not run.expiration > updated_time:
+                run.expiration = updated_time
+                run.save()
+            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ExportConfigViewSet(viewsets.ModelViewSet):

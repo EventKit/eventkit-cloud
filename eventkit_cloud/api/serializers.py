@@ -303,12 +303,13 @@ class ExportRunSerializer(serializers.ModelSerializer):
     duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField
 
     class Meta:
         model = ExportRun
         fields = (
             'uid', 'url', 'started_at', 'finished_at', 'duration', 'user',
-            'status', 'job', 'provider_tasks', 'zipfile_url'
+            'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration'
         )
 
     @staticmethod

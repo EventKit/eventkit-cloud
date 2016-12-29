@@ -40,6 +40,8 @@ class TestExportRun(TestCase):
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertIsNotNone(saved_run)
         self.assertEqual(run, saved_run)
+        self.assertIsNone(run.notified)
+        self.assertIsNotNone(run.expiration)
         self.assertIsNone(saved_run.zipfile_url)
 
     def test_get_tasks_for_run(self, ):
