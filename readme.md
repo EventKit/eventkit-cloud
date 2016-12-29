@@ -47,6 +47,18 @@ Then open a browser and navigate to http://cloud.eventkit.dev
 ### Settings
 The following environment variables can be used to adjust how eventkit_cloud is configured.
 
+#### Site Name
+
+You can set the hostname that the web server will respond and properly authenticate using `SITE_NAME`.
+
+**In development, please make sure you have SITE_NAME environment variable set to `cloud.eventkit.dev` 
+in your shell or when you invoke `docker-compose up`.  If you are experiencing 302s when you attempt
+login this is likely the culprit**
+
+```
+SITE_NAME='cloud.eventkit.dev'
+```
+
 #### S3 Storage
 If you want your export files to be stored on S3 rather than locally add:
 <pre>USE_S3=True
