@@ -41,7 +41,7 @@ RUN useradd -g eventkit eventkit
 # Python dependecies needed for python-ldap
 RUN apt-get update && apt-get -y install python-pip libsasl2-dev python-dev libldap2-dev libssl-dev
 RUN pip install virtualenv
-RUN virtualenv /var/lib/eventkit/.virtualenvs/eventkit
+RUN virtualenv /var/lib/.virtualenvs/eventkit
 
 RUN apt-get -y install git libpq-dev python-dev gcc g++ software-properties-common
 RUN git clone https://gitlab.com/osm-c-tools/osmctools.git /var/lib/eventkit/osmctools
@@ -67,8 +67,8 @@ COPY ./.coveragerc /var/lib/eventkit/.coveragerc
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
-  /var/lib/eventkit/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements.txt &&\
-  /var/lib/eventkit/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements-dev.txt
+  /var/lib/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements.txt &&\
+  /var/lib/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements-dev.txt
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download

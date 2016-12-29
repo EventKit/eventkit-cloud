@@ -92,6 +92,7 @@ core/settings/secret.py
 *.iml
 
 exports_download
+exports_stage
 *~
 
 coverage
