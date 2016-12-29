@@ -119,6 +119,6 @@ Sets request timeout for overpass queries.
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 """
 
-OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIsMEOUT', 1600)  # query timeout in seconds
+OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
 
 USE_DISK_CACHE = True
