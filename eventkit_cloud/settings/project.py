@@ -63,7 +63,7 @@ OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/int
 Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
-JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
+JOB_MAX_EXTENT = os.getenv('JOB_MAX_EXTENT', 2500000)  # default export max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
@@ -92,6 +92,13 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'eventkit.team@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', None)
+
+if EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 EMAIL_USE_TLS = True
 
 """
@@ -102,7 +109,7 @@ Sets the max ram allowed for overpass query
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
 """
 
-OVERPASS_MAX_SIZE = 2147483648  # 2GB
+OVERPASS_MAX_SIZE = os.getenv('OVERPASS_MAX_SIZE', 2147483648)  # 2GB
 
 """
 Overpass timeout setting
@@ -112,6 +119,6 @@ Sets request timeout for overpass queries.
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 """
 
-OVERPASS_TIMEOUT = 1600  # query timeout in seconds
+OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
 
 USE_DISK_CACHE = True

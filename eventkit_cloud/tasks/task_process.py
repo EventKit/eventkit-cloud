@@ -1,6 +1,7 @@
 from billiard import Process
 import subprocess
 from inspect import getcallargs
+from django.db import connection
 
 import logging
 
@@ -34,6 +35,9 @@ class TaskProcess(object):
             self.store_pid(pid=proc.pid)
             self.exitcode = proc.wait()
 
+        # We need to close the existing connection because the logger could be using a forked process which,
+        # will be invalid and throw an error.
+        connection.close()
         export_task = ExportTask.objects.get(uid=self.task_uid)
         if export_task.status == TaskStates.CANCELED.value:
             from ..tasks.exceptions import CancelException
