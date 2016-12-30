@@ -1,12 +1,12 @@
 exports = {};
-exports.detail = (function(){
+exports.detail = (function () {
     var map;
     var job_extents_source;
 
     return {
-        init: function(){
+        init: function () {
             parts = window.location.href.split('/');
-            var job_uid = parts[parts.length -2];
+            var job_uid = parts[parts.length - 2];
             exports.detail.job_uid = job_uid;
             exports.detail.timer = false;
             exports.detail.run_ready = false;
@@ -21,7 +21,7 @@ exports.detail = (function(){
     /**
      * Initialize the export overview map.
      */
-    function initMap(){
+    function initMap() {
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
         });
@@ -31,7 +31,7 @@ exports.detail = (function(){
             layers: [osm],
             view: new ol.View({
                 projection: 'EPSG:3857',
-                extent: [-20037508.34,-20037508.34, 20037508.34, 20037508.34],
+                extent: [-20037508.34, -20037508.34, 20037508.34, 20037508.34],
                 center: [0, 0],
                 zoom: 2,
                 minZoom: 2,
@@ -58,9 +58,9 @@ exports.detail = (function(){
     /**
      * Loads the job details.
      */
-    function loadJobDetail(){
+    function loadJobDetail() {
         var job_uid = exports.detail.job_uid;
-        $.getJSON(Config.JOBS_URL + '/' + job_uid, function(data){
+        $.getJSON(Config.JOBS_URL + '/' + job_uid, function (data) {
             // keep a reference to the job..
             exports.detail.job = data;
             $('#uid').html(data.uid);
@@ -78,29 +78,29 @@ exports.detail = (function(){
             var created = moment(data.created_at).format('h:mm:ss a, MMMM Do YYYY');
             $('#created').html(created);
             var formats = data.exports;
-            for (i = 0; i < formats[0].formats.length; i++){
+            for (i = 0; i < formats[0].formats.length; i++) {
                 $('#formats').append(formats[0].formats[i].name + '<br/>');
             }
 
             // features
             var model = data.tags.length > 0 ? data.tags[0].data_model : null;
 
-            switch (model){
+            switch (model) {
                 case 'HDM':
-                    $('#osm-feature-tree').css('display','none');
-                    $('#hdm-feature-tree').css('display','block');
+                    $('#osm-feature-tree').css('display', 'none');
+                    $('#hdm-feature-tree').css('display', 'block');
                     $('#filelist').css('display', 'none');
                     initHDMFeatureTree(data.tags);
                     break;
                 case 'OSM':
-                    $('#hdm-feature-tree').css('display','none');
-                    $('#osm-feature-tree').css('display','block');
+                    $('#hdm-feature-tree').css('display', 'none');
+                    $('#osm-feature-tree').css('display', 'block');
                     $('#filelist').css('display', 'none');
                     initOSMFeatureTree(data.tags);
                     break;
                 case 'PRESET':
-                    $('#hdm-feature-tree').css('display','none');
-                    $('#osm-feature-tree').css('display','none');
+                    $('#hdm-feature-tree').css('display', 'none');
+                    $('#osm-feature-tree').css('display', 'none');
                     $('#filelist').css('display', 'block');
                     initPresetList(data.configurations);
                     break;
@@ -136,7 +136,7 @@ exports.detail = (function(){
             buildDeleteDialog();
             buildFeatureDialog();
 
-        }).fail(function(jqxhr, textStatus, error) {
+        }).fail(function (jqxhr, textStatus, error) {
             if (jqxhr.status == 404) {
                 $('#details-row').css('display', 'none');
                 // display error info..
@@ -145,18 +145,18 @@ exports.detail = (function(){
         });
 
         // handle re-run click events..
-        $('button#rerun').bind('click', function(e){
+        $('button#rerun').bind('click', function (e) {
             $(this).popover('hide');
             $.ajax({
                 cache: false,
                 url: Config.RERUN_URL + exports.detail.job_uid,
-                success: function(data){
+                success: function (data) {
                     // initialize the submitted run panel immediately
                     //initSubmittedRunPanel([data]);
                     // then start the check interval..
                     startRunCheckInterval();
                 },
-                error: function(jqXHR, textStatus, errorThrown){
+                error: function (jqXHR, textStatus, errorThrown) {
                     console.log(jqXHR, textStatus, errorThrown);
                     if (jqXHR.status == 500 || jqXHR.status == 400) {
                         window.location.href = Config.CREATE_ERROR_URL;
@@ -166,15 +166,60 @@ exports.detail = (function(){
         });
 
         // handle clone event
-        $('button#clone').bind('click', function(e){
+        $('button#clone').bind('click', function (e) {
             window.location.href = '/exports/clone/' + exports.detail.job_uid;
         });
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+
+        $('button#expiration').bind('click', function(e){
+            $.ajax({
+                cache: false,
+                url: Config.EXPORT_RUN_URL + exports.detail.job_uid + '&field=expiration',
+                method: 'patch',
+                // data: {'field': 'expiration'},
+                // dataType: 'json',
+                cache: false,
+                success: function(data){
+                    console.log(data);
+                    var expiration = moment(data['expiration']).format('h:mm:ss a, MMMM Do YYYY');
+                    $('div').find('#expiration_time').text(expiration);
+                }
+            })
+        });
     }
-    function setProgress(progress, uid)
-    {
+
+    function setProgress(progress, uid) {
         $("#progressContainer").html("");
-        var progressBarWidth =$("#progressContainer"+uid).width() * (progress/ 100);
-        $("#progressbar"+uid).width(progressBarWidth).html(progress + "% ");
+        var progressBarWidth = $("#progressContainer" + uid).width() * (progress / 100);
+        $("#progressbar" + uid).width(progressBarWidth).html(progress + "% ");
 
 
     }
@@ -186,7 +231,7 @@ exports.detail = (function(){
      * Parameters:
      * expand_first {Object} - whether to expand the first completed run.
      */
-    function loadCompletedRunDetails(expand_first){
+    function loadCompletedRunDetails(expand_first) {
         var job_uid = exports.detail.job_uid;
         var $runPanel = $('#completed_runs > .panel-group');
         var url = Config.RUNS_URL + '?job_uid=' + job_uid;
@@ -194,14 +239,14 @@ exports.detail = (function(){
             cache: false,
             url: url,
             dataType: 'json',
-            success: function(data){
+            success: function (data) {
                 $runPanel.empty();
                 // hide the submitted run panel
                 if (!exports.detail.timer) {
                     $('#submitted_runs > .panel-group').empty();
                     $('#submitted_runs').css('display', 'none');
                 }
-                $.each(data, function(index, run) {
+                $.each(data, function (index, run) {
                     if (run.status == 'SUBMITTED') {
                         return;
                     } // ignore submitted runs
@@ -222,12 +267,14 @@ exports.detail = (function(){
                         default:
                             break;
                     }
+                    var expiration = moment(run.expiration).format('h:mm:ss a, MMMM Do YYYY');
                     var expanded = !exports.detail.timer && index === 0 ? 'in' : '';
                     var context = {
                         'run_uid': run.uid, 'status': run.status, 'user': run.user,
                         'started': started, 'finished': finished,
                         'duration': duration, 'status_class': status_class,
-                        'expanded': expanded
+                        'expanded': expanded,
+                        'expiration': expiration
                     };
                     var template = run.status == 'COMPLETED' || run.status == 'INCOMPLETE' ? getCompletedRunTemplate() : getFailedRunTemplate();
                     var html = template(context);
@@ -265,14 +312,13 @@ exports.detail = (function(){
                                 }
                             }
                         });
-                        taskDiv+=('</table></div>');
+                        taskDiv += ('</table></div>');
                         $(taskDiv).appendTo('#providers');
                         $providersDiv.append('</table>')
 
 
                     });
-                    if(run.zipfile_url)
-                    {
+                    if (run.zipfile_url) {
                         $zipFiletr = $('tr#zipfile_tr');
                         $zipFiletr.css('display', 'table-row');
                         $zipFileDiv = $('div').find('#zipfile_div');
@@ -311,6 +357,7 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Started') + ' :</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Finished') + ':</strong></td><td><div id="finished">{{ finished }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
+                                                   <tr><td><strong>' + gettext('Expiration') + ':</strong></td><td><div id="expiration_time">{{ expiration }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Provider') + ':</strong></td><td> \
                                                         <div id="providers"> \
                                                         </div> \
@@ -362,6 +409,7 @@ exports.detail = (function(){
                                                    <tr><td><strong>' + gettext('Started') + ' :</strong></td><td><div id="started">{{ started }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Finished') + ':</strong></td><td><div id="finished">{{ finished }}</div></td></tr> \
                                                    <tr><td><strong>' + gettext('Duration') + ':</strong></td><td><div id="duration">{{ duration }}</div></td></tr> \
+                                                   <tr><td><strong>' + gettext('Expiration') + ':</strong></td><td><div id="expiration_time">{{ expiration }}</div></td></tr> \
                                                     <tr id="exceptions-{{ run_uid }}"><td><strong>' + gettext('Errors') + ':</strong></td><td> \
                                                         <div id="errors"> \
                                                             <table class="table table-condensed" width="100%"> \
@@ -381,19 +429,19 @@ exports.detail = (function(){
     }
 
 
-
     /**
      * Loads the job details.
      * This occurs initially on page load..
      */
-    function loadSubmittedRunDetails(){
+    function loadSubmittedRunDetails() {
         loadJobDetail();
+
         var job_uid = exports.detail.job_uid;
         $.ajax({
             cache: false,
             dataType: 'json',
             url: Config.RUNS_URL + '?status=SUBMITTED&job_uid=' + job_uid,
-            success: function(data){
+            success: function (data) {
                 if (data.length > 0) {
                     // initSubmittedRunPanel(data);
                     startRunCheckInterval();
@@ -405,9 +453,10 @@ exports.detail = (function(){
     /**
      * Initializes the submitted run panel.
      */
-    function initSubmittedRunPanel(data){
+    function initSubmittedRunPanel(data) {
         var $runPanel = $('#submitted_runs > .panel-group');
-        //$runPanel.empty();
+        // $runPanel.empty();
+        // $('#submitted_runs').empty()
         if (data.length > 0) {
             // display the submitted run
             $('#submitted_runs').css('display', 'block');
@@ -427,14 +476,16 @@ exports.detail = (function(){
             $('button#delete').prop('disabled', false);
             return;
         }
-        $.each(data, function(index, run){
+        $.each(data, function (index, run) {
             var started = moment(run.started_at).format('h:mm:ss a, MMMM Do YYYY');
             var duration = moment.duration(run.duration).humanize();
             var status_class = run.status === 'SUBMITTED' ? 'alert alert-info' : 'alert alert-warning';
             var expanded = index === 0 ? 'in' : ''; // collapse all for now..
-            var context = { 'run_uid': run.uid, 'status': run.status,
+            var context = {
+                'run_uid': run.uid, 'status': run.status,
                 'started': started, 'user': run.user, 'status_class': status_class,
-                'expanded': expanded};
+                'expanded': expanded
+            };
             var template = getSubmittedRunTemplate();
             var html = template(context);
             $runPanel.append(html);
@@ -446,11 +497,49 @@ exports.detail = (function(){
             $providersDiv = $('div#' + run.uid).find('#providers');
             var providers = run.provider_tasks;
             $.each(providers, function (i, provider) {
+                provider.run_uid = run.uid;
                 var name = provider.name;
-                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
-                // add task info
+                $providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong><i class="fa fa-times" style="color:red; float: right; cursor: pointer" id="cancel-' + provider.uid + '"/></td></tr>');
 
-                var taskDiv = '<div><table border=0 class="table table-condensed">';
+                // $("#cancel-" + provider.uid).click(function () {
+                //     $('<div title="Confirm Cancel">' +
+                //         '<p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span>' +
+                //         'Are you sure you want to cancel the task ' + name + ' ?</p></div>').dialog({
+                //         resizable: false,
+                //         height: "auto",
+                //         modal: true,
+                //         buttons: {
+                //             "Confirm": function () {
+                //                 $(this).dialog("close");
+                //             },
+                //             "Cancel": function () {
+                //                 $(this).dialog("close");
+                //             }
+                //         }
+                //     });
+                // });
+
+                var modalOpts = {
+                    keyboard: true,
+                    backdrop: 'static',
+                };
+
+                $("#cancel-" + provider.uid).bind('click', function (e) {
+                    // stop form getting posted..
+                    e.preventDefault();
+                    $(".cancel-modal-footer").html('<button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>' +
+                        '<button id="cancelConfirm" type="button" class="btn btn-danger">Confirm</button>')
+                    $("#cancelExportModal").modal(modalOpts, 'show');
+                    $(".cancel-modal-footer").on('click', "#cancelConfirm", function () {
+                        $("#cancelExportModal").modal('hide');
+                        cancelProvider(provider);
+                    });
+                });
+
+
+
+                // add task info
+                var taskDiv = '<div id="info-' + provider.uid + '"><table border=0 class="table table-condensed">';
                 var tasks = provider.tasks;
                 $.each(tasks, function (i, task) {
 
@@ -466,28 +555,88 @@ exports.detail = (function(){
 
                         if (status === 'PENDING' || status === 'RUNNING' || status === 'FAILED') {
                             cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
-
-                        }
-                        else {
+                            taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
+                        } else if (status === 'CANCELED'){
                             cls = status.toLowerCase();
-                            taskDiv+=('<tr class="' + cls + '" id="' + task.uid +'"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
-                            taskDiv += ('<tr id="bar' + task.uid +'"><td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td></tr>');
+                            taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td>' + descriptiveName + '</td><td>' + duration + '</td><td> -- </td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
+                            $("#cancel-" + provider.uid).removeClass("fa fa-times");
+                        } else {
+                            cls = status.toLowerCase();
+                            taskDiv += ('<tr class="' + cls + '" id="' + task.uid + '"><td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td></tr>');
+                            taskDiv += ('<tr id="bar' + task.uid + '"><td colspan="4"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td></tr>');
 
                         }
                     }
                 });
 
-                taskDiv+=('</table></div>');
+                taskDiv += ('</table></div>');
                 $(taskDiv).appendTo('#providers');
                 $providersDiv.append('</table>');
 
-                for (j = 0; j <= progressValue.length; j++)
-                {
-                    setProgress(progressValue[j],index[j])
+                for (j = 0; j <= progressValue.length; j++) {
+                    setProgress(progressValue[j], index[j])
                 }
             });
+        });
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    function cancelProvider(provider) {
+        var url = Config.PROVIDER_TAKS_URL + '/' + provider.uid;
+        $("#cancel-" + provider.uid).removeClass().addClass('fa fa-cog fa-spin');
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                }
+            }
+        });
+        $.ajax({
+            url: url,
+            data: {
+                'cancel': true,
+            },
+            dataType: 'json',
+            cache: false,
+            method: 'patch',
+            success: function () {
+                for (task in provider.tasks) {
+                    task.status = "CANCELING";
+                    var $runDiv = $('#' + provider.run_uid);
+                    var $tr = $runDiv.find('table').find('tr#' + task.uid);
+                    $("#cancel-" + provider.uid).removeClass('fa fa-cog fa-spin');
+                    $tr.addClass(status.toLowerCase());
+                    $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                    $barTr.html('');
+                }
+            },
+            failure: function () {
+                alert(provider.name + " could not be canceled at this time.");
+                $("#cancel-" + provider.uid).removeClass().addClass('fa fa-times');
+            }
         });
     }
 
@@ -536,7 +685,7 @@ exports.detail = (function(){
      *
      * data: the data to update
      */
-    function updateSubmittedRunDetails(data){
+    function updateSubmittedRunDetails(data) {
 
         if (data.length > 0) {
             var run = data[0];
@@ -553,6 +702,7 @@ exports.detail = (function(){
             $.each(providers, function (i, provider) {
                 var provideruid = provider.uid;
                 var name = provider.name;
+                provider.run_uid = run.uid;
 
                 //$providersDiv.append('<table width="100%"><tr id="' + provider.uid + '"><td><strong>' + name + '</strong></td></tr>');
                 // add task info
@@ -560,7 +710,7 @@ exports.detail = (function(){
 
                 var tasks = provider.tasks;
                 var $tr = $runDiv.find('table').find('tr#' + provideruid);
-                $tr.html('<td>' + name + '</td></tr>');
+                // $tr.html('<td>' + name + '</td></tr>');
 
                 $.each(tasks, function (i, task) {
 
@@ -578,41 +728,38 @@ exports.detail = (function(){
                         var $tr = $runDiv.find('table').find('tr#' + uid);
                         var $barTr = $runDiv.find('table').find('tr#bar' + uid);
                         var estimatedFinish = "";
-                        
-                        if (task.estimated_finish == null){
+
+                        if (task.estimated_finish == null) {
                             estimatedFinish = " -- -- --";
                         }
-                        else{
+                        else {
                             estimatedFinish = new Date(task.estimated_finish);
-                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth()+1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
+                            estimatedFinish = (estimatedFinish.getFullYear() + "-" + (estimatedFinish.getMonth() + 1)) + "-" + estimatedFinish.getDate() + " " + estimatedFinish.getHours() + ":" + estimatedFinish.getMinutes();
                         }
 
-                        if (status === 'PENDING' ||  status === 'FAILED') {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                        $tr.removeClass();
+                        $tr.addClass(status.toLowerCase());
+                        if (status === 'PENDING'){
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
                             $barTr.html('');
                             //$barTr.html('<td colspan="4"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td>')
-                        }
-                            else if (status === 'RUNNING' ){
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                        } else if (status === 'RUNNING') {
                             $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                            $barTr.html('<td colspan="3"><div id="progressContainer'+task.uid+'" class="progressContainer"><div id="progressbar'+task.uid+'" class="progressbar"></div></div></td><td align="right">Est. Finish: '+estimatedFinish+'  </td>')
-
-                        }
-                        else {
-                            $tr.removeClass();
-                            $tr.addClass(status.toLowerCase());
+                            $barTr.html('<td colspan="3"><div id="progressContainer' + task.uid + '" class="progressContainer"><div id="progressbar' + task.uid + '" class="progressbar"></div></div></td><td align="right">Est. Finish: ' + estimatedFinish + '  </td>')
+                        } else if (status == 'CANCELED' || status === 'FAILED'){
+                            $tr.html('<td>' + descriptiveName + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
+                            $barTr.html('');
+                            $("#cancel-" + provider.uid).removeClass("fa fa-times");
+                        } else {
                             $tr.html('<td><a href="' + result.url + '">' + descriptiveName + '</a></td><td>' + duration + '</td><td>' + result.size + '</td><td>' + task.status + '</td>');
-                            $barTr.html('')
+                            $barTr.html('');
+                            // $("#cancel-" + provider.uid).removeClass("fa fa-times");
                         }
                     }
                 });
 
-                for (j = 0; j <= progressValue.length; j++)
-                {
-                    setProgress(progressValue[j],index[j])
+                for (j = 0; j <= progressValue.length; j++) {
+                    setProgress(progressValue[j], index[j])
                 }
             });
         }
@@ -634,7 +781,7 @@ exports.detail = (function(){
      * Starts an interval timer to periodically
      * report the status of a currently running job.
      */
-    function startRunCheckInterval(){
+    function startRunCheckInterval() {
         var job_uid = exports.detail.job_uid;
         var completedInit = false;
         /*
@@ -650,7 +797,7 @@ exports.detail = (function(){
          * Run a check on the submitted job
          * at an interval of 3 seconds.
          */
-        exports.detail.timer = setInterval(function(){
+        exports.detail.timer = setInterval(function () {
             var job_uid = exports.detail.job_uid;
             var url = Config.RUNS_URL + '?job_uid=' + job_uid + '&status=SUBMITTED&format=json';
 
@@ -665,6 +812,9 @@ exports.detail = (function(){
                         if (exports.detail.run_ready) {
                             initSubmittedRunPanel(run_data);
                             completedInit = true;
+                        } else {
+                            // $('#submitted_runs').css('display', 'block');
+                            // $('#submitted_runs').html('<i class="fa fa-cog fa-spin"/> Your tasks are pending, this could take awhile...')
                         }
                     }
                     else {
@@ -675,8 +825,8 @@ exports.detail = (function(){
         }, 2000);
     }
 
-    // Checks to see if all backend tasks have been created and added to the run. The UI shouldn't be loaded until
-    // these are ready, otherwise the tasks won't get updated.
+// Checks to see if all backend tasks have been created and added to the run. The UI shouldn't be loaded until
+// these are ready, otherwise the tasks won't get updated.
     function areRunTasksCreated(run_data) {
         var job_uid = exports.detail.job_uid;
         var url = Config.JOBS_URL + '/' + job_uid + '?format=json';
@@ -690,14 +840,15 @@ exports.detail = (function(){
                 var osm_generic_index = null;
                 var osm_index = null;
                 $.each(job_data.provider_tasks, function (index, provider_task) {
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data (Generic)") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data (Generic)") {
                         osm_generic_index = index;
                     }
-                    if (provider_task.provider.localeCompare("OpenStreetMap Data") == 0) {
+                    if (provider_task.provider === "OpenStreetMap Data") {
                         osm_index = index;
                     }
                 });
-                if (osm_generic_index && osm_index) {
+                if (osm_generic_index != null && osm_index != null) {
+                    console.log("Removing duplicate OSM provider.")
                     job_data.provider_tasks.splice(osm_generic_index, 1);
                 }
                 if (compareRunJobProviderTasks(run_data, job_data)) {
@@ -713,30 +864,29 @@ exports.detail = (function(){
         //Multiple runs may exist so check the submitted runs specifically
         $.each(run_data, function (index, run) {
             if (run.status === 'SUBMITTED') {
-                console.log(job_data.provider_tasks.length);
-                console.log(run.provider_tasks.length);
+                console.log("Run details will be displayed when job tasks ("+job_data.provider_tasks.length+") == run tasks ("+run.provider_tasks.length+")");
                 run_ready = job_data.provider_tasks.length == run.provider_tasks.length;
             }
         });
         return run_ready;
     }
 
-    function buildDeleteDialog(){
+    function buildDeleteDialog() {
 
         var that = this;
         var options = {
             url: Config.JOBS_URL + '/' + exports.detail.job_uid,
             dataType: 'json',
-            beforeSubmit: function(arr, $form, options) {
+            beforeSubmit: function (arr, $form, options) {
             },
-            success: function(data, status, xhr) {
+            success: function (data, status, xhr) {
                 if (status == 'nocontent') {
                     $('#details-row').css('display', 'none');
                     // display delete info..
                     $('#delete-info').css('display', 'block');
                 }
             },
-            error: function(xhr, status, error){
+            error: function (xhr, status, error) {
                 var json = xhr.responseJSON;
                 console.log(error);
             },
@@ -747,30 +897,30 @@ exports.detail = (function(){
             backdrop: 'static',
         };
 
-        $("button#delete").bind('click', function(e){
+        $("button#delete").bind('click', function (e) {
             // stop form getting posted..
             e.preventDefault();
             $("#deleteExportModal").modal(modalOpts, 'show');
         });
 
-        $("#deleteConfirm").click(function(){
+        $("#deleteConfirm").click(function () {
             // post form..
             $('#deleteForm').ajaxSubmit(options);
             $("#deleteExportModal").modal('hide');
         });
     }
 
-    function buildFeatureDialog(){
+    function buildFeatureDialog() {
         var modalOpts = {
             keyboard: true,
             backdrop: 'static',
         };
-        $("button#features").bind('click', function(e){
+        $("button#features").bind('click', function (e) {
             $("#featuresModal").modal(modalOpts, 'show');
         });
     }
 
-    function initPopovers(){
+    function initPopovers() {
         $('button#rerun').popover({
             content: gettext("Run the export with the same geographic location and settings"),
             trigger: 'hover',
@@ -789,17 +939,23 @@ exports.detail = (function(){
             delay: {show: 0, hide: 0},
             placement: 'top'
         });
+        $('button#expiration').popover({
+            content: gettext("Reset the expiration countdown to 2 weeks"),
+            trigger: 'hover',
+            delay: {show: 0, hide: 0},
+            placement: 'top'
+        });
 
     }
 
-    // ----- FEATURE SELECTION TREES ----- //
+// ----- FEATURE SELECTION TREES ----- //
 
     /*
      * Initialises the HDM feature tree.
      */
-    function initHDMFeatureTree(tags){
+    function initHDMFeatureTree(tags) {
 
-        $.get(Config.HDM_TAGS_URL, function(data){
+        $.get(Config.HDM_TAGS_URL, function (data) {
             var level_idx = 0;
             var $tree = $('#hdm-feature-tree ul.nav-list');
             if (typeof data == 'object') {
@@ -809,18 +965,18 @@ exports.detail = (function(){
             /*
              * Recursively builds the feature tree.
              */
-            function traverse(data, $level, level_idx){
-                $.each(data, function(k,v){
-                    if ($(v).attr('displayName')){
+            function traverse(data, $level, level_idx) {
+                $.each(data, function (k, v) {
+                    if ($(v).attr('displayName')) {
                         var name = $(v).attr('displayName');
                         var tag = $(v).attr('tag');
                         var key = tag.split('=')[0];
                         var val = tag.split('=')[1];
                         var geom = $(v).attr('geom');
-                        geom_str = geom.join([separator=',']);
+                        geom_str = geom.join([separator = ',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
                             '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="HDM" data-geom="' +
-                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" disabled/></div>' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val + '" data-name="' + name + '" disabled/></div>' +
                             '</li>');
                         $level.append($entry);
                     }
@@ -840,7 +996,7 @@ exports.detail = (function(){
                 });
             }
 
-            $.each(tags, function(idx, tag){
+            $.each(tags, function (idx, tag) {
                 var key = tag.key;
                 var val = tag.value;
                 // check the corresponding input on the tree
@@ -849,14 +1005,14 @@ exports.detail = (function(){
                 $input.prop('disabled', false);
                 // check the parent levels
                 $.each($input.parentsUntil('#hdm-feature-tree', 'li.level'),
-                    function(idx, level){
+                    function (idx, level) {
                         $(level).children('div.tree-checkbox').find('input.level').prop('checked', true);
                         $(level).children('div.tree-checkbox').find('input.level').prop('disabled', false);
                     });
             });
 
             // toggle level collapse
-            $('#hdm-feature-tree li.level > label').bind('click', function(e){
+            $('#hdm-feature-tree li.level > label').bind('click', function (e) {
                 if ($(this).parent().hasClass('open')) {
                     $(this).parent().removeClass('open').addClass('closed');
                     $(this).find('i.level').removeClass('fa-plus-minus-o').addClass('fa-plus-square-o');
@@ -869,7 +1025,7 @@ exports.detail = (function(){
             });
 
             // prevent checkboxes from being deselected
-            $('#hdm-feature-tree input[type="checkbox"]').on('click', function(e){
+            $('#hdm-feature-tree input[type="checkbox"]').on('click', function (e) {
                 e.preventDefault();
             });
 
@@ -879,8 +1035,8 @@ exports.detail = (function(){
     /*
      * Initialises the OSM feature tree.
      */
-    function initOSMFeatureTree(tags){
-        $.get(Config.OSM_TAGS_URL, function(data){
+    function initOSMFeatureTree(tags) {
+        $.get(Config.OSM_TAGS_URL, function (data) {
             var level_idx = 0;
             var $tree = $('#osm-feature-tree ul.nav-list');
             if (typeof data == 'object') {
@@ -890,18 +1046,18 @@ exports.detail = (function(){
             /*
              * Recursively builds the feature tree.
              */
-            function traverse(data, $level, level_idx){
-                $.each(data, function(k,v){
-                    if ($(v).attr('displayName')){
+            function traverse(data, $level, level_idx) {
+                $.each(data, function (k, v) {
+                    if ($(v).attr('displayName')) {
                         var name = $(v).attr('displayName');
                         var tag = $(v).attr('tag');
                         var key = tag.split('=')[0];
                         var val = tag.split('=')[1];
                         var geom = $(v).attr('geom');
-                        geom_str = geom.join([separator=',']);
+                        geom_str = geom.join([separator = ',']);
                         var $entry = $('<li class="entry" data-toggle="tooltip" data-placement="right" title="' + key + '=' + val + '"><label><i class="fa fa-square-o fa-fw"></i>' + name + '</label>' +
                             '<div class="checkbox tree-checkbox"><input class="entry" type="checkbox" data-model="OSM" data-geom="' +
-                            geom_str + '" data-key="' + key + '" data-val="' + val +'" data-name="' + name + '" disabled/></div>' +
+                            geom_str + '" data-key="' + key + '" data-val="' + val + '" data-name="' + name + '" disabled/></div>' +
                             '</li>');
                         $level.append($entry);
                     }
@@ -922,7 +1078,7 @@ exports.detail = (function(){
             }
 
             // toggle level collapse
-            $('#osm-feature-tree li.level > label').bind('click', function(e){
+            $('#osm-feature-tree li.level > label').bind('click', function (e) {
                 if ($(this).parent().hasClass('open')) {
                     $(this).parent().removeClass('open').addClass('closed');
                     $(this).find('i.level').removeClass('fa-plus-minus-o').addClass('fa-plus-square-o');
@@ -934,7 +1090,7 @@ exports.detail = (function(){
                 $(this).parent().children('ul.sub-level').toggle(150);
             });
 
-            $.each(tags, function(idx, tag){
+            $.each(tags, function (idx, tag) {
                 var key = tag.key;
                 var val = tag.value;
                 // check the corresponding input on the tree
@@ -943,14 +1099,14 @@ exports.detail = (function(){
                 $input.prop('disabled', false);
                 // check the parent levels
                 $.each($input.parentsUntil('#osm-feature-tree', 'li.level'),
-                    function(idx, level){
+                    function (idx, level) {
                         $(level).children('div.tree-checkbox').find('input.level').prop('checked', true);
                         $(level).children('div.tree-checkbox').find('input.level').prop('disabled', false);
                     });
             });
 
             // prevent checkboxes from being deselected
-            $('#osm-feature-tree input[type="checkbox"]').on('click', function(e){
+            $('#osm-feature-tree input[type="checkbox"]').on('click', function (e) {
                 e.preventDefault();
             });
         });
@@ -959,7 +1115,7 @@ exports.detail = (function(){
     /*
      * Loads preset details on fetaures modal.
      */
-    function initPresetList(configurations){
+    function initPresetList(configurations) {
         var $filelist = $('#filelist');
         if (configurations.length > 0) {
             var config = configurations[0];
@@ -973,15 +1129,16 @@ exports.detail = (function(){
         }
         else {
             // config most likely deleted
-            $filelist.css('display','none');
+            $filelist.css('display', 'none');
             $('#config-deleted-message').css('display', 'block');
         }
     }
 
-})();
+})
+();
 
 
-$(document).ready(function() {
+$(document).ready(function () {
     // initialize the app..
     exports.detail.init();
 });

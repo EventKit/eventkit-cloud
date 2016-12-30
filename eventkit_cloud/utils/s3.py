@@ -2,6 +2,9 @@ import os
 
 import boto3
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_s3_client():
@@ -12,16 +15,16 @@ def get_s3_client():
     )
 
 
-def upload_to_s3(run_uuid, filename, client=None):
+def upload_to_s3(run_uuid, source_filename, destination_filename, client=None):
     if not client:
         client = get_s3_client()
 
     asset_path = os.path.join(
-        settings.EXPORT_DOWNLOAD_ROOT,
+        settings.EXPORT_STAGING_ROOT,
         run_uuid,
-        filename
+        source_filename
     )
-    asset_remote_path = os.path.join(run_uuid, filename)
+    asset_remote_path = os.path.join(run_uuid, destination_filename)
     with open(asset_path, 'rb') as asset_file:
         asset_file.seek(0)
         client.put_object(
@@ -41,17 +44,31 @@ def upload_to_s3(run_uuid, filename, client=None):
     ).split('?')[0]
 
 
-def delete_from_s3(run_uuid, client=None):
+def delete_from_s3(run_uid=None, download_url=None, client=None):
+    """
+
+    :param run_uid: An ExportRun uuid. If run uid is provided the entire run will be removed.
+    :param download_url: A url for the download path. If a download url is provided only that file will be removed.
+    :param client: An S3 Client, if not provided one will be created based on django settings if available.
+    :return: None
+    """
+
     if not client:
         client = get_s3_client()
 
-    path_objects = client.list_objects(
-        Bucket=settings.AWS_BUCKET_NAME,
-        Prefix=run_uuid
-    )
-    for item in path_objects.get('Contents', []):
-        _key = item['Key']
-        client.delete_object(
+    if run_uid:
+        path_objects = client.list_objects(
             Bucket=settings.AWS_BUCKET_NAME,
-            Key=_key,
+            Prefix=run_uid
         )
+        items = path_objects.get('Contents', [])
+
+    if download_url:
+        parts = download_url.split('/')
+        items = [{'Key':'/'.join([parts[-2], parts[-1]])}]
+
+    for item in items:
+        _key = item['Key']
+        response = client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
+        if not response.get("DeleteMarker"):
+            logger.warn("Could not delete {0} from S3.".format(_key))

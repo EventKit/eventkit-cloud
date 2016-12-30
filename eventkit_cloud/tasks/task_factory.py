@@ -1,16 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from ..jobs.models import Job
-from .models import ExportRun
-from .task_runners import ExportOSMTaskRunner, ExportWFSTaskRunner, ExportExternalRasterServiceTaskRunner, \
-    ExportArcGISFeatureServiceTaskRunner
-from django.conf import settings
-from .export_tasks import FinalizeExportProviderTask
 from datetime import datetime, timedelta
 import logging
 import os
+from uuid import UUID
+
+from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.tasks.models import ExportRun
+from eventkit_cloud.tasks.export_tasks import FinalizeExportProviderTask
+from .task_runners import (
+    ExportOSMTaskRunner,
+    ExportWFSTaskRunner,
+    ExportExternalRasterServiceTaskRunner,
+    ExportArcGISFeatureServiceTaskRunner
+)
+
+from django.conf import settings
 from django.db import DatabaseError
+from django.utils import timezone
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -20,6 +29,7 @@ class TaskFactory:
     """
     A class create Task Runners based on an Export Run.
     """
+
     def __init__(self, ):
         self.type_task_map = {'osm-generic': ExportOSMTaskRunner, 'osm': ExportOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
@@ -62,12 +72,15 @@ class TaskFactory:
 
             if provider_tasks:
                 tasks_results = []
+                tasks_results = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
-                        task_runner = self.type_task_map.get(provider_task.provider.export_provider_type.type_name)()
+                        type_name = provider_task.provider.export_provider_type.type_name
+                        task_runner = self.type_task_map.get(type_name)()
                         os.makedirs(os.path.join(stage_dir, provider_task.provider.slug), 6600)
-                        # If the provider is osm we need to pass in a dict which indicates which osm providers will be included
+                        # If the provider is osm we need to pass in a dict 
+                        # which indicates which osm providers will be included
                         if provider_task == osm_task:
                             args = {'user': job.user,
                                     'provider_task_uid': provider_task.uid,
@@ -94,26 +107,34 @@ class TaskFactory:
                         #  it will call FinalizeTask which will mark the entire job complete/incomplete.
                         if not task_runner_tasks:
                             return False
+                        # trt_res = task_runner_tasks.freeze()
+                        # assert trt_res.task_id, "task_id must be populated"
+                        # ept = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+                        # ept.celery_uid = UUID(trt_res.task_id)
+                        # ept.save()
+
                         finalize_export_provider_task = FinalizeExportProviderTask()
-                        tasks_results += [(task_runner_tasks | finalize_export_provider_task.si(run_uid=run.uid,
-                                                                                                stage_dir=os.path.join(
-                                                                                                    stage_dir,
-                                                                                                    provider_task.provider.slug),
-                                                                                                export_provider_task_uid=export_provider_task_uid,
-                                                                                                worker=worker).set(
-                            queue=worker)
-                                           ).apply_async(interval=1, max_retries=10,
-                                                         expires=datetime.now() + timedelta(days=2),
-                                                         link_error=[finalize_export_provider_task.si(run_uid=run.uid,
-                                                                                                      stage_dir=os.path.join(
-                                                                                                          stage_dir,
-                                                                                                          provider_task.provider.slug),
-                                                                                                      export_provider_task_uid=export_provider_task_uid,
-                                                                                                      worker=worker).set(
-                                                             queue=worker)])]
+                        tasks_results += [
+                            (task_runner_tasks | finalize_export_provider_task.si(
+                                run_uid=run.uid,
+                                stage_dir=os.path.join(stage_dir, provider_task.provider.slug),
+                                export_provider_task_uid=export_provider_task_uid,
+                                worker=worker
+                            ).set(queue=worker)).apply_async(
+                                interval=1,
+                                max_retries=10,
+                                expires=datetime.now() + timedelta(days=2),
+                                link_error=[finalize_export_provider_task.si(
+                                    run_uid=run.uid,
+                                    stage_dir=os.path.join(stage_dir, provider_task.provider.slug),
+                                    export_provider_task_uid=export_provider_task_uid,
+                                    worker=worker).set(queue=worker)]
+                            )
+                        ]
+
                 return tasks_results
-            else:
-                return False
+
+            return False
 
 
 def create_run(job_uid):
@@ -136,7 +157,7 @@ def create_run(job_uid):
                 job.runs.earliest(field_name='started_at').delete()  # delete earliest
                 run_count -= 1
         # add the export run to the database
-        run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED')  # persist the run
+        run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED', expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
         run.save()
         run_uid = run.uid
         logger.debug('Saved run with id: {0}'.format(str(run_uid)))

@@ -3,6 +3,7 @@ import argparse
 import logging
 import os
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
 
 from osgeo import gdal, ogr, osr
@@ -17,7 +18,7 @@ class TransformSQlite(object):
     NOT IMPLEMENTED YET
     """
 
-    def __init__(self, sqlite=None, transform=None, transform_sqlite=None, debug=None):
+    def __init__(self, sqlite=None, transform=None, transform_sqlite=None, debug=None, task_uid=None):
         self.sqlite = sqlite
         self.transform = transform
         if not os.path.exists(self.sqlite):
@@ -25,6 +26,7 @@ class TransformSQlite(object):
         if not os.path.exists(self.transform):
             raise IOError('Cannot find transform file for this task.')
         self.debug = debug
+        self.task_uid = task_uid
         """
             OGR Command to run.
         """
@@ -42,18 +44,17 @@ class TransformSQlite(object):
         # transform the spatialite schema
         self.update_sql = Template("spatialite $sqlite < $transform_sql")
         sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
-                            'transform_sql': self.transform})
-        if(self.debug):
+                                                   'transform_sql': self.transform})
+        if (self.debug):
             print 'Running: %s' % sql_cmd
-        proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if returncode != 1:
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
+        if task_process.exitcode != 1:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode)
         if self.debug:
-            print 'spatialite returned: %s' % returncode
+            print 'spatialite returned: %s' % task_process.exitcode
 
 
 if __name__ == '__main__':
@@ -66,7 +67,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('-o', '--osm-file', required=True, dest="osm", help='The OSM file to convert (xml or pbf)')
     parser.add_argument('-s', '--spatialite-file', required=True, dest="sqlite", help='The sqlite output file')
-    parser.add_argument('-q', '--schema-sql', required=False, dest="schema", help='A sql file to refactor the output schema')
+    parser.add_argument('-q', '--schema-sql', required=False, dest="schema",
+                        help='A sql file to refactor the output schema')
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}

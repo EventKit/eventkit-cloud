@@ -3,19 +3,20 @@ import logging
 
 from mock import Mock, patch
 
-from django.test import SimpleTestCase
+from django.test import TransactionTestCase
 
 from ..pbf import OSMToPBF
 
 logger = logging.getLogger(__name__)
 
 
-class TestOSMToPBF(SimpleTestCase):
+class TestOSMToPBF(TransactionTestCase):
 
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('eventkit_cloud.utils.pbf.subprocess.PIPE')
     @patch('eventkit_cloud.utils.pbf.subprocess.Popen')
-    def test_convert(self, popen, pipe, exists):
+    def test_convert(self, popen, pipe, exists, export_task):
         osm = '/path/to/sample.osm'
         pbffile = '/path/to/sample.pbf'
         convert_cmd = 'osmconvert {0} --out-pbf >{1}'.format(osm, pbffile)
@@ -26,6 +27,7 @@ class TestOSMToPBF(SimpleTestCase):
         proc.wait.return_value = 0
         o2p = OSMToPBF(osm=osm, pbffile=pbffile)
         out = o2p.convert()
+        export_task.assert_called_once()
         exists.assert_called_once_with(osm)
         popen.assert_called_once_with(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)

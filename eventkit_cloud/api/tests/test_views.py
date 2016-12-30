@@ -411,7 +411,10 @@ class TestJobViewSet(APITestCase):
             'ymax': 27.6,
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
-        response = self.client.post(url, request_data, format='json')
+        try:
+            response = self.client.post(url, request_data, format='json')
+        except Exception:
+            pass
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
         self.assertEquals(response['Content-Language'], 'en')
@@ -693,6 +696,18 @@ class TestExportRunViewSet(APITestCase):
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.run_uid = str(self.export_run.uid)
+
+    def test_patch(self):
+        url = reverse('api:runs-list')
+        patch_url = '{0}?job_uid={1}&field=expiration'.format(url, self.job.uid)
+        response = self.client.patch(patch_url)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['expiration'])
+        self.assertTrue(response.data['success'])
+
+        bad_patch_url = '{0}?job_uid={1}'.format(url, self.job_uid)
+        response = self.client.patch(bad_patch_url)
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_zipfile_url_s3(self):
         self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
