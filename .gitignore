@@ -91,6 +91,7 @@ core/settings/secret.py
 
 *.iml
 
+# temp and generated data
 exports_download
 exports_stage
 cache_data
