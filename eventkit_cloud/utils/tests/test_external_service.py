@@ -9,6 +9,7 @@ from django.conf import settings
 from django.test import TransactionTestCase
 from ..external_service import ExternalRasterServiceToGeopackage, create_conf_from_url
 from mapproxy.config.config import base_config
+from mapproxy.seed.config import SeedConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -89,13 +90,14 @@ class TestWMTSToGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
+    @patch('django.db.connections')
     @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
     @patch('eventkit_cloud.utils.external_service.seeder')
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, export_task):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, export_task, connections):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -114,6 +116,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
                                service_type='wmts')
         result = w2g.convert()
         export_task.assert_called_once()
+        connections.close_all.assert_called_once()
         self.assertEqual(result, gpkgfile)
 
         cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')], gpkgfile)
@@ -123,5 +126,59 @@ class TestWMTSToGeopackage(TransactionTestCase):
         json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
 
         load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
+
+        seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
+
+    @patch('django.db.connections')
+    @patch('mapproxy.seed.spec.validate_seed_conf')
+    @patch('mapproxy.config.spec.validate_options')
+    @patch('eventkit_cloud.tasks.models.ExportTask')
+    @patch('eventkit_cloud.tasks.task_process.TaskProcess')
+    @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
+    @patch('eventkit_cloud.utils.external_service.seeder')
+    @patch('eventkit_cloud.utils.external_service.load_config')
+    @patch('eventkit_cloud.utils.external_service.get_cache_template')
+    @patch('eventkit_cloud.utils.external_service.get_seed_template')
+    def test_convert_failure(self, seed_template, cache_template, load_config, seeder, seeding_config, task_process, export_task, validate_options, validate_seed_conf, connections):
+        gpkgfile = '/var/lib/eventkit/test.gpkg'
+        config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        json_config = real_yaml.load(config)
+        mapproxy_base = base_config()
+        cache_template.return_value = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage',
+                                                                                        'filename': '/var/lib/eventkit/test.gpkg'},
+                                                 'grids': ['webmercator']}}
+        seed_template.return_value = {'coverages': {'geom': {'srs': 'EPSG:4326', 'bbox': [-2, -2, 2, 2]}}, 'seeds': {
+            'seed': {'coverages': ['geom'], 'refresh_before': {'minutes': 0}, 'levels': {'to': 10, 'from': 0},
+                     'caches': ['cache']}}}
+        task_process.return_value = Exception("TEST")
+        validate_options.return_value = ("errors", False)
+        validate_seed_conf.return_value = ("errors", False)
+        w2g = ExternalRasterServiceToGeopackage(config=config,
+                                                gpkgfile=gpkgfile,
+                                                bbox=[-2, -2, 2, 2],
+                                                service_url='http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng',
+                                                layer='imagery',
+                                                debug=True,
+                                                name='imagery',
+                                                level_from=0,
+                                                level_to=10,
+                                                service_type='wmts')
+        result = w2g.convert()
+
+        export_task.assert_called_once()
+        self.assertEqual(result, gpkgfile)
+
+        cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')],
+                                               gpkgfile)
+        json_config['caches'] = {'cache': {'sources': ['imagery_wmts'],
+                                           'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'},
+                                           'grids': ['webmercator']}}
+        json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
+        json_config['sources']['imagery_wmts']['transparent'] = True
+        json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False, 'response': 'transparent'}}
+
+        load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
+        self.assertRaises(SeedConfigurationError)
+        connections.close_all.assert_called_once()
 
         seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
