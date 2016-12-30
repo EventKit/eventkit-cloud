@@ -34,8 +34,9 @@ RUN set -xe \
 # enable the universe
 RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
 
-RUN export PATH=/usr/local/bin:$PATH
+RUN export PATH=/var/lib/.virtualenvs/eventkit/bin:/usr/local/bin:$PATH
 RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
+ENV PATH /var/lib/.virtualenvs/eventkit/bin:$PATH
 RUN groupadd eventkit
 RUN useradd -g eventkit eventkit
 # Python dependecies needed for python-ldap

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-. /var/lib/.virtualenvs/eventkit/bin/activate
 python /var/lib/eventkit/manage.py collectstatic --noinput
 python /var/lib/eventkit/manage.py migrate
 python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/admin_user.json
