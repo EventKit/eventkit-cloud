@@ -635,10 +635,11 @@ class FinalizeExportProviderTask(Task):
                     include_files=include_files
                 ).set(queue=worker)()
 
+            run_dir, slug = os.path.split(stage_dir)
             finalize_run_task = FinalizeRunTask()
             finalize_run_task.si(
                 run_uid=run_uid,
-                stage_dir=stage_dir,
+                stage_dir=run_dir,
             ).apply_async(queue=worker)
 
 
@@ -722,14 +723,9 @@ class FinalizeRunTask(Task):
     name = 'Finalize Export Run'
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        stage_dir = retval['stage_dir']
         try:
-            stage_dir = retval['stage_dir']
             shutil.rmtree(stage_dir)
-
-            if 'osm' in stage_dir:
-                path, slug = os.path.split(stage_dir)
-                shutil.rmtree(os.path.join(path, 'osm-data'))
-
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
