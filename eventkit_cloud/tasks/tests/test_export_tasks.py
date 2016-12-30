@@ -449,15 +449,13 @@ class TestExportTasks(ExportTaskBase):
     def test_finalize_run_task_after_return(self, rmtree):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
-        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, os.path.join(str(self.run.uid), 'osm'))
-        stage_dir2 = os.path.join(settings.EXPORT_STAGING_ROOT, os.path.join(str(self.run.uid), 'osm-data'))
+        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
         task = FinalizeRunTask()
         task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
         rmtree.assert_any_call(stage_dir)
-        rmtree.assert_any_call(stage_dir2)
 
     @patch('django.core.mail.EmailMessage')
     def test_finalize_run_task(self, email):
