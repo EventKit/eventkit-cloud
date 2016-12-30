@@ -93,6 +93,7 @@ core/settings/secret.py
 
 exports_download
 exports_stage
+cache_data
 *~
 
 coverage
