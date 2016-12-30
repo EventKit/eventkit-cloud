@@ -725,6 +725,11 @@ class FinalizeRunTask(Task):
         try:
             stage_dir = retval['stage_dir']
             shutil.rmtree(stage_dir)
+
+            if 'osm' in stage_dir:
+                path, slug = os.path.split(stage_dir)
+                shutil.rmtree(os.path.join(path, 'osm-data'))
+
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
