@@ -25,5 +25,5 @@ script:
     -  echo $SITE_NAME && echo $SITE_IP && ip addr && docker-compose -f docker-compose-test.yml run -T eventkit python manage.py run_integration_tests
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=eventkit SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
