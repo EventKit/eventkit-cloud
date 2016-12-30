@@ -445,8 +445,9 @@ class TestExportTasks(ExportTaskBase):
         task_factory.assert_called_once()
         task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
 
+    @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('shutil.rmtree')
-    def test_finalize_run_task_after_return(self, rmtree):
+    def test_finalize_run_task_after_return(self, rmtree, logger):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
@@ -455,7 +456,18 @@ class TestExportTasks(ExportTaskBase):
                                   status='SUCCESS', name='Default Shapefile Export')
         task = FinalizeRunTask()
         task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
-        rmtree.assert_any_call(stage_dir)
+        rmtree.assert_called_twice_with(stage_dir)
+
+        celery_uid = str(uuid.uuid4())
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
+                                  status='SUCCESS', name='Default Shapefile Export')
+        rmtree.return_value = IOError
+        task = FinalizeRunTask()
+        task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+
+        rmtree.assert_called_twice_with(stage_dir)
+        logger.assert_called_once()
 
     @patch('django.core.mail.EmailMessage')
     def test_finalize_run_task(self, email):
