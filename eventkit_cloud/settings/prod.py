@@ -81,8 +81,6 @@ TEMPLATES = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
 # Disable caching while in development
 CACHES = {
     'default': {
