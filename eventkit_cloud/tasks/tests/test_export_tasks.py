@@ -462,11 +462,12 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
-        rmtree.return_value = IOError
+        rmtree.side_effect = IOError
         task = FinalizeRunTask()
         task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
 
         rmtree.assert_called_twice_with(stage_dir)
+        self.assertRaises(IOError, rmtree)
         logger.assert_called_once()
 
     @patch('django.core.mail.EmailMessage')
