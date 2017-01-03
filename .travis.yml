@@ -22,7 +22,8 @@ script:
     - docker-compose -f docker-compose-test.yml run -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
     - docker-compose -f docker-compose-test.yml run -T eventkit python manage.py migrate
     - docker-compose -f docker-compose-test.yml run -T eventkit python manage.py loaddata providers
-    -  echo $SITE_NAME && echo $SITE_IP && ip addr && docker-compose -f docker-compose-test.yml run -T eventkit python manage.py run_integration_tests
+    - docker-compose -f docker-compose-test.yml run -T eventkit python manage.py run_integration_tests &
+    - docker-compose -f docker-compose-test.yml logs -f celery
 
 env:
   - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
