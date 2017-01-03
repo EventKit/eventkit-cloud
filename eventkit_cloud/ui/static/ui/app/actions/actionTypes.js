@@ -1,2 +1,3 @@
 
 export const LOAD_JOBS_SUCCESS = 'LOAD_JOBS_SUCCESS'; 
+export const UPDATE_BBOX = 'UPDATE_BBOX'
