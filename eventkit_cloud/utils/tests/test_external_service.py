@@ -90,6 +90,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
+    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
     @patch('django.db.connections')
     @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
@@ -97,7 +98,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, export_task, connections):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, export_task, connections, remove_zoom_levels):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -126,9 +127,10 @@ class TestWMTSToGeopackage(TransactionTestCase):
         json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
 
         load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
-
+        remove_zoom_levels.assert_called_once_with(gpkgfile)
         seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
 
+    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
     @patch('django.db.connections')
     @patch('mapproxy.seed.spec.validate_seed_conf')
     @patch('mapproxy.config.spec.validate_options')
@@ -139,7 +141,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert_failure(self, seed_template, cache_template, load_config, seeder, seeding_config, task_process, export_task, validate_options, validate_seed_conf, connections):
+    def test_convert_failure(self, seed_template, cache_template, load_config, seeder, seeding_config, task_process, export_task, validate_options, validate_seed_conf, connections, remove_zoom_levels):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -180,5 +182,5 @@ class TestWMTSToGeopackage(TransactionTestCase):
         load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
         self.assertRaises(SeedConfigurationError)
         connections.close_all.assert_called_once()
-
+        remove_zoom_levels.assert_called_once_with(gpkgfile)
         seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)

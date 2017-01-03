@@ -10,6 +10,7 @@ from time import sleep
 from ...tasks.models import ExportTask, ExportProviderTask
 from ...tasks.export_tasks import TaskStates
 from ..models import ExportProvider, ExportProviderType, Job
+from ...utils.geopackage import is_alnum, get_table_names, get_table_count
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -473,59 +474,6 @@ class TestJob(TestCase):
                     if task.get('name') == "Geopackage":
                         return task.get('result').get("url")
         return None
-
-
-def get_table_count(gpkg, table):
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    if is_alnum(table):
-        cur.execute("SELECT COUNT(*) FROM '{0}';".format(table))
-        result = cur.fetchone()
-        conn.close()
-        return result[0]
-    conn.close()
-    return False
-
-
-def get_table_names(gpkg):
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    result = cur.execute("SELECT table_name FROM gpkg_contents;")
-    table_names = [table for (table,) in result]
-    conn.close()
-    return table_names
-
-
-def check_content_exists(gpkg):
-    """
-    :param gpkg: A geopackage file with data.
-    :return: True if there is a single raster tile or feature is found.
-    """
-    for table in get_table_names(gpkg):
-        if get_table_count(gpkg, table) > 0:
-            return True
-    print("Failed to find any data in {0}".format(gpkg))
-    return False
-
-
-def is_alnum(data):
-    """
-    Used to ensure that only 'safe' data can be used to query or create data.
-    >>> is_alnum("test")
-    True
-    >>> is_alnum("test_2")
-    True
-    >>> is_alnum(";")
-    False
-    >>> is_alnum("test 4")
-    False
-    @param: String of data to be tested.
-    @return: if data is only alphanumeric or '_' chars.
-    """
-    import re
-    if re.match(r'[\w:]+$', data):
-        return True
-    return False
 
 
 def get_providers_list():
