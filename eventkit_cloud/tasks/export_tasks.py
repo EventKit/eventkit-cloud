@@ -630,6 +630,9 @@ class FinalizeExportProviderTask(Task):
                                 continue
                             include_files += [full_file_path]
                 zipfile_task = ZipFileTask()
+                # Need to remove duplicates from the list because
+                # some intermediate tasks produce files with the same name.
+                include_files = list(set(include_files))
                 zipfile_task.si(
                     run_uid=run_uid,
                     include_files=include_files
