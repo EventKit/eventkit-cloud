@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {ClassificationBanner} from './ClassificationBanner'
-import {TitleBar} from './TitleBar'
+import TitleBar from './TitleBar'
 import {Navigation} from './Navigation'
 import styles from './Application.css'
 import injectTapEventPlugin from 'react-tap-event-plugin'
@@ -17,7 +17,7 @@ class Application extends Component {
                 <div className={styles.root}>
                     <ClassificationBanner />
                     <TitleBar />
-                    <Navigation />
+                    
                     {this.props.children}
                 </div>
             </MuiThemeProvider>
