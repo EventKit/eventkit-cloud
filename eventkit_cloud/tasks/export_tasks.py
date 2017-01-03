@@ -613,7 +613,6 @@ class FinalizeExportProviderTask(Task):
                 # To prepare for the zipfile task, the files need to be checked to ensure they weren't
                 # deleted during cancellation.
                 include_files = []
-                import sys
                 for export_provider_task in provider_tasks:
                     if TaskStates[export_provider_task.status] != TaskStates.CANCELED:
                         for export_task in export_provider_task.tasks.all():
@@ -630,7 +629,6 @@ class FinalizeExportProviderTask(Task):
                             if not os.path.isfile(full_file_path):
                                 continue
                             include_files += [full_file_path]
-                sys.stdout.flush()
                 zipfile_task = ZipFileTask()
                 # Need to remove duplicates from the list because
                 # some intermediate tasks produce files with the same name.
