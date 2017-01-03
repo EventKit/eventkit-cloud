@@ -650,7 +650,6 @@ class ZipFileTask(Task):
     name = 'Zip File Export'
 
     def run(self, run_uid=None, include_files=None):
-        import sys
         from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
@@ -660,8 +659,6 @@ class ZipFileTask(Task):
 
         files = []
         if not include_files:
-            print("NO FILES WERE INCLUDED")
-            sys.stdout.flush()
             return {'result': None}
         files += [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
@@ -682,8 +679,6 @@ class ZipFileTask(Task):
         zip_st_filepath = os.path.join(st_filepath, zip_filename)
         zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
         with ZipFile(zip_st_filepath, 'w') as zipfile:
-            print("WRITING ZIP FILE TO {0}".format(zip_st_filepath))
-            sys.stdout.flush()
             for filepath in files:
                 name, ext = os.path.splitext(filepath)
                 provider_slug, name = os.path.split(name)
@@ -707,16 +702,12 @@ class ZipFileTask(Task):
             zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
             os.remove(zip_st_filepath)
         else:
-            print("COPYING ZIP FILE TO {0}".format(zip_dl_filepath))
-            sys.stdout.flush()
             shutil.copy(zip_st_filepath, zip_dl_filepath)
             zipfile_url = os.path.join(run_uid, zip_filename)
 
         run.zipfile_url = zipfile_url
         run.save()
 
-        print("RETURNING ZIP PATH: {0}".format(zip_st_filepath))
-        sys.stdout.flush()
         return {'result': zip_st_filepath}
 
 
