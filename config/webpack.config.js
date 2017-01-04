@@ -63,6 +63,7 @@ var config = {
         outputPath: BUILD_DIR,
         host: "0.0.0.0",
         port: 8080,
+        historyApiFallback: true,
     },
     watchOptions: {
         poll: true

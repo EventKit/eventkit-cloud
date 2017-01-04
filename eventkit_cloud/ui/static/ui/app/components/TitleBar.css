@@ -1,28 +1,69 @@
-.titleBar {
-    z-index: 9999;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 25px;
-    height:75px;
-    line-height:50px;
-    background-color: #010101;
-    color: white;
-    font-size: 25px;
+
+.menuItem > div > div{
+    margin-left: 0px !important;
+    padding: 0px !important;
 }
 
-.mainMenu {
-   position: inherit;
-    left: 10px;
-    top: 15px;
-    color: #3e3f3f;
-    font-size: 25px;
+.img {
+
+    width: 205px;
+    height: 40px;
 }
 
-.logo {
-    position: inherit;
-    left: 50%;
-    top: 10px;
-    transform: translate(50, -50%);
-    color: #3e3f3f;
+
+/* =========================================================================
+   Link
+   ========================================================================= */
+
+.link {
+    position: relative;
+    display: block;
+    padding: 5px;
+    text-align: left;
+    text-decoration: none;
+    color: #4498c0;
 }
+.link:visited {
+    text-decoration:none;
+}
+
+.atHome .link {
+    line-height: 150px;
+}
+
+.link:hover {
+    background-color: #161e2e;
+    text-decoration: none;
+}
+.link:active {
+    text-decoration: none;
+}
+a:link {
+    text-decoration: none;
+}
+
+
+
+
+/* Link: State
+   ========================================================================= */
+
+.active,
+.active:hover {
+    box-shadow: 0 2px rgba(0,0,0,.1);
+    background-color: #161e2e;
+    text-decoration: none;
+}
+
+.active:visited {
+    text-decoration: none;
+}
+
+.active .icon {
+    fill: #1675aa;
+    filter: none;
+    -webkit-filter: none;
+    box-shadow: 0 2px rgba(0,0,0,.1);
+    text-decoration: none;
+}
+
