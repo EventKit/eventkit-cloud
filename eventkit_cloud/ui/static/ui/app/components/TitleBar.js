@@ -6,7 +6,6 @@ import Subheader from 'material-ui/Subheader'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import MenuItem from 'material-ui/MenuItem'
-import {red500, yellow500, blue500} from 'material-ui/styles/colors'
 import { Link, IndexLink } from 'react-router';
 import css from './TitleBar.css'
 
@@ -49,6 +48,8 @@ class TitleBar extends Component {
             },
             mainMenu: {
                 color: '#3e3f3f',
+                display: 'inline-block',
+                marginRight: '40px',
                 fontSize: '20px',
                 align: 'left',
             },
@@ -64,7 +65,7 @@ class TitleBar extends Component {
                     docked={false}
                     open={this.state.drawerOpen}
                     onRequestChange={(open) => this.setState({open})}>
-                <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i className="fa fa-long-arrow-left" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></div></span></Subheader>
+                <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU</div><div style={{display:'inline-block'}}><i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></div></span></Subheader>
                 <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports"><i className="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;DataPack Library</IndexLink></MenuItem>
                 <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/create" ><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Create Datapack</Link></MenuItem>
                 <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/about" ><i className="fa fa-info-circle" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;About EventKit</Link></MenuItem>
