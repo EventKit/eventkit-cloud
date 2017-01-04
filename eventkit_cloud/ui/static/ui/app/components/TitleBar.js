@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import logo from '../../images/logo_white_medium.png'
+import logo from '../../images/eventkit-logo.1.png'
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
@@ -35,8 +35,9 @@ class TitleBar extends Component {
             img: {
                 position: 'absolute',
                 left: '50%',
-                marginLeft: '-100px',
-                marginTop: '10px'
+                marginLeft: '-127px',
+                marginTop: '10px',
+                height: '50px'
             },
             drawer: {
                 width: '200px',
