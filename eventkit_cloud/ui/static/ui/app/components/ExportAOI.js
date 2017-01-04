@@ -3,6 +3,8 @@ import React, {Component} from 'react'
 import ol from 'openlayers'
 import styles from './CreateExport.css'
 import DrawControl from './openlayers.DrawControl.js'
+import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
+import SetAOIToolbar from './SetAOIToolbar.js'
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
 export const MODE_NORMAL = 'MODE_NORMAL'
@@ -40,6 +42,7 @@ export default class ExportAOI extends Component {
     _handleDrawEnd(event) {
         const geometry = event.feature.getGeometry()
         const bbox = serialize(geometry.getExtent())
+        console.log('marco')
         this.props.onBoundingBoxChange(bbox)
     }
 
@@ -50,12 +53,26 @@ export default class ExportAOI extends Component {
 
     _initializeOpenLayers() {
 
+        const scaleStyle = {
+            background: 'white',
+        }
+
         this._drawLayer = generateDrawLayer()
         this._drawInteraction = generateDrawInteraction(this._drawLayer)
         this._drawInteraction.on('drawstart', this._handleDrawStart)
         this._drawInteraction.on('drawend', this._handleDrawEnd)
 
         this._map = new ol.Map({
+            controls: [
+                new ol.control.ScaleLine(),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: styles.olZoom
+                })
+            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
@@ -76,23 +93,25 @@ export default class ExportAOI extends Component {
                 maxZoom: 22,
             })
         })
-        const scaleLine = new ol.control.ScaleLine();
-        this._map.addControl(scaleLine);
+//        const scaleLine = new ol.control.ScaleLine({
+//            className: styles.olScale
+//        });
+//        this._map.addControl(scaleLine);
+//
+//        const attribution = new ol.control.Attribution();
+//        this._map.addControl(attribution);
 
-        const attribution = new ol.control.Attribution();
-        this._map.addControl(attribution);
+//        const zoomSlider = new ol.control.ZoomSlider();
+//        this._map.addControl(zoomSlider);
 
-        const zoomSlider = new ol.control.ZoomSlider();
-        this._map.addControl(zoomSlider);
+//        const mousePosition = new ol.control.MousePosition({
+//            coordinateFormat: ol.coordinate.toStringHDMS,
+//            projection: 'EPSG:4326'
+//        });
+//        this._map.addControl(mousePosition);
 
-        const mousePosition = new ol.control.MousePosition({
-            coordinateFormat: ol.coordinate.toStringHDMS,
-            projection: 'EPSG:4326'
-        });
-        this._map.addControl(mousePosition);
-
-        const fullScreen = new ol.control.FullScreen();
-        this._map.addControl(fullScreen);
+//        const fullScreen = new ol.control.FullScreen();
+//        this._map.addControl(fullScreen);
 
         this._map.addInteraction(this._drawInteraction);
         this._map.addLayer(this._drawLayer);
@@ -100,24 +119,28 @@ export default class ExportAOI extends Component {
 
 
     render() {
+
         let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
+
 
         return (
             <div>
                 <div id="map" className={styles.map} ref="olmap">
+                    <SetAOIToolbar />
+                </div>
 
-                </div>
-                <div className={buttonClass}><button onClick={this.drawClicked} style={{width:'80px'}}><i className="fa fa-plus fa-1x">  DRAW</i></button></div>
-                </div>
+                <div className={buttonClass}><button onClick={this.drawClicked} style={{width:'80px'}}><i className="fa fa-plus fa-1x">  BOX</i></button></div>
+
+            </div>
         );
     }
 
 
     drawClicked() {
-
-        this.setState({mode: MODE_DRAW_BBOX})
-        this._updateInteractions();
-        console.log(this.state.mode + "I was clicked!")
+        this.setState({mode: 'MODE_DRAW_BBOX'},
+            function(){
+                this._updateInteractions();
+            })
     }
 
     _updateInteractions() {

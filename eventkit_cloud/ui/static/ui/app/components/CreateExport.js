@@ -12,7 +12,7 @@ class CreateExport extends React.Component {
 
     constructor() {
         super()
-        this._handleBoundingBoxChange = this._handleBoundingBoxChange(this)
+        this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
 
     }
 
@@ -35,11 +35,11 @@ class CreateExport extends React.Component {
                 <p className={primaryStyles.heading}>Create DataPack</p>
             </div>
             <div className={primaryStyles.sectionMenu}>
-                <p className={primaryStyles.heading}>MENU > MENU > MENU > MENU</p>
+                <p className={primaryStyles.heading}>SET AOI > ADD INFO > PREVIEW & EXPORT > EXPORT STATUS</p>
             </div>
                 <div>
                     <ExportAOI mode={this._mapMode} 
-                               onBoundingBoxChange={this._handleBoundingBoxChange}/>
+                               onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>
                 </div>
                 <div >
                     {this.props.children}
@@ -63,7 +63,8 @@ class CreateExport extends React.Component {
     }
 
     _handleBoundingBoxChange(bbox) {
-        //this.props.dispatch(updateBbox(bbox))
+        console.log('polo')
+        console.log(bbox)
     }
 }
 
