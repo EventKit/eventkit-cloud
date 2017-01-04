@@ -1,5 +1,6 @@
-import React, {PropTypes} from 'react';
-import {connect} from 'react-redux';
+import React, {PropTypes} from 'react'
+import {connect} from 'react-redux'
+import AppBar from 'material-ui/AppBar'
 import * as exportActions from '../actions/exportsActions';
 import JobList from './JobList';
 import styles from './Exports.css'
@@ -8,6 +9,16 @@ import primaryStyles from '../styles/constants.css'
 
 class Exports extends React.Component {
     render() {
+        const pageTitle = "DataPack Library"
+        const styles = {
+            appBar: {
+                backgroundColor: '#161e2e',
+                height: '35px',
+                color: 'white',
+                fontSize: '14px',
+                marginTop: '25px'
+            },
+        };
         //const jobs = this.props.jobs;
         let jobs = []
         jobs[0]  = {uid: '33434', name: 'Export number 1', date: '1/1/2016'}
@@ -17,15 +28,13 @@ class Exports extends React.Component {
         jobs[4]  = {uid: '33438', name: 'Export number 5', date: '1/1/2016'}
         jobs[5]  = {uid: '33439', name: 'Export number 6', date: '1/1/2016'}
         jobs[6]  = {uid: '33430', name: 'Export number 7', date: '1/1/2016'}
-        console.log(jobs);
+
         return (
-        <div className={primaryStyles.primaryDiv}>
-            <div className={primaryStyles.sectionBar}>
-                <p className={primaryStyles.heading}>DataPack Library</p>
-            </div>
-            <div className={primaryStyles.sectionMenu}>
-                <p className={primaryStyles.heading}>MENU > MENU > MENU > MENU</p>
-            </div>
+        <div>
+            <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
+                    iconElementLeft={<p></p>}
+            />
+            
             <div>
                 <JobList jobs={jobs} />
             </div>
