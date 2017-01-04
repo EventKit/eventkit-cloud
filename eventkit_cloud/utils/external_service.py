@@ -10,6 +10,7 @@ from mapproxy.config.spec import validate_options
 from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
+from .geopackage import remove_empty_zoom_levels
 from billiard.util import register_after_fork
 import yaml
 from django.core.files.temp import NamedTemporaryFile
@@ -127,6 +128,7 @@ class ExternalRasterServiceToGeopackage(object):
             raise e
         finally:
             connections.close_all()
+        remove_empty_zoom_levels(self.gpkgfile)
         return self.gpkgfile
 
 
