@@ -2,7 +2,9 @@ version: '2'
 services:
   base:
      volumes:
-       - ./:/var/lib/eventkit/
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+       - ./coverage:/var/lib/eventkit/coverage
+       - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
        dockerfile: config/Dockerfile
@@ -13,8 +15,8 @@ services:
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
         - PRODUCTION=True
-        - DJANGO_LOG_LEVEL=WARN
-        - LOG_LEVEL=WARN
+        - DJANGO_LOG_LEVEL=ERROR
+        - LOG_LEVEL=ERROR
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
      extra_hosts:

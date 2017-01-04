@@ -48,7 +48,7 @@ class SQliteToGeopackage(object):
             print 'Running: %s' % convert_cmd
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
@@ -84,14 +84,10 @@ def get_table_count(gpkg, table):
     :param table: A table name to count the rows.
     :return: A count of the rows in a table.
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    if is_alnum(table):
-        cur.execute("SELECT COUNT(*) FROM '{0}';".format(table))
-        result = cur.fetchone()
-        conn.close()
-        return result[0]
-    conn.close()
+    with sqlite3.connect(gpkg) as conn:
+        if is_alnum(table):
+            result = conn.execute("SELECT COUNT(*) FROM '{0}';".format(table))
+            return result.fetchone()[0]
     return False
 
 
@@ -102,12 +98,9 @@ def get_table_names(gpkg):
     :param gpkg: Path to geopackage file.
     :return: List of user data table names in geopackage.
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    result = cur.execute("SELECT table_name FROM gpkg_contents;")
-    table_names = [table for (table,) in result]
-    conn.close()
-    return table_names
+    with sqlite3.connect(gpkg) as conn:
+        result = conn.execute("SELECT table_name FROM gpkg_contents;")
+    return [table for (table,) in result]
 
 
 def get_tile_table_names(gpkg):
@@ -117,12 +110,9 @@ def get_tile_table_names(gpkg):
     :param gpkg: Path to geopackage file.
     :return: List of tile user data table names in geopackage.
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    result = cur.execute("SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';")
-    table_names = [table for (table,) in result]
-    conn.close()
-    return table_names
+    with sqlite3.connect(gpkg) as conn:
+        result = conn.execute("SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';")
+        return [table for (table,) in result]
 
 
 def get_zoom_levels_table(gpkg, table):
@@ -132,14 +122,10 @@ def get_zoom_levels_table(gpkg, table):
     :param table: A table name to return the zoom_levels which have data in the user table.
     :return: A list of zoom levels.
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    if is_alnum(table):
-        result = cur.execute("SELECT DISTINCT zoom_level FROM '{0}';".format(table))
-        zoom_levels = [zoom_level for (zoom_level,) in result]
-        conn.close()
-        return zoom_levels
-    conn.close()
+    with sqlite3.connect(gpkg) as conn:
+        if is_alnum(table):
+            result = conn.execute("SELECT DISTINCT zoom_level FROM '{0}';".format(table))
+            return [zoom_level for (zoom_level,) in result]
     return False
 
 
@@ -165,13 +151,13 @@ def remove_zoom_level(gpkg, table, zoom_level):
     :param zoom_level: A specific zoom level to remove from gpkg_tile_matrix.
     :return:
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    if is_alnum(table):
-        cur.execute("DELETE FROM '{0}' WHERE zoom_level = '{1}';".format(table, int(zoom_level)))
-        conn.close()
-        return True
-    conn.close()
+    # with sqlite3.connect(gpkg) as conn:
+    #     with conn.cursor() as cur:
+    with sqlite3.connect(gpkg) as conn:
+        if is_alnum(table):
+            conn.execute("DELETE FROM gpkg_tile_matrix "
+                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level))
+            return True
     return False
 
 
@@ -183,15 +169,37 @@ def get_tile_matrix_table_zoom_levels(gpkg, table_name):
     :param table_name: Table to query zoom_levels for in the gpkg_tile_matrix.
     :return: List of zoom levels (i.e. [2,3,4,5]
     """
-    conn = sqlite3.connect(gpkg)
-    cur = conn.cursor()
-    if is_alnum(table_name):
-        result = cur.execute("SELECT zoom_level FROM gpkg_tile_matrix WHERE table_name = '{0}';".format(table_name))
-        zoom_levels = [zoom_level for (zoom_level,) in result]
-        conn.close()
-        return zoom_levels
-    conn.close()
+    with sqlite3.connect(gpkg) as conn:
+        if is_alnum(table_name):
+            result = conn.execute("SELECT zoom_level "
+                                  "FROM gpkg_tile_matrix WHERE table_name = '{0}';".format(table_name))
+            return [zoom_level for (zoom_level,) in result]
     return False
+
+
+def check_content_exists(gpkg):
+    """
+    :param gpkg: Path to geopackage file.
+    :return: True if there is a single raster tile or feature is found.
+    """
+    for table in get_table_names(gpkg):
+        if get_table_count(gpkg, table) > 0:
+            return True
+    return False
+
+
+def check_zoom_levels(gpkg):
+    """
+    Checks the zoom levels for the geopackage returns False if ANY gpkg_tile_matrix sets do no match the zoom levels
+    of the user data tables.
+
+    :param gpkg: Path to geopackage file.
+    :return: True if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
+    """
+    for table in get_table_names(gpkg):
+        if not get_tile_matrix_table_zoom_levels(gpkg, table) == get_zoom_levels_table(gpkg, table):
+            return False
+    return True
 
 
 if __name__ == '__main__':
