@@ -1,16 +1,13 @@
-
 import React, {Component} from 'react'
 import logo from '../../images/logo_white_medium.png'
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
-import FontIcon from 'material-ui/FontIcon';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import MenuItem from 'material-ui/MenuItem'
-import {red500, yellow500, blue500} from 'material-ui/styles/colors';
-
-
-
+import {red500, yellow500, blue500} from 'material-ui/styles/colors'
+import { Link, IndexLink } from 'react-router';
+import css from './TitleBar.css'
 
 class TitleBar extends Component {
     constructor(props){
@@ -22,11 +19,10 @@ class TitleBar extends Component {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
 
-
     handleToggle() {
         this.setState({drawerOpen: !this.state.drawerOpen});
-        console.log("open")
     }
+
     handleClose() { this.setState({drawerOpen: false}); }
     render() {
 
@@ -37,20 +33,20 @@ class TitleBar extends Component {
                 top: '25px'
             },
             img: {
-                position: 'fixed',
+                position: 'absolute',
                 left: '50%',
                 marginLeft: '-100px',
-                marginTop: '35px'
+                marginTop: '10px'
             },
             drawer: {
+                width: '200px',
                 marginTop: '95px',
                 backgroundColor: '#010101',
-            },
-            menuItem: {
-                color: 'white',
+                marginLeft: '0px',
+                padding: '0px'
             }
-        };
 
+        };
 
         const img = <img style={styles.img} src={logo}/>
 
@@ -58,12 +54,15 @@ class TitleBar extends Component {
         <header className="header">
             <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
             <Drawer containerStyle={styles.drawer}
+                    overlayStyle={styles.drawer}
                     docked={false}
                     open={this.state.drawerOpen}
                     onRequestChange={(open) => this.setState({open})}>
-                <MenuItem style={styles.menuItem} onTouchTap={this.handleClose.bind(this)}>Menu Item 1</MenuItem>
-                <MenuItem style={styles.menuItem} onTouchTap={this.handleClose.bind(this)}>Menu Item 2 </MenuItem>
-                <MenuItem style={styles.menuItem} onTouchTap={this.handleClose.bind(this)}>Menu Item 3 </MenuItem>
+                <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports"><i className="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;DataPack Library</IndexLink></MenuItem>
+                <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/create" ><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Create Datapack</Link></MenuItem>
+                <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/about" ><i className="fa fa-info-circle" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;About EventKit</Link></MenuItem>
+                <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/account" ><i className="fa fa-user" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Account Settings</Link></MenuItem>
+                <MenuItem className={css.menuItem} onTouchTap={this.handleClose.bind(this)}><Link className={css.link} activeClassName={css.active} to="/logout" ><i className="fa fa-sign-out" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Log Out</Link></MenuItem>
             </Drawer>
 
         </header>
