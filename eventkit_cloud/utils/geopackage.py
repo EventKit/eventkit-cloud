@@ -151,8 +151,6 @@ def remove_zoom_level(gpkg, table, zoom_level):
     :param zoom_level: A specific zoom level to remove from gpkg_tile_matrix.
     :return:
     """
-    # with sqlite3.connect(gpkg) as conn:
-    #     with conn.cursor() as cur:
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
             conn.execute("DELETE FROM gpkg_tile_matrix "
