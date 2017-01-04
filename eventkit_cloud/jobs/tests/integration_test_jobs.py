@@ -10,7 +10,7 @@ from time import sleep
 from ...tasks.models import ExportTask, ExportProviderTask
 from ...tasks.export_tasks import TaskStates
 from ..models import ExportProvider, ExportProviderType, Job
-from ...utils.geopackage import is_alnum, get_table_names, get_table_count
+from ...utils.geopackage import check_content_exists, check_zoom_levels
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -411,6 +411,7 @@ class TestJob(TestCase):
             geopackage_file = self.download_file(geopackage_url)
             self.assertTrue(os.path.isfile(geopackage_file))
             self.assertTrue(check_content_exists(geopackage_file))
+            self.assertTrue(check_zoom_levels(geopackage_file))
             os.remove(geopackage_file)
         delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
