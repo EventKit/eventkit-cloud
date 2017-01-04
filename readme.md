@@ -5,37 +5,16 @@ Eventkit-Cloud
 Eventkit-cloud is based on the [HOT OSM Export Tool 2](https://github.com/hotosm/osm-export-tool2).  It allows the user to select data from different sources to export into a variety of formats.
   
 ## Getting Started
-Eventkit-cloud requires [Vagrant](https://www.vagrantup.com/), which itself requires [Virtualbox](https://www.virtualbox.org/wiki/Downloads) or [Docker](https://docs.docker.com/engine/installation/)
+Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/) or [Vagrant](https://www.vagrantup.com/). 
 
-A setup guide for running vagrant and docker in the [windows setup guide](windows.md).
+A setup guide for running docker in vagrant can be found in the [windows setup guide](windows.md).
 
-### Vagrant
-After installing the dependencies open an elevated shell/command prompt and enter:
-<pre>git clone https://repo_server/repo_org/eventkit-cloud.git
-cd eventkit-cloud
-vagrant plugin install vagrant-hostsupdater
-vagrant up nodocker</pre>
-After the virtual machine finishes provisioning, open a browser and navigate to http://cloud.eventkit.dev
-
-### Docker-in-Vagrant
-If you are running on a windows machine but would like to develop using docker, a vagrant box can be built that will install docker and run it for you inside the vm.
-To run Docker-in-Vagrant enter:
-<pre>git clone https://repo_server/repo_org/eventkit-cloud.git
-cd eventkit-cloud
-vagrant plugin install vagrant-hostsupdater
-vagrant up docker</pre>
-Then ssh into the vm and run:
-<pre>cd /vagrant
-docker-compose build
-docker-compose up</pre>
-
-### Docker 
+### Installation 
 Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc. 
 
 After installing docker open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
-wget https://partner-images.canonical.com/core/xenial/current/ubuntu-xenial-core-cloudimg-amd64-root.tar.gz
 docker-compose up</pre>
 In a different elevated shell/command prompt add the cloud.eventkit.dev to the hosts file:
 On linux:
@@ -45,15 +24,15 @@ On windows:
 Then open a browser and navigate to http://cloud.eventkit.dev
 
 ### Settings
-The following environment variables can be used to adjust how eventkit_cloud is configured.
+The following are a few of the relevant environment variables that can be used to adjust how eventkit_cloud is configured.
 
 #### Site Name
 
 You can set the hostname that the web server will respond and properly authenticate using `SITE_NAME`.
 
-**In development, please make sure you have SITE_NAME environment variable set to `cloud.eventkit.dev` 
-in your shell or when you invoke `docker-compose up`.  If you are experiencing 302s when you attempt
-login this is likely the culprit**
+*Please make sure you have SITE_NAME environment variable set to `cloud.eventkit.dev` 
+in your shell or when you invoke `docker-compose up`.  If you are experiencing 302s or 403s when you attempt
+login this is likely the culprit*
 
 ```
 SITE_NAME='cloud.eventkit.dev'
@@ -70,11 +49,9 @@ AWS_SECRET_KEY='my-secret-key'</pre>
 To use your own database connection string add:
 <pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
 
-#### Settings file
-If you want to run eventkit_cloud using the dev.py settings file add:
-<pre>DEVELOPMENT=True</pre>
-If you want to run using the prod.py settings file add:
-<pre>PRODUCTION=True</pre>
+#### Broker URL
+To specify which RabbitMQ instance to use add:
+<pre>BROKER_URL='amqp://guest:guest@rabbitmq:5672/'</pre>
 
 #### Task error email
 To configure the email address that will send out any error messages add:
