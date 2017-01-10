@@ -1,0 +1,23 @@
+
+.searchbarDiv {
+    z-index: 1;
+    position: absolute;
+    width: 90%;
+    top: 7em;
+    left: 1em;
+    background-color: white;
+}
+
+.searchbarDiv i {
+    padding-left: 15px;
+    padding-right: 10px;
+    color: #4498c0
+}
+
+.searchbarInput {
+    width: 95% !important;
+}
+
+.searchbarInput > div {
+    width: 95% !important;
+}

@@ -3,10 +3,8 @@ import {connect} from 'react-redux'
 import styles from './CreateExport.css'
 import primaryStyles from '../styles/constants.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
-import {
-updateBbox
-} from '../actions'
-
+import {updateBbox} from '../actions'
+import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
 
 class CreateExport extends React.Component {
 
@@ -63,8 +61,8 @@ class CreateExport extends React.Component {
     }
 
     _handleBoundingBoxChange(bbox) {
-        console.log('polo')
-        console.log(bbox)
+        console.log('Running Handle bounding box change in CreateExport.js')
+        console.log(this.props.bbox)
     }
 }
 
@@ -77,8 +75,11 @@ CreateExport.propTypes = {
 function mapStateToProps(state) {
     return {
         location: state.location,
-        bbox: state.bbox
+        bbox: state.bbox,
     };
 }
 
-export default connect(mapStateToProps)(CreateExport);
+
+export default connect(
+    mapStateToProps,
+)(CreateExport);

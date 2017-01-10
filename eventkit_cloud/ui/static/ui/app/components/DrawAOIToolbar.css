@@ -1,0 +1,199 @@
+.toolbarsContainer {
+    z-index: 1;
+    position: absolute;
+    width: 90%;
+    top: 11em;
+    left: 1em;
+    height: 50px;
+}
+
+.toolbarDiv {
+    position: absolute;
+    width: 40%;
+    top: 0px;
+    left: 0px;
+}
+
+.extensionToolbarDiv {
+    position: absolute;
+    width: 60%;
+    top: 0px;
+    left: 40%;
+}
+
+.extensionToolbarDivHidden {
+    display: none;
+}
+
+.titleDiv {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 50px;
+    line-height: 50px;
+    width: 140px;
+    font-size: 15px;
+    padding-left: 15px;
+    vertical-align: middle;
+    color: grey;
+}
+
+.titleSpan {
+    vertical-align: middle;
+}
+
+.drawButtonsFreeDiv {
+    position: absolute;
+    top: 10px;
+    left: 140px;
+    height: 30px;
+    width: 80px;
+}
+
+.drawButtonsBoxDiv {
+    position: absolute;
+    top: 10px;
+    left: 220px;
+    height: 30px;
+    width: 80px;
+}
+
+.drawButtonsFreeDiv > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.drawButtonsBoxDiv > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.drawButtonsFreeDiv button {
+    background-color: #e6e6e6 !important;
+}
+
+.drawButtonsBoxDiv button {
+    background-color: #e6e6e6 !important;
+}
+
+.drawButtonsFreeDiv button div span {
+    color: #4498c0 !important;
+}
+
+.drawButtonsBoxDiv button div span {
+    color: #4498c0 !important;
+}
+
+/* DUPLICATE FOR ACCESSING CHILD ELEMENT THAT NEED TO CHANGE ON SELECTION */
+.drawButtonsFreeDivSelect {
+    position: absolute;
+    top: 10px;
+    left: 140px;
+    height: 30px;
+    width: 80px;
+}
+
+.drawButtonsBoxDivSelect {
+    position: absolute;
+    top: 10px;
+    left: 220px;
+    height: 30px;
+    width: 80px;
+}
+
+.drawButtonsFreeDivSelect > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.drawButtonsBoxDivSelect > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.drawButtonsFreeDivSelect button {
+    background-color: #4498c0 !important;
+}
+
+.drawButtonsBoxDivSelect button {
+    background-color: #4498c0 !important;
+}
+
+.drawButtonsFreeDivSelect button div span {
+    color: #fff !important;
+}
+
+.drawButtonsBoxDivSelect button div span {
+    color: #fff !important;
+}
+
+.cancelButtonDiv {
+    position: absolute;
+    top: 0px;
+    left: 10%;
+    height: 50px;
+    width: 30%;
+    line-height: 50px;
+    vertical-align: middle;
+}
+
+.redrawButtonDiv {
+    position: absolute;
+    top: 0px;
+    left: 40%;
+    height: 50px;
+    width: 30%;
+    line-height: 50px;
+    vertical-align: middle;
+}
+
+.setButtonDiv {
+    position: absolute;
+    top: 0px;
+    right: 20px;
+    width: 80px;
+    height: 30px;
+
+}
+
+.setButtonDiv > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.setButtonDiv button div span {
+    color: #fff !important;
+}
+
+.setButtonActiveDiv {
+    position: absolute;
+    top: 0px;
+    right: 20px;
+    width: 80px;
+    height: 30px;
+
+}
+
+.setButtonActiveDiv > div {
+    min-width: 0px !important;
+    margin-right: 10px;
+    line-height: 30px;
+}
+
+.dsetButtonActiveDiv button {
+    background-color: #4498c0 !important;
+}
+
+.setButtonActiveDiv button div span {
+    color: #fff !important;
+}
+
+.setButton {
+    padding-top: 10px;
+    padding-left: 10px;
+}

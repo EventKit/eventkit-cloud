@@ -1,15 +1,28 @@
 import 'openlayers/dist/ol.css'
 import React, {Component} from 'react'
+import {connect} from 'react-redux'
 import ol from 'openlayers'
 import styles from './SetAOIToolbar.css'
 import DrawControl from './openlayers.DrawControl.js'
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
-import FlatButton from 'material-ui/FlatButton'
+import {toggleZoomToSelection, clickZoomToSelection} from '../actions/setAoiToolbarActions.js'
 
-export default class SetAOIToolbar extends Component {
+export class SetAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
+    }
+
+    handleZoomToSelection() {
+        console.log('zooming to selection');
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.bbox != this.props.bbox) {
+            if (bbox != [] || bbox != null) {
+
+            }
+        }
     }
 
 
@@ -42,3 +55,26 @@ export default class SetAOIToolbar extends Component {
         )
     }
 }
+
+function mapStateToProps(state) {
+    return {
+        bbox: state.bbox,
+        zoomToSelection: state.zoomToSelection
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        toggleZoomToSelction: (currentState) => {
+            dispatch(toggleZoomToSelection(currentState));
+        },
+        clickZoomToSelection: () => {
+            dispatch(clickZoomToSelection());
+        }
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SetAOIToolbar)
