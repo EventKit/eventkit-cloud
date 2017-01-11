@@ -1,11 +1,8 @@
 import React from 'react';
-import {
-    Step,
-    Stepper,
-    StepLabel,
-} from 'material-ui/Stepper';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import { Link, IndexLink } from 'react-router'
+import Button from 'react-bootstrap/lib/Button'
+import Breadcrumb from 'react-bootstrap/lib/Breadcrumb'
+import style from './BreadcrumbStepper.css'
 
 /**
  * Horizontal steppers are ideal when the contents of one step depend on an earlier step.
@@ -57,54 +54,51 @@ class BreadcrumbStepper extends React.Component {
                 backgroundColor: '#161e2e',
                 height: '35px',
                 fontColor: 'white',
-                fontSize: '14px',
+                fontFamily: 'Roboto',
+                fontSize: '18px',
             },
             stepLabel: {
                 color: 'white',
-                fontSize: '16px',
+                fontSize: '18px',
             },
-            button: {
-                width: '20px',
-            }
+            btnLg : {
+            width: '50px',
+            height: '50px',
+            padding: '10px 16px',
+            textAlign: 'center',
+            fontSize: '18px',
+            lineHeight: '1.33',
+            borderRadius: '25px',
+        }
         };
         const {finished, stepIndex} = this.state;
         const contentStyle = {margin: '0 16px'};
 
         return (
             <div style={{width: '100%', backgroundColor: '#161e2e'}}>
-            <div style={{maxWidth: '700px', margin: 'auto', backgroundColor: '#161e2e',}}>
-                <Stepper style={styles.stepper} activeStep={stepIndex}>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Preview and Export</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
-                    </Step>
-                </Stepper>
+            <div style={{width: '50%', margin: '0 auto', backgroundColor: '#161e2e'}}>
+                <Breadcrumb style={styles.stepper}>
+                    <Breadcrumb.Item style={styles.stepper} href="#">
+                        Set AOI
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item style={styles.stepper} href="#">
+                        Add Info
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item style={styles.stepper}>
+                        Preview & Export
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item style={styles.stepper}>
+                        Export Status
+                    </Breadcrumb.Item>
+                </Breadcrumb>
 
                 <div style={contentStyle}>
-                    
+
                 </div>
              </div>
-                <div style={{ float:'right', marginTop: '-20px', marginRight: '100px'}}>
-                    <FlatButton
-                        label="Back"
-                        disabled={stepIndex === 0}
-                        onTouchTap={this.handlePrev}
-                        style={{marginRight: 12}}
-                    />
-                    <RaisedButton
-                        style={styles.button}
-                        label={stepIndex === 2 ? 'Finish' : 'Next'}
-                        primary={true}
-                        onTouchTap={this.handleNext}
-                    />
+                <div style={{ float:'right', marginTop: '-45px', marginRight: '400px'}}>
+                    <Button bsStyle="primary" style={styles.btnLg}  disabled><i className="fa fa-arrow-left" aria-hidden="true"></i></Button>
+                    <Button bsStyle="success" style={styles.btnLg}><i className="fa fa-arrow-right" aria-hidden="true"></i></Button>
                 </div>
             </div>
         );
