@@ -7,6 +7,8 @@ import DrawControl from './openlayers.DrawControl.js'
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
 import {toggleZoomToSelection, clickZoomToSelection} from '../actions/setAoiToolbarActions.js'
 
+const {Grid, Row, Col} = require('react-flexbox-grid');
+
 export class SetAOIToolbar extends Component {
 
     constructor(props) {
@@ -37,20 +39,18 @@ export class SetAOIToolbar extends Component {
 
         return (
             <div className={styles.toolbarDiv}>
-                <Toolbar style={toolbarStyles.toolbar}>
-                        <div className={styles.titleDiv}>
-                            <strong>Set Area Of Interest (AOI)</strong>
-                        </div>
-                        <div className={styles.selectedDiv}>
-                            None selected
-                        </div>
-                        <div className={styles.resetMapDiv}>
-                            <button className={styles.simpleButton}><i className={'fa fa-refresh'}></i>  RESET MAP</button>
-                        </div>
-                        <div className={styles.zoomToDiv}>
-                            <button className={styles.simpleButton}><i className={'fa fa-search-plus'}></i>  ZOOM TO SELECTION</button>
-                        </div>
-                </Toolbar>
+                    <div className={styles.titleDiv}>
+                        <strong>Set Area Of Interest (AOI)</strong>
+                    </div>
+                    <div className={styles.selectedDiv}>
+                        None selected
+                    </div>
+                    <div className={styles.resetMapDiv}>
+                        <button className={styles.simpleButton}><i className={'fa fa-refresh'}></i>  RESET MAP</button>
+                    </div>
+                    <div className={styles.zoomToDiv}>
+                        <button className={styles.simpleButton}><i className={'fa fa-search-plus'}></i>  ZOOM TO SELECTION</button>
+                    </div>
             </div>
         )
     }

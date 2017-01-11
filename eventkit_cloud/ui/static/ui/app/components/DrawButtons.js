@@ -4,6 +4,7 @@ import styles from './DrawAOIToolbar.css'
 import RaisedButton from 'material-ui/RaisedButton'
 import {toggleDrawSet, clickDrawSet, toggleDrawBoxButton, clickDrawBoxButton} from '../actions/drawToolBarActions.js'
 import {updateMode, updateBbox} from '../actions/exportsActions.js'
+import { Button } from 'react-bootstrap';
 
 
 export class DrawButtons extends Component {
@@ -16,10 +17,8 @@ export class DrawButtons extends Component {
         this.handleDrawBoxClick = this.handleDrawBoxClick.bind(this)
         this.setBoxStyle = this.setBoxStyle.bind(this)
         this.state = {
-            freeClass: styles.drawButtonsFreeDiv,
-            freeSelected: false,
-            boxClass: styles.drawButtonsBoxDiv,
-            boxSelected: false,
+            freeClass: styles.drawButtonInactive,
+            boxClass: styles.drawButtonInactive,
         }
     }
 
@@ -34,10 +33,10 @@ export class DrawButtons extends Component {
 
     setBoxStyle(disabled) {
         if(!disabled) {
-            this.setState({boxClass: styles.drawButtonsBoxDivSelect, boxSelected: true})
+            this.setState({boxClass: styles.drawButtonActive})
         }
         else {
-            this.setState({boxClass: styles.drawButtonsBoxDiv, boxSelected: false})
+            this.setState({boxClass: styles.drawButtonInactive})
         }
     }
 
@@ -65,13 +64,8 @@ export class DrawButtons extends Component {
 
         return (
             <div>
-                <div className={this.state.freeClass}>
-                    <RaisedButton label="FREE" style={buttonStyles.button} onClick={this.handleFreeClick} />
-                </div>
-
-                <div className={this.state.boxClass}>
-                    <RaisedButton label="BOX" style={buttonStyles.button} onClick={this.props.clickDrawBoxButton} />
-                </div>
+               <Button bsClass={styles.buttonGeneral + " " + this.state.boxClass} onClick={this.props.clickDrawBoxButton}>BOX</Button>
+               <Button bsClass={styles.buttonGeneral + " " + this.state.freeClass} >FREE</Button>
             </div>
         )
     }

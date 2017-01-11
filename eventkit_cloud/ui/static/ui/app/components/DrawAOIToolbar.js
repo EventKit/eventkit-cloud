@@ -1,16 +1,17 @@
-import 'openlayers/dist/ol.css'
-import React, {Component} from 'react'
-import {connect} from 'react-redux'
-import ol from 'openlayers'
-import styles from './DrawAOIToolbar.css'
-import DrawControl from './openlayers.DrawControl.js'
-import RaisedButton from 'material-ui/RaisedButton'
-import FlatButton from 'material-ui/FlatButton'
-import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
+import 'openlayers/dist/ol.css';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import ol from 'openlayers';
+import styles from './DrawAOIToolbar.css';
+import DrawControl from './openlayers.DrawControl.js';
+import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
+import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import {toggleDrawExtension, toggleDrawCancel, clickDrawCancel, toggleDrawRedraw,
-    clickDrawRedraw, toggleDrawSet, clickDrawSet, toggleDrawBoxButton} from '../actions/drawToolBarActions.js'
-import {updateMode, updateBbox} from '../actions/exportsActions.js'
-import DrawButtons from './DrawButtons.js'
+    clickDrawRedraw, toggleDrawSet, clickDrawSet, toggleDrawBoxButton} from '../actions/drawToolBarActions.js';
+import {updateMode, updateBbox} from '../actions/exportsActions.js';
+import DrawButtons from './DrawButtons.js';
+import { Button } from 'react-bootstrap';
 
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
@@ -25,10 +26,15 @@ export class DrawAOIToolbar extends Component {
         this.updateDrawExtensionVisibility = this.updateDrawExtensionVisibility.bind(this);
         this.handleDrawCancel = this.handleDrawCancel.bind(this);
         this.handleDrawRedraw = this.handleDrawRedraw.bind(this);
+        this.updateCancelButtonState = this.updateCancelButtonState.bind(this);
+        this.updateRedrawButtonState = this.updateRedrawButtonState.bind(this);
         this.state = {
             extensionClass: styles.extensionToolbarDivHidden,
             redrawDisabled: true,
             setDisabled: true,
+            setButtonClass: styles.setButtonInactive,
+            cancelButtonClass: styles.flatButtonInactive,
+            redrawButtonClass: styles.flatButtonInactive,
         };
     }
 
@@ -42,6 +48,12 @@ export class DrawAOIToolbar extends Component {
         if(nextProps.drawBoxButton.click != this.props.drawBoxButton.click) {
             this.handleDrawBoxClick();
         }
+        if(nextProps.drawCancel.disabled != this.props.drawCancel.disabled) {
+            this.updateCancelButtonState(nextProps.drawCancel.disabled);
+        }
+        if (nextProps.drawRedraw.disabled != this.props.drawRedraw.disabled) {
+            this.updateRedrawButtonState(nextProps.drawRedraw.disabled);
+        }
 
     }
 
@@ -53,6 +65,24 @@ export class DrawAOIToolbar extends Component {
         else {
             this.setState({extensionClass: styles.extensionToolbarDivHidden});
             
+        }
+    }
+
+    updateCancelButtonState(disabled) {
+        if (disabled) {
+            this.setState({cancelButtonClass: styles.flatButtonInactive});
+        }
+        else {
+            this.setState({cancelButtonClass: styles.flatButtonActive});
+        }
+    }
+
+    updateRedrawButtonState(disabled) {
+        if (disabled) {
+            this.setState({redrawButtonClass: styles.flatButtonInactive});
+        }
+        else {
+            this.setState({redrawButtonClass: styles.flatButtonActive});
         }
     }
 
@@ -69,20 +99,32 @@ export class DrawAOIToolbar extends Component {
         }
     }
 
+    dispatchDrawCancel() {
+        //If the button is active, dispatch the 'click'
+        if (!this.props.drawCancel.disabled) {
+            this.props.clickDrawCancel()
+        }
+    }
+    dispatchDrawRedraw() {
+        if (!this.props.drawRedraw.disabled) {
+            this.props.clickDrawRedraw()
+        }
+    }
+
     handleDrawCancel(){
         this.props.updateMode('MODE_DRAW_NORMAL');
-        this.props.toggleDrawCancel(this.props.drawCancelDisabled);
+        this.props.toggleDrawCancel(false);
         this.setState({extensionClass: styles.extensionToolbarDivHidden});
-        this.props.toggleDrawSet(this.props.drawSet.disabled);
-        this.props.toggleDrawBoxButton(this.props.drawBoxButton.disabled);
-        this.props.toggleDrawRedraw(this.props.drawRedraw.disabled);
+        this.props.toggleDrawSet(false);
+        this.props.toggleDrawBoxButton(false);
+        this.props.toggleDrawRedraw(false);
     }
 
     handleDrawRedraw() {
         console.log('You have chosen to redraw')
         this.props.updateMode('MODE_DRAW_BBOX')
-        this.props.toggleDrawRedraw(this.props.drawRedraw.disabled)
-        this.props.toggleDrawSet(this.props.drawSet.disabled)
+        this.props.toggleDrawRedraw(false);
+        this.props.toggleDrawSet(false);
     }
 
     render() {
@@ -91,6 +133,7 @@ export class DrawAOIToolbar extends Component {
             toolbar: {
                 height: '50px',
                 backgroundColor: '#fff',
+                padding: '0px 0px',
             },
             setButton: {
                 height: '30px',
@@ -102,46 +145,47 @@ export class DrawAOIToolbar extends Component {
         return (
             <div className={styles.toolbarsContainer}>
                 <div className={styles.toolbarDiv}>
-                    <Toolbar style={toolbarStyles.toolbar}>
-                        <div className={styles.titleDiv}>
-                            <span className={styles.titleSpan}><strong>Draw Custom</strong></span>
-                        </div>
+                    <div className={styles.title}>Draw Custom</div>
+                    <div className={styles.drawButtonsDiv}>
                         <DrawButtons />
-                    </Toolbar>
+                    </div>
                 </div>
                 <div className={this.state.extensionClass}>
-                    <Toolbar style={toolbarStyles.toolbar}>
-                        <div className={styles.cancelButtonDiv}>
-                            <FlatButton 
-                                label="Cancel" 
-                                primary={!this.props.drawCancel.disabled}
-                                disabled={this.props.drawCancel.disabled}
-                                onClick={this.props.clickDrawCancel}
-                             />
-                        </div>
-                        <div className={styles.redrawButtonDiv}>
-                            <FlatButton
-                                label="Redraw"
-                                primary={!this.props.drawRedraw.disabled}
-                                disabled={this.props.drawRedraw.disabled}
-                                onClick={this.props.clickDrawRedraw}
-                            />
-                        </div>
+
+
+
                         <div className={styles.setButtonDiv}>
-                            <RaisedButton label="SET"
-                              style={toolbarStyles.setButton}
-                              className={styles.setButton}
-                              primary={!this.props.drawSet.disabled}
-                              disabled={this.props.drawSet.disabled}
-                              onClick={this.props.clickDrawSet}
-                            />
+                            <Button bsClass={styles.buttonGeneral + ' ' + this.state.setButtonClass} onClick={this.props.clickDrawSet}>SET</Button>
                         </div>
-                    </Toolbar>
+                        <Button bsClass={styles.buttonGeneral + ' ' + this.state.redrawButtonClass}
+                            onClick={this.props.clickDrawRedraw}>
+                                Redraw
+                        </Button>
+                        <Button bsClass={styles.buttonGeneral + ' ' + this.state.cancelButtonClass}
+                            onClick={this.props.clickDrawCancel}>
+                                Cancel
+                        </Button>
                 </div>
             </div>
         )
     }
 }
+
+//<FlatButton
+//                                label="Cancel"
+//                                primary={!this.props.drawCancel.disabled}
+//                                disabled={this.props.drawCancel.disabled}
+//                                onClick={this.props.clickDrawCancel}
+//                             />
+
+// <div className={styles.redrawButtonDiv}>
+//                            <FlatButton
+//                                label="Redraw"
+//                                primary={!this.props.drawRedraw.disabled}
+//                                disabled={this.props.drawRedraw.disabled}
+//                                onClick={this.props.clickDrawRedraw}
+//                            />
+//                        </div>
 
 function mapStateToProps(state) {
     return {

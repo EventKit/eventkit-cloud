@@ -18,9 +18,6 @@ import {
     StepLabel,
 } from 'material-ui/Stepper';
 import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
-import {
-updateBbox
-} from '../actions'
 
 
 class CreateExport extends React.Component {

@@ -1,24 +1,83 @@
+@media only screen and (min-width: 850px) {
+    .toolbarsContainer {
+        max-width: 680px !important;
+    }
+}
+
+@media only screen and (min-width: 750px) {
+    .toolbarsContainer {
+        font-size: 1em;
+    }
+    .buttonGeneral {
+        font-size: 1em;
+        margin: 9px 1em 0 0;
+    }
+}
+
+@media only screen and (max-width: 750px) {
+    .toolbarsContainer {
+        font-size: .8em;
+    }
+    .buttonGeneral {
+        font-size: .8em;
+        margin: 13px 1em 0 0;
+        padding: 5px 0px !important;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .toolbarsContainer {
+        font-size: .7em;
+    }
+    .buttonGeneral {
+        font-size: .7em;
+        margin: 14.5px 1em 0 0;
+        padding: 5px 0px !important;
+    }
+}
+@media only screen and (max-width: 400px) {
+    .toolbarsContainer {
+        font-size: .6em;
+    }
+    .buttonGeneral {
+        font-size: .6em;
+        margin: 15.5px 1em 0 0;
+        padding: 5px 0px !important;
+    }
+}
+
 .toolbarsContainer {
     z-index: 1;
     position: absolute;
-    width: 90%;
-    top: 11em;
-    left: 1em;
+    width: 80%;
+    top: 150px;
+    left: 10px;
     height: 50px;
 }
 
 .toolbarDiv {
     position: absolute;
-    width: 40%;
+    width: 50%;
     top: 0px;
     left: 0px;
+    background-color: #fff;
+    height: 100%;
+}
+
+.title {
+    line-height: 50px;
+    padding-left: 15px;
+    vertical-align: middle;
+    word-wrap: break-word;
 }
 
 .extensionToolbarDiv {
     position: absolute;
-    width: 60%;
+    width: 50%;
     top: 0px;
-    left: 40%;
+    left: 50%;
+    height: 100%;
+    background-color: #fff;
 }
 
 .extensionToolbarDivHidden {
@@ -31,8 +90,8 @@
     left: 0px;
     height: 50px;
     line-height: 50px;
-    width: 140px;
-    font-size: 15px;
+    width: 40%;
+    background-color: rgba(0,0,0,1);
     padding-left: 15px;
     vertical-align: middle;
     color: grey;
@@ -42,93 +101,12 @@
     vertical-align: middle;
 }
 
-.drawButtonsFreeDiv {
+.drawButtonsDiv {
     position: absolute;
-    top: 10px;
-    left: 140px;
-    height: 30px;
-    width: 80px;
-}
-
-.drawButtonsBoxDiv {
-    position: absolute;
-    top: 10px;
-    left: 220px;
-    height: 30px;
-    width: 80px;
-}
-
-.drawButtonsFreeDiv > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
-}
-
-.drawButtonsBoxDiv > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
-}
-
-.drawButtonsFreeDiv button {
-    background-color: #e6e6e6 !important;
-}
-
-.drawButtonsBoxDiv button {
-    background-color: #e6e6e6 !important;
-}
-
-.drawButtonsFreeDiv button div span {
-    color: #4498c0 !important;
-}
-
-.drawButtonsBoxDiv button div span {
-    color: #4498c0 !important;
-}
-
-/* DUPLICATE FOR ACCESSING CHILD ELEMENT THAT NEED TO CHANGE ON SELECTION */
-.drawButtonsFreeDivSelect {
-    position: absolute;
-    top: 10px;
-    left: 140px;
-    height: 30px;
-    width: 80px;
-}
-
-.drawButtonsBoxDivSelect {
-    position: absolute;
-    top: 10px;
-    left: 220px;
-    height: 30px;
-    width: 80px;
-}
-
-.drawButtonsFreeDivSelect > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
-}
-
-.drawButtonsBoxDivSelect > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
-}
-
-.drawButtonsFreeDivSelect button {
-    background-color: #4498c0 !important;
-}
-
-.drawButtonsBoxDivSelect button {
-    background-color: #4498c0 !important;
-}
-
-.drawButtonsFreeDivSelect button div span {
-    color: #fff !important;
-}
-
-.drawButtonsBoxDivSelect button div span {
-    color: #fff !important;
+    top: 0;
+    right: 0;
+    height: 50px;
+    float: right;
 }
 
 .cancelButtonDiv {
@@ -151,49 +129,58 @@
     vertical-align: middle;
 }
 
-.setButtonDiv {
-    position: absolute;
-    top: 0px;
-    right: 20px;
-    width: 80px;
-    height: 30px;
-
+.buttonGeneral {
+    width: 5em;
+    padding: 5px 10px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    float: right;
 }
 
-.setButtonDiv > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
+.drawButtonInactive {
+    color: #4498c0;
+    background-color: #e6e6e6;
+    border-color: #e6e6e6;
 }
 
-.setButtonDiv button div span {
-    color: #fff !important;
+.drawButtonInactive:hover {
+    background-color: #438cc0;
+    color: #fff;
 }
 
-.setButtonActiveDiv {
-    position: absolute;
-    top: 0px;
-    right: 20px;
-    width: 80px;
-    height: 30px;
-
+.drawButtonActive {
+    color: #fff;
+    background-color: #4498c0;
+    border-color: #4498c0;
 }
 
-.setButtonActiveDiv > div {
-    min-width: 0px !important;
-    margin-right: 10px;
-    line-height: 30px;
+.drawButtonInactive:hover {
+    background-color: #438cc0;
+    color: #fff;
 }
 
-.dsetButtonActiveDiv button {
-    background-color: #4498c0 !important;
+.setButtonActive {
+    color: #fff;
+    background-color: #048c08;
+    border-color: #048c08;
 }
 
-.setButtonActiveDiv button div span {
-    color: #fff !important;
+.setButtonInactive {
+    color: #fff;
+    background-color: #e6e6e6;
+    border-color: #e6e6e6;
 }
 
-.setButton {
-    padding-top: 10px;
-    padding-left: 10px;
+.flatButtonInactive {
+    color: grey;
+    float: right;
+    background-color: #fff;
+    border-color: #fff;
+}
+
+.flatButtonActive {
+    color: #4498c0;
+    float: right;
+    background-color: #fff;
+    border-color: #fff;
 }
