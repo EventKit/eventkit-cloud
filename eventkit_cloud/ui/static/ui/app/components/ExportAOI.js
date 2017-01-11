@@ -1,28 +1,61 @@
 import 'openlayers/dist/ol.css'
 import React, {Component} from 'react'
+import {connect} from 'react-redux'
 import ol from 'openlayers'
 import styles from './CreateExport.css'
 import DrawControl from './openlayers.DrawControl.js'
+import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
+import SetAOIToolbar from './SetAOIToolbar.js'
+import SearchAOIToolbar from './SearchAOIToolbar.js'
+import DrawAOIToolbar from './DrawAOIToolbar.js'
+import {updateMode, updateBbox} from '../actions/exportsActions.js'
+import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet} from '../actions/drawToolBarActions.js'
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
 export const MODE_NORMAL = 'MODE_NORMAL'
 const WGS84 = 'EPSG:4326'
 const WEB_MERCATOR = 'EPSG:3857'
 
-export default class ExportAOI extends Component {
+export class ExportAOI extends Component {
 
     constructor(props) {
         super(props)
-        this._handleDrawStart = this._handleDrawStart.bind(this)
-        this._handleDrawEnd = this._handleDrawEnd.bind(this)
-        this.drawClicked = this.drawClicked.bind(this);
-        this.state = {mode: MODE_NORMAL}
+        this._handleDrawStart = this._handleDrawStart.bind(this);
+        this._handleDrawEnd = this._handleDrawEnd.bind(this);
+        this.handleDrawRedraw = this.handleDrawRedraw.bind(this);
+        this.handleDrawCancel = this.handleDrawCancel.bind(this);
     }
 
     componentDidMount() {
-        this._initializeOpenLayers()
-        this._updateInteractions()
+        this._initializeOpenLayers();
+        this._updateInteractions();
 
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(this.props.mode != nextProps.mode) {
+            console.log(this.props.mode, nextProps.mode);
+            this._updateInteractions(nextProps.mode);
+        }
+        if(this.props.drawBoxButton.click != nextProps.drawBoxButton.click) {
+//            this.handleDrawBoxClick();
+        }
+        if(this.props.drawCancel.click != nextProps.drawCancel.click) {
+            this.handleDrawCancel();
+        }
+        if(this.props.drawRedraw.click != nextProps.drawRedraw.click) {
+            this.handleDrawRedraw();
+        }
+    }
+
+    handleDrawRedraw() {
+        console.log('Your redrawing!');
+        this._clearDraw();
+    }
+
+    handleDrawCancel() {
+        this._clearDraw();
+        this._deactivateDrawInteraction();
     }
 
     _activateDrawInteraction() {
@@ -34,21 +67,30 @@ export default class ExportAOI extends Component {
     }
 
     _deactivateDrawInteraction() {
+        console.log('deactivating draw');
         this._drawInteraction.setActive(false)
     }
 
     _handleDrawEnd(event) {
+        // exit drawing mode
+        this.props.updateMode('MODE_NORMAL')
+        // make the redraw and set buttons available
+        this.props.toggleDrawRedraw(this.props.drawRedraw.disabled)
+        this.props.toggleDrawSet(this.props.drawSet.disabled)
+        // get the drawn bounding box
         const geometry = event.feature.getGeometry()
         const bbox = serialize(geometry.getExtent())
-        this.props.onBoundingBoxChange(bbox)
     }
 
     _handleDrawStart() {
         this._clearDraw()
-        this.props.onBoundingBoxChange(null)
     }
 
     _initializeOpenLayers() {
+
+        const scaleStyle = {
+            background: 'white',
+        }
 
         this._drawLayer = generateDrawLayer()
         this._drawInteraction = generateDrawInteraction(this._drawLayer)
@@ -56,6 +98,16 @@ export default class ExportAOI extends Component {
         this._drawInteraction.on('drawend', this._handleDrawEnd)
 
         this._map = new ol.Map({
+            controls: [
+                new ol.control.ScaleLine(),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: styles.olZoom
+                })
+            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
@@ -76,23 +128,6 @@ export default class ExportAOI extends Component {
                 maxZoom: 22,
             })
         })
-        const scaleLine = new ol.control.ScaleLine();
-        this._map.addControl(scaleLine);
-
-        const attribution = new ol.control.Attribution();
-        this._map.addControl(attribution);
-
-        const zoomSlider = new ol.control.ZoomSlider();
-        this._map.addControl(zoomSlider);
-
-        const mousePosition = new ol.control.MousePosition({
-            coordinateFormat: ol.coordinate.toStringHDMS,
-            projection: 'EPSG:4326'
-        });
-        this._map.addControl(mousePosition);
-
-        const fullScreen = new ol.control.FullScreen();
-        this._map.addControl(fullScreen);
 
         this._map.addInteraction(this._drawInteraction);
         this._map.addLayer(this._drawLayer);
@@ -100,28 +135,23 @@ export default class ExportAOI extends Component {
 
 
     render() {
+
         let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
+
 
         return (
             <div>
                 <div id="map" className={styles.map} ref="olmap">
-
+                    <SetAOIToolbar />
+                    <SearchAOIToolbar />
+                    <DrawAOIToolbar />
                 </div>
-                <div className={buttonClass}><button onClick={this.drawClicked} style={{width:'80px'}}><i className="fa fa-plus fa-1x">  DRAW</i></button></div>
-                </div>
+            </div>
         );
     }
 
-
-    drawClicked() {
-
-        this.setState({mode: MODE_DRAW_BBOX})
-        this._updateInteractions();
-        console.log(this.state.mode + "I was clicked!")
-    }
-
-    _updateInteractions() {
-        switch (this.state.mode) {
+    _updateInteractions(mode) {
+        switch (mode) {
             case MODE_DRAW_BBOX:
                 this._activateDrawInteraction()
                 break
@@ -133,11 +163,46 @@ export default class ExportAOI extends Component {
     }
 }
 
-ExportAOI.propTypes = {
-    bbox:                React.PropTypes.arrayOf(React.PropTypes.number),
-    mode:                React.PropTypes.string.isRequired,
-    onBoundingBoxChange: React.PropTypes.func.isRequired,
+//ExportAOI.propTypes = {
+//    bbox:                React.PropTypes.arrayOf(React.PropTypes.number),
+//    mode:                React.PropTypes.string.isRequired,
+//    onBoundingBoxChange: React.PropTypes.func.isRequired,
+//}
+
+function mapStateToProps(state) {
+    return {
+        bbox: state.bbox,
+        mode: state.mode,
+        drawCancel: state.drawCancel,
+        drawRedraw: state.drawRedraw,
+        drawSet: state.drawSet,
+        drawBoxButton: state.drawBoxButton,
+    };
 }
+
+function mapDispatchToProps(dispatch) {
+    return {
+        toggleDrawCancel: (currentVisibility) => {
+            dispatch (toggleDrawCancel(currentVisibility))
+        },
+        toggleDrawRedraw: (currentVisibility) => {
+            dispatch(toggleDrawRedraw(currentVisibility))
+        },
+        toggleDrawSet: (currentToggleState) => {
+            dispatch(toggleDrawSet(currentToggleState))
+        },
+        updateMode: (newMode) => {
+            dispatch(updateMode(newMode))
+        },
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(ExportAOI);
+
+
 
 function generateDrawLayer() {
     return new ol.layer.Vector({

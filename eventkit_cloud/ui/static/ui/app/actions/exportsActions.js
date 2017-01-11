@@ -15,6 +15,12 @@ export function updateBbox(bbox) {
     }
 }
 
+export function updateMode(mode) {
+    return {
+        type: types.SET_MODE,
+        mode: mode
+    }
+}
 
 export function loadExports() {
     // make async call to api, handle promise, dispatch action when promise is resolved

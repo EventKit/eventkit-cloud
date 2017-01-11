@@ -1,0 +1,106 @@
+@media only screen and (min-width: 1000px) {
+    .searchbarDiv i {
+        width: 2%;
+    }
+    .searchbarDiv > div {
+        width: 97% !important;
+    }
+    .searchbarInput {
+        width: 97% !important;
+    }
+
+    .searchbarInput > div {
+        width: 97% !important;
+        white-space: nowrap;
+    }
+}
+
+@media only screen and (min-width: 850px) {
+    .searchbarDiv {
+        max-width: 765px !important;
+    }
+}
+
+@media only screen and (min-width: 750px) {
+    .searchbarDiv i {
+        width: 5%;
+    }
+    .searchbarDiv > div {
+        width: 95% !important;
+    }
+    .searchbarInput {
+        width: 95% !important;
+    }
+
+    .searchbarInput > div {
+        width: 95% !important;
+        white-space: nowrap;
+    }
+}
+
+@media only screen and (max-width: 750px) {
+    .searchbarDiv > div > div > div {
+        font-size: .8em !important;
+    }
+    .searchbarDiv i {
+        width: 10%;
+    }
+    .searchbarDiv > div {
+        width: 90% !important;
+    }
+    .searchbarInput {
+        width: 90% !important;
+    }
+
+    .searchbarInput > div {
+        width: 90% !important;
+        white-space: nowrap;
+    }
+}
+
+@media only screen and (max-width: 340px) {
+    .searchbarDiv > div > div > div {
+        font-size: .6em !important;
+    }
+    .searchbarDiv i {
+        width: 15%;
+    }
+    .searchbarDiv > div {
+        width: 85% !important;
+    }
+    .searchbarInput {
+        width: 85% !important;
+    }
+
+    .searchbarInput > div {
+        width: 85% !important;
+        white-space: nowrap;
+    }
+}
+
+.searchbarDiv {
+    z-index: 1;
+    position: absolute;
+    width: 90%;
+    min-width: 320;
+    height: 50px;
+    top: 90px;
+    left: 10px;
+    background-color: white;
+}
+
+.searchbarDiv i {
+    padding-left: 1em;
+    align: center;
+
+    color: #4498c0;
+}
+
+.searchbarInput {
+
+}
+
+.searchbarInput > div {
+
+    white-space: nowrap;
+}
