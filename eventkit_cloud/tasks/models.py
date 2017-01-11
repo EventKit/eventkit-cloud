@@ -128,7 +128,7 @@ class ExportTaskResult(models.Model):
     filename = models.CharField(max_length=100, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
     download_url = models.URLField(
-        verbose_name='Url to export task result output.',
+        verbose_name='URL to export task result output.',
         max_length=254
     )
 

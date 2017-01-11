@@ -1,6 +1,6 @@
 from billiard import Process
 import subprocess
-from inspect import getcallargs
+import time
 from django.db import connection
 
 import logging
@@ -46,7 +46,6 @@ class TaskProcess(object):
 
     def store_pid(self, pid=None):
         """
-
         :param pid: A pid (integer) to store in the Export Task
         :return: None
         """
@@ -57,3 +56,18 @@ class TaskProcess(object):
             export_task = ExportTask.objects.get(uid=self.task_uid)
             export_task.pid = pid
             export_task.save()
+
+    # def wait(self, proc, interval=5):
+    #     """
+    #     :param pid: A pid (integer) to store in the Export Task
+    #     :return: None
+    #     """
+    #     from .models import ExportTask
+    #     from ..tasks.export_tasks import TaskStates
+    #
+    #     while not proc.exitcode:
+    #         time.sleep(interval)
+    #         export_task = ExportTask.objects.get(uid=self.task_uid)
+    #         if TaskStates[export_task.status] != TaskStates.RUNNING:
+    #             proc.terminate()
+    #     return proc.exitcode

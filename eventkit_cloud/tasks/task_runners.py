@@ -24,13 +24,7 @@ export_task_registry = {
     'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
     'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask',
-}
-
-export_task_registry_thematic = {
-    'kml': 'eventkit_cloud.tasks.export_tasks.ThematicKmlExportTask',
-    'shp': 'eventkit_cloud.tasks.export_tasks.ThematicShpExportTask',
-    'sqlite': 'eventkit_cloud.tasks.export_tasks.ThematicSQLiteExportTask',
-    'gpkg': 'eventkit_cloud.tasks.export_tasks.ThematicGPKGExportTask'
+    'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.OSMThematicGPKGExportTask'
 }
 
 
@@ -46,9 +40,9 @@ class TaskRunner(object):
         raise NotImplementedError('Override in subclass.')
 
 
-class ExportOSMTaskRunner(TaskRunner):
+class ExportGenericOSMTaskRunner(TaskRunner):
     """
-    Runs HOT Export Tasks
+    Runs Generic OSM Export Tasks
     """
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
@@ -66,22 +60,16 @@ class ExportOSMTaskRunner(TaskRunner):
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
-        osm = service_type.get('osm-generic')
-        osm_thematic = service_type.get('osm')
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
-        thematic_exports = {}
+
         # build a list of celery tasks based on the export formats..
         for format in formats:
             try:
-                # instantiate the required class.
-                if osm:
-                    export_tasks[format] = {'obj': create_format_task(format, 'osm-generic')(), 'task_uid': None}
-                if format != 'gpkg' and osm_thematic:
-                    thematic_exports[format] = {'obj': create_format_task(format, 'osm')(), 'task_uid': None}
+                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -89,8 +77,8 @@ class ExportOSMTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
-        if osm or osm_thematic:
 
+        if len(export_tasks) > 0:
             # pull out the tags to create the conf file
             categories = job.categorised_tags  # dict of points/lines/polygons
             bbox = job.overpass_extents  # extents of provider_task in order required by overpass
@@ -108,12 +96,7 @@ class ExportOSMTaskRunner(TaskRunner):
                          'query': {'obj': OverpassQueryTask(), 'task_uid': None},
                          'pbfconvert': {'obj': OSMToPBFConvertTask(), 'task_uid': None},
                          'prep_schema': {'obj': OSMPrepSchemaTask(), 'task_uid': None}}
-            # check for transform and/or translate configurations
-            """
-            Not implemented for now.
-            transform = provider_task.configs.filter(config_type='TRANSFORM')
-            translate = provider_task.configs.filter(config_type='TRANSLATION')
-            """
+
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
@@ -128,11 +111,6 @@ class ExportOSMTaskRunner(TaskRunner):
                 export_task = create_export_task(task_name=task.get('obj').name,
                                                  export_provider_task=export_provider_task, worker=worker)
                 export_tasks[task_type]['task_uid'] = export_task.uid
-
-            for task_type, task in thematic_exports.iteritems():
-                export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker)
-                thematic_exports[task_type]['task_uid'] = export_task.uid
 
             """
             Create a celery chain which runs the initial conf and query tasks (initial_tasks),
@@ -165,44 +143,99 @@ class ExportOSMTaskRunner(TaskRunner):
 
             task_chain = (initial_tasks | schema_tasks)
 
-            if osm:
-                format_tasks = group(task.get('obj').si(run_uid=run.uid,
-                                                        stage_dir=stage_dir,
-                                                        job_name=job_name,
-                                                        task_uid=task.get('task_uid')).set(queue=worker) for
-                                     task_name, task in
-                                     export_tasks.iteritems() if task is not None)
-                task_chain = (task_chain | format_tasks)
+            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+                                                    stage_dir=stage_dir,
+                                                    job_name=job_name,
+                                                    task_uid=task.get('task_uid')).set(queue=worker) for
+                                 task_name, task in
+                                 export_tasks.iteritems() if task is not None)
+            task_chain = (task_chain | format_tasks)
 
-            if osm_thematic:
-                thematic_gpkg_task = create_format_task('gpkg', 'osm')()
-                thematic_gpkg = {'obj': thematic_gpkg_task,
-                                 'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
-                                                                export_provider_task=export_provider_task, worker=worker).uid}
-                thematic_tasks = (thematic_gpkg.get('obj').si(run_uid=run.uid,
-                                                              stage_dir=stage_dir,
-                                                              job_name=job_name,
-                                                              task_uid=thematic_gpkg.get('task_uid')).set(
-                    queue=worker) |
-                                  group(task.get('obj').si(run_uid=run.uid,
-                                                           stage_dir=stage_dir,
-                                                           job_name=job_name,
-                                                           task_uid=task.get('task_uid')).set(queue=worker) for
-                                        task_name, task in
-                                        thematic_exports.iteritems())
-                                  )
-                task_chain = (task_chain | thematic_tasks)
-
-                """
-                the tasks are chained instead of nested groups.
-                this is because celery3.x has issues with handling these callbacks
-                even using redis as a result backend
-                """
+            """
+            the tasks are chained instead of nested groups.
+            this is because celery3.x has issues with handling these callbacks
+            even using redis as a result backend
+            """
 
             return export_provider_task.uid, task_chain
-
         else:
-            return None, False
+            return None, None
+
+
+class ExportThematicOSMTaskRunner(TaskRunner):
+    """Run Thematic OSM Export Tasks, this requires an OSM file be available to it."""
+
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+        """
+        Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
+
+        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param user: The user executing the task.
+        :param run: The ExportRun which this task will belong to.
+        :param stage_dir: The directory where to store the files while they are being created.
+        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
+        :param worker: The celery worker assigned this task.
+        :param osm_gpkg: A OSM geopackage with the planet osm schema.
+        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        """
+        logger.debug('Running Job with id: {0}'.format(provider_task_uid))
+
+        # pull the provider_task from the database
+        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        logger.info(
+            "RUNNING TASK: {0}".format(provider_task))
+        job = run.job
+        job_name = normalize_job_name(job.name)
+        # get the formats to export
+        formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
+        export_tasks = {}
+
+        # build a list of celery tasks based on the export formats...
+        for format in formats:
+            if format == 'gpkg':
+                continue
+            try:
+                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
+            except KeyError as e:
+                logger.debug(e)
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
+
+        # run the tasks
+        export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                 name=provider_task.provider.name,
+                                                                 slug=provider_task.provider.slug,
+                                                                 status="PENDING")
+
+        for task_type, task in export_tasks.iteritems():
+            export_task = create_export_task(task_name=task.get('obj').name,
+                                             export_provider_task=export_provider_task, worker=worker)
+            export_tasks[task_type]['task_uid'] = export_task.uid
+
+        """
+        Create a celery chain which uses a gpkg file with the planet osm schema, so that it can be converted to a
+        thematic schema.
+        """
+        thematic_gpkg_task = create_format_task('gpkg-thematic')()
+        thematic_gpkg = {'obj': thematic_gpkg_task,
+                         'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
+                                                        export_provider_task=export_provider_task, worker=worker).uid}
+        # Note this needs to be mutable (s instead of si) so that it can take the result of the generic osm tasks.
+        thematic_tasks = (thematic_gpkg.get('obj').s(run_uid=run.uid,
+                                                      stage_dir=stage_dir,
+                                                      job_name=job_name,
+                                                      task_uid=thematic_gpkg.get('task_uid')).set(
+            queue=worker) |
+                          group(task.get('obj').si(run_uid=run.uid,
+                                                   stage_dir=stage_dir,
+                                                   job_name=job_name,
+                                                   task_uid=task.get('task_uid')).set(queue=worker) for
+                                task_name, task in
+                                export_tasks.iteritems())
+                          )
+
+        return export_provider_task.uid, thematic_tasks
 
 
 class ExportWFSTaskRunner(TaskRunner):
@@ -235,7 +268,7 @@ class ExportWFSTaskRunner(TaskRunner):
         for _format in formats:
             try:
                 # instantiate the required class.
-                export_tasks[_format] = {'obj': create_format_task(_format, 'osm-generic')(), 'task_uid': None}
+                export_tasks[_format] = {'obj': create_format_task(_format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -279,6 +312,8 @@ class ExportWFSTaskRunner(TaskRunner):
 
             task_chain = (initial_task | format_tasks)
             return export_provider_task.uid, task_chain
+        else:
+            return None, None
 
 
 class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
@@ -318,7 +353,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         for format in formats:
             try:
                 # instantiate the required class.
-                export_tasks[format] = {'obj': create_format_task(format, 'osm-generic')(), 'task_uid': None}
+                export_tasks[format] = {'obj': create_format_task(format)(), 'task_uid': None}
             except KeyError as e:
                 logger.debug(e)
             except ImportError as e:
@@ -362,6 +397,8 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
             task_chain = (initial_task | format_tasks)
             return export_provider_task.uid, task_chain
+        else:
+            return None, None
 
 
 class ExportExternalRasterServiceTaskRunner(TaskRunner):
@@ -398,7 +435,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         # build a list of celery tasks based on the export formats..
         try:
             # instantiate the required class.
-            export_tasks['gpkg'] = {'obj': create_format_task('gpkg', 'osm-generic')(), 'task_uid': None}
+            export_tasks['gpkg'] = {'obj': create_format_task('gpkg')(), 'task_uid': None}
         except KeyError as e:
             logger.debug(e)
         except ImportError as e:
@@ -435,12 +472,8 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             return None, None
 
 
-def create_format_task(task_format, task_type):
-    if task_type == 'osm-generic':
-        task_fq_name = export_task_registry[task_format]
-    else:
-        task_fq_name = export_task_registry_thematic[task_format]
-
+def create_format_task(task_format):
+    task_fq_name = export_task_registry[task_format]
     # instantiate the required class.
     parts = task_fq_name.split('.')
     module_path, class_name = '.'.join(parts[:-1]), parts[-1]

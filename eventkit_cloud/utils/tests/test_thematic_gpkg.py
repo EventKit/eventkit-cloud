@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-
 from mock import Mock, patch, MagicMock
 
 from django.conf import settings
@@ -35,17 +34,17 @@ class TestThematicGPKG(TestCase):
             tag = Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                      geom_types=entry['geom_types'], data_model='PRESET', job=self.job)
 
+    @patch('os.remove')
+    @patch('__builtin__.open')
     @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
     @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')
     @patch('eventkit_cloud.utils.thematic_gpkg.subprocess.PIPE')
     @patch('eventkit_cloud.utils.thematic_gpkg.TaskProcess')
     @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3.connect')
-    def test_convert(self, connect, task_process, pipe, exists, copy):
+    def test_convert(self, connect, task_process, pipe, exists, copy, mock_open, remove):
         gpkg = self.path + '/files/test.gpkg'
-        thematic_gpkg = self.path + '/files/test_thematic_shp_thematic.gpkg'
-        # proc = Mock()
-        # proc.communicate.return_value = (Mock(), Mock())
-        # proc.wait.return_value = 0
+        stage_dir = '/test/path'
+        sql_file_name = 'thematic_spatial_index.sql'
         exists.return_value = True
         conn = Mock()
         conn.enable_load_extention = Mock()
@@ -54,11 +53,13 @@ class TestThematicGPKG(TestCase):
         conn.cursor = cur
         cur.execute = MagicMock()
         tags = self.job.categorised_tags
-        generated_task_uid = task_uid=uuid.uuid4()
+        generated_task_uid = uuid.uuid4()
         t2s = ThematicGPKG(
             gpkg=gpkg,
-            tags=tags, job_name='test_thematic_gpkg',
-            zipped=False, debug=False,
+            tags=tags,
+            job_name='test_thematic_gpkg',
+            stage_dir=stage_dir,
+            debug=False,
             task_uid=generated_task_uid
         )
         task_process.return_value = MagicMock(exitcode=0)
@@ -70,4 +71,6 @@ class TestThematicGPKG(TestCase):
         connect.assert_called_once()
         conn.load_extention.assert_called_once()
         conn.cursor.assert_called_once()
+        mock_open.assert_called_once_with(os.path.join(stage_dir, sql_file_name), 'w+')
+        remove.assert_called_once_with(os.path.join(stage_dir, sql_file_name))
 

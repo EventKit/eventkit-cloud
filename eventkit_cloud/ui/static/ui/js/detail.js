@@ -630,7 +630,6 @@ exports.detail = (function () {
                     $("#cancel-" + provider.uid).removeClass('fa fa-cog fa-spin');
                     $tr.addClass(status.toLowerCase());
                     $tr.html('<td>' + task.name + '</td><td> -- </td><td> -- </td><td>' + task.status + '</td>');
-                    $barTr.html('');
                 }
             },
             failure: function () {
@@ -839,18 +838,18 @@ exports.detail = (function () {
                 // Check for OSM(Generic task) which doesn't get counted in the run as a separate provider task.
                 var osm_generic_index = null;
                 var osm_index = null;
-                $.each(job_data.provider_tasks, function (index, provider_task) {
-                    if (provider_task.provider === "OpenStreetMap Data (Generic)") {
-                        osm_generic_index = index;
-                    }
-                    if (provider_task.provider === "OpenStreetMap Data") {
-                        osm_index = index;
-                    }
-                });
-                if (osm_generic_index != null && osm_index != null) {
-                    console.log("Removing duplicate OSM provider.")
-                    job_data.provider_tasks.splice(osm_generic_index, 1);
-                }
+                // $.each(job_data.provider_tasks, function (index, provider_task) {
+                //     if (provider_task.provider === "OpenStreetMap Data (Generic)") {
+                //         osm_generic_index = index;
+                //     }
+                //     if (provider_task.provider === "OpenStreetMap Data") {
+                //         osm_index = index;
+                //     }
+                // });
+                // if (osm_generic_index != null && osm_index != null) {
+                //     console.log("Removing duplicate OSM provider.")
+                //     job_data.provider_tasks.splice(osm_generic_index, 1);
+                // }
                 if (compareRunJobProviderTasks(run_data, job_data)) {
                     exports.detail.run_ready = true;
                 }
@@ -864,8 +863,8 @@ exports.detail = (function () {
         //Multiple runs may exist so check the submitted runs specifically
         $.each(run_data, function (index, run) {
             if (run.status === 'SUBMITTED') {
-                console.log("Run details will be displayed when job tasks ("+job_data.provider_tasks.length+") == run tasks ("+run.provider_tasks.length+")");
-                run_ready = job_data.provider_tasks.length == run.provider_tasks.length;
+                console.log("Run details will be displayed when job tasks ("+job_data.provider_tasks.length+") <= run tasks ("+run.provider_tasks.length+")");
+                run_ready = job_data.provider_tasks.length <= run.provider_tasks.length;
             }
         });
         return run_ready;

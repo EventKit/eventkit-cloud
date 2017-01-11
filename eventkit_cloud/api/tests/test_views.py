@@ -586,7 +586,7 @@ class TestBBoxSearch(APITestCase):
         self.user = None
         self.client = None
 
-    @patch('eventkit_cloud.tasks.task_runners.ExportOSMTaskRunner')
+    @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
     def setUp(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
