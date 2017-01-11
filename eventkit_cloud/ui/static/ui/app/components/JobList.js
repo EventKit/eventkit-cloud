@@ -23,6 +23,7 @@ const styles = {
     },
     card: {
         backgroundColor: '#f7f8f8',
+
     },
     cardTitle:{
 
@@ -43,7 +44,6 @@ const JobList = ({jobs}) => {
             {jobs.map((job) => (
                 <Card style={styles.card} key={job.uid}>
                     <CardTitle color={lightBlue200} style={styles.cardTitle} title={job.name} subtitle={job.date} />
-
                     <CardActions>
                         <FlatButton label="Action1" />
                         <FlatButton label="Action2" />

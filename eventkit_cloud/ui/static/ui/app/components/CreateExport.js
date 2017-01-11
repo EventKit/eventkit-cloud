@@ -5,6 +5,7 @@ import AppBar from 'material-ui/AppBar'
 import IconButton from 'material-ui/IconButton'
 import IconMenu from 'material-ui/IconMenu'
 import MenuItem from 'material-ui/MenuItem'
+import BreadcrumbStepper from './BreadcrumbStepper'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
@@ -66,7 +67,7 @@ class CreateExport extends React.Component {
 
                                         </IconMenu>}
             />
-
+            <BreadcrumbStepper/>
 
 
                 <div>
