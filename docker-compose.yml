@@ -14,7 +14,7 @@ services:
         - DEBUG=True
         - PRODUCTION=True
         - DJANGO_LOG_LEVEL=ERROR
-        - LOG_LEVEL=ERROR
+        - LOG_LEVEL=INFO
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
      extra_hosts:
@@ -45,6 +45,7 @@ services:
       environment:
         # Concurrency needs to be greater than 1 to support Task Cancellation.
         - CONCURRENCY=2
+        - MAPPROXY_CONCURRENCY=8
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
       extends:
@@ -58,7 +59,6 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=ERROR
         - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
   postgis:

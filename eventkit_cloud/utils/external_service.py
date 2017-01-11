@@ -11,11 +11,11 @@ from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
 from .geopackage import remove_empty_zoom_levels
-from billiard.util import register_after_fork
+from django.conf import settings
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
-from django.db import connection, connections, OperationalError
+from django.db import connections
 from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class ExternalRasterServiceToGeopackage(object):
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
                         kwargs={"tasks": seed_configuration.seeds(['seed']),
-                                "concurrency": 1,
+                                "concurrency": int(getattr(settings, 'MAPPROXY_CONCURRENCY', 1)),
                                 "progress_logger": progress_logger})
             remove_empty_zoom_levels(self.gpkgfile)
         except Exception as e:
