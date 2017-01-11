@@ -14,7 +14,7 @@ services:
         - DEBUG=True
         - PRODUCTION=True
         - DJANGO_LOG_LEVEL=ERROR
-        - LOG_LEVEL=INFO
+        - LOG_LEVEL=ERROR
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
      extra_hosts:
