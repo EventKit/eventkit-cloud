@@ -109,6 +109,8 @@ AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
+MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
