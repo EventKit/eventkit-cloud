@@ -1,0 +1,79 @@
+@media only screen and (min-width: 850px) {
+    .toolbarDiv {
+        max-width: 765px !important;
+    }
+}
+
+@media only screen and (max-width: 750px) {
+    .toolbarDiv {
+        font-size: .8em;
+    }
+}
+
+@media only screen and (max-width: 340px) {
+    .toolbarDiv {
+        font-size: .6em;
+    }
+}
+
+.toolbarDiv {
+    z-index: 1;
+    position: absolute;
+    width: 90%;
+    top: 1em;
+    left: 10px;
+    background-color: #fff;
+    height: 50px;
+}
+
+.titleDiv {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 50%;
+    width: 50%;
+    padding-left: 15px;
+    padding-top: 10px;
+}
+
+.selectedDiv {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    height: 50%;
+    width: 50%;
+    padding-left: 15px;
+    padding-top: 5px;
+    color: grey;
+}
+
+.toolbarText {
+    padding-left: 10px;
+}
+
+.resetMapDiv {
+    position: absolute;
+    left: 50%;
+    width: 20%;
+    height: 100%;
+    padding-top: 10px;
+    top: 0px;
+    text-align: center;
+    color: grey
+}
+
+.zoomToDiv {
+    position: absolute;
+    left: 70%;
+    width: 30%;
+    height: 100%;
+    padding-top: 10px;
+    top: 0px;
+    text-align: center;
+    color: grey;
+}
+
+.simpleButton {
+    background: none;
+    border: none;
+}

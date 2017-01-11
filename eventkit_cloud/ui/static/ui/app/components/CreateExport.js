@@ -8,6 +8,8 @@ import MenuItem from 'material-ui/MenuItem'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
+import {updateBbox} from '../actions'
+import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import {
@@ -16,16 +18,13 @@ import {
     StepLabel,
 } from 'material-ui/Stepper';
 import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
-import {
-updateBbox
-} from '../actions'
 
 
 class CreateExport extends React.Component {
 
     constructor() {
         super()
-        this._handleBoundingBoxChange = this._handleBoundingBoxChange(this)
+        this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
     }
 
 
@@ -54,24 +53,21 @@ class CreateExport extends React.Component {
         jobs[6]  = {uid: '33430', name: 'alksdfjlkasjdf'}
 
         return (
-        <div>
-            <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
-                    iconElementLeft={<p></p>}
-                    iconElementRight={<IconMenu iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
-                                          anchorOrigin={{horizontal: 'right', vertical: 'top'}}
-                                          targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-                                          <MenuItem primaryText="Save & Exit" />
-                                          <MenuItem primaryText="Save & Share" />
-                                          <MenuItem primaryText="Discard" />
+            <div>
+                <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
+                        iconElementLeft={<p></p>}
+                        iconElementRight={<IconMenu iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
+                                              anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+                                              targetOrigin={{horizontal: 'right', vertical: 'top'}}>
+                                              <MenuItem primaryText="Save & Exit" />
+                                              <MenuItem primaryText="Save & Share" />
+                                              <MenuItem primaryText="Discard" />
 
-                                        </IconMenu>}
-            />
-
-
-
+                                            </IconMenu>}
+                />
                 <div>
                     <ExportAOI mode={this._mapMode} 
-                               onBoundingBoxChange={this._handleBoundingBoxChange}/>
+                               onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>
                 </div>
                 <div >
                     {this.props.children}
@@ -95,7 +91,8 @@ class CreateExport extends React.Component {
     }
 
     _handleBoundingBoxChange(bbox) {
-        //this.props.dispatch(updateBbox(bbox))
+        console.log('Running Handle bounding box change in CreateExport.js')
+        console.log(this.props.bbox)
     }
 
 }
@@ -109,8 +106,11 @@ CreateExport.propTypes = {
 function mapStateToProps(state) {
     return {
         location: state.location,
-        bbox: state.bbox
+        bbox: state.bbox,
     };
 }
 
-export default connect(mapStateToProps)(CreateExport);
+
+export default connect(
+    mapStateToProps,
+)(CreateExport);
