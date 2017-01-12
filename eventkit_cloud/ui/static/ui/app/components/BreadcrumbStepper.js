@@ -1,7 +1,12 @@
 import React from 'react';
 import { Link, IndexLink } from 'react-router'
-import Button from 'react-bootstrap/lib/Button'
-import Breadcrumb from 'react-bootstrap/lib/Breadcrumb'
+import {
+    Step,
+    Stepper,
+    StepLabel,
+} from 'material-ui/Stepper';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
+import FlatButton from 'material-ui/FlatButton';
 import style from './BreadcrumbStepper.css'
 
 /**
@@ -55,50 +60,45 @@ class BreadcrumbStepper extends React.Component {
                 height: '35px',
                 fontColor: 'white',
                 fontFamily: 'Roboto',
-                fontSize: '18px',
+                zIndex: 1,
             },
             stepLabel: {
                 color: 'white',
                 fontSize: '18px',
-            },
-            btnLg : {
-            width: '50px',
-            height: '50px',
-            padding: '10px 16px',
-            textAlign: 'center',
-            fontSize: '18px',
-            lineHeight: '1.33',
-            borderRadius: '25px',
         }
         };
         const {finished, stepIndex} = this.state;
-        const contentStyle = {margin: '0 16px'};
 
         return (
             <div style={{width: '100%', backgroundColor: '#161e2e'}}>
-            <div style={{width: '50%', margin: '0 auto', backgroundColor: '#161e2e'}}>
-                <Breadcrumb style={styles.stepper}>
-                    <Breadcrumb.Item style={styles.stepper} href="#">
-                        Set AOI
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item style={styles.stepper} href="#">
-                        Add Info
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item style={styles.stepper}>
-                        Preview & Export
-                    </Breadcrumb.Item>
-                    <Breadcrumb.Item style={styles.stepper}>
-                        Export Status
-                    </Breadcrumb.Item>
-                </Breadcrumb>
+            <div style={{width: '50%',  margin: '0 auto', backgroundColor: '#161e2e'}}>
 
-                <div style={contentStyle}>
+                <Stepper style={styles.stepper} activeStep={stepIndex}>
+                    <Step>
+                        <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
+                    </Step>
+                    <Step>
+                        <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
+                    </Step>
+                    <Step>
+                        <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
+                    </Step>
+                    <Step>
+                        <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
+                    </Step>
+                </Stepper>
 
-                </div>
              </div>
-                <div style={{ float:'right', marginTop: '-45px', marginRight: '400px'}}>
-                    <Button bsStyle="primary" style={styles.btnLg}  disabled><i className="fa fa-arrow-left" aria-hidden="true"></i></Button>
-                    <Button bsStyle="success" style={styles.btnLg}><i className="fa fa-arrow-right" aria-hidden="true"></i></Button>
+                <div style={{ float:'right', marginTop: '-35px', marginRight: '200px'}}>
+
+
+                    <FloatingActionButton mini={true}
+                                          disabled={stepIndex === 0}
+                                          onTouchTap={this.handlePrev}
+                                          style={{marginRight: 12}}><i className="fa fa-arrow-left fa-lg" aria-hidden="true"></i></FloatingActionButton>
+                    <FloatingActionButton mini={true}
+                                          onTouchTap={this.handleNext}
+                                          style={{marginRight: 12}}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></FloatingActionButton>
                 </div>
             </div>
         );

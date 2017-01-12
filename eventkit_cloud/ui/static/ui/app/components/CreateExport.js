@@ -66,6 +66,7 @@ class CreateExport extends React.Component {
 
                                             </IconMenu>}
                 />
+                <BreadcrumbStepper/>
                 <div>
                     <ExportAOI mode={this._mapMode} 
                                onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>
