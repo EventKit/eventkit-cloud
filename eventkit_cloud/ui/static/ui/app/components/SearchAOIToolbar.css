@@ -2,16 +2,8 @@
     .searchbarDiv i {
         width: 2%;
     }
-    .searchbarDiv > div {
-        width: 97% !important;
-    }
-    .searchbarInput {
-        width: 97% !important;
-    }
-
-    .searchbarInput > div {
-        width: 97% !important;
-        white-space: nowrap;
+    .formGroup {
+        width: 98%;
     }
 }
 
@@ -25,56 +17,32 @@
     .searchbarDiv i {
         width: 5%;
     }
-    .searchbarDiv > div {
-        width: 95% !important;
-    }
-    .searchbarInput {
-        width: 95% !important;
-    }
-
-    .searchbarInput > div {
-        width: 95% !important;
-        white-space: nowrap;
+    .formGroup {
+        width: 95%;
     }
 }
 
 @media only screen and (max-width: 750px) {
-    .searchbarDiv > div > div > div {
+    .formControl {
         font-size: .8em !important;
     }
     .searchbarDiv i {
         width: 10%;
     }
-    .searchbarDiv > div {
-        width: 90% !important;
-    }
-    .searchbarInput {
-        width: 90% !important;
-    }
-
-    .searchbarInput > div {
-        width: 90% !important;
-        white-space: nowrap;
+    .formGroup {
+        width: 90%;
     }
 }
 
 @media only screen and (max-width: 340px) {
-    .searchbarDiv > div > div > div {
+    .formControl {
         font-size: .6em !important;
     }
     .searchbarDiv i {
         width: 15%;
     }
-    .searchbarDiv > div {
-        width: 85% !important;
-    }
-    .searchbarInput {
-        width: 85% !important;
-    }
-
-    .searchbarInput > div {
-        width: 85% !important;
-        white-space: nowrap;
+    .formGroup {
+        width: 85%;
     }
 }
 
@@ -90,17 +58,23 @@
 }
 
 .searchbarDiv i {
+    padding-top: 18px;
     padding-left: 1em;
-    align: center;
-
     color: #4498c0;
+    height: 50px;
 }
 
-.searchbarInput {
-
+.formGroup {
+    float: right;
+    height: 50px;
 }
 
-.searchbarInput > div {
+.formControl {
+    height: 50px;
+    border: none;
+    width: 100%;
+}
 
-    white-space: nowrap;
+.formControl:focus {
+    outline: none;
 }
