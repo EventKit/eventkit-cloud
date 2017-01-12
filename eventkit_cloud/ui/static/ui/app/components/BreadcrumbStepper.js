@@ -72,21 +72,22 @@ class BreadcrumbStepper extends React.Component {
         return (
             <div style={{width: '100%', backgroundColor: '#161e2e'}}>
             <div style={{width: '50%',  margin: '0 auto', backgroundColor: '#161e2e'}}>
-
-                <Stepper style={styles.stepper} activeStep={stepIndex}>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
-                    </Step>
-                    <Step>
-                        <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
-                    </Step>
-                </Stepper>
+                <div className={style.stepperWrapper}>
+                    <Stepper activeStep={stepIndex}>
+                        <Step>
+                            <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
+                        </Step>
+                        <Step>
+                            <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
+                        </Step>
+                        <Step>
+                            <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
+                        </Step>
+                        <Step>
+                            <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
+                        </Step>
+                    </Stepper>
+                </div>
 
              </div>
                 <div style={{ float:'right', marginTop: '-35px', marginRight: '200px'}}>

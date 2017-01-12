@@ -5,8 +5,8 @@
 }
 
 @media only screen and (min-width: 750px) {
-    .stepper {
-        font-size: 1em;
+    .stepperWrapper > div > div > span {
+        font-size: 1em !important;
     }
     .stepLabel {
         font-size: 1em;
@@ -14,8 +14,8 @@
 }
 
 @media only screen and (max-width: 750px) {
-    .stepper {
-         font-size: .8em;
+    .stepperWrapper > div > div > span {
+         font-size: .8em !important;
      }
     .stepLabel {
         font-size: .8em;
@@ -23,8 +23,8 @@
 }
 
 @media only screen and (max-width: 500px) {
-    .stepper {
-        font-size: .7em;
+    .stepperWrapper > div > div > span  {
+        font-size: .7em !important;
     }
     .stepLabel {
         font-size: .7em;
@@ -35,17 +35,19 @@
     .stepLabel {
         font-size: .6em;
     }
-    .stepper {
-        font-size: .6em;
+    .stepperWrapper > div > div > span {
+        font-size: .6em !important;
     }
 
 }
-.stepper {
+
+.stepperWrapper {}
+
+.stepperWrapper > div {
     background-color: #161e2e;
     height: 35px;
-    font-color: white;
+    color: white;
     font-family: Roboto;
-    font-size: 18px;
     z-index: 1;
 }
 
