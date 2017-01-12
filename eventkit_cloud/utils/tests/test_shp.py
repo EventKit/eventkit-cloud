@@ -24,7 +24,8 @@ class TestGPKGToShp(TransactionTestCase):
     def test_convert(self, popen, pipe, exists, export_task):
         gpkg = self.path + '/utils/tests/files/test.gpkg'
         shapefile = self.path + '/utils/tests/files/shp'
-        cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8".format(shapefile, gpkg)
+        layer_name = os.path.splitext(os.path.basename(gpkg))[0]
+        cmd = "ogr2ogr -f 'ESRI Shapefile' {0} {1} -lco ENCODING=UTF-8 -nln {2} -overwrite".format(shapefile, gpkg, layer_name)
         proc = Mock()
         exists.return_value = True
         popen.return_value = proc
