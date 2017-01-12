@@ -23,5 +23,9 @@ export default {
     zoomToSelection: {
         disabled: true,
         click: false
-    }
+    },
+    resetMap: {
+        disabled: true,
+        click: false
+    },
 }

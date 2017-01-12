@@ -2,7 +2,7 @@
 import {combineReducers} from 'redux';
 import {exportJobsReducer, exportModeReducer, exportBboxReducer} from './exportsReducer';
 import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer} from './drawToolBarReducer';
-import {zoomToSelectionReducer} from './setAoiToolbarReducer.js';
+import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -14,8 +14,8 @@ const rootReducer = combineReducers({
     mode: exportModeReducer,
     jobs: exportJobsReducer,
     bbox: exportBboxReducer,
-    zoomToSelction: zoomToSelectionReducer,
-    
+    zoomToSelection: zoomToSelectionReducer,
+    resetMap: resetMapReducer,
 })
 
 export default rootReducer;

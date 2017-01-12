@@ -24,6 +24,8 @@ export class ExportAOI extends Component {
         this._handleDrawEnd = this._handleDrawEnd.bind(this);
         this.handleDrawRedraw = this.handleDrawRedraw.bind(this);
         this.handleDrawCancel = this.handleDrawCancel.bind(this);
+        this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.handleResetMap = this.handleResetMap.bind(this);
     }
 
     componentDidMount() {
@@ -33,30 +35,57 @@ export class ExportAOI extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        // Check if the map mode has changed (DRAW or NORMAL)
         if(this.props.mode != nextProps.mode) {
             console.log(this.props.mode, nextProps.mode);
             this._updateInteractions(nextProps.mode);
         }
+        // Check if the draw box button has been clicked
         if(this.props.drawBoxButton.click != nextProps.drawBoxButton.click) {
 //            this.handleDrawBoxClick();
         }
+        // Check if cancel button has been clicked
         if(this.props.drawCancel.click != nextProps.drawCancel.click) {
             this.handleDrawCancel();
         }
+        // Check if redraw button has been clicked
         if(this.props.drawRedraw.click != nextProps.drawRedraw.click) {
             this.handleDrawRedraw();
+        }
+        // Check if zoom to selection button has been clicked
+        if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
+            this.handleZoomToSelection(nextProps.bbox);
+        }
+        // Check if the reset map button has been clicked
+        if(this.props.resetMap.click != nextProps.resetMap.click) {
+            this.handleResetMap();
         }
     }
 
     handleDrawRedraw() {
-        console.log('Your redrawing!');
         this._clearDraw();
+        this.props.updateBbox([]);
     }
 
     handleDrawCancel() {
         this._clearDraw();
         this._deactivateDrawInteraction();
+        this.props.updateBbox([]);
     }
+
+    handleZoomToSelection(bbox) {
+        this._map.getView().fit(
+            ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR),
+            this._map.getSize()
+        );
+    }
+
+    handleResetMap() {
+        let worldExtent = ol.proj.transformExtent([-180,-90,180,90], WGS84, WEB_MERCATOR)
+        this._map.getView().fit(worldExtent, this._map.getSize());
+    }
+
+
 
     _activateDrawInteraction() {
         this._drawInteraction.setActive(true)
@@ -67,7 +96,6 @@ export class ExportAOI extends Component {
     }
 
     _deactivateDrawInteraction() {
-        console.log('deactivating draw');
         this._drawInteraction.setActive(false)
     }
 
@@ -80,6 +108,7 @@ export class ExportAOI extends Component {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry()
         const bbox = serialize(geometry.getExtent())
+        this.props.updateBbox(bbox);
     }
 
     _handleDrawStart() {
@@ -177,23 +206,28 @@ function mapStateToProps(state) {
         drawRedraw: state.drawRedraw,
         drawSet: state.drawSet,
         drawBoxButton: state.drawBoxButton,
+        zoomToSelection: state.zoomToSelection,
+        resetMap: state.resetMap,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
         toggleDrawCancel: (currentVisibility) => {
-            dispatch (toggleDrawCancel(currentVisibility))
+            dispatch (toggleDrawCancel(currentVisibility));
         },
         toggleDrawRedraw: (currentVisibility) => {
-            dispatch(toggleDrawRedraw(currentVisibility))
+            dispatch(toggleDrawRedraw(currentVisibility));
         },
         toggleDrawSet: (currentToggleState) => {
-            dispatch(toggleDrawSet(currentToggleState))
+            dispatch(toggleDrawSet(currentToggleState));
         },
         updateMode: (newMode) => {
-            dispatch(updateMode(newMode))
+            dispatch(updateMode(newMode));
         },
+        updateBbox: (newBbox) => {
+            dispatch(updateBbox(newBbox));
+        }
     }
 }
 

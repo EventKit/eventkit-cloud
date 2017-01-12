@@ -121,7 +121,6 @@ export class DrawAOIToolbar extends Component {
     }
 
     handleDrawRedraw() {
-        console.log('You have chosen to redraw')
         this.props.updateMode('MODE_DRAW_BBOX')
         this.props.toggleDrawRedraw(false);
         this.props.toggleDrawSet(false);
@@ -170,22 +169,6 @@ export class DrawAOIToolbar extends Component {
         )
     }
 }
-
-//<FlatButton
-//                                label="Cancel"
-//                                primary={!this.props.drawCancel.disabled}
-//                                disabled={this.props.drawCancel.disabled}
-//                                onClick={this.props.clickDrawCancel}
-//                             />
-
-// <div className={styles.redrawButtonDiv}>
-//                            <FlatButton
-//                                label="Redraw"
-//                                primary={!this.props.drawRedraw.disabled}
-//                                disabled={this.props.drawRedraw.disabled}
-//                                onClick={this.props.clickDrawRedraw}
-//                            />
-//                        </div>
 
 function mapStateToProps(state) {
     return {

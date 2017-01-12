@@ -15,3 +15,17 @@ export function clickZoomToSelection() {
         click: true
     }
 }
+
+export function toggleResetMap(currentState) {
+    return {
+        type: types.TOGGLE_RESET_MAP,
+        disabled: !currentState
+    }
+}
+
+export function clickResetMap() {
+    return {
+        type: types.CLICK_RESET_MAP,
+        click: true
+    }
+}
