@@ -1,0 +1,55 @@
+@media only screen and (min-width: 850px) {
+    .toolbarsContainer {
+        max-width: 680px !important;
+    }
+}
+
+@media only screen and (min-width: 750px) {
+    .stepper {
+        font-size: 1em;
+    }
+    .stepLabel {
+        font-size: 1em;
+    }
+}
+
+@media only screen and (max-width: 750px) {
+    .stepper {
+         font-size: .8em;
+     }
+    .stepLabel {
+        font-size: .8em;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .stepper {
+        font-size: .7em;
+    }
+    .stepLabel {
+        font-size: .7em;
+    }
+
+}
+@media only screen and (max-width: 400px) {
+    .stepLabel {
+        font-size: .6em;
+    }
+    .stepper {
+        font-size: .6em;
+    }
+
+}
+.stepper {
+    background-color: #161e2e;
+    height: 35px;
+    font-color: white;
+    font-family: Roboto;
+    font-size: 18px;
+    z-index: 1;
+}
+
+.stepLabel {
+    color: white;
+    fontSize: 18px;
+}
