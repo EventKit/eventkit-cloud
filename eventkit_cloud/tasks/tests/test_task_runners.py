@@ -11,7 +11,7 @@ from django.test import TestCase
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
 
-from ..task_runners import ExportOSMTaskRunner
+from ..task_runners import ExportGenericOSMTaskRunner
 from ..task_factory import create_run
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class TestExportTaskRunner(TestCase):
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.all()[0].formats.add(shp_task)
-        runner = ExportOSMTaskRunner()
+        runner = ExportGenericOSMTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
             runner.run_task(provider_task_uid=self.uid, run=self.job.runs.first(), service_type={'osm-generic': True},
