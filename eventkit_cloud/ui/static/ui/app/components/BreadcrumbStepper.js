@@ -70,8 +70,9 @@ class BreadcrumbStepper extends React.Component {
         const {finished, stepIndex} = this.state;
 
         return (
-            <div style={{width: '100%', backgroundColor: '#161e2e'}}>
-            <div style={{width: '50%',  margin: '0 auto', backgroundColor: '#161e2e'}}>
+            <div>
+            <div style={{width: '100%', backgroundColor: '#161e2e', paddingTop: '5px'}}>
+            <div style={{backgroundColor: '#161e2e'}}>
                 <div className={style.stepperWrapper}>
                     <Stepper activeStep={stepIndex}>
                         <Step>
@@ -86,22 +87,25 @@ class BreadcrumbStepper extends React.Component {
                         <Step>
                             <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
                         </Step>
+
                     </Stepper>
+                    <div className={style.imageWrapper} style={{width: '150px'}}>
+                        <FloatingActionButton mini={true}
+                                              disabled={stepIndex === 0}
+                                              onTouchTap={this.handlePrev}
+                                              style={{marginRight: 12}}><i className="fa fa-arrow-left fa-lg" aria-hidden="true"></i></FloatingActionButton>
+                        <FloatingActionButton mini={true}
+                                              onTouchTap={this.handleNext}
+                                              style={{marginRight: 12}}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></FloatingActionButton>
+                    </div>
                 </div>
 
              </div>
-                <div style={{ float:'right', marginTop: '-35px', marginRight: '200px'}}>
 
-
-                    <FloatingActionButton mini={true}
-                                          disabled={stepIndex === 0}
-                                          onTouchTap={this.handlePrev}
-                                          style={{marginRight: 12}}><i className="fa fa-arrow-left fa-lg" aria-hidden="true"></i></FloatingActionButton>
-                    <FloatingActionButton mini={true}
-                                          onTouchTap={this.handleNext}
-                                          style={{marginRight: 12}}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></FloatingActionButton>
-                </div>
             </div>
+
+                </div>
+
         );
     }
 }
