@@ -45,7 +45,7 @@ services:
       environment:
         # Concurrency needs to be greater than 1 to support Task Cancellation.
         - CONCURRENCY=2
-        - MAPPROXY_CONCURRENCY=8
+        - MAPPROXY_CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
       extends:
@@ -71,10 +71,16 @@ services:
       - "5432"
   rabbitmq:
        image: rabbitmq:3.6.6-management
+       expose:
+        - "5672"
   httpd:
        build:
          context: .
          dockerfile: config/Dockerfile_httpd
+       depends_on:
+        - eventkit
+       links:
+        - eventkit
        volumes:
          - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
          - ./exports_download:/var/lib/eventkit/exports_download
