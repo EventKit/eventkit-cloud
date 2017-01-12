@@ -236,10 +236,9 @@ class OverpassQueryTask(ExportTask):
         Runs the query and returns the path to the filtered osm file.
         """
         self.update_task_state(task_uid=task_uid)
-        progress_tracker = get_progress_tracker(task_uid=task_uid)
         op = overpass.Overpass(
             bbox=bbox, stage_dir=stage_dir,
-            job_name=job_name, filters=filters, progress_tracker=progress_tracker, task_uid=task_uid
+            job_name=job_name, filters=filters, task_uid=task_uid
         )
         op.run_query()  # run the query
         filtered_osm = op.filter()  # filter the results
@@ -497,13 +496,11 @@ class ExternalRasterServiceExportTask(ExportTask):
             service_url=None, level_from=None, level_to=None, name=None, service_type=None):
         self.update_task_state(task_uid=task_uid)
         gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        progress_tracker = get_progress_tracker(task_uid=task_uid)
         try:
             w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
                                                                      service_url=service_url, name=name, layer=layer,
                                                                      config=config, level_from=level_from,
                                                                      level_to=level_to, service_type=service_type,
-                                                                     progress_tracker=progress_tracker,
                                                                      task_uid=task_uid)
             out = w2g.convert()
             return {'result': out}
@@ -630,15 +627,19 @@ class FinalizeExportProviderTask(Task):
                                 continue
                             include_files += [full_file_path]
                 zipfile_task = ZipFileTask()
+                # Need to remove duplicates from the list because
+                # some intermediate tasks produce files with the same name.
+                include_files = list(set(include_files))
                 zipfile_task.si(
                     run_uid=run_uid,
                     include_files=include_files
                 ).set(queue=worker)()
 
+            run_dir, slug = os.path.split(stage_dir)
             finalize_run_task = FinalizeRunTask()
             finalize_run_task.si(
                 run_uid=run_uid,
-                stage_dir=stage_dir,
+                stage_dir=run_dir,
             ).apply_async(queue=worker)
 
 
@@ -722,8 +723,8 @@ class FinalizeRunTask(Task):
     name = 'Finalize Export Run'
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        stage_dir = retval['stage_dir']
         try:
-            stage_dir = retval['stage_dir']
             shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
@@ -913,29 +914,32 @@ class KillTask(Task):
         #         logger.info("{0} PID does not exist.")
 
 
-def get_progress_tracker(task_uid=None):
+def update_progress(task_uid, progress=None, estimated_finish=None):
     """
-    Takes a task uid to create a closure that can be updated to change the status in the ExportTask object.
-    :param task_uid: A uid to reference the ExportTask.
-    :return: A function which can be called to update the progress on an ExportTask.
-    """
-    from eventkit_cloud.tasks.models import ExportTask
-    if not task_uid:
+       Updates the progress of the ExportTask from the given task_uid.
+       :param task_uid: A uid to reference the ExportTask.
+       :return: A function which can be called to update the progress on an ExportTask.
+       """
+
+    from ..tasks.models import ExportTask
+    from django.db import connection
+    if not estimated_finish and not progress:
         return
-
-    def progress_tracker(progress=None, estimated_finish=None):
-        if not estimated_finish and not progress:
-            return
-        if progress > 100:
-            progress = 100
+    if progress > 100:
+        progress = 100
+    try:
+        # We need to close the existing connection because the logger could be using a forked process which,
+        # will be invalid and throw an error.
+        connection.close()
         export_task = ExportTask.objects.get(uid=task_uid)
-        if progress:
-            export_task.progress = progress
-        if estimated_finish:
-            export_task.estimated_finish = estimated_finish
-        export_task.save()
+    except ExportTask.DoesNotExist:
+        return
+    if progress:
+        export_task.progress = progress
+    if estimated_finish:
+        export_task.estimated_finish = estimated_finish
+    export_task.save()
 
-    return progress_tracker
 
 app.register_task(ExportTask())
 app.register_task(OSMConfTask())

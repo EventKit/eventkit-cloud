@@ -2,9 +2,7 @@ version: '2'
 services:
   base:
      volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./coverage:/var/lib/eventkit/coverage
-       - ./exports_download:/var/lib/eventkit/exports_download
+       - ./:/var/lib/eventkit/
      build:
        context: .
        dockerfile: config/Dockerfile
@@ -47,6 +45,7 @@ services:
       environment:
         # Concurrency needs to be greater than 1 to support Task Cancellation.
         - CONCURRENCY=2
+        - MAPPROXY_CONCURRENCY=8
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
       extends:
@@ -60,7 +59,6 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=INFO
         - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
   postgis:

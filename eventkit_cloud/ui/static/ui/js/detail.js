@@ -82,31 +82,31 @@ exports.detail = (function () {
                 $('#formats').append(formats[0].formats[i].name + '<br/>');
             }
 
-            // features
-            var model = data.tags.length > 0 ? data.tags[0].data_model : null;
-
-            switch (model) {
-                case 'HDM':
-                    $('#osm-feature-tree').css('display', 'none');
-                    $('#hdm-feature-tree').css('display', 'block');
-                    $('#filelist').css('display', 'none');
-                    initHDMFeatureTree(data.tags);
-                    break;
-                case 'OSM':
-                    $('#hdm-feature-tree').css('display', 'none');
-                    $('#osm-feature-tree').css('display', 'block');
-                    $('#filelist').css('display', 'none');
-                    initOSMFeatureTree(data.tags);
-                    break;
-                case 'PRESET':
-                    $('#hdm-feature-tree').css('display', 'none');
-                    $('#osm-feature-tree').css('display', 'none');
-                    $('#filelist').css('display', 'block');
-                    initPresetList(data.configurations);
-                    break;
-                default:
-                    break;
-            }
+            // // features
+            // var model = data.tags.length > 0 ? data.tags[0].data_model : null;
+            //
+            // switch (model) {
+            //     case 'HDM':
+            //         $('#osm-feature-tree').css('display', 'none');
+            //         $('#hdm-feature-tree').css('display', 'block');
+            //         $('#filelist').css('display', 'none');
+            //         initHDMFeatureTree(data.tags);
+            //         break;
+            //     case 'OSM':
+            //         $('#hdm-feature-tree').css('display', 'none');
+            //         $('#osm-feature-tree').css('display', 'block');
+            //         $('#filelist').css('display', 'none');
+            //         initOSMFeatureTree(data.tags);
+            //         break;
+            //     case 'PRESET':
+            //         $('#hdm-feature-tree').css('display', 'none');
+            //         $('#osm-feature-tree').css('display', 'none');
+            //         $('#filelist').css('display', 'block');
+            //         initPresetList(data.configurations);
+            //         break;
+            //     default:
+            //         break;
+            // }
 
             var extent = data.extent;
             var geojson = new ol.format.GeoJSON();
@@ -134,7 +134,7 @@ exports.detail = (function () {
                 $('button#delete').css('display', 'block');
             }
             buildDeleteDialog();
-            buildFeatureDialog();
+            // buildFeatureDialog();
 
         }).fail(function (jqxhr, textStatus, error) {
             if (jqxhr.status == 404) {

@@ -367,7 +367,7 @@ clone.job = (function(){
                         + 'source-layer="' + provider.layer + '" checked="checked"/>' 
                         + '<i class="fa fa-eye" id="' + provider.name + '"/></label>'
                         + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
-                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '" source-type="' + provider.type + '"/>'
                         + provider.name + '</label></div>');
                 }
                 else {
@@ -379,7 +379,7 @@ clone.job = (function(){
                         + 'source-layer="' + provider.layer + '"/>' 
                         + '<i class="fa fa-eye-slash" id="' + provider.name + '"/></label>'
                         + '<label style="padding-left: 2em;"><input type="checkbox" name="providers"'
-                        + 'value="' + provider.name + '" data-description="' + provider.name + '"/>'
+                        + 'value="' + provider.name + '" data-description="' + provider.name + '" source-type="' + provider.type + '"/>'
                         + provider.name + '</label></div>');
                 }
             }
@@ -1537,31 +1537,31 @@ clone.job = (function(){
          * Handle selection events on config publish options.
          * Only one can be selected at at time.
          */
-        $('input#feature_save').on('change', function(e){
-            var checked = $(this).is(':checked');
-            $featPub =  $('input#feature_pub');
-            if (checked) {
-                $featPub.prop('checked', false);
-                $featPub.prop('disabled', true);
-            }
-            else {
-                $featPub.prop('checked', false);
-                $featPub.prop('disabled', false);
-            }
-        });
-
-        $('input#feature_pub').on('change', function(e){
-            var checked = $(this).is(':checked');
-            $featSave =  $('input#feature_save');
-            if (checked) {
-                $featSave.prop('checked', false);
-                $featSave.prop('disabled', true);
-            }
-            else {
-                $featSave.prop('checked', false);
-                $featSave.prop('disabled', false);
-            }
-        });
+        // $('input#feature_save').on('change', function(e){
+        //     var checked = $(this).is(':checked');
+        //     $featPub =  $('input#feature_pub');
+        //     if (checked) {
+        //         $featPub.prop('checked', false);
+        //         $featPub.prop('disabled', true);
+        //     }
+        //     else {
+        //         $featPub.prop('checked', false);
+        //         $featPub.prop('disabled', false);
+        //     }
+        // });
+        //
+        // $('input#feature_pub').on('change', function(e){
+        //     var checked = $(this).is(':checked');
+        //     $featSave =  $('input#feature_save');
+        //     if (checked) {
+        //         $featSave.prop('checked', false);
+        //         $featSave.prop('disabled', true);
+        //     }
+        //     else {
+        //         $featSave.prop('checked', false);
+        //         $featSave.prop('disabled', false);
+        //     }
+        // });
 
         // ----- FORM SUBMISSION ----- //
 

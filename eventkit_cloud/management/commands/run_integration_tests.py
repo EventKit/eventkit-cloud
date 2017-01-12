@@ -19,3 +19,4 @@ class Command(BaseCommand):
         unittest.TextTestRunner().run(suite)
         print('Removing test providers')
         delete_providers()
+
