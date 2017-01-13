@@ -115,8 +115,11 @@ class ExportTask(Task):
                 )
             else:
                 try:
-                    if not os.path.exists(run_dir):
+                    if not os.path.isdir(run_dir):
                         os.makedirs(run_dir)
+                except OSError as e:
+                    logger.info(e)
+                try:
                     # don't copy raw run_dir data
                     if task.name != 'OverpassQuery':
                         shutil.copy(output_url, download_path)

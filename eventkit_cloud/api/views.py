@@ -316,14 +316,13 @@ class RunJob(views.APIView):
             the serialized run data.
         """
         job_uid = request.query_params.get('job_uid', None)
-        # user = request.user
         if job_uid:
-            # run the tasks
-            # job = Job.objects.get(uid=job_uid)
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=job_uid)
             # Run is passed to celery to start the tasks.
             run = ExportRun.objects.get(uid=run_uid)
+            if run.user != request.user and not request.user.is_superuser:
+                return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
             if run:
                 PickUpRunTask().delay(run_uid=run_uid)
                 running = ExportRunSerializer(run, context={'request': request})
@@ -539,10 +538,14 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
-        rt = CancelExportProviderTask()
-        rt.run(uid, request.user)
-        return Response({'success': True}, status=status.HTTP_200_OK)
 
+        export_provider_task = ExportProviderTask.objects.get(uid=uid)
+
+        if export_provider_task.run.user != request.user and not request.user.is_superuser:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
+        CancelExportProviderTask().run(uid, request.user)
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
     """
