@@ -22,7 +22,7 @@ class GPKGToShp(object):
         Initialize the GPKGToShp utility.
 
         Args:
-            gpkg: the sqlite file to convert.
+            gpkg: the gpkg file to convert.
             shapefile: the path to the shapefile output
             zipped: whether to zip the output
         """
@@ -32,11 +32,11 @@ class GPKGToShp(object):
         self.shapefile = shapefile
         self.zipped = zipped
         if not self.shapefile:
-            # create shp path from sqlite path.
+            # create shp path from gpkg path.
             root = self.gpkg.split('.')[0]
-            self.shapefile = root + 'shp'
+            self.shapefile = root + '_shp'
         self.debug = debug
-        self.cmd = Template("ogr2ogr -f 'ESRI Shapefile' $shp $gpkg -lco ENCODING=UTF-8")
+        self.cmd = Template("ogr2ogr -f 'ESRI Shapefile' $shp $gpkg -lco ENCODING=UTF-8 -nln $layer_name -overwrite")
         self.zip_cmd = Template("zip -j -r $zipfile $shp_dir")
         self.task_uid = task_uid
 
@@ -44,7 +44,8 @@ class GPKGToShp(object):
         """
         Convert the sqlite to shape.
         """
-        convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'gpkg': self.gpkg})
+        layer_name = os.path.splitext(os.path.basename(self.gpkg))[0]
+        convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'gpkg': self.gpkg, 'layer_name': layer_name})
         if (self.debug):
             print 'Running: %s' % convert_cmd
         task_process = TaskProcess(task_uid=self.task_uid)
