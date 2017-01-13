@@ -72,7 +72,6 @@ class TaskFactory:
 
             if provider_tasks:
                 tasks_results = []
-                tasks_results = []
                 for provider_task in provider_tasks:
                     # Create an instance of a task runner based on the type name
                     if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
@@ -123,7 +122,12 @@ class TaskFactory:
                             ).set(queue=worker)).apply_async(
                                 interval=1,
                                 max_retries=10,
-                                expires=datetime.now() + timedelta(days=2)
+                                expires=datetime.now() + timedelta(days=2),
+                                on_error=[finalize_export_provider_task.si(
+                                run_uid=run.uid,
+                                stage_dir=os.path.join(stage_dir, provider_task.provider.slug),
+                                export_provider_task_uid=export_provider_task_uid,
+                                worker=worker)]
                             )
                         ]
 

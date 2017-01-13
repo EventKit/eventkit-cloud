@@ -614,7 +614,7 @@ class FinalizeExportProviderTask(Task):
                 # deleted during cancellation.
                 include_files = []
                 for export_provider_task in provider_tasks:
-                    if TaskStates[export_provider_task.status] != TaskStates.CANCELED:
+                    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
                         for export_task in export_provider_task.tasks.all():
                             # Need to refactor OSM pipeline to remove things like this....
                             export_provider_task_slug = 'osm-data' \
