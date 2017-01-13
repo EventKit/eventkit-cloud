@@ -19,6 +19,7 @@ from time import sleep
 
 from celery import Task
 from celery.utils.log import get_task_logger
+from eventkit_cloud.celery import app
 
 from ..jobs.presets import TagParser
 from ..utils import (
@@ -55,7 +56,6 @@ class TaskStates(Enum):
         return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
-
 # ExportTask abstract base class and subclasses.
 
 class ExportTask(Task):
@@ -65,9 +65,6 @@ class ExportTask(Task):
 
     # whether to abort the whole run if this task fails.
     abort_on_error = False
-
-    class Meta:
-        abstract = True
 
     def on_success(self, retval, task_id, args, kwargs):
         """
@@ -617,7 +614,7 @@ class FinalizeExportProviderTask(Task):
                 # deleted during cancellation.
                 include_files = []
                 for export_provider_task in provider_tasks:
-                    if TaskStates[export_provider_task.status] != TaskStates.CANCELED:
+                    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
                         for export_task in export_provider_task.tasks.all():
                             # Need to refactor OSM pipeline to remove things like this....
                             export_provider_task_slug = 'osm-data' \
@@ -929,7 +926,6 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
 
     from ..tasks.models import ExportTask
     from django.db import connection
-
     if not estimated_finish and not progress:
         return
     if progress > 100:
@@ -946,3 +942,28 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
     if estimated_finish:
         export_task.estimated_finish = estimated_finish
     export_task.save()
+
+
+app.register_task(ExportTask())
+app.register_task(OSMConfTask())
+app.register_task(OSMConfTask())
+app.register_task(OverpassQueryTask())
+app.register_task(OSMToPBFConvertTask())
+app.register_task(OSMPrepSchemaTask())
+app.register_task(ThematicShpExportTask())
+app.register_task(ThematicGPKGExportTask())
+app.register_task(ShpExportTask())
+app.register_task(KmlExportTask())
+app.register_task(SqliteExportTask())
+app.register_task(GeopackageExportTask())
+app.register_task(ThematicSQLiteExportTask())
+app.register_task(ThematicKmlExportTask())
+app.register_task(WFSExportTask())
+app.register_task(ArcGISFeatureServiceExportTask())
+app.register_task(ExternalRasterServiceExportTask())
+app.register_task(PickUpRunTask())
+app.register_task(GeneratePresetTask())
+app.register_task(FinalizeExportProviderTask())
+app.register_task(ZipFileTask())
+app.register_task(FinalizeRunTask())
+app.register_task(ExportTaskErrorHandler())

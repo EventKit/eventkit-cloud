@@ -1,5 +1,6 @@
 from celery import Task
 from celery.app import app_or_default
+from eventkit_cloud.celery import app
 
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
@@ -22,3 +23,4 @@ class RevokeTask(Task):
 
         pt.status = 'CANCELED'
         pt.save()
+app.register_task(RevokeTask())

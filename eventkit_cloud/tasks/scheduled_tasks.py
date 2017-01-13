@@ -6,7 +6,7 @@ from django.core.mail import EmailMultiAlternatives
 
 from celery import Task
 from celery.utils.log import get_task_logger
-
+from eventkit_cloud.celery import app
 logger = get_task_logger(__name__)
 
 
@@ -25,6 +25,8 @@ class PurgeUnpublishedExportsTask(Task):
         logger.debug('Purging {0} unpublished exports.'.format(count))
         expired_jobs.delete()
 
+
+app.register_task(PurgeUnpublishedExportsTask())
 
 class ExpireRuns(Task):
     """
@@ -95,3 +97,4 @@ def send_warning_email(date, url, addr):
         msg.send()
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
+
