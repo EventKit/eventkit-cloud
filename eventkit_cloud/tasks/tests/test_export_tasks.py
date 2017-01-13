@@ -286,12 +286,12 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')
-    @patch('os.path.exists')
+    @patch('os.path.isdir')
     @patch('shutil.copy')
     @patch('os.stat')
     @patch('django.utils.timezone')
-    def test_task_on_success(self, time, os_stat, shutil_copy, exists, mkdirs, s3):
-        exists.return_value = False  # download dir doesn't exist
+    def test_task_on_success(self, time, os_stat, shutil_copy, isdir, mkdirs, s3):
+        isdir.return_value = False  # download dir doesn't exist
         real_time = real_timezone.now()
         time.now.return_value = real_time
         expected_time = real_time.strftime('%Y%m%d')
@@ -314,9 +314,9 @@ class TestExportTasks(ExportTaskBase):
         run_dir = os.path.join(download_root, str(self.run.uid))
         shp_export_task.on_success(retval={'result': download_url}, task_id=celery_uid,
                                    args={}, kwargs={'run_uid': str(self.run.uid)})
-        os_stat.assert_called_once_with(download_url)
+        os_stat.assert_has_calls([call(download_url)])
         if not getattr(settings, "USE_S3", False):
-            exists.assert_has_calls([call(run_dir)])
+            isdir.assert_has_calls([call(run_dir)])
             mkdirs.assert_has_calls([call(run_dir)])
             shutil_copy.assert_called_once()
         task = ExportTask.objects.get(celery_uid=celery_uid)
