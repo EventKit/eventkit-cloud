@@ -9,12 +9,6 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import FlatButton from 'material-ui/FlatButton';
 import style from './BreadcrumbStepper.css'
 
-/**
- * Horizontal steppers are ideal when the contents of one step depend on an earlier step.
- * Avoid using long step names in horizontal steppers.
- *
- * Linear steppers require users to complete one step in order to move on to the next.
- */
 class BreadcrumbStepper extends React.Component {
 
     state = {
@@ -40,13 +34,13 @@ class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
             case 0:
-                return 'Select campaign settings...';
+                return 'return the export AOI';
             case 1:
-                return 'What is an ad group anyways?';
+                return 'return the export info';
             case 2:
-                return 'This is the bit I really care about!';
+                return 'return preview export';
             case 3:
-                return 'This is the 4th one!';
+                return 'return export status';
             default:
                 return 'You\'re a long way from home sonny jim!';
         }
