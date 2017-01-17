@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, IndexLink } from 'react-router'
+import {connect} from 'react-redux'
 import {
     Step,
     Stepper,
@@ -8,8 +9,17 @@ import {
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import FlatButton from 'material-ui/FlatButton';
 import style from './BreadcrumbStepper.css'
+import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
+import {updateBbox} from '../actions'
+import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
 
 class BreadcrumbStepper extends React.Component {
+    constructor() {
+        super()
+        this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
+    }
+
+
 
     state = {
         finished: false,
@@ -34,7 +44,8 @@ class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
             case 0:
-                return 'return the export AOI';
+                return <ExportAOI mode={this._mapMode}
+                                  onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
                 return 'return the export info';
             case 2:
@@ -97,11 +108,40 @@ class BreadcrumbStepper extends React.Component {
              </div>
 
             </div>
-
+                {this.getStepContent(this.state.stepIndex)}
                 </div>
 
         );
     }
+    //
+    // Internal API
+    //
+
+    get _mapMode() {
+        if (this.props.location === 'exportAOI') {
+            return MODE_DRAW_BBOX
+        }
+        return MODE_NORMAL
+    }
+
+    _handleBoundingBoxChange(bbox) {
+        console.log('Running Handle bounding box change in CreateExport.js')
+        console.log(this.props.bbox)
+    }
+
 }
 
-export default BreadcrumbStepper;
+BreadcrumbStepper.propTypes = {
+    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
+};
+
+function mapStateToProps(state) {
+    return {
+        bbox: state.bbox,
+    };
+}
+
+
+export default connect(
+    mapStateToProps,
+)(BreadcrumbStepper);
