@@ -64,3 +64,18 @@ export function clickDrawBoxButton() {
         click: true
     }
 }
+
+export function toggleDrawFreeButton(currentToggleState) {
+    return {
+        type: types.TOGGLE_DRAW_FREE_BUTTON,
+        disabled: !currentToggleState
+    }
+}
+
+export function clickDrawFreeButton() {
+    return {
+        type: types.CLICK_DRAW_FREE_BUTTON,
+        click: true
+    }
+}
+

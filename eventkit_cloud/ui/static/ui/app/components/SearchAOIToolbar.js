@@ -1,61 +1,120 @@
-import 'openlayers/dist/ol.css'
-import React, {Component} from 'react'
-import ol from 'openlayers'
-import styles from './SearchAOIToolbar.css'
-import DrawControl from './openlayers.DrawControl.js'
-import AutoComplete from 'material-ui/AutoComplete'
-import { FormGroup, FormControl } from 'react-bootstrap';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import styles from './SearchAOIToolbar.css';
+import {Typeahead} from 'react-bootstrap-typeahead'; // ES2015
+import ExportsApi from '../api/exportsApi.js';
+import {getGeonames, drawSearchBbox} from '../actions/searchToolbarActions';
 
-export default class SearchAOIToolbar extends Component {
+const debounce = require('lodash/debounce');
+
+export class SearchAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
 
         this.handleChange = this.handleChange.bind(this);
+        this.handleEnter = this.handleEnter.bind(this);
 
         this.state = {
             value: '',
+            suggestions: [],
         }
     }
 
+    componentWillMount() {
+      this.debouncer = debounce(e => {
+        this.handleChange(e);
+      }, 700);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.geonames.fetched == true) {
+            this.state.suggestions = nextProps.geonames.geonames;
+        }
+        else {
+            if(this.state.suggestions.length > 0) {
+                this.setState({suggestions: []});
+            }
+        }
+    }
+
+
     handleChange(e) {
-        this.setState({value: e.target.value}, function() {
-            console.log(this.state.value);
-        });
+        // If 2 or more characters are entered then make request for suggested names.
+        if(e.length >= 2) {
+            this.props.getGeonames(e);
+        }
+        // If one or zero characters are entered then dont provide suggestions
+        else {
+            // If there are suggestions remove them
+            if(this.state.suggestions.length > 0) {
+                this.setState({suggestions: []});
+            }
+        }
+    }
+
+    handleEnter(e) {
+        this.setState({suggestions: []});
+        if (e.length > 0) {
+            let bbox = e[0].bbox;
+            let formatted_bbox = [bbox.west, bbox.south, bbox.east, bbox.north]
+            this.props.drawSearchBbox(formatted_bbox);
+        }
     }
 
     render() {
 
-        const searchbarStyles = {
-            searchbar: {
-                backgroundColor: '#fff',
-                width: '95%',
-            },
-        }
-
         return (
             <div className={styles.searchbarDiv}>
                 <i className={'fa fa-search'}/>
-                <FormGroup validationState={null} controlId={'searchbar'} bsClass={styles.formGroup}>
-                    <FormControl
-                        bsClass={styles.formControl}
-                        type="text"
-                        value={this.state.value}
-                        placeholder="Search admin boundary or location..."
-                        onChange={this.handleChange}
+                <div className={styles.typeahead}>
+                    <Typeahead
+                        options={this.state.suggestions}
+                        onChange={this.handleEnter}
+                        placeholder={'Search admin boundary or location...'}
+                        onInputChange={this.debouncer}
+                        labelKey={'name'}
+                        ref="typeahead"
+                        renderMenuItemChildren={(props, option, idx) => {
+                            let returnStr = option.name;
+                            if (option.adminName1){
+                                returnStr = returnStr + ', ' + option.adminName1;
+                            }
+                            if (option.adminName2) {
+                                returnStr = returnStr + ', ' + option.adminName2;
+                            }
+                            if (option.countryName) {
+                                returnStr = returnStr + ', ' + option.countryName;
+                            }
+                            return returnStr
+                        }}
                     />
-                </FormGroup>
+                </div>
             </div>
         )
     }
 }
 
-//<AutoComplete
-//                    className={styles.searchbarInput}
-//                    style={searchbarStyles.searchbar}
-//                    searchText={this.state.searchText}
-//                    onUpdateInput={this.handleUpdateInput}
-//                    onNewRequest={this.handleNewRequest}
-//                    dataSource={this.state.source}
-//                    hintText={'Search admin boundary or location...'}
-//                />
+function mapStateToProps(state) {
+    return {
+        geonames: state.geonames,
+        searchBbox: state.searchBbox,
+    };
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        getGeonames: (query) => {
+            dispatch(getGeonames(query));
+        },
+        drawSearchBbox: (bbox) => {
+            dispatch(drawSearchBbox(bbox));
+        }
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(SearchAOIToolbar);
+

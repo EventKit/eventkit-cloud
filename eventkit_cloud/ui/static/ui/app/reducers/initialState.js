@@ -2,6 +2,7 @@
 export default {
     jobs: [],
     bbox: [],
+    searchBbox : [],
     drawExtensionVisible: false,
     drawCancel: {
         disabled: true,
@@ -20,6 +21,10 @@ export default {
         disabled: true,
         click: false,
     },
+    drawFreeButton: {
+        disabled: true,
+        click: false,
+    },
     zoomToSelection: {
         disabled: true,
         click: false
@@ -27,5 +32,11 @@ export default {
     resetMap: {
         disabled: true,
         click: false
+    },
+    geonames: {
+        fetching: false,
+        fetched: false,
+        geonames: [],
+        error: null,
     },
 }

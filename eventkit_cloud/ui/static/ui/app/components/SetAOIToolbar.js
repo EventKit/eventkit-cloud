@@ -6,6 +6,7 @@ import styles from './SetAOIToolbar.css'
 import DrawControl from './openlayers.DrawControl.js'
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
+import {clearSearchBbox} from '../actions/searchToolbarActions';
 
 export const NO_SELECTION_TEXT = 'None Selected'
 export const CARDINAL_DIRECTIONS = "(West, South, East, North)"

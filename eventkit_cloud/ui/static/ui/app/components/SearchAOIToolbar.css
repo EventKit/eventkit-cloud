@@ -2,7 +2,7 @@
     .searchbarDiv i {
         width: 2%;
     }
-    .formGroup {
+    .typeahead {
         width: 98%;
     }
 }
@@ -10,6 +10,10 @@
 @media only screen and (min-width: 850px) {
     .searchbarDiv {
         max-width: 765px !important;
+        width: 2%;
+    }
+     .typeahead {
+        width: 98%;
     }
 }
 
@@ -17,7 +21,7 @@
     .searchbarDiv i {
         width: 5%;
     }
-    .formGroup {
+    .typeahead {
         width: 95%;
     }
 }
@@ -29,7 +33,7 @@
     .searchbarDiv i {
         width: 10%;
     }
-    .formGroup {
+    .typeahead {
         width: 90%;
     }
 }
@@ -41,13 +45,13 @@
     .searchbarDiv i {
         width: 15%;
     }
-    .formGroup {
+    .typeahead {
         width: 85%;
     }
 }
 
 .searchbarDiv {
-    z-index: 1;
+    z-index: 2;
     position: absolute;
     width: 90%;
     min-width: 320;
@@ -59,22 +63,43 @@
 
 .searchbarDiv i {
     padding-top: 18px;
-    padding-left: 1em;
+    padding-left: 10px;
     color: #4498c0;
     height: 50px;
+    width: 30px;
 }
 
-.formGroup {
-    float: right;
+.typeahead {
+    left: 30px;
+    top: 0px;
+    right: 0px;
     height: 50px;
+    position: absolute;
 }
 
-.formControl {
+.typeahead > div {
     height: 50px;
-    border: none;
+    position: absolute !important;
     width: 100%;
 }
 
-.formControl:focus {
-    outline: none;
+.typeahead > div > div {
+    position: absolute !important;
+    width: 100%;
+}
+
+.typeahead > div > div > input {
+    height: 50px;
+    border: none;
+    --webkit-box-shadow: none;
+    box-shadow: none;
+    color: #4498c0;
+}
+
+.typeahead > div > div > input: focus {
+    border: none;
+}
+
+.typeahead > div > ul > li > a {
+    color: #4498c0 !important;
 }
