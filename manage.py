@@ -2,18 +2,7 @@
 import os
 import sys
 import subprocess
-import contextlib
-import logging
 from django.conf import settings
-
-@contextlib.contextmanager
-def nostderr():
-    savestderr = sys.stderr
-    sys.stderr = os.devnull
-    try:
-        yield
-    finally:
-        sys.stderr = savestderr
 
 
 if __name__ == "__main__":
@@ -25,8 +14,6 @@ if __name__ == "__main__":
         is_testing = 'test' in sys.argv
 
         if is_testing:
-            logging.getLogger().setLevel(logging.ERROR)
-            settings.configure()
             import coverage
 
             cov = coverage.coverage(config_file=".coveragerc",
