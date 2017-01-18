@@ -18,19 +18,17 @@ INSTALLED_APPS += (
     'django_classification_banner',
 )
 
-INSTALLED_APPS += ("djcelery", )
-import djcelery
-djcelery.setup_loader()
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
 LOGIN_URL = '/login/'
 
 EXPORT_TASKS = {
-    'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
+    'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
     'obf': 'eventkit_cloud.tasks.export_tasks.ObfExportTask',
-    'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
-    'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
+    'sqlite': 'eventkit_cloud.tasks.export_tasks.sqlite_export_task',
+    'kml': 'eventkit_cloud.tasks.export_tasks.kml_export_task',
     'thematic': 'eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask',
-    'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask'
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task'
 }
 
 
@@ -122,3 +120,4 @@ http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
 
 USE_DISK_CACHE = True
+

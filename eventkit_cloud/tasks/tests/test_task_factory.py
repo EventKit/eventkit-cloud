@@ -45,7 +45,7 @@ class TestExportTaskFactory(TestCase):
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
 
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeExportProviderTask')
+    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
     def test_task_factory(self, task_runner, chain, finalize_task):

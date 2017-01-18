@@ -634,7 +634,7 @@ exports.detail = (function () {
             },
             failure: function () {
                 alert(provider.name + " could not be canceled at this time.");
-                $("#cancel-" + provider.uid).removeClass().addClass('fa fa-times');
+                $("#cancel-" + provider.uid).removeClass('fa fa-cog fa-spin').addClass('fa fa-times');
             }
         });
     }
@@ -821,7 +821,7 @@ exports.detail = (function () {
                     }
                 }
             });
-        }, 2000);
+        }, 1000);
     }
 
 // Checks to see if all backend tasks have been created and added to the run. The UI shouldn't be loaded until

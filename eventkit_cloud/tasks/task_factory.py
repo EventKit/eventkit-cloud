@@ -4,11 +4,9 @@ from __future__ import absolute_import
 from datetime import datetime, timedelta
 import logging
 import os
-from uuid import UUID
 
-from eventkit_cloud.jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
-from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.export_tasks import FinalizeExportProviderTask, CleanUpFailure
+from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
+from ..tasks.models import ExportRun
 from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
@@ -17,6 +15,7 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
+from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
 from django.conf import settings
 from django.db import DatabaseError
 from django.utils import timezone
@@ -45,6 +44,7 @@ class TaskFactory:
         :param run_uid: A uid to reference an ExportRun.
         :return:The results from the celery chain or False.
         """
+
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
@@ -102,17 +102,16 @@ class TaskFactory:
                             export_provider_task_uid, chain_task_runner_tasks = task_runner.run_task(**args)
                             export_provider_task_uids += [export_provider_task_uid]
                             if chain_task_runner_tasks:
-                                finalize_export_provider_task = FinalizeExportProviderTask()
                                 # Run the task, and when it completes return the status of the task to the model.
-                                # The FinalizeExportProviderTask will check to see if all of the tasks are done, and if they are
+                                # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
                                 # it will call FinalizeTask which will mark the entire job complete/incomplete
                                 finalize_chain_task_runner_tasks = (
-                                chain_task_runner_tasks | finalize_export_provider_task.s(
-                                    run_uid=run_uid,
-                                    run_dir=run_dir,
-                                    export_provider_task_uid=export_provider_task_uid,
-                                    worker=worker
-                                ).set(queue=worker))
+                                    chain_task_runner_tasks | finalize_export_provider_task.s(
+                                        run_uid=run_uid,
+                                        run_dir=run_dir,
+                                        export_provider_task_uid=export_provider_task_uid,
+                                        worker=worker
+                                    ).set(queue=worker, routing_key=worker))
                                 if not task_runner_tasks:
                                     task_runner_tasks = finalize_chain_task_runner_tasks
                                 else:
@@ -121,15 +120,15 @@ class TaskFactory:
                     if not task_runner_tasks:
                         continue
 
-                    clean_up_failure = CleanUpFailure()
                     tasks_results += [task_runner_tasks.apply_async(
                         interval=1,
                         max_retries=10,
                         expires=datetime.now() + timedelta(days=2),
-                        link_error=[clean_up_failure.s(run_uid=run_uid, run_dir=run_dir,
-                                                       export_provider_task_uids=export_provider_task_uids,
-                                                       worker=worker).set(queue=worker)])
-                    ]
+                        priority=TaskPriority.TASK_RUNNER.value,
+                        routing_key=worker,
+                        link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
+                                                            export_provider_task_uids=export_provider_task_uids,
+                                                            worker=worker).set(queue=worker, routing_key=worker))]
                 return tasks_results
 
             return False

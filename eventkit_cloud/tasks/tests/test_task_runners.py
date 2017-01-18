@@ -38,15 +38,15 @@ class TestExportTaskRunner(TestCase):
         self.job.save()
         create_run(job_uid=self.job.uid)
 
+
     @patch('eventkit_cloud.tasks.task_runners.chain')
-    @patch('eventkit_cloud.tasks.export_tasks.ShpExportTask')
+    @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
     def test_run_task(self, mock_shp, mock_chain):
         shp_task = ExportFormat.objects.get(slug='shp')
         celery_uid = str(uuid.uuid4())
         # shp export task mock
-        shp_export_task = mock_shp.return_value
-        shp_export_task.run.return_value = Mock(state='PENDING', id=celery_uid)
-        type(shp_export_task).name = PropertyMock(return_value='Shapefile Export')
+        mock_shp.run.return_value = Mock(state='PENDING', id=celery_uid)
+        type(mock_shp).name = PropertyMock(return_value='Shapefile Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.all()[0].formats.add(shp_task)
