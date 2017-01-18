@@ -24,7 +24,7 @@ export class SearchAOIToolbar extends Component {
     componentWillMount() {
       this.debouncer = debounce(e => {
         this.handleChange(e);
-      }, 700);
+      }, 500);
     }
 
     componentWillReceiveProps(nextProps) {

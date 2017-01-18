@@ -79,3 +79,16 @@ export function clickDrawFreeButton() {
     }
 }
 
+export function hideInvalidDrawWarning() {
+    return {
+        type: types.HIDE_INVALID_DRAW_WARNING,
+        showInvalidDrawWarning: false
+    }
+}
+
+export function showInvalidDrawWarning() {
+    return {
+        type: types.SHOW_INVALID_DRAW_WARNING,
+        showInvalidDrawWarning: true
+    }
+}

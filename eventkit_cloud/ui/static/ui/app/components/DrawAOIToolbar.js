@@ -1,21 +1,17 @@
-import 'openlayers/dist/ol.css';
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import ol from 'openlayers';
 import styles from './DrawAOIToolbar.css';
-import DrawControl from './openlayers.DrawControl.js';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import {toggleDrawExtension, toggleDrawCancel, clickDrawCancel, toggleDrawRedraw,
-    clickDrawRedraw, toggleDrawSet, clickDrawSet, toggleDrawBoxButton, toggleDrawFreeButton} from '../actions/drawToolBarActions.js';
+    clickDrawRedraw, toggleDrawBoxButton, toggleDrawFreeButton, toggleDrawSet} from '../actions/drawToolBarActions.js';
 import {updateMode, updateBbox} from '../actions/exportsActions.js';
 import DrawButtons from './DrawButtons.js';
+import SetAOIButton from './SetAOIButton.js';
 import { Button } from 'react-bootstrap';
 
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
 export const MODE_NORMAL = 'MODE_NORMAL'
+const isEqual = require('lodash/isEqual');
 
 
 export class DrawAOIToolbar extends Component {
@@ -32,8 +28,6 @@ export class DrawAOIToolbar extends Component {
         this.state = {
             extensionClass: styles.extensionToolbarDivHidden,
             redrawDisabled: true,
-            setDisabled: true,
-            setButtonClass: styles.setButtonInactive,
             cancelButtonClass: styles.flatButtonInactive,
             redrawButtonClass: styles.flatButtonInactive,
         };
@@ -50,7 +44,6 @@ export class DrawAOIToolbar extends Component {
             this.handleDrawBoxClick();
         }
         if(nextProps.drawFreeButton.click != this.props.drawFreeButton.click) {
-            console.log('draw free was clicked');
             this.handleDrawFreeClick();
         }
         if(nextProps.drawCancel.disabled != this.props.drawCancel.disabled) {
@@ -59,8 +52,7 @@ export class DrawAOIToolbar extends Component {
         if (nextProps.drawRedraw.disabled != this.props.drawRedraw.disabled) {
             this.updateRedrawButtonState(nextProps.drawRedraw.disabled);
         }
-
-    }
+}
 
     updateDrawExtensionVisibility(visible) {
         if (visible) {
@@ -92,9 +84,7 @@ export class DrawAOIToolbar extends Component {
     }
 
     handleDrawFreeClick() {
-        console.log('made it here');
         if(this.props.drawFreeButton.disabled) {
-            console.log('handleing free click');
             this.props.updateMode('MODE_DRAW_FREE');
             this.props.showDrawExtension(false);
             this.setState({extensionClass: styles.extensionToolbarDiv});
@@ -149,19 +139,6 @@ export class DrawAOIToolbar extends Component {
 
     render() {
 
-        const toolbarStyles = {
-            toolbar: {
-                height: '50px',
-                backgroundColor: '#fff',
-                padding: '0px 0px',
-            },
-            setButton: {
-                height: '30px',
-                width: '70px',
-            }
-        }
-
-
         return (
             <div className={styles.toolbarsContainer}>
                 <div className={styles.toolbarDiv}>
@@ -171,12 +148,7 @@ export class DrawAOIToolbar extends Component {
                     </div>
                 </div>
                 <div className={this.state.extensionClass}>
-
-
-
-                        <div className={styles.setButtonDiv}>
-                            <Button bsClass={styles.buttonGeneral + ' ' + this.state.setButtonClass} onClick={this.props.clickDrawSet}>SET</Button>
-                        </div>
+                        <SetAOIButton />
                         <Button bsClass={styles.buttonGeneral + ' ' + this.state.redrawButtonClass}
                             onClick={this.props.clickDrawRedraw}>
                                 Redraw
@@ -196,10 +168,10 @@ function mapStateToProps(state) {
         drawExtensionVisible: state.drawExtensionVisible,
         drawCancel: state.drawCancel,
         drawRedraw: state.drawRedraw,
-        drawSet: state.drawSet,
         drawBoxButton: state.drawBoxButton,
         drawFreeButton: state.drawFreeButton,
         mode: state.mode,
+        geojson: state.geojson,
     };
 }
 
@@ -220,12 +192,6 @@ function mapDispatchToProps(dispatch) {
         clickDrawRedraw: () => {
             dispatch(clickDrawRedraw());
         },
-        toggleDrawSet: (currentToggleState) => {
-            dispatch(toggleDrawSet(currentToggleState));
-        },
-        clickDrawSet: () => {
-            dispatch(clickDrawSet());
-        },
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
         },
@@ -234,6 +200,9 @@ function mapDispatchToProps(dispatch) {
         },
         toggleDrawFreeButton: (currentToggleState) => {
             dispatch(toggleDrawFreeButton(currentToggleState));
+        },
+        toggleDrawSet: (currentToggleState) => {
+            dispatch(toggleDrawSet(currentToggleState));
         },
     }
 }

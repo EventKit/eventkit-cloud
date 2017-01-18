@@ -2,6 +2,9 @@
 export default {
     jobs: [],
     bbox: [],
+    geojson: {},
+    mode: 'DRAW_NORMAL',
+    showInvalidDrawWarning: false,
     searchBbox : [],
     drawExtensionVisible: false,
     drawCancel: {
@@ -16,7 +19,7 @@ export default {
         disabled: true,
         click: false,
     },
-    mode: 'DRAW_NORMAL',
+
     drawBoxButton: {
         disabled: true,
         click: false,

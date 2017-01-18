@@ -15,6 +15,13 @@ export function updateBbox(bbox) {
     }
 }
 
+export function updateGeojson(geojson) {
+    return {
+        type: types.UPDATE_GEOJSON,
+        geojson: geojson
+    }
+}
+
 export function updateMode(mode) {
     return {
         type: types.SET_MODE,
