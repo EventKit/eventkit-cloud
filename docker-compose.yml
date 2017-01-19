@@ -44,8 +44,7 @@ services:
         - postgis
         - rabbitmq
       environment:
-        # Concurrency needs to be greater than 1 to support Task Cancellation.
-        - CONCURRENCY=2
+        - CONCURRENCY=1
         - MAPPROXY_CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:

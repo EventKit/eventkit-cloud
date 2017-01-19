@@ -41,6 +41,7 @@ CELERYBEAT_SCHEDULE = {
     }
 }
 
+
 if os.environ.get('VCAP_SERVICES'):
     services = json.loads(os.environ.get('VCAP_SERVICES'))
     try:
