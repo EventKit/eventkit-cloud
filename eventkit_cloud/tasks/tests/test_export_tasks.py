@@ -5,6 +5,8 @@ import logging
 import os
 import sys
 import uuid
+import celery
+import signal
 
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
@@ -15,17 +17,18 @@ from django.utils import timezone as real_timezone
 from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch
 
-
 from ...jobs import presets
 from ...jobs.models import Job, Tag
 from ..export_tasks import (
-    ExportTaskErrorHandler, FinalizeRunTask,
-    GeneratePresetTask, KmlExportTask, OSMConfTask,
-    ExternalRasterServiceExportTask, GeopackageExportTask,
-    OSMPrepSchemaTask, OSMToPBFConvertTask, OverpassQueryTask,
-    ShpExportTask, ArcGISFeatureServiceExportTask, update_progress,
-    ZipFileTask, PickUpRunTask, CancelExportProviderTask, KillTask, TaskStates
+    export_task_error_handler, finalize_run_task,
+    generate_preset_task, kml_export_task, osm_conf_task,
+    external_raster_service_export_task, geopackage_export_task,
+    osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
+    shp_export_task, arcgis_feature_service_export_task, update_progress,
+    zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
+    parse_result, finalize_export_provider_task, clean_up_failure_task
 )
+from ...celery import TaskPriority
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
@@ -72,7 +75,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.osmconf.OSMConfig')
     def test_run_osmconf_task(self, mock_config, mock_request):
-        task = OSMConfTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         osm_conf = mock_config.return_value
@@ -80,14 +82,15 @@ class TestExportTasks(ExportTaskBase):
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(
             os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'),
-            str(self.run.uid)),
+                         str(self.run.uid)),
             '{}.ini'.format(job_name)
         )
         osm_conf.create_osm_conf.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='osmconf')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=osm_conf_task.name)
+        result = osm_conf_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         osm_conf.create_osm_conf.assert_called_with(stage_dir=stage_dir)
         self.assertEquals(expected_output_path, result['result'])
         # test tasks update_task_state method
@@ -98,7 +101,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.overpass.Overpass')
     def test_run_overpass_task(self, overpass, mock_request):
-        task = OverpassQueryTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         overpass = overpass.return_value
@@ -110,9 +112,10 @@ class TestExportTasks(ExportTaskBase):
         overpass.run_query.return_value = raw_osm_path
         overpass.filter.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Overpass Query')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=overpass_query_task.name)
+        result = overpass_query_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         overpass.run_query.assert_called_once()
         overpass.filter.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
@@ -124,7 +127,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.pbf.OSMToPBF')
     def test_run_osmtopbf_task(self, mock_overpass, mock_request):
-        task = OSMToPBFConvertTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         osmtopbf = mock_overpass.return_value
@@ -134,9 +136,11 @@ class TestExportTasks(ExportTaskBase):
                                             '{}.pbf'.format(job_name))
         osmtopbf.convert.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='OSM2PBF')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=osm_to_pbf_convert_task.name)
+        result = osm_to_pbf_convert_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                             job_name=job_name)
         osmtopbf.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test tasks update_task_state method
@@ -147,19 +151,19 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.osmparse.OSMParser')
     def test_run_osmprepschema_task(self, mock_parser, mock_request):
-        task = OSMPrepSchemaTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         prep_schema = mock_parser.return_value
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}_generic.gpkg'.format(job_name))
+                                            '{}.gpkg'.format(job_name))
         prep_schema.instancemethod.return_value = expected_output_path
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='OSM Schema Prep')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=osm_prep_schema_task.name)
+        result = osm_prep_schema_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         prep_schema.instancemethod.assert_called_once()
         prep_schema.create_spatialite.assert_called_once()
         prep_schema.create_default_schema.assert_called_once()
@@ -173,7 +177,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.shp.GPKGToShp')
     def test_run_shp_export_task(self, mock, mock_request):
-        task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         gpkg_to_shp = mock.return_value
@@ -181,9 +184,10 @@ class TestExportTasks(ExportTaskBase):
         gpkg_to_shp.convert.return_value = '/path/to/' + job_name + '.shp'
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=shp_export_task.name)
+        result = shp_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         gpkg_to_shp.convert.assert_called_once()
         self.assertEquals('/path/to/' + job_name + '.shp', result['result'])
         # test tasks update_task_state method
@@ -194,7 +198,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.kml.GPKGToKml')
     def test_run_kml_export_task(self, mock_kml, mock_request):
-        task = KmlExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         gpkg_to_kml = mock_kml.return_value
@@ -204,9 +207,10 @@ class TestExportTasks(ExportTaskBase):
         gpkg_to_kml.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='GPKGToKml')
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=kml_export_task.name)
+        result = kml_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         gpkg_to_kml.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
@@ -217,19 +221,19 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.geopackage.SQliteToGeopackage')
     def test_run_gpkg_export_task(self, mock_gpkg, mock_request):
-        task = GeopackageExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         sqlite_to_gpkg = mock_gpkg.return_value
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}_generic.gpkg'.format(job_name))
+                                            '{}.gpkg'.format(job_name))
         sqlite_to_gpkg.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=geopackage_export_task.name)
+        result = geopackage_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
         sqlite_to_gpkg.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
@@ -240,7 +244,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.arcgis_feature_service.ArcGISFeatureServiceToGPKG')
     def test_run_arcgis_feature_service_export_task(self, mock_service, mock_request):
-        task = ArcGISFeatureServiceExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         arcfs_to_gpkg = mock_service.return_value
@@ -250,9 +253,11 @@ class TestExportTasks(ExportTaskBase):
         arcfs_to_gpkg.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=arcgis_feature_service_export_task.name)
+        result = arcgis_feature_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                                        job_name=job_name)
         arcfs_to_gpkg.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
@@ -263,7 +268,6 @@ class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
     def test_run_external_raster_service_export_task(self, mock_service, mock_request):
-        task = ExternalRasterServiceExportTask()
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         service_to_gpkg = mock_service.return_value
@@ -273,9 +277,11 @@ class TestExportTasks(ExportTaskBase):
         service_to_gpkg.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
-                                                      name=task.name)
-        result = task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=external_raster_service_export_task.name)
+        result = external_raster_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                                         job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
@@ -296,16 +302,14 @@ class TestExportTasks(ExportTaskBase):
         expected_time = real_time.strftime('%Y%m%d')
         download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
         osstat = os_stat.return_value
-        s3_url = 'cloud.eventkit.dev/{},{},{}'.format(str(self.run.uid), 'osm-generic', download_file)
+        s3_url = 'cloud.eventkit.dev/{0},{0},{0}'.format(str(self.run.uid), 'osm-generic', download_file)
         s3.return_value = s3_url
         type(osstat).st_size = PropertyMock(return_value=1234567890)
-        shp_export_task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.RUNNING.value, name=shp_export_task.name)
-        shp_export_task = ShpExportTask()
         expected_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid), download_file])
         download_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid),
                                  'osm-generic', 'file.shp'])
@@ -324,7 +328,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(result)
         self.assertEqual(task, result.task)
         self.assertEquals(TaskStates.SUCCESS.value, task.status)
-        self.assertEquals('ESRI Shapefile Format (Generic)', task.name)
+        self.assertEquals('ESRI Shapefile Format', task.name)
         # pull out the result and test
         result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
@@ -334,7 +338,6 @@ class TestExportTasks(ExportTaskBase):
             self.assertEquals(expected_url, str(result.download_url))
 
     def test_task_on_failure(self, ):
-        shp_export_task = ShpExportTask()
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
@@ -359,15 +362,14 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('celery.app.task.Task.request')
     def test_generate_preset_task(self, mock_request):
-        task = GeneratePresetTask()
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         celery_uid = str(uuid.uuid4())
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         succeeded_task = ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
-                                                   status=TaskStates.RUNNING.value, name=task.name)
+                                                   status=TaskStates.RUNNING.value, name=generate_preset_task.name)
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        result = task.run(run_uid=run_uid, task_uid=succeeded_task.uid, job_name='testjob')
+        result = generate_preset_task.run(run_uid=run_uid, task_uid=succeeded_task.uid, job_name='testjob')
         config = self.job.configs.all()[0]
         expected_path = config.upload.path
         self.assertEquals(result['result'], expected_path)
@@ -400,7 +402,6 @@ class TestExportTasks(ExportTaskBase):
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
         self.run.job.save()
-        stage_dir = settings.EXPORT_STAGING_ROOT + run_uid
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         mock_os_walk.return_value = [(
@@ -409,11 +410,11 @@ class TestExportTasks(ExportTaskBase):
             ['test.gpkg', 'test.om5', 'test.osm']  # om5 and osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
-        fname = 'test-osm-vector-{0}.gpkg'.format(date,)
+        fname = 'test-osm-vector-{0}.gpkg'.format(date, )
         zipfile_name = '{0}/TestJob-test-eventkit-{1}.zip'.format(run_uid, date)
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        task = ZipFileTask()
-        result = task.run(run_uid=run_uid, include_files=['/var/lib/eventkit/exports_staging/{0}/osm-vector/test.gpkg'.format(run_uid)])
+        result = zip_file_task.run(run_uid=run_uid, include_files=[
+            '/var/lib/eventkit/exports_staging/{0}/osm-vector/test.gpkg'.format(run_uid)])
 
         self.assertEqual(
             zipfile.files,
@@ -438,9 +439,8 @@ class TestExportTasks(ExportTaskBase):
     def test_pickup_run_task(self, socket, task_factory):
         run_uid = self.run.uid
         socket.gethostname.return_value = "test"
-        task = PickUpRunTask()
-        self.assertEquals('Pickup Run', task.name)
-        task.run(run_uid=run_uid)
+        self.assertEquals('Pickup Run', pick_up_run_task.name)
+        pick_up_run_task.run(run_uid=run_uid)
         task_factory.assert_called_once()
         task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
 
@@ -453,8 +453,7 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
-        task = FinalizeRunTask()
-        task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+        finalize_run_task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
         rmtree.assert_called_twice_with(stage_dir)
 
         celery_uid = str(uuid.uuid4())
@@ -462,8 +461,7 @@ class TestExportTasks(ExportTaskBase):
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
         rmtree.side_effect = IOError
-        task = FinalizeRunTask()
-        task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+        finalize_run_task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
 
         rmtree.assert_called_twice_with(stage_dir)
         self.assertRaises(IOError, rmtree)
@@ -477,9 +475,8 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
-        task = FinalizeRunTask()
-        self.assertEquals('Finalize Export Run', task.name)
-        task.run(run_uid=run_uid, stage_dir=stage_dir)
+        self.assertEquals('Finalize Export Run', finalize_run_task.name)
+        finalize_run_task.run(run_uid=run_uid, stage_dir=stage_dir)
         msg = Mock()
         email.return_value = msg
         msg.send.assert_called_once()
@@ -498,9 +495,8 @@ class TestExportTasks(ExportTaskBase):
         ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_id,
                                   celery_uid=celery_uid, status=TaskStates.FAILED.value,
                                   name='Default Shapefile Export')
-        task = ExportTaskErrorHandler()
-        self.assertEquals('Export Task Error Handler', task.name)
-        task.run(run_uid=run_uid, task_id=task_id, stage_dir=stage_dir)
+        self.assertEquals('Export Task Error Handler', export_task_error_handler.name)
+        export_task_error_handler.run(run_uid=run_uid, task_id=task_id, stage_dir=stage_dir)
         isdir.assert_any_call(stage_dir)
         rmtree.assert_called_once_with(stage_dir)
         msg.send.assert_called_once()
@@ -527,7 +523,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(export_task_instance.progress, 50)
         self.assertEquals(export_task_instance.estimated_finish, estimated)
 
-    @patch('eventkit_cloud.tasks.export_tasks.KillTask')
+    @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, kill_task):
         worker_name = "test_worker"
         task_pid = 55
@@ -537,57 +533,144 @@ class TestExportTasks(ExportTaskBase):
             run=self.run,
             name='test_provider_task',
         )
-        task_uid = ExportTask.objects.create(
+        export_task = ExportTask.objects.create(
             export_provider_task=export_provider_task,
             status=TaskStates.PENDING.value,
             name="test_task",
             celery_uid=celery_uid,
             pid=task_pid,
             worker=worker_name
-        ).uid
+        )
 
-        task = CancelExportProviderTask()
-        self.assertEquals('Cancel Export Provider Task', task.name)
-        task.run(export_provider_task.uid, user)
-        kill_task.return_value.run.assert_called_once_with(celery_uid=celery_uid)
-        export_task = ExportTask.objects.get(uid=task_uid)
+        self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
+        cancel_export_provider_task.run(export_provider_task.uid, user)
+        kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
+                                                      queue="{0}.cancel".format(worker_name),
+                                                      priority=TaskPriority.CANCEL.value,
+                                                      routing_key="{0}.cancel".format(worker_name))
+        export_task = ExportTask.objects.get(uid=export_task.uid)
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task.uid)
         self.assertEquals(export_task.status, TaskStates.CANCELED.value)
         self.assertEquals(export_provider_task.status, TaskStates.CANCELED.value)
 
-    # app.control.revoke(celery_uid, terminate=True)
-    @patch('eventkit_cloud.celery.app')
-    def test_kill_task(self, app):
-        celery_uid = uuid.uuid4()
-        task = KillTask()
-        self.assertEquals('Kill Task', task.name)
-        task.run(celery_uid=celery_uid)
-        app.control.revoke.assert_called_once_with(str(celery_uid), terminate=True)
+    def test_parse_result(self):
+        result = parse_result(None, None)
+        self.assertIsNone(result)
 
-    # @patch('os.kill')
-    # @patch('celery.result.AsyncResult')
-    # def test_kill_task(self, AsyncResult):
-        from uuid import uuid4
-        from eventkit_cloud.celery import app
-        #Ensure that kill isn't called with default.
-        # task_pid = -1
-        # task = KillTask()
-        # self.assertEquals('Kill Task', task.name)
-        # task.run(task_pid)
-        # kill.assert_not_called()
+        task_result = [{"test": True}]
+        expected_result = True
+        returned_result = parse_result(task_result, "test")
+        self.assertEqual(expected_result, returned_result)
+
+        task_result = {"test": True}
+        expected_result = True
+        returned_result = parse_result(task_result, "test")
+        self.assertEqual(expected_result, returned_result)
+
+        task_result = True
+        expected_result = True
+        returned_result = parse_result(task_result)
+        self.assertEqual(expected_result, returned_result)
+
+    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
+    def test_clean_up_failure_task(self, finalize_export_provider_task):
+        worker_name = "test_worker"
+        task_pid = 55
+        celery_uid = uuid.uuid4()
+        run_uid = self.run.uid
+        canceled_export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='test_provider_task',
+            status=TaskStates.CANCELED.value,
+            slug='test_provider_task_slug'
+        )
+        canceled_task = ExportTask.objects.create(
+            export_provider_task=canceled_export_provider_task,
+            status=TaskStates.CANCELED.value,
+            name="test_task",
+            celery_uid=celery_uid,
+            pid=task_pid,
+            worker=worker_name
+        )
+        export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='test_provider_task',
+            status=TaskStates.PENDING.value,
+            slug='test_provider_task_slug'
+        )
+        task = ExportTask.objects.create(
+            export_provider_task=export_provider_task,
+            status=TaskStates.PENDING.value,
+            name="test_task",
+            celery_uid=celery_uid,
+            pid=task_pid,
+            worker=worker_name
+        )
+        export_provider_task_uids = [canceled_export_provider_task.uid, export_provider_task.uid]
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+        run_dir = os.path.join(download_root, str(run_uid))
+        clean_up_failure_task.run(export_provider_task_uids, export_provider_task_uids, run_uid=run_uid,
+                                  run_dir=run_dir)
+        updated_task = ExportTask.objects.get(uid=task.uid)
+        self.assertEqual(updated_task.status, TaskStates.CANCELED.value)
+        finalize_export_provider_task.assert_called_once()
+
+    @patch('eventkit_cloud.tasks.export_tasks.finalize_run_task')
+    @patch('os.path.isfile')
+    @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
+    def test_finalize_export_provider_task(self, zip_file_task, isfile, finalize_run_task):
+        worker_name = "test_worker"
+        task_pid = 55
+        filename = 'test.gpkg'
+        celery_uid = uuid.uuid4()
+        run_uid = self.run.uid
+        self.job.include_zipfile = True
+        self.job.save()
+        export_provider_task = ExportProviderTask.objects.create(
+            run=self.run,
+            name='test_provider_task',
+            status=TaskStates.COMPLETED.value,
+            slug='test_provider_task_slug'
+        )
+        task = ExportTask.objects.create(
+            export_provider_task=export_provider_task,
+            status=TaskStates.COMPLETED.value,
+            name="test_task",
+            celery_uid=celery_uid,
+            pid=task_pid,
+            worker=worker_name
+        )
+        ExportTaskResult.objects.create(task=task, filename=filename, size=10)
+
+        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+        run_dir = os.path.join(download_root, str(run_uid))
+        finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
+                                          run_dir=run_dir)
+        full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                      export_provider_task.slug, filename)
+        isfile.assert_called_once_with(full_file_path)
+        zip_file_task.run.assert_called_with(run_uid=run_uid, include_files=[full_file_path])
+        finalize_run_task.assert_called_once()
+
+    @patch('os.kill')
+    @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
+    def test_kill_task(self, async_result, kill):
+        # Ensure that kill isn't called with default.
+        task_pid = -1
+        self.assertEquals('Kill Task', kill_task.name)
+        kill_task.run(task_pid)
+        kill.assert_not_called()
 
         # Ensure that kill is not called with an invalid state
-        # task_pid = 55
-        # AsyncResult.return_value = Mock(state=celery.states.FAILURE)
-        # task = KillTask()
-        # self.assertEquals('Kill Task', task.name)
-        # task.run(task_pid)
-        # kill.assert_not_called()
+        task_pid = 55
+        async_result.return_value = Mock(state=celery.states.FAILURE)
+        self.assertEquals('Kill Task', kill_task.name)
+        kill_task.run(task_pid)
+        kill.assert_not_called()
 
-        #Ensure that kill is called with a valid pid
-        # task_pid = 55
-        # AsyncResult.return_value = Mock(state=celery.states.STARTED)
-        # task = KillTask()
-        # self.assertEquals('Kill Task', task.name)
-        # task.run(task_pid)
-        # kill.assert_called_once_with(task_pid, signal.SIGTERM)
+        # Ensure that kill is called with a valid pid
+        task_pid = 55
+        async_result.return_value = Mock(state=celery.states.STARTED)
+        self.assertEquals('Kill Task', kill_task.name)
+        kill_task.run(task_pid)
+        kill.assert_called_once_with(task_pid, signal.SIGTERM)

@@ -83,10 +83,6 @@ RUN chmod 775 /var/log/eventkit
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
 EXPOSE 80
-#RUN rm -rf /var/lib/eventkit/tmp
-
-#RUN /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-#RUN /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
 
 COPY ./scripts /var/lib/eventkit/scripts
 

@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from .project import *  # NOQA
 import dj_database_url
 import os
-
+import logging
 
 # Authentication Settings
 if os.environ.get('LDAP_SERVER_URI'):
@@ -111,6 +111,10 @@ AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 
+
+## WARNINGS ARE SUPPRESSED, PLEASE REVIEW PRIOR TO UPGRADING
+# http://stackoverflow.com/questions/29562070/how-to-suppress-the-deprecation-warnings-in-django
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -126,7 +130,7 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
         },
         'eventkit_cloud': {
-            'handlers': ['console'],
+            'handlers': ['console', ],
             'propagate': True,
             'level': os.getenv('LOG_LEVEL', 'INFO'),
         },
