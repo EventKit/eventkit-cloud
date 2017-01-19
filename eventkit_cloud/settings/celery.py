@@ -31,10 +31,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 CELERYBEAT_SCHEDULE = {
-    'purge-unpublished-exports': {
-        'task': 'Purge Unpublished Exports',
-        'schedule': crontab(minute='0', hour='*', day_of_week='*')
-    },
+    # 'purge-unpublished-exports': {
+    #     'task': 'Purge Unpublished Exports',
+    #     'schedule': crontab(minute='0', hour='*', day_of_week='*')
+    # },
     'expire-runs': {
         'task': 'Expire Runs',
         'schedule': crontab(minute='0', hour='0', day_of_week='*')
