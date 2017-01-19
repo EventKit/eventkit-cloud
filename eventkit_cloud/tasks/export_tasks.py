@@ -2,7 +2,6 @@
 from __future__ import absolute_import
 
 import cPickle
-import glob
 import logging
 import os
 import shutil
@@ -772,13 +771,11 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
     Cancels an ExportProviderTask and terminates each subtasks execution.
     """
 
-    from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult, \
-        ExportTask as ExportTaskModel
+    from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from datetime import datetime, timedelta
 
-    import sys
     export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
     if not export_provider_task:
         return False
@@ -805,8 +802,6 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
             task_result.delete()
 
         if export_task.pid and export_task.worker:
-            # If using revoke there isn't a need to put the kill task on the correct queue, because celery will
-            # broadcast the message.
             kill_task.apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                                   queue="{0}.cancel".format(export_task.worker),
                                   priority=TaskPriority.CANCEL.value,
