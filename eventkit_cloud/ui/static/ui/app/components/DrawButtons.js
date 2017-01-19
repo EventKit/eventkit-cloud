@@ -59,18 +59,18 @@ export class DrawButtons extends Component {
     handleDrawBoxClick() {
         if (this.props.drawBoxButton.disabled) {
             if(!this.props.drawFreeButton.disabled) {
-                this.props.toggleDrawFreeButton(false);
+                this.props.toggleDrawFreeButton(true);
             }
-            this.props.toggleDrawBoxButton(true);
+            this.props.toggleDrawBoxButton(false);
         }
     }
 
     handleDrawFreeClick() {
         if (this.props.drawFreeButton.disabled) {
             if(!this.props.drawBoxButton.disabled) {
-                this.props.toggleDrawBoxButton(false);
+                this.props.toggleDrawBoxButton(true);
             }
-            this.props.toggleDrawFreeButton(true);
+            this.props.toggleDrawFreeButton(false);
         }
     }
 
@@ -105,14 +105,14 @@ function mapDispatchToProps(dispatch) {
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
         },
-        toggleDrawBoxButton: (currentToggleState) => {
-            dispatch(toggleDrawBoxButton(currentToggleState));
+        toggleDrawBoxButton: (isDisabled) => {
+            dispatch(toggleDrawBoxButton(isDisabled));
         },
         clickDrawBoxButton: () => {
             dispatch(clickDrawBoxButton());
         },
-        toggleDrawFreeButton: (currentToggleState) => {
-            dispatch(toggleDrawFreeButton(currentToggleState));
+        toggleDrawFreeButton: (isDisabled) => {
+            dispatch(toggleDrawFreeButton(isDisabled));
         },
         clickDrawFreeButton: () => {
             dispatch(clickDrawFreeButton());

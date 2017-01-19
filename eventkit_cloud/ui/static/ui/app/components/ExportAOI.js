@@ -9,8 +9,8 @@ import SetAOIToolbar from './SetAOIToolbar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
 import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
-import {updateMode, updateBbox, updateGeojson} from '../actions/exportsActions.js';
-import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning} from '../actions/drawToolBarActions.js';
+import {updateMode, updateBbox, updateGeojson, unsetAOI} from '../actions/exportsActions.js';
+import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning, clickDrawSet} from '../actions/drawToolBarActions.js';
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -19,6 +19,7 @@ export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
 const jsts = require('jsts');
+const isEqual = require('lodash/isEqual');
 
 export class ExportAOI extends Component {
 
@@ -41,7 +42,6 @@ export class ExportAOI extends Component {
     componentWillReceiveProps(nextProps) {
         // Check if the map mode has changed (DRAW or NORMAL)
         if(this.props.mode != nextProps.mode) {
-            console.log(this.props.mode, nextProps.mode);
             this._updateInteractions(nextProps.mode);
         }
         // Check if cancel button has been clicked
@@ -68,14 +68,14 @@ export class ExportAOI extends Component {
     handleDrawRedraw() {
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
-        this.props.updateBbox([]);
+        this.props.unsetAOI();
     }
 
     handleDrawCancel() {
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
         this._deactivateDrawInteraction();
-        this.props.updateBbox([]);
+        this.props.unsetAOI();
     }
 
     handleZoomToSelection(bbox) {
@@ -104,6 +104,7 @@ export class ExportAOI extends Component {
         this.props.updateBbox(bbox);
         this.props.updateGeojson(geojson);
         this.handleZoomToSelection(bbox);
+        this.props.clickDrawSet();
     }
 
 
@@ -111,17 +112,19 @@ export class ExportAOI extends Component {
     _activateDrawInteraction(mode) {
         this._clearDraw()
         if(mode == MODE_DRAW_BBOX) {
-            this.props.updateBbox([]);
+            this.props.unsetAOI();
             this.props.updateGeojson({});
+            this.props.toggleDrawSet(true);
             this.props.hideInvalidDrawWarning();
-            this.props.toggleDrawRedraw(false);
+            this.props.toggleDrawRedraw(true);
             this._drawFreeInteraction.setActive(false);
             this._drawBoxInteraction.setActive(true);
         }
         else if(mode == MODE_DRAW_FREE) {
-            this.props.updateBbox([]);
+            this.props.unsetAOI();
             this.props.updateGeojson({});
-            this.props.toggleDrawRedraw(false);
+            this.props.toggleDrawSet(true);
+            this.props.toggleDrawRedraw(true);
             this._drawBoxInteraction.setActive(false);
             this._drawFreeInteraction.setActive(true);
         }
@@ -137,7 +140,6 @@ export class ExportAOI extends Component {
     }
 
     _handleDrawEnd(event) {
-
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
         const geojson = createGeoJSON(geometry);
@@ -163,8 +165,7 @@ export class ExportAOI extends Component {
         // exit drawing mode
         this.props.updateMode('MODE_NORMAL');
         // make the redraw and set buttons available
-        this.props.toggleDrawRedraw(this.props.drawRedraw.disabled);
-        this.props.toggleDrawSet(this.props.drawSet.disabled);
+        this.props.toggleDrawRedraw(false);
     }
 
     _handleDrawStart() {
@@ -243,13 +244,13 @@ export class ExportAOI extends Component {
     _updateInteractions(mode) {
         switch (mode) {
             case MODE_DRAW_BBOX:
-                if (this.props.searchBbox) {
+                if (this.props.searchBbox.length > 0) {
                     this.props.clearSearchBbox();
                 }
                 this._activateDrawInteraction(MODE_DRAW_BBOX);
                 break
             case MODE_DRAW_FREE:
-                if (this.props.searchBbox) {
+                if (this.props.searchBbox.length > 0) {
                     this.props.clearSearchBbox();
                 }
                 this._activateDrawInteraction(MODE_DRAW_FREE);
@@ -285,14 +286,14 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleDrawCancel: (currentVisibility) => {
-            dispatch (toggleDrawCancel(currentVisibility));
+        toggleDrawCancel: (isDisabled) => {
+            dispatch (toggleDrawCancel(isDisabled));
         },
-        toggleDrawRedraw: (currentVisibility) => {
-            dispatch(toggleDrawRedraw(currentVisibility));
+        toggleDrawRedraw: (isDisabled) => {
+            dispatch(toggleDrawRedraw(isDisabled));
         },
-        toggleDrawSet: (currentToggleState) => {
-            dispatch(toggleDrawSet(currentToggleState));
+        toggleDrawSet: (isDisabled) => {
+            dispatch(toggleDrawSet(isDisabled));
         },
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
@@ -311,6 +312,12 @@ function mapDispatchToProps(dispatch) {
         },
         updateGeojson: (geojson) => {
             dispatch(updateGeojson(geojson));
+        },
+        unsetAOI: () => {
+            dispatch(unsetAOI());
+        },
+        clickDrawSet: () => {
+            dispatch(clickDrawSet());
         },
     }
 }
@@ -451,10 +458,11 @@ function createGeoJSON(ol3Geometry) {
     // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
     const polygonGeom = new ol.geom.Polygon(coords)
     polygonGeom.transform(WEB_MERCATOR, WGS84);
+    const wgs84Coords = polygonGeom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
                     "features": [
                         {"type": "Feature",
-                        "geometry": {"type": "Polygon", "coordinates": coords}}
+                        "geometry": {"type": "Polygon", "coordinates": wgs84Coords}}
                     ]}
     return geojson;
 }

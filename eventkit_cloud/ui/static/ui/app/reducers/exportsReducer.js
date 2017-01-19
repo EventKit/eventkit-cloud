@@ -37,3 +37,14 @@ export function exportGeojsonReducer(state = initialState.geojson, action) {
             return state;
     }
 }
+
+export function exportSetAOIReducer(state = initialState.isAOISet, action) {
+    switch(action.type) {
+        case types.SET_AOI:
+            return true;
+        case types.UNSET_AOI:
+            return false;
+        default:
+            return state;
+    }
+}

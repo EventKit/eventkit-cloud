@@ -4,6 +4,7 @@ import styles from './SearchAOIToolbar.css';
 import {Typeahead} from 'react-bootstrap-typeahead'; // ES2015
 import ExportsApi from '../api/exportsApi.js';
 import {getGeonames, drawSearchBbox} from '../actions/searchToolbarActions';
+import {clickDrawCancel} from '../actions/drawToolBarActions.js'
 
 const debounce = require('lodash/debounce');
 
@@ -14,6 +15,7 @@ export class SearchAOIToolbar extends Component {
 
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
+        this.handleFocus = this.handleFocus.bind(this);
 
         this.state = {
             value: '',
@@ -38,6 +40,10 @@ export class SearchAOIToolbar extends Component {
         }
     }
 
+    handleFocus() {
+        this.props.clickDrawCancel();
+        this.refs.typeahead.getInstance().clear();
+    }
 
     handleChange(e) {
         // If 2 or more characters are entered then make request for suggested names.
@@ -59,6 +65,7 @@ export class SearchAOIToolbar extends Component {
             let bbox = e[0].bbox;
             let formatted_bbox = [bbox.west, bbox.south, bbox.east, bbox.north]
             this.props.drawSearchBbox(formatted_bbox);
+            this.refs.typeahead.getInstance().blur();
         }
     }
 
@@ -69,7 +76,9 @@ export class SearchAOIToolbar extends Component {
                 <i className={'fa fa-search'}/>
                 <div className={styles.typeahead}>
                     <Typeahead
+                        ref="typeahead"
                         options={this.state.suggestions}
+                        onFocus={this.handleFocus}
                         onChange={this.handleEnter}
                         placeholder={'Search admin boundary or location...'}
                         onInputChange={this.debouncer}
@@ -109,6 +118,9 @@ function mapDispatchToProps(dispatch) {
         },
         drawSearchBbox: (bbox) => {
             dispatch(drawSearchBbox(bbox));
+        },
+        clickDrawCancel: () => {
+            dispatch(clickDrawCancel());
         }
     }
 }

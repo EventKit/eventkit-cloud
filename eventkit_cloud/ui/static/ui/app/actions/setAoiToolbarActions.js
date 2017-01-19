@@ -2,10 +2,10 @@ import {Config} from '../config'
 import * as types from './actionTypes'
 import ExportApi from '../api/exportsApi';
 
-export function toggleZoomToSelection(currentState) {
+export function toggleZoomToSelection(isDisabled) {
     return {
         type: types.TOGGLE_ZOOM_TO_SELECTION,
-        disabled: !currentState
+        disabled: isDisabled
     }
 }
 
@@ -16,10 +16,10 @@ export function clickZoomToSelection() {
     }
 }
 
-export function toggleResetMap(currentState) {
+export function toggleResetMap(isDisabled) {
     return {
         type: types.TOGGLE_RESET_MAP,
-        disabled: !currentState
+        disabled: isDisabled
     }
 }
 

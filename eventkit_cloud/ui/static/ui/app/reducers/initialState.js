@@ -4,6 +4,7 @@ export default {
     bbox: [],
     geojson: {},
     mode: 'DRAW_NORMAL',
+    isAOISet: false,
     showInvalidDrawWarning: false,
     searchBbox : [],
     drawExtensionVisible: false,

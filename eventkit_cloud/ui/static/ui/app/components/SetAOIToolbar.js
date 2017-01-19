@@ -8,8 +8,10 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 
-export const NO_SELECTION_TEXT = 'None Selected'
+export const NO_SELECTION_TEXT = 'None Set'
 export const CARDINAL_DIRECTIONS = "(West, South, East, North)"
+
+const isEqual = require('lodash/isEqual');
 
 export class SetAOIToolbar extends Component {
 
@@ -21,6 +23,7 @@ export class SetAOIToolbar extends Component {
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
         this.updateResetMapState = this.updateResetMapState.bind(this);
         this.dispatchResetMap = this.dispatchResetMap.bind(this);
+        this.handleAOISet = this.handleAOISet.bind(this);
 
         this.state = {
             areaSelectedText: NO_SELECTION_TEXT,
@@ -30,10 +33,6 @@ export class SetAOIToolbar extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        // Check if bbox has been updated
-        if (nextProps.bbox != this.props.bbox) {
-            this.updateBboxText(nextProps.bbox);
-        }
         // Check if zoomToSelction state has been changed
         if (nextProps.zoomToSelection.disabled != this.props.zoomToSelection.disabled) {
             this.updateZoomToSelectionState(nextProps.zoomToSelection.disabled);
@@ -43,6 +42,22 @@ export class SetAOIToolbar extends Component {
         if (nextProps.resetMap.disabled != this.props.zoomToSelection.disabled) {
             this.updateResetMapState(nextProps.resetMap.disabled);
         }
+        if (nextProps.isAOISet != this.props.isAOISet) {
+            this.handleAOISet(nextProps.isAOISet, nextProps.bbox, nextProps.geojson);
+        }
+    }
+
+    handleAOISet(isSet, bbox, geojson) {
+        if(isSet) {
+            this.updateBboxText(bbox);
+            this.props.toggleZoomToSelection(false);
+            this.props.toggleResetMap(false);
+        }
+        else {
+            this.updateBboxText([]);
+            this.props.toggleZoomToSelection(true);
+            this.props.toggleResetMap(true);
+        }
     }
 
     updateBboxText(bbox) {
@@ -50,16 +65,16 @@ export class SetAOIToolbar extends Component {
         if (bbox.length != 0 && bbox != null) {
             this.setState({areaSelectedText:
                 CARDINAL_DIRECTIONS + `: ${bbox[0]}, ${bbox[1]}, ${bbox[2]}, ${bbox[3]}`});
-            this.props.toggleZoomToSelection(true);
-            this.props.toggleResetMap(true);
+            this.props.toggleZoomToSelection(false);
+            this.props.toggleResetMap(false);
         }
         // If no valid bbox set reset text to no selection
         else {
             if(this.state.areaSelectedText != NO_SELECTION_TEXT) {
                 this.setState({areaSelectedText: NO_SELECTION_TEXT});
             }
-            this.props.toggleZoomToSelection(false);
-            this.props.toggleResetMap(false);
+            this.props.toggleZoomToSelection(true);
+            this.props.toggleResetMap(true);
         }
     }
 
@@ -130,21 +145,23 @@ export class SetAOIToolbar extends Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
+        geojson: state.geojson,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
+        isAOISet: state.isAOISet,
     }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleZoomToSelection: (currentState) => {
-            dispatch(toggleZoomToSelection(currentState));
+        toggleZoomToSelection: (isDisabled) => {
+            dispatch(toggleZoomToSelection(isDisabled));
         },
         clickZoomToSelection: () => {
             dispatch(clickZoomToSelection());
         },
-        toggleResetMap: (currentState) => {
-            dispatch(toggleResetMap(currentState));
+        toggleResetMap: (isDisabled) => {
+            dispatch(toggleResetMap(isDisabled));
         },
         clickResetMap: () => {
             dispatch(clickResetMap());

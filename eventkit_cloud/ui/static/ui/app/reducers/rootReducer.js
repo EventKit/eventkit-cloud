@@ -1,6 +1,6 @@
 
 import {combineReducers} from 'redux';
-import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer} from './exportsReducer';
+import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer';
 import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
 import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js';
@@ -22,6 +22,7 @@ const rootReducer = combineReducers({
     resetMap: resetMapReducer,
     geonames: getGeonamesReducer,
     showInvalidDrawWarning: invalidDrawWarningReducer,
+    isAOISet: exportSetAOIReducer,
 })
 
 export default rootReducer;
