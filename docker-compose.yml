@@ -69,6 +69,9 @@ services:
       - POSTGRES_DB=eventkit_exports
     expose:
       - "5432"
+    # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
+    volumes:
+      - "../eventkit_database/database:/var/lib/postgresql/data"
   rabbitmq:
        image: rabbitmq:3.6.6-management
        expose:
