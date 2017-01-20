@@ -1,6 +1,6 @@
 from billiard import Process
 import subprocess
-from inspect import getcallargs
+import time
 from django.db import connection
 
 import logging
@@ -46,7 +46,6 @@ class TaskProcess(object):
 
     def store_pid(self, pid=None):
         """
-
         :param pid: A pid (integer) to store in the Export Task
         :return: None
         """

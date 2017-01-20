@@ -18,16 +18,14 @@ class ThematicGPKG(object):
     Thin wrapper around ogr2ogr to convert sqlite to shp using thematic layers.
     """
 
-    def __init__(self, gpkg=None, tags=None, job_name=None, zipped=True, debug=False, task_uid=None):
+    def __init__(self, gpkg=None, stage_dir=None, tags=None, job_name=None, debug=False, task_uid=None):
         """
         Initialize the ThematicGPKG utility.
 
         Args:
-            sqlite: the sqlite file to convert
-            shapefile: the path to the shapefile output
+            gpkg: the gpkg file to convert
             tags: the selected tags for this export
             job_name: the name of the export job
-            zipped: true if output is to be zipped, false otherwise
             debug: turn on/off debug logging output.
         """
         self.gpkg = gpkg
@@ -35,12 +33,11 @@ class ThematicGPKG(object):
         self.job_name = job_name
         if not os.path.exists(self.gpkg):
             raise IOError('Cannot find gpkg file for this task.')
-        self.stage_dir = os.path.dirname(self.gpkg)
         self.debug = debug
         # create thematic gpkg file
-        self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '.gpkg'
+        self.stage_dir = stage_dir
+        self.thematic_gpkg = os.path.join(self.stage_dir, '{0}.gpkg'.format(self.job_name))
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.stage_dir = settings.EXPORT_STAGING_ROOT
         self.task_uid = task_uid
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
@@ -153,9 +150,9 @@ class ThematicGPKG(object):
             sql = sql_tmpl.safe_substitute(params)
             try:
                 cur.execute(sql)
-            except Exception:
+            except Exception as e:
                 logger.error("SQL Execute for: {}, has failed.".format(sql))
-                raise
+                raise e
             geom_type = geom_types[layer_type]
             conn.commit()
 
@@ -171,9 +168,9 @@ class ThematicGPKG(object):
                 insert_geom_cmd = insert_geom_temp.safe_substitute(
                     {'table_name': layer, 'geom_type': geom_type, 'srs': insert_data[9]})
                 cur.execute(insert_geom_cmd)
-            except Exception:
+            except Exception as e:
                 logger.error("GPKG Contents Insert failed for {}".format(layer))
-                raise
+                raise e
             conn.commit()
 
         cur.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_point'")
@@ -206,18 +203,18 @@ class ThematicGPKG(object):
         conn.close()
 
         thematic_spatial_index_file = os.path.join(self.stage_dir, 'thematic_spatial_index.sql')
-        sql_file = open(thematic_spatial_index_file, 'w+')
-        convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
-        index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
-        convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
-        for layer in valid_layers:
-            convert_to_cmd = convert_to_cmd_temp.safe_substitute({'layer': layer})
-            index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
-            convert_from_cmd = convert_from_cmd_temp.safe_substitute({'layer': layer})
-            sql_file.write(convert_to_cmd)
-            sql_file.write(index_cmd)
-            sql_file.write(convert_from_cmd)
-        sql_file.close()
+
+        with open(thematic_spatial_index_file, 'w+') as sql_file:
+            convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
+            index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
+            convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
+            for layer in valid_layers:
+                convert_to_cmd = convert_to_cmd_temp.safe_substitute({'layer': layer})
+                index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
+                convert_from_cmd = convert_from_cmd_temp.safe_substitute({'layer': layer})
+                sql_file.write(convert_to_cmd)
+                sql_file.write(index_cmd)
+                sql_file.write(convert_from_cmd)
 
         self.update_index = Template("spatialite $gpkg < $update_sql")
         index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,

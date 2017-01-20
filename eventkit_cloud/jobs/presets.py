@@ -306,7 +306,7 @@ class TagParser:
     """
     Reconstruct a JOSM Preset from the users selected Tag's.
 
-    Used in tasks.export_tasks.GeneratePresetTask.
+    Used in tasks.export_tasks.generate_preset_task.
     """
     namespaces = {'ns': 'http://josm.openstreetmap.de/tagging-preset-1.0'}
     nsmap = {None: 'http://josm.openstreetmap.de/tagging-preset-1.0'}
