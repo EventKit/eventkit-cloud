@@ -16,9 +16,10 @@ services:
         - DEBUG=True
         - PRODUCTION=True
         - DJANGO_LOG_LEVEL=ERROR
-        - LOG_LEVEL=ERROR
+        - LOG_LEVEL=INFO
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME
+        - PYTHONWARNINGS=ignore
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -45,8 +46,7 @@ services:
         - postgis
         - rabbitmq
       environment:
-        # Concurrency needs to be greater than 1 to support Task Cancellation.
-        - CONCURRENCY=2
+        - CONCURRENCY=1
         - MAPPROXY_CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
@@ -92,16 +92,19 @@ services:
        image: httpd:2.4.23
        ports:
           - "80:80"
-#  flower:
-#       extends:
-#          service: base
-#       depends_on:
-#          - rabbitmq
-#       links:
-#          - rabbitmq
-#       ports:
-#         - "49555:5555"
-#       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
-#       extra_hosts:
-#        - "cloud.eventkit.dev:192.168.99.130"
+  flower:
+       extends:
+          service: base
+       depends_on:
+          - rabbitmq
+       links:
+          - rabbitmq
+       ports:
+         - "49555:5555"
+       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
+       extra_hosts:
+         - "${SITE_NAME}:${SITE_IP}"
+       environment:
+         - BROKER_API=http://guest:guest@rabbitmq:15672/api/
+         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
 

@@ -44,7 +44,7 @@ class SQliteToGeopackage(object):
         """
         convert_cmd = self.cmd.safe_substitute({'gpkgfile': self.gpkgfile,
                                                 'sqlite': self.sqlite})
-        if (self.debug):
+        if self.debug:
             print 'Running: %s' % convert_cmd
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
@@ -52,7 +52,7 @@ class SQliteToGeopackage(object):
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
-        if (self.debug):
+        if self.debug:
             print 'ogr2ogr returned: %s' % task_process.exitcode
         return self.gpkgfile
 
@@ -79,7 +79,6 @@ def is_alnum(data):
 
 def get_table_count(gpkg, table):
     """
-
     :param gpkg: Path to geopackage file.
     :param table: A table name to count the rows.
     :return: A count of the rows in a table.

@@ -28,7 +28,7 @@ class GPKGToKml(object):
         """
         self.gpkg = gpkg
         if not os.path.exists(self.gpkg):
-            raise IOError('Cannot find GPKG file for this task.')
+            raise IOError('Cannot find gpkg file for this task.')
         self.kmlfile = kmlfile
         self.zipped = zipped
         if not self.kmlfile:

@@ -29,8 +29,7 @@ from serializers import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
-from ..tasks.export_tasks import PickUpRunTask, CancelExportProviderTask
-
+from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
@@ -282,9 +281,10 @@ class JobViewSet(viewsets.ModelViewSet):
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=job_uid)
+
             running = JobSerializer(job, context={'request': request})
             # Run is passed to celery to start the tasks.
-            PickUpRunTask().delay(run_uid=run_uid)
+            pick_up_run_task.delay(run_uid=run_uid)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -324,7 +324,7 @@ class RunJob(views.APIView):
             if run.user != request.user and not request.user.is_superuser:
                 return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
             if run:
-                PickUpRunTask().delay(run_uid=run_uid)
+                pick_up_run_task.delay(run_uid=run_uid)
                 running = ExportRunSerializer(run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
@@ -544,7 +544,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        CancelExportProviderTask().run(uid, request.user)
+        cancel_export_provider_task.run(uid, request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):

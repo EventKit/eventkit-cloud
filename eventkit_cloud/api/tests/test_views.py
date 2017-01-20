@@ -226,7 +226,7 @@ class TestJobViewSet(APITestCase):
         job = Job.objects.get(uid=job_uid)
         self.assertEqual(job.include_zipfile, True)
 
-    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_success(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
@@ -251,7 +251,7 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid)
-        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
@@ -273,7 +273,7 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
@@ -298,7 +298,7 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid)
-        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -316,7 +316,7 @@ class TestJobViewSet(APITestCase):
         configs = self.job.configs.all()
         self.assertIsNotNone(configs[0])
 
-    @patch('eventkit_cloud.api.views.PickUpRunTask')
+    @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
@@ -343,7 +343,7 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid)
-        pickup_mock.return_value.delay.assert_called_once_with(run_uid="some_run_uid")
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -586,7 +586,7 @@ class TestBBoxSearch(APITestCase):
         self.user = None
         self.client = None
 
-    @patch('eventkit_cloud.tasks.task_runners.ExportOSMTaskRunner')
+    @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
     def setUp(self, mock):
         task_runner = mock.return_value
         url = reverse('api:jobs-list')
