@@ -1,5 +1,5 @@
 FROM ubuntu:16.04
-
+ARG DATABASE_URL
 # a few minor docker-specific tweaks
 # see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
 RUN set -xe \
@@ -82,6 +82,6 @@ COPY ./scripts /var/lib/eventkit/scripts
 RUN chmod 755 /var/lib/eventkit /var/log/eventkit /home
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
-ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh", "postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports"]
+ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh", $DATABASE_URL]
 CMD ["echo", "Override this command in the docker-compose.yaml"]
 

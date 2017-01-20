@@ -6,6 +6,8 @@ services:
      build:
        context: .
        dockerfile: config/Dockerfile
+       args:
+           DATABASE_URL: postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
