@@ -4,9 +4,9 @@ from django.conf import settings
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 
-from celery import Task
 from celery.utils.log import get_task_logger
 from eventkit_cloud.celery import app
+
 logger = get_task_logger(__name__)
 
 

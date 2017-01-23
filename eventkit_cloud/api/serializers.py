@@ -419,7 +419,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProvider
-        exclude = ('id', 'level_from', 'level_to')
+        extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
 
     @staticmethod

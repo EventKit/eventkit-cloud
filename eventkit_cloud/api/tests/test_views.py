@@ -126,7 +126,9 @@ class TestJobViewSet(APITestCase):
             'xmax': 7.0,
             'ymax': 27.6,
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
-            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0, 'url': 'http://coolproviderurl.to'}],
+            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0,
+                                  'url': 'http://coolproviderurl.to',
+                                  'preview_url': 'http://coolproviderurl.to'}],
             'preset': config_uid,
             'transform': '',
             'translation': ''
@@ -139,7 +141,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['exports'][0]['provider'], 'test')
 
         request_data['export_providers'][0]['name'] = 'test 2'
-        # should be idempontent
+        # should be idempotent
         self.client.post(url, request_data, format='json')
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
