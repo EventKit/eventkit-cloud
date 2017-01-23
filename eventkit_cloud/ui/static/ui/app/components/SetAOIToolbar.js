@@ -131,7 +131,7 @@ export class SetAOIToolbar extends Component {
                     </div>
                     <div className={styles.resetMapDiv}>
                         <button className={styles.simpleButton + ' '
-                        + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={'fa fa-refresh'}></i>  RESET MAP</button>
+                        + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={'fa fa-refresh'}></i>  RESET VIEW</button>
                     </div>
                     <div className={styles.zoomToDiv}>
                         <button className={styles.simpleButton + ' '
