@@ -8,6 +8,6 @@ const logger = createLogger();
 export default function configureStore() {
     return createStore(
         rootReducer,
-        applyMiddleware(thunkMiddleware, logger)
+        applyMiddleware(thunkMiddleware)
    );
 }

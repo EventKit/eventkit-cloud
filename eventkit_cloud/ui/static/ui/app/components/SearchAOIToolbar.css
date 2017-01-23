@@ -54,7 +54,7 @@
     z-index: 2;
     position: absolute;
     width: 90%;
-    min-width: 320;
+    min-width: 320px;
     height: 50px;
     top: 90px;
     left: 10px;
