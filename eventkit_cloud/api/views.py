@@ -354,9 +354,18 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.AllowAny,)
-    queryset = ExportProvider.objects.all()
     lookup_field = 'id'
     ordering = ['name']
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        if user.is_authenticated():
+            return ExportProvider.objects.filter(Q(user=user) | Q(user=None))
+        return ExportProvider.objects.filter(user=None)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
