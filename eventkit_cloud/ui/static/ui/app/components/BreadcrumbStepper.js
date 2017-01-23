@@ -6,20 +6,16 @@ import {
     Stepper,
     StepLabel,
 } from 'material-ui/Stepper';
-import FloatingActionButton from 'material-ui/FloatingActionButton';
-import FlatButton from 'material-ui/FlatButton';
+import FloatingActionButton from 'material-ui/FloatingActionButton'
 import style from './BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
-import {updateBbox} from '../actions'
-import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
+import ExportInfo from './ExportInfo'
 
 class BreadcrumbStepper extends React.Component {
     constructor() {
         super()
         this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
     }
-
-
 
     state = {
         finished: false,
@@ -47,13 +43,14 @@ class BreadcrumbStepper extends React.Component {
                 return <ExportAOI mode={this._mapMode}
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
-                return 'return the export info';
+                return <ExportInfo/>
             case 2:
                 return 'return preview export';
             case 3:
                 return 'return export status';
             default:
-                return 'You\'re a long way from home sonny jim!';
+                return <ExportAOI mode={this._mapMode}
+                                  onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
         }
     }
 
@@ -100,6 +97,7 @@ class BreadcrumbStepper extends React.Component {
                                               onTouchTap={this.handlePrev}
                                               style={{marginRight: 12}}><i className="fa fa-arrow-left fa-lg" aria-hidden="true"></i></FloatingActionButton>
                         <FloatingActionButton mini={true}
+                                              disabled={stepIndex === 3}
                                               onTouchTap={this.handleNext}
                                               style={{marginRight: 12}}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></FloatingActionButton>
                     </div>

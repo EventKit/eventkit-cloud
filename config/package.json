@@ -19,6 +19,7 @@
     "image-webpack-loader": "~3.0.0",
     "file-loader": "~0.9.0",
     "material-ui": "~0.16.5",
+    "material-design-icons": "~3.0.1",
     "openlayers": "~3.19.1",
     "style-loader": "~0.13.1",
     "react-dom": "~15.4.0",
