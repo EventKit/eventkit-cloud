@@ -135,6 +135,10 @@ class ExportProvider(TimeStampedModelMixin):
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
+    preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
+                                   help_text="This url will be served to the front end for displaying in the map.")
+    service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
+                                   help_text="This information is used to display relevant copyright information.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
@@ -150,6 +154,13 @@ class ExportProvider(TimeStampedModelMixin):
     class Meta:  # pragma: no cover
         managed = True
         db_table = 'export_provider'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.name.replace(' ', '_').lower()
+            if len(self.slug) > 40:
+                self.slug = self.slug[0:39]
+        super(ExportProvider, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{0}'.format(self.name)
