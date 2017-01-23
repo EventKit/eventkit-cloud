@@ -4,9 +4,7 @@ sudo groupadd eventkit
 sudo useradd -g eventkit eventkit
 
 sudo apt-get update
-sudo apt-get -y install python-pip
-sudo apt-get -y install vim
-sudo apt-get -y install git
+sudo apt-get -y install python-pip vim git
 
 sudo pip install --upgrade pip
 sudo pip install virtualenvwrapper
@@ -14,8 +12,9 @@ sudo echo 'export WORKON_HOME=/var/lib/.virtualenvs' >> /etc/profile.d/path.sh
 sudo echo 'export PROJECT_HOME=/var/lib/eventkit' >> /etc/profile.d/path.sh
 sudo echo 'source /usr/local/bin/virtualenvwrapper.sh' >> /etc/profile.d/path.sh
 source /etc/profile.d/path.sh
+cd /var/lib
 mkvirtualenv eventkit
-sudo mkdir /var/lib/eventkit
+
 workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev
@@ -35,14 +34,28 @@ cd ..
 sudo rm -fr osmctools
 cd ~
 
-sudo apt-get -y install software-properties-common
-sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+#sudo apt-get -y install software-properties-common
+#sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+#sudo apt-get update
+#sudo apt-get -y install gdal-bin libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
+#sudo apt-get libgdal-dev
+#sudo apt-get -y install osmctools
+#sudo apt-get -y install spatialite-bin
+#sudo apt-get -y install zip unzip
+
 sudo apt-get update
-sudo apt-get -y install gdal-bin libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
-sudo apt-get libgdal-dev
-sudo apt-get -y install osmctools
-sudo apt-get -y install spatialite-bin
-sudo apt-get -y install zip unzip
+sudo apt-get install curl \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+sudo apt-get install apt-transport-https \
+                       ca-certificates
+curl -fsSL https://yum.dockerproject.org/gpg | sudo apt-key add -
+sudo add-apt-repository \
+       "deb https://apt.dockerproject.org/repo/ \
+       ubuntu-$(lsb_release -cs) \
+       main"
+sudo apt-get update
+sudo apt-get -y install docker-engine=1.12.3-0~xenial
 
 sudo service postgresql start
 sudo update-rc.d postgresql enable
@@ -72,11 +85,13 @@ cd eventkit-cloud
 sudo git fetch origin
 cp -R * /var/lib/eventkit
 cd /var/lib/eventkit
-sudo apt-get -y install libxml2-dev libxslt-dev
-export CPLUS_INCLUDE_PATH=/usr/include/gdal
-export C_INCLUDE_PATH=/usr/include/gdal
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+## EDIT DOCKER_COMPOSE IF NEEDED
+sudo docker-compose up -d celery
+#sudo apt-get -y install libxml2-dev libxslt-dev
+#export CPLUS_INCLUDE_PATH=/usr/include/gdal
+#export C_INCLUDE_PATH=/usr/include/gdal
+#pip install -r requirements.txt
+#pip install -r requirements-dev.txt
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -89,21 +104,32 @@ sudo apt-get install -y supervisor
 
 sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord-celery.conf /etc/supervisor/supervisord.conf
 
-sudo chmod 755 /home
-sudo chmod 755 /var/lib/eventkit
-sudo chmod 755 /var/lib/eventkit
-sudo chmod 775 /var/log/eventkit
 
 # make a staging directory (the prod webapp asssumes workers are on on cloudfoundry so we mimic the same path)
 # TODO: symlink?
-sudo mkdir /home/vcap
-sudo mkdir /home/vcap/staging
-sudo chmod 775 /home/vcap/staging
+#sudo mkdir /home/vcap
+#sudo mkdir /home/vcap/staging
+#sudo chmod 775 /home/vcap/staging
 
-sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
+
+sudo apt-get -y install rabbitmq-server
+echo "[ {rabbit,\
+[\
+{cluster_nodes, {['rabbit at host'], disc}},\
+{default_user,<<'user'>>},\
+{default_pass,<<'password'>>}\
+]\
+}]\
+" >> /etc/rabbitmq/rabbitmq-env.conf
+
+echo "RABBITMQ_NODE_PORT=5672" >> /etc/profile.d/path.sh
+
+sudo service rabbitmq-server start
+sudo update-rc.d rabbitmq-server enable
 
 sudo ufw allow 22
 sudo ufw allow 5432
+sudo ufw allow 5672
 sudo ufw --force enable
 
 sudo service supervisor restart
@@ -112,7 +138,14 @@ sudo chown -R eventkit:eventkit /var/log/eventkit
 
 rm -rf /var/lib/eventkit/tmp
 
-sudo apt-get install -y inotify-tools
+sudo chmod 755 /home
+sudo chmod 755 /var/lib/eventkit
+sudo chmod 755 /var/lib/eventkit
+sudo chmod 775 /var/log/eventkit
+
+sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
+
+
 
 # we need to kill all python processes to get rid of this annoying
 # issue where supervisor boots up a worker before it gets a proper config
