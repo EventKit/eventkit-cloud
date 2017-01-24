@@ -1,11 +1,13 @@
 import {Config} from '../config'
 import * as types from './actionTypes'
+import fetch from 'isomorphic-fetch'
+const isEqual = require('lodash/isEqual');
 
 
 export function getGeonames(query) {
     return (dispatch) => {
         dispatch({type: "FETCHING_GEONAMES"});
-        fetch(`http:\/\/api.geonames.org/searchJSON?q=${query}&maxRows=${20}&username=${'hotexports'}&style=${'full'}`, {
+        return fetch(`http:\/\/api.geonames.org/searchJSON?q=${query}&maxRows=${20}&username=${'hotexports'}&style=${'full'}`, {
             method: 'POST',
         }).then(response => {
             return response.json();
@@ -13,7 +15,7 @@ export function getGeonames(query) {
             let data = responseData.geonames;
             let geonames = []
             for(var i=0;i<data.length;i++) {
-                if (data[i].bbox) {
+                if (data[i].bbox && !isEqual(data[i].bbox, {})) {
                     geonames.push(data[i]);
                 }
             }
