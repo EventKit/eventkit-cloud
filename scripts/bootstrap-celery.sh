@@ -19,8 +19,6 @@ workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev gcc g++
 
-sudo apt-get -y install
-
 #cd /var/lib/eventkit
 #sudo git clone https://gitlab.com/osm-c-tools/osmctools.git
 #cd osmctools/src
