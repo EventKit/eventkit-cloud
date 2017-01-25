@@ -17,26 +17,28 @@ mkvirtualenv eventkit
 
 workon eventkit
 
-sudo apt-get -y install libpq-dev python-dev
-sudo apt-get -y install postgis postgresql-contrib*
+sudo apt-get -y install libpq-dev python-dev gcc g++
 
-sudo apt-get -y install gcc g++
+sudo apt-get -y install
 
-cd /var/lib/eventkit
-sudo git clone https://gitlab.com/osm-c-tools/osmctools.git
-cd osmctools/src
-sudo gcc osmupdate.c -o ../osmupdate
-sudo gcc osmfilter.c -O3 -o ../osmfilter
-sudo gcc osmconvert.c -lz -O3 -o ../osmconvert
-cd ..
-sudo cp osmupdate osmfilter osmconvert /usr/local/bin
-cd ..
-sudo rm -fr osmctools
-cd ~
+#cd /var/lib/eventkit
+#sudo git clone https://gitlab.com/osm-c-tools/osmctools.git
+#cd osmctools/src
+#sudo gcc osmupdate.c -o ../osmupdate
+#sudo gcc osmfilter.c -O3 -o ../osmfilter
+#sudo gcc osmconvert.c -lz -O3 -o ../osmconvert
+#cd ..
+#sudo cp osmupdate osmfilter osmconvert /usr/local/bin
+#cd ..
+#sudo rm -fr osmctools
+#cd ~
 
-#sudo apt-get -y install software-properties-common
-#sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
-#sudo apt-get update
+sudo apt-get -y install software-properties-common
+sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get -y install postgresql-9.3-postgis-2.2
+
+
 #sudo apt-get -y install gdal-bin libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
 #sudo apt-get libgdal-dev
 #sudo apt-get -y install osmctools
