@@ -3,6 +3,9 @@ import {connect} from 'react-redux'
 import { reduxForm, Field } from 'redux-form'
 import { RadioButton } from 'material-ui/RadioButton'
 import { List, ListItem} from 'material-ui/List'
+import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
+import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
+
 import {
     Checkbox,
     RadioButtonGroup,
@@ -27,14 +30,14 @@ class ExportInfo extends React.Component {
             <div className={styles.root}>
                 <form>
                 <div className={styles.heading}>Enter General Information</div>
-                    <div>
+                    <div className={styles.fieldWrapper}>
                         <Field name="datapackName"
                                className={styles.textField}
                                component={TextField}
                                hintText="Name"
                                ref="datapackName" withRef/>
                     </div>
-                    <div>
+                    <div className={styles.fieldWrapperLarge}>
                         <Field
                             name="description"
                             component={TextField}
@@ -42,24 +45,32 @@ class ExportInfo extends React.Component {
                             multiLine={true}
                             rows={2}/>
                     </div>
-                    <div>
+                    <div className={styles.fieldWrapper}>
                         <Field
                             name="projectName"
                             component={TextField}
                             hintText="Project Name"/>
                     </div>
-                    <div className={styles.sectionBottom}>
-                        <Field name="makePublic" component={Checkbox} label="Make Public"/>
+                    <div className={styles.checkbox}>
+                        <Field name="makePublic"
+                               component={Checkbox}
+                               label="Make Public"
+                               checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />}
+                               />
                     </div>
 
                     <div className={styles.heading}>Select Layers</div>
                     <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                     <div className={styles.sectionBottom}>
-                        <List>
+                        <List className={styles.list}>
 
                             <ListItem
                             primaryText="OpenStreetMap Data"
-                            leftIcon={ <Field name="osmData" component={Checkbox} />}
+                            leftIcon={ <Field name="osmData"
+                            component={Checkbox}
+                            checkedIcon={<ActionCheckCircle />}
+                            uncheckedIcon={<UncheckedCircle />} />}
                             initiallyOpen={false}
                             primaryTogglesNestedList={true}
                             nestedItems={[
@@ -72,7 +83,8 @@ class ExportInfo extends React.Component {
                         />
                             <ListItem
                                 primaryText="OpenStreetMap Tiles"
-                                leftIcon={<Field name="osmTiles" component={Checkbox} />}
+                                leftIcon={<Field name="osmTiles" component={Checkbox} checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />} />}
                                 initiallyOpen={false}
                                 primaryTogglesNestedList={true}
                                 nestedItems={[
@@ -85,7 +97,10 @@ class ExportInfo extends React.Component {
                             />
                             <ListItem
                                 primaryText="DigitalGlobe Satellite Imagery Foundation Mosaic"
-                                leftIcon={ <Field name="digitalGlobe" component={Checkbox} />}
+                                leftIcon={ <Field name="digitalGlobe" 
+                                component={Checkbox} 
+                                checkedIcon={<ActionCheckCircle />}
+                                uncheckedIcon={<UncheckedCircle />} />}
                                 initiallyOpen={false}
                                 primaryTogglesNestedList={true}
                                 nestedItems={[
@@ -103,13 +118,21 @@ class ExportInfo extends React.Component {
                     <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                     <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>
                     <div className={styles.sectionBottom}>
-                        <div>
-                            <Field name="geopackage" component={Checkbox} label="GeoPackage (gpkg)"/>
+                        <div className={styles.checkboxLabel}>
+                            <Field name="geopackage"
+                                   component={Checkbox}
+                                   checkedIcon={<ActionCheckCircle />}
+                                   uncheckedIcon={<UncheckedCircle />}
+                                   label="GeoPackage (gpkg)"/>
                         </div>
-                        <div>
-                            <Field name="esriShape" component={Checkbox} label="Esri Shapefile (.shp)"/>
+                        <div className={styles.checkboxLabel}>
+                            <Field name="esriShape"
+                                   component={Checkbox}
+                                   checkedIcon={<ActionCheckCircle />}
+                                   uncheckedIcon={<UncheckedCircle />}
+                                   label="Esri Shapefile (.shp)"/>
                         </div>
-                        <List>
+                        <List className={styles.listBottom}>
                         <ListItem
                             value={1}
                             primaryText="Other Format Options"
@@ -117,22 +140,34 @@ class ExportInfo extends React.Component {
                                 <ListItem
                                 key={1}
                                 primaryText="GeoTiff (.tiff)"
-                                leftAvatar={<Field name="geoTiff" component={Checkbox}/>}
+                                leftAvatar={<Field name="geoTiff"
+                                checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />}
+                               component={Checkbox}/>}
                               />,
                               <ListItem
                                 key={2}
                                 primaryText="Google Earth (.kmz)"
-                                leftAvatar={<Field name="googleEarth" component={Checkbox}/>}
+                                leftAvatar={<Field name="googleEarth"
+                                checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />}
+                               component={Checkbox}/>}
                               />,
                               <ListItem
                                 key={3}
                                 primaryText="SQLite (.sqlite)"
-                                leftAvatar={<Field name="sqlite" component={Checkbox}/>}
+                                leftAvatar={<Field name="sqlite"
+                                checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />}
+                               component={Checkbox}/>}
                               />,
                               <ListItem
                                 key={4}
                                 primaryText="OSMAnd (.obf)"
-                                leftAvatar={<Field name="osmand" component={Checkbox}/>}
+                                leftAvatar={<Field name="osmand"
+                                checkedIcon={<ActionCheckCircle />}
+                               uncheckedIcon={<UncheckedCircle />}
+                               component={Checkbox}/>}
                               />
                             ]}
                         />

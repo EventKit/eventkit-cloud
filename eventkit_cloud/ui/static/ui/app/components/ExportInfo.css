@@ -9,8 +9,7 @@
     padding-bottom: 60px;
 }
 .heading {
-    font-size: 16px;
-
+    font-size: 18px;
     font-weight: bold;
     color: black;
     align-content: flex-start;
@@ -20,6 +19,48 @@
     color: black;
     align-content: flex-start;
 }
-.textField {
-
+.fieldWrapper > div{
+    background-color: whitesmoke!important;
+    font-size: 14px;
+    width: 500px!important;
+    height: 40px!important;
+    margin-top: 15px!important;
+}
+.fieldWrapperLarge > div{
+    font-size: 14px;
+    background-color: whitesmoke!important;
+    width: 500px!important;
+    margin-top: 15px!important;
+}
+.checkbox > div{
+    padding-bottom: 60px;
+    margin-top: 15px!important;
+}
+.checkbox > div > div > label {
+    font-weight: normal!important;
+}
+.checkboxLabel > div > div > label {
+    font-weight:normal!important;
+}
+.list {
+    width: 500px;
+    background-color: whitesmoke!important;
+    font-size: 14px!important;
+}
+.list > div > span {
+    font-size: 14px!important;
+}
+.list > div  > div > div > span {
+    font-size: 14px!important;
+}
+.listBottom {
+    width: 500px;
+    background-color: whitesmoke!important;
+    margin-top: 15px!important;
+}
+.listBottom > div  > span {
+    font-size: 14px!important;
+}
+.listBottom > div  > div > div > span  {
+    font-size: 14px!important;
 }
