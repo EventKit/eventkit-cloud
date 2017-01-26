@@ -19,29 +19,10 @@ workon eventkit
 
 sudo apt-get -y install libpq-dev python-dev gcc g++
 
-#cd /var/lib/eventkit
-#sudo git clone https://gitlab.com/osm-c-tools/osmctools.git
-#cd osmctools/src
-#sudo gcc osmupdate.c -o ../osmupdate
-#sudo gcc osmfilter.c -O3 -o ../osmfilter
-#sudo gcc osmconvert.c -lz -O3 -o ../osmconvert
-#cd ..
-#sudo cp osmupdate osmfilter osmconvert /usr/local/bin
-#cd ..
-#sudo rm -fr osmctools
-#cd ~
-
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
 sudo apt-get -y install postgresql-9.3-postgis-2.2
-
-
-#sudo apt-get -y install gdal-bin libgeos-dev libspatialite-dev libspatialite5 libgeos-c1v5
-#sudo apt-get libgdal-dev
-#sudo apt-get -y install osmctools
-#sudo apt-get -y install spatialite-bin
-#sudo apt-get -y install zip unzip
 
 sudo apt-get update
 sudo apt-get install curl \
@@ -68,7 +49,6 @@ sudo echo "host    eventkit_exports     eventkit        all            md5" >> /
 sudo service postgresql restart
 
 
-
 sudo -u postgres createdb 'eventkit_exports'
 sudo -u postgres psql -c "CREATE ROLE eventkit WITH PASSWORD 'eventkit_exports';"
 sudo -u postgres psql -d eventkit_exports -c "ALTER ROLE eventkit SUPERUSER;"
@@ -87,11 +67,6 @@ cp -R * /var/lib/eventkit
 cd /var/lib/eventkit
 ## EDIT DOCKER_COMPOSE IF NEEDED
 sudo docker-compose up -d celery
-#sudo apt-get -y install libxml2-dev libxslt-dev
-#export CPLUS_INCLUDE_PATH=/usr/include/gdal
-#export C_INCLUDE_PATH=/usr/include/gdal
-#pip install -r requirements.txt
-#pip install -r requirements-dev.txt
 
 sudo mkdir /var/lib/eventkit/exports_stage
 sudo mkdir /var/lib/eventkit/exports_download
@@ -104,27 +79,12 @@ sudo apt-get install -y supervisor
 
 sudo mv /var/lib/eventkit/tmp/eventkit-cloud/config/supervisord-celery.conf /etc/supervisor/supervisord.conf
 
-
-# make a staging directory (the prod webapp asssumes workers are on on cloudfoundry so we mimic the same path)
-# TODO: symlink?
-#sudo mkdir /home/vcap
-#sudo mkdir /home/vcap/staging
-#sudo chmod 775 /home/vcap/staging
-
-
 sudo apt-get -y install rabbitmq-server
-echo "[ {rabbit,\
-[\
-{cluster_nodes, {['rabbit at host'], disc}},\
-{default_user,<<'user'>>},\
-{default_pass,<<'password'>>}\
-]\
-}]\
-" >> /etc/rabbitmq/rabbitmq-env.conf
+echo "export RABBITMQ_NODE_PORT=5672" >> /etc/profile.d/path.sh
+echo "export RABBITMQ_DEFAULT_USER=rabbit_user" >> /etc/profile.d/path.sh
+echo "export RABBITMQ_DEFAULT_PASSWORD=rabbit_password" >> /etc/profile.d/path.sh
 
-echo "RABBITMQ_NODE_PORT=5672" >> /etc/profile.d/path.sh
-
-sudo service rabbitmq-server start
+sudo service rabbitmq-server restart
 sudo update-rc.d rabbitmq-server enable
 
 sudo ufw allow 22
@@ -144,8 +104,6 @@ sudo chmod 755 /var/lib/eventkit
 sudo chmod 775 /var/log/eventkit
 
 sudo chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit /var/log/supervisor.log
-
-
 
 # we need to kill all python processes to get rid of this annoying
 # issue where supervisor boots up a worker before it gets a proper config
