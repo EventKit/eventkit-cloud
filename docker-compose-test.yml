@@ -7,10 +7,9 @@ services:
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
-        - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+        - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
-        - C_FORCE_ROOT=True
         - PRODUCTION=True
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME=${SITE_NAME}
