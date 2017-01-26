@@ -1,4 +1,5 @@
 import * as api from '../config'
+import fetch from 'isomorphic-fetch'
 
 class ExportsApi {
 
