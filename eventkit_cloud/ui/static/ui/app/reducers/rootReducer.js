@@ -1,8 +1,9 @@
 
 import {combineReducers} from 'redux';
-import {exportJobsReducer, exportModeReducer, exportBboxReducer} from './exportsReducer';
-import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer} from './drawToolBarReducer';
-import {zoomToSelectionReducer} from './setAoiToolbarReducer.js';
+import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer';
+import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer';
+import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
+import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js';
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -11,11 +12,17 @@ const rootReducer = combineReducers({
     drawRedraw: drawRedrawReducer,
     drawSet: drawSetReducer,
     drawBoxButton: drawBoxButtonReducer,
+    drawFreeButton: drawFreeButtonReducer,
     mode: exportModeReducer,
     jobs: exportJobsReducer,
     bbox: exportBboxReducer,
-    zoomToSelction: zoomToSelectionReducer,
-    
+    geojson: exportGeojsonReducer,
+    searchBbox: searchBboxReducer,
+    zoomToSelection: zoomToSelectionReducer,
+    resetMap: resetMapReducer,
+    geonames: getGeonamesReducer,
+    showInvalidDrawWarning: invalidDrawWarningReducer,
+    isAOISet: exportSetAOIReducer,
 })
 
 export default rootReducer;

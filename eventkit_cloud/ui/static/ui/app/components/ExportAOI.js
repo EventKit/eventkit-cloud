@@ -1,20 +1,25 @@
-import 'openlayers/dist/ol.css'
-import React, {Component} from 'react'
-import {connect} from 'react-redux'
-import ol from 'openlayers'
-import styles from './CreateExport.css'
-import DrawControl from './openlayers.DrawControl.js'
-import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
-import SetAOIToolbar from './SetAOIToolbar.js'
-import SearchAOIToolbar from './SearchAOIToolbar.js'
-import DrawAOIToolbar from './DrawAOIToolbar.js'
-import {updateMode, updateBbox} from '../actions/exportsActions.js'
-import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet} from '../actions/drawToolBarActions.js'
+import 'openlayers/dist/ol.css';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import ol from 'openlayers';
+import styles from './CreateExport.css';
+import DrawControl from './openlayers.DrawControl.js';
+import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
+import SetAOIToolbar from './SetAOIToolbar.js';
+import SearchAOIToolbar from './SearchAOIToolbar.js';
+import DrawAOIToolbar from './DrawAOIToolbar.js';
+import InvalidDrawWarning from './InvalidDrawWarning.js';
+import {updateMode, updateBbox, updateGeojson, unsetAOI} from '../actions/exportsActions.js';
+import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning, clickDrawSet} from '../actions/drawToolBarActions.js';
+import {clearSearchBbox} from '../actions/searchToolbarActions';
 
-export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
-export const MODE_NORMAL = 'MODE_NORMAL'
-const WGS84 = 'EPSG:4326'
-const WEB_MERCATOR = 'EPSG:3857'
+export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
+export const MODE_NORMAL = 'MODE_NORMAL';
+export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
+const WGS84 = 'EPSG:4326';
+const WEB_MERCATOR = 'EPSG:3857';
+const jsts = require('jsts');
+const isEqual = require('lodash/isEqual');
 
 export class ExportAOI extends Component {
 
@@ -24,78 +29,163 @@ export class ExportAOI extends Component {
         this._handleDrawEnd = this._handleDrawEnd.bind(this);
         this.handleDrawRedraw = this.handleDrawRedraw.bind(this);
         this.handleDrawCancel = this.handleDrawCancel.bind(this);
+        this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.handleResetMap = this.handleResetMap.bind(this);
+        this.handleSearchBbox = this.handleSearchBbox.bind(this);
     }
 
     componentDidMount() {
         this._initializeOpenLayers();
         this._updateInteractions();
-
     }
 
     componentWillReceiveProps(nextProps) {
+        // Check if the map mode has changed (DRAW or NORMAL)
         if(this.props.mode != nextProps.mode) {
-            console.log(this.props.mode, nextProps.mode);
             this._updateInteractions(nextProps.mode);
         }
-        if(this.props.drawBoxButton.click != nextProps.drawBoxButton.click) {
-//            this.handleDrawBoxClick();
-        }
+        // Check if cancel button has been clicked
         if(this.props.drawCancel.click != nextProps.drawCancel.click) {
             this.handleDrawCancel();
         }
+        // Check if redraw button has been clicked
         if(this.props.drawRedraw.click != nextProps.drawRedraw.click) {
             this.handleDrawRedraw();
+        }
+        // Check if zoom to selection button has been clicked
+        if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
+            this.handleZoomToSelection(nextProps.bbox);
+        }
+        // Check if the reset map button has been clicked
+        if(this.props.resetMap.click != nextProps.resetMap.click) {
+            this.handleResetMap();
+        }
+        if(nextProps.searchBbox.length > 0 && nextProps.searchBbox != this.props.searchBbox) {
+            this.handleSearchBbox(nextProps.searchBbox);
         }
     }
 
     handleDrawRedraw() {
-        console.log('Your redrawing!');
         this._clearDraw();
+        this.props.hideInvalidDrawWarning();
+        this.props.unsetAOI();
     }
 
     handleDrawCancel() {
         this._clearDraw();
+        this.props.hideInvalidDrawWarning();
         this._deactivateDrawInteraction();
+        this.props.unsetAOI();
     }
 
-    _activateDrawInteraction() {
-        this._drawInteraction.setActive(true)
+    handleZoomToSelection(bbox) {
+        this._map.getView().fit(
+            ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR),
+            this._map.getSize()
+        );
+    }
+
+    handleResetMap() {
+        let worldExtent = ol.proj.transformExtent([-180,-90,180,90], WGS84, WEB_MERCATOR)
+        this._map.getView().fit(worldExtent, this._map.getSize());
+    }
+
+    handleSearchBbox(bbox) {
+        this._clearDraw();
+        this.props.hideInvalidDrawWarning();
+        bbox = bbox.map(truncate);
+        const mercBbox = ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR);
+        const geom = new ol.geom.Polygon.fromExtent(mercBbox);
+        const geojson = createGeoJSON(geom);
+        const bboxFeature = new ol.Feature({
+            geometry: geom
+        });
+        this._drawLayer.getSource().addFeature(bboxFeature);
+        this.props.updateBbox(bbox);
+        this.props.updateGeojson(geojson);
+        this.handleZoomToSelection(bbox);
+        this.props.clickDrawSet();
+    }
+
+
+
+    _activateDrawInteraction(mode) {
+        this._clearDraw()
+        if(mode == MODE_DRAW_BBOX) {
+            this.props.unsetAOI();
+            this.props.updateGeojson({});
+            this.props.toggleDrawSet(true);
+            this.props.hideInvalidDrawWarning();
+            this.props.toggleDrawRedraw(true);
+            this._drawFreeInteraction.setActive(false);
+            this._drawBoxInteraction.setActive(true);
+        }
+        else if(mode == MODE_DRAW_FREE) {
+            this.props.unsetAOI();
+            this.props.updateGeojson({});
+            this.props.toggleDrawSet(true);
+            this.props.toggleDrawRedraw(true);
+            this._drawBoxInteraction.setActive(false);
+            this._drawFreeInteraction.setActive(true);
+        }
     }
 
     _clearDraw() {
-        this._drawLayer.getSource().clear()
+        this._drawLayer.getSource().clear();
     }
 
     _deactivateDrawInteraction() {
-        console.log('deactivating draw');
-        this._drawInteraction.setActive(false)
+        this._drawBoxInteraction.setActive(false);
+        this._drawFreeInteraction.setActive(false);
     }
 
     _handleDrawEnd(event) {
-        // exit drawing mode
-        this.props.updateMode('MODE_NORMAL')
-        // make the redraw and set buttons available
-        this.props.toggleDrawRedraw(this.props.drawRedraw.disabled)
-        this.props.toggleDrawSet(this.props.drawSet.disabled)
         // get the drawn bounding box
-        const geometry = event.feature.getGeometry()
-        const bbox = serialize(geometry.getExtent())
+        const geometry = event.feature.getGeometry();
+        const geojson = createGeoJSON(geometry);
+        if (this.props.mode == MODE_DRAW_FREE) {
+            let drawFeature = new ol.Feature({
+                geometry: geometry
+            });
+            this._drawLayer.getSource().addFeature(drawFeature);
+
+            if(isGeoJSONValid(geojson)) {
+                this.props.updateBbox(serialize(geometry.getExtent()));
+                this.props.updateGeojson(geojson);
+            }
+            else {
+                this.props.showInvalidDrawWarning();
+            }
+        }
+        else if (this.props.mode == MODE_DRAW_BBOX) {
+            const bbox = serialize(geometry.getExtent());
+            this.props.updateBbox(bbox);
+            this.props.updateGeojson(geojson);
+        }
+        // exit drawing mode
+        this.props.updateMode('MODE_NORMAL');
+        // make the redraw and set buttons available
+        this.props.toggleDrawRedraw(false);
     }
 
     _handleDrawStart() {
-        this._clearDraw()
+        this._clearDraw();
     }
 
     _initializeOpenLayers() {
 
         const scaleStyle = {
             background: 'white',
-        }
+        };
 
-        this._drawLayer = generateDrawLayer()
-        this._drawInteraction = generateDrawInteraction(this._drawLayer)
-        this._drawInteraction.on('drawstart', this._handleDrawStart)
-        this._drawInteraction.on('drawend', this._handleDrawEnd)
+        this._drawLayer = generateDrawLayer();
+        this._drawBoxInteraction = _generateDrawBoxInteraction(this._drawLayer);
+        this._drawBoxInteraction.on('drawstart', this._handleDrawStart);
+        this._drawBoxInteraction.on('drawend', this._handleDrawEnd);
+
+        this._drawFreeInteraction = _generateDrawFreeInteraction(this._drawLayer);
+        this._drawFreeInteraction.on('drawstart', this._handleDrawStart);
+        this._drawFreeInteraction.on('drawend', this._handleDrawEnd);
 
         this._map = new ol.Map({
             controls: [
@@ -127,9 +217,10 @@ export class ExportAOI extends Component {
                 minZoom: 2.5,
                 maxZoom: 22,
             })
-        })
+        });
 
-        this._map.addInteraction(this._drawInteraction);
+        this._map.addInteraction(this._drawBoxInteraction);
+        this._map.addInteraction(this._drawFreeInteraction);
         this._map.addLayer(this._drawLayer);
     }
 
@@ -138,13 +229,13 @@ export class ExportAOI extends Component {
 
         let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
 
-
         return (
             <div>
                 <div id="map" className={styles.map} ref="olmap">
                     <SetAOIToolbar />
                     <SearchAOIToolbar />
                     <DrawAOIToolbar />
+                    <InvalidDrawWarning />
                 </div>
             </div>
         );
@@ -153,11 +244,20 @@ export class ExportAOI extends Component {
     _updateInteractions(mode) {
         switch (mode) {
             case MODE_DRAW_BBOX:
-                this._activateDrawInteraction()
+                if (this.props.searchBbox.length > 0) {
+                    this.props.clearSearchBbox();
+                }
+                this._activateDrawInteraction(MODE_DRAW_BBOX);
+                break
+            case MODE_DRAW_FREE:
+                if (this.props.searchBbox.length > 0) {
+                    this.props.clearSearchBbox();
+                }
+                this._activateDrawInteraction(MODE_DRAW_FREE);
                 break
             case MODE_NORMAL:
-                this._clearDraw()
-                this._deactivateDrawInteraction()
+                this._clearDraw();
+                this._deactivateDrawInteraction();
                 break
         }
     }
@@ -172,27 +272,52 @@ export class ExportAOI extends Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
+        searchBbox: state.searchBbox,
         mode: state.mode,
         drawCancel: state.drawCancel,
         drawRedraw: state.drawRedraw,
         drawSet: state.drawSet,
         drawBoxButton: state.drawBoxButton,
+        drawFreeButton: state.drawFreeButton,
+        zoomToSelection: state.zoomToSelection,
+        resetMap: state.resetMap,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleDrawCancel: (currentVisibility) => {
-            dispatch (toggleDrawCancel(currentVisibility))
+        toggleDrawCancel: (isDisabled) => {
+            dispatch (toggleDrawCancel(isDisabled));
         },
-        toggleDrawRedraw: (currentVisibility) => {
-            dispatch(toggleDrawRedraw(currentVisibility))
+        toggleDrawRedraw: (isDisabled) => {
+            dispatch(toggleDrawRedraw(isDisabled));
         },
-        toggleDrawSet: (currentToggleState) => {
-            dispatch(toggleDrawSet(currentToggleState))
+        toggleDrawSet: (isDisabled) => {
+            dispatch(toggleDrawSet(isDisabled));
         },
         updateMode: (newMode) => {
-            dispatch(updateMode(newMode))
+            dispatch(updateMode(newMode));
+        },
+        updateBbox: (newBbox) => {
+            dispatch(updateBbox(newBbox));
+        },
+        clearSearchBbox: () => {
+            dispatch(clearSearchBbox());
+        },
+        hideInvalidDrawWarning: () => {
+            dispatch(hideInvalidDrawWarning());
+        },
+        showInvalidDrawWarning: () => {
+            dispatch(showInvalidDrawWarning());
+        },
+        updateGeojson: (geojson) => {
+            dispatch(updateGeojson(geojson));
+        },
+        unsetAOI: () => {
+            dispatch(unsetAOI());
+        },
+        clickDrawSet: () => {
+            dispatch(clickDrawSet());
         },
     }
 }
@@ -222,7 +347,7 @@ function generateDrawLayer() {
     })
 }
 
-function generateDrawInteraction(drawLayer) {
+function _generateDrawBoxInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
         maxPoints: 2,
@@ -233,6 +358,36 @@ function generateDrawInteraction(drawLayer) {
             geometry.setCoordinates([[[x1, y1], [x1, y2], [x2, y2], [x2, y1], [x1, y1]]])
             return geometry
         },
+        style: new ol.style.Style({
+            image: new ol.style.RegularShape({
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 1
+                }),
+                points: 4,
+                radius: 15,
+                radius2: 0,
+                angle: 0
+            }),
+            fill: new ol.style.Fill({
+                color: 'hsla(202, 70%, 50%, .6)'
+            }),
+            stroke: new ol.style.Stroke({
+                color: 'hsl(202, 70%, 50%)',
+                width: 1,
+                lineDash: [5, 5]
+            })
+        })
+    })
+    draw.setActive(false)
+    return draw
+}
+
+function _generateDrawFreeInteraction(drawLayer) {
+    const draw = new ol.interaction.Draw({
+        source: drawLayer.getSource(),
+        type: 'Polygon',
+        freehand: true,
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
@@ -289,4 +444,25 @@ function serialize(extent) {
     const p1 = unwrapPoint(bbox.slice(0, 2))
     const p2 = unwrapPoint(bbox.slice(2, 4))
     return p1.concat(p2).map(truncate)
+}
+
+function isGeoJSONValid(geojson) {
+    const parser = new jsts.io.GeoJSONReader();
+    const jstsGeom = parser.read(geojson);
+    const valid = jstsGeom.features[0].geometry.isValid();
+    return valid;
+}
+
+function createGeoJSON(ol3Geometry) {
+    const coords = ol3Geometry.getCoordinates();
+    // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
+    const polygonGeom = new ol.geom.Polygon(coords)
+    polygonGeom.transform(WEB_MERCATOR, WGS84);
+    const wgs84Coords = polygonGeom.getCoordinates();
+    const geojson = {"type": "FeatureCollection",
+                    "features": [
+                        {"type": "Feature",
+                        "geometry": {"type": "Polygon", "coordinates": wgs84Coords}}
+                    ]}
+    return geojson;
 }

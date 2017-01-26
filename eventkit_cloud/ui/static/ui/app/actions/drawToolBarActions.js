@@ -2,17 +2,17 @@ import {Config} from '../config'
 import * as types from './actionTypes'
 import ExportApi from '../api/exportsApi';
 
-export function toggleDrawExtension(currentToggleVisibility) {
+export function toggleDrawExtension(visibility) {
     return {
         type: types.TOGGLE_DRAW_EXTENSION,
-        drawExtensionVisible: !currentToggleVisibility
+        drawExtensionVisible: visibility
     }
 }
 
-export function toggleDrawCancel(currentToggleState) {
+export function toggleDrawCancel(newState) {
     return {
         type: types.TOGGLE_DRAW_CANCEL,
-        disabled: !currentToggleState
+        disabled: newState
     }
 }
 
@@ -30,10 +30,10 @@ export function clickDrawRedraw() {
     }
 }
 
-export function toggleDrawRedraw(currentToggleState) {
+export function toggleDrawRedraw(newState) {
     return {
         type: types.TOGGLE_DRAW_REDRAW,
-        disabled: !currentToggleState
+        disabled: newState
     }
 }
 
@@ -44,17 +44,17 @@ export function clickDrawSet() {
     }
 }
 
-export function toggleDrawSet(currentToggleState) {
+export function toggleDrawSet(newState) {
     return {
         type: types.TOGGLE_DRAW_SET,
-        disabled: !currentToggleState
+        disabled: newState
     }
 }
 
-export function toggleDrawBoxButton(currentToggleState) {
+export function toggleDrawBoxButton(newState) {
     return {
         type: types.TOGGLE_DRAW_BOX_BUTTON,
-        disabled: !currentToggleState
+        disabled: newState
     }
 }
 
@@ -62,5 +62,33 @@ export function clickDrawBoxButton() {
     return {
         type: types.CLICK_DRAW_BOX_BUTTON,
         click: true
+    }
+}
+
+export function toggleDrawFreeButton(newState) {
+    return {
+        type: types.TOGGLE_DRAW_FREE_BUTTON,
+        disabled: newState
+    }
+}
+
+export function clickDrawFreeButton() {
+    return {
+        type: types.CLICK_DRAW_FREE_BUTTON,
+        click: true
+    }
+}
+
+export function hideInvalidDrawWarning() {
+    return {
+        type: types.HIDE_INVALID_DRAW_WARNING,
+        showInvalidDrawWarning: false
+    }
+}
+
+export function showInvalidDrawWarning() {
+    return {
+        type: types.SHOW_INVALID_DRAW_WARNING,
+        showInvalidDrawWarning: true
     }
 }
