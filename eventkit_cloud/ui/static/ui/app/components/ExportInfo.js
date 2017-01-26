@@ -5,6 +5,7 @@ import { RadioButton } from 'material-ui/RadioButton'
 import { List, ListItem} from 'material-ui/List'
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
+import Paper from 'material-ui/Paper';
 
 import {
     Checkbox,
@@ -28,7 +29,9 @@ class ExportInfo extends React.Component {
 
         return (
             <div className={styles.root}>
-                <form>
+
+                <form className={styles.form}>
+                    <Paper className={styles.paper} zDepth={2}>
                 <div className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <Field name="datapackName"
@@ -54,6 +57,7 @@ class ExportInfo extends React.Component {
                     <div className={styles.checkbox}>
                         <Field name="makePublic"
                                component={Checkbox}
+                               className={styles.checkboxColor}
                                label="Make Public"
                                checkedIcon={<ActionCheckCircle />}
                                uncheckedIcon={<UncheckedCircle />}
@@ -69,8 +73,9 @@ class ExportInfo extends React.Component {
                             primaryText="OpenStreetMap Data"
                             leftIcon={ <Field name="osmData"
                             component={Checkbox}
+                            className={styles.checkboxColor}
                             checkedIcon={<ActionCheckCircle />}
-                            uncheckedIcon={<UncheckedCircle />} />}
+                            uncheckedIcon={<UncheckedCircle className={styles.checkboxColor}/>} />}
                             initiallyOpen={false}
                             primaryTogglesNestedList={true}
                             nestedItems={[
@@ -83,8 +88,11 @@ class ExportInfo extends React.Component {
                         />
                             <ListItem
                                 primaryText="OpenStreetMap Tiles"
-                                leftIcon={<Field name="osmTiles" component={Checkbox} checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />} />}
+                                leftIcon={<Field name="osmTiles"
+                                component={Checkbox}
+                                className={styles.checkboxColor}
+                                checkedIcon={<ActionCheckCircle />}
+                                uncheckedIcon={<UncheckedCircle />} />}
                                 initiallyOpen={false}
                                 primaryTogglesNestedList={true}
                                 nestedItems={[
@@ -98,7 +106,8 @@ class ExportInfo extends React.Component {
                             <ListItem
                                 primaryText="DigitalGlobe Satellite Imagery Foundation Mosaic"
                                 leftIcon={ <Field name="digitalGlobe" 
-                                component={Checkbox} 
+                                component={Checkbox}
+                                className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
                                 uncheckedIcon={<UncheckedCircle />} />}
                                 initiallyOpen={false}
@@ -113,7 +122,7 @@ class ExportInfo extends React.Component {
                             />
                         </List>
                         </div>
-
+                    {/*
                     <div className={styles.heading}>Select Export File Formats</div>
                     <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                     <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>
@@ -121,6 +130,7 @@ class ExportInfo extends React.Component {
                         <div className={styles.checkboxLabel}>
                             <Field name="geopackage"
                                    component={Checkbox}
+                                   className={styles.checkboxColor}
                                    checkedIcon={<ActionCheckCircle />}
                                    uncheckedIcon={<UncheckedCircle />}
                                    label="GeoPackage (gpkg)"/>
@@ -128,6 +138,7 @@ class ExportInfo extends React.Component {
                         <div className={styles.checkboxLabel}>
                             <Field name="esriShape"
                                    component={Checkbox}
+                                   className={styles.checkboxColor}
                                    checkedIcon={<ActionCheckCircle />}
                                    uncheckedIcon={<UncheckedCircle />}
                                    label="Esri Shapefile (.shp)"/>
@@ -144,6 +155,7 @@ class ExportInfo extends React.Component {
                                 checkedIcon={<ActionCheckCircle />}
                                uncheckedIcon={<UncheckedCircle />}
                                component={Checkbox}/>}
+                               className={styles.checkboxColor}
                               />,
                               <ListItem
                                 key={2}
@@ -152,6 +164,7 @@ class ExportInfo extends React.Component {
                                 checkedIcon={<ActionCheckCircle />}
                                uncheckedIcon={<UncheckedCircle />}
                                component={Checkbox}/>}
+                               className={styles.checkboxColor}
                               />,
                               <ListItem
                                 key={3}
@@ -160,6 +173,7 @@ class ExportInfo extends React.Component {
                                 checkedIcon={<ActionCheckCircle />}
                                uncheckedIcon={<UncheckedCircle />}
                                component={Checkbox}/>}
+                               className={styles.checkboxColor}
                               />,
                               <ListItem
                                 key={4}
@@ -168,13 +182,17 @@ class ExportInfo extends React.Component {
                                 checkedIcon={<ActionCheckCircle />}
                                uncheckedIcon={<UncheckedCircle />}
                                component={Checkbox}/>}
+                               className={styles.checkboxColor}
                               />
                             ]}
                         />
                             </List>
+                     </div>
+                     */}
 
-                    </div>
+                    </Paper>
                 </form>
+
             </div>
 
 

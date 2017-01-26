@@ -1,12 +1,21 @@
 .root {
     justify-content: space-around;
     margin-top: 30px;
-    margin-left: 30px;
-    margin-right: 30px;
+    display: flex;
+    flex-wrap: wrap;
 }
-
+.paper {
+    display: inline-block;
+    margin: 0 auto;
+    padding: 20px;
+}
+.form {
+    width: 50%;
+    margin: 0 auto;
+    padding-left: 100px;
+}
 .sectionBottom {
-    padding-bottom: 60px;
+    padding-bottom: 50px;
 }
 .heading {
     font-size: 18px;
@@ -22,14 +31,14 @@
 .fieldWrapper > div{
     background-color: whitesmoke!important;
     font-size: 14px;
-    width: 500px!important;
+    width: 700px!important;
     height: 40px!important;
     margin-top: 15px!important;
 }
 .fieldWrapperLarge > div{
     font-size: 14px;
     background-color: whitesmoke!important;
-    width: 500px!important;
+    width: 700px!important;
     margin-top: 15px!important;
 }
 .checkbox > div{
@@ -43,7 +52,7 @@
     font-weight:normal!important;
 }
 .list {
-    width: 500px;
+    width: 700px;
     background-color: whitesmoke!important;
     font-size: 14px!important;
 }
@@ -54,7 +63,7 @@
     font-size: 14px!important;
 }
 .listBottom {
-    width: 500px;
+    width: 700px;
     background-color: whitesmoke!important;
     margin-top: 15px!important;
 }
@@ -63,4 +72,8 @@
 }
 .listBottom > div  > div > div > span  {
     font-size: 14px!important;
+}
+.checkboxColor > div >  div > div > svg {
+    color: #4598bf!important;
+    fill: #4598bf!important;
 }

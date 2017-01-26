@@ -6,9 +6,15 @@
         margin: 0 auto;
         max-width: 400px;
     }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
 }
 
-@media only screen and (min-width: 750px) {
+@media only screen and (min-width: 800px) {
     .stepperWrapper > div > div > span {
         font-size: 1em !important;
         margin: 0 auto;
@@ -21,14 +27,26 @@
     .stepLabel {
         font-size: 1em;
     }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 800px !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
 }
 
-@media only screen and (max-width: 750px) {
+@media only screen and (max-width: 800px) {
     .stepperWrapper > div > div > span {
          font-size: .8em !important;
      }
     .stepLabel {
         font-size: .8em;
+    }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
     }
 }
 
@@ -39,14 +57,12 @@
     .stepLabel {
         font-size: .7em;
     }
-    .imageWrapper {
-        margin-top: -25px;
-        display: block;
-        width: 150px;
-        margin-left: 350px!important;
-        position: absolute;
-        left: 120px;
-        top: -38px;
+
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
     }
 
 }
@@ -58,20 +74,18 @@
         font-size: .6em !important;
 
     }
-    .imageWrapper {
-        margin-top: -25px;
-        display: block;
-        width: 150px;
-        margin-left: 300px!important;
-        position: absolute;
-        left: 120px;
-        top: -38px;
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
     }
 
 }
 
 .stepperWrapper {
     height: 45px;
+    float: left;
 }
 
 .stepperWrapper > div {
@@ -90,12 +104,15 @@
 }
 
 .imageWrapper {
-    margin-top: -25px;
-    display: block;
+    float: right;
     width: 150px;
-    margin-left: 850px;
-    position: absolute;
-    left: 520px;
-    top: -38px;
 }
+
+.stepperImageWrapper {
+    background-color: #161e2e;
+    width: 800px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
 
