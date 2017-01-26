@@ -75,14 +75,6 @@ export class DrawButtons extends Component {
     }
 
     render() {
-
-        const buttonStyles = {
-            button: {
-                height: '30px',
-                width: '70px',
-            }
-        }
-
         return (
             <div>
                <Button bsClass={styles.buttonGeneral + " " + this.state.boxClass} onClick={this.props.clickDrawBoxButton}>BOX</Button>
