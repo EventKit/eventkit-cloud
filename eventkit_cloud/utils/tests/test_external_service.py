@@ -199,10 +199,19 @@ class TestHelpers(TransactionTestCase):
         conf_dict = {'sources': {'source1': {'url': 'http://example.com/url'},
                                  'source2': {'url': 'http://example2.com/url'}}}
 
-        requests_get.return_value = Mock(status_code=200)
+        response = Mock(status_code=None, text="Some Text")
+
+        response.status_code = 200
+        requests_get.return_value = response
         self.assertIsNone(check_service(conf_dict))
 
-        response = Mock()
-        response.status_code.return_value = [200, 401]
-        self.assertRaisesMessage(Exception, "The provider does not have valid credentials.", check_service(conf_dict))
+        response.status_code = 401
+        requests_get.return_value = response
+        with self.assertRaisesMessage(Exception, "The provider does not have valid credentials."):
+            check_service(conf_dict)
+
+        response.status_code = 500
+        requests_get.return_value = response
+        with self.assertRaisesMessage(Exception, "The provider reported a server error."):
+            check_service(conf_dict)
 
