@@ -65,7 +65,7 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
 
     if download_url:
         parts = download_url.split('/')
-        items = [{'Key':'/'.join([parts[-2], parts[-1]])}]
+        items = [{'Key': '/'.join([parts[-2], parts[-1]])}]
 
     for item in items:
         _key = item['Key']
