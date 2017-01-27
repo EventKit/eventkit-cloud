@@ -210,4 +210,8 @@ def check_service(conf_dict):
         url = conf_dict['sources'][source].get('url') % tile
         response = requests.get(url, verify=False)
         if response.status_code in [401, 403]:
+            logger.error("The provider has invalid credentials with status code {0} and the text: \n{1}".format(response.status_code, response.text))
             raise Exception("The provider does not have valid credentials.")
+        elif response.status_code >= 500:
+            logger.error("The provider reported a server error with status code {0} and the text: \n{1}".format(response.status_code, response.text))
+            raise Exception("The provider reported a server error.")
