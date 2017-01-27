@@ -7,6 +7,7 @@ from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError, C
 from mapproxy.seed.spec import validate_seed_conf
 from mapproxy.config.loader import ProxyConfiguration
 from mapproxy.config.spec import validate_options
+
 from mapproxy.config.config import load_config, base_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
@@ -40,7 +41,6 @@ class CustomLogger(ProgressLog):
                     self.log_step_counter = self.log_step_step
                 self.log_step_counter -= 1
         super(CustomLogger, self).log_step(progress)
-
 
 class ExternalRasterServiceToGeopackage(object):
     """
@@ -151,7 +151,9 @@ def get_cache_template(sources, grids, geopackage):
             "type": "geopackage",
             "filename": str(geopackage),
         },
-        "grids": grids
+        "grids": grids,
+        "format": "mixed",
+        "request_format": "image/png"
     }}
 
 
