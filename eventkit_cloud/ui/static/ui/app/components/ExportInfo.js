@@ -28,10 +28,10 @@ class ExportInfo extends React.Component {
 
 
         return (
+            <div className={styles.wholeDiv}>
             <div className={styles.root}>
-
                 <form className={styles.form}>
-                    <Paper className={styles.paper} zDepth={2}>
+                    <Paper className={styles.paper} zDepth={2} rounded>
                 <div className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <Field name="datapackName"
@@ -193,6 +193,7 @@ class ExportInfo extends React.Component {
                     </Paper>
                 </form>
 
+            </div>
             </div>
 
 
