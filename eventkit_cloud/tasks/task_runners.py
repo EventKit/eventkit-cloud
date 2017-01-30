@@ -219,6 +219,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         thematic_gpkg = {'obj': thematic_gpkg_task,
                          'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
                                                         export_provider_task=export_provider_task, worker=worker).uid}
+
         # Note this needs to be mutable (s instead of si) so that it can take the result of the generic osm tasks.
         thematic_tasks = (thematic_gpkg.get('obj').s(run_uid=run.uid,
                                                       stage_dir=stage_dir,
@@ -451,21 +452,26 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                                      slug=provider_task.provider.slug,
                                                                      status="PENDING")
 
-            service_task = external_raster_service_export_task
-            export_task = create_export_task(task_name=service_task.name,
+
+            export_task = create_export_task(task_name=external_raster_service_export_task.name,
                                              export_provider_task=export_provider_task, worker=worker)
 
-            return export_provider_task.uid, service_task.si(stage_dir=stage_dir,
-                                                             job_name=job_name,
-                                                             task_uid=export_task.uid,
-                                                             name=provider_task.provider.slug,
-                                                             layer=provider_task.provider.layer,
-                                                             config=provider_task.provider.config,
-                                                             bbox=bbox,
-                                                             service_url=provider_task.provider.url,
-                                                             level_from=provider_task.provider.level_from,
-                                                             level_to=provider_task.provider.level_to,
-                                                             service_type=service_type).set(queue=worker, routing_key=worker)
+            service_task = external_raster_service_export_task.si(stage_dir=stage_dir,
+                                                                  run_uid=run.uid,
+                                                                  job_name=job_name,
+                                                                  task_uid=export_task.uid,
+                                                                  name=provider_task.provider.slug,
+                                                                  layer=provider_task.provider.layer,
+                                                                  config=provider_task.provider.config,
+                                                                  bbox=bbox,
+                                                                  service_url=provider_task.provider.url,
+                                                                  level_from=provider_task.provider.level_from,
+                                                                  level_to=provider_task.provider.level_to,
+                                                                  service_type=service_type).set(queue=worker,
+                                                                                                 routing_key=worker)
+
+
+            return export_provider_task.uid, service_task
         else:
             return None, None
 
