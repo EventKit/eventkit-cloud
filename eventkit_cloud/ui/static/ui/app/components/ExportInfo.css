@@ -1,0 +1,182 @@
+
+
+/*
+   .heading .override {
+       font-size: .7em !important;
+       width: 500px!important;
+   }
+   .subHeading .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .fieldWrapper .override > div {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .fieldWrapperLarge .override > div {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .list .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .list > div > span .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .list > div  > div > div > span .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .listBottom > div  > span .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .listBottom > div  > div > div > span .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+   .checkboxLabel > div > div > label .override {
+       font-size: .7em!important;
+       width: 500px!important;
+   }
+
+   .stepperImageWrapper {
+       background-color: #161e2e;
+       width: 100% !important;
+       margin: 0 auto;
+       overflow: hidden;
+   }
+
+}
+@media only screen and (max-width: 500px) {
+   .heading {
+       font-size: .6em!important;
+   }
+   .subHeading {
+       font-size: .6em !important;
+   }
+   .fieldWrapper > div {
+       font-size: .6em!important;
+   }
+   .fieldWrapperLarge > div {
+       font-size: .6em!important;
+   }
+   .list {
+       font-size: .6em!important;
+   }
+   .list > div > span {
+       font-size: .6em!important;
+   }
+   .list > div  > div > div > span {
+       font-size: .6em!important;
+   }
+   .listBottom > div  > span {
+       font-size: .6em!important;
+   }
+   .listBottom > div  > div > div > span  {
+       font-size: .6em!important;
+   }
+   .checkboxLabel > div > div > label {
+       font-size: .6em!important;
+   }
+   .stepperImageWrapper {
+       background-color: #161e2e;
+       width: 100% !important;
+       margin: 0 auto;
+       overflow: hidden;
+   }
+
+
+}
+*/
+.wholeDiv {
+    margin-top:-30px;
+    width:100%;
+    height: 100%;
+    background-image: url('../../images/ek_topo_pattern.png');
+    background-repeat: repeat repeat;
+
+}
+.root {
+   justify-content: space-around;
+   margin-top: 30px;
+   display: flex;
+   flex-wrap: wrap;
+}
+.paper {
+    margin: 0 auto;
+    padding: 20px;
+    margin-top: 30px;
+    margin-bottom: 70px;
+    width: 100%;
+    max-width: 700px;
+}
+.form {
+   margin: 0 auto;
+   width: 50%
+}
+.sectionBottom {
+   padding-bottom: 50px;
+}
+.heading {
+   font-size: 18px;
+   font-weight: bold;
+   color: black;
+   align-content: flex-start;
+}
+.subHeading {
+   font-size: 14px;
+   color: black;
+   align-content: flex-start;
+}
+.fieldWrapper > div{
+   background-color: whitesmoke!important;
+   font-size: 14px;
+   width: 100%!important;
+   height: 40px!important;
+   margin-top: 15px!important;
+}
+.fieldWrapperLarge > div{
+   font-size: 14px;
+   background-color: whitesmoke!important;
+   width: 100%!important;
+   margin-top: 15px!important;
+}
+.checkbox > div{
+   padding-bottom: 60px;
+   margin-top: 15px!important;
+}
+.checkbox > div > div > label {
+   font-weight: normal!important;
+}
+.checkboxLabel > div > div > label {
+   font-weight:normal!important;
+}
+.list {
+   width: 100%;
+   background-color: whitesmoke!important;
+   font-size: 14px!important;
+}
+.list > div > span {
+   font-size: 14px!important;
+}
+.list > div  > div > div > span {
+   font-size: 14px!important;
+}
+.listBottom {
+   width: 100%;
+   background-color: whitesmoke!important;
+   margin-top: 15px!important;
+}
+.listBottom > div  > span {
+   font-size: 14px!important;
+}
+.listBottom > div  > div > div > span  {
+   font-size: 14px!important;
+}
+.checkboxColor > div >  div > div > svg {
+   color: #4598bf!important;
+   fill: #4598bf!important;
+}

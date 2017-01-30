@@ -6,6 +6,7 @@ import Exports from './components/Exports'
 import Export from './components/Export'
 import CreateExport from './components/CreateExport'
 import ExportAOI from './components/ExportAOI'
+import ExportInfo from './components/ExportInfo'
 
 export default (
     <Router history={browserHistory}>
@@ -15,6 +16,7 @@ export default (
             </Route>
             <Route path="/create" component={CreateExport} >
                 <Route path="/exportAOI" component={ExportAOI} />
+                <Route path="/exportInfo" component={ExportInfo} />
             </Route>
             <Route path="/about" component={About} />
         </Route>

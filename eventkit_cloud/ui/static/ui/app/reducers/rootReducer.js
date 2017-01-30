@@ -1,5 +1,6 @@
 
 import {combineReducers} from 'redux';
+import { reducer as reduxFormReducer } from 'redux-form'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer';
 import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
     geonames: getGeonamesReducer,
     showInvalidDrawWarning: invalidDrawWarningReducer,
     isAOISet: exportSetAOIReducer,
+    form: reduxFormReducer,
 })
 
 export default rootReducer;
