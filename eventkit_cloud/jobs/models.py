@@ -252,6 +252,10 @@ class Job(TimeStampedModelMixin):
         return overpass_extents
 
     @property
+    def extents(self, ):
+        return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
+
+    @property
     def tag_dict(self, ):
         """
         Return the unique set of Tag keys from this export
