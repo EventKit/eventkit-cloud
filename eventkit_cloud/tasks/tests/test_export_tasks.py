@@ -300,18 +300,19 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
+        provider_slug = "provider_slug"
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         mock_geopackage.add_geojson_to_geopackage.return_value = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'),
                                                                               str(self.run.uid),
-                                                                              '{}_bounds.gpkg'.format(job_name))
+                                                                              '{}_bounds.gpkg'.format(provider_slug))
         expected_output_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid),
-                                            '{}_bounds.gpkg'.format(job_name))
+                                            '{}_bounds.gpkg'.format(provider_slug))
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=bounds_export_task.name)
         result = bounds_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                        job_name=job_name)
+                                        provider_slug=job_name)
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)

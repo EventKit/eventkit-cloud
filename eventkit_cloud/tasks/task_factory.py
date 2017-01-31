@@ -184,4 +184,4 @@ def create_bounds_task(export_provider_task_uid=None, stage_dir=None, worker=Non
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(task_name=bounds_export_task.name, export_provider_task=export_provider_task, worker=worker)
     return bounds_export_task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid,
-                                 stage_dir=stage_dir, job_name=export_provider_task.run.job.name)
+                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug)

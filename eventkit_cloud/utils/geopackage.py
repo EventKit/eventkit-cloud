@@ -84,7 +84,6 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
                                       'gpkg': gpkg,
                                       'layer_name': layer_name})
 
-    logger.error(append_cmd)
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)

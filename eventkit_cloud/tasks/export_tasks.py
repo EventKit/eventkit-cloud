@@ -370,7 +370,7 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
 
 
 @app.task(name='Bounds Export', bind=True, base=ExportTask)
-def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None):
     """
     Class defining geopackage export function.
     """
@@ -381,7 +381,7 @@ def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
 
     result_gpkg = parse_result(result, 'result')
 
-    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(job_name))
+    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
     gpkg = geopackage.add_geojson_to_geopackage(geojson=run.job.bounds_geojson, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
 
     # Pass the on_success handler the result of this task, and pass the previous task geopackage through to follow on.
