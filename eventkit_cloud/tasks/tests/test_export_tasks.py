@@ -16,6 +16,7 @@ from django.test import TestCase
 from django.utils import timezone as real_timezone
 from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch
+import datetime
 
 from ...jobs import presets
 from ...jobs.models import Job, Tag
@@ -26,7 +27,7 @@ from ..export_tasks import (
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task
+    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
 )
 from ...celery import TaskPriority
 from eventkit_cloud.tasks.models import (
@@ -316,6 +317,32 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+
+    @patch('eventkit_cloud.tasks.export_tasks.timezone')
+    @patch('celery.app.task.Task.request')
+    @patch('__builtin__.open')
+    def test_run_osm_create_styles_task(self, mock_open, mock_request, mock_timezone):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        provider_slug = 'example_provider'
+        bbox = [-1, -1, 1, 1]
+        mock_timezone.now.return_value = datetime.datetime(2017, 1, 2, 3, 4, 5)
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
+        style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name, '20170102'))
+        expected_output_path = style_file
+        export_provider_task = ExportProviderTask.objects.create(run=self.run)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=osm_create_styles_task.name)
+        result = osm_create_styles_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                            job_name=job_name, provider_slug=provider_slug, bbox=bbox)
+        self.assertEquals(expected_output_path, result['result'])
+        # test the tasks update_task_state method
+        run_task = ExportTask.objects.get(celery_uid=celery_uid)
+        self.assertIsNotNone(run_task)
+        self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+        mock_open.assert_called_once_with(style_file, 'w')
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')
