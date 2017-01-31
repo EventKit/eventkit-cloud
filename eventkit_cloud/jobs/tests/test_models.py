@@ -124,6 +124,12 @@ class TestJob(TestCase):
         self.assertIsNotNone(extents)
         self.assertEquals(4, len(extents.split(',')))
 
+    def test_extents(self, ):
+        job = Job.objects.all()[0]
+        extents = job.extents
+        self.assertIsNotNone(extents)
+        self.assertEquals(4, len(extents))
+
     def test_categorised_tags(self, ):
         # delete existing tags
         self.job.tags.all().delete()

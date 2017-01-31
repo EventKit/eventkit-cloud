@@ -13,7 +13,7 @@ from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
-from django.template.loader import get_template
+from django.template.loader import get_template, render_to_string
 from django.utils import timezone
 from enum import Enum
 from celery.result import AsyncResult
@@ -266,6 +266,30 @@ def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_n
     return {'result': gpkg}
 
 
+@app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
+def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+    """
+    Task to create styles for osm.
+    """
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    gpkg_file = '{0}-{1}-{2}.gpkg'.format(job_name,
+                                          provider_slug,
+                                          timezone.now().strftime('%Y%m%d'))
+    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
+                                                                  timezone.now().strftime("%Y%m%d")))
+    with open(style_file, 'w') as open_file:
+        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
+                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
+                                                                                                              timezone.now().strftime(
+                                                                                                                  "%Y%m%d")),
+                                                                      'layer_id_date_time': '{0}'.format(
+                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
+                                                                          :-3]),
+                                                                      'bbox': bbox}))
+    return {'result': style_file}
+
+
 @app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
 def osm_thematic_gpkg_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
@@ -284,7 +308,7 @@ def osm_thematic_gpkg_export_task(self, result=None, run_uid=None, task_uid=None
         t2s = thematic_gpkg.ThematicGPKG(gpkg=input_gpkg, stage_dir=stage_dir, tags=tags, job_name=job_name,
                                          task_uid=task_uid)
         out = t2s.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': out}
     except Exception as e:
         logger.error('Raised exception in thematic gpkg task, %s', str(e))
         raise Exception(e)  # hand off to celery..
