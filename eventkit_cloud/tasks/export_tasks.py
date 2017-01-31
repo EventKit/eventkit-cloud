@@ -283,7 +283,7 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
                                                                                                               timezone.now().strftime(
                                                                                                                   "%Y%m%d")),
-                                                                      'layer_id_suffix': '{0}'.format(
+                                                                      'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'bbox': bbox}))
