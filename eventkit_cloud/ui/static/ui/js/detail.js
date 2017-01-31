@@ -322,7 +322,7 @@ exports.detail = (function () {
                         $zipFiletr = $('tr#zipfile_tr');
                         $zipFiletr.css('display', 'table-row');
                         $zipFileDiv = $('div').find('#zipfile_div');
-                        var displayText = run.job.description + " ZipFile";
+                        var displayText = run.job.name + " ZipFile";
                         $zipFileDiv.append('<table border="0" width="100%"><tr><td><a href="' + run.zipfile_url + '">' + displayText + '</a></td></tr></table>');
                     }
 
