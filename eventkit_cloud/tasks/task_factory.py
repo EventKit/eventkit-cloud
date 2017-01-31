@@ -6,7 +6,7 @@ import logging
 import os
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
-from ..tasks.models import ExportRun
+from ..tasks.models import ExportRun, ExportProviderTask
 from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
@@ -15,10 +15,11 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
-from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
+from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority, bounds_export_task
 from django.conf import settings
 from django.db import DatabaseError
 from django.utils import timezone
+from ..tasks.task_runners import create_export_task
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -88,25 +89,32 @@ class TaskFactory:
                             task_runner = self.type_task_map.get(type_name)()
 
                             os.makedirs(os.path.join(run_dir, chain_task.provider.slug), 6600)
+                            stage_dir =os.path.join(
+                                        run_dir,
+                                        chain_task.provider.slug)
 
                             args = {'user': job.user,
                                     'provider_task_uid': chain_task.uid,
                                     'run': run,
-                                    'stage_dir': os.path.join(
-                                        run_dir,
-                                        chain_task.provider.slug),
+                                    'stage_dir': stage_dir,
                                     'service_type': chain_task.provider.export_provider_type.type_name,
                                     'worker': worker
                                     }
 
                             export_provider_task_uid, chain_task_runner_tasks = task_runner.run_task(**args)
                             export_provider_task_uids += [export_provider_task_uid]
+
                             if chain_task_runner_tasks:
+
+                                # Export the bounds for this provider
+                                bounds_task = create_bounds_task(export_provider_task_uid=export_provider_task_uid,
+                                                                 stage_dir=stage_dir, worker=worker)
+
                                 # Run the task, and when it completes return the status of the task to the model.
                                 # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
                                 # it will call FinalizeTask which will mark the entire job complete/incomplete
                                 finalize_chain_task_runner_tasks = (
-                                    chain_task_runner_tasks | finalize_export_provider_task.s(
+                                    chain_task_runner_tasks | bounds_task | finalize_export_provider_task.s(
                                         run_uid=run_uid,
                                         run_dir=run_dir,
                                         export_provider_task_uid=export_provider_task_uid,
@@ -163,3 +171,17 @@ def create_run(job_uid):
     except DatabaseError as e:
         logger.error('Error saving export run: {0}'.format(e))
         raise e
+
+
+def create_bounds_task(export_provider_task_uid=None, stage_dir=None, worker=None):
+    """
+    Create a new task to export the bounds for an ExportProviderTask
+    :param export_provider_task_uid: An export provider task UUID.
+    :param worker: The name of the celery worker assigned the task.
+    :return: A celery task signature.
+    """""
+
+    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    export_task = create_export_task(task_name=bounds_export_task.name, export_provider_task=export_provider_task, worker=worker)
+    return bounds_export_task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid,
+                                 stage_dir=stage_dir, job_name=export_provider_task.run.job.name)

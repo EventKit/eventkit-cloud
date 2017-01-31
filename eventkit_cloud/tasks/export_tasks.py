@@ -345,8 +345,8 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
         raise Exception(e)
 
 
-@app.task(name='Geopackage Format', bind=True, base=ExportTask)
-def geopackage_export_task(self, result=None, bounds=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+@app.task(name='Bounds Export', bind=True, base=ExportTask)
+def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining geopackage export function.
     """
@@ -355,8 +355,25 @@ def geopackage_export_task(self, result=None, bounds=None, run_uid=None, task_ui
     self.update_task_state(result=result, task_uid=task_uid)
     run = ExportRun.objects.get(uid=run_uid)
 
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    result_gpkg = parse_result(result, 'result')
+
+    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(job_name))
     gpkg = geopackage.add_geojson_to_geopackage(geojson=run.job.bounds_geojson, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
+
+    # Pass the on_success handler the result of this task, and pass the previous task geopackage through to follow on.
+    return {'result': gpkg, 'geopackage': result_gpkg}
+
+
+@app.task(name='Geopackage Format', bind=True, base=ExportTask)
+def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+    """
+    Class defining geopackage export function.
+    """
+    from .models import ExportRun
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     return {'result': gpkg, 'geopackage': gpkg}
 
 
@@ -412,7 +429,6 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     from .models import ExportRun
 
     self.update_task_state(result=result, task_uid=task_uid)
-    run = ExportRun.objects.get(uid=run_uid)
 
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
@@ -422,7 +438,6 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
                                                                  level_to=level_to, service_type=service_type,
                                                                  task_uid=task_uid)
         gpkg = w2g.convert()
-        gpkg = geopackage.add_geojson_to_geopackage(geojson=run.job.bounds_geojson, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
         return {'result': gpkg, 'geopackage': gpkg}
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
@@ -674,11 +689,11 @@ class FinalizeRunTaskClass(Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         stage_dir = retval['stage_dir']
-        # try:
-        #     if stage_dir:
-        #         shutil.rmtree(stage_dir)
-        # except IOError or OSError:
-        #     logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        try:
+            if stage_dir:
+                shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
 
 @app.task(name='Finalize Export Run', base=FinalizeRunTaskClass)

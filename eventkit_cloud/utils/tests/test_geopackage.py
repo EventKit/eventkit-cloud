@@ -3,12 +3,14 @@ import logging
 import os
 
 from mock import Mock, patch, call
-
+import uuid
 from django.test import TransactionTestCase
 
 from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
-                          remove_empty_zoom_levels, check_content_exists, check_zoom_levels)
+                          remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
+                          add_geojson_to_geopackage)
+
 
 logger = logging.getLogger(__name__)
 
@@ -190,4 +192,28 @@ class TestSQliteToGeopackage(TransactionTestCase):
         self.assertTrue(returned_value)
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
+
+    @patch('eventkit_cloud.utils.geopackage.TaskProcess')
+    @patch('__builtin__.open')
+    def test_add_geojson_to_geopackage(self, open, task_process):
+
+        geojson = "{}"
+        gpkg = None
+        with self.assertRaises(Exception):
+             add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg)
+
+        geojson = "{}"
+        gpkg = "test.gpkg"
+        layer_name = "test_layer"
+        task_uid = uuid.uuid4()
+        task_process.return_value = Mock(exitcode=0)
+        add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=task_uid)
+        task_process.assert_called_once_with(task_uid=task_uid)
+        open.assert_called_once_with(os.path.join(os.path.dirname(gpkg),
+                                "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), 'w')
+
+        task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=task_uid)
+
 
