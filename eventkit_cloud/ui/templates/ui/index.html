@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    {% load staticfiles %}
+    <meta charset="utf-8">
+    <title>EventKit</title>
+    <meta id="meta" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="{% static 'ui/contrib/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'ui/contrib/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'ui/contrib/openlayers/ol.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+
+    <style>
+      .ol-scale-line {
+        background: rgba(0,0,0,0);
+      }
+      .ol-scale-line-inner {
+        color: #171515;
+        border-bottom-color: black;
+        border-left-color: black;
+        border-right-color: black;
+      }
+      .form-control:focus {
+        box-shadow: none
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <div id='root'></div>
+
+    <script src="{% static 'ui/build/bundle.js' %}"></script>
+
+
+  </body>
+</html>

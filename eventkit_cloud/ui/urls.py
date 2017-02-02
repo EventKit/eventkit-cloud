@@ -3,13 +3,13 @@ from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
-from .views import clone_export, create_export, view_export
+from .views import logout
 
 urlpatterns = [
-    url(r'^$', login_required(TemplateView.as_view(template_name='ui/list.html')), name='list'),
-    url(r'^create/$', login_required(create_export, redirect_field_name=None), name='create'),
-    url(r'^configurations/$', login_required(TemplateView.as_view(template_name='ui/configurations.html')),
-        name='configurations'),
-    url(r'^(?P<uuid>[^/]+)/$', login_required(view_export), name='detail'),
-    url(r'^clone/(?P<uuid>[^/]+)/$', login_required(clone_export), name='clone')
+    # url(r'^login/$', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name="home"),
+    url(r'^$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="home"),
+    url(r'^exports$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="exports"),
+    url(r'^create$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="create"),
+    url(r'^account', login_required(TemplateView.as_view(template_name='ui/index.html')), name="account"),
+    url(r'^logout', logout, name="logout"),
 ]

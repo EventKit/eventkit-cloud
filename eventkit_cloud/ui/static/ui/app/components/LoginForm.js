@@ -9,13 +9,16 @@ import {
     TextField,
 } from 'redux-form-material-ui'
 import styles from './Login.css'
+import cookie from 'react-cookie';
+
 
 class LoginForm extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
             username: '',
-            password: ''
+            password: '',
+            csrfmiddlewaretoken: ''
         }
 
         this.onChange = this.onChange.bind(this)
@@ -26,14 +29,25 @@ class LoginForm extends React.Component {
     }
 
     onSubmit(e) {
-         e.preventDefault()
-        console.log(this.state)
-        axios.post('django.contrib.auth.views.login', {user: this.state})
+        e.preventDefault()
+        const data = new FormData();
+        data.append('username', this.state.username);
+        data.append('password', this.state.password);
+        data.append('csrfmiddlewaretoken', this.state.csrfmiddlewaretoken);
+        data.append('next', this.props.location.query || '/');
+        axios({
+            url: '/login/',
+            method: 'post',
+            data: data,
+            headers: {"X-CSRFToken": this.state.csrfmiddlewaretoken}
+        })
     }
 
     componentDidMount() {
-
+        axios.get('/login/');
+        this.state.csrfmiddlewaretoken = cookie.load('csrftoken');
     }
+
     render() {
         return (
             <div className={styles.wholeDiv}>
@@ -64,7 +78,6 @@ class LoginForm extends React.Component {
                                                         <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
                                 </FloatingActionButton>
                             </div>
-
                         </Paper>
                     </form>
 

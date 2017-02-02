@@ -17,7 +17,7 @@ var config = {
     output: {
         path: BUILD_DIR,
         filename: 'bundle.js',
-        publicPath: BUILD_DIR
+        publicPath: '/static/ui/build/'
     }
     ,
     resolve: {

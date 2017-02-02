@@ -75,7 +75,7 @@ def login(request):
     if not request.user.is_authenticated():
         return redirect('login')
     else:
-        return not_allowed_error_view(request)
+        return redirect('create')
 
 
 def logout(request):
