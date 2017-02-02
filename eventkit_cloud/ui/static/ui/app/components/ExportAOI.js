@@ -9,8 +9,9 @@ import SetAOIToolbar from './SetAOIToolbar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
 import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
+import DropZone from './DropZone.js';
 import {updateMode, updateBbox, updateGeojson, unsetAOI} from '../actions/exportsActions.js';
-import {toggleDrawCancel, toggleDrawRedraw, toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning, clickDrawSet} from '../actions/drawToolBarActions.js';
+import {toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning, clickDrawSet} from '../actions/drawToolBarActions.js';
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -27,11 +28,13 @@ export class ExportAOI extends Component {
         super(props)
         this._handleDrawStart = this._handleDrawStart.bind(this);
         this._handleDrawEnd = this._handleDrawEnd.bind(this);
-        this.handleDrawRedraw = this.handleDrawRedraw.bind(this);
-        this.handleDrawCancel = this.handleDrawCancel.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handelFreeCancel = this.handleFreeCancel.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
         this.handleResetMap = this.handleResetMap.bind(this);
         this.handleSearchBbox = this.handleSearchBbox.bind(this);
+        this.setMapView = this.setMapView.bind(this);
+        this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
     }
 
     componentDidMount() {
@@ -44,15 +47,6 @@ export class ExportAOI extends Component {
         if(this.props.mode != nextProps.mode) {
             this._updateInteractions(nextProps.mode);
         }
-        // Check if cancel button has been clicked
-        if(this.props.drawCancel.click != nextProps.drawCancel.click) {
-            this.handleDrawCancel();
-        }
-        // Check if redraw button has been clicked
-        if(this.props.drawRedraw.click != nextProps.drawRedraw.click) {
-            this.handleDrawRedraw();
-        }
-        // Check if zoom to selection button has been clicked
         if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
             this.handleZoomToSelection(nextProps.bbox);
         }
@@ -63,15 +57,23 @@ export class ExportAOI extends Component {
         if(nextProps.searchBbox.length > 0 && nextProps.searchBbox != this.props.searchBbox) {
             this.handleSearchBbox(nextProps.searchBbox);
         }
+        if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
+            this.handleGeoJSONUpload(nextProps.importGeom.geom);
+        }
     }
 
-    handleDrawRedraw() {
-        this._clearDraw();
+    handleCancel(sender) {
         this.props.hideInvalidDrawWarning();
         this.props.unsetAOI();
+        if(this.props.mode != MODE_NORMAL) {
+            this.props.updateMode(MODE_NORMAL);
+        }
+        this._clearDraw();
+        this.props.updateBbox([]);
+        this.props.updateGeojson({});
     }
 
-    handleDrawCancel() {
+    handleFreeCancel() {
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
         this._deactivateDrawInteraction();
@@ -107,24 +109,48 @@ export class ExportAOI extends Component {
         this.props.clickDrawSet();
     }
 
+    handleGeoJSONUpload(geom) {
+        this._drawLayer.getSource().addFeature(
+            new ol.Feature({
+                geometry: geom
+            })
+        )
+        const bbox = serialize(geom.getExtent());
+        const geojson = createGeoJSON(geom);
+        this.props.updateBbox(bbox);
+        this.props.updateGeojson(geojson);
+
+
+    }
+
+    setMapView() {
+        const extent = this._map.getView().calculateExtent(this._map.getSize());
+        const geom = new ol.geom.Polygon.fromExtent(extent);
+        const geojson = createGeoJSON(geom);
+        const bboxFeature = new ol.Feature({
+            geometry: geom
+        });
+        const bbox = serialize(extent)
+        this._drawLayer.getSource().addFeature(bboxFeature);
+        this.props.updateBbox(bbox);
+        this.props.updateGeojson(geojson);
+    }
 
 
     _activateDrawInteraction(mode) {
-        this._clearDraw()
+        // this._clearDraw()
         if(mode == MODE_DRAW_BBOX) {
-            this.props.unsetAOI();
-            this.props.updateGeojson({});
-            this.props.toggleDrawSet(true);
-            this.props.hideInvalidDrawWarning();
-            this.props.toggleDrawRedraw(true);
+            // this.props.unsetAOI();
+            // this.props.updateGeojson({});
+            // this.props.toggleDrawSet(true);
+            // this.props.hideInvalidDrawWarning();
             this._drawFreeInteraction.setActive(false);
             this._drawBoxInteraction.setActive(true);
         }
         else if(mode == MODE_DRAW_FREE) {
-            this.props.unsetAOI();
-            this.props.updateGeojson({});
-            this.props.toggleDrawSet(true);
-            this.props.toggleDrawRedraw(true);
+            // this.props.unsetAOI();
+            // this.props.updateGeojson({});
+            // this.props.toggleDrawSet(true);
             this._drawBoxInteraction.setActive(false);
             this._drawFreeInteraction.setActive(true);
         }
@@ -164,8 +190,6 @@ export class ExportAOI extends Component {
         }
         // exit drawing mode
         this.props.updateMode('MODE_NORMAL');
-        // make the redraw and set buttons available
-        this.props.toggleDrawRedraw(false);
     }
 
     _handleDrawStart() {
@@ -234,8 +258,10 @@ export class ExportAOI extends Component {
                 <div id="map" className={styles.map} ref="olmap">
                     <SetAOIToolbar />
                     <SearchAOIToolbar />
-                    <DrawAOIToolbar />
+                    <DrawAOIToolbar handleCancel={(sender) => this.handleCancel(sender)}
+                                    setMapView={this.setMapView}/>
                     <InvalidDrawWarning />
+                    <DropZone handleGeoJSONUpload={(file) => {this.handleGeoJSONUpload(file)}}/>
                 </div>
             </div>
         );
@@ -244,54 +270,40 @@ export class ExportAOI extends Component {
     _updateInteractions(mode) {
         switch (mode) {
             case MODE_DRAW_BBOX:
-                if (this.props.searchBbox.length > 0) {
-                    this.props.clearSearchBbox();
-                }
+                // if (this.props.searchBbox.length > 0) {
+                //     this.props.clearSearchBbox();
+                // }
                 this._activateDrawInteraction(MODE_DRAW_BBOX);
                 break
             case MODE_DRAW_FREE:
-                if (this.props.searchBbox.length > 0) {
-                    this.props.clearSearchBbox();
-                }
+                // if (this.props.searchBbox.length > 0) {
+                //     this.props.clearSearchBbox();
+                // }
                 this._activateDrawInteraction(MODE_DRAW_FREE);
                 break
             case MODE_NORMAL:
-                this._clearDraw();
+                // this._clearDraw();
                 this._deactivateDrawInteraction();
                 break
         }
     }
 }
 
-//ExportAOI.propTypes = {
-//    bbox:                React.PropTypes.arrayOf(React.PropTypes.number),
-//    mode:                React.PropTypes.string.isRequired,
-//    onBoundingBoxChange: React.PropTypes.func.isRequired,
-//}
 
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
         searchBbox: state.searchBbox,
         mode: state.mode,
-        drawCancel: state.drawCancel,
-        drawRedraw: state.drawRedraw,
         drawSet: state.drawSet,
-        drawBoxButton: state.drawBoxButton,
-        drawFreeButton: state.drawFreeButton,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
+        importGeom: state.importGeom,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleDrawCancel: (isDisabled) => {
-            dispatch (toggleDrawCancel(isDisabled));
-        },
-        toggleDrawRedraw: (isDisabled) => {
-            dispatch(toggleDrawRedraw(isDisabled));
-        },
         toggleDrawSet: (isDisabled) => {
             dispatch(toggleDrawSet(isDisabled));
         },
@@ -465,4 +477,16 @@ function createGeoJSON(ol3Geometry) {
                         "geometry": {"type": "Polygon", "coordinates": wgs84Coords}}
                     ]}
     return geojson;
+}
+
+function processGeoJSONFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        const dataURL = reader.result;
+        const geojsonReader = new ol.format.GeoJSON();
+        const geom = geojsonReader.readFeatures(JSON.parse(dataURL));
+        console.log(geom);
+        return geom;
+    }
+    return reader.readAsText(file);
 }

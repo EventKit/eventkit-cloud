@@ -1,0 +1,117 @@
+@media (min-width: 768px) {
+    .popup {
+        width: 600px;
+        margin: 30px auto; 
+    }
+}
+
+.dropZoneContainer {
+    position: absolute;
+    top: 180px;
+    left: 25%;
+    width: 50%;
+    height: 280px;
+    background-color: #fff;
+    z-index: 1;
+    max-width: 600px;
+    min-width: 200px;
+}
+
+.dropZoneTitlebar {
+    height: 45px;
+    width: 100%
+}
+
+.dropZoneTitle {
+    line-height: 45px;
+    margin-left: 5%;
+}
+
+.dropZoneClear {
+    color: #4498c0;
+    border: none;
+    background-color: #fff;
+    float: right;
+    margin-right: 5%;
+    margin-top: 8px;
+    padding: 0px;
+    width: 24px;
+    height: 24px;
+}
+
+.dropZoneClear:focus {
+    outline: none;
+}
+
+.dropZone {
+    margin: auto;
+    width: 90%;
+    height: 200px;
+    text-align: center;
+    border: 1px dashed;
+    font-size: 1em;
+    color: #4498c0;
+}
+
+.dropZoneText {
+    vertical-align: center;
+    color: grey;
+    height: 100px;
+    margin-top: 50px;
+}
+
+.dropZoneImportButton {
+    border: none;
+    background-color: #4498c0;
+    color: #fff;
+    margin: 15px 5px 10px 5px;
+    height: 30px;
+    padding: 5px 10px 5px 10px;
+    
+}
+
+.dropZoneImportButton i {
+    vertical-align: middle;
+    font-size: 20px;
+    margin-right: 5px;
+}
+
+.popup {
+    width: auto;
+    background-color: #fff;
+}
+
+.fileErrorContainer {
+    position: absolute;
+    top: 180px;
+    left: 25%;
+    width: 50%;
+    height: auto;
+    background-color: #fff;
+    z-index: 1;
+    max-width: 600px;
+    min-width: 200px;
+}
+
+.fileError {
+    margin: auto auto 30px auto;
+    width: 90%;
+    height: auto;
+    text-align: center;
+    border: 1px dashed;
+    font-size: 1em;
+    color: red;
+    padding: 20px;
+}
+
+.fileErrorClear {
+    color: red;
+    border: none;
+    background-color: #fff;
+    float: right;
+    margin-right: 5%;
+    margin-top: 8px;
+    padding: 0px;
+    width: 24px;
+    height: 24px;
+}

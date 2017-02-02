@@ -6,26 +6,9 @@ export default {
     mode: 'DRAW_NORMAL',
     isAOISet: false,
     showInvalidDrawWarning: false,
+    showImportModal: false,
     searchBbox : [],
-    drawExtensionVisible: false,
-    drawCancel: {
-        disabled: true,
-        click: false,
-    },
-    drawRedraw: {
-        disabled: true,
-        click: false,
-    },
     drawSet: {
-        disabled: true,
-        click: false,
-    },
-
-    drawBoxButton: {
-        disabled: true,
-        click: false,
-    },
-    drawFreeButton: {
         disabled: true,
         click: false,
     },
@@ -43,4 +26,16 @@ export default {
         geonames: [],
         error: null,
     },
+    importGeom: {
+        processing: false,
+        processed: false,
+        geom: {},
+        error: null,
+    },
+    toolbarIcons: {
+        box: "DEFAULT",
+        free: "DEFAULT",
+        mapView: "DEFAULT",
+        import: "DEFAULT",
+    }
 }

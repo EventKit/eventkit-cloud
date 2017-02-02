@@ -4,12 +4,16 @@ import {connect} from 'react-redux'
 import ol from 'openlayers'
 import styles from './SetAOIToolbar.css'
 import DrawControl from './openlayers.DrawControl.js'
-import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar'
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
 import {clearSearchBbox} from '../actions/searchToolbarActions';
+import SetAOIButton from './SetAOIButton';
 
-export const NO_SELECTION_TEXT = 'None Set'
-export const CARDINAL_DIRECTIONS = "(West, South, East, North)"
+export const NO_SELECTION_TEXT = 'No AOI Set';
+export const NO_SELECTION_HEADER = '';
+export const NO_SELECTION_ICON = 'do_not_disturb';
+export const POLYGON_ICON = 'sentiment_neutral';
+export const POINT_ICON = 'room';
+export const CARDINAL_DIRECTIONS = "(West, South, East, North)";
 
 const isEqual = require('lodash/isEqual');
 
@@ -27,8 +31,10 @@ export class SetAOIToolbar extends Component {
 
         this.state = {
             areaSelectedText: NO_SELECTION_TEXT,
+            areaSelectedHeading: NO_SELECTION_HEADER,
             zoomToSelectionClass: styles.inactiveButton,
             resetMapClass: styles.inactiveButton,
+            geometryIcon: NO_SELECTION_ICON,
         }
     }
 
@@ -122,21 +128,22 @@ export class SetAOIToolbar extends Component {
         }
 
         return (
-            <div className={styles.toolbarDiv}>
-                    <div className={styles.titleDiv}>
-                        <strong>Set Area Of Interest (AOI)</strong>
+            <div>
+            <div className={styles.setAOIContainer}>
+                <SetAOIButton />
+                <div className={styles.topBar}>
+                    <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
+                    <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION</button>
+                    <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={"fa fa-refresh"}></i> RESET VIEW</button>
+                </div>
+                <div className={styles.detailBar}>
+                    <i className={"material-icons " + styles.geometryIcon}>{this.state.geometryIcon}</i>
+                    <div className={styles.detailText}>
+                        <div className={styles.areaSelectedHeading}><strong>{this.state.areaSelectedHeading}</strong></div>
+                        <div className={styles.areaSelectedText}>{this.state.areaSelectedText}</div>
                     </div>
-                    <div className={styles.selectedDiv}>
-                        {this.state.areaSelectedText}
-                    </div>
-                    <div className={styles.resetMapDiv}>
-                        <button className={styles.simpleButton + ' '
-                        + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={'fa fa-refresh'}></i>  RESET VIEW</button>
-                    </div>
-                    <div className={styles.zoomToDiv}>
-                        <button className={styles.simpleButton + ' '
-                        + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={'fa fa-search-plus'}></i>  ZOOM TO SELECTION</button>
-                    </div>
+                </div>
+            </div>
             </div>
         )
     }

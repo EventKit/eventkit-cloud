@@ -96,7 +96,7 @@
     color: #4498c0;
 }
 
-.typeahead > div > div > input: focus {
+.typeahead > div > div > input:focus {
     border: none;
 }
 

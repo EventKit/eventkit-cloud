@@ -41,7 +41,6 @@ export class SearchAOIToolbar extends Component {
     }
 
     handleFocus() {
-        this.props.clickDrawCancel();
         this.refs.typeahead.getInstance().clear();
     }
 
@@ -119,9 +118,6 @@ function mapDispatchToProps(dispatch) {
         drawSearchBbox: (bbox) => {
             dispatch(drawSearchBbox(bbox));
         },
-        clickDrawCancel: () => {
-            dispatch(clickDrawCancel());
-        }
     }
 }
 
