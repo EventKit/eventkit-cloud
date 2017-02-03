@@ -34,7 +34,6 @@ class LoginForm extends React.Component {
         data.append('username', this.state.username);
         data.append('password', this.state.password);
         data.append('csrfmiddlewaretoken', this.state.csrfmiddlewaretoken);
-        data.append('next', this.props.location.query || '/');
         axios({
             url: '/login/',
             method: 'post',
