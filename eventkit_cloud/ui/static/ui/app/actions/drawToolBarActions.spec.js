@@ -1,4 +1,4 @@
-import * as actions from './drawToolBarActions'
+import * as actions from './drawToolBarActions';
 
 describe('drawToolBar actions', () => {
     it('toggleDrawExtension should return the specifed visibility boolean', () => {

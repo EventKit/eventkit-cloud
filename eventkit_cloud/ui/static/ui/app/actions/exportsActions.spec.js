@@ -1,9 +1,9 @@
-import * as actions from './exportsActions'
-import configureMockStore from 'redux-mock-store'
-import thunk from 'redux-thunk'
-import nock from 'nock'
-const middlewares = [thunk]
-const mockStore = configureMockStore(middlewares)
+import * as actions from './exportsActions';
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+import nock from 'nock';
+const middlewares = [thunk];
+const mockStore = configureMockStore(middlewares);
 
 describe('export actions', () => {
 

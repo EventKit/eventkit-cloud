@@ -1,5 +1,5 @@
 import {Config} from '../config'
-import * as types from './actionTypes'
+import actions from './actionTypes'
 import fetch from 'isomorphic-fetch'
 const isEqual = require('lodash/isEqual');
 
@@ -28,13 +28,13 @@ export function getGeonames(query) {
 
 export function drawSearchBbox(searchBbox) {
     return {
-        type: types.DRAW_SEARCH_BBOX,
+        type: actions.DRAW_SEARCH_BBOX,
         searchBbox: searchBbox,
     }
 }
 
 export function clearSearchBbox() {
     return {
-        type: types.CLEAR_SEARCH_BBOX,
+        type: actions.CLEAR_SEARCH_BBOX,
     }
 }

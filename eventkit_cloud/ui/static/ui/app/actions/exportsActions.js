@@ -1,30 +1,30 @@
-import {Config} from '../config'
-import * as types from './actionTypes'
+import {Config} from '../config';
+import actions from './actionTypes';
 import ExportApi from '../api/exportsApi';
 
 export function loadJobsSuccess(jobs) {
     return {
-        type: types.LOAD_JOBS_SUCCESS,
+        type: actions.LOAD_JOBS_SUCCESS,
         jobs};
 }
 
 export function updateBbox(bbox) {
     return {
-        type: types.UPDATE_BBOX,
+        type: actions.UPDATE_BBOX,
         bbox: bbox || null
     }
 }
 
 export function updateGeojson(geojson) {
     return {
-        type: types.UPDATE_GEOJSON,
+        type: actions.UPDATE_GEOJSON,
         geojson: geojson
     }
 }
 
 export function updateMode(mode) {
     return {
-        type: types.SET_MODE,
+        type: actions.SET_MODE,
         mode: mode
     }
 }
@@ -42,14 +42,14 @@ export function loadExports() {
 
 export function setAOI() {
     return {
-        type: types.SET_AOI,
+        type: actions.SET_AOI,
         isAOISet: true
     }
 }
 
 export function unsetAOI() {
     return {
-        type: types.UNSET_AOI,
+        type: actions.UNSET_AOI,
         isAOISet: false,
     }
 }

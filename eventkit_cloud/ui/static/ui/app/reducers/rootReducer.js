@@ -1,10 +1,10 @@
-
-import {combineReducers} from 'redux';
+import {combineReducers} from 'redux'
 import { reducer as reduxFormReducer } from 'redux-form'
-import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer';
-import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer';
-import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
-import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js';
+import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer'
+import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer'
+import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js'
+import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js'
+import auth from './authReducer'
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -25,6 +25,7 @@ const rootReducer = combineReducers({
     showInvalidDrawWarning: invalidDrawWarningReducer,
     isAOISet: exportSetAOIReducer,
     form: reduxFormReducer,
+    auth: auth
 })
 
 export default rootReducer;

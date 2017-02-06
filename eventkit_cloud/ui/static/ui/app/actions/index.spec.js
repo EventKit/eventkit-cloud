@@ -1,4 +1,4 @@
-import * as actions from './index'
+import * as actions from './index';
 
 describe('todo actions', () => {
   it('addTodo should create ADD_TODO action', () => {

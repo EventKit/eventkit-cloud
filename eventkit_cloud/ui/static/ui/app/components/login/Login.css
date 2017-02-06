@@ -11,7 +11,7 @@
     flex-wrap: wrap;
 }
 .paper {
-    background-image: url('../../images/topoBackground.jpg');
+    background-image: url('../../../images/topoBackground.jpg');
     background-repeat: repeat repeat;
     margin: 0 auto;
     padding: 60px;
