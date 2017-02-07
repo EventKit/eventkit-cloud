@@ -3,7 +3,6 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
 import styles from './CreateExport.css';
-import DrawControl from './openlayers.DrawControl.js';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import SetAOIToolbar from './SetAOIToolbar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
@@ -261,7 +260,7 @@ export class ExportAOI extends Component {
                     <DrawAOIToolbar handleCancel={(sender) => this.handleCancel(sender)}
                                     setMapView={this.setMapView}/>
                     <InvalidDrawWarning />
-                    <DropZone handleGeoJSONUpload={(file) => {this.handleGeoJSONUpload(file)}}/>
+                    <DropZone/>
                 </div>
             </div>
         );

@@ -42,11 +42,9 @@ export class MapViewButton extends Component {
 
     render() {
         return (
-            <div>
-                <button className={styles.drawButtonGeneral} onClick={this.handleOnClick}>
-                    {this.state.icon}
-                </button>
-            </div>
+            <button className={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+                {this.state.icon}
+            </button>
         )
     }
 }

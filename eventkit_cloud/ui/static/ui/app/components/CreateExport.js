@@ -8,7 +8,6 @@ import MenuItem from 'material-ui/MenuItem'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
-import {updateBbox} from '../actions'
 import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
 import FlatButton from 'material-ui/FlatButton';
 import RaisedButton from 'material-ui/RaisedButton';

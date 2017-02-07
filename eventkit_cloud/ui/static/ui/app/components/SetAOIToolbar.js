@@ -3,7 +3,6 @@ import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import ol from 'openlayers'
 import styles from './SetAOIToolbar.css'
-import DrawControl from './openlayers.DrawControl.js'
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 import SetAOIButton from './SetAOIButton';

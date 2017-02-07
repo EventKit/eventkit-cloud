@@ -1,34 +1,14 @@
 import React, {Component} from 'react';
-import {connect} from 'react-redux';
 import styles from './DrawAOIToolbar.css';
-import {toggleDrawSet} from '../actions/drawToolBarActions.js';
-import {updateMode, updateBbox} from '../actions/exportsActions.js';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
-import SetAOIButton from './SetAOIButton.js';
-import { Button } from 'react-bootstrap';
-
-
-export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
-export const MODE_NORMAL = 'MODE_NORMAL'
-
 
 export class DrawAOIToolbar extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            extensionClass: styles.extensionToolbarDivHidden,
-            icons: {
-                mapView: 'INACTIVE_ICON',
-            }
-        };
-    }
-
-    componentWillReceiveProps(nextProps){
-        console.log('');
     }
 
     render() {
@@ -47,22 +27,7 @@ export class DrawAOIToolbar extends Component {
     }
 }
 
-function mapStateToProps(state) {
-    return {
-        
-    };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DrawAOIToolbar);
+export default DrawAOIToolbar;
 
 
 

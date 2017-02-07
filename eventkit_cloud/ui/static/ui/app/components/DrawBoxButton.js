@@ -1,5 +1,4 @@
 
-
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from './DrawAOIToolbar.css';
@@ -38,7 +37,7 @@ export class DrawBoxButton extends Component {
     handleOnClick() {
         if(this.state.icon == SELECTED_ICON) {
             this.props.setAllButtonsDefault();
-            this.props.handleCancel('Im a box button');
+            this.props.handleCancel();
         }
         else if(this.state.icon == DEFAULT_ICON) {
             this.props.setBoxButtonSelected();
