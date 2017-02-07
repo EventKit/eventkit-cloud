@@ -1,85 +1,73 @@
-@media only screen and (min-width: 850px) {
-    .toolbarDiv {
-        max-width: 765px !important;
+@media screen and (min-width: 510px) {
+    .simpleButton {
+        font-size: .7em;
     }
 }
 
-@media only screen and (max-width: 750px) {
-    .toolbarDiv {
-        font-size: .8em;
+@media screen and (max-width: 509px) {
+    .simpleButton {
+        font-size: .5em;
     }
 }
 
-@media only screen and (max-width: 500px) {
-    .selectedDiv {
-        font-size: .6em;
-    }
-}
-
-@media only screen and (max-width: 340px) {
-    .toolbarDiv {
-        font-size: .6em;
-    }
-    .selectedDiv {
-        font-size: .4em;
-    }
-}
-
-.toolbarDiv {
-    z-index: 1;
+.setAOIContainer {
+    z-index: 2;
     position: absolute;
     width: 90%;
+    min-width: 320px;
+    max-width: 765px;
     top: 1em;
     left: 10px;
     background-color: #fff;
-    height: 50px;
+    height: 70px;
 }
 
-.titleDiv {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height: 30%;
-    width: 50%;
-    padding-left: 15px;
-    padding-top: 10px;
-    padding-bottom: 5px;
+.topBar {
+    height: 25px;
+    width: calc(100% - 50px);
+    float: left;
+    padding-top: 5px;
 }
 
-.selectedDiv {
-    position: absolute;
-    bottom: 0px;
-    left: 0px;
-    height: 20px;
-    width: 100%;
-    padding-left: 15px;
-    color: grey;
-}
-
-.toolbarText {
+.setAOITitle {
+    font-size: 1em;
     padding-left: 10px;
 }
 
-.resetMapDiv {
-    position: absolute;
-    left: 50%;
-    width: 20%;
-    height: 30px;
-    padding-top: 10px;
-    top: 0px;
-    text-align: center;
-    color: grey
+.detailBar {
+    height: 45px;
+    width: calc(100% - 50px);
+    float: left;
 }
 
-.zoomToDiv {
-    position: absolute;
-    left: 70%;
-    width: 30%;
-    height: 30px;
-    padding-top: 10px;
-    top: 0px;
-    text-align: center;
-    color: grey;
+.setButton {
+    height: 70px;
+    width: 50px;
+    background-color: limegreen;
+    float: right;
+    margin: 0px;
+    padding: 0px;
+    border: none;
+    color: #fff;
+    font-size: .8em;
+}
+
+.setButton:focus {
+    outline: none;
+}
+
+.forwardArrow {
+    font-size: 2.5em;
+    margin: 0px;
+    padding: 0px;
+    vertical-align: middle !important;
+}
+
+.simpleButton {
+    background: none;
+    border: none;
+    float: right;
+    padding-right: 10px;
 }
 
 .activeButton {
@@ -90,7 +78,28 @@
     color: grey;
 }
 
-.simpleButton {
-    background: none;
-    border: none;
+.geometryIcon {
+    color: grey;
+    font-size: 3.1em;
+    padding-left: 10px;
+    width: 43px;
+}
+
+.detailText {
+    float: right;
+    width: calc(100% - 55px);
+    height: 100%;
+}
+
+.areaSelectedText {
+    padding-left: 6px;
+    width: 100%;
+    color: grey;
+    min-height: 16px;
+}
+
+.areaSelectedHeading {
+    padding-left: 6px;
+    width: 100%;
+    min-height: 16px;
 }

@@ -1,9 +1,8 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './DrawAOIToolbar.css';
+import styles from './SetAOIToolbar.css';
 import {toggleDrawSet, clickDrawSet} from '../actions/drawToolBarActions.js';
 import {updateMode, updateBbox, setAOI, unsetAOI} from '../actions/exportsActions.js';
-import { Button } from 'react-bootstrap';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX'
 export const MODE_NORMAL = 'MODE_NORMAL'
@@ -20,6 +19,9 @@ export class SetAOIButton extends Component {
         this.state = {
             setButtonClass: styles.setButtonInactive,
         };
+    }
+
+    componentWillMount() {
     }
 
     componentWillReceiveProps(nextProps){
@@ -55,9 +57,12 @@ export class SetAOIButton extends Component {
     }
     render() {
         return (
-            <div className={styles.setButtonDiv}>
-                <Button bsClass={styles.buttonGeneral + ' ' + this.state.setButtonClass} onClick={this.dispatchSetClick}>SET</Button>
-            </div>
+            <button className={styles.setButton} onClick={this.dispatchSetClick}>
+                <div>
+                    <i className={"material-icons " + styles.forwardArrow}>arrow_forward</i>
+                    <div>SET</div>
+                </div>
+            </button>
         )
     }
 }

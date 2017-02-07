@@ -31,6 +31,7 @@
     "react-flexbox-grid": "~0.10.2",
     "react-bootstrap": "~0.30.7",
     "react-bootstrap-typeahead": "~1.0.0-beta4",
+    "react-dropzone": "~3.9.2",
     "redux": "~3.6.0",
     "redux-form": "~6.4.3",
     "redux-form-material-ui": "~4.1.2",
@@ -59,7 +60,8 @@
   "babel": {
     "plugins": [
       "react-hot-loader/babel",
-      "transform-class-properties"
+      "transform-class-properties",
+      "transform-async-to-generator"
     ],
     "presets": [
       "react",
@@ -73,7 +75,8 @@
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
-    }
+    },
+    "modulePathIgnorePatterns": ["staticfiles/"]
   },
   "scripts": {
     "test": "jest --verbose"
