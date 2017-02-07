@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.hostname = "cloud.eventkit.dev"
   config.vm.network :private_network, ip: "192.168.99.130"
-  config.vm.network "forwarded_port", guest: 8080, host:8080
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
   
   config.vm.define "nodocker", autostart: false do |nodocker|
     nodocker.vm.box = "bento/ubuntu-16.04"

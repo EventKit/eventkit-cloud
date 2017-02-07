@@ -1,5 +1,6 @@
 
 import {combineReducers} from 'redux';
+import { reducer as reduxFormReducer } from 'redux-form'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer, exportSetAOIReducer} from './exportsReducer';
 import {drawSetReducer, invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
     toolbarIcons: toolbarIconsReducer,
     showImportModal: showImportModalReducer,
     importGeom: importGeomReducer,
+    form: reduxFormReducer,
 })
 
 export default rootReducer;

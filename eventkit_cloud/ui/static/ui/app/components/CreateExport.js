@@ -5,12 +5,11 @@ import AppBar from 'material-ui/AppBar'
 import IconButton from 'material-ui/IconButton'
 import IconMenu from 'material-ui/IconMenu'
 import MenuItem from 'material-ui/MenuItem'
+import BreadcrumbStepper from './BreadcrumbStepper'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
-import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
-import {toggleDrawCancel, toggleDrawRedraw} from '../actions/drawToolBarActions.js'
-import FlatButton from 'material-ui/FlatButton';
-import RaisedButton from 'material-ui/RaisedButton';
+
+
 import {
     Step,
     Stepper,
@@ -23,7 +22,7 @@ class CreateExport extends React.Component {
 
     constructor() {
         super()
-        this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
+        
     }
 
 
@@ -64,10 +63,8 @@ class CreateExport extends React.Component {
 
                                             </IconMenu>}
                 />
-                <div>
-                    <ExportAOI mode={this._mapMode} 
-                               onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>
-                </div>
+                <BreadcrumbStepper/>
+                
                 <div >
                     {this.props.children}
                 </div>
@@ -78,22 +75,7 @@ class CreateExport extends React.Component {
         );
     }
 
-    //
-    // Internal API
-    //
-
-    get _mapMode() {
-        if (this.props.location === 'exportAOI') {
-            return MODE_DRAW_BBOX
-        }
-        return MODE_NORMAL
-    }
-
-    _handleBoundingBoxChange(bbox) {
-        console.log('Running Handle bounding box change in CreateExport.js')
-        console.log(this.props.bbox)
-    }
-
+    
 }
 
 

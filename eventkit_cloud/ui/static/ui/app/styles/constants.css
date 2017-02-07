@@ -1,4 +1,23 @@
+@media (min-width: 1200px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+}
 
+@media (min-width: 992px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 768px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+    #start-date {
+        padding-right: 0px;
+    }
+}
 div.sectionBar {
     background-color: #161e2e;
     border-width: 2px;

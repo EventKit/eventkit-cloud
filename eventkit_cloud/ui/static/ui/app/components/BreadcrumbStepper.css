@@ -1,0 +1,118 @@
+@media only screen and (min-width: 850px) {
+    .stepperWrapper > div > div > span {
+        max-width: 680px !important;
+    }
+    .stepperWrapper > div {
+        margin: 0 auto;
+        max-width: 400px;
+    }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+}
+
+@media only screen and (min-width: 800px) {
+    .stepperWrapper > div > div > span {
+        font-size: 1em !important;
+        margin: 0 auto;
+        max-width: 400px;
+    }
+    .stepperWrapper > div {
+        margin: 0 auto;
+        max-width: 400px;
+    }
+    .stepLabel {
+        font-size: 1em;
+    }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 800px !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+}
+
+@media only screen and (max-width: 800px) {
+    .stepperWrapper > div > div > span {
+         font-size: .8em !important;
+     }
+    .stepLabel {
+        font-size: .8em;
+    }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .stepperWrapper > div > div > span  {
+        font-size: .7em !important;
+    }
+    .stepLabel {
+        font-size: .7em;
+    }
+
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+}
+@media only screen and (max-width: 400px) {
+    .stepLabel {
+        font-size: .6em;
+    }
+    .stepperWrapper > div > div > span {
+        font-size: .6em !important;
+
+    }
+    .stepperImageWrapper {
+        background-color: #161e2e;
+        width: 100% !important;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+
+}
+
+.stepperWrapper {
+    height: 45px;
+    float: left;
+}
+
+.stepperWrapper > div {
+    background-color: #161e2e;
+    height: 35px;
+    color: white;
+    font-family: Roboto;
+    z-index: 1;
+    width: 50%;
+    position: relative;
+}
+
+.stepLabel {
+    color: white;
+    fontSize: 18px;
+}
+
+.imageWrapper {
+    float: right;
+    width: 150px;
+}
+
+.stepperImageWrapper {
+    background-color: #161e2e;
+    width: 800px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+
