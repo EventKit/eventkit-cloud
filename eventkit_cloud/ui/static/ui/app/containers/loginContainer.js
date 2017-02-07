@@ -43,12 +43,14 @@ class Form extends React.Component {
                             <div className={styles.heading}>Enter Login Information</div>
                             <div className={styles.fieldWrapper}>
                                 <input name="username"
+                                       placeholder="Username"
                                        className={styles.textField}
                                        type="text"/>
 
                             </div>
                             <div className={styles.fieldWrapper}>
                                 <input name="password"
+                                       placeholder="Password"
                                        className={styles.textField}
                                        onChange={this.onChange}
                                        type="password"
