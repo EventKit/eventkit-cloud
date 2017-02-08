@@ -27,7 +27,7 @@ from ..export_tasks import (
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, osm_create_styles_task
+    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
 )
 from ...celery import TaskPriority
 from eventkit_cloud.tasks.models import (
@@ -284,6 +284,35 @@ class TestExportTasks(ExportTaskBase):
         result = external_raster_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                                          job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
+        self.assertEquals(expected_output_path, result['result'])
+        # test the tasks update_task_state method
+        run_task = ExportTask.objects.get(celery_uid=celery_uid)
+        self.assertIsNotNone(run_task)
+        self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+        service_to_gpkg.convert.side_effect = Exception("Task Failed")
+        with self.assertRaises(Exception):
+            external_raster_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                                             job_name=job_name)
+
+    @patch('celery.app.task.Task.request')
+    @patch('eventkit_cloud.tasks.export_tasks.geopackage')
+    def test_run_bounds_export_task(self, mock_geopackage, mock_request):
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        job_name = self.job.name.lower()
+        provider_slug = "provider_slug"
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
+        mock_geopackage.add_geojson_to_geopackage.return_value = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'),
+                                                                              str(self.run.uid),
+                                                                              '{}_bounds.gpkg'.format(provider_slug))
+        expected_output_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid),
+                                            '{}_bounds.gpkg'.format(provider_slug))
+        export_provider_task = ExportProviderTask.objects.create(run=self.run)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=bounds_export_task.name)
+        result = bounds_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                        provider_slug=job_name)
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)

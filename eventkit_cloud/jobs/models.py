@@ -7,6 +7,7 @@ import uuid
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.serializers import serialize
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.fields import CharField
 from django.db.models.signals import (
@@ -308,6 +309,12 @@ class Job(TimeStampedModelMixin):
                 if geom == 'polygon':
                     polygons.append(tag)
         return {'points': sorted(points), 'lines': sorted(lines), 'polygons': sorted(polygons)}
+
+    @property
+    def bounds_geojson(self,):
+        return serialize('geojson', [self],
+                         geometry_field='the_geom',
+                         fields=('name', 'the_geom'))
 
 
 class Tag(models.Model):

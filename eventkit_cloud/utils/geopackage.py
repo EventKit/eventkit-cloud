@@ -8,6 +8,7 @@ import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
 import sqlite3
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,40 @@ class SQliteToGeopackage(object):
             print 'ogr2ogr returned: %s' % task_process.exitcode
         return self.gpkgfile
 
+
+def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid=None):
+    """Uses an ogr2ogr script to upload a geojson file.
+        Args:
+            geojson: A geojson string.
+            gpkg: Database dict from the django settings.
+            layer_name: A DB table.
+            task_uid: A task uid to update.
+        Returns:
+            True if the file is succesfully uploaded.
+        """
+
+    if not geojson or not gpkg:
+        raise Exception("A geojson: {0} \nor a geopackage: {1} was not provided.".format(geojson, gpkg))
+
+    geojson_file = os.path.join(os.path.dirname(gpkg),
+                                "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]))
+
+    with open(geojson_file, 'w') as open_file:
+        open_file.write(geojson)
+
+    cmd = Template("ogr2ogr -f 'GPKG' $gpkg $geojson_file -nln $layer_name")
+
+    append_cmd = cmd.safe_substitute({'geojson_file': geojson_file,
+                                      'gpkg': gpkg,
+                                      'layer_name': layer_name})
+
+    task_process = TaskProcess(task_uid=task_uid)
+    task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stderr))
+        raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+    return gpkg
 
 def is_alnum(data):
     """
