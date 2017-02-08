@@ -1,8 +1,6 @@
 import React from 'react'
 import LoginForm from '../../containers/loginContainer'
 import styles from './Login.css'
-import redirect from '../../containers/redirect'
-import login from '../../containers/login'
 
 class LoginPage extends React.Component {
 

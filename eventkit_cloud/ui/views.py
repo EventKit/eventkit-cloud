@@ -4,10 +4,11 @@
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
-from django.shortcuts import RequestContext, redirect, render_to_response
+from django.shortcuts import RequestContext, redirect, render_to_response, HttpResponse
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from functools import wraps
+import json
+from django.contrib.auth import authenticate, login
 
 
 # def user_verification_required(func=None):
@@ -71,11 +72,28 @@ def view_export(request, uuid=None):  # NOQA
     return render_to_response('ui/detail.html', context, RequestContext(request))
 
 
-def login(request):
-    if not request.user.is_authenticated():
-        return redirect('login')
+def auth(request):
+    """Logs out user"""
+    auth_logout(request)
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        login(request, user)
+        return HttpResponse(status=200)
     else:
-        return redirect('create')
+        return HttpResponse(status=401)
+
+
+def user(request):
+    if not request.user.is_authenticated():
+        return HttpResponse(status=401)
+    else:
+        user_data = {'username': request.user.username,
+                     'first_name': request.user.first_name,
+                     'last_name': request.user.last_name,
+                     'email': request.user.email}
+        return HttpResponse(json.dumps(user_data), status=200, content_type="application/json")
 
 
 def logout(request):

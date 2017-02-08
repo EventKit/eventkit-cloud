@@ -4,7 +4,8 @@ import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonRe
 import {drawExtensionReducer, drawCancelReducer, drawRedrawReducer, drawSetReducer, drawBoxButtonReducer, drawFreeButtonReducer, invalidDrawWarningReducer} from './drawToolBarReducer'
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js'
 import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js'
-import auth from './authReducer'
+import userReducer from './userReducer'
+import { routerReducer } from 'react-router-redux'
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -25,7 +26,8 @@ const rootReducer = combineReducers({
     showInvalidDrawWarning: invalidDrawWarningReducer,
     isAOISet: exportSetAOIReducer,
     form: reduxFormReducer,
-    auth: auth
+    user: userReducer,
+    routing: routerReducer,
 })
 
 export default rootReducer;

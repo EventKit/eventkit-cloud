@@ -1,3 +1,4 @@
+import { initialState as userInitialState } from './userReducer'
 
 export default {
     jobs: [],
@@ -43,4 +44,5 @@ export default {
         geonames: [],
         error: null,
     },
+    user: userInitialState
 }
