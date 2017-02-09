@@ -48,6 +48,11 @@
         margin: 0 auto;
         overflow: hidden;
     }
+    .topWrapper {
+        width: 100% !important;
+        background-color: #161e2e;
+        paddingTop: 5px;
+    }
 }
 
 @media only screen and (max-width: 500px) {
@@ -63,6 +68,11 @@
         width: 100% !important;
         margin: 0 auto;
         overflow: hidden;
+    }
+    .topWrapper {
+        width: 100% !important;
+        background-color: #161e2e;
+        paddingTop: 5px;
     }
 
 }
@@ -88,7 +98,13 @@
     float: left;
 }
 
+.topWrapper {
+    width: 50%;
+    background-color: #161e2e;
+    paddingTop: 5px;
+}
 .stepperWrapper > div {
+    display: inline-flex!important;
     background-color: #161e2e;
     height: 35px;
     color: white;

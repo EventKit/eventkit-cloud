@@ -9,7 +9,7 @@ import SearchAOIToolbar from './SearchAOIToolbar.js';
 import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
 import DropZone from './DropZone.js';
-import {updateMode, updateBbox, updateGeojson, unsetAOI} from '../actions/exportsActions.js';
+import {updateMode, updateBbox, updateGeojson} from '../actions/exportsActions.js';
 import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../actions/drawToolBarActions.js';
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 
@@ -64,7 +64,6 @@ export class ExportAOI extends Component {
 
     handleCancel(sender) {
         this.props.hideInvalidDrawWarning();
-        this.props.unsetAOI();
         if(this.props.mode != MODE_NORMAL) {
             this.props.updateMode(MODE_NORMAL);
         }
@@ -77,7 +76,6 @@ export class ExportAOI extends Component {
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
         this._deactivateDrawInteraction();
-        this.props.unsetAOI();
     }
 
     handleZoomToSelection(bbox) {
@@ -315,9 +313,6 @@ function mapDispatchToProps(dispatch) {
         },
         updateGeojson: (geojson) => {
             dispatch(updateGeojson(geojson));
-        },
-        unsetAOI: () => {
-            dispatch(unsetAOI());
         },
     }
 }

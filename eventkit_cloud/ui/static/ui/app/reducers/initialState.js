@@ -4,10 +4,9 @@ export default {
     bbox: [],
     geojson: {},
     mode: 'DRAW_NORMAL',
-    isAOISet: false,
     showInvalidDrawWarning: false,
     showImportModal: false,
-    searchBbox : [],
+    searchBbox: [],
     zoomToSelection: {
         disabled: true,
         click: false

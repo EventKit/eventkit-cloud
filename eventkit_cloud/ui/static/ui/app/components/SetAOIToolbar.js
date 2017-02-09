@@ -5,7 +5,6 @@ import ol from 'openlayers'
 import styles from './SetAOIToolbar.css'
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
 import {clearSearchBbox} from '../actions/searchToolbarActions';
-import SetAOIButton from './SetAOIButton';
 
 export const NO_SELECTION_TEXT = 'No AOI Set';
 export const NO_SELECTION_HEADER = '';
