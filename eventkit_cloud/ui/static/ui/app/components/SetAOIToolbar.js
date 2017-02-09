@@ -9,7 +9,7 @@ import SetAOIButton from './SetAOIButton';
 
 export const NO_SELECTION_TEXT = 'No AOI Set';
 export const NO_SELECTION_HEADER = '';
-export const NO_SELECTION_ICON = 'do_not_disturb';
+export const NO_SELECTION_ICON = 'warning';
 export const POLYGON_ICON = 'sentiment_neutral';
 export const POINT_ICON = 'room';
 export const CARDINAL_DIRECTIONS = "(West, South, East, North)";
@@ -26,7 +26,7 @@ export class SetAOIToolbar extends Component {
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
         this.updateResetMapState = this.updateResetMapState.bind(this);
         this.dispatchResetMap = this.dispatchResetMap.bind(this);
-        this.handleAOISet = this.handleAOISet.bind(this);
+        // this.handleAOISet = this.handleAOISet.bind(this);
 
         this.state = {
             areaSelectedText: NO_SELECTION_TEXT,
@@ -38,7 +38,7 @@ export class SetAOIToolbar extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        // Check if zoomToSelction state has been changed
+        // Check if zoomToSelection state has been changed
         if (nextProps.zoomToSelection.disabled != this.props.zoomToSelection.disabled) {
             this.updateZoomToSelectionState(nextProps.zoomToSelection.disabled);
         }
@@ -47,21 +47,18 @@ export class SetAOIToolbar extends Component {
         if (nextProps.resetMap.disabled != this.props.zoomToSelection.disabled) {
             this.updateResetMapState(nextProps.resetMap.disabled);
         }
-        if (nextProps.isAOISet != this.props.isAOISet) {
-            this.handleAOISet(nextProps.isAOISet, nextProps.bbox, nextProps.geojson);
-        }
-    }
 
-    handleAOISet(isSet, bbox, geojson) {
-        if(isSet) {
-            this.updateBboxText(bbox);
-            this.props.toggleZoomToSelection(false);
-            this.props.toggleResetMap(false);
-        }
-        else {
-            this.updateBboxText([]);
-            this.props.toggleZoomToSelection(true);
-            this.props.toggleResetMap(true);
+        if(!isEqual(nextProps.geojson, this.props.geojson)) {
+            if(!isEqual(nextProps.geojson, {})) {
+                this.updateBboxText(nextProps.bbox);
+                this.props.toggleZoomToSelection(false);
+                this.props.toggleResetMap(false);
+            }
+            else {
+                this.updateBboxText([]);
+                this.props.toggleZoomToSelection(true);
+                this.props.toggleResetMap(true);
+            }
         }
     }
 
@@ -115,7 +112,7 @@ export class SetAOIToolbar extends Component {
         if(!this.props.resetMap.disabled) {
             this.props.clickResetMap();
         }
-    }
+    } 
 
     render() {
 
@@ -129,7 +126,7 @@ export class SetAOIToolbar extends Component {
         return (
             <div>
             <div className={styles.setAOIContainer}>
-                <SetAOIButton />
+                {/*<SetAOIButton />*/}
                 <div className={styles.topBar}>
                     <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
                     <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION</button>
@@ -148,13 +145,23 @@ export class SetAOIToolbar extends Component {
     }
 }
 
+SetAOIToolbar.propTypes = {
+    bbox: React.PropTypes.arrayOf(React.PropTypes.number),
+    geojson: React.PropTypes.object,
+    zoomToSelection: React.PropTypes.object,
+    resetMap: React.PropTypes.object,
+    toggleZoomToSelection: React.PropTypes.func,
+    clickZoomToSelection: React.PropTypes.func,
+    toggleResetMap: React.PropTypes.func,
+    clickResetMap: React.PropTypes.func,
+}
+
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
         geojson: state.geojson,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
-        isAOISet: state.isAOISet,
     }
 }
 

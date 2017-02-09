@@ -10,7 +10,7 @@ import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
 import DropZone from './DropZone.js';
 import {updateMode, updateBbox, updateGeojson, unsetAOI} from '../actions/exportsActions.js';
-import {toggleDrawSet, hideInvalidDrawWarning, showInvalidDrawWarning, clickDrawSet} from '../actions/drawToolBarActions.js';
+import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../actions/drawToolBarActions.js';
 import {clearSearchBbox} from '../actions/searchToolbarActions';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -39,6 +39,7 @@ export class ExportAOI extends Component {
     componentDidMount() {
         this._initializeOpenLayers();
         this._updateInteractions();
+        this.props.updateGeojson({});
     }
 
     componentWillReceiveProps(nextProps) {
@@ -105,7 +106,6 @@ export class ExportAOI extends Component {
         this.props.updateBbox(bbox);
         this.props.updateGeojson(geojson);
         this.handleZoomToSelection(bbox);
-        this.props.clickDrawSet();
     }
 
     handleGeoJSONUpload(geom) {
@@ -139,17 +139,13 @@ export class ExportAOI extends Component {
     _activateDrawInteraction(mode) {
         // this._clearDraw()
         if(mode == MODE_DRAW_BBOX) {
-            // this.props.unsetAOI();
             // this.props.updateGeojson({});
-            // this.props.toggleDrawSet(true);
             // this.props.hideInvalidDrawWarning();
             this._drawFreeInteraction.setActive(false);
             this._drawBoxInteraction.setActive(true);
         }
         else if(mode == MODE_DRAW_FREE) {
-            // this.props.unsetAOI();
             // this.props.updateGeojson({});
-            // this.props.toggleDrawSet(true);
             this._drawBoxInteraction.setActive(false);
             this._drawFreeInteraction.setActive(true);
         }
@@ -294,7 +290,6 @@ function mapStateToProps(state) {
         bbox: state.bbox,
         searchBbox: state.searchBbox,
         mode: state.mode,
-        drawSet: state.drawSet,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
         importGeom: state.importGeom,
@@ -303,9 +298,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleDrawSet: (isDisabled) => {
-            dispatch(toggleDrawSet(isDisabled));
-        },
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
         },
@@ -326,9 +318,6 @@ function mapDispatchToProps(dispatch) {
         },
         unsetAOI: () => {
             dispatch(unsetAOI());
-        },
-        clickDrawSet: () => {
-            dispatch(clickDrawSet());
         },
     }
 }

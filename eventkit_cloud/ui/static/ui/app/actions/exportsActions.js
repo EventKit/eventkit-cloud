@@ -40,18 +40,5 @@ export function loadExports() {
     };
 }
 
-export function setAOI() {
-    return {
-        type: types.SET_AOI,
-        isAOISet: true
-    }
-}
-
-export function unsetAOI() {
-    return {
-        type: types.UNSET_AOI,
-        isAOISet: false,
-    }
-}
 
 

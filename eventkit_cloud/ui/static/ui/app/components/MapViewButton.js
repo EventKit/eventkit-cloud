@@ -50,12 +50,12 @@ export class MapViewButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>crop_original</i>
+                        <i className={"material-icons " + styles.defaultButton}>settings_overscan</i>
                         <div className={styles.buttonName}>CURRENT VIEW</div>
                     </div>
                     
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>crop_original</i>
+                        <i className={"material-icons " + styles.inactiveButton}>settings_overscan</i>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>CURRENT VIEW</div>
                     </div>
 

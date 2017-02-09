@@ -55,20 +55,6 @@ describe('export actions', () => {
             mode: mode
         })
     })
-
-    it('setAOI should return true', () => {
-        expect(actions.setAOI()).toEqual({
-            type: 'SET_AOI',
-            isAOISet: true
-        })
-    })
-
-    it('unsetAOI should return false', () => {
-        expect(actions.unsetAOI()).toEqual({
-            type: 'UNSET_AOI',
-            isAOISet: false
-        })
-    })
 })
 
 describe('async export actions', () => {

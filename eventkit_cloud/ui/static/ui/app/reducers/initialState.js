@@ -8,10 +8,6 @@ export default {
     showInvalidDrawWarning: false,
     showImportModal: false,
     searchBbox : [],
-    drawSet: {
-        disabled: true,
-        click: false,
-    },
     zoomToSelection: {
         disabled: true,
         click: false
