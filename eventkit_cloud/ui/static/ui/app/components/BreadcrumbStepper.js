@@ -72,8 +72,8 @@ class BreadcrumbStepper extends React.Component {
         const {finished, stepIndex} = this.state;
 
         return (
-            <div>
-            <div style={{width: '100%', backgroundColor: '#161e2e', paddingTop: '5px'}}>
+            <div style={{backgroundColor: '#161e2e'}}>
+            <div className={style.topWrapper}>
             <div className={style.stepperImageWrapper}>
                 <div className={style.stepperWrapper}>
                     <Stepper activeStep={stepIndex}>
