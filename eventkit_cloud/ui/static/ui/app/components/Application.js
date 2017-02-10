@@ -16,10 +16,18 @@ injectTapEventPlugin();
 class Application extends Component {
     constructor(props) {
         super(props);
-        this.state = {open: true};
-        this.state.drawerOpen = true;
+        this.state = {open: true}
+        this.state.drawerOpen = true
+
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
+    }
+
+    componentDidMount() {
+        console.log("Mount "+window.innerWidth)
+        if (window.innerWidth <= 600){
+            this.setState({drawerOpen: false});
+        }
     }
 
     handleToggle() {
@@ -29,6 +37,7 @@ class Application extends Component {
     handleClose() { this.setState({drawerOpen: false}); }
 
     render() {
+
         const contentStyle = {  transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)' };
 
         if (this.state.drawerOpen) {
@@ -72,9 +81,10 @@ class Application extends Component {
                     <ClassificationBanner />
                     <header className="header">
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
-                        <Drawer containerStyle={styles.drawer}
+                        <Drawer className={css.drawer}
+                                containerStyle={styles.drawer}
                                 overlayStyle={styles.drawer}
-                                docked={true}
+                                docked={false}
                                 open={this.state.drawerOpen}
                                 onRequestChange={(open) => this.setState({open})}>
                             <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU</div><div style={{display:'inline-block'}}><a href="#"><i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></a></div></span></Subheader>
@@ -86,7 +96,7 @@ class Application extends Component {
                         </Drawer>
 
                     </header>
-                    <div  style={contentStyle}>
+                    <div style={contentStyle} className={css.contentStyle}>
                     {this.props.children}
                     </div>
                 </div>
