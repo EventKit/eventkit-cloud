@@ -1,17 +1,14 @@
-import 'openlayers/dist/ol.css'
-import React, {Component} from 'react'
-import {connect} from 'react-redux'
-import ol from 'openlayers'
-import styles from './SetAOIToolbar.css'
-import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js'
-import {clearSearchBbox} from '../actions/searchToolbarActions';
+import 'openlayers/dist/ol.css';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import ol from 'openlayers';
+import styles from './SetAOIToolbar.css';
+import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js';
+import {PopupBox} from './PopupBox.js';
 
-export const NO_SELECTION_TEXT = 'No AOI Set';
-export const NO_SELECTION_HEADER = '';
 export const NO_SELECTION_ICON = 'warning';
-export const POLYGON_ICON = 'sentiment_neutral';
+export const POLYGON_ICON = 'crop_square';
 export const POINT_ICON = 'room';
-export const CARDINAL_DIRECTIONS = "(West, South, East, North)";
 
 const isEqual = require('lodash/isEqual');
 
@@ -19,20 +16,20 @@ export class SetAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
-
-        this.updateBboxText = this.updateBboxText.bind(this);
         this.updateZoomToSelectionState = this.updateZoomToSelectionState.bind(this);
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
         this.updateResetMapState = this.updateResetMapState.bind(this);
         this.dispatchResetMap = this.dispatchResetMap.bind(this);
-        // this.handleAOISet = this.handleAOISet.bind(this);
+        this.handleAoiInfo = this.handleAoiInfo.bind(this);
+        this.handleInfoClick = this.handleInfoClick.bind(this);
 
         this.state = {
-            areaSelectedText: NO_SELECTION_TEXT,
-            areaSelectedHeading: NO_SELECTION_HEADER,
+            aoiDescription: 'No AOI Set',
+            aoiTitle: '',
             zoomToSelectionClass: styles.inactiveButton,
             resetMapClass: styles.inactiveButton,
             geometryIcon: NO_SELECTION_ICON,
+            showInfoPopup: false,
         }
     }
 
@@ -47,36 +44,36 @@ export class SetAOIToolbar extends Component {
             this.updateResetMapState(nextProps.resetMap.disabled);
         }
 
-        if(!isEqual(nextProps.geojson, this.props.geojson)) {
-            if(!isEqual(nextProps.geojson, {})) {
-                this.updateBboxText(nextProps.bbox);
-                this.props.toggleZoomToSelection(false);
-                this.props.toggleResetMap(false);
-            }
-            else {
-                this.updateBboxText([]);
-                this.props.toggleZoomToSelection(true);
-                this.props.toggleResetMap(true);
-            }
+        if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
+            this.handleAoiInfo(nextProps.aoiInfo);
         }
     }
 
-    updateBboxText(bbox) {
-        // If a valid bbox has been set display it in the toolbar
-        if (bbox.length != 0 && bbox != null) {
-            this.setState({areaSelectedText:
-                CARDINAL_DIRECTIONS + `: ${bbox[0]}, ${bbox[1]}, ${bbox[2]}, ${bbox[3]}`});
+    handleAoiInfo(aoiInfo) {
+        if(!isEqual(aoiInfo.geojson, {})) {
             this.props.toggleZoomToSelection(false);
             this.props.toggleResetMap(false);
-        }
-        // If no valid bbox set reset text to no selection
-        else {
-            if(this.state.areaSelectedText != NO_SELECTION_TEXT) {
-                this.setState({areaSelectedText: NO_SELECTION_TEXT});
+            if(aoiInfo.geomType == 'Point') {
+            this.setState({geometryIcon: POINT_ICON});
             }
+            else if(aoiInfo.geomType == 'Polygon') {
+                this.setState({geometryIcon: POLYGON_ICON});
+            }
+            this.setState({aoiTitle: aoiInfo.title});
+            this.setState({aoiDescription: aoiInfo.description});    
+        }
+        else {
             this.props.toggleZoomToSelection(true);
             this.props.toggleResetMap(true);
+            this.setState({geometryIcon: NO_SELECTION_ICON});
+            this.setState({aoiTitle: ''});
+            this.setState({aoiDescription: 'No AOI Set'});    
         }
+    }
+
+    handleInfoClick() {
+        console.log('Ive been clicked');
+        this.setState({showInfoPopup: true})
     }
 
     // Change the appearance of the button to either active or inactive
@@ -115,30 +112,39 @@ export class SetAOIToolbar extends Component {
 
     render() {
 
-        const toolbarStyles = {
-            toolbar: {
-                backgroundColor: '#fff',
-
-            },
-        }
-
         return (
             <div>
-            <div className={styles.setAOIContainer}>
-                {/*<SetAOIButton />*/}
-                <div className={styles.topBar}>
-                    <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
-                    <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION</button>
-                    <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={"fa fa-refresh"}></i> RESET VIEW</button>
-                </div>
-                <div className={styles.detailBar}>
-                    <i className={"material-icons " + styles.geometryIcon}>{this.state.geometryIcon}</i>
-                    <div className={styles.detailText}>
-                        <div className={styles.areaSelectedHeading}><strong>{this.state.areaSelectedHeading}</strong></div>
-                        <div className={styles.areaSelectedText}>{this.state.areaSelectedText}</div>
+                <div className={styles.setAOIContainer}>
+                    <div className={styles.topBar}>
+                        <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
+                        <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION</button>
+                        <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={"fa fa-refresh"}></i> RESET VIEW</button>
+                    </div>
+                    <div className={styles.detailBar}>
+                        <i 
+                            style={this.state.geometryIcon == NO_SELECTION_ICON ? {color: '#f4d225'}: {color: '#4598bf'}} 
+                            className={"material-icons " + styles.geometryIcon}>
+                                {this.state.geometryIcon}
+                        </i>
+                        <div className={styles.detailText}>
+                            <div className={styles.aoiTitle}>
+                                <strong>{this.state.aoiTitle}</strong>
+                                {this.state.geometryIcon != NO_SELECTION_ICON ? 
+                                    <button className={styles.aoiInfo} onClick={this.handleInfoClick}>
+                                        <i className={"material-icons"} style={{fontSize: '15px', color: '#4598bf'}}>info</i>
+                                    </button>
+                                : null}
+                            </div>
+                            <div className={styles.aoiDescription}>
+                                {this.state.aoiDescription}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+                <PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
+                    <p> AOI Geojson </p>
+                    <div style={{overflowY: 'scroll', maxHeight: '430px'}}>{JSON.stringify(this.props.aoiInfo.geojson, undefined, 2)}</div>
+                </PopupBox>
             </div>
         )
     }
@@ -146,7 +152,7 @@ export class SetAOIToolbar extends Component {
 
 SetAOIToolbar.propTypes = {
     bbox: React.PropTypes.arrayOf(React.PropTypes.number),
-    geojson: React.PropTypes.object,
+    aoiInfo: React.PropTypes.object,
     zoomToSelection: React.PropTypes.object,
     resetMap: React.PropTypes.object,
     toggleZoomToSelection: React.PropTypes.func,
@@ -158,7 +164,7 @@ SetAOIToolbar.propTypes = {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
-        geojson: state.geojson,
+        aoiInfo: state.aoiInfo,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
     }

@@ -164,6 +164,7 @@
 
 .backButtonDiv > button:disabled > div > i {
     color: #e2e2e2 !important;
+    opacity: .3 !important;
 }
 
 .backButtonDiv > button > div > div {

@@ -25,8 +25,8 @@ class BreadcrumbStepper extends React.Component {
     };
 
     componentWillReceiveProps(nextProps) {
-        if(!isEqual(nextProps.geojson, this.props.geojson)) {
-            if(!isEqual(nextProps.geojson, {})) {
+        if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
+            if(!isEqual(nextProps.aoiInfo.geojson, {})) {
                 //make the stepper button clickable
                 this.setState({nextDisabled: false});
             }
@@ -143,13 +143,13 @@ class BreadcrumbStepper extends React.Component {
 
 BreadcrumbStepper.propTypes = {
     bbox: React.PropTypes.arrayOf(React.PropTypes.number),
-    geojson: React.PropTypes.object,
+    aoiInfo: React.PropTypes.object,
 };
 
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
-        geojson: state.geojson,
+        aoiInfo: state.aoiInfo,
     };
 }
 

@@ -26,15 +26,3 @@ export function getGeonames(query) {
     }
 }
 
-export function drawSearchBbox(searchBbox) {
-    return {
-        type: types.DRAW_SEARCH_BBOX,
-        searchBbox: searchBbox,
-    }
-}
-
-export function clearSearchBbox() {
-    return {
-        type: types.CLEAR_SEARCH_BBOX,
-    }
-}

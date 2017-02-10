@@ -29,10 +29,22 @@ export function exportBboxReducer(state = initialState.bbox, action) {
     }
 }
 
-export function exportGeojsonReducer(state = initialState.geojson, action) {
+export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
-        case types.UPDATE_GEOJSON:
-            return action.geojson;
+        case types.UPDATE_AOI_INFO:
+            return {
+                geojson: action.geojson,
+                geomType: action.geomType,
+                title: action.title,
+                description: action.description,
+            };
+        case types.CLEAR_AOI_INFO:
+            return {
+                geojson: {},
+                geomType: null,
+                title: null,
+                description: null,
+            };
         default:
             return state;
     }

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from './DropZone.css';
 import {setImportButtonSelected, setAllButtonsDefault, setImportModalState, processGeoJSONFile, resetGeoJSONFile} from '../actions/mapToolActions';
-import { Modal } from 'react-bootstrap';
+import {PopupBox} from './PopupBox.js';
 const Dropzone = require('react-dropzone');
 
 export class DropZoneDialog extends Component {
@@ -33,14 +33,11 @@ export class DropZoneDialog extends Component {
     render() {
 
         return (
-            <div>
-                {this.props.showImportModal ? 
-                <div className={styles.dropZoneContainer}>
-                    <div className={styles.dropZoneTitlebar}>
-                        <span className={styles.dropZoneTitle}><strong>Import AOI</strong></span>
-                        <button onClick={this.handleClear} className={styles.dropZoneClear}><i className={"material-icons"}>clear</i></button>
-                    </div>
-                    <Dropzone onDrop={this.onDrop} 
+            <PopupBox 
+                show={this.props.showImportModal}
+                title="Import AOI"
+                onExit={this.handleClear}>
+                <Dropzone onDrop={this.onDrop} 
                             multiple={false} 
                             className={styles.dropZone}
                             ref={(node) => {this.dropzone = node;}} 
@@ -51,9 +48,7 @@ export class DropZoneDialog extends Component {
                         <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><i className={"material-icons"}>file_upload</i>Select A File</button>
                         </div>
                     </Dropzone>
-                </div>
-                : null}
-            </div>
+            </PopupBox>
         )
     }
 }

@@ -3,48 +3,48 @@ import * as reducers from './exportsReducer'
 describe('exportJobs reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportJobsReducer(undefined, {})).toEqual([])
-    })
+    });
 
     it('should handle LOAD_JOBS_SUCCESS', () => {
         expect(reducers.exportJobsReducer(
             [],
             {type: 'LOAD_JOBS_SUCCESS', jobs: [{ 'jobs1': {}, 'job2': {} }]}
         )).toEqual([{ 'jobs1': {}, 'job2': {} }])
-    })
-})
+    });
+});
 
 describe('exportMode reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportModeReducer(undefined, {})).toEqual('DRAW_NORMAL')
-    })
+    });
 
     it('should handle SET_MODE', () => {
         expect(reducers.exportModeReducer(
             'DRAW_NORMAL',
             {type: 'SET_MODE', mode: 'DRAW_BBOX'}
         )).toEqual('DRAW_BBOX')
-    })
-})
+    });
+});
 
 describe('exportBboxReducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportBboxReducer(undefined, {})).toEqual([])
-    })
+    });
 
     it('should handle UPDATE_BBOX', () => {
         expect(reducers.exportBboxReducer(
             [],
             {type: 'UPDATE_BBOX', bbox: [-1,-1,1,1]}
         )).toEqual([-1,-1,1,1])
-    })
-})
+    });
+});
 
-describe('exportGeojson reducer', () => {
+describe('exportAoiInfo reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.exportGeojsonReducer(undefined, {})).toEqual({})
-    })
+        expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null})
+    });
 
-    it('should handle UPDATE_GEOJSON', () => {
+    it('should handle UPDATE_AOI_INFO', () => {
         let geojson ={ "type": "FeatureCollection",
                         "features": [
                             { "type": "Feature",
@@ -58,29 +58,9 @@ describe('exportGeojson reducer', () => {
                             }
                         ]
                     }
-        expect(reducers.exportGeojsonReducer(
+        expect(reducers.exportAoiInfoReducer(
             {},
-            {type: 'UPDATE_GEOJSON', geojson: geojson}
-        )).toEqual(geojson)
-    })
-})
-
-describe('exportSetAOI reducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.exportSetAOIReducer(undefined, {})).toEqual(false)
-    })
-
-    it('should handle SET_AOI', () => {
-        expect(reducers.exportSetAOIReducer(
-            false,
-            {type: 'SET_AOI'}
-        )).toEqual(true)
-    })
-
-    it('should handle UNSET_AOI', () => {
-        expect(reducers.exportSetAOIReducer(
-            true,
-            {type: 'UNSET_AOI'}
-        )).toEqual(false)
-    })
-})
+            {type: 'UPDATE_AOI_INFO', geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'}
+        )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'});
+    });
+});

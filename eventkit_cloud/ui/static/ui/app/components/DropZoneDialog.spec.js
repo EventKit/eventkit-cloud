@@ -3,6 +3,7 @@ import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
+import {PopupBox} from './PopupBox.js';
 const Dropzone = require('react-dropzone');
 
 describe('DropZoneDialog component', () => {
@@ -25,11 +26,11 @@ describe('DropZoneDialog component', () => {
         let props = getProps();
         props.showImportModal = true;
         const wrapper = mount(<DropZoneDialog {...props}/>);
-        expect(wrapper.find('.dropZoneContainer')).to.have.length(1);
-        expect(wrapper.find('.dropZoneTitlebar')).to.have.length(1);
-        expect(wrapper.find('.dropZoneTitle')).to.have.length(1);
-        expect(wrapper.find('.dropZoneTitle').text()).to.equal('Import AOI');
-        expect(wrapper.find('.dropZoneClear')).to.have.length(1);
+        expect(wrapper.find('.container')).to.have.length(1);
+        expect(wrapper.find('.titlebar')).to.have.length(1);
+        expect(wrapper.find('.title')).to.have.length(1);
+        expect(wrapper.find('.title').text()).to.equal('Import AOI');
+        expect(wrapper.find('.exit')).to.have.length(1);
         expect(wrapper.find('i').first().text()).to.equal('clear');
     });
 
@@ -37,7 +38,7 @@ describe('DropZoneDialog component', () => {
         let props = getProps();
         props.showImportModal = true;
         const wrapper = mount(<DropZoneDialog {...props}/>);
-        expect(wrapper.find('.dropZoneContainer')).to.have.length(1);
+        expect(wrapper.find('.container')).to.have.length(1);
         expect(wrapper.find(Dropzone)).to.have.length(1);
         expect(wrapper.find('.dropZoneText')).length(1);
         expect(wrapper.find('.dropZoneText').find('span')).to.have.length(1);
@@ -61,7 +62,7 @@ describe('DropZoneDialog component', () => {
         props.setImportModalState = sinon.spy();
         props.setAllButtonsDefault = sinon.spy();
         const wrapper = mount(<DropZoneDialog {...props}/>);
-        wrapper.find('.dropZoneTitlebar').find('button').simulate('click');
+        wrapper.find('.titlebar').find('button').simulate('click');
         expect(props.setAllButtonsDefault.calledOnce).to.equal(true);
         expect(props.setImportModalState.calledOnce).to.equal(true);
     });

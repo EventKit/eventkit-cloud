@@ -1,10 +1,10 @@
 
 import {combineReducers} from 'redux';
 import { reducer as reduxFormReducer } from 'redux-form'
-import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportGeojsonReducer} from './exportsReducer';
+import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer} from './exportsReducer';
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
-import {getGeonamesReducer, searchBboxReducer} from './searchToolbarReducer.js';
+import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 
 const rootReducer = combineReducers({
@@ -12,8 +12,7 @@ const rootReducer = combineReducers({
     mode: exportModeReducer,
     jobs: exportJobsReducer,
     bbox: exportBboxReducer,
-    geojson: exportGeojsonReducer,
-    searchBbox: searchBboxReducer,
+    aoiInfo: exportAoiInfoReducer,
     zoomToSelection: zoomToSelectionReducer,
     resetMap: resetMapReducer,
     geonames: getGeonamesReducer,

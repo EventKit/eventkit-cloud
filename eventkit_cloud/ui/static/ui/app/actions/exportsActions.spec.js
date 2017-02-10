@@ -10,7 +10,7 @@ describe('export actions', () => {
     let jobs = {
         uuid: '12345',
         name: 'test-job-name'
-    }
+    };
     let bbox = [-180, -90, 180, 90];
 
     let geojson = { "type": "FeatureCollection",
@@ -32,38 +32,47 @@ describe('export actions', () => {
         expect(actions.loadJobsSuccess(jobs)).toEqual({
             type: 'LOAD_JOBS_SUCCESS',
             jobs: jobs,
-        })
-    })
+        });
+    });
 
     it('updateBbox should return passed in bbox', () => {
         expect(actions.updateBbox(bbox)).toEqual({
             type: 'UPDATE_BBOX',
             bbox: bbox
-        })
-    })
+        });
+    });
 
-    it('updateGeojson should return passed in json', () => {
-        expect(actions.updateGeojson(geojson)).toEqual({
-            type: 'UPDATE_GEOJSON',
-            geojson: geojson
-        })
-    })
+    it('updateAoiInfo should return passed in json', () => {
+        expect(actions.updateAoiInfo(geojson, 'Polygon', 'title', 'description')).toEqual({
+            type: 'UPDATE_AOI_INFO',
+            geojson: geojson,
+            geomType: 'Polygon',
+            title: 'title',
+            description: 'description',
+        });
+    });
+
+    it('clearAoiInfo should return type CLEAR_AOI_INFO and no action', () => {
+        expect(actions.clearAoiInfo()).toEqual({
+            type: 'CLEAR_AOI_INFO',
+        });
+    });
 
     it('updateMode should return the passed in mode string', () => {
         expect(actions.updateMode(mode)).toEqual({
             type: 'SET_MODE',
             mode: mode
-        })
-    })
-})
+        });
+    });
+});
 
 describe('async export actions', () => {
 
     afterEach(() => {
         nock.cleanAll();
-    })
+    });
 
-    let jobs = {'job1': {'somedata': [1]}, 'job2': {'moredata': [2]}}
+    let jobs = {'job1': {'somedata': [1]}, 'job2': {'moredata': [2]}};
     
     it('loadExports should create LOAD_JOBS_SUCCESS after fetching', () => {
         nock('http://http://cloud.eventkit.dev:8080/api/')
@@ -77,7 +86,7 @@ describe('async export actions', () => {
         return store.dispatch(actions.loadExports())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions)
-            })
-    })
+            });
+    });
     
-})
+});

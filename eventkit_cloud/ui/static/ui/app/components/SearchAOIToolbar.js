@@ -1,10 +1,10 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from './SearchAOIToolbar.css';
-import {Typeahead} from 'react-bootstrap-typeahead'; // ES2015
+import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead'; // ES2015
 import ExportsApi from '../api/exportsApi.js';
-import {getGeonames, drawSearchBbox} from '../actions/searchToolbarActions';
-import {clickDrawCancel} from '../actions/drawToolBarActions.js'
+import {getGeonames} from '../actions/searchToolbarActions';
+import {setAllButtonsDefault} from '../actions/mapToolActions';
 
 const debounce = require('lodash/debounce');
 
@@ -42,6 +42,8 @@ export class SearchAOIToolbar extends Component {
 
     handleFocus() {
         this.refs.typeahead.getInstance().clear();
+        this.props.handleCancel();
+        this.props.setAllButtonsDefault();
     }
 
     handleChange(e) {
@@ -61,9 +63,8 @@ export class SearchAOIToolbar extends Component {
     handleEnter(e) {
         this.setState({suggestions: []});
         if (e.length > 0) {
-            let bbox = e[0].bbox;
-            let formatted_bbox = [bbox.west, bbox.south, bbox.east, bbox.north]
-            this.props.drawSearchBbox(formatted_bbox);
+            console.log(e[0]);
+            this.props.handleSearch(e[0]);
             this.refs.typeahead.getInstance().blur();
         }
     }
@@ -82,19 +83,16 @@ export class SearchAOIToolbar extends Component {
                         placeholder={'Search admin boundary or location...'}
                         onInputChange={this.debouncer}
                         labelKey={'name'}
-                        ref="typeahead"
-                        renderMenuItemChildren={(props, option, idx) => {
-                            let returnStr = option.name;
-                            if (option.adminName1){
-                                returnStr = returnStr + ', ' + option.adminName1;
-                            }
-                            if (option.adminName2) {
-                                returnStr = returnStr + ', ' + option.adminName2;
-                            }
-                            if (option.countryName) {
-                                returnStr = returnStr + ', ' + option.countryName;
-                            }
-                            return returnStr
+                        renderMenu={(results, menuProps) => {
+                            return(
+                                <Menu {...menuProps}>
+                                    {results.map((result, index) => (
+                                        <MenuItem option={result} position={index}>
+                                            {result.name}
+                                        </MenuItem>))
+                                    }
+                                </Menu>
+                            )
                         }}
                     />
                 </div>
@@ -103,10 +101,17 @@ export class SearchAOIToolbar extends Component {
     }
 }
 
+SearchAOIToolbar.propTypes = {
+    geonames: React.PropTypes.object,
+    getGeonames: React.PropTypes.func,
+    handleSearch: React.PropTypes.func,
+    handleCancel: React.PropTypes.func,
+    setAllButtonsDefault: React.PropTypes.func,
+}
+
 function mapStateToProps(state) {
     return {
         geonames: state.geonames,
-        searchBbox: state.searchBbox,
     };
 }
 
@@ -115,8 +120,8 @@ function mapDispatchToProps(dispatch) {
         getGeonames: (query) => {
             dispatch(getGeonames(query));
         },
-        drawSearchBbox: (bbox) => {
-            dispatch(drawSearchBbox(bbox));
+        setAllButtonsDefault: () => {
+            dispatch(setAllButtonsDefault());
         },
     }
 }
