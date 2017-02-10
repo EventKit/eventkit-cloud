@@ -23,8 +23,7 @@ class Application extends Component {
         this.handleClose = this.handleClose.bind(this)
     }
 
-    componentDidMount() {
-        console.log("Mount "+window.innerWidth)
+    componentWillMount() {
         if (window.innerWidth <= 600){
             this.setState({drawerOpen: false});
         }
