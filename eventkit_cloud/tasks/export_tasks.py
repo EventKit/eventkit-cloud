@@ -272,12 +272,14 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
     Task to create styles for osm.
     """
     self.update_task_state(result=result, task_uid=task_uid)
+    input_gpkg = parse_result(result, 'geopackage')
 
     gpkg_file = '{0}-{1}-{2}.gpkg'.format(job_name,
                                           provider_slug,
                                           timezone.now().strftime('%Y%m%d'))
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
+
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
@@ -287,7 +289,7 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'bbox': bbox}))
-    return {'result': style_file}
+    return {'result': style_file, 'geopackage': input_gpkg}
 
 
 @app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
@@ -327,7 +329,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
         out = s2s.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': gpkg}
     except Exception as e:
         logger.error('Raised exception in shapefile export, %s', str(e))
         raise Exception(e)
@@ -345,7 +347,7 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
         out = s2k.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': gpkg}
     except Exception as e:
         logger.error('Raised exception in kml export, %s', str(e))
         raise Exception(e)
@@ -363,7 +365,7 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     try:
         s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
         out = s2g.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': gpkg}
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
         raise Exception(e)
