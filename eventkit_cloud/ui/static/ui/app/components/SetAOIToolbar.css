@@ -1,12 +1,12 @@
-@media screen and (min-width: 510px) {
+@media screen and (min-width: 531px) {
     .simpleButton {
-        font-size: .7em;
+        font-size: .9em;
     }
 }
 
-@media screen and (max-width: 509px) {
+@media screen and (max-width: 530px) {
     .simpleButton {
-        font-size: .5em;
+        font-size: .7em;
     }
 }
 
@@ -24,7 +24,7 @@
 
 .topBar {
     height: 25px;
-    width: calc(100% - 50px);
+    width: 100%;
     float: left;
     padding-top: 5px;
 }
@@ -36,24 +36,8 @@
 
 .detailBar {
     height: 45px;
-    width: calc(100% - 50px);
+    width: 100%;
     float: left;
-}
-
-.setButton {
-    height: 70px;
-    width: 50px;
-    background-color: limegreen;
-    float: right;
-    margin: 0px;
-    padding: 0px;
-    border: none;
-    color: #fff;
-    font-size: .8em;
-}
-
-.setButton:focus {
-    outline: none;
 }
 
 .forwardArrow {
@@ -68,6 +52,10 @@
     border: none;
     float: right;
     padding-right: 10px;
+}
+
+.simpleButton:focus {
+    outline: none;
 }
 
 .activeButton {
@@ -91,15 +79,23 @@
     height: 100%;
 }
 
-.areaSelectedText {
+.aoiDescription {
     padding-left: 6px;
     width: 100%;
     color: grey;
-    min-height: 16px;
+    height: 20px;
 }
 
-.areaSelectedHeading {
+.aoiTitle {
     padding-left: 6px;
     width: 100%;
-    min-height: 16px;
+    height: 20px;
+}
+
+.aoiInfo {
+    padding: 0px 5px 0px 5px;
+    border: none;
+    background-color: #fff;
+    height: 100%;
+    line-height: 100%;
 }

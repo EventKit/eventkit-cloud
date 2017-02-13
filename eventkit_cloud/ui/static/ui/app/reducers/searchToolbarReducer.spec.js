@@ -9,8 +9,8 @@ describe('getGeonames reducer', () => {
                 geonames: [],
                 error: null,
             }
-        )
-    })
+        );
+    });
 
     it('should handle FETCHING_GEONAMES', () => {
         expect(reducers.getGeonamesReducer( 
@@ -28,8 +28,8 @@ describe('getGeonames reducer', () => {
                 geonames: [],
                 error: null,
             }
-        )
-    })
+        );
+    });
 
     it('should handle RECEIVED_GEONAMES', () => {
         expect(reducers.getGeonamesReducer(
@@ -47,8 +47,8 @@ describe('getGeonames reducer', () => {
                 geonames: ['name1', 'name2'],
                 error: null,
             }
-        )
-    })
+        );
+    });
 
     it('should handle FETCH_GEONAMES_ERROR', () => {
         expect(reducers.getGeonamesReducer(
@@ -66,26 +66,6 @@ describe('getGeonames reducer', () => {
                 geonames: [],
                 error: 'Oh no I had an error',
             }
-        )
-    })
-})
-
-describe('searchBbox reducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.searchBboxReducer(undefined, {})).toEqual([])
-    })
-
-    it('should handle DRAW_SEARCH_BBOX', () => {
-        expect(reducers.searchBboxReducer(
-            [],
-            {type: 'DRAW_SEARCH_BBOX', searchBbox: [-1,-1,1,1]}
-        )).toEqual([-1,-1,1,1])
-    })
-
-    it('should handle CLEAR_SEARCH_BBOX', () => {
-        expect(reducers.searchBboxReducer(
-            [-1,-1,1,1],
-            {type: 'CLEAR_SEARCH_BBOX'}
-        )).toEqual([])
-    })
-})
+        );
+    });
+});

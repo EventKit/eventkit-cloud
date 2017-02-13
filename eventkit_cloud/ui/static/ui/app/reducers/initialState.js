@@ -2,16 +2,15 @@
 export default {
     jobs: [],
     bbox: [],
-    geojson: {},
+    aoiInfo: {
+        geojson: {},
+        geomType: null,
+        title: null,
+        description: null,
+    },
     mode: 'DRAW_NORMAL',
-    isAOISet: false,
     showInvalidDrawWarning: false,
     showImportModal: false,
-    searchBbox : [],
-    drawSet: {
-        disabled: true,
-        click: false,
-    },
     zoomToSelection: {
         disabled: true,
         click: false

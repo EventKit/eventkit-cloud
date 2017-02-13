@@ -14,7 +14,8 @@ describe('DrawAOIToolbar component', () => {
     it('should render a toolbar title and 4 sub components', () => {
         const props = {
             handleCancel: (sender) => {},
-            setMapView: () => {}
+            setMapView: () => {},
+            setAllButtonsDefault: sinon.spy(),
         }
         const store = fakeStore({});
         const wrapper = mount(<Provider store={store}><DrawAOIToolbar {...props}/></Provider>);
@@ -25,5 +26,6 @@ describe('DrawAOIToolbar component', () => {
         expect(wrapper.find(DrawFreeButton)).to.have.length(1);
         expect(wrapper.find(MapViewButton)).to.have.length(1);
         expect(wrapper.find(ImportButton)).to.have.length(1);
+        expect(props.setAllButtonsDefault.calledOnce).to.equal(true);
     });
 });

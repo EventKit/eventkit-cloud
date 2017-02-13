@@ -3,6 +3,7 @@ import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
+import {PopupBox} from './PopupBox';
 const Dropzone = require('react-dropzone');
 
 describe('DropZoneError component', () => {
@@ -33,11 +34,12 @@ describe('DropZoneError component', () => {
         let nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
-        expect(wrapper.find('.fileErrorContainer')).to.have.length(1);
-        expect(wrapper.find('.dropZoneTitlebar')).to.have.length(1);
-        expect(wrapper.find('.dropZoneTitle')).to.have.length(1);
+        expect(wrapper.find(PopupBox)).to.have.length(1);
+        expect(wrapper.find('.container')).to.have.length(1);
+        expect(wrapper.find('.titlebar')).to.have.length(1);
+        expect(wrapper.find('.title')).to.have.length(1);
         expect(wrapper.find('span').text()).to.equal('Error');
-        expect(wrapper.find('.fileErrorClear')).to.have.length(1);
+        expect(wrapper.find('.exit')).to.have.length(1);
         expect(wrapper.find('.fileError')).to.have.length(1);
         expect(wrapper.find('.fileError').text()).to.equal('An error has occured');
     });
@@ -47,12 +49,10 @@ describe('DropZoneError component', () => {
         const wrapper = mount(<DropZoneError {...props}/>);
         let nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
-        // nextProps.setAllButtonsDefault = sinon.spy();
         wrapper.instance().setState = sinon.spy();
         wrapper.setProps(nextProps);
         expect(wrapper.instance().setState
             .calledWith({showErrorMessage: true, errorMessage: nextProps.importGeom.error})).to.equal(true);
-        // expect(nextProps.setAllButtonsDefault.calledOnce).to.equal(true);
     });
 
     it('should handle button click', () => {

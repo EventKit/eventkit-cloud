@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from './DropZone.css';
 import {setAllButtonsDefault, resetGeoJSONFile} from '../actions/mapToolActions';
+import {PopupBox} from './PopupBox';
 
 export class DropZoneError extends Component {
 
@@ -31,19 +32,14 @@ export class DropZoneError extends Component {
     render() {
 
         return (
-            <div>
-                { this.state.showErrorMessage ?
-                <div className={styles.fileErrorContainer}>
-                    <div className={styles.dropZoneTitlebar}>
-                        <span className={styles.dropZoneTitle}><strong>Error</strong></span>
-                        <button onClick={this.handleErrorClear} className={styles.fileErrorClear}><i className={"material-icons"}>clear</i></button>
-                    </div>
-                    <div className={styles.fileError}>
-                        {this.state.errorMessage}
-                    </div>
+            <PopupBox
+                show={this.state.showErrorMessage}
+                title="Error"
+                onExit={this.handleErrorClear}>
+                <div className={styles.fileError}>
+                    {this.state.errorMessage}
                 </div>
-                : null}
-            </div>
+            </PopupBox>
         )
     }
 }

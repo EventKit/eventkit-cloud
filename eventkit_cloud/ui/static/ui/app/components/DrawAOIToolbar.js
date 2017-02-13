@@ -1,14 +1,21 @@
 import React, {Component} from 'react';
+import {connect} from 'react-redux';
 import styles from './DrawAOIToolbar.css';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
+import {setAllButtonsDefault} from '../actions/mapToolActions';
+
 
 export class DrawAOIToolbar extends Component {
 
     constructor(props) {
         super(props);
+    }
+
+    componentDidMount() {
+        this.props.setAllButtonsDefault();
     }
 
     render() {
@@ -27,7 +34,15 @@ export class DrawAOIToolbar extends Component {
     }
 }
 
-export default DrawAOIToolbar;
+function mapDispatchToProps(dispatch) {
+    return {
+        setAllButtonsDefault: () => {
+            dispatch(setAllButtonsDefault());
+        },
+    };
+}
 
-
-
+export default connect(
+    null,
+    mapDispatchToProps,
+)(DrawAOIToolbar);

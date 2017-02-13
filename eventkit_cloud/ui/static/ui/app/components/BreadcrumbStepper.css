@@ -131,4 +131,47 @@
     overflow: hidden;
 }
 
+.backButtonDiv {
+    margin-right: 12px;
+    vertical-align: middle;
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+.forwardButtonDiv {
+    margin-right: 12px;
+    vertical-align: middle;
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+.forwardButtonDiv > button:not([disabled]) {
+    background-color: #55ba63 !important;
+}
+
+.backButtonDiv > button {
+    background-color: #161e2e !important;
+    transition: none !important;
+}
+
+.backButtonDiv > button > div > div:hover {
+    background-color: #161e2e !important;
+}
+
+.backButtonDiv > button > div:focus {
+    background-color: #161e2e !important;
+}
+
+.backButtonDiv > button:disabled > div > i {
+    color: #e2e2e2 !important;
+    opacity: .3 !important;
+}
+
+.backButtonDiv > button > div > div {
+    transition: none !important;
+}
+
+.backButtonDiv > button:not([disabled]) > div > div > i {
+    color: #4598bf !important;
+}
 

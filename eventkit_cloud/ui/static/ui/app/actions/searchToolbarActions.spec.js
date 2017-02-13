@@ -6,23 +6,6 @@ import nock from 'nock'
 const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares)
 
-describe('searchToolbar actions', () => {
-    let searchBbox = [-180, -90, 180, 90];
-    
-    it('drawSearchBbox should return passed in bbox', () => {
-        expect(actions.drawSearchBbox(searchBbox)).toEqual({
-            type: 'DRAW_SEARCH_BBOX',
-            searchBbox: searchBbox
-        })
-    })
-
-    it('clearSearchBbox should only have a type', () => {
-        expect(actions.clearSearchBbox()).toEqual({
-            type: 'CLEAR_SEARCH_BBOX'
-        })
-    })
-})
-
 describe('async searchToolbar actions', () => {
     afterEach(() => {
         nock.cleanAll()

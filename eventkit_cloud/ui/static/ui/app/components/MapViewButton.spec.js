@@ -29,7 +29,7 @@ describe('MapViewButton component', () => {
         expect(wrapper.find('div')).to.have.length(2);
         const icon = wrapper.find('i')
         expect(icon).to.have.length(1);
-        expect(icon.text()).to.equal('crop_original')
+        expect(icon.text()).to.equal('settings_overscan')
         expect(icon.hasClass('material-icons')).to.equal(true);
         expect(icon.hasClass('defaultButton')).to.equal(true);    
     });
@@ -43,7 +43,7 @@ describe('MapViewButton component', () => {
         expect(wrapper.find('div')).to.have.length(2);
         const icon = wrapper.find('i')
         expect(icon).to.have.length(1);
-        expect(icon.text()).to.equal('crop_original')
+        expect(icon.text()).to.equal('settings_overscan')
         expect(icon.hasClass('material-icons')).to.equal(true);
         expect(icon.hasClass('inactiveButton')).to.equal(true);    
     });
