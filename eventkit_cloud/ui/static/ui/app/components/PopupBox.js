@@ -17,7 +17,9 @@ export class PopupBox extends Component {
                             <i className={"material-icons"}>clear</i>
                         </button>
                     </div>
-                    {this.props.children}
+                    <div className={styles.body}>
+                        {this.props.children}
+                    </div>
                     <div className={styles.footer}/>
                 </div>
                 : null}

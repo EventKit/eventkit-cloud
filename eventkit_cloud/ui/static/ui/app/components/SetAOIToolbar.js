@@ -21,7 +21,7 @@ export class SetAOIToolbar extends Component {
         this.updateResetMapState = this.updateResetMapState.bind(this);
         this.dispatchResetMap = this.dispatchResetMap.bind(this);
         this.handleAoiInfo = this.handleAoiInfo.bind(this);
-        this.handleInfoClick = this.handleInfoClick.bind(this);
+        // this.handleInfoClick = this.handleInfoClick.bind(this);
 
         this.state = {
             aoiDescription: 'No AOI Set',
@@ -71,10 +71,9 @@ export class SetAOIToolbar extends Component {
         }
     }
 
-    handleInfoClick() {
-        console.log('Ive been clicked');
-        this.setState({showInfoPopup: true})
-    }
+    // handleInfoClick() {
+    //     this.setState({showInfoPopup: true})
+    // }
 
     // Change the appearance of the button to either active or inactive
     updateZoomToSelectionState(disabled) {
@@ -104,36 +103,37 @@ export class SetAOIToolbar extends Component {
     }
 
     dispatchResetMap() {
-        //If the reset map butotn is active dispatch the click
+        //If the reset map buttn is active dispatch the click
         if(!this.props.resetMap.disabled) {
             this.props.clickResetMap();
         }
     } 
 
     render() {
-
         return (
             <div>
                 <div className={styles.setAOIContainer}>
                     <div className={styles.topBar}>
                         <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
-                        <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}><i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION</button>
-                        <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}><i className={"fa fa-refresh"}></i> RESET VIEW</button>
+                        <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}>
+                            <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
+                        </button>
+                        <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}>
+                            <i className={"fa fa-refresh"}></i> RESET VIEW
+                        </button>
                     </div>
                     <div className={styles.detailBar}>
-                        <i 
-                            style={this.state.geometryIcon == NO_SELECTION_ICON ? {color: '#f4d225'}: {color: '#4598bf'}} 
-                            className={"material-icons " + styles.geometryIcon}>
+                        <i className={"material-icons " + styles.geometryIcon}>
                                 {this.state.geometryIcon}
                         </i>
                         <div className={styles.detailText}>
                             <div className={styles.aoiTitle}>
                                 <strong>{this.state.aoiTitle}</strong>
-                                {this.state.geometryIcon != NO_SELECTION_ICON ? 
+                                {/*{this.state.geometryIcon != NO_SELECTION_ICON ? 
                                     <button className={styles.aoiInfo} onClick={this.handleInfoClick}>
                                         <i className={"material-icons"} style={{fontSize: '15px', color: '#4598bf'}}>info</i>
                                     </button>
-                                : null}
+                                : null}*/}
                             </div>
                             <div className={styles.aoiDescription}>
                                 {this.state.aoiDescription}
@@ -141,17 +141,16 @@ export class SetAOIToolbar extends Component {
                         </div>
                     </div>
                 </div>
-                <PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
+                {/*<PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
                     <p> AOI Geojson </p>
                     <div style={{overflowY: 'scroll', maxHeight: '430px'}}>{JSON.stringify(this.props.aoiInfo.geojson, undefined, 2)}</div>
-                </PopupBox>
+                </PopupBox>*/}
             </div>
         )
     }
 }
 
 SetAOIToolbar.propTypes = {
-    bbox: React.PropTypes.arrayOf(React.PropTypes.number),
     aoiInfo: React.PropTypes.object,
     zoomToSelection: React.PropTypes.object,
     resetMap: React.PropTypes.object,
@@ -163,7 +162,6 @@ SetAOIToolbar.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
         aoiInfo: state.aoiInfo,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,

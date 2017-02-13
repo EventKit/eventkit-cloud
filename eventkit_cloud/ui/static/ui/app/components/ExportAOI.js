@@ -112,7 +112,7 @@ export class ExportAOI extends Component {
         const bbox = serialize(geom.getExtent());
         const geojson = createGeoJSON(geom);
         this.props.updateBbox(bbox);
-        this.props.updateAoiInfo(geojson, 'Polygon', '', 'Custom Polygon - Import');
+        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Import');
 
 
     }
@@ -127,7 +127,7 @@ export class ExportAOI extends Component {
         const bbox = serialize(extent)
         this._drawLayer.getSource().addFeature(bboxFeature);
         this.props.updateBbox(bbox);
-        this.props.updateAoiInfo(geojson, 'Polygon', '', 'Custom Polygon - Map View');
+        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View');
     }
 
 
@@ -163,7 +163,7 @@ export class ExportAOI extends Component {
 
             if(isGeoJSONValid(geojson)) {
                 this.props.updateBbox(serialize(geometry.getExtent()));
-                this.props.updateAoiInfo(geojson, 'Polygon', '', 'Custom Polygon - Draw');
+                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
             }
             else {
                 this.props.showInvalidDrawWarning();
@@ -172,7 +172,7 @@ export class ExportAOI extends Component {
         else if (this.props.mode == MODE_DRAW_BBOX) {
             const bbox = serialize(geometry.getExtent());
             this.props.updateBbox(bbox);
-            this.props.updateAoiInfo(geojson, 'Polygon', '', 'Custom Polygon - Box');
+            this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
         }
         // exit drawing mode
         this.props.updateMode('MODE_NORMAL');
