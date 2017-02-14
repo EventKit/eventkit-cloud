@@ -18,6 +18,7 @@ services:
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
         - SITE_NAME
         - PYTHONWARNINGS=ignore
+        - DISABLE_SSL_VERIFICATION=True
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'

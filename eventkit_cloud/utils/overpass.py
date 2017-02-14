@@ -45,6 +45,7 @@ class Overpass(object):
         self.filters = filters
         self.debug = debug
         self.task_uid = task_uid
+        self.verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
         if url:
             self.url = url
         if bbox:
@@ -87,7 +88,7 @@ class Overpass(object):
         if self.debug:
             print 'Query started at: %s' % datetime.now()
         try:
-            req = requests.post(self.url, data=q, stream=True)
+            req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
             update_progress(self.task_uid, progress=50)
             try:
