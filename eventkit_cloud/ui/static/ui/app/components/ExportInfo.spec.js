@@ -1,10 +1,9 @@
-import ExportInfo from './ExportInfo';
-import React from 'react';
-import {expect} from 'chai';
-import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import {fakeStore} from '../__mocks__/fakeStore';
-import { Provider } from 'react-redux';
+import ExportInfo from './ExportInfo'
+import React from 'react'
+import {expect} from 'chai'
+import {mount, shallow} from 'enzyme'
+import {fakeStore} from '../__mocks__/fakeStore'
+import { Provider } from 'react-redux'
 
 describe('ExportInfo component', () => {
     it('should render a form', () => {
