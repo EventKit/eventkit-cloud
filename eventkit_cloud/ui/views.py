@@ -72,19 +72,6 @@ def view_export(request, uuid=None):  # NOQA
     return render_to_response('ui/detail.html', context, RequestContext(request))
 
 
-def auth(request):
-    """Logs out user"""
-    auth_logout(request)
-    username = request.POST.get('username')
-    password = request.POST.get('password')
-    user = authenticate(username=username, password=password)
-    if user is not None:
-        login(request, user)
-        return HttpResponse(status=200)
-    else:
-        return HttpResponse(status=401)
-
-
 def user(request):
     if not request.user.is_authenticated():
         return HttpResponse(status=401)
@@ -94,6 +81,19 @@ def user(request):
                      'last_name': request.user.last_name,
                      'email': request.user.email}
         return HttpResponse(json.dumps(user_data), status=200, content_type="application/json")
+
+
+def auth(request):
+    """Logs out user"""
+    auth_logout(request)
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user_data = authenticate(username=username, password=password)
+    if user_data is not None:
+        login(request, user_data)
+        return user(request)
+    else:
+        return HttpResponse(status=401)
 
 
 def logout(request):

@@ -5,18 +5,11 @@ import rootReducer from '../reducers/rootReducer'
 import { browserHistory } from 'react-router'
 import { routerMiddleware } from 'react-router-redux'
 
-// const logger = createLogger();
+const logger = createLogger();
 
 const baseHistory = browserHistory
 const routingMiddleware = routerMiddleware(baseHistory)
 
-
-const logger = store => next => action => {
-  console.log('dispatching', action)
-  let result = next(action)
-  console.log('next state', store.getState())
-  return result
-}
 
 const crashReporter = store => next => action => {
   try {
@@ -33,10 +26,12 @@ const crashReporter = store => next => action => {
   }
 }
 
+
 export default () => {
     return createStore(
         rootReducer,
         applyMiddleware(thunkMiddleware, logger, crashReporter, routingMiddleware)
    );
 }
+
 

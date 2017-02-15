@@ -8,24 +8,28 @@ export const logout = data => dispatch => {
     axios({
         url: '/logout',
         method: 'get',
-    }).catch((error) => {
+    }).then((response) =>{
+        dispatch({
+            type: actions.USER_LOGGED_OUT,
+        })}
+    ).catch((error) => {
         console.log(error);
-    });
-    dispatch({
-        type: actions.USER_LOGGED_OUT,
     });
 }
 
-export const checkLogin = (response=[]) => dispatch => {
-    console.log("GETTING USER");
-    console.log(response)
+export const checkLogin = () => dispatch => {
+    console.log("DISPATCHING THE LOG IN STATE");
+    dispatch({
+        type: actions.USER_LOGGING_IN
+    });
+
     axios({
         url: '/user',
         method: 'get',
     }).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_IN,
-            data: response.data
+            payload: response.data || {"ERROR": "No user response data"}
         })
     }).catch((error) => {
         dispatch(logout());
@@ -58,9 +62,10 @@ export const login = data => dispatch => {
         headers: {"X-CSRFToken": csrfmiddlewaretoken}
     }).then((response)=> {
         console.log("CHECKING LOG IN");
+        console.log(response.data || {"ERROR": "No user response data"});
         dispatch({
             type: actions.USER_LOGGED_IN,
-            data: response.data
+            payload: response.data || {"ERROR": "No user response data"}
         });
     }).catch((error) => {
         console.log(error);
