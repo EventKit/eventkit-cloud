@@ -7,11 +7,10 @@ import Subheader from 'material-ui/Subheader'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
 import css from './TitleBar.css'
-import {ClassificationBanner} from './ClassificationBanner'
-import injectTapEventPlugin from 'react-tap-event-plugin'
+import ClassificationBanner from './ClassificationBanner'
+
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-injectTapEventPlugin();
 
 class Application extends Component {
     constructor(props) {

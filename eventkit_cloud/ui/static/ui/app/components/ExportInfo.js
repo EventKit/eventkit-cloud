@@ -6,7 +6,9 @@ import { List, ListItem} from 'material-ui/List'
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
 import Paper from 'material-ui/Paper';
-
+import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
+import getMuiTheme from 'material-ui/styles/getMuiTheme'
+import '../components/tap_events'
 import {
     Checkbox,
     RadioButtonGroup,
@@ -17,6 +19,9 @@ import {
 import styles from './ExportInfo.css'
 
 class ExportInfo extends React.Component {
+    getChildContext() {
+        return {muiTheme: getMuiTheme(baseTheme)};
+    }
     componentDidMount() {
         this.refs.datapackName            // the Field
             .getRenderedComponent() // on Field, returns ReduxFormMaterialUITextField
@@ -25,16 +30,15 @@ class ExportInfo extends React.Component {
     }
     render() {
 
-
-
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
                 <form className={styles.form}>
                     <Paper className={styles.paper} zDepth={2} rounded>
-                <div className={styles.heading}>Enter General Information</div>
+                <div id='mainHeading' className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <Field name="datapackName"
+                               id="datapackName"
                                className={styles.textField}
                                component={TextField}
                                hintText="Name"
@@ -43,6 +47,7 @@ class ExportInfo extends React.Component {
                     <div className={styles.fieldWrapperLarge}>
                         <Field
                             name="description"
+                            id="description"
                             component={TextField}
                             hintText="Description"
                             multiLine={true}
@@ -50,12 +55,14 @@ class ExportInfo extends React.Component {
                     </div>
                     <div className={styles.fieldWrapper}>
                         <Field
+                            id="projectName"
                             name="projectName"
                             component={TextField}
                             hintText="Project Name"/>
                     </div>
                     <div className={styles.checkbox}>
                         <Field name="makePublic"
+                               id="makePublic"
                                component={Checkbox}
                                className={styles.checkboxColor}
                                label="Make Public"
@@ -64,11 +71,10 @@ class ExportInfo extends React.Component {
                                />
                     </div>
 
-                    <div className={styles.heading}>Select Layers</div>
+                    <div id="layersHeader" className={styles.heading}>Select Layers</div>
                     <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                     <div className={styles.sectionBottom}>
                         <List className={styles.list}>
-
                             <ListItem
                             primaryText="OpenStreetMap Data"
                             leftIcon={ <Field name="osmData"
@@ -205,11 +211,12 @@ class ExportInfo extends React.Component {
 ExportInfo.propTypes = {
 
 }
-
+ExportInfo.childContextTypes = {
+    muiTheme: React.PropTypes.object.isRequired,
+};
 
 export default reduxForm({
     form: 'exportInfo',
     initialValues: {
-
     }
 })(ExportInfo)

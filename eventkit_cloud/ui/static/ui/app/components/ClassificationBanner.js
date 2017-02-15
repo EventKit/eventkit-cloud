@@ -7,8 +7,15 @@ import {
 import styles from './ClassificationBanner.css';
 
 
-export const ClassificationBanner = () => (
+class ClassificationBanner extends React.Component {
+    render() {
+
+        return (
+
     <div className={styles.classificationbanner}>
         {'UNCLASSIFIED'}
     </div>
-)
+        )
+    }
+}
+export default ClassificationBanner
