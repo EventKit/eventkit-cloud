@@ -93,7 +93,8 @@ class ExternalRasterServiceToGeopackage(object):
                 conf_dict['sources'][source]['on_error'] = {"other": {"response": "transparent", "cache": False}}
 
         # disable SSL cert checks
-        conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
+        if getattr(settings, "DISABLE_SSL_VERIFICATION", False):
+            conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
         # Add autoconfiguration to base_config
         mapproxy_config = base_config()

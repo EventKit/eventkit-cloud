@@ -136,3 +136,5 @@ LOGGING = {
         },
     },
 }
+
+DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
