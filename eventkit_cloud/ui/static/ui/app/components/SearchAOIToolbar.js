@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from './SearchAOIToolbar.css';
-import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead'; // ES2015
+import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
 import ExportsApi from '../api/exportsApi.js';
 import {getGeonames} from '../actions/searchToolbarActions';
 import {setAllButtonsDefault} from '../actions/mapToolActions';
+import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 
 const debounce = require('lodash/debounce');
 
@@ -63,7 +64,6 @@ export class SearchAOIToolbar extends Component {
     handleEnter(e) {
         this.setState({suggestions: []});
         if (e.length > 0) {
-            console.log(e[0]);
             this.props.handleSearch(e[0]);
             this.refs.typeahead.getInstance().blur();
         }
@@ -73,7 +73,7 @@ export class SearchAOIToolbar extends Component {
 
         return (
             <div className={styles.searchbarDiv}>
-                <i className={'fa fa-search'}/>
+                {/*<i className={'fa fa-search'}/>*/}
                 <div className={styles.typeahead}>
                     <Typeahead
                         ref="typeahead"
@@ -83,15 +83,17 @@ export class SearchAOIToolbar extends Component {
                         placeholder={'Search admin boundary or location...'}
                         onInputChange={this.debouncer}
                         labelKey={'name'}
+                        paginate={false}
+                        emptyLabel={''}
+                        minLength={2}
                         renderMenu={(results, menuProps) => {
                             return(
                                 <Menu {...menuProps}>
                                     {results.map((result, index) => (
-                                        <MenuItem option={result} position={index}>
-                                            {result.name}
-                                        </MenuItem>))
+                                        <TypeaheadMenuItem result={result} index={index}/>
+                                    ))
                                     }
-                                </Menu>
+                                </Menu>        
                             )
                         }}
                     />

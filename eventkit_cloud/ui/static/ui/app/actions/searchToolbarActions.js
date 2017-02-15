@@ -15,7 +15,7 @@ export function getGeonames(query) {
             let data = responseData.geonames;
             let geonames = []
             for(var i=0;i<data.length;i++) {
-                if (data[i].bbox && !isEqual(data[i].bbox, {})) {
+                if ((data[i].bbox && !isEqual(data[i].bbox, {})) || (data.lat && data.lng)) {
                     geonames.push(data[i]);
                 }
             }
