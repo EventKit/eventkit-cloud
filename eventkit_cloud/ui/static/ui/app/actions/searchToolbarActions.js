@@ -1,5 +1,3 @@
-import {Config} from '../config'
-import actions from './actionTypes'
 import fetch from 'isomorphic-fetch'
 const isEqual = require('lodash/isEqual');
 
@@ -15,7 +13,7 @@ export function getGeonames(query) {
             let data = responseData.geonames;
             let geonames = []
             for(var i=0;i<data.length;i++) {
-                if (data[i].bbox && !isEqual(data[i].bbox, {})) {
+                if ((data[i].bbox && !isEqual(data[i].bbox, {})) || (data.lat && data.lng)) {
                     geonames.push(data[i]);
                 }
             }
@@ -23,18 +21,5 @@ export function getGeonames(query) {
         }).catch(error => {
             dispatch({type: "GEONAMES_ERROR", error: error});
         });
-    }
-}
-
-export function drawSearchBbox(searchBbox) {
-    return {
-        type: actions.DRAW_SEARCH_BBOX,
-        searchBbox: searchBbox,
-    }
-}
-
-export function clearSearchBbox() {
-    return {
-        type: actions.CLEAR_SEARCH_BBOX,
     }
 }

@@ -29,21 +29,22 @@ export function exportBboxReducer(state = initialState.bbox, action) {
     }
 }
 
-export function exportGeojsonReducer(state = initialState.geojson, action) {
+export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
-        case types.UPDATE_GEOJSON:
-            return action.geojson;
-        default:
-            return state;
-    }
-}
-
-export function exportSetAOIReducer(state = initialState.isAOISet, action) {
-    switch(action.type) {
-        case types.SET_AOI:
-            return true;
-        case types.UNSET_AOI:
-            return false;
+        case types.UPDATE_AOI_INFO:
+            return {
+                geojson: action.geojson,
+                geomType: action.geomType,
+                title: action.title,
+                description: action.description,
+            };
+        case types.CLEAR_AOI_INFO:
+            return {
+                geojson: {},
+                geomType: null,
+                title: null,
+                description: null,
+            };
         default:
             return state;
     }

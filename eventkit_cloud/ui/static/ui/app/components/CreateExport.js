@@ -9,21 +9,12 @@ import BreadcrumbStepper from './BreadcrumbStepper'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
 
-import {
-    Step,
-    Stepper,
-    StepLabel,
-} from 'material-ui/Stepper';
-import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
-
-
 class CreateExport extends React.Component {
 
     constructor() {
         super()
         
     }
-
 
     render() {
         let location = this.props.location
@@ -37,17 +28,6 @@ class CreateExport extends React.Component {
                 marginTop: '25px'
             },
         }
-
-
-        //const jobs = this.props.jobs;
-        let jobs = []
-        jobs[0]  = {uid: '33434', name: 'alksdfjlkasjdf'}
-        jobs[1]  = {uid: '33435', name: 'alksdfjlkasjdf'}
-        jobs[2]  = {uid: '33436', name: 'alksdfjlkasjdf'}
-        jobs[3]  = {uid: '33437', name: 'alksdfjlkasjdf'}
-        jobs[4]  = {uid: '33438', name: 'alksdfjlkasjdf'}
-        jobs[5]  = {uid: '33439', name: 'alksdfjlkasjdf'}
-        jobs[6]  = {uid: '33430', name: 'alksdfjlkasjdf'}
 
         return (
             <div>
@@ -69,7 +49,6 @@ class CreateExport extends React.Component {
                 </div>
 
         </div>
-
 
         );
     }

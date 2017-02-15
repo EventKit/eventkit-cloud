@@ -14,13 +14,3 @@ export function getGeonamesReducer(state = initialState.geonames, action) {
     }
 }
 
-export function searchBboxReducer(state = initialState.searchBbox, action) {
-    switch(action.type) {
-        case types.DRAW_SEARCH_BBOX:
-            return action.searchBbox;
-        case types.CLEAR_SEARCH_BBOX:
-            return [];
-        default:
-            return state;
-    }
-}

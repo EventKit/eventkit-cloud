@@ -59,7 +59,7 @@ class TitleBar extends Component {
 
         return (
         <header className="header">
-            <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
+            <AppBar style={styles.appBar}  title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
             <Drawer containerStyle={styles.drawer}
                     overlayStyle={styles.drawer}
                     docked={false}

@@ -3,33 +3,15 @@ import { initialState as userInitialState } from './userReducer'
 export default {
     jobs: [],
     bbox: [],
-    geojson: {},
+    aoiInfo: {
+        geojson: {},
+        geomType: null,
+        title: null,
+        description: null,
+    },
     mode: 'DRAW_NORMAL',
-    isAOISet: false,
     showInvalidDrawWarning: false,
-    searchBbox : [],
-    drawExtensionVisible: false,
-    drawCancel: {
-        disabled: true,
-        click: false,
-    },
-    drawRedraw: {
-        disabled: true,
-        click: false,
-    },
-    drawSet: {
-        disabled: true,
-        click: false,
-    },
-
-    drawBoxButton: {
-        disabled: true,
-        click: false,
-    },
-    drawFreeButton: {
-        disabled: true,
-        click: false,
-    },
+    showImportModal: false,
     zoomToSelection: {
         disabled: true,
         click: false
@@ -44,5 +26,17 @@ export default {
         geonames: [],
         error: null,
     },
-    user: userInitialState
+    user: userInitialState,
+    importGeom: {
+        processing: false,
+        processed: false,
+        geom: {},
+        error: null,
+    },
+    toolbarIcons: {
+        box: "DEFAULT",
+        free: "DEFAULT",
+        mapView: "DEFAULT",
+        import: "DEFAULT",
+    }
 }

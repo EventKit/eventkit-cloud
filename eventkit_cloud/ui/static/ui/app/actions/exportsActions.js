@@ -1,5 +1,5 @@
 import {Config} from '../config';
-import actions from './actionTypes';
+import types from './actionTypes';
 import ExportApi from '../api/exportsApi';
 
 export function loadJobsSuccess(jobs) {
@@ -15,10 +15,19 @@ export function updateBbox(bbox) {
     }
 }
 
-export function updateGeojson(geojson) {
+export function updateAoiInfo(geojson, geomType, title, description) {
     return {
-        type: actions.UPDATE_GEOJSON,
-        geojson: geojson
+        type: types.UPDATE_AOI_INFO,
+        geojson: geojson,
+        geomType,
+        title,
+        description,
+    }
+}
+
+export function clearAoiInfo() {
+    return {
+        type: types.CLEAR_AOI_INFO,
     }
 }
 
@@ -37,21 +46,8 @@ export function loadExports() {
         }).catch(error => {
             throw(error);
         });
-    };
-}
-
-export function setAOI() {
-    return {
-        type: actions.SET_AOI,
-        isAOISet: true
     }
 }
 
-export function unsetAOI() {
-    return {
-        type: actions.UNSET_AOI,
-        isAOISet: false,
-    }
-}
 
 

@@ -10,6 +10,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import style from './BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
+const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -20,7 +21,21 @@ class BreadcrumbStepper extends React.Component {
     state = {
         finished: false,
         stepIndex: 0,
+        nextDisabled: true,
     };
+
+    componentWillReceiveProps(nextProps) {
+        if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
+            if(!isEqual(nextProps.aoiInfo.geojson, {})) {
+                //make the stepper button clickable
+                this.setState({nextDisabled: false});
+            }
+            else {
+                //make the stepper button disabled
+                this.setState({nextDisabled: true});
+            }
+        }
+    }
 
     handleNext = () => {
         const {stepIndex} = this.state;
@@ -72,43 +87,39 @@ class BreadcrumbStepper extends React.Component {
         const {finished, stepIndex} = this.state;
 
         return (
-            <div>
-            <div style={{width: '100%', backgroundColor: '#161e2e', paddingTop: '5px'}}>
-            <div className={style.stepperImageWrapper}>
-                <div className={style.stepperWrapper}>
-                    <Stepper activeStep={stepIndex}>
-                        <Step>
-                            <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
-                        </Step>
-                        <Step>
-                            <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
-                        </Step>
-                        <Step>
-                            <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
-                        </Step>
-                        <Step>
-                            <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
-                        </Step>
-
-                    </Stepper>
-                </div>
-                    <div className={style.imageWrapper} style={{maxWidth: '150px'}}>
-                        <FloatingActionButton mini={true}
-                                              disabled={stepIndex === 0}
-                                              onTouchTap={this.handlePrev}
-                                              style={{marginRight: 12}}><i className="fa fa-arrow-left fa-lg" aria-hidden="true"></i></FloatingActionButton>
-                        <FloatingActionButton mini={true}
-                                              disabled={stepIndex === 3}
-                                              onTouchTap={this.handleNext}
-                                              style={{marginRight: 12}}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></FloatingActionButton>
+            <div style={{backgroundColor: '#161e2e'}}>
+                <div className={style.topWrapper}>
+                    <div className={style.stepperImageWrapper}>
+                        <div className={style.stepperWrapper}>
+                            <Stepper activeStep={stepIndex}>
+                                <Step>
+                                    <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
+                                </Step>
+                                <Step>
+                                    <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
+                                </Step>
+                                <Step>
+                                    <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
+                                </Step>
+                                <Step>
+                                    <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
+                                </Step>
+                            </Stepper>
+                        </div>
+                        <div className={style.imageWrapper} style={{maxWidth: '150px'}}>
+                            <FloatingActionButton mini={true}
+                                                disabled={stepIndex === 0}
+                                                onTouchTap={this.handlePrev}
+                                                className={style.backButtonDiv}><i className="material-icons" aria-hidden="false">arrow_back</i></FloatingActionButton>
+                            <FloatingActionButton mini={true}
+                                                disabled={this.state.nextDisabled}
+                                                onTouchTap={this.handleNext}
+                                                className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
+                        </div>
                     </div>
-
-
-             </div>
-
-            </div>
-                {this.getStepContent(this.state.stepIndex)}
                 </div>
+                {this.getStepContent(this.state.stepIndex)}
+            </div>
 
         );
     }
@@ -131,15 +142,16 @@ class BreadcrumbStepper extends React.Component {
 }
 
 BreadcrumbStepper.propTypes = {
-    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
+    bbox: React.PropTypes.arrayOf(React.PropTypes.number),
+    aoiInfo: React.PropTypes.object,
 };
 
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
+        aoiInfo: state.aoiInfo,
     };
 }
-
 
 export default connect(
     mapStateToProps,

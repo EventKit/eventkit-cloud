@@ -1,186 +1,67 @@
-@media only screen and (min-width: 850px) {
-    .toolbarsContainer {
-        max-width: 680px !important;
-    }
-}
-
-@media only screen and (min-width: 750px) {
-    .toolbarsContainer {
-        font-size: 1em;
-    }
-    .buttonGeneral {
-        font-size: 1em;
-        margin: 9px 1em 0 0;
-    }
-}
-
-@media only screen and (max-width: 750px) {
-    .toolbarsContainer {
-        font-size: .8em;
-    }
-    .buttonGeneral {
-        font-size: .8em;
-        margin: 13px 1em 0 0;
-        padding: 5px 0px !important;
-    }
-}
-
-@media only screen and (max-width: 500px) {
-    .toolbarsContainer {
-        font-size: .7em;
-    }
-    .buttonGeneral {
-        font-size: .7em;
-        margin: 14.5px 1em 0 0;
-        padding: 5px 0px !important;
-    }
-}
-@media only screen and (max-width: 400px) {
-    .toolbarsContainer {
-        font-size: .6em;
-    }
-    .buttonGeneral {
-        font-size: .6em;
-        margin: 15.5px 1em 0 0;
-        padding: 5px 0px !important;
-    }
-}
-
-.toolbarsContainer {
+.drawButtonsContainer {
     z-index: 1;
     position: absolute;
-    width: 80%;
     top: 150px;
     left: 10px;
-    height: 50px;
-}
-
-.toolbarDiv {
-    position: absolute;
-    width: 50%;
-    top: 0px;
-    left: 0px;
-    background-color: #fff;
-    height: 100%;
-}
-
-.title {
-    line-height: 50px;
-    padding-left: 15px;
-    vertical-align: middle;
-    word-wrap: break-word;
-}
-
-.extensionToolbarDiv {
-    position: absolute;
-    width: 50%;
-    top: 0px;
-    left: 50%;
-    height: 100%;
+    width: 60px;
+    height: 270px;
     background-color: #fff;
 }
 
-.extensionToolbarDivHidden {
-    display: none;
+.drawButtonsTitle {
+    height: 30px;
+    width: 60px;
+    font-size: .8em;
+    text-align: center;
+    line-height: 30px;
 }
 
-.titleDiv {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    height: 50px;
-    line-height: 50px;
-    width: 40%;
-    background-color: rgba(0,0,0,1);
-    padding-left: 15px;
-    vertical-align: middle;
-    color: grey;
+.drawButtonGeneral {
+    height: 60px;
+    width: 60px;
+    border-top: 1px solid #e6e6e6;
+    border-right: none;
+    border-left: none;
+    border-bottom: none;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
 }
 
-.titleSpan {
-    vertical-align: middle;
+.buttonDiv {
+    height: 33px;
 }
 
-.drawButtonsDiv {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 50px;
-    float: right;
-}
-
-.cancelButtonDiv {
-    position: absolute;
-    top: 0px;
-    left: 10%;
-    height: 50px;
-    width: 30%;
-    line-height: 50px;
-    vertical-align: middle;
-}
-
-.redrawButtonDiv {
-    position: absolute;
-    top: 0px;
-    left: 40%;
-    height: 50px;
-    width: 30%;
-    line-height: 50px;
-    vertical-align: middle;
-}
-
-.buttonGeneral {
-    width: 5em;
-    padding: 5px 10px;
-    border-radius: 3px;
-    border: 1px solid transparent;
-    float: right;
-}
-
-.drawButtonInactive {
+.drawButtonGeneral i {
     color: #4498c0;
-    background-color: #e6e6e6;
-    border-color: #e6e6e6;
+    padding: 0;
 }
 
-.drawButtonInactive:hover {
-    background-color: #438cc0;
-    color: #fff;
+.inactiveButton {
+    opacity: 0.4;
+    font-size: 1.5em;
 }
 
-.drawButtonActive {
-    color: #fff;
-    background-color: #4498c0;
-    border-color: #4498c0;
+.selectedButton {
+    font-size: 1.5em;
 }
 
-.drawButtonInactive:hover {
-    background-color: #438cc0;
-    color: #fff;
+.defaultButton {
+    font-size: 1.5em;
 }
 
-.setButtonActive {
-    color: #fff;
-    background-color: #53ba56;
-    border-color: #53ba56;
+.drawButtonGeneral:focus {
+    outline: none;
 }
 
-.setButtonInactive {
-    color: #fff;
-    background-color: #e6e6e6;
-    border-color: #e6e6e6;
-}
-
-.flatButtonInactive {
-    color: grey;
-    float: right;
-    background-color: #fff;
-    border-color: #fff;
-}
-
-.flatButtonActive {
+.buttonName {
+    font-size: .6em;
+    width: 60px;
     color: #4498c0;
-    float: right;
-    background-color: #fff;
-    border-color: #fff;
+    bottom: 0;
+    height: 12px;
+}
+
+.buttonNameInactive {
+    opacity: 0.4;
 }
