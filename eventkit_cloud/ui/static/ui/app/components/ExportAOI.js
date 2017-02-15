@@ -2,7 +2,7 @@ import 'openlayers/dist/ol.css';
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
-import styles from './CreateExport.css';
+import styles from '../styles/CreateExport.css';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import SetAOIToolbar from './SetAOIToolbar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';

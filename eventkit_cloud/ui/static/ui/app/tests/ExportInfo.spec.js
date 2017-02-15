@@ -1,4 +1,4 @@
-import ExportInfo from './ExportInfo'
+import ExportInfo from '../components/ExportInfo'
 import React from 'react'
 import {expect} from 'chai'
 import {mount, shallow} from 'enzyme'

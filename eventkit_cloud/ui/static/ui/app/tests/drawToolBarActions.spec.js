@@ -1,4 +1,4 @@
-import * as actions from './drawToolBarActions'
+import * as actions from '../actions/drawToolBarActions'
 
 describe('drawToolBar actions', () => {
 

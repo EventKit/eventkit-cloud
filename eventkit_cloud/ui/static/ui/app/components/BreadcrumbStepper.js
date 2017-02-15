@@ -7,7 +7,7 @@ import {
     StepLabel,
 } from 'material-ui/Stepper';
 import FloatingActionButton from 'material-ui/FloatingActionButton'
-import style from './BreadcrumbStepper.css'
+import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 const isEqual = require('lodash/isEqual');

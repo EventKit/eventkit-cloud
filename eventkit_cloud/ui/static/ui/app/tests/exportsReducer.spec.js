@@ -1,4 +1,4 @@
-import * as reducers from './exportsReducer'
+import * as reducers from '../reducers/exportsReducer'
 
 describe('exportJobs reducer', () => {
     it('should return initial state', () => {

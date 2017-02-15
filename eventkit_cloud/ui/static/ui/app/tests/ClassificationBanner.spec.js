@@ -1,4 +1,4 @@
-import ClassificationBanner from './ClassificationBanner'
+import ClassificationBanner from '../components/ClassificationBanner'
 import React from 'react'
 import {expect} from 'chai'
 import {mount, shallow} from 'enzyme'

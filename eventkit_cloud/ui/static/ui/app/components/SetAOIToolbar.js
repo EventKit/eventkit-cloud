@@ -1,8 +1,6 @@
-import 'openlayers/dist/ol.css';
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import ol from 'openlayers';
-import styles from './SetAOIToolbar.css';
+import styles from '../styles/SetAOIToolbar.css';
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js';
 import {PopupBox} from './PopupBox.js';
 

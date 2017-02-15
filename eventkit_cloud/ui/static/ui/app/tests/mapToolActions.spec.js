@@ -1,6 +1,6 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import * as actions from './mapToolActions';
+import * as actions from '../actions/mapToolActions';
 import nock from 'nock';
 import sinon from 'sinon';
 

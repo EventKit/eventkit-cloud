@@ -1,6 +1,6 @@
-import {DropZone} from './DropZone';
-import {DropZoneDialog} from './DropZoneDialog';
-import {DropZoneError} from './DropZoneError';
+import {DropZone} from '../components/DropZone';
+import {DropZoneDialog} from '../components/DropZoneDialog';
+import {DropZoneError} from '../components/DropZoneError';
 import React from 'react';
 import { Provider } from 'react-redux';
 import {expect} from 'chai';

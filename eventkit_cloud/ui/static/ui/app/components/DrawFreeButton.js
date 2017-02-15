@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './DrawAOIToolbar.css';
+import styles from '../styles/DrawAOIToolbar.css';
 import {setFreeButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 import {updateMode, updateBbox} from '../actions/exportsActions';
 
