@@ -4,7 +4,7 @@ import {
     CLASSIFICATION_BANNER_FOREGROUND,
     CLASSIFICATION_BANNER_TEXT,
 } from '../config'
-import styles from './ClassificationBanner.css';
+import styles from '../styles/ClassificationBanner.css';
 
 
 class ClassificationBanner extends React.Component {

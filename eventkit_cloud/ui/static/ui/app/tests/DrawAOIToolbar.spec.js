@@ -1,12 +1,12 @@
-import {DrawAOIToolbar} from './DrawAOIToolbar';
+import {DrawAOIToolbar} from '../components/DrawAOIToolbar';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {DrawBoxButton} from './DrawBoxButton';
-import {DrawFreeButton} from './DrawFreeButton';
-import {MapViewButton} from './MapViewButton';
-import {ImportButton} from './ImportButton';
+import {DrawBoxButton} from '../components/DrawBoxButton';
+import {DrawFreeButton} from '../components/DrawFreeButton';
+import {MapViewButton} from '../components/MapViewButton';
+import {ImportButton} from '../components/ImportButton';
 import {fakeStore} from '../__mocks__/fakeStore';
 import { Provider } from 'react-redux';
 

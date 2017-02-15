@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './DrawAOIToolbar.css';
+import styles from '../styles/DrawAOIToolbar.css';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';

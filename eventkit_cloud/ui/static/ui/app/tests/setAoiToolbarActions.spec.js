@@ -1,4 +1,4 @@
-import * as actions from './setAoiToolbarActions'
+import * as actions from '../actions/setAoiToolbarActions'
 
 describe('setAoiToolbar actions', () => {
 

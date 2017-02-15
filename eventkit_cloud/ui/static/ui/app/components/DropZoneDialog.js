@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './DropZone.css';
+import styles from '../styles/DropZone.css';
 import {setImportButtonSelected, setAllButtonsDefault, setImportModalState, processGeoJSONFile, resetGeoJSONFile} from '../actions/mapToolActions';
 import {PopupBox} from './PopupBox.js';
 const Dropzone = require('react-dropzone');

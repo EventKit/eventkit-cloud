@@ -1,4 +1,4 @@
-import * as reducers from './mapToolReducer';
+import * as reducers from '../reducers/mapToolReducer';
 
 describe('toolbarIcons reducer', () => {
     it('should return the intitial state', () => {

@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import styles from './PopupBox.css';
+import styles from '../styles/PopupBox.css';
 
 export class PopupBox extends Component {
     constructor(props) {

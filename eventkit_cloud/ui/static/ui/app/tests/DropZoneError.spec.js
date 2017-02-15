@@ -1,9 +1,9 @@
-import {DropZoneError} from './DropZoneError';
+import {DropZoneError} from '../components/DropZoneError';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {PopupBox} from './PopupBox';
+import {PopupBox} from '../components/PopupBox';
 const Dropzone = require('react-dropzone');
 
 describe('DropZoneError component', () => {

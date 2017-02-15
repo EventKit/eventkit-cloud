@@ -1,4 +1,4 @@
-import * as actions from './exportsActions'
+import * as actions from '../actions/exportsActions'
 import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import nock from 'nock'

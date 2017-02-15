@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './InvalidDrawWarning.css';
+import styles from '../styles/InvalidDrawWarning.css';
 import {showInvalidDrawWarning, hideInvalidDrawWarning} from '../actions/drawToolBarActions.js';
 
 export class InvalidDrawWarning extends Component {

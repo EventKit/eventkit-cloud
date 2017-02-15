@@ -1,4 +1,4 @@
-import {PopupBox} from './PopupBox';
+import {PopupBox} from '../components/PopupBox';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';

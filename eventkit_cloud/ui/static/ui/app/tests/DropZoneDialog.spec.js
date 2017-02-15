@@ -1,9 +1,9 @@
-import {DropZoneDialog} from './DropZoneDialog';
+import {DropZoneDialog} from '../components/DropZoneDialog';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {PopupBox} from './PopupBox.js';
+import {PopupBox} from '../components/PopupBox.js';
 const Dropzone = require('react-dropzone');
 
 describe('DropZoneDialog component', () => {

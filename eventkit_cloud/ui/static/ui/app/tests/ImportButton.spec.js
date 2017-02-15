@@ -1,10 +1,10 @@
-import {MapViewButton} from './MapViewButton';
+import {ImportButton} from '../components/ImportButton';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 
-describe('MapViewButton component', () => {
+describe('ImportButton component', () => {
 
     const getProps = () => {
         return {
@@ -16,42 +16,42 @@ describe('MapViewButton component', () => {
             },
             mode: 'DRAW_NORMAL',
             updateMode: () => {},
-            setMapViewButtonSelected: () => {},
+            setImportButtonSelected: () => {},
             setAllButtonsDefault: () => {},
             handleCancel: () => {},
-            setMapView: () => {},
+            setImportModalState: () => {},
         }
     }
     it('should display the default icon', () => {
         const props = getProps()
-        const wrapper = mount(<MapViewButton {...props}/>);
+        const wrapper = mount(<ImportButton {...props}/>);
         expect(wrapper.find('button')).to.have.length(1);
         expect(wrapper.find('div')).to.have.length(2);
         const icon = wrapper.find('i')
         expect(icon).to.have.length(1);
-        expect(icon.text()).to.equal('settings_overscan')
+        expect(icon.text()).to.equal('file_upload')
         expect(icon.hasClass('material-icons')).to.equal(true);
         expect(icon.hasClass('defaultButton')).to.equal(true);    
     });
 
     it('should display inactive icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<MapViewButton {...props}/>);
-        const newProps = {toolbarIcons: {mapView: 'INACTIVE'}}
+        const wrapper = mount(<ImportButton {...props}/>);
+        const newProps = {toolbarIcons: {import: 'INACTIVE'}}
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).to.have.length(1);
         expect(wrapper.find('div')).to.have.length(2);
         const icon = wrapper.find('i')
         expect(icon).to.have.length(1);
-        expect(icon.text()).to.equal('settings_overscan')
+        expect(icon.text()).to.equal('file_upload')
         expect(icon.hasClass('material-icons')).to.equal(true);
         expect(icon.hasClass('inactiveButton')).to.equal(true);    
     });
 
     it('should display selected icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<MapViewButton {...props}/>);
-        const newProps = {toolbarIcons: {mapView: 'SELECTED'}}
+        const wrapper = mount(<ImportButton {...props}/>);
+        const newProps = {toolbarIcons: {import: 'SELECTED'}}
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).to.have.length(1);
         expect(wrapper.find('div')).to.have.length(2);
@@ -64,48 +64,50 @@ describe('MapViewButton component', () => {
 
     it('should execute componentWillReceiveProps when new props are passed in', () => {
         const props = getProps();
-        const wrapper = mount(<MapViewButton {...props}/>);
-        const updateSpy = new sinon.spy(MapViewButton.prototype, 'componentWillReceiveProps');
+        const wrapper = mount(<ImportButton {...props}/>);
+        const updateSpy = new sinon.spy(ImportButton.prototype, 'componentWillReceiveProps');
         wrapper.setProps(props);
         expect(updateSpy.calledOnce).to.equal(true);
     });
 
     it('should handleOnClick when icon is in SELECTED state', () => {   
         const props = getProps();
-        const wrapper = mount(<MapViewButton {...props}/>);
+        const wrapper = mount(<ImportButton {...props}/>);
         let newProps = getProps();
-        newProps.toolbarIcons.mapView = 'SELECTED';
+        newProps.toolbarIcons.import = 'SELECTED';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
+        newProps.setImportModalState = sinon.spy();
         wrapper.setProps(newProps);
         wrapper.find('button').simulate('click');
         expect(newProps.setAllButtonsDefault.calledOnce).to.equal(true);
+        expect(newProps.setImportModalState.calledOnce).to.equal(true);
         expect(newProps.handleCancel.calledOnce).to.equal(true);
     });
 
     it('should handleOnClick when icon is in DEFAULT state', () => {
         let props = getProps();
-        props.setMapViewButtonSelected = sinon.spy();
-        props.setMapView = sinon.spy();
-        const wrapper = mount(<MapViewButton {...props}/>);
+        props.setImportButtonSelected = sinon.spy();
+        props.setImportModalState = sinon.spy();
+        const wrapper = mount(<ImportButton {...props}/>);
         wrapper.find('button').simulate('click');
-        expect(props.setMapViewButtonSelected.calledOnce).to.equal(true);
-        expect(props.setMapView.calledOnce).to.equal(true);
+        expect(props.setImportButtonSelected.calledOnce).to.equal(true);
+        expect(props.setImportModalState.calledOnce).to.equal(true);
     });
 
     it('handleOnClick should do nothing when icon is in INACTIVE state', () => {
         const props = getProps();
-        const wrapper = mount(<MapViewButton {...props}/>);
+        const wrapper = mount(<ImportButton {...props}/>);
         let newProps = getProps();
-        newProps.toolbarIcons.mapView = 'INACTIVE';
+        newProps.toolbarIcons.import = 'INACTIVE';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
-        newProps.setMapViewButtonSelected = sinon.spy();
-        newProps.setMapView = sinon.spy();
+        newProps.setImportButtonSelected = sinon.spy();
+        newProps.setImportModalState = sinon.spy();
         wrapper.setProps(newProps);
         expect(newProps.setAllButtonsDefault.calledOnce).to.equal(false);
         expect(newProps.handleCancel.calledOnce).to.equal(false);
-        expect(newProps.setMapViewButtonSelected.calledOnce).to.equal(false);
-        expect(newProps.setMapView.calledOnce).to.equal(false);
+        expect(newProps.setImportButtonSelected.calledOnce).to.equal(false);
+        expect(newProps.setImportModalState.calledOnce).to.equal(false);
     });
 });

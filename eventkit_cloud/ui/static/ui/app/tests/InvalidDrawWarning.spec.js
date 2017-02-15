@@ -1,4 +1,4 @@
-import {InvalidDrawWarning} from './InvalidDrawWarning';
+import {InvalidDrawWarning} from '../components/InvalidDrawWarning';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';

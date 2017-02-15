@@ -1,4 +1,4 @@
-import * as reducers from './setAoiToolbarReducer'
+import * as reducers from '../reducers/setAoiToolbarReducer'
 
 describe('zoomToSelectionReducer', () => {
     it('should return initial state', () => {

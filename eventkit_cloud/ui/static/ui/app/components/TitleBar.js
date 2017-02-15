@@ -7,7 +7,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
-import css from './TitleBar.css'
+import css from '../styles/TitleBar.css'
 
 class TitleBar extends Component {
     constructor(props){

@@ -1,9 +1,8 @@
-import {SetAOIToolbar} from './SetAOIToolbar';
+import {SetAOIToolbar} from '../components/SetAOIToolbar';
 import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-// import {PopupBox} from './PopupBox.js';
 
 describe('SetAOIToolbar component', () => {
     const getProps = () => {
@@ -64,13 +63,6 @@ describe('SetAOIToolbar component', () => {
         expect(wrapper.find('.aoiTitle').text()).to.equal('');
         expect(wrapper.find('.aoiDescription').text()).to.equal('No AOI Set');
     });
-
-    // it('should display a PopupBox which is in hidden state', () => {
-    //     let props = getProps();
-    //     const wrapper = mount(<SetAOIToolbar {...props}/>);
-    //     expect(wrapper.find(PopupBox)).to.have.length(1);
-    //     expect(wrapper.find('div').last().html()).to.equal('<div></div>');
-    // });
 
     it('should handle aoiInfo update', () => {
         let props = getProps();

@@ -1,4 +1,4 @@
-import * as reducers from './searchToolbarReducer'
+import * as reducers from '../reducers/searchToolbarReducer'
 
 describe('getGeonames reducer', () => {
     it('should return initial state', () => {

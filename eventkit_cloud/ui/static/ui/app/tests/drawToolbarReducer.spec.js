@@ -1,4 +1,4 @@
-import * as reducers from './drawToolBarReducer'
+import * as reducers from '../reducers/drawToolBarReducer'
 
 describe('invalidDrawWarning reducer', () => {
     it('should return the initial state', () => {
