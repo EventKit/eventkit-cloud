@@ -3,7 +3,7 @@ from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
-from .views import clone_export, create_export, view_export, data_estimator
+from .views import clone_export, create_export, view_export, data_estimator, request_geonames
 
 urlpatterns = [
     url(r'^$', login_required(TemplateView.as_view(template_name='ui/list.html')), name='list'),
@@ -12,5 +12,6 @@ urlpatterns = [
         name='configurations'),
     url(r'^(?P<uuid>[^/]+)/$', login_required(view_export), name='detail'),
     url(r'^clone/(?P<uuid>[^/]+)/$', login_required(clone_export), name='clone'),
-    url(r'^estimator$', data_estimator)
+    url(r'^estimator$', data_estimator),
+    url(r'^request_geonames$', request_geonames)
 ]

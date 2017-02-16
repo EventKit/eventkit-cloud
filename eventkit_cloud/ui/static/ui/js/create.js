@@ -1977,9 +1977,6 @@ create.job = (function(){
                         Config.GEONAMES_SEARCH_URL,
                         {
                             q: query,
-                            maxRows: 20,
-                            username: 'hotexports',
-                            style: 'full'
                         },
                         function(data){
                             // build list of suggestions

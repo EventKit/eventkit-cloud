@@ -30,7 +30,7 @@ Config.NOMINATIM_SEARCH_URL = 'http://nominatim.openstreetmap.org/search';
 Config.MAPQUEST_SEARCH_URL = 'http://open.mapquestapi.com/nominatim/v1/search';
 
 // geonames
-Config.GEONAMES_SEARCH_URL = 'http://api.geonames.org/searchJSON';
+Config.GEONAMES_SEARCH_URL = '/exports/request_geonames';
 
 // error pages
 Config.CREATE_ERROR_URL = '/error';
