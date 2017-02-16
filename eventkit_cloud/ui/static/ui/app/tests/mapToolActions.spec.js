@@ -33,6 +33,12 @@ describe('mapTool actions', () => {
         });
     });
 
+    it('setSearchAOIButtonSelected should return type SET_SEARCH_SELECTED', () => {
+        expect(actions.setSearchAOIButtonSelected()).toEqual({
+            type: 'SET_SEARCH_SELECTED'
+        });
+    });
+
     it('setAllButtonsDefault should return type SET_BUTTONS_DEFAULT', () => {
         expect(actions.setAllButtonsDefault()).toEqual({
             type: 'SET_BUTTONS_DEFAULT'

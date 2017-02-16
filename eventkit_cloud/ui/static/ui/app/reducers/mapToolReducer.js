@@ -9,6 +9,7 @@ export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
                 free: "INACTIVE",
                 mapView: "INACTIVE",
                 import: "INACTIVE",
+                search: "INACTIVE",
             }
         case types.SET_FREE_SELECTED:
             return {
@@ -16,6 +17,7 @@ export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
                 free: "SELECTED",
                 mapView: "INACTIVE",
                 import: "INACTIVE",
+                search: "INACTIVE",
             }
         case types.SET_VIEW_SELECTED:
             return {
@@ -23,6 +25,7 @@ export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
                 free: "INACTIVE",
                 mapView: "SELECTED",
                 import: "INACTIVE",
+                search: "INACTIVE",
             }
         case types.SET_IMPORT_SELECTED:
             return {
@@ -30,6 +33,15 @@ export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
                 free: "INACTIVE",
                 mapView: "INACTIVE",
                 import: "SELECTED",
+                search: "INACTIVE",
+            }
+        case types.SET_SEARCH_SELECTED:
+            return {
+                box: "INACTIVE",
+                free: "INACTIVE",
+                mapView: "INACTIVE",
+                import: "INACTIVE",
+                search: "SELECTED",
             }
         case types.SET_BUTTONS_DEFAULT:
             return {
@@ -37,6 +49,7 @@ export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
                 free: "DEFAULT",
                 mapView: "DEFAULT",
                 import: "DEFAULT",
+                search: "DEFAULT",
             }
         default:
             return state;

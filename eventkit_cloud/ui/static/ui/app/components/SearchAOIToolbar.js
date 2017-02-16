@@ -4,8 +4,9 @@ import styles from '../styles/SearchAOIToolbar.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
 import ExportsApi from '../api/exportsApi.js';
 import {getGeonames} from '../actions/searchToolbarActions';
-import {setAllButtonsDefault} from '../actions/mapToolActions';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
+import SearchAOIButton from './SearchAOIButton';
+import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 
 const debounce = require('lodash/debounce');
 
@@ -39,12 +40,19 @@ export class SearchAOIToolbar extends Component {
                 this.setState({suggestions: []});
             }
         }
+        if(nextProps.toolbarIcons.search != this.props.toolbarIcons.search) {
+            if(nextProps.toolbarIcons.search == 'DEFAULT') {
+                this.refs.typeahead.getInstance().clear();
+            }
+        }
     }
 
     handleFocus() {
-        this.refs.typeahead.getInstance().clear();
-        this.props.handleCancel();
-        this.props.setAllButtonsDefault();
+        //If the search is not already active make sure the map is cleared
+        // if(this.props.toolbarIcons.search != 'SELECTED'){
+        //     this.props.handleCancel();
+        // }
+        this.props.setSearchAOIButtonSelected();
     }
 
     handleChange(e) {
@@ -70,13 +78,13 @@ export class SearchAOIToolbar extends Component {
     }
 
     render() {
-
         return (
             <div className={styles.searchbarDiv}>
                 {/*<i className={'fa fa-search'}/>*/}
                 <div className={styles.typeahead}>
                     <Typeahead
                         ref="typeahead"
+                        disabled={this.props.toolbarIcons.search == 'INACTIVE'}
                         options={this.state.suggestions}
                         onFocus={this.handleFocus}
                         onChange={this.handleEnter}
@@ -98,22 +106,28 @@ export class SearchAOIToolbar extends Component {
                         }}
                     />
                 </div>
+                <div className={styles.searchAOIButtonContainer}>
+                    <SearchAOIButton handleCancel={this.props.handleCancel}/>
+                </div>
             </div>
         )
     }
 }
 
 SearchAOIToolbar.propTypes = {
+    toolbarIcons: React.PropTypes.object,
     geonames: React.PropTypes.object,
     getGeonames: React.PropTypes.func,
     handleSearch: React.PropTypes.func,
     handleCancel: React.PropTypes.func,
     setAllButtonsDefault: React.PropTypes.func,
+    setSearchAOIButtonSelected: React.PropTypes.func,
 }
 
 function mapStateToProps(state) {
     return {
         geonames: state.geonames,
+        toolbarIcons: state.toolbarIcons,
     };
 }
 
@@ -124,6 +138,9 @@ function mapDispatchToProps(dispatch) {
         },
         setAllButtonsDefault: () => {
             dispatch(setAllButtonsDefault());
+        },
+        setSearchAOIButtonSelected: () => {
+            dispatch(setSearchAOIButtonSelected());
         },
     }
 }
