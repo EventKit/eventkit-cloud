@@ -1,24 +1,24 @@
 import actions from './actionTypes'
 import axios from 'axios'
 import cookie from 'react-cookie'
+import { push } from 'react-router-redux'
 
 
-export const logout = data => dispatch => {
-    //may need to look at validating login on backend prior to updating.
-    axios({
-        url: '/logout',
-        method: 'get',
-    }).then((response) =>{
-        dispatch({
-            type: actions.USER_LOGGED_OUT,
-        })}
-    ).catch((error) => {
+export const logout = () => dispatch => {
+
+    return axios.get('/logout').then((response) => {
+            dispatch({
+                type: actions.USER_LOGGED_OUT,
+            })
+            dispatch(push('/login'))
+        }).catch((error) => {
         console.log(error);
     });
+
 }
 
 export const checkLogin = () => dispatch => {
-    console.log("DISPATCHING THE LOG IN STATE");
+
     dispatch({
         type: actions.USER_LOGGING_IN
     });
@@ -35,16 +35,14 @@ export const checkLogin = () => dispatch => {
         dispatch(logout());
         console.log(error);
     });
-    console.log("RETURNING FROM CHECK LOGIN");
 }
 
 export const login = data => dispatch => {
-    console.log("DISPATCHING THE LOG IN STATE");
+
     dispatch({
         type: actions.USER_LOGGING_IN
     });
 
-    console.log("FETCHING CSRF TOKEN");
     axios.get('/auth/').catch((error) => {
         console.log(error);
     });
@@ -54,14 +52,13 @@ export const login = data => dispatch => {
     form_data.append('username', data.username);
     form_data.append('password', data.password);
     form_data.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
-    console.log("LOGGING IN");
+
     axios({
         url: '/auth/',
         method: 'post',
         data: form_data,
         headers: {"X-CSRFToken": csrfmiddlewaretoken}
-    }).then((response)=> {
-        console.log("CHECKING LOG IN");
+    }).then((response) => {
         console.log(response.data || {"ERROR": "No user response data"});
         dispatch({
             type: actions.USER_LOGGED_IN,

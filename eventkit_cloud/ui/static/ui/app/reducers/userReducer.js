@@ -1,4 +1,4 @@
-import actions from '../actions/actionTypes'
+import types from '../actions/actionTypes'
 
 const initialState = {
   data: null,
@@ -7,11 +7,11 @@ const initialState = {
 
 export default (state = initialState, { type, payload }) => {
   switch (type) {
-    case actions.USER_LOGGING_IN:
+    case types.USER_LOGGING_IN:
       return { ...initialState, isLoading: true }
-    case actions.USER_LOGGED_IN:
+    case types.USER_LOGGED_IN:
       return { data: payload, isLoading: false }
-    case actions.USER_LOGGED_OUT:
+    case types.USER_LOGGED_OUT:
       return initialState
     default:
       return state

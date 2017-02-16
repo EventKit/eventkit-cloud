@@ -2,11 +2,12 @@ import React from 'react';
 import { render } from 'react-dom';
 import configureStore from './store/configureStore';
 import { Provider } from 'react-redux';
-import { browserHistory, Router, Route, IndexRoute } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute, Redirect } from 'react-router'
 import { syncHistoryWithStore, routerActions, routerMiddleware } from 'react-router-redux'
 import Application from './components/Application'
-import LoginPage from './components/login/LoginPage'
-import Loading from './components/login/Loading'
+import LoginPage from './components/auth/LoginPage'
+import Loading from './components/auth/Loading'
+import Logout from './containers/logoutContainer'
 import About from './components/About'
 import Exports from './components/Exports'
 import Export from './components/Export'
@@ -45,6 +46,7 @@ render(
         <Router history={history}>
             <Route path="/" component={Application}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
+                <Route path="/logout" component={Logout}/>
                 <Route component={Authenticated}>
                     <Route path="/exports" component={Exports}>
                         <Route path="/export/:uid" component={Export}/>

@@ -1,4 +1,4 @@
-import * as types from './mapToolActionTypes'
+import types from './mapToolActionTypes'
 import ol from 'openlayers';
 
 export function setBoxButtonSelected() {

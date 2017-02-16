@@ -4,13 +4,13 @@ import ExportApi from '../api/exportsApi';
 
 export function loadJobsSuccess(jobs) {
     return {
-        type: actions.LOAD_JOBS_SUCCESS,
+        type: types.LOAD_JOBS_SUCCESS,
         jobs};
 }
 
 export function updateBbox(bbox) {
     return {
-        type: actions.UPDATE_BBOX,
+        type: types.UPDATE_BBOX,
         bbox: bbox || null
     }
 }
@@ -33,7 +33,7 @@ export function clearAoiInfo() {
 
 export function updateMode(mode) {
     return {
-        type: actions.SET_MODE,
+        type: types.SET_MODE,
         mode: mode
     }
 }

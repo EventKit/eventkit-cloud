@@ -1,11 +1,17 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    {% load staticfiles %}
     <meta charset="utf-8">
     <title>EventKit</title>
+    {% load staticfiles %}
     <meta id="meta" name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="{% static 'ui/contrib/bootstrap/css/bootstrap.min.css'%}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'ui/contrib/font-awesome/css/font-awesome.min.css'%}">
+    <link rel="stylesheet" href="{% static 'ui/contrib/openlayers/ol.css'%}">
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <style>
       .ol-scale-line {
@@ -19,6 +25,15 @@
       }
       .form-control:focus {
         box-shadow: none
+      }
+
+      .dropdown-menu > .active > a,
+      .dropdown-menu > .active > a:hover,
+      .dropdown-menu > .active > a:focus {
+        color: #fff;
+        text-decoration: none;
+        background-color: #cecece;
+        outline: 0;
       }
 
     </style>

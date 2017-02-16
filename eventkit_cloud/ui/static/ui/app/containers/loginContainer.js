@@ -7,7 +7,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import {
     TextField,
 } from 'redux-form-material-ui'
-import styles from '../components/login/Login.css'
+import styles from '../components/auth/Login.css'
 import { login } from '../actions/userActions'
 import axios from 'axios'
 
