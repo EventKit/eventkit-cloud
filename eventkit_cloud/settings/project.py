@@ -56,6 +56,7 @@ GARMIN_CONFIG = os.getenv('GARMIN_CONFIG', '/var/lib/eventkit/conf/garmin_config
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
+GEONAMES_API_URL = os.getenv('GEONAMES_API_URL', 'http://api.geonames.org/searchJSON')
 
 """
 Maximum extent of a Job

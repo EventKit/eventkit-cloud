@@ -11,6 +11,7 @@ from functools import wraps
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .data_estimator import get_size_estimate
+import requests
 
 
 # def user_verification_required(func=None):
@@ -93,6 +94,19 @@ def require_email(request):
     """
     backend = request.session['partial_pipeline']['backend']
     return render_to_response('osm/email.html', {'backend': backend}, RequestContext(request))
+
+
+@require_http_methods(['GET'])
+def request_geonames(request):
+    payload = {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': request.GET.get('q')}
+    geonames_url = getattr(settings, 'GEONAMES_API_URL')
+    if geonames_url:
+        response = requests.get(geonames_url, params=payload).json()
+        assert(isinstance(response, dict))
+        return HttpResponse(content=json.dumps(response), status=200, content_type="application/json")
+    else:
+        return HttpResponse(content=json.dumps({'error': 'A url was not provided for geonames'}),
+                            status=500, content_type="application/json")
 
 
 @require_http_methods(['GET'])
