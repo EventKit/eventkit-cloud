@@ -28,7 +28,7 @@ class TestUIViews(TestCase):
 
 
     @patch('eventkit_cloud.ui.views.requests')
-    def test_data_estimate_view(self, requests):
+    def test_request_geonames_view(self, requests):
         expected_return = {"some": "json"}
         response = Mock()
         response.json.return_value = expected_return
