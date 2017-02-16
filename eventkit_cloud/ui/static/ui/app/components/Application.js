@@ -7,6 +7,7 @@ import Subheader from 'material-ui/Subheader'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
 import css from '../styles/TitleBar.css'
+require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
