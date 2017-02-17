@@ -77,7 +77,7 @@ class ExportTask(Task):
             6. create the export task result
             7. update the export task status and save it
         """
-        from ..tasks.models import ExportTaskResult, ExportTask as ExportTaskModel
+        from ..tasks.models import (ExportTaskResult, ExportTask as ExportTaskModel)
         # update the task
         finished = timezone.now()
         task = ExportTaskModel.objects.get(celery_uid=task_id)
@@ -562,9 +562,11 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
             run_uid=run_uid,
             export_provider_task_uid=export_provider_task_uid,
             worker=worker
-        ).set(queue=worker).apply_async(
+        ).set(queue=worker, routing_key=worker).apply_async(
             interval=1,
-            max_retries=10)
+            max_retries=10,
+            queue=worker,
+            routing_key=worker)
 
 
 @app.task(name='Finalize Export Provider Run')
@@ -574,7 +576,6 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
 
     Cleans up staging directory.
     Updates run with finish time.
-    Emails user notification.
     """
 
     from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
@@ -757,7 +758,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     else:
         subject = "Your Eventkit Data Pack is ready."
     to = [addr]
-    # TODO: from email address should not be hardcoded
     from_email = getattr(
         settings,
         'DEFAULT_FROM_EMAIL',
@@ -873,12 +873,13 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
         stage_dir=stage_dir,
         export_provider_task_uid=export_provider_task_uid,
         worker=worker
-    ).set(queue=worker).apply_async(
+    ).set(queue=worker, routing_key=worker).apply_async(
         interval=1,
         max_retries=10,
         expires=datetime.now() + timedelta(days=2),
         priority=TaskPriority.FINALIZE_PROVIDER.value,
-        routing_key=worker
+        routing_key=worker,
+        queue=worker
     )
 
 

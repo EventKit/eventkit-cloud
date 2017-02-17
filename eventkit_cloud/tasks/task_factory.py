@@ -134,6 +134,7 @@ class TaskFactory:
                         expires=datetime.now() + timedelta(days=2),
                         priority=TaskPriority.TASK_RUNNER.value,
                         routing_key=worker,
+                        queue=worker,
                         link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
                                                             export_provider_task_uids=export_provider_task_uids,
                                                             worker=worker).set(queue=worker, routing_key=worker))]

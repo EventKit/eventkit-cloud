@@ -134,11 +134,11 @@ class ExportGenericOSMTaskRunner(TaskRunner):
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
                                                           job_name=job_name,
                                                           task_uid=osm_tasks.get('pbfconvert').get('task_uid')).set(
-                    queue=worker) |
+                    queue=worker, routing_key=worker) |
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
                                                            job_name=job_name,
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid')).set(
-                    queue=worker)
+                    queue=worker, routing_key=worker)
             )
 
             task_chain = (initial_tasks | schema_tasks)
