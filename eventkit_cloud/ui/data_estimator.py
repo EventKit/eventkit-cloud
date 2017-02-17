@@ -17,12 +17,12 @@ def get_size_estimate(provider, bbox, srs='3857'):
         provider = ExportProvider.objects.get(name=provider)
     except ObjectDoesNotExist:
         return None
-    levels = range(provider.level_from, provider.level_to)
+    levels = range(provider.level_from, provider.level_to+1)
     req_srs = mapproxy_srs.SRS(srs)
     bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(4326), req_srs)
 
     tile_size = (256, 256)
-    tile_grid = mapproxy_grid.tile_grid_for_epsg(srs, tile_size=tile_size)
+    tile_grid = mapproxy_grid.TileGrid(srs, tile_size=tile_size, levels=len(levels))
     total_tiles = 0
     tiles = []
     for level in levels:
