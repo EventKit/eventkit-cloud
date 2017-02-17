@@ -21,4 +21,5 @@
 .menuItemText {
     left: 30px;
     color: #707274;
+    min-height: 20px;
 }

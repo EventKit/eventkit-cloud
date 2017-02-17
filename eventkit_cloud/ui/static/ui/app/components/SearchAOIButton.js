@@ -63,7 +63,10 @@ const SELECTED_ICON =<div>
                     </div>
 
 SearchAOIButton.propTypes = {
+    toolbarIcons: React.PropTypes.object,
     handleCancel: React.PropTypes.func,
+    setSearchAOIButtonSelected: React.PropTypes.func,
+    setAllButtonsDefault: React.PropTypes.func,
     
 }
 

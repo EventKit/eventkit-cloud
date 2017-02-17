@@ -27,14 +27,6 @@
     background-color: white;
 }
 
-.searchbarDiv > i {
-    padding-top: 18px;
-    padding-left: 10px;
-    color: #4498c0;
-    height: 50px;
-    width: 30px;
-}
-
 .searchAOIButtonContainer {
     position: absolute;
     width: 60px;

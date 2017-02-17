@@ -17,7 +17,6 @@ export class SearchAOIToolbar extends Component {
 
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
-        this.handleFocus = this.handleFocus.bind(this);
 
         this.state = {
             value: '',
@@ -33,7 +32,7 @@ export class SearchAOIToolbar extends Component {
 
     componentWillReceiveProps(nextProps) {
         if(nextProps.geonames.fetched == true) {
-            this.state.suggestions = nextProps.geonames.geonames;
+            this.setState({suggestions: nextProps.geonames.geonames});
         }
         else {
             if(this.state.suggestions.length > 0) {
@@ -45,14 +44,6 @@ export class SearchAOIToolbar extends Component {
                 this.refs.typeahead.getInstance().clear();
             }
         }
-    }
-
-    handleFocus() {
-        //If the search is not already active make sure the map is cleared
-        // if(this.props.toolbarIcons.search != 'SELECTED'){
-        //     this.props.handleCancel();
-        // }
-        this.props.setSearchAOIButtonSelected();
     }
 
     handleChange(e) {
@@ -72,6 +63,7 @@ export class SearchAOIToolbar extends Component {
     handleEnter(e) {
         this.setState({suggestions: []});
         if (e.length > 0) {
+            this.props.setSearchAOIButtonSelected();
             this.props.handleSearch(e[0]);
             this.refs.typeahead.getInstance().blur();
         }
@@ -80,13 +72,11 @@ export class SearchAOIToolbar extends Component {
     render() {
         return (
             <div className={styles.searchbarDiv}>
-                {/*<i className={'fa fa-search'}/>*/}
                 <div className={styles.typeahead}>
                     <Typeahead
                         ref="typeahead"
                         disabled={this.props.toolbarIcons.search == 'INACTIVE'}
                         options={this.state.suggestions}
-                        onFocus={this.handleFocus}
                         onChange={this.handleEnter}
                         placeholder={'Search admin boundary or location...'}
                         onInputChange={this.debouncer}
