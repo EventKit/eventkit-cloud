@@ -22,7 +22,7 @@ def get_size_estimate(provider, bbox, srs='3857'):
     bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(4326), req_srs)
 
     tile_size = (256, 256)
-    tile_grid = mapproxy_grid.tile_grid_for_epsg(srs, tile_size=tile_size)
+    tile_grid = mapproxy_grid.TileGrid(srs, tile_size=tile_size, levels=len(levels))
     total_tiles = 0
     tiles = []
     for level in levels:
@@ -39,6 +39,6 @@ def get_size_estimate(provider, bbox, srs='3857'):
 
 def get_gb_estimate(total_tiles, tile_width=256, tile_height=256):
     # the literal number there is the average pixels/GB ratio for tiles.
-    gigs_per_pixel_constant = 0.0000000005
+    gigs_per_pixel_constant = 0.0000000006
     return total_tiles*tile_width*tile_height*gigs_per_pixel_constant
 
