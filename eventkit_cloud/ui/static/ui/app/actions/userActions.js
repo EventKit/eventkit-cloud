@@ -1,20 +1,22 @@
 import actions from './actionTypes'
-import axios from 'axios'
+import fetch from 'isomorphic-fetch'
 import cookie from 'react-cookie'
 import { push } from 'react-router-redux'
+import axios from 'axios'
 
 
 export const logout = () => dispatch => {
 
-    return axios.get('/logout').then((response) => {
+    return fetch('logout', {method: 'GET'}).then((response) => {
             dispatch({
                 type: actions.USER_LOGGED_OUT,
             })
-            dispatch(push('/login'))
+            dispatch(push('/login'));
+            return response;
         }).catch((error) => {
         console.log(error);
+        return error;
     });
-
 }
 
 export const checkLogin = () => dispatch => {

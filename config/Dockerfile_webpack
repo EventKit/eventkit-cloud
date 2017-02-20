@@ -3,7 +3,7 @@ FROM node:7.1.0-slim
 # Create app directory
 WORKDIR /var/lib/eventkit
 COPY ./config/package.json /var/lib/eventkit/
-RUN npm install npm@4.0.2
+RUN npm install npm@4.0.2 --quiet
 RUN npm install --quiet
 RUN npm install webpack webpack-dev-server -g --quiet
 

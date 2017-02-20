@@ -2,10 +2,11 @@ import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import * as userActions from './userActions'
 import types from './actionTypes'
-import MockAdapter from 'axios-mock-adapter'
 import React from 'react'
 import axios from 'axios'
 import expect from 'expect'
+import fetch from 'isomorphic-fetch'
+import fetchMock from 'fetch-mock'
 
 
 const promisifyMiddleware = ({dispatch, getState}) => next => action => {
@@ -17,18 +18,19 @@ const mockStore = configureMockStore(middlewares)
 
 describe('userActions actions', () => {
 
+    afterEach(() => {
+         fetchMock.restore();
+    })
+
     it('logout should call logout reducer if logout request is successful', () => {
 
-        const mock = new MockAdapter(axios, {delayResponse: 1000});
-
-        mock.onGet('/logout').reply(200, {});
+        fetchMock.mock('*', {status: 200});
 
         const expectedActions = [{type: types.USER_LOGGED_OUT}];
         const store = mockStore({user: {username: "ExampleUser"}})
 
         store.dispatch(userActions.logout())
             .then(() => {
-                throw new Error("HERE!")
                 expect(store.getActions()).toEqual(expectedActions)
             })
     });
