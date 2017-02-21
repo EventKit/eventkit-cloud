@@ -62,7 +62,7 @@ const DEFAULT_ICON = <div>
 
 const INACTIVE_ICON = <div>
                         <i className={"material-icons " + styles.inactiveButton}>crop_square</i>
-                        <div className={styles.buttonName}>BOX</div>
+                        <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>BOX</div>
                     </div>
 
 const SELECTED_ICON = <div>

@@ -1,8 +1,8 @@
 .drawButtonsContainer {
     z-index: 1;
     position: absolute;
-    top: 150px;
-    left: 10px;
+    top: 70px;
+    right: 10px;
     width: 60px;
     height: 270px;
     background-color: #fff;

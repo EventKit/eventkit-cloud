@@ -11,12 +11,13 @@
 }
 
 .setAOIContainer {
+    display: none; /* HIDE FOR NOW */
     z-index: 2;
     position: absolute;
     width: 90%;
     min-width: 320px;
     max-width: 765px;
-    top: 1em;
+    bottom: 1em;
     left: 10px;
     background-color: #fff;
     height: 70px;

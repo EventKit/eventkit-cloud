@@ -48,6 +48,13 @@ var config = {
                     modules: true,
                     localIdentName: '[name]__[local]___[hash:base64:5]'
                 }
+            },
+            {
+                test: /\.(woff2?|ttf|eot|svg)$/,
+                loader: 'url-loader?limit=100000',
+                options: {
+                    name: 'fonts/[hash].[ext]',
+                }
             }
 
         ],

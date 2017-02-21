@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {setMapViewButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions'
-import {updateMode, updateBbox} from '../actions/exportsActions.js';
 
 export class MapViewButton extends Component {
 
@@ -67,15 +66,11 @@ const SELECTED_ICON =<div>
 function mapStateToProps(state) {
     return {
         toolbarIcons: state.toolbarIcons,
-        mode: state.mode,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        updateMode: (newMode) => {
-            dispatch(updateMode(newMode));
-        },
         setMapViewButtonSelected: () => {
             dispatch(setMapViewButtonSelected());
         },

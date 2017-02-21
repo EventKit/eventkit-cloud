@@ -41,6 +41,7 @@
     "react-tap-event-plugin": "~2.0.1",
     "redux-logger": "~2.7.4",
     "redux-thunk": "~2.1.0",
+    "url-loader": "~0.5.7",
     "webpack": "~1.13.3"
   },
   "devDependencies": {
