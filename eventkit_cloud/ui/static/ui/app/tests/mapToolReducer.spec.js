@@ -8,6 +8,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'DEFAULT',
                 mapView: 'DEFAULT',
                 import: 'DEFAULT',
+                search: 'DEFAULT',
             }
         );
     });
@@ -19,6 +20,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'DEFAULT',
                 mapView: 'DEFAULT',
                 import: 'DEFAULT',
+                search: 'DEFAULT',
             },
             {type: 'SET_BOX_SELECTED'}
         )).toEqual(
@@ -27,6 +29,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'INACTIVE',
                 mapView: 'INACTIVE',
                 import: 'INACTIVE',
+                search: 'INACTIVE',
             }
         );
     });
@@ -38,6 +41,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'DEFAULT',
                 mapView: 'DEFAULT',
                 import: 'DEFAULT',
+                search: 'DEFAULT',
             },
             {type: 'SET_FREE_SELECTED'}
         )).toEqual(
@@ -46,6 +50,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'SELECTED',
                 mapView: 'INACTIVE',
                 import: 'INACTIVE',
+                search: 'INACTIVE',
             }
         );
     });
@@ -57,6 +62,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'DEFAULT',
                 mapView: 'DEFAULT',
                 import: 'DEFAULT',
+                search: 'DEFAULT',
             },
             {type: 'SET_VIEW_SELECTED'}
         )).toEqual(
@@ -65,6 +71,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'INACTIVE',
                 mapView: 'SELECTED',
                 import: 'INACTIVE',
+                search: 'INACTIVE',
             }
         );
     });
@@ -76,6 +83,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'DEFAULT',
                 mapView: 'DEFAULT',
                 import: 'DEFAULT',
+                search: 'DEFAULT',
             },
             {type: 'SET_IMPORT_SELECTED'}
         )).toEqual(
@@ -84,9 +92,31 @@ describe('toolbarIcons reducer', () => {
                 free: 'INACTIVE',
                 mapView: 'INACTIVE',
                 import: 'SELECTED',
+                search: 'INACTIVE',
             }
         );
     });
+
+    it('should handle SET_SEARCH_SELECTED', () => {
+        expect(reducers.toolbarIconsReducer(
+            {
+                box: 'DEFAULT',
+                free: 'DEFAULT',
+                mapView: 'DEFAULT',
+                import: 'DEFAULT',
+                search: 'DEFAULT',
+            },
+            {type: 'SET_SEARCH_SELECTED'}
+        )).toEqual(
+            {
+                box: 'INACTIVE',
+                free: 'INACTIVE',
+                mapView: 'INACTIVE',
+                import: 'INACTIVE',
+                search: 'SELECTED',
+            }
+        );
+    })
 
     it('should handle SET_BUTTONS_DEFAULT', () => {
         expect(reducers.toolbarIconsReducer(
@@ -95,6 +125,7 @@ describe('toolbarIcons reducer', () => {
                 free: 'INACTIVE',
                 mapView: 'INACTIVE',
                 import: 'SELECTED',
+                search: 'INACTIVE',
             },
             {type: 'SET_BUTTONS_DEFAULT'}
         )).toEqual(
@@ -103,6 +134,7 @@ describe('toolbarIcons reducer', () => {
                 free: "DEFAULT",
                 mapView: "DEFAULT",
                 import: "DEFAULT",
+                search: 'DEFAULT',
             }
         );
     });
