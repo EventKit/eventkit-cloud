@@ -1,5 +1,5 @@
 import actions from './actionTypes'
-import fetch from 'isomorphic-fetch'
+import 'isomorphic-fetch'
 import cookie from 'react-cookie'
 import { push } from 'react-router-redux'
 import axios from 'axios'
@@ -7,25 +7,23 @@ import axios from 'axios'
 
 export const logout = () => dispatch => {
 
-    return fetch('logout', {method: 'GET'}).then((response) => {
+    return axios('/logout', {method: 'GET'}).then((response) => {
             dispatch({
                 type: actions.USER_LOGGED_OUT,
             })
             dispatch(push('/login'));
-            return response;
         }).catch((error) => {
         console.log(error);
-        return error;
     });
 }
 
 export const checkLogin = () => dispatch => {
 
     dispatch({
-        type: actions.USER_LOGGING_IN
+         type: actions.USER_LOGGING_IN
     });
 
-    axios({
+    return axios({
         url: '/user',
         method: 'get',
     }).then((response) => {
@@ -55,7 +53,7 @@ export const login = data => dispatch => {
     form_data.append('password', data.password);
     form_data.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
 
-    axios({
+    return axios({
         url: '/auth/',
         method: 'post',
         data: form_data,

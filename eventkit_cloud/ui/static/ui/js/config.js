@@ -3,7 +3,7 @@
  * Urls for API endpoints.
  */
 
-Config = {};
+const Config = {};
 
 // region / region mask endpoints (GeoJSON)
 Config.REGIONS_URL = '/api/regions.json';

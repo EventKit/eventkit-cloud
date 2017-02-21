@@ -5,66 +5,61 @@ import types from './actionTypes'
 import React from 'react'
 import axios from 'axios'
 import expect from 'expect'
-import fetch from 'isomorphic-fetch'
-import fetchMock from 'fetch-mock'
-
-
-const promisifyMiddleware = ({dispatch, getState}) => next => action => {
-    return new Promise((resolve) => resolve(next(action)))
-}
+import MockAdapter from 'axios-mock-adapter';
 
 const middlewares = [ thunk]
 const mockStore = configureMockStore(middlewares)
 
 describe('userActions actions', () => {
 
-    afterEach(() => {
-         fetchMock.restore();
-    })
-
     it('logout should call logout reducer if logout request is successful', () => {
 
-        fetchMock.mock('*', {status: 200});
+        var mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        const expectedActions = [{type: types.USER_LOGGED_OUT}];
-        const store = mockStore({user: {username: "ExampleUser"}})
+        mock.onGet('/logout').reply(200, {
+          users: [
+            { id: 1, name: 'John Smith' }
+          ]
+        });
 
-        store.dispatch(userActions.logout())
+        const expectedActions = [{type: types.USER_LOGGED_OUT},
+            {payload: {args: ['/login'], method: 'push'}, type: '@@router/CALL_HISTORY_METHOD'}];
+        const store = mockStore({user: {username: "ExampleUser"}});
+
+        return store.dispatch(userActions.logout())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions)
             })
     });
 
-    // it('valid login should log the user in', () => {
-    //     const mock = new MockAdapter(axios, {delayResponse: 1000});
-    //
-    //     mock.onGet('/auth').reply(200, {});
-    //
-    //     const expectedActions = [{type: types.USER_LOGGED_OUT}, {type: types.USER_LOGGED_IN}];
-    //
-    //     const getState = () => ({user: 'foo'});
-    //     const dispatch = expect.createSpy();
-    //     userActions.login({username: 'username', password: 'password'})(dispatch, getState).then(() => {
-    //             expect(dispatch).toHaveBeenCalledWith(expectedActions);
-    //         }
-    //     )
-    // });
-    //
-    // it('invalid login should log the user out', () => {
-    //     const mock = new MockAdapter(axios, {delayResponse: 1000});
-    //
-    //     mock.onGet('/auth').reply(401, {});
-    //
-    //     const store = mockStore({user: null})
-    //
-    //     return store.dispatch(userActions.login({username: 'username', password: 'password'}))
-    //         .then(() => {
-    //             expect(store.getActions()).toEqual([{type: types.USER_LOGGING_IN}])
-    //         })
-    //         .then(() => {
-    //             expect(store.getActions()).toEqual({type: types.USER_LOGGED_OUT})
-    //         })
-    // });
+    it('valid credentials should log the user in', () => {
+        const mock = new MockAdapter(axios, {delayResponse: 1000});
 
+        mock.onGet('/auth/').reply(200, {});
+        mock.onPost('/auth/').reply(200, {});
+
+        const expectedActions = [{type: types.USER_LOGGING_IN},  { payload: {}, type: 'USER_LOGGED_IN' }];
+
+        const store = mockStore({user: {username: "ExampleUser"}});
+        return store.dispatch(userActions.login({username: 'username', password: 'password'}))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions)
+            })
+    });
+
+    it('invalid credentials should NOT log the user in', () => {
+        const mock = new MockAdapter(axios, {delayResponse: 1000});
+
+        mock.onGet('/auth/').reply(200, {});
+        mock.onPost('/auth/').reply(401, {});
+
+        const expectedActions = [{type: types.USER_LOGGING_IN}, {type: types.USER_LOGGED_OUT}];
+
+        const store = mockStore({user: {username: "ExampleUser"}});
+        return store.dispatch(userActions.login({username: 'username', password: 'bad_password'}))
+            .catch(() => {
+                expect(store.getActions()).toEqual(expectedActions)
+            })
+    });
 })
 
