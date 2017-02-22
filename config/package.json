@@ -5,7 +5,6 @@
   "main": "webpack.config.js",
   "dependencies": {
     "axios": "~0.15.3",
-    "axios-mock-adapter": "~1.7.1",
     "babel-core": "~6.18.2",
     "babel-loader": "~6.2.8",
     "babel-plugin-transform-class-properties": "~6.19.0",
@@ -54,6 +53,7 @@
   },
   "devDependencies": {
     "babel-jest": "17.0.2",
+    "axios-mock-adapter": "~1.7.1",
     "chai": "~3.5.0",
     "enzyme": "~2.7.1",
     "identity-obj-proxy": "~3.0.0",

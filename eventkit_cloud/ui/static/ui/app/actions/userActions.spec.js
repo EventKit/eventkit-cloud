@@ -47,7 +47,7 @@ describe('userActions actions', () => {
             })
     });
 
-    it('invalid credentials should NOT log the user in', () => {
+    it('invalid credentials should not log the user in', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
         mock.onGet('/auth/').reply(200, {});
