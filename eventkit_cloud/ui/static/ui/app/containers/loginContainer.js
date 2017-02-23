@@ -12,13 +12,12 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import '../components/tap_events';
 
-class Form extends React.Component {
+export class Form extends React.Component {
 
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        const {username, password} = this.props;
     }
 
     onChange(event) {
@@ -27,16 +26,14 @@ class Form extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        const {username, password} = this.state;
-        this.props.dispatch(login({'username': username, 'password': password}));
-    };
+        this.props.handleLogin(this.state);
+    }
 
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
 
     render() {
-
         return (
             <form onSubmit={this.handleSubmit} onChange={this.onChange} className={styles.form}>
                 <div className={styles.heading}>Enter Login Information</div>
@@ -70,8 +67,16 @@ class Form extends React.Component {
     }
 }
 
+function mapDispatchToProps(dispatch) {
+    return {
+        handleLogin: (params) => {
+            dispatch(login(params));
+        },
+    };
+}
+
 Form.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
 }
 
-export default connect()(Form);
+export default connect(null, mapDispatchToProps)(Form);
