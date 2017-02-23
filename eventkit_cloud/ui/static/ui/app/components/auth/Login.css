@@ -1,8 +1,9 @@
 .wholeDiv {
     margin-top:-30px;
-    width:100%;
+    width: 100%;
     height: 100%;
-    background-color: black
+    background-color: black;
+    margin-bottom: 0px;
 }
 .root {
     justify-content: space-around;
@@ -25,6 +26,7 @@
     width: 50%
 }
 .heading {
+    width: 100%;
     font-size: 18px;
     font-weight: bold;
     color: white;
