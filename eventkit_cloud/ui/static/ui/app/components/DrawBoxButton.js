@@ -1,7 +1,7 @@
 
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from './DrawAOIToolbar.css';
+import styles from '../styles/DrawAOIToolbar.css';
 import {setBoxButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 import {updateMode, updateBbox} from '../actions/exportsActions.js';
 
@@ -62,7 +62,7 @@ const DEFAULT_ICON = <div>
 
 const INACTIVE_ICON = <div>
                         <i className={"material-icons " + styles.inactiveButton}>crop_square</i>
-                        <div className={styles.buttonName}>BOX</div>
+                        <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>BOX</div>
                     </div>
 
 const SELECTED_ICON = <div>

@@ -42,7 +42,6 @@ describe('loginContainer', () => {
         wrapper.find('form').simulate('submit');
         expect(props.handleLogin.callCount).to.equal(1);
         expect(props.handleLogin.calledWith(state)).to.equal(true);
-
     });
 
 });

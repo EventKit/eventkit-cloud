@@ -2,7 +2,7 @@ import 'openlayers/dist/ol.css';
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
-import styles from './CreateExport.css';
+import styles from '../styles/CreateExport.css';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import SetAOIToolbar from './SetAOIToolbar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
@@ -104,6 +104,7 @@ export class ExportAOI extends Component {
     }
 
     handleGeoJSONUpload(geom) {
+        this._clearDraw();
         this._drawLayer.getSource().addFeature(
             new ol.Feature({
                 geometry: geom
@@ -112,12 +113,14 @@ export class ExportAOI extends Component {
         const bbox = serialize(geom.getExtent());
         const geojson = createGeoJSON(geom);
         this.props.updateBbox(bbox);
+        this.handleZoomToSelection(bbox);
         this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Import');
 
 
     }
 
     setMapView() {
+        this._clearDraw();
         const extent = this._map.getView().calculateExtent(this._map.getSize());
         const geom = new ol.geom.Polygon.fromExtent(extent);
         const geojson = createGeoJSON(geom);

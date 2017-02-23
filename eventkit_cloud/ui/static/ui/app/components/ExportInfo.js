@@ -16,7 +16,7 @@ import {
     TextField,
     Toggle
 } from 'redux-form-material-ui'
-import styles from './ExportInfo.css'
+import styles from '../styles/ExportInfo.css'
 
 class ExportInfo extends React.Component {
     getChildContext() {

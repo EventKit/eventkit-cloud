@@ -17,6 +17,10 @@ export function setImportButtonSelected() {
     return {type: types.SET_IMPORT_SELECTED}
 }
 
+export function setSearchAOIButtonSelected() {
+    return {type: types.SET_SEARCH_SELECTED}
+}
+
 export function setAllButtonsDefault() {
     return {type: types.SET_BUTTONS_DEFAULT}
 }

@@ -48,21 +48,13 @@ var config = {
                     modules: true,
                     localIdentName: '[name]__[local]___[hash:base64:5]'
                 }
-            }, {
-              test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-              loader: "url?limit=10000&mimetype=application/font-woff"
-            }, {
-              test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-              loader: "url?limit=10000&mimetype=application/font-woff"
-            }, {
-              test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-              loader: "url?limit=10000&mimetype=application/octet-stream"
-            }, {
-              test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-              loader: "file"
-            }, {
-              test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
-              loader: "url?limit=10000&mimetype=image/svg+xml"
+            },
+            {
+                test: /\.(woff2?|ttf|eot|svg)$/,
+                loader: 'url-loader?limit=100000',
+                options: {
+                    name: 'fonts/[hash].[ext]',
+                }
             }
         ],
     },

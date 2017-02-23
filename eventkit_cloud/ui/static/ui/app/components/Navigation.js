@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import { Link, IndexLink } from 'react-router';
-import styles from './Navigation.css'
+import styles from '../styles/Navigation.css'
 
 
 export const Navigation = () => (

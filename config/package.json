@@ -48,7 +48,11 @@
     "react-tap-event-plugin": "~2.0.1",
     "redux-logger": "~2.7.4",
     "redux-thunk": "~2.1.0",
+<<<<<<< HEAD
     "roboto-fontface": "~0.7.0",
+=======
+    "url-loader": "~0.5.7",
+>>>>>>> 1.0.0
     "webpack": "~1.13.3"
   },
   "devDependencies": {

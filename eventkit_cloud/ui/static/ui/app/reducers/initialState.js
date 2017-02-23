@@ -38,5 +38,6 @@ export default {
         free: "DEFAULT",
         mapView: "DEFAULT",
         import: "DEFAULT",
+        search: "DEFAULT",
     }
 }
