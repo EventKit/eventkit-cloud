@@ -39,23 +39,19 @@ const UserIsNotAuthenticated = UserAuthWrapper({
     allowRedirectBack: false
 })
 
-const Authenticated = UserIsAuthenticated((props) => React.cloneElement(props.children, props));
-
 render(
     <Provider store={store}>
         <Router history={history}>
             <Route path="/" component={Application}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
-                <Route component={Authenticated}>
-                    <Route path="/exports" component={Exports}>
-                        <Route path="/export/:uid" component={Export}/>
+                    <Route path="/exports" component={UserIsAuthenticated(Exports)}>
+                        <Route path="/export/:uid" component={UserIsAuthenticated(Export)}/>
                     </Route>
-                    <Route path="/create" component={CreateExport}>
-                        <Route path="/exportAOI" component={ExportAOI}/>
-                        <Route path="/exportInfo" component={ExportInfo}/>
+                    <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
+                        <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
+                        <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
                     </Route>
-                </Route>
                 <Route path="/about" component={About}/>
             </Route>
         </Router>
