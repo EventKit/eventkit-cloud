@@ -14,8 +14,8 @@ div.map {
 }
 
 .olZoom {
-    left: 8px;
-    bottom: 60px;
+    right: 8px;
+    top: 350px;
     color: #66a3ff;
     background-color: white;
 }

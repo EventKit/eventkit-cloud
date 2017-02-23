@@ -3,7 +3,7 @@ import {combineReducers} from 'redux';
 import { reducer as reduxFormReducer } from 'redux-form'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer} from './exportsReducer';
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
-import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
+import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 

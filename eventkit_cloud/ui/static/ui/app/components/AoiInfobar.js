@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from '../styles/SetAOIToolbar.css';
-import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/setAoiToolbarActions.js';
+import styles from '../styles/AoiInfobar.css';
+import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/AoiInfobarActions.js';
 import {PopupBox} from './PopupBox.js';
 
 export const NO_SELECTION_ICON = 'warning';
@@ -10,7 +10,7 @@ export const POINT_ICON = 'room';
 
 const isEqual = require('lodash/isEqual');
 
-export class SetAOIToolbar extends Component {
+export class AoiInfobar extends Component {
 
     constructor(props) {
         super(props)
@@ -28,6 +28,7 @@ export class SetAOIToolbar extends Component {
             resetMapClass: styles.inactiveButton,
             geometryIcon: NO_SELECTION_ICON,
             showInfoPopup: false,
+            showAoiInfobar: false,
         }
     }
 
@@ -58,9 +59,11 @@ export class SetAOIToolbar extends Component {
                 this.setState({geometryIcon: POLYGON_ICON});
             }
             this.setState({aoiTitle: aoiInfo.title});
-            this.setState({aoiDescription: aoiInfo.description});    
+            this.setState({aoiDescription: aoiInfo.description});
+            this.setState({showAoiInfobar: true});
         }
         else {
+            this.setState({showAoiInfobar: false});
             this.props.toggleZoomToSelection(true);
             this.props.toggleResetMap(true);
             this.setState({geometryIcon: NO_SELECTION_ICON});
@@ -110,34 +113,38 @@ export class SetAOIToolbar extends Component {
     render() {
         return (
             <div>
-                <div className={styles.setAOIContainer}>
-                    <div className={styles.topBar}>
-                        <span className={styles.setAOITitle}><strong>Set Area Of Interest (AOI)</strong></span>
-                        <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}>
-                            <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
-                        </button>
-                        <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}>
-                            <i className={"fa fa-refresh"}></i> RESET VIEW
-                        </button>
-                    </div>
-                    <div className={styles.detailBar}>
-                        <i className={"material-icons " + styles.geometryIcon}>
-                                {this.state.geometryIcon}
-                        </i>
-                        <div className={styles.detailText}>
-                            <div className={styles.aoiTitle}>
-                                <strong>{this.state.aoiTitle}</strong>
-                                {/*{this.state.geometryIcon != NO_SELECTION_ICON ? 
-                                    <button className={styles.aoiInfo} onClick={this.handleInfoClick}>
-                                        <i className={"material-icons"} style={{fontSize: '15px', color: '#4598bf'}}>info</i>
-                                    </button>
-                                : null}*/}
-                            </div>
-                            <div className={styles.aoiDescription}>
-                                {this.state.aoiDescription}
-                            </div>
+                <div className={styles.aoiInfoWrapper}>
+                    {this.state.showAoiInfobar ? 
+                    <div className={styles.aoiInfobar}>
+                        <div className={styles.topBar}>
+                            <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
+                            <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}>
+                                <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
+                            </button>
+                            <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}>
+                                <i className={"fa fa-refresh"}></i> RESET VIEW
+                            </button>
                         </div>
+                        <div className={styles.detailBar}>
+                            <i className={"material-icons " + styles.geometryIcon}>
+                                    {this.state.geometryIcon}
+                            </i>
+                            <div className={styles.detailText}>
+                                <div className={styles.aoiTitle}>
+                                    <strong>{this.state.aoiTitle}</strong>
+                                    {/*{this.state.geometryIcon != NO_SELECTION_ICON ? 
+                                        <button className={styles.aoiInfo} onClick={this.handleInfoClick}>
+                                            <i className={"material-icons"} style={{fontSize: '15px', color: '#4598bf'}}>info</i>
+                                        </button>
+                                    : null}*/}
+                                </div>
+                                <div className={styles.aoiDescription}>
+                                    {this.state.aoiDescription}
+                                </div>
+                            </div>
+                        </div>   
                     </div>
+                    : null}
                 </div>
                 {/*<PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
                     <p> AOI Geojson </p>
@@ -148,7 +155,7 @@ export class SetAOIToolbar extends Component {
     }
 }
 
-SetAOIToolbar.propTypes = {
+AoiInfobar.propTypes = {
     aoiInfo: React.PropTypes.object,
     zoomToSelection: React.PropTypes.object,
     resetMap: React.PropTypes.object,
@@ -186,4 +193,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(SetAOIToolbar)
+)(AoiInfobar)

@@ -4,7 +4,7 @@ import {connect} from 'react-redux';
 import ol from 'openlayers';
 import styles from '../styles/CreateExport.css';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
-import SetAOIToolbar from './SetAOIToolbar.js';
+import AoiInfobar from './AoiInfobar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
 import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
@@ -245,7 +245,7 @@ export class ExportAOI extends Component {
         return (
             <div>
                 <div id="map" className={styles.map} ref="olmap">
-                    <SetAOIToolbar />
+                    <AoiInfobar />
                     <SearchAOIToolbar 
                         handleSearch={(result) => this.handleSearch(result)}
                         handleCancel={(sender) => this.handleCancel(sender)}/>

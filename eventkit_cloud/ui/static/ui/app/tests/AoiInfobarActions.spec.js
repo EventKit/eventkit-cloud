@@ -1,6 +1,6 @@
-import * as actions from '../actions/setAoiToolbarActions'
+import * as actions from '../actions/AoiInfobarActions'
 
-describe('setAoiToolbar actions', () => {
+describe('AoiInfobar actions', () => {
 
     it('toggleZoomToSelection should return boolean indicating if its disabled', () => {
         expect(actions.toggleZoomToSelection(true)).toEqual({
