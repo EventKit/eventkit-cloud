@@ -14,18 +14,14 @@ export class AoiInfobar extends Component {
 
     constructor(props) {
         super(props)
-        this.updateZoomToSelectionState = this.updateZoomToSelectionState.bind(this);
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
-        this.updateResetMapState = this.updateResetMapState.bind(this);
-        this.dispatchResetMap = this.dispatchResetMap.bind(this);
+        // this.dispatchResetMap = this.dispatchResetMap.bind(this);
         this.handleAoiInfo = this.handleAoiInfo.bind(this);
         // this.handleInfoClick = this.handleInfoClick.bind(this);
 
         this.state = {
-            aoiDescription: 'No AOI Set',
+            aoiDescription: '',
             aoiTitle: '',
-            zoomToSelectionClass: styles.inactiveButton,
-            resetMapClass: styles.inactiveButton,
             geometryIcon: NO_SELECTION_ICON,
             showInfoPopup: false,
             showAoiInfobar: false,
@@ -33,16 +29,6 @@ export class AoiInfobar extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        // Check if zoomToSelection state has been changed
-        if (nextProps.zoomToSelection.disabled != this.props.zoomToSelection.disabled) {
-            this.updateZoomToSelectionState(nextProps.zoomToSelection.disabled);
-        }
-
-        // Check if resetMap state has been changed
-        if (nextProps.resetMap.disabled != this.props.zoomToSelection.disabled) {
-            this.updateResetMapState(nextProps.resetMap.disabled);
-        }
-
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             this.handleAoiInfo(nextProps.aoiInfo);
         }
@@ -50,8 +36,6 @@ export class AoiInfobar extends Component {
 
     handleAoiInfo(aoiInfo) {
         if(!isEqual(aoiInfo.geojson, {})) {
-            this.props.toggleZoomToSelection(false);
-            this.props.toggleResetMap(false);
             if(aoiInfo.geomType == 'Point') {
             this.setState({geometryIcon: POINT_ICON});
             }
@@ -64,8 +48,6 @@ export class AoiInfobar extends Component {
         }
         else {
             this.setState({showAoiInfobar: false});
-            this.props.toggleZoomToSelection(true);
-            this.props.toggleResetMap(true);
             this.setState({geometryIcon: NO_SELECTION_ICON});
             this.setState({aoiTitle: ''});
             this.setState({aoiDescription: 'No AOI Set'});    
@@ -76,26 +58,6 @@ export class AoiInfobar extends Component {
     //     this.setState({showInfoPopup: true})
     // }
 
-    // Change the appearance of the button to either active or inactive
-    updateZoomToSelectionState(disabled) {
-        if (disabled) {
-            this.setState({zoomToSelectionClass: styles.inactiveButton});
-        }
-        else {
-            this.setState({zoomToSelectionClass: styles.activeButton});
-        }
-    }
-
-    // Change the appearance of the button to either active or inactive
-    updateResetMapState(disabled) {
-        if (disabled) {
-            this.setState({resetMapClass: styles.inactiveButton});
-        }
-        else {
-            this.setState({resetMapClass: styles.activeButton});
-        }
-    }
-
     dispatchZoomToSelection() {
         //If the zoom button is active dispatch the click
         if(!this.props.zoomToSelection.disabled){
@@ -103,12 +65,12 @@ export class AoiInfobar extends Component {
         }
     }
 
-    dispatchResetMap() {
-        //If the reset map buttn is active dispatch the click
-        if(!this.props.resetMap.disabled) {
-            this.props.clickResetMap();
-        }
-    } 
+    // dispatchResetMap() {
+    //     //If the reset map buttn is active dispatch the click
+    //     if(!this.props.resetMap.disabled) {
+    //         this.props.clickResetMap();
+    //     }
+    // } 
 
     render() {
         return (
@@ -118,12 +80,12 @@ export class AoiInfobar extends Component {
                     <div className={styles.aoiInfobar}>
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
-                            <button className={styles.simpleButton + ' ' + this.state.zoomToSelectionClass} onClick={this.dispatchZoomToSelection}>
+                            <button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchZoomToSelection}>
                                 <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
                             </button>
-                            <button className={styles.simpleButton + ' ' + this.state.resetMapClass} onClick={this.dispatchResetMap}>
+                            {/*<button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchResetMap}>
                                 <i className={"fa fa-refresh"}></i> RESET VIEW
-                            </button>
+                            </button>*/}
                         </div>
                         <div className={styles.detailBar}>
                             <i className={"material-icons " + styles.geometryIcon}>
@@ -158,35 +120,28 @@ export class AoiInfobar extends Component {
 AoiInfobar.propTypes = {
     aoiInfo: React.PropTypes.object,
     zoomToSelection: React.PropTypes.object,
-    resetMap: React.PropTypes.object,
-    toggleZoomToSelection: React.PropTypes.func,
+    // resetMap: React.PropTypes.object,
     clickZoomToSelection: React.PropTypes.func,
-    toggleResetMap: React.PropTypes.func,
-    clickResetMap: React.PropTypes.func,
+    // clickResetMap: React.PropTypes.func,
 }
 
 function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         zoomToSelection: state.zoomToSelection,
-        resetMap: state.resetMap,
+        // resetMap: state.resetMap,
     }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        toggleZoomToSelection: (isDisabled) => {
-            dispatch(toggleZoomToSelection(isDisabled));
-        },
+        
         clickZoomToSelection: () => {
             dispatch(clickZoomToSelection());
         },
-        toggleResetMap: (isDisabled) => {
-            dispatch(toggleResetMap(isDisabled));
-        },
-        clickResetMap: () => {
-            dispatch(clickResetMap());
-        }
+        // clickResetMap: () => {
+        //     dispatch(clickResetMap());
+        // }
     }
 }
 

@@ -202,14 +202,20 @@ export class ExportAOI extends Component {
 
         this._map = new ol.Map({
             controls: [
-                new ol.control.ScaleLine(),
+                new ol.control.ScaleLine({
+                    className: styles.olScaleLine,
+                }),
                 new ol.control.Attribution({
                     collapsible: false,
                     collapsed: false,
                 }),
                 new ol.control.Zoom({
                     className: styles.olZoom
-                })
+                }),
+                new ol.control.ZoomToExtent({
+                    className: styles.olZoomToExtent,
+                    extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
+                }),
             ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
@@ -235,6 +241,8 @@ export class ExportAOI extends Component {
         this._map.addInteraction(this._drawBoxInteraction);
         this._map.addInteraction(this._drawFreeInteraction);
         this._map.addLayer(this._drawLayer);
+        console.log(this._map.getView().calculateExtent(this._map.getSize()));
+        ///[-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]///
     }
 
 

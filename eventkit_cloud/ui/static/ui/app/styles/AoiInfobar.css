@@ -1,11 +1,11 @@
 @media screen and (min-width: 531px) {
-    .simpleButton {
+    .activeButton {
         font-size: .9em;
     }
 }
 
 @media screen and (max-width: 530px) {
-    .simpleButton {
+    .activeButton {
         font-size: .7em;
     }
 }
@@ -23,7 +23,7 @@
     min-width: 320px;
     max-width: 765px;
     margin: 0 auto;
-    width: 90%;
+    width: 80%;
     height: 70px;
     background-color: #fff;
 }
@@ -53,23 +53,16 @@
     vertical-align: middle !important;
 }
 
-.simpleButton {
+.activeButton {
     background: none;
     border: none;
     float: right;
     padding-right: 10px;
-}
-
-.simpleButton:focus {
-    outline: none;
-}
-
-.activeButton {
     color: #4498c0;
 }
 
-.inactiveButton {
-    color: grey;
+.activeButton:focus {
+    outline: none;
 }
 
 .geometryIcon {
