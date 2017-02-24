@@ -1,5 +1,5 @@
 
-import * as types from '../actions/actionTypes';
+import types from '../actions/actionTypes';
 import initialState from './initialState';
 
 export function exportJobsReducer(state = initialState.jobs, action) {

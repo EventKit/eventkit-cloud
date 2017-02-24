@@ -1,5 +1,5 @@
-import {Config} from '../config'
-import * as types from './actionTypes'
+import {Config} from '../config';
+import types from './actionTypes';
 import ExportApi from '../api/exportsApi';
 
 export function loadJobsSuccess(jobs) {

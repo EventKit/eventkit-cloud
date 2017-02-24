@@ -1,4 +1,4 @@
-import * as types from '../actions/actionTypes';
+import types from '../actions/actionTypes';
 import initialState from './initialState';
 
 export function zoomToSelectionReducer(state = initialState.zoomToSelection, action) {

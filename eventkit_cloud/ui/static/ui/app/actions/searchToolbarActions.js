@@ -1,5 +1,3 @@
-import {Config} from '../config'
-import * as types from './actionTypes'
 import fetch from 'isomorphic-fetch'
 const isEqual = require('lodash/isEqual');
 
@@ -25,4 +23,3 @@ export function getGeonames(query) {
         });
     }
 }
-
