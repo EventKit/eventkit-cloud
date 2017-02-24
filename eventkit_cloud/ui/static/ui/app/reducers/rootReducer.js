@@ -1,11 +1,13 @@
-
-import {combineReducers} from 'redux';
+import {combineReducers} from 'redux'
 import { reducer as reduxFormReducer } from 'redux-form'
+import userReducer from './userReducer'
+import { routerReducer } from 'react-router-redux'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer} from './exportsReducer';
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './setAoiToolbarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -21,6 +23,8 @@ const rootReducer = combineReducers({
     showImportModal: showImportModalReducer,
     importGeom: importGeomReducer,
     form: reduxFormReducer,
+    user: userReducer,
+    routing: routerReducer,
 });
 
 export default rootReducer;

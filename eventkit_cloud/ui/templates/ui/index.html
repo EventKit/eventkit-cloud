@@ -3,11 +3,12 @@
   <head>
     <meta charset="utf-8">
     <title>EventKit</title>
+    {% load staticfiles %}
     <meta id="meta" name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="app/styles/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="app/fonts/materialIcons.css">
-    <link rel="stylesheet" href="app/styles/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="app/styles/openlayers/ol.css">
+    <link rel="stylesheet" href="{% static 'ui/app/styles/bootstrap/css/bootstrap.min.css'%}">
+    <link rel="stylesheet" href="{% static 'ui/app/fonts/materialIcons.css'%}">
+    <link rel="stylesheet" href="{% static 'ui/app/styles/font-awesome/css/font-awesome.min.css'%}">
+    <link rel="stylesheet" href="{% static 'ui/app/styles/openlayers/ol.css'%}">
 
     <style>
       .ol-scale-line {
@@ -38,7 +39,8 @@
 
     <div id='root'></div>
 
-    <script src="build/bundle.js"></script>
+    <script src="{% static 'ui/build/bundle.js' %}"></script>
 
   </body>
 </html>
+
