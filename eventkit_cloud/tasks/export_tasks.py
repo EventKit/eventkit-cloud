@@ -8,6 +8,7 @@ import shutil
 from zipfile import ZipFile
 import socket
 
+from django.core.cache import caches
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
@@ -57,8 +58,43 @@ class TaskStates(Enum):
         return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
+# https://github.com/celery/celery/issues/3270
+class TaskWithLock(Task):
+    """
+    Base task with lock to prevent multiple execution of tasks with ETA.
+    It's happens with multiple workers for tasks with any delay (countdown, ETA).
+    You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file
+    """
+    cache = caches[getattr(settings, 'CELERY_TASK_LOCK_CACHE', 'default')]
+    lock_expiration = 60 * 60 * 24  # 1 day
+
+    @property
+    def lock_key(self):
+        """
+        Unique string for task as lock key
+        """
+        return 'TaskLock_%s_%s_%s' % (self.__class__.__name__, self.request.id, self.request.retries)
+
+    def acquire_lock(self):
+        """
+        Set lock
+        """
+        result = self.cache.add(self.lock_key, True, self.lock_expiration)
+        logger.debug('Acquiring %s key %s', self.lock_key, 'succeed' if result else 'failed')
+        return result
+
+    def __call__(self, *args, **kwargs):
+        """
+        Checking for lock existence
+        """
+        if self.acquire_lock():
+            logger.debug('Task %s execution with lock started', self.request.id)
+            return super(TaskWithLock, self).__call__(*args, **kwargs)
+        logger.warning('Task %s skipped due lock detection', self.request.id)
+
+
 # ExportTask abstract base class and subclasses.
-class ExportTask(Task):
+class ExportTask(TaskWithLock):
     """
     Abstract base class for export tasks.
     """
@@ -78,6 +114,12 @@ class ExportTask(Task):
             6. create the export task result
             7. update the export task status and save it
         """
+
+        # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks should
+        # just return.
+        if not retval:
+            return
+
         from ..tasks.models import (ExportTaskResult, ExportTask as ExportTaskModel)
         # update the task
         finished = timezone.now()
@@ -190,10 +232,6 @@ class ExportTask(Task):
         try:
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
-            scheduled = celery.control.inspect().scheduled()
-            if scheduled and celery_uid in [item['request']['id'] for sublist in
-                                                 celery.control.inspect().scheduled().values() for item in sublist]:
-                raise Exception("The task {0} is already scheduled for execution.".format(task.name))
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, 'state') or []
@@ -530,7 +568,7 @@ def generate_preset_task(self, result=None, run_uid=None, task_uid=None, stage_d
         return {'result': output_path}
 
 
-@app.task(name='Clean Up Failure Task')
+@app.task(name='Clean Up Failure Task', base=TaskWithLock)
 def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Used to close tasks in a failed chain.
@@ -574,7 +612,7 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
             routing_key=worker)
 
 
-@app.task(name='Finalize Export Provider Run')
+@app.task(name='Finalize Export Provider Run', base=TaskWithLock)
 def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -644,7 +682,7 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
     return result
 
 
-@app.task(name='Zip File Export')
+@app.task(name='Zip File Export', base=TaskWithLock)
 def zip_file_task(result=None, run_uid=None, include_files=None):
     """
     rolls up runs into a zip file
@@ -712,7 +750,7 @@ def zip_file_task(result=None, run_uid=None, include_files=None):
     return {'result': zip_st_filepath}
 
 
-class FinalizeRunTaskClass(Task):
+class FinalizeRunTaskClass(TaskWithLock):
     """
     Finalizes Cleans up stage_dir for ExportRun
     """
@@ -782,7 +820,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     return {'stage_dir': stage_dir}
 
 
-@app.task(name='Export Task Error Handler', bind=True)
+@app.task(name='Export Task Error Handler', bind=True, base=TaskWithLock)
 def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
     """
     Handles un-recoverable errors in export tasks.
@@ -819,7 +857,7 @@ def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
     msg.send()
 
 
-@app.task(name='Cancel Export Provider Task')
+@app.task(name='Cancel Export Provider Task', base=TaskWithLock)
 def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=None):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
@@ -888,7 +926,7 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
     )
 
 
-@app.task(name='Kill Task')
+@app.task(name='Kill Task', base=TaskWithLock)
 def kill_task(task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.

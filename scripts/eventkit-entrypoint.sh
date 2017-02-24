@@ -2,6 +2,7 @@
 
 python /var/lib/eventkit/manage.py collectstatic --noinput
 python /var/lib/eventkit/manage.py migrate
+python /var/lib/eventkit/manage.py createcachetable
 python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/admin_user.json
 python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/insert_provider_types.json
 python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/osm_provider.json
