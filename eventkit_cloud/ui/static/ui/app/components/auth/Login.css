@@ -10,6 +10,9 @@
     margin-top: 50px;
     display: flex;
     flex-wrap: wrap;
+    padding-bottom: 1000px;
+    width:100%;
+    height:100%;
 }
 .paper {
     background-image: url('../../../images/topoBackground.jpg');
