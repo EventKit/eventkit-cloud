@@ -38,6 +38,7 @@ from eventkit_cloud.tasks.models import (
     ExportTaskResult,
     ExportProviderTask
 )
+from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
     from collections import OrderedDict
@@ -162,7 +163,10 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         request = self.context['request']
-        return request.build_absolute_uri(obj.download_url)
+        if getattr(settings, 'USE_S3', False):
+            return get_presigned_url(download_url=obj.download_url)
+        else:
+            return request.build_absolute_uri(obj.download_url)
 
     @staticmethod
     def get_size(obj):
@@ -339,7 +343,10 @@ class ExportRunSerializer(serializers.ModelSerializer):
             return None
 
         if obj.zipfile_url.startswith('http'):
-            return obj.zipfile_url
+            if getattr(settings, 'USE_S3', False):
+                return get_presigned_url(download_url=obj.zipfile_url)
+            else:
+                return obj.zipfile_url
 
         # get full URL path from current request
         uri = request.build_absolute_uri()

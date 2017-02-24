@@ -711,24 +711,35 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.patch(bad_patch_url)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_zipfile_url_s3(self):
+    @patch('eventkit_cloud.api.serializers.get_presigned_url')
+    def test_zipfile_url_s3(self, get_url):
         self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
         self.export_run.save()
-
+        get_url.return_value = self.export_run.zipfile_url
         url = reverse('api:runs-detail', args=[self.run_uid])
-        response = self.client.get(url)
-        result = response.data
 
-        self.assertEquals(
-            self.export_run.zipfile_url,
-            result[0]['zipfile_url']
-        )
+        with self.settings(USE_S3=False):
+            response = self.client.get(url)
+            result = response.data
+
+            self.assertEquals(
+                self.export_run.zipfile_url,
+                result[0]['zipfile_url']
+            )
+            get_url.assert_not_called()
+
+        with self.settings(USE_S3=True):
+            response = self.client.get(url)
+            result = response.data
+
+            self.assertEquals(
+                self.export_run.zipfile_url,
+                result[0]['zipfile_url']
+            )
+            get_url.assert_called_with(download_url=self.export_run.zipfile_url)
 
     def test_retrieve_run(self, ):
         expected = '/api/runs/{0}'.format(self.run_uid)
-
-        self.export_run.zipfile_url = 'test.zip'
-        self.export_run.save()
 
         url = reverse('api:runs-detail', args=[self.run_uid])
         self.assertEquals(expected, url)
@@ -737,10 +748,6 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
-        self.assertEquals(
-            'http://testserver/downloads/test.zip',
-            result[0]['zipfile_url']
-        )
 
     def test_retrieve_run_no_permissions(self, ):
         user = User.objects.create_user(

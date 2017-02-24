@@ -72,3 +72,14 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
         response = client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
         if not response.get("DeleteMarker"):
             logger.warn("Could not delete {0} from S3.".format(_key))
+
+
+def get_presigned_url(download_url=None, client=None):
+
+    if not client:
+        client = get_s3_client()
+
+    parts = download_url.split('/')
+    key = "{0}/{1}".format(parts[-2], parts[-1])
+    return client.generate_presigned_url('get_object', Params={'Bucket': settings.AWS_BUCKET_NAME, 'Key': key},
+                                         ExpiresIn=300)

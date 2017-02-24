@@ -7,14 +7,16 @@ import botocore.session
 from botocore.stub import Stubber, ANY
 from django.conf import settings
 from django.test import TestCase
-from django.test.utils  import override_settings
-from mock import patch, mock_open
+from django.test.utils import override_settings
+from mock import patch, mock_open, Mock
 
 from eventkit_cloud.utils.s3 import (
     delete_from_s3,
     get_s3_client,
     upload_to_s3,
+    get_presigned_url
 )
+
 
 # TODO: override settings.EXPORT_DOWNLOAD_ROOT to be test dir?
 
@@ -46,17 +48,17 @@ class TestS3Util(TestCase):
             'put_object',
             self._base_response,
             dict(
-            Bucket=ANY,
-            Key=self._path,
-            Body='test'
-        ))
+                Bucket=ANY,
+                Key=self._path,
+                Body='test'
+            ))
         stubber.add_response(
             'put_object_acl',
             self._base_response,
             {'ACL': 'public-read', 'Bucket': ANY, 'Key': ANY}
         )
         with patch('eventkit_cloud.utils.s3.open', mock_open(read_data='test'), create=True) as mock_open_obj:
-            upload_to_s3(self._uuid, self._filename, self._filename,client=client)
+            upload_to_s3(self._uuid, self._filename, self._filename, client=client)
 
     def test_s3_delete(self):
         client = get_s3_client()
@@ -67,10 +69,10 @@ class TestS3Util(TestCase):
             'put_object',
             self._base_response,
             dict(
-            Bucket=ANY,
-            Key=self._path,
-            Body='test'
-        ))
+                Bucket=ANY,
+                Key=self._path,
+                Body='test'
+            ))
         stubber.add_response(
             'put_object_acl',
             self._base_response,
@@ -78,33 +80,33 @@ class TestS3Util(TestCase):
         )
 
         list_objects_response = {
-                'IsTruncated': False,
-                'Name': 'test-bucket',
-                'MaxKeys': 1000, 'Prefix': '',
-                'Contents': [{
-                    u'LastModified': datetime.datetime(2016, 9, 23, 11, 17, 14),
-                    u'ETag': '"20d2cb13afb394301bbea0bcff19e12b"',
-                    u'StorageClass': 'STANDARD',
-                    u'Key': self._path,
-                    u'Owner': {
-                        u'DisplayName': 'test',
-                        u'ID': '31d89f79718dbd4435290740e6fa5e41cffafa7d9a3c323c85b525342e6341ae'
-                    },
-                    u'Size': 77824
-                }],
-                'EncodingType': 'url',
-                'ResponseMetadata': {
-                            'RequestId': 'abc123',
-                            'HTTPStatusCode': 200,
-                            'HostId': 'abc123'
-                        },
-                'Marker': ''
+            'IsTruncated': False,
+            'Name': 'test-bucket',
+            'MaxKeys': 1000, 'Prefix': '',
+            'Contents': [{
+                u'LastModified': datetime.datetime(2016, 9, 23, 11, 17, 14),
+                u'ETag': '"20d2cb13afb394301bbea0bcff19e12b"',
+                u'StorageClass': 'STANDARD',
+                u'Key': self._path,
+                u'Owner': {
+                    u'DisplayName': 'test',
+                    u'ID': '31d89f79718dbd4435290740e6fa5e41cffafa7d9a3c323c85b525342e6341ae'
+                },
+                u'Size': 77824
+            }],
+            'EncodingType': 'url',
+            'ResponseMetadata': {
+                'RequestId': 'abc123',
+                'HTTPStatusCode': 200,
+                'HostId': 'abc123'
+            },
+            'Marker': ''
         }
         stubber.add_response(
             'list_objects',
             list_objects_response, {
                 'Bucket': ANY,
-                'Prefix':self._uuid
+                'Prefix': self._uuid
             })
         stubber.add_response(
             'delete_object',
@@ -117,3 +119,23 @@ class TestS3Util(TestCase):
             upload_to_s3(self._uuid, self._filename, self._filename, client=client)
 
         delete_from_s3(self._uuid, client=client)
+
+    @patch('eventkit_cloud.utils.s3.get_s3_client')
+    def test_get_presigned_url(self, get_client):
+        client = Mock()
+        get_client.return_value = client
+
+        test_url = "http://s3/run_uid/file.txt"
+        expected_key = "run_uid/file.txt"
+        expected_bucket = 'test_bucket'
+        with self.settings(AWS_BUCKET_NAME=expected_bucket):
+            get_presigned_url(download_url=test_url)
+        client.generate_presigned_url.assert_called_with('get_object',
+                                                         Params={'Bucket': expected_bucket, 'Key': expected_key},
+                                                         ExpiresIn=300)
+
+        with self.settings(AWS_BUCKET_NAME=expected_bucket):
+            get_presigned_url(download_url=test_url, client=client)
+        client.generate_presigned_url.assert_called_with('get_object',
+                                                         Params={'Bucket': expected_bucket, 'Key': expected_key},
+                                                         ExpiresIn=300)
