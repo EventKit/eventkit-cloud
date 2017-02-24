@@ -1,0 +1,14 @@
+{% load i18n %}
+<html>
+    <head>
+        <title>{% trans 'Eventkit' %}</title>
+    </head>
+    <body>
+        <p>{% trans 'This is an automated email from the Eventkit Team.' %}</p>
+        <p>{% trans 'Unfortunately, your Eventkit Data Pack has a failure.' %}</p>
+        <p>{% trans 'Please follow this link' %} <a href="{{ url }}">{{ url }}</a>{% trans ' to see the status of your Eventkit Data Pack.' %}</p>
+        <p>{% trans 'Please quote this Task ID when reporting errors:' %} {{ task_id }}.</p>
+        <p>{% trans 'We apologise for any inconvenience this may cause.' %}</p>
+        <p>{% trans 'Eventkit Team' %}</p>
+    </body>
+</html>
