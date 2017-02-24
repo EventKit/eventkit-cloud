@@ -10,6 +10,8 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
+import ExportSummary from './ExportSummary'
+import { createExportRequest } from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -58,9 +60,10 @@ class BreadcrumbStepper extends React.Component {
                 return <ExportAOI mode={this._mapMode}
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
-                return <ExportInfo/>
+                return <ExportInfo bbox={this.props.bbox}
+                                   createExportRequest={createExportRequest} />
             case 2:
-                return 'return preview export';
+                return <ExportSummary/>
             case 3:
                 return 'return export status';
             default:
@@ -70,6 +73,8 @@ class BreadcrumbStepper extends React.Component {
     }
 
     render() {
+
+        const { createExportRequest } = this.props
 
         const styles = {
             stepper: {
@@ -144,6 +149,7 @@ class BreadcrumbStepper extends React.Component {
 BreadcrumbStepper.propTypes = {
     bbox: React.PropTypes.arrayOf(React.PropTypes.number),
     aoiInfo: React.PropTypes.object,
+    createExportRequest: React.PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -152,7 +158,15 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
     };
 }
+function mapDispatchToProps(dispatch) {
+    return {
+        createExportRequest: () => {
+            dispatch(createExportRequest());
+        },
+    }
+}
 
 export default connect(
     mapStateToProps,
+    mapDispatchToProps
 )(BreadcrumbStepper);

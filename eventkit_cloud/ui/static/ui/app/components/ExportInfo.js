@@ -3,72 +3,101 @@ import {connect} from 'react-redux'
 import { reduxForm, Field } from 'redux-form'
 import { RadioButton } from 'material-ui/RadioButton'
 import { List, ListItem} from 'material-ui/List'
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
-import Paper from 'material-ui/Paper';
+import TextField from 'material-ui/TextField'
+import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle'
+import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked'
+import Paper from 'material-ui/Paper'
+import Checkbox from 'material-ui/Checkbox'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
-import {
-    Checkbox,
-    RadioButtonGroup,
-    SelectField,
-    TextField,
-    Toggle
-} from 'redux-form-material-ui'
 import styles from '../styles/ExportInfo.css'
 
 class ExportInfo extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            exportName: '',
+            datapackDescription: '',
+            projectName: '',
+            makePublic: false,
+            osmData: false,
+            osmTiles: false,
+            digitalGlobe: false,
+        }
+        this.onChange = this.onChange.bind(this)
+        this.onSubmit = this.onSubmit.bind(this)
+    }
+    onChange(e) {
+        this.setState({
+            [e.target.name]: e.target.value
+        })
+    }
+
+    toggleCheckbox(event, checked) {
+        this.setState({
+            [event.target.name]: checked
+        });
+    }
+
+    onSubmit(e) {
+        e.preventDefault()
+        console.log("made it here")
+        this.props.createExportRequest(this.state)
+    }
+
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
     componentDidMount() {
-        this.refs.datapackName            // the Field
-            .getRenderedComponent() // on Field, returns ReduxFormMaterialUITextField
-            .getRenderedComponent() // on ReduxFormMaterialUITextField, returns TextField
-            .focus()                // on TextField
+        //this.refs.datapackName            // the Field
+        //    .getRenderedComponent() // on Field, returns ReduxFormMaterialUITextField
+        //    .getRenderedComponent() // on ReduxFormMaterialUITextField, returns TextField
+        //    .focus()                // on TextField
     }
     render() {
 
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
-                <form className={styles.form}>
+                <form className={styles.form} onSubmit={this.onSubmit}>
                     <Paper className={styles.paper} zDepth={2} rounded>
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
-                        <Field name="datapackName"
-                               id="datapackName"
+                        <TextField name="exportName"
+                               onChange={this.onChange}
+                               value={this.state.exportName}
+                               hintText="Datapack Name"
                                className={styles.textField}
-                               component={TextField}
-                               hintText="Name"
-                               ref="datapackName" withRef/>
+                               />
                     </div>
                     <div className={styles.fieldWrapperLarge}>
-                        <Field
-                            name="description"
-                            id="description"
-                            component={TextField}
+                        <TextField
+                            name="datapackDescription"
+                            onChange={this.onChange}
+                            value={this.state.datapackDescription}
                             hintText="Description"
                             multiLine={true}
                             rows={2}/>
                     </div>
                     <div className={styles.fieldWrapper}>
-                        <Field
-                            id="projectName"
+                        <TextField
                             name="projectName"
-                            component={TextField}
-                            hintText="Project Name"/>
+                            onChange={this.onChange}
+                            value={this.state.projectName}
+                            hintText="Project Name"
+                            className={styles.textField}/>
                     </div>
                     <div className={styles.checkbox}>
-                        <Field name="makePublic"
-                               id="makePublic"
-                               component={Checkbox}
-                               className={styles.checkboxColor}
-                               label="Make Public"
-                               checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />}
-                               />
+                        <Checkbox
+                            name="makePublic"
+                            onCheck={this.toggleCheckbox.bind(this)}
+                            checked={this.state.makePublic}
+                            className={styles.checkboxColor}
+                            label="Make Public"
+                            checkedIcon={<ActionCheckCircle />}
+                            uncheckedIcon={<UncheckedCircle />}
+                            />
                     </div>
 
                     <div id="layersHeader" className={styles.heading}>Select Layers</div>
@@ -77,11 +106,15 @@ class ExportInfo extends React.Component {
                         <List className={styles.list}>
                             <ListItem
                             primaryText="OpenStreetMap Data"
-                            leftIcon={ <Field name="osmData"
-                            component={Checkbox}
-                            className={styles.checkboxColor}
-                            checkedIcon={<ActionCheckCircle />}
-                            uncheckedIcon={<UncheckedCircle className={styles.checkboxColor}/>} />}
+                            leftIcon={<Checkbox
+                                name="osmData"
+                                onCheck={this.toggleCheckbox.bind(this)}
+                                checked={this.state.osmData}
+                                className={styles.checkboxColor}
+                                checkedIcon={<ActionCheckCircle />}
+                                uncheckedIcon={<UncheckedCircle
+                                className={styles.checkboxColor}/>}
+                            />}
                             initiallyOpen={false}
                             primaryTogglesNestedList={true}
                             nestedItems={[
@@ -94,11 +127,14 @@ class ExportInfo extends React.Component {
                         />
                             <ListItem
                                 primaryText="OpenStreetMap Tiles"
-                                leftIcon={<Field name="osmTiles"
-                                component={Checkbox}
-                                className={styles.checkboxColor}
-                                checkedIcon={<ActionCheckCircle />}
-                                uncheckedIcon={<UncheckedCircle />} />}
+                                leftIcon={<Checkbox
+                                    name="osmTiles"
+                                    onCheck={this.toggleCheckbox.bind(this)}
+                                    checked={this.state.osmTiles}
+                                    className={styles.checkboxColor}
+                                    checkedIcon={<ActionCheckCircle />}
+                                    uncheckedIcon={<UncheckedCircle />}
+                                />}
                                 initiallyOpen={false}
                                 primaryTogglesNestedList={true}
                                 nestedItems={[
@@ -111,11 +147,14 @@ class ExportInfo extends React.Component {
                             />
                             <ListItem
                                 primaryText="DigitalGlobe Satellite Imagery Foundation Mosaic"
-                                leftIcon={ <Field name="digitalGlobe" 
-                                component={Checkbox}
-                                className={styles.checkboxColor}
-                                checkedIcon={<ActionCheckCircle />}
-                                uncheckedIcon={<UncheckedCircle />} />}
+                                leftIcon={ <Checkbox
+                                    name="digitalGlobe"
+                                    onCheck={this.toggleCheckbox.bind(this)}
+                                    checked={this.state.digitalGlobe}
+                                    className={styles.checkboxColor}
+                                    checkedIcon={<ActionCheckCircle />}
+                                    uncheckedIcon={<UncheckedCircle />}
+                                />}
                                 initiallyOpen={false}
                                 primaryTogglesNestedList={true}
                                 nestedItems={[
@@ -127,6 +166,7 @@ class ExportInfo extends React.Component {
                                 ]}
                             />
                         </List>
+                        <button type="submit">submit</button>
                         </div>
                     {/*
                     <div className={styles.heading}>Select Export File Formats</div>
@@ -206,17 +246,29 @@ class ExportInfo extends React.Component {
         )
     }
 }
+function mapStateToProps(state) {
+    return {
+        bbox: state.bbox,
+        exportInfo: state.exportInfo,
+    }
+}
 
 
 ExportInfo.propTypes = {
-
+    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
+    createExportRequest: React.PropTypes.func.isRequired,
 }
+
 ExportInfo.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
-};
+}
 
-export default reduxForm({
+ExportInfo =  reduxForm({
     form: 'exportInfo',
     initialValues: {
     }
 })(ExportInfo)
+
+ExportInfo = connect(mapStateToProps)(ExportInfo)
+
+export default ExportInfo

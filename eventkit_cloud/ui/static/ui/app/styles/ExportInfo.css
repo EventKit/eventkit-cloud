@@ -3,16 +3,14 @@
         margin: 0 auto;
         width: 90% !important
     }
-
 }
 .wholeDiv {
     margin-top:-30px;
-    padding-bottom: 90px;
+    padding-bottom: 250px;
     width:100%;
     height: 100%;
     background-image: url('../../images/ek_topo_pattern.png');
     background-repeat: repeat repeat;
-
 }
 .root {
    justify-content: space-around;
@@ -45,6 +43,23 @@
    font-size: 14px;
    color: black;
    align-content: flex-start;
+}
+.fieldWrapper > input {
+    background-color: rgba(179, 205, 224, .2)!important;
+    font-size: 16px!important;
+    width: 100%!important;
+    height: 45px!important;
+    margin-top: 15px!important;
+    color: black!important;
+    border:0;
+}
+.textField >  {
+    font-size: 16px!important;
+    color: #e2e2e2!important;
+}
+.textField > input{
+    font-size: 16px!important;
+    color: black!important;
 }
 .fieldWrapper > div{
    background-color: whitesmoke!important;

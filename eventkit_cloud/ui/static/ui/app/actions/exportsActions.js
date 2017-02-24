@@ -1,6 +1,15 @@
 import {Config} from '../config'
 import * as types from './actionTypes'
 import ExportApi from '../api/exportsApi';
+import axios from 'axios'
+
+
+export function createExportRequest(exportData) {
+    return {
+        type: types.CREATE_EXPORT_SUCCESS,
+        exportInfo: exportData
+    }
+}
 
 export function loadJobsSuccess(jobs) {
     return {
@@ -37,6 +46,7 @@ export function updateMode(mode) {
         mode: mode
     }
 }
+
 
 export function loadExports() {
     // make async call to api, handle promise, dispatch action when promise is resolved

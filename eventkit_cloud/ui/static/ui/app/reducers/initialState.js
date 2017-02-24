@@ -37,5 +37,14 @@ export default {
         mapView: "DEFAULT",
         import: "DEFAULT",
         search: "DEFAULT",
+    },
+    exportInfo: {
+        exportName: null,
+        datapackDescription: null,
+        projectName: null,
+        makePublic: false,
+        osmData: false,
+        osmTiles: false,
+        digitalGlobe: false,
     }
 }
