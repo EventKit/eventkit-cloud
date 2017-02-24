@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:xenial-20170119
 
 # a few minor docker-specific tweaks
 # see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
@@ -53,8 +53,7 @@ RUN cp /var/lib/eventkit/osmctools/osmupdate /var/lib/eventkit/osmctools/osmfilt
 RUN rm -fr /var/lib/eventkit/osmctools
 
 RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
-RUN apt-get update
-RUN apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite osmctools spatialite-bin libspatialite7 libspatialite-dev default-jre zip unzip postgresql-client
+RUN apt-get update && apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite osmctools spatialite-bin libspatialite7 libspatialite-dev default-jre zip unzip postgresql-client
 
 #RUN mkdir /var/lib/eventkit/tmp
 #RUN cd /var/lib/eventkit/tmp

@@ -18,6 +18,7 @@ from django.utils import timezone
 from enum import Enum
 from celery.result import AsyncResult
 from celery import Task
+import celery
 from celery.utils.log import get_task_logger
 from ..celery import app, TaskPriority
 from ..jobs.presets import TagParser
@@ -189,6 +190,10 @@ class ExportTask(Task):
         try:
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
+            scheduled = celery.control.inspect().scheduled()
+            if scheduled and celery_uid in [item['request']['id'] for sublist in
+                                                 celery.control.inspect().scheduled().values() for item in sublist]:
+                raise Exception("The task {0} is already scheduled for execution.".format(task.name))
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, 'state') or []
