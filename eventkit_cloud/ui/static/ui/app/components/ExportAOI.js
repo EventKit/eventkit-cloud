@@ -241,8 +241,6 @@ export class ExportAOI extends Component {
         this._map.addInteraction(this._drawBoxInteraction);
         this._map.addInteraction(this._drawFreeInteraction);
         this._map.addLayer(this._drawLayer);
-        console.log(this._map.getView().calculateExtent(this._map.getSize()));
-        ///[-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]///
     }
 
 
