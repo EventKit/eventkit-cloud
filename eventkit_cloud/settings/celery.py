@@ -21,7 +21,7 @@ CELERY_TRACK_STARTED = True
 CELERY_CHORD_PROPAGATES = False
 
 CELERYD_PREFETCH_MULTIPLIER = 1
-# CELERYBEAT_SCHEDULER='djcelery.schedulers.DatabaseScheduler'
+CELERYBEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_RESULT_BACKEND=os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
 
 # Pickle used to be the default, and accepting pickled content is a security concern.  Using the new default json,
@@ -30,10 +30,6 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 # configure periodic task
 CELERYBEAT_SCHEDULE = {
-    # 'purge-unpublished-exports': {
-    #     'task': 'Purge Unpublished Exports',
-    #     'schedule': crontab(minute='0', hour='*', day_of_week='*')
-    # },
     'expire-runs': {
         'task': 'Expire Runs',
         'schedule': crontab(minute='0', hour='0', day_of_week='*')

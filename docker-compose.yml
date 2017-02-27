@@ -19,7 +19,7 @@ services:
         - SITE_NAME
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
-        - MEMCACHED=memcached:11211
+#        - MEMCACHED=memcached:11211
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -92,10 +92,10 @@ services:
        image: httpd:2.4.23
        ports:
           - "80:80"
-  memcached:
-       image: memcached:1.4.34
-       expose:
-        - "11211"
+#  memcached:
+#       image: memcached:1.4.34
+#       expose:
+#        - "11211"
   flower:
        extends:
           service: base

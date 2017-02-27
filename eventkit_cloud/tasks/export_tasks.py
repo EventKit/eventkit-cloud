@@ -19,7 +19,6 @@ from django.utils import timezone
 from enum import Enum
 from celery.result import AsyncResult
 from celery import Task
-import celery
 from celery.utils.log import get_task_logger
 from ..celery import app, TaskPriority
 from ..jobs.presets import TagParser
@@ -58,15 +57,16 @@ class TaskStates(Enum):
         return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
+# http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
-class TaskWithLock(Task):
+class LockingTask(Task):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
     It's happens with multiple workers for tasks with any delay (countdown, ETA).
     You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file
     """
     cache = caches[getattr(settings, 'CELERY_TASK_LOCK_CACHE', 'default')]
-    lock_expiration = 60 * 60 * 24  # 1 day
+    lock_expiration = 60 * 60 * 12  # 12 Hours
 
     @property
     def lock_key(self):
@@ -80,7 +80,7 @@ class TaskWithLock(Task):
         Set lock
         """
         result = self.cache.add(self.lock_key, True, self.lock_expiration)
-        logger.debug('Acquiring %s key %s', self.lock_key, 'succeed' if result else 'failed')
+        logger.debug('Acquiring {0} key: {1}'.format(self.lock_key, 'succeed' if result else 'failed'))
         return result
 
     def __call__(self, *args, **kwargs):
@@ -88,13 +88,13 @@ class TaskWithLock(Task):
         Checking for lock existence
         """
         if self.acquire_lock():
-            logger.debug('Task %s execution with lock started', self.request.id)
-            return super(TaskWithLock, self).__call__(*args, **kwargs)
-        logger.warning('Task %s skipped due lock detection', self.request.id)
+            logger.debug('Task {0} started.'.format(self.request.id))
+            return super(LockingTask, self).__call__(*args, **kwargs)
+        logger.info('Task {0} skipped due to lock'.format(self.request.id))
 
 
 # ExportTask abstract base class and subclasses.
-class ExportTask(TaskWithLock):
+class ExportTask(LockingTask):
     """
     Abstract base class for export tasks.
     """
@@ -187,6 +187,7 @@ class ExportTask(TaskWithLock):
 
         task.status = TaskStates.SUCCESS.value
         task.save()
+        super(ExportTask, self).on_success(retval, task_id, args, kwargs)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
@@ -221,6 +222,7 @@ class ExportTask(TaskWithLock):
                     stage_dir=stage_dir
                 ).delay()
             return {'state': TaskStates.CANCELED.value}
+        super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
     def update_task_state(self, result=None, task_uid=None):
         """
@@ -306,7 +308,7 @@ def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_n
     osmparser.create_geopackage()
     osmparser.create_default_schema_gpkg()
     osmparser.update_zindexes()
-    return {'result': gpkg}
+    return {'result': gpkg, 'geopackage': gpkg}
 
 
 @app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
@@ -424,7 +426,7 @@ def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     self.update_task_state(result=result, task_uid=task_uid)
     run = ExportRun.objects.get(uid=run_uid)
 
-    result_gpkg = parse_result(result, 'result')
+    result_gpkg = parse_result(result, 'geopackage')
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
     gpkg = geopackage.add_geojson_to_geopackage(geojson=run.job.bounds_geojson, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
@@ -459,7 +461,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                             config=config, service_type=service_type, task_uid=task_uid)
         out = w2g.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': out}
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
@@ -481,7 +483,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
                                                                 config=config, service_type=service_type,
                                                                 task_uid=task_uid)
         out = w2g.convert()
-        return {'result': out}
+        return {'result': out, 'geopackage': out}
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
@@ -568,7 +570,7 @@ def generate_preset_task(self, result=None, run_uid=None, task_uid=None, stage_d
         return {'result': output_path}
 
 
-@app.task(name='Clean Up Failure Task', base=TaskWithLock)
+@app.task(name='Clean Up Failure Task', base=LockingTask)
 def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Used to close tasks in a failed chain.
@@ -612,7 +614,7 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
             routing_key=worker)
 
 
-@app.task(name='Finalize Export Provider Run', base=TaskWithLock)
+@app.task(name='Finalize Export Provider Run', base=LockingTask)
 def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -639,12 +641,12 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
             export_provider_task.status = TaskStates.INCOMPLETE.value
             export_provider_task.save()
 
-    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
-    provider_tasks = export_provider_task.run.provider_tasks.all()
-    if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
-           provider_tasks):
-        run_finished = True
+        provider_tasks = export_provider_task.run.provider_tasks.all()
+        if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
+               provider_tasks):
+            run_finished = True
 
     if run_finished:
         run = ExportRun.objects.get(uid=run_uid)
@@ -678,11 +680,11 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
             run_uid=run_uid,
             stage_dir=run_dir,
         )
+    else:
+        return result
 
-    return result
 
-
-@app.task(name='Zip File Export', base=TaskWithLock)
+@app.task(name='Zip File Export', base=LockingTask)
 def zip_file_task(result=None, run_uid=None, include_files=None):
     """
     rolls up runs into a zip file
@@ -750,7 +752,7 @@ def zip_file_task(result=None, run_uid=None, include_files=None):
     return {'result': zip_st_filepath}
 
 
-class FinalizeRunTaskClass(TaskWithLock):
+class FinalizeRunTaskClass(LockingTask):
     """
     Finalizes Cleans up stage_dir for ExportRun
     """
@@ -764,6 +766,7 @@ class FinalizeRunTaskClass(TaskWithLock):
                 shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
+        super(FinalizeRunTaskClass, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
 
 @app.task(name='Finalize Export Run', base=FinalizeRunTaskClass)
@@ -820,7 +823,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     return {'stage_dir': stage_dir}
 
 
-@app.task(name='Export Task Error Handler', bind=True, base=TaskWithLock)
+@app.task(name='Export Task Error Handler', bind=True, base=LockingTask)
 def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
     """
     Handles un-recoverable errors in export tasks.
@@ -857,7 +860,7 @@ def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
     msg.send()
 
 
-@app.task(name='Cancel Export Provider Task', base=TaskWithLock)
+@app.task(name='Cancel Export Provider Task', base=LockingTask)
 def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=None):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
@@ -926,7 +929,7 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
     )
 
 
-@app.task(name='Kill Task', base=TaskWithLock)
+@app.task(name='Kill Task', base=LockingTask)
 def kill_task(task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.

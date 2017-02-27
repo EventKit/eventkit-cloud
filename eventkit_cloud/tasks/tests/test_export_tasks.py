@@ -21,7 +21,7 @@ import datetime
 from ...jobs import presets
 from ...jobs.models import Job, Tag
 from ..export_tasks import (
-    export_task_error_handler, finalize_run_task,
+    LockingTask, export_task_error_handler, finalize_run_task,
     generate_preset_task, kml_export_task, osm_conf_task,
     external_raster_service_export_task, geopackage_export_task,
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
@@ -29,7 +29,7 @@ from ..export_tasks import (
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
     parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
 )
-from ...celery import TaskPriority
+from ...celery import TaskPriority, app
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
@@ -38,6 +38,50 @@ from eventkit_cloud.tasks.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class TestLockingTask(TestCase):
+
+    @patch('eventkit_cloud.tasks.export_tasks.caches')
+    def test_locking_task(self, caches):
+        task_id = '0123'
+        retries = False
+        task_name = 'lock_test_task'
+        expected_lock_key = 'TaskLock_{0}_{1}_{2}'.format(task_name, task_id, retries)
+
+       # Create a test task...
+        @app.task(base=LockingTask)
+        def lock_test_task():
+            pass
+
+        # ...as two separate test tasks...
+        lock_task = lock_task2 = lock_test_task
+
+        # ...mock the cache...
+        mock_cache = Mock()
+        mock_cache.add.side_effect = ["A Lock", None]
+        lock_task.cache = lock_task2.cache = mock_cache
+
+
+        # ..create a mock request...
+        mock_request = Mock(task_name=task_name, id=task_id, retries=False)
+        mock_request_stack = Mock()
+        mock_request_stack.top = mock_request
+        mock_push_request = Mock()
+
+        # ...with duplicate requests...
+        lock_task.request_stack = lock_task2.request_stack = mock_request_stack
+        lock_task.push_request = lock_task2.push_request = mock_push_request
+
+        # ...call first task ensure it returns...
+        lock_task.__call__()
+        mock_cache.add.assert_called_with(expected_lock_key, True, lock_task.lock_expiration)
+        lock_task.push_request.assert_called_once()
+
+        # ...call a second task with duplicate id, ensure nothing returns.
+        lock_task2.__call__()
+        mock_cache.add.assert_called_with(expected_lock_key, True, lock_task.lock_expiration)
+        lock_task2.push_request.assert_not_called()
 
 
 class ExportTaskBase(TestCase):
