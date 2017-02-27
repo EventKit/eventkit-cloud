@@ -1,5 +1,5 @@
 table{
-    width: 90%;
+    width: 100%;
     border: 0px solid black;
     border-spacing: 5px;
     border-collapse: separate;
@@ -22,6 +22,10 @@ table{
     background-color: #f8f8f8;
     font-weight: normal;
     color: #8b9396
+}
+.map {
+    width:100%;
+    padding-top:15px;
 }
 
 @media only screen and (max-width: 800px) {
@@ -54,6 +58,7 @@ table{
     margin-bottom: 70px;
     width: 100%;
     max-width: 700px;
+    height: 1400px
 }
 
 .sectionBottom {

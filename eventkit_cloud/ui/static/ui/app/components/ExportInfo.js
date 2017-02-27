@@ -166,7 +166,7 @@ class ExportInfo extends React.Component {
                                 ]}
                             />
                         </List>
-                        <button type="submit">submit</button>
+
                         </div>
                     {/*
                     <div className={styles.heading}>Select Export File Formats</div>
