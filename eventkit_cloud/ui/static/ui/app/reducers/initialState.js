@@ -1,3 +1,4 @@
+import { initialState as userInitialState } from './userReducer'
 
 export default {
     jobs: [],
@@ -12,11 +13,9 @@ export default {
     showInvalidDrawWarning: false,
     showImportModal: false,
     zoomToSelection: {
-        disabled: true,
         click: false
     },
     resetMap: {
-        disabled: true,
         click: false
     },
     geonames: {
@@ -25,6 +24,7 @@ export default {
         geonames: [],
         error: null,
     },
+    user: userInitialState,
     importGeom: {
         processing: false,
         processed: false,

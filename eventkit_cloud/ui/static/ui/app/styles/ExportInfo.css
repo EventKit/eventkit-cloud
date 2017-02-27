@@ -1,9 +1,11 @@
+
 @media only screen and (max-width: 800px) {
     .form {
         margin: 0 auto;
         width: 90% !important
     }
 }
+
 .wholeDiv {
     margin-top:-30px;
     padding-bottom: 250px;

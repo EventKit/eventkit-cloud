@@ -17,7 +17,7 @@ var config = {
     output: {
         path: BUILD_DIR,
         filename: 'bundle.js',
-        publicPath: BUILD_DIR
+        publicPath: '/static/ui/build/'
     }
     ,
     resolve: {
@@ -28,7 +28,7 @@ var config = {
         loaders: [
             {
                 test: /\.jsx?$/,
-                exclude: /node_modules/,
+                exclude: [/node_modules/, /staticfiles/],
                 loader: ['babel-loader'],
                 query: {
                     presets: ["es2015", "react", "stage-0"]
@@ -56,7 +56,6 @@ var config = {
                     name: 'fonts/[hash].[ext]',
                 }
             }
-
         ],
     },
     plugins: [

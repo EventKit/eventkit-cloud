@@ -10,15 +10,24 @@
     <link rel="stylesheet" href="app/styles/openlayers/ol.css">
 
     <style>
-      .ol-scale-line {
-        background: rgba(0,0,0,0);
+      .ol-attribution {
+        left: .5em;
+        right: auto;
+        text-align: left;
       }
-      .ol-scale-line-inner {
-        color: #171515;
-        border-bottom-color: black;
-        border-left-color: black;
-        border-right-color: black;
+      .ol-attribution.ol-uncollapsible {
+        bottom: 10px;
+        left: 10px;
+        right: auto;
+        border-radius: 4px 0 0;
+        height: 1.1em;
+        line-height: 1em;
       }
+
+      .ol-attribution:not(.ol-collapsed) {
+        background: rgba(255,255,255,.0);
+      }
+
       .form-control:focus {
         box-shadow: none
       }
@@ -35,35 +44,10 @@
     </style>
   </head>
   <body>
-    <!--
-    The recommended approach in React is to use a container
-    dive to load your react code into, rather than using `document.body`.
 
-    This can be any element or tag name, just don't use `document.body`
-    if you can avoid it.
-    -->
     <div id='root'></div>
 
-    <!--
-    For ease of use, we are including the React, ReactDOM and Babel CDN
-    builds to make getting started as fast as possible.
-
-    In production, you'll want to instead look at using something
-    like Gulp, Grunt or WebPack (my personal recommendation)
-    to compile JSX into JavaScript. Also, check out:
-    http://facebook.github.io/react/docs/tooling-integration.html
-    -->
     <script src="build/bundle.js"></script>
-    <!--
-    <script src="https://fb.me/react-15.0.1.js"></script>
-    <script src="https://fb.me/react-dom-15.0.1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
-    -->
-    <!--
-    This is where you link to your React code. Can be .js or .jsx
-    extension, doesn't really matter.
-    -->
-    <script src="scripts.js" type="text/babel"></script>
 
   </body>
 </html>

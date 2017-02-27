@@ -1,4 +1,4 @@
-import * as types from '../actions/mapToolActionTypes';
+import types from '../actions/mapToolActionTypes';
 import initialState from './initialState';
 
 export function toolbarIconsReducer(state = initialState.toolbarIcons, action) {
