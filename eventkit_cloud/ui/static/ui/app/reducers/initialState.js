@@ -13,11 +13,9 @@ export default {
     showInvalidDrawWarning: false,
     showImportModal: false,
     zoomToSelection: {
-        disabled: true,
         click: false
     },
     resetMap: {
-        disabled: true,
         click: false
     },
     geonames: {
