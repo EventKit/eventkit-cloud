@@ -49,5 +49,17 @@ export function loadExports() {
     }
 }
 
+export function closeDrawer() {
+    return {
+        type: types.CLOSE_DRAWER
+    }
+}
+
+export function openDrawer() {
+    return {
+        type: types.OPEN_DRAWER
+    }
+}
+
 
 

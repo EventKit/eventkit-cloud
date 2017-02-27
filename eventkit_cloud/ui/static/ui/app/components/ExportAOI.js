@@ -240,11 +240,22 @@ export class ExportAOI extends Component {
 
     render() {
 
+        const mapStyle = {
+                right: '0px',
+        }
+
+        if(this.props.drawerOpen && window.innerWidth > 600) {
+            mapStyle.left = '200px';
+        }
+        else {
+            mapStyle.left = '0px';
+        }
+
         let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
 
         return (
             <div>
-                <div id="map" className={styles.map} ref="olmap">
+                <div id="map" className={styles.map}  style={mapStyle} ref="olmap">
                     <SetAOIToolbar />
                     <SearchAOIToolbar 
                         handleSearch={(result) => this.handleSearch(result)}
@@ -281,6 +292,7 @@ function mapStateToProps(state) {
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
         importGeom: state.importGeom,
+        drawerOpen: state.drawerOpen,
     };
 }
 
