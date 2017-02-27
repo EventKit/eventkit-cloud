@@ -29,7 +29,7 @@
     }
     .stepperImageWrapper {
         background-color: #161e2e;
-        width: 800px !important;
+        width: 100% !important;
         margin: 0 auto;
         overflow: hidden;
     }
@@ -99,7 +99,7 @@
 }
 
 .topWrapper {
-    width: 50%;
+    width: 100%;
     background-color: #161e2e;
     paddingTop: 5px;
 }
