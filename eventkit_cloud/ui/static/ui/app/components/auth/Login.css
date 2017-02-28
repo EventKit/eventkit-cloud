@@ -26,18 +26,28 @@
 }
 .form {
     margin: 0 auto;
-    width: 50%
+    width: 70%
 }
 .heading {
     width: 100%;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     color: white;
-    align-content: flex-start;
+    transform: translateX(10%);
 }
-.submitButton{
+.enabledButton{
     margin-top: 30px;
-    margin-left: 45%;
+    margin-left: 40%;
+}
+.disabledButton{
+    margin-top: 30px;
+    margin-left: 40%;
+}
+.disabledButton > div > button {
+    background-color: #b4b7b8!important;
+}
+.enabledButton > div > button {
+    background-color: #55ba63!important;
 }
 .fieldWrapper > input {
     background-color: rgba(179, 205, 224, .2)!important;
@@ -46,6 +56,7 @@
     height: 45px!important;
     margin-top: 15px!important;
     color: #e2e2e2!important;
+    padding-left: 10px;
 }
 .textField >  {
     font-size: 16px!important;
