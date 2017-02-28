@@ -19,9 +19,21 @@ export class Form extends React.Component {
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
+    state = {
+        username: '',
+        password: '',
+        button: DISABLED_BUTTON,
+    };
 
     onChange(event) {
-        this.setState({[event.target.name]: event.target.value});
+        this.setState({[event.target.name]: event.target.value}, function () {
+            if (!this.state.username || !this.state.password) {
+                this.setState({button: DISABLED_BUTTON})
+            }
+            else {
+                this.setState({button: ENABLED_BUTTON})
+            }
+        });
     }
 
     handleSubmit(event) {
@@ -54,18 +66,33 @@ export class Form extends React.Component {
                            type="password"
                     />
                 </div>
-                <div className={styles.submitButton}>
-                    <FloatingActionButton name="submit"
-                                          mini={false}
-                                          type="submit"
-                                          style={{marginRight: 12}}>
-                        <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
-                    </FloatingActionButton>
-                </div>
+
+                    {this.state.button}
+
+
             </form>
         )
     }
 }
+const DISABLED_BUTTON = <div className={styles.disabledButton}>
+    <FloatingActionButton name="submit"
+                          mini={false}
+                          type="submit"
+                          style={{marginRight: 12}}
+                          disabled={true}>
+        <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
+    </FloatingActionButton>
+    </div>
+
+const ENABLED_BUTTON = <div className={styles.enabledButton}>
+    <FloatingActionButton name="submit"
+                          mini={false}
+                          type="submit"
+                          style={{marginRight: 12}}>
+        <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
+    </FloatingActionButton>
+</div>
+
 
 function mapDispatchToProps(dispatch) {
     return {

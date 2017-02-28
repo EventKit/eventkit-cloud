@@ -35,10 +35,11 @@ describe('loginContainer', () => {
         }
         const expected_username = "UserName";
         const expected_password = "Password";
-        const state = {username: expected_username, password: expected_password};
+        const expected_button = "Button";
+        const state = {username: expected_username, password: expected_password, button: expected_button};
 
         const wrapper = mount(<Form {...props}/>);
-        wrapper.setState({username: expected_username, password: expected_password});
+        wrapper.setState({username: expected_username, password: expected_password, button: expected_button});
         wrapper.find('form').simulate('submit');
         expect(props.handleLogin.callCount).to.equal(1);
         expect(props.handleLogin.calledWith(state)).to.equal(true);
