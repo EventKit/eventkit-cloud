@@ -18,7 +18,7 @@ class TaskPriority(Enum):
                                 # the the default, it is here to be explicit. https://www.rabbitmq.com/priority.html
 
 
-app = Celery('eventkit_cloud', strict_typing=False)
+app = Celery('eventkit_cloud')
 
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks()

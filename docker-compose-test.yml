@@ -41,8 +41,8 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=error
         - CONCURRENCY=1
+        - MAPPROXY_CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
@@ -53,7 +53,7 @@ services:
     expose:
       - "5432"
   rabbitmq:
-     image: rabbitmq:3.6.5
+     image: rabbitmq:3.6.6-management
      expose:
        - "5672"
   httpd:

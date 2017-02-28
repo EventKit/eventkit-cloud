@@ -17,6 +17,7 @@ from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -480,11 +481,9 @@ class TestJob(TestCase):
 def get_providers_list():
     return [{
         "model": "jobs.exportprovider",
-        "pk": 2,
         "fields": {
             "created_at": "2016-10-06T17:44:54.837Z",
             "updated_at": "2016-10-06T17:44:54.837Z",
-            "uid": "8977892f-e057-4723-8fe5-7a9b0080bc66",
             "name": "eventkit-integration-test-wms",
             "slug": "eventkit-integration-test-wms",
             "url": "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
@@ -496,13 +495,10 @@ def get_providers_list():
         }
     }, {
         "model": "jobs.exportprovider",
-        "pk": 3,
         "fields": {
             "created_at": "2016-10-06T17:45:46.213Z",
             "updated_at": "2016-10-06T17:45:46.213Z",
-            "uid": "5e3d76cb-09aa-42ac-96f3-2663e06ac81a",
             "name": "eventkit-integration-test-wmts",
-            "slug": "eventkit-integration-test-wmts",
             "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
             "layer": "imagery",
             "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wmts'),
@@ -518,11 +514,9 @@ def get_providers_list():
         }
     }, {
         "model": "jobs.exportprovider",
-        "pk": 4,
         "fields": {
             "created_at": "2016-10-06T19:17:28.770Z",
             "updated_at": "2016-10-06T19:17:28.770Z",
-            "uid": "3c497618-5a50-4c93-a310-e439a99549ce",
             "name": "eventkit-integration-test-arc-raster",
             "slug": "eventkit-integration-test-arc-raster",
             "url": "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
@@ -543,11 +537,9 @@ def get_providers_list():
         }
     }, {
         "model": "jobs.exportprovider",
-        "pk": 5,
         "fields": {
             "created_at": "2016-10-13T17:23:26.890Z",
             "updated_at": "2016-10-13T17:23:26.890Z",
-            "uid": "b47ecf0c-98bd-4b5c-89d1-856fd8c402a3",
             "name": "eventkit-integration-test-wfs",
             "slug": "eventkit-integration-test-wfs",
             "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:EurasiaOceania_LSIB_Polygons_Simplified_2015&SRSNAME=EPSG:4326",
@@ -559,11 +551,9 @@ def get_providers_list():
         }
     }, {
         "model": "jobs.exportprovider",
-        "pk": 2,
         "fields": {
             "created_at": "2016-10-21T14:30:27.066Z",
             "updated_at": "2016-10-21T14:30:27.066Z",
-            "uid": "7da498df-7702-4988-bad5-3a8db20e01b8",
             "name": "eventkit-integration-test-arc-fs",
             "slug": "eventkit-integration-test-arc-fs",
             "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",

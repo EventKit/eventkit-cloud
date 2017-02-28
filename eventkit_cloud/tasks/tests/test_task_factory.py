@@ -2,6 +2,7 @@
 import logging
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
@@ -46,16 +47,19 @@ class TestExportTaskFactory(TestCase):
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
 
     @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
+    @patch('eventkit_cloud.tasks.task_factory.create_bounds_task')
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
-    def test_task_factory(self, task_runner, chain, finalize_task):
+    def test_task_factory(self, task_runner, chain, create_bounds_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
         task = Mock()
-        task_runner.run_task.return_value(uuid.uuid4, task)
-        tasks_results = TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
-        self.assertIsInstance(tasks_results[0], AsyncResult)
-        chain.assert_called_once()
-        finalize_task.si.assert_called_once()
+        provider_uuid = uuid.uuid4
+        task_runner.run_task.return_value(provider_uuid, task)
+        create_bounds_task.return_value = task
+        TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
+        chain.assert_called()
+        create_bounds_task.assert_called()
+        finalize_task.s.assert_called_once()
 
