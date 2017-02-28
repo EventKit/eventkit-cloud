@@ -185,6 +185,7 @@ export class ExportAOI extends Component {
         this._clearDraw();
     }
 
+
     _initializeOpenLayers() {
 
         const scaleStyle = {
@@ -205,14 +206,10 @@ export class ExportAOI extends Component {
                 new ol.control.ScaleLine({
                     className: styles.olScaleLine,
                 }),
-                new ol.control.Attribution({
-                    collapsible: false,
-                    collapsed: false,
-                }),
                 new ol.control.Zoom({
                     className: styles.olZoom
                 }),
-                new ol.control.ZoomToExtent({
+                new ol.control.ZoomExtent({
                     className: styles.olZoomToExtent,
                     extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
                 }),
@@ -262,7 +259,7 @@ export class ExportAOI extends Component {
         return (
             <div>
                 <div id="map" className={styles.map}  style={mapStyle} ref="olmap">
-                    <SetAOIToolbar />
+                    <AoiInfobar />
                     <SearchAOIToolbar 
                         handleSearch={(result) => this.handleSearch(result)}
                         handleCancel={(sender) => this.handleCancel(sender)}/>
@@ -476,8 +473,38 @@ function processGeoJSONFile(file) {
         const dataURL = reader.result;
         const geojsonReader = new ol.format.GeoJSON();
         const geom = geojsonReader.readFeatures(JSON.parse(dataURL));
-        console.log(geom);
         return geom;
     }
     return reader.readAsText(file);
 }
+
+ol.control.ZoomExtent = function(opt_option) {
+    let options = opt_option ? opt_option : {};
+    options.className = options.className != undefined ? options.className : ''
+
+    let button = document.createElement('button');
+    let icon = document.createElement('i');
+    icon.className = 'fa fa-globe';
+    button.appendChild(icon);
+    let this_ = this;
+
+    this.zoomer = () => {
+        const extent = !options.extent ? view.getProjection.getExtent() : options.extent;
+        const map = this_.getMap();
+        const view = map.getView();
+        const size = map.getSize();
+        view.fit(options.extent, size);
+    }
+
+    button.addEventListener('click', this_.zoomer, false);
+    button.addEventListener('touchstart', this_.zoomer, false);
+    let element = document.createElement('div');
+    element.className = options.className + ' ol-unselectable ol-control';
+    element.appendChild(button);
+
+    ol.control.Control.call(this, {
+        element: element,
+        target: options.target
+    });
+}
+ol.inherits(ol.control.ZoomExtent, ol.control.Control);

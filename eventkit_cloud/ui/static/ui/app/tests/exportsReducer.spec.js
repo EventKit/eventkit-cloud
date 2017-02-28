@@ -64,3 +64,23 @@ describe('exportAoiInfo reducer', () => {
         )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'});
     });
 });
+
+describe('drawerMenu Reducer', () => {
+    it('should return initial state', () => {
+        expect(reducers.drawerMenuReducer(undefined, {})).toEqual(true);
+    });
+
+    it('should handle OPEN_DRAWER', () => {
+        expect(reducers.drawerMenuReducer(
+            false,
+            {type: 'OPEN_DRAWER'}
+        )).toEqual(true);
+    });
+    
+    it('should handle CLOSE_DRAWER', () => {
+        expect(reducers.drawerMenuReducer(
+            true,
+            {type: 'CLOSE_DRAWER'}
+        )).toEqual(false);
+    });
+});

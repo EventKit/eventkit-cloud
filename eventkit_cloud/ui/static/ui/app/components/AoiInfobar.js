@@ -15,7 +15,6 @@ export class AoiInfobar extends Component {
     constructor(props) {
         super(props)
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
-        // this.dispatchResetMap = this.dispatchResetMap.bind(this);
         this.handleAoiInfo = this.handleAoiInfo.bind(this);
         // this.handleInfoClick = this.handleInfoClick.bind(this);
 
@@ -65,13 +64,6 @@ export class AoiInfobar extends Component {
         }
     }
 
-    // dispatchResetMap() {
-    //     //If the reset map buttn is active dispatch the click
-    //     if(!this.props.resetMap.disabled) {
-    //         this.props.clickResetMap();
-    //     }
-    // } 
-
     render() {
         return (
             <div>
@@ -83,9 +75,6 @@ export class AoiInfobar extends Component {
                             <button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchZoomToSelection}>
                                 <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
                             </button>
-                            {/*<button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchResetMap}>
-                                <i className={"fa fa-refresh"}></i> RESET VIEW
-                            </button>*/}
                         </div>
                         <div className={styles.detailBar}>
                             <i className={"material-icons " + styles.geometryIcon}>
@@ -120,16 +109,13 @@ export class AoiInfobar extends Component {
 AoiInfobar.propTypes = {
     aoiInfo: React.PropTypes.object,
     zoomToSelection: React.PropTypes.object,
-    // resetMap: React.PropTypes.object,
     clickZoomToSelection: React.PropTypes.func,
-    // clickResetMap: React.PropTypes.func,
 }
 
 function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         zoomToSelection: state.zoomToSelection,
-        // resetMap: state.resetMap,
     }
 }
 
@@ -139,9 +125,6 @@ function mapDispatchToProps(dispatch) {
         clickZoomToSelection: () => {
             dispatch(clickZoomToSelection());
         },
-        // clickResetMap: () => {
-        //     dispatch(clickResetMap());
-        // }
     }
 }
 

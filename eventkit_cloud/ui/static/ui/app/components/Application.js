@@ -26,19 +26,11 @@ export class Application extends Component {
 
     componentWillMount() {
         if (window.innerWidth <= 600){
-            // this.setState({drawerOpen: false});
             this.props.closeDrawer();
         }
     }
 
-    // componentWillReceiveProps(nextProps) {
-    //     if(nextProps.drawerOpen != this.props.drawerOpen) {
-    //         this.setS
-    //     }
-    // }
-
     handleToggle() {
-        // this.setState({drawerOpen: !this.state.drawerOpen});
         if(this.props.drawerOpen) {
             this.props.closeDrawer();
         }
@@ -48,7 +40,6 @@ export class Application extends Component {
     }
 
     handleClose() { 
-        // this.setState({drawerOpen: false}); 
         this.props.closeDrawer();
     }
 

@@ -51,7 +51,7 @@
     .topWrapper {
         width: 100% !important;
         background-color: #161e2e;
-        paddingTop: 5px;
+        padding-top: 5px;
     }
 }
 
@@ -72,7 +72,12 @@
     .topWrapper {
         width: 100% !important;
         background-color: #161e2e;
-        paddingTop: 5px;
+        padding-top: 5px;
+    }
+
+    .stepperWrapper svg {
+        width: 17px !important;
+        height: 17px !important;
     }
 
 }
@@ -82,13 +87,20 @@
     }
     .stepperWrapper > div > div > span {
         font-size: .6em !important;
-
+    }
+    .stepperWrapper > div > div > span > span {
+        padding-right: 2px !important;
     }
     .stepperImageWrapper {
         background-color: #161e2e;
         width: 100% !important;
         margin: 0 auto;
         overflow: hidden;
+    }
+
+    .stepperWrapper svg {
+        width: 15px !important;
+        height: 15px !important;
     }
 
 }
@@ -101,7 +113,7 @@
 .topWrapper {
     width: 100%;
     background-color: #161e2e;
-    paddingTop: 5px;
+    padding-top: 5px;
 }
 .stepperWrapper > div {
     display: inline-flex!important;
@@ -116,7 +128,7 @@
 
 .stepLabel {
     color: white;
-    fontSize: 18px;
+    font-size: 18px;
 }
 
 .imageWrapper {
