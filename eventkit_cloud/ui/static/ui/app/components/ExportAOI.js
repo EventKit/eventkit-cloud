@@ -206,6 +206,10 @@ export class ExportAOI extends Component {
                 new ol.control.ScaleLine({
                     className: styles.olScaleLine,
                 }),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
                 new ol.control.Zoom({
                     className: styles.olZoom
                 }),

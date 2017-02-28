@@ -76,12 +76,24 @@ div.map {
     color: #4498c0;
     background-color: white;
     outline: none;
+    height: 22px;
+    width: 22px;
 }
 
 .olZoom button {
     color: #4498c0;
     background-color: white;
     outline: none;
+    height: 22px;
+    width: 22px;
+}
+
+.olZoomToExtent button i {
+    font-size: 16px;
+}
+
+.olZoom button i {
+    font-size: 16px;
 }
 
 .olZoomToExtent button:hover {
