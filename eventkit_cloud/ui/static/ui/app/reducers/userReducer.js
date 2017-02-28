@@ -1,7 +1,7 @@
 import types from '../actions/actionTypes'
 
 const initialState = {
-  data: 'logged in',
+  data: null,
   isLoading: false
 }
 
