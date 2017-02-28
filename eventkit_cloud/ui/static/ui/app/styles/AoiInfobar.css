@@ -28,6 +28,12 @@
     }
 }
 
+@media screen and (max-width: 400px) {
+    .activeButton {
+        font-size: .6em;
+    }
+}
+
 .aoiInfoWrapper {
     z-index: 2;
     position: absolute;
