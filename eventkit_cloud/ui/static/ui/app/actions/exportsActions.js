@@ -33,6 +33,18 @@ export function updateAoiInfo(geojson, geomType, title, description) {
         description,
     }
 }
+export function updateExportInfo(exportName, datapackDescription, projectName, makePublic, osmData, osmTiles, digitalGlobe) {
+    return {
+        type: types.UPDATE_EXPORT_INFO,
+        exportInfo: exportName,
+        datapackDescription,
+        projectName,
+        makePublic,
+        osmData,
+        osmTiles,
+        digitalGlobe,
+    }
+}
 
 export function clearAoiInfo() {
     return {

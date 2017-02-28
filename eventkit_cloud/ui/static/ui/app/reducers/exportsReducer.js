@@ -49,3 +49,20 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
             return state;
     }
 }
+
+export function exportInfoReducer(state = initialState.exportInfo, action) {
+    switch(action.type) {
+        case types.UPDATE_EXPORT_INFO:
+            return {
+                exportName: action.exportName,
+                datapackDescription: action.datapackDescription,
+                projectName: action.projectName,
+                makePublic: action.makePublic,
+                osmData: action.osmData,
+                osmTiles: action.osmTiles,
+                digitalGlobe: action.digitalGlobe,
+            };
+        default:
+            return state;
+    }
+}

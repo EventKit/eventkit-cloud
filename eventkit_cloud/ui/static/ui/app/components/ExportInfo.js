@@ -12,19 +12,13 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
 import styles from '../styles/ExportInfo.css'
+import {updateExportInfo} from '../actions/exportsActions.js';
+
 
 class ExportInfo extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            makePublic: false,
-            osmData: false,
-            osmTiles: false,
-            digitalGlobe: false,
-        }
+
         this.onChange = this.onChange.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
     }
@@ -253,6 +247,26 @@ function mapStateToProps(state) {
     }
 }
 
+function mapDispatchToProps(dispatch) {
+    return {
+        updateExportInfo: (exportName,
+                           datapackDescription,
+                           projectName,
+                           makePublic,
+                           osmData,
+                           osmTiles,
+                           digitalGlobe) => {
+            dispatch(updateExportInfo(exportName,
+                datapackDescription,
+                projectName,
+                makePublic,
+                osmData,
+                osmTiles,
+                digitalGlobe));
+        },
+
+    }
+}
 
 ExportInfo.propTypes = {
     bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
@@ -269,6 +283,6 @@ ExportInfo =  reduxForm({
     }
 })(ExportInfo)
 
-ExportInfo = connect(mapStateToProps)(ExportInfo)
+ExportInfo = connect(mapStateToProps, mapDispatchToProps)(ExportInfo)
 
 export default ExportInfo
