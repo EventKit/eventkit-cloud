@@ -39,9 +39,9 @@ export default {
         search: "DEFAULT",
     },
     exportInfo: {
-        exportName: null,
-        datapackDescription: null,
-        projectName: null,
+        exportName: '',
+        datapackDescription: '',
+        projectName: '',
         makePublic: false,
         osmData: false,
         osmTiles: false,
