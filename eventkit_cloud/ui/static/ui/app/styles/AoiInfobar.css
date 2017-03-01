@@ -1,11 +1,11 @@
 @media screen and (min-width: 601px) {
     .aoiInfoWrapper {
-        font-size: .9em;
+        font-size: 12px;
         height: 70px;
     }
 
     .geometryIcon {
-        font-size: 3.1em;
+        font-size: 38px;
     }
 
     .aoiInfobar {
@@ -15,22 +15,26 @@
 
 @media screen and (max-width: 600px) {
     .aoiInfoWrapper {
-        font-size: .7em;
+        font-size: 10px;
         height: 50px;
     }
 
     .geometryIcon {
-        font-size: 2.5em;
+        font-size: 25px;
     }
 
     .aoiInfobar {
         width: 60%;
     }
+
+    .activeButton {
+        font-size: 8px;
+    }
 }
 
 @media screen and (max-width: 400px) {
     .activeButton {
-        font-size: .6em;
+        font-size: 7px;
     }
 }
 
@@ -52,7 +56,8 @@
     width: 100%;
     float: left;
     padding-top: 5px;
-    padding-left: 10px;
+    /*padding-left: 10px;*/
+    
 }
 
 .aoiInfoTitle {
@@ -63,13 +68,6 @@
 .detailBar {
     width: 100%;
     float: left;
-}
-
-.forwardArrow {
-    font-size: 2.5em;
-    margin: 0px;
-    padding: 0px;
-    vertical-align: middle !important;
 }
 
 .activeButton {
@@ -86,7 +84,7 @@
 
 .geometryIcon {
     color: grey;
-    padding-left: 10px;
+    padding-left: 8px;
     float: left;
 }
 
