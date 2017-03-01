@@ -33,11 +33,6 @@ def upload_to_s3(run_uuid, source_filename, destination_filename, client=None):
             Body=asset_file.read()
         )
 
-    client.put_object_acl(
-        ACL='public-read',
-        Bucket=settings.AWS_BUCKET_NAME,
-        Key=asset_remote_path
-    )
     return client.generate_presigned_url(
         'get_object',
         Params={'Bucket': settings.AWS_BUCKET_NAME, 'Key': asset_remote_path}

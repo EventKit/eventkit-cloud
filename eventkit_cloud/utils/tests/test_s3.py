@@ -52,11 +52,6 @@ class TestS3Util(TestCase):
                 Key=self._path,
                 Body='test'
             ))
-        stubber.add_response(
-            'put_object_acl',
-            self._base_response,
-            {'ACL': 'public-read', 'Bucket': ANY, 'Key': ANY}
-        )
         with patch('eventkit_cloud.utils.s3.open', mock_open(read_data='test'), create=True) as mock_open_obj:
             upload_to_s3(self._uuid, self._filename, self._filename, client=client)
 
@@ -73,11 +68,6 @@ class TestS3Util(TestCase):
                 Key=self._path,
                 Body='test'
             ))
-        stubber.add_response(
-            'put_object_acl',
-            self._base_response,
-            {'ACL': 'public-read', 'Bucket': ANY, 'Key': self._path}
-        )
 
         list_objects_response = {
             'IsTruncated': False,
