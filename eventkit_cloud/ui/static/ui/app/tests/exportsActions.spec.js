@@ -64,6 +64,18 @@ describe('export actions', () => {
             mode: mode
         });
     });
+
+    it('closeDrawer should return type CLOSE_DRAWER', () => {
+        expect(actions.closeDrawer()).toEqual({
+            type: 'CLOSE_DRAWER'
+        });
+    });
+
+    it('openDrawer should return type OPEN_DRAWER', () => {
+        expect(actions.openDrawer()).toEqual({
+            type: 'OPEN_DRAWER'
+        });
+    });
 });
 
 describe('async export actions', () => {

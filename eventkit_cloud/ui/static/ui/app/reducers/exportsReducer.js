@@ -2,6 +2,17 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
+export function drawerMenuReducer(state = initialState.drawerOpen, action) {
+    switch(action.type) {
+        case types.OPEN_DRAWER:
+            return true;
+        case types.CLOSE_DRAWER:
+            return false;
+        default:
+            return state;
+    }
+}
+
 export function exportJobsReducer(state = initialState.jobs, action) {
     switch(action.type) {
         case types.LOAD_JOBS_SUCCESS:

@@ -1,12 +1,40 @@
-@media screen and (min-width: 531px) {
-    .activeButton {
-        font-size: .9em;
+@media screen and (min-width: 601px) {
+    .aoiInfoWrapper {
+        font-size: 12px;
+        height: 70px;
+    }
+
+    .geometryIcon {
+        font-size: 38px;
+    }
+
+    .aoiInfobar {
+        width: 80%;
     }
 }
 
-@media screen and (max-width: 530px) {
+@media screen and (max-width: 600px) {
+    .aoiInfoWrapper {
+        font-size: 10px;
+        height: 50px;
+    }
+
+    .geometryIcon {
+        font-size: 25px;
+    }
+
+    .aoiInfobar {
+        width: 60%;
+    }
+
     .activeButton {
-        font-size: .7em;
+        font-size: 8px;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .activeButton {
+        font-size: 7px;
     }
 }
 
@@ -15,23 +43,21 @@
     position: absolute;
     width: 100%;
     bottom: 40px;
-    height: 70px;
 }
 
 .aoiInfobar {
-    min-width: 320px;
-    max-width: 765px;
+    max-width: 600px;
     margin: 0 auto;
-    width: 80%;
-    height: 70px;
+    height: 100%;
     background-color: #fff;
 }
 
 .topBar {
-    height: 25px;
     width: 100%;
     float: left;
     padding-top: 5px;
+    /*padding-left: 10px;*/
+    
 }
 
 .aoiInfoTitle {
@@ -40,16 +66,8 @@
 }
 
 .detailBar {
-    height: 45px;
     width: 100%;
     float: left;
-}
-
-.forwardArrow {
-    font-size: 2.5em;
-    margin: 0px;
-    padding: 0px;
-    vertical-align: middle !important;
 }
 
 .activeButton {
@@ -66,14 +84,12 @@
 
 .geometryIcon {
     color: grey;
-    font-size: 3.1em;
-    padding-left: 10px;
-    width: 43px;
+    padding-left: 8px;
+    float: left;
 }
 
 .detailText {
-    float: right;
-    width: calc(100% - 55px);
+    float: left;
     height: 100%;
 }
 
@@ -81,13 +97,11 @@
     padding-left: 6px;
     width: 100%;
     color: grey;
-    height: 20px;
 }
 
 .aoiTitle {
     padding-left: 6px;
     width: 100%;
-    height: 20px;
 }
 
 .aoiInfo {

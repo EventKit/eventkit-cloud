@@ -37,5 +37,6 @@ export default {
         mapView: "DEFAULT",
         import: "DEFAULT",
         search: "DEFAULT",
-    }
+    },
+    drawerOpen: true,
 }
