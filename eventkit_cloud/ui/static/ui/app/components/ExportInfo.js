@@ -19,14 +19,14 @@ class ExportInfo extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            exportName : '',
+            exportName: '',
             datapackDescription: '',
-            projectName : '',
+            projectName: '',
             makePublic: false,
-            osmData : false,
-            osmTiles : false,
-            digitalGlobe : false
-        }
+            osmData: false,
+            osmTiles: false,
+            digitalGlobe: false
+    }
 
         this.onChange = this.onChange.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
@@ -67,7 +67,7 @@ class ExportInfo extends React.Component {
                     <div className={styles.fieldWrapper}>
                         <TextField name="exportName"
                                onChange={this.onChange}
-                               value={this.props.exportInfo.exportName}
+                               value={this.state.exportName}
                                hintText="Datapack Name"
                                className={styles.textField}
                                />
@@ -76,7 +76,7 @@ class ExportInfo extends React.Component {
                         <TextField
                             name="datapackDescription"
                             onChange={this.onChange}
-                            value={this.props.exportInfo.datapackDescription}
+                            value={this.state.datapackDescription}
                             hintText="Description"
                             multiLine={true}
                             rows={2}/>
@@ -85,7 +85,7 @@ class ExportInfo extends React.Component {
                         <TextField
                             name="projectName"
                             onChange={this.onChange}
-                            value={this.props.exportInfo.projectName}
+                            value={this.state.projectName}
                             hintText="Project Name"
                             className={styles.textField}/>
                     </div>
@@ -93,7 +93,7 @@ class ExportInfo extends React.Component {
                         <Checkbox
                             name="makePublic"
                             onCheck={this.toggleCheckbox.bind(this)}
-                            checked={this.props.exportInfo.makePublic}
+                            checked={this.state.makePublic}
                             className={styles.checkboxColor}
                             label="Make Public"
                             checkedIcon={<ActionCheckCircle />}
@@ -110,7 +110,7 @@ class ExportInfo extends React.Component {
                             leftIcon={<Checkbox
                                 name="osmData"
                                 onCheck={this.toggleCheckbox.bind(this)}
-                                checked={this.props.exportInfo.osmData}
+                                checked={this.state.osmData}
                                 className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
                                 uncheckedIcon={<UncheckedCircle
@@ -131,7 +131,7 @@ class ExportInfo extends React.Component {
                                 leftIcon={<Checkbox
                                     name="osmTiles"
                                     onCheck={this.toggleCheckbox.bind(this)}
-                                    checked={this.props.exportInfo.osmTiles}
+                                    checked={this.state.osmTiles}
                                     className={styles.checkboxColor}
                                     checkedIcon={<ActionCheckCircle />}
                                     uncheckedIcon={<UncheckedCircle />}
@@ -151,7 +151,7 @@ class ExportInfo extends React.Component {
                                 leftIcon={ <Checkbox
                                     name="digitalGlobe"
                                     onCheck={this.toggleCheckbox.bind(this)}
-                                    checked={this.props.exportInfo.digitalGlobe}
+                                    checked={this.state.digitalGlobe}
                                     className={styles.checkboxColor}
                                     checkedIcon={<ActionCheckCircle />}
                                     uncheckedIcon={<UncheckedCircle />}
@@ -250,7 +250,7 @@ class ExportInfo extends React.Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
-        exportInfo: state.exportInfo,
+        exportName: state.exportInfo.exportName,
     }
 }
 
