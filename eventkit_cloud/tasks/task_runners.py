@@ -134,16 +134,16 @@ class ExportGenericOSMTaskRunner(TaskRunner):
                 osm_tasks.get('pbfconvert').get('obj').si(stage_dir=stage_dir,
                                                           job_name=job_name,
                                                           task_uid=osm_tasks.get('pbfconvert').get('task_uid')).set(
-                    queue=worker) |
+                    queue=worker, routing_key=worker) |
                 osm_tasks.get('prep_schema').get('obj').si(stage_dir=stage_dir,
                                                            job_name=job_name,
                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid')).set(
-                    queue=worker)
+                    queue=worker, routing_key=worker)
             )
 
             task_chain = (initial_tasks | schema_tasks)
 
-            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+            format_tasks = chain(task.get('obj').s(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for
@@ -226,7 +226,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
                                                       job_name=job_name,
                                                       task_uid=thematic_gpkg.get('task_uid')).set(
             queue=worker, routing_key=worker) |
-                          group(task.get('obj').si(run_uid=run.uid,
+                          chain(task.get('obj').s(run_uid=run.uid,
                                                    stage_dir=stage_dir,
                                                    job_name=job_name,
                                                    task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for
@@ -235,7 +235,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
                           )
 
         bbox = run.job.extents
-        style_task = osm_create_styles_task.si(task_uid=create_export_task(task_name=osm_create_styles_task.name,
+        style_task = osm_create_styles_task.s(task_uid=create_export_task(task_name=osm_create_styles_task.name,
                                                                            export_provider_task=export_provider_task,
                                                                            worker=worker).uid,
                                                stage_dir=stage_dir,
@@ -312,7 +312,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                             bbox=bbox,
                                             service_url=provider_task.provider.url).set(queue=worker, routing_key=worker))
 
-            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+            format_tasks = chain(task.get('obj').s(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for task_name, task
@@ -397,7 +397,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                             bbox=bbox,
                                             service_url=provider_task.provider.url).set(queue=worker, routing_key=worker))
 
-            format_tasks = group(task.get('obj').si(run_uid=run.uid,
+            format_tasks = chain(task.get('obj').s(run_uid=run.uid,
                                                     stage_dir=stage_dir,
                                                     job_name=job_name,
                                                     task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for task_name, task

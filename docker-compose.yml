@@ -19,6 +19,7 @@ services:
         - SITE_NAME
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
+#        - MEMCACHED=memcached:11211
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -46,7 +47,7 @@ services:
         - rabbitmq
       environment:
         - CONCURRENCY=1
-        - MAPPROXY_CONCURRENCY=1
+        - MAPPROXY_CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
       extends:
@@ -72,7 +73,7 @@ services:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
-      - "../eventkit_database/database:/var/lib/postgresql/data"
+            - "postgis_database:/var/lib/postgresql/data"
   rabbitmq:
        image: rabbitmq:3.6.6-management
        expose:
@@ -91,6 +92,10 @@ services:
        image: httpd:2.4.23
        ports:
           - "80:80"
+#  memcached:
+#       image: memcached:1.4.34
+#       expose:
+#        - "11211"
   flower:
        extends:
           service: base
@@ -106,4 +111,5 @@ services:
        environment:
          - BROKER_API=http://guest:guest@rabbitmq:15672/api/
          - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-
+volumes:
+    postgis_database:

@@ -56,16 +56,16 @@ class TaskFactory:
             # Note that if a provider depends on a different provider they should be grouped in a list,
             # otherwise passed in as a single element list.
             osm_thematic_provider_task = osm_generic_provider_task = None
-            for provider_task in job.provider_tasks.all():
-                provider_type = provider_task.provider.export_provider_type.type_name
+            for grouped_provider_task in job.provider_tasks.all():
+                provider_type = grouped_provider_task.provider.export_provider_type.type_name
                 # If both osm and osm-thematic are requested then only add one task which will run both exports
                 # It would be nice if this could be done for any arbitrary providers, via the API and/or models.
                 if provider_type == 'osm':
-                    osm_thematic_provider_task = provider_task
+                    osm_thematic_provider_task = grouped_provider_task
                 elif provider_type == 'osm-generic':
-                    osm_generic_provider_task = provider_task
+                    osm_generic_provider_task = grouped_provider_task
                 else:
-                    grouped_provider_tasks.append([provider_task])
+                    grouped_provider_tasks.append([grouped_provider_task])
 
             if osm_thematic_provider_task and not osm_generic_provider_task:
                 # If a generic OSM task doesn't exist we need to create one so that it can be used.
@@ -77,27 +77,27 @@ class TaskFactory:
 
             if grouped_provider_tasks:
                 tasks_results = []
-                for provider_task in grouped_provider_tasks:
+                for grouped_provider_task in grouped_provider_tasks:
                     task_runner_tasks = None
                     export_provider_task_uids = []
-                    for chain_task in provider_task:
-                        if not chain_task:
+                    for provider_task in grouped_provider_task:
+                        if not provider_task:
                             continue
                         # Create an instance of a task runner based on the type name
-                        if self.type_task_map.get(chain_task.provider.export_provider_type.type_name):
-                            type_name = chain_task.provider.export_provider_type.type_name
+                        if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
+                            type_name = provider_task.provider.export_provider_type.type_name
                             task_runner = self.type_task_map.get(type_name)()
 
-                            os.makedirs(os.path.join(run_dir, chain_task.provider.slug), 6600)
-                            stage_dir =os.path.join(
+                            os.makedirs(os.path.join(run_dir, provider_task.provider.slug), 6600)
+                            stage_dir = os.path.join(
                                         run_dir,
-                                        chain_task.provider.slug)
+                                        provider_task.provider.slug)
 
                             args = {'user': job.user,
-                                    'provider_task_uid': chain_task.uid,
+                                    'provider_task_uid': provider_task.uid,
                                     'run': run,
                                     'stage_dir': stage_dir,
-                                    'service_type': chain_task.provider.export_provider_type.type_name,
+                                    'service_type': provider_task.provider.export_provider_type.type_name,
                                     'worker': worker
                                     }
 
@@ -134,11 +134,11 @@ class TaskFactory:
                         expires=datetime.now() + timedelta(days=2),
                         priority=TaskPriority.TASK_RUNNER.value,
                         routing_key=worker,
+                        queue=worker,
                         link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
                                                             export_provider_task_uids=export_provider_task_uids,
                                                             worker=worker).set(queue=worker, routing_key=worker))]
                 return tasks_results
-
             return False
 
 
@@ -184,4 +184,4 @@ def create_bounds_task(export_provider_task_uid=None, stage_dir=None, worker=Non
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(task_name=bounds_export_task.name, export_provider_task=export_provider_task, worker=worker)
     return bounds_export_task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid,
-                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug)
+                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug).set(queue=worker, routing_key=worker)

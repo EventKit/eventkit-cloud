@@ -81,12 +81,20 @@ TEMPLATES = [
     },
 ]
 
-# Disable caching while in development
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+if os.environ.get("MEMCACHED"):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+            'LOCATION': os.environ.get("MEMCACHED"),
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'eventkit_cache',
+        }
+    }
 
 
 # session settings
