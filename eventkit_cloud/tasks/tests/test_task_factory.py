@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from django.db import DatabaseError
 from mock import patch, Mock
 
 from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
@@ -41,10 +42,17 @@ class TestExportTaskFactory(TestCase):
         self.uid = str(provider_task.uid)
         self.job.save()
 
-    def test_create_run(self):
+    def test_create_run_success(self):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
+
+    @patch('eventkit_cloud.tasks.task_factory.ExportRun')
+    def test_create_run_failure(self, ExportRun):
+        ExportRun.objects.create.side_effect = DatabaseError('FAIL')
+        with self.assertRaises(DatabaseError):
+            run_uid = create_run(job_uid=self.job.uid)
+            self.assertIsNone(run_uid)
 
     @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_bounds_task')
