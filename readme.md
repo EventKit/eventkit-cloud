@@ -15,6 +15,7 @@ Note: the RabbitMQ configuration provided here is the Official Docker version an
 After installing docker open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
+docker-compose run --rm eventkit python manage.py runinitial setup
 docker-compose up</pre>
 In a different elevated shell/command prompt add the cloud.eventkit.dev to the hosts file:
 On linux:
