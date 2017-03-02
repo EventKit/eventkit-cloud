@@ -221,18 +221,22 @@ class ExportThematicOSMTaskRunner(TaskRunner):
                                                         export_provider_task=export_provider_task, worker=worker).uid}
 
         # Note this needs to be mutable (s instead of si) so that it can take the result of the generic osm tasks.
-        thematic_tasks = (thematic_gpkg.get('obj').s(run_uid=run.uid,
+        thematic_task = thematic_gpkg.get('obj').s(run_uid=run.uid,
                                                       stage_dir=stage_dir,
                                                       job_name=job_name,
                                                       task_uid=thematic_gpkg.get('task_uid')).set(
-            queue=worker, routing_key=worker) |
-                          chain(task.get('obj').s(run_uid=run.uid,
-                                                   stage_dir=stage_dir,
-                                                   job_name=job_name,
-                                                   task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for
-                                task_name, task in
-                                export_tasks.iteritems())
-                          )
+            queue=worker, routing_key=worker)
+        if export_tasks:
+            format_tasks = chain(task.get('obj').s(run_uid=run.uid,
+                                                       stage_dir=stage_dir,
+                                                       job_name=job_name,
+                                                       task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for
+                                    task_name, task in
+                                    export_tasks.iteritems())
+        else:
+            format_tasks = None
+
+        thematic_tasks = (thematic_task | format_tasks) if format_tasks else thematic_task
 
         bbox = run.job.extents
         style_task = osm_create_styles_task.s(task_uid=create_export_task(task_name=osm_create_styles_task.name,
