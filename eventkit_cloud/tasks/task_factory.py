@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import logging
 import os
 
+from celery import chain
+
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
 from ..tasks.models import ExportRun, ExportProviderTask
 from .task_runners import (
@@ -113,8 +115,7 @@ class TaskFactory:
                                 # Run the task, and when it completes return the status of the task to the model.
                                 # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
                                 # it will call FinalizeTask which will mark the entire job complete/incomplete
-                                finalize_chain_task_runner_tasks = (
-                                    chain_task_runner_tasks | bounds_task | finalize_export_provider_task.s(
+                                finalize_chain_task_runner_tasks = chain(chain_task_runner_tasks, bounds_task, finalize_export_provider_task.s(
                                         run_uid=run_uid,
                                         run_dir=run_dir,
                                         export_provider_task_uid=export_provider_task_uid,
@@ -123,7 +124,7 @@ class TaskFactory:
                                 if not task_runner_tasks:
                                     task_runner_tasks = finalize_chain_task_runner_tasks
                                 else:
-                                    task_runner_tasks = (task_runner_tasks | finalize_chain_task_runner_tasks)
+                                    task_runner_tasks = chain(task_runner_tasks, finalize_chain_task_runner_tasks)
 
                     if not task_runner_tasks:
                         continue

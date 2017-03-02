@@ -48,9 +48,10 @@ class TestExportTaskFactory(TestCase):
 
     @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_bounds_task')
+    @patch('eventkit_cloud.tasks.task_factory.chain')
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
-    def test_task_factory(self, task_runner, chain, create_bounds_task, finalize_task):
+    def test_task_factory(self, task_runner, task_runner_chain, task_factory_chain, create_bounds_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
@@ -59,7 +60,8 @@ class TestExportTaskFactory(TestCase):
         task_runner.run_task.return_value(provider_uuid, task)
         create_bounds_task.return_value = task
         TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
-        chain.assert_called()
+        task_runner_chain.assert_called()
+        task_factory_chain.assert_called()
         create_bounds_task.assert_called()
         finalize_task.s.assert_called_once()
 
