@@ -17,7 +17,7 @@ before_install:
 before_script:
     - docker-compose -f docker-compose-test.yml build
     - docker-compose -f docker-compose-test.yml up -d
-    - docker-compose -f docker-compose-test.yml exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial
+    - docker-compose -f docker-compose-test.yml exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial setup
 
 script:
     - docker-compose -f docker-compose-test.yml run --rm -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
