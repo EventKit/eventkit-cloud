@@ -46,6 +46,28 @@ export function updateExportInfo(exportName, datapackDescription, projectName, m
     }
 }
 
+export const getProviders = () => dispatch => {
+    dispatch({
+        type: types.GETTING_PROVIDERS
+    });
+
+    axios.get('/api/providers').catch((error) => {
+        console.log(error);
+    });
+
+    return axios({
+        url: '/api/providers',
+        method: 'GET',
+    }).then((response) => {
+        dispatch({
+            type: types.PROVIDERS_RECEIVED,
+            providers: response.data
+        });
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
 export function clearAoiInfo() {
     return {
         type: types.CLEAR_AOI_INFO,
@@ -71,5 +93,16 @@ export function loadExports() {
     }
 }
 
+export function closeDrawer() {
+    return {
+        type: types.CLOSE_DRAWER
+    }
+}
+
+export function openDrawer() {
+    return {
+        type: types.OPEN_DRAWER
+    }
+}
 
 

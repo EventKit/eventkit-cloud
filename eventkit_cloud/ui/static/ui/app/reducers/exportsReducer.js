@@ -2,6 +2,17 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
+export function drawerMenuReducer(state = initialState.drawerOpen, action) {
+    switch(action.type) {
+        case types.OPEN_DRAWER:
+            return true;
+        case types.CLOSE_DRAWER:
+            return false;
+        default:
+            return state;
+    }
+}
+
 export function exportJobsReducer(state = initialState.jobs, action) {
     switch(action.type) {
         case types.LOAD_JOBS_SUCCESS:
@@ -64,5 +75,17 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
             };
         default:
             return state;
+    }
+}
+
+export function getProvidersReducer(state = initialState.providers, action ) {
+    console.log(state, action);
+    switch (action.type) {
+        case types.GETTING_PROVIDERS:
+            return  []
+        case types.PROVIDERS_RECEIVED:
+            return action.providers
+        default:
+            return state
     }
 }

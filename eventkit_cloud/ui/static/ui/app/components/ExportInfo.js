@@ -46,18 +46,19 @@ class ExportInfo extends React.Component {
 
     onSubmit(e) {
         e.preventDefault()
-        console.log("made it here")
-        this.props.createExportRequest(this.state)
+        this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.osmData, this.state.osmTiles, this.state.digitalGlobe)
     }
 
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
     componentDidMount() {
-
+       console.log(this.props.providers)
     }
-    render() {
 
+    render() {
+        const providers = this.props.providers;
+        console.log("this is it"+providers[0])
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
@@ -105,28 +106,32 @@ class ExportInfo extends React.Component {
                     <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                     <div className={styles.sectionBottom}>
                         <List className={styles.list}>
+                            {providers.map((provider) => (
                             <ListItem
-                            primaryText="OpenStreetMap Data"
-                            leftIcon={<Checkbox
-                                name="osmData"
+                                key={provider.uid}
+                                primaryText={provider.name}
+
+                                leftCheckbox={<Checkbox
+                                name={provider.name}
                                 onCheck={this.toggleCheckbox.bind(this)}
-                                checked={this.state.osmData}
+                                checked={this.state[provider.name]}
                                 className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
                                 uncheckedIcon={<UncheckedCircle
                                 className={styles.checkboxColor}/>}
                             />}
                             initiallyOpen={false}
-                            primaryTogglesNestedList={true}
+                            primaryTogglesNestedList={false}
                             nestedItems={[
                                     <ListItem
                                       key={1}
-                                      primaryText="bla blah blah blaaaaaaah blahalklasdfjlaksjdf asdldkfjasldfj asdlkfklsadfjlkasdfjlkasddfjlkasdfjlkasdfjlkdsajflkasdf"
+                                      primaryText="We need to add descriptive text to the backend providers information."
 
                                     />
                                 ]}
-                        />
-                            <ListItem
+                            />
+                            ))}
+                            {/*<ListItem
                                 primaryText="OpenStreetMap Tiles"
                                 leftIcon={<Checkbox
                                     name="osmTiles"
@@ -165,9 +170,9 @@ class ExportInfo extends React.Component {
 
                                     />
                                 ]}
-                            />
+                            />*/}
                         </List>
-
+<button type="submit">Submit data</button>
                         </div>
                     {/*
                     <div className={styles.heading}>Select Export File Formats</div>
@@ -250,7 +255,7 @@ class ExportInfo extends React.Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
-        exportName: state.exportInfo.exportName,
+
     }
 }
 
@@ -277,7 +282,7 @@ function mapDispatchToProps(dispatch) {
 
 ExportInfo.propTypes = {
     bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
-    createExportRequest: React.PropTypes.func.isRequired,
+    providers:       PropTypes.array.isRequired
 }
 
 ExportInfo.childContextTypes = {

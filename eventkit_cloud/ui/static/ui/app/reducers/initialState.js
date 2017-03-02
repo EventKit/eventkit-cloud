@@ -38,6 +38,7 @@ export default {
         import: "DEFAULT",
         search: "DEFAULT",
     },
+    drawerOpen: true,
     exportInfo: {
         exportName: '',
         datapackDescription: '',
@@ -46,5 +47,6 @@ export default {
         osmData: false,
         osmTiles: false,
         digitalGlobe: false,
-    }
+    },
+    providers: [],
 }

@@ -11,7 +11,7 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest } from '../actions/exportsActions'
+import { createExportRequest, getProviders } from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -26,7 +26,11 @@ class BreadcrumbStepper extends React.Component {
         nextDisabled: true,
     };
 
+    componentDidMount(){
+        this.props.getProviders();
+    }
     componentWillReceiveProps(nextProps) {
+
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             if(!isEqual(nextProps.aoiInfo.geojson, {})) {
                 //make the stepper button clickable
@@ -61,7 +65,7 @@ class BreadcrumbStepper extends React.Component {
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
                 return <ExportInfo bbox={this.props.bbox}
-                                   createExportRequest={createExportRequest} />
+                                   providers={this.props.providers} />
             case 2:
                 return <ExportSummary/>
             case 3:
@@ -156,6 +160,7 @@ function mapStateToProps(state) {
     return {
         bbox: state.bbox,
         aoiInfo: state.aoiInfo,
+        providers: state.providers,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -163,6 +168,7 @@ function mapDispatchToProps(dispatch) {
         createExportRequest: () => {
             dispatch(createExportRequest());
         },
+        getProviders: () => {dispatch(getProviders())},
     }
 }
 

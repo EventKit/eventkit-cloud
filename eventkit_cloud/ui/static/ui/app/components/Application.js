@@ -7,13 +7,14 @@ import Subheader from 'material-ui/Subheader'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
 import css from '../styles/TitleBar.css'
+import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 
-class Application extends Component {
+export class Application extends Component {
     constructor(props) {
         super(props);
         this.state = {open: true}
@@ -25,21 +26,28 @@ class Application extends Component {
 
     componentWillMount() {
         if (window.innerWidth <= 600){
-            this.setState({drawerOpen: false});
+            this.props.closeDrawer();
         }
     }
 
     handleToggle() {
-        this.setState({drawerOpen: !this.state.drawerOpen});
+        if(this.props.drawerOpen) {
+            this.props.closeDrawer();
+        }
+        else {
+            this.props.openDrawer();
+        }
     }
 
-    handleClose() { this.setState({drawerOpen: false}); }
+    handleClose() { 
+        this.props.closeDrawer();
+    }
 
     render() {
 
         const contentStyle = {  transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)' };
 
-        if (this.state.drawerOpen) {
+        if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
         }
 
@@ -84,7 +92,7 @@ class Application extends Component {
                                 containerStyle={styles.drawer}
                                 overlayStyle={styles.drawer}
                                 docked={false}
-                                open={this.state.drawerOpen}
+                                open={this.props.drawerOpen}
                                 onRequestChange={(open) => this.setState({open})}>
                             <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU</div><div style={{display:'inline-block'}}><a href="#"><i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></a></div></span></Subheader>
                             <MenuItem className={css.menuItem} ><IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports"><i className="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;DataPack Library</IndexLink></MenuItem>
@@ -106,6 +114,28 @@ class Application extends Component {
 Application.propTypes = {
     children: PropTypes.object.isRequired,
     bbox:     React.PropTypes.arrayOf(React.PropTypes.number),
+    openDrawer: PropTypes.func,
+    closeDrawer: PropTypes.func,
 };
 
-export default Application
+function mapStateToProps(state) {
+    return {
+        drawerOpen: state.drawerOpen,
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        closeDrawer: () => {
+            dispatch(closeDrawer());
+        },
+        openDrawer: () => {
+            dispatch(openDrawer());
+        }
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(Application);
