@@ -39,4 +39,10 @@ export default {
         search: "DEFAULT",
     },
     drawerOpen: true,
+    jobsList: {
+        fetching: false,
+        fetched: false,
+        jobs: [],
+        error: null,
+    }
 }
