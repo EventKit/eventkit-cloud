@@ -1,0 +1,84 @@
+.wholeDiv {
+    margin-top:-30px;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    margin-bottom: 0px;
+}
+.root {
+    justify-content: space-around;
+    margin-top: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    padding-bottom: 1000px;
+    width:100%;
+    height:100%;
+}
+.paper {
+    background-image: url('../../../images/topoBackground.jpg');
+    background-repeat: repeat repeat;
+    margin: 0 auto;
+    padding: 60px;
+    margin-top: 130px;
+    margin-bottom: 0px;
+    width: 100%;
+    max-width: 500px;
+}
+.form {
+    margin: 0 auto;
+    width: 70%
+}
+.heading {
+    width: 100%;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    transform: translateX(10%);
+}
+.enabledButton{
+    margin-top: 30px;
+    margin-left: 40%;
+}
+.disabledButton{
+    margin-top: 30px;
+    margin-left: 40%;
+}
+.disabledButton > div > button {
+    background-color: #b4b7b8!important;
+}
+.enabledButton > div > button {
+    background-color: #55ba63!important;
+}
+.fieldWrapper > input {
+    background-color: rgba(179, 205, 224, .2)!important;
+    font-size: 16px!important;
+    width: 100%!important;
+    height: 45px!important;
+    margin-top: 15px!important;
+    color: #e2e2e2!important;
+    padding-left: 10px;
+}
+.textField >  {
+    font-size: 16px!important;
+    color: #e2e2e2!important;
+}
+.textField > input{
+    font-size: 16px!important;
+    color: #e2e2e2!important;
+}
+
+.fieldWrapper > svg {
+    float: left!important;
+    margin-top: 25px!important;
+    height: 32px!important;
+    width: 32px!important;
+    color: #e2e2e2 !important;
+    fill: #e2e2e2 !important;
+}
+.accountIcon > div >  div {
+    color: #e2e2e2 !important;
+
+}
+.accountIcon > div {
+    bottom:2px!important;
+}
