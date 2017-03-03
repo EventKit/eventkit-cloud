@@ -100,6 +100,11 @@ class ExportInfo extends React.Component {
         });
     }
     render() {
+        const style ={
+            underlineStyle: {
+                width: 'calc(100% - 10px)'
+            }
+        }
         const providers = this.props.providers;
         console.log("this is it"+providers[0])
         return (
@@ -112,6 +117,8 @@ class ExportInfo extends React.Component {
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <TextField name="exportName"
+                               underlineStyle={style.underlineStyle}
+                               underlineFocusStyle={style.underlineStyle}
                                onChange={this.onChange}
                                value={this.state.exportName}
                                hintText="Datapack Name"
@@ -120,6 +127,8 @@ class ExportInfo extends React.Component {
                     </div>
                     <div className={styles.fieldWrapperLarge}>
                         <TextField
+                            underlineStyle={style.underlineStyle}
+                            underlineFocusStyle={style.underlineStyle}
                             name="datapackDescription"
                             onChange={this.onChange}
                             value={this.state.datapackDescription}
@@ -129,6 +138,8 @@ class ExportInfo extends React.Component {
                     </div>
                     <div className={styles.fieldWrapper}>
                         <TextField
+                            underlineStyle={style.underlineStyle}
+                            underlineFocusStyle={style.underlineStyle}
                             name="projectName"
                             onChange={this.onChange}
                             value={this.state.projectName}
@@ -139,7 +150,7 @@ class ExportInfo extends React.Component {
                         <Checkbox
                             name="makePublic"
                             onCheck={this.toggleCheckbox.bind(this)}
-                            checked={this.state.makePublic}
+                            checked={!!this.state.makePublic}
                             className={styles.checkboxColor}
                             label="Make Public"
                             checkedIcon={<ActionCheckCircle />}
@@ -155,11 +166,10 @@ class ExportInfo extends React.Component {
                             <ListItem
                                 key={provider.uid}
                                 primaryText={provider.name}
-
                                 leftCheckbox={<Checkbox
                                 name={provider.name}
                                 onCheck={this.toggleCheckbox.bind(this)}
-                                checked={this.state[provider.name]}
+                                checked={!!this.state[provider.name]}
                                 className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
                                 uncheckedIcon={<UncheckedCircle
@@ -176,6 +186,7 @@ class ExportInfo extends React.Component {
                                 ]}
                             />
                             ))}
+                        </List>
                             {/*<ListItem
                                 primaryText="OpenStreetMap Tiles"
                                 leftIcon={<Checkbox
@@ -216,7 +227,7 @@ class ExportInfo extends React.Component {
                                     />
                                 ]}
                             />*/}
-                        </List>
+
 
                         </div>
 
@@ -226,6 +237,7 @@ class ExportInfo extends React.Component {
                     <div className={styles.sectionBottom}>
                         <div className={styles.checkboxLabel}>
                             <Field name="geopackage"
+                                   value="value"
                                    component={Checkbox}
                                    className={styles.checkboxColorDisabled}
                                    checked={true}
