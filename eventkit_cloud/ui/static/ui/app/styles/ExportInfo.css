@@ -40,9 +40,10 @@
    font-weight: bold;
    color: black;
    align-content: flex-start;
+    padding-bottom: 10px;
 }
 .subHeading {
-   font-size: 14px;
+   font-size: 16px;
    color: black;
    align-content: flex-start;
 }
@@ -63,18 +64,24 @@
     font-size: 16px!important;
     color: black!important;
 }
+.textField > div {
+    padding: 5px!important;
+}
 .fieldWrapper > div{
    background-color: whitesmoke!important;
-   font-size: 14px;
+   font-size: 16px;
    width: 100%!important;
    height: 40px!important;
    margin-top: 15px!important;
 }
 .fieldWrapperLarge > div{
-   font-size: 14px;
+   font-size: 16px;
    background-color: whitesmoke!important;
    width: 100%!important;
    margin-top: 15px!important;
+}
+.fieldWrapperLarge > div > div {
+    padding: 5px!important;
 }
 .checkbox > div{
    padding-bottom: 60px;
@@ -82,24 +89,29 @@
 }
 .checkbox > div > div > label {
    font-weight: normal!important;
+    font-size:16px!important;
 }
 .checkboxLabel > div > div > label {
    font-weight:normal!important;
+    font-size:16px!important;
 }
 .list {
    width: 100%;
    background-color: whitesmoke!important;
-   font-size: 14px!important;
+   font-size: 16px!important;
+}
+.list > div {
+    margin-left: -15px;
 }
 .list > div > span {
-   font-size: 14px!important;
+   font-size: 16px!important;
 }
 .list > div > label {
     font-weight: normal!important;
-    font-size: 14px!important;
+    font-size: 16px!important;
 }
 .list > div  > div > div > span {
-   font-size: 14px!important;
+   font-size: 16px!important;
 }
 .listBottom {
    width: 100%;
@@ -107,18 +119,43 @@
    margin-top: 15px!important;
 }
 .listBottom > div  > span {
-   font-size: 14px!important;
+   font-size: 16px!important;
 }
 .listBottom > div  > div > div > span  {
-   font-size: 14px!important;
+   font-size: 16px!important;
 }
 .checkboxColor > div >  div > div > svg {
    color: #4598bf!important;
    fill: #4598bf!important;
-
 }
 .checkboxColor {
     float:left!important;
     paddding-top: 12px!important;
     padding-left: 5px;
+}
+.checkedColor {
+    color: #4598bf!important;
+    fill: #55ba63!important;
+}
+.checkboxColorDisabled > div >  div > div > svg {
+    color: #b4b7b8!important;
+    fill: #b4b7b8!important;
+}
+.uncheckedColor {
+    color: #4598bf!important;
+}
+.mapCard > div > div > div {
+    font-weight: bold!important;
+    font-size: 18px!important;
+    padding: 5px!important;
+}
+.mapCard > div {
+    background-color: rgba(179, 205, 224, .2)!important;
+}
+.mapCard {
+    padding-bottom: 20px;
+}
+.map {
+    width:100%;
+    padding-top:15px;
 }

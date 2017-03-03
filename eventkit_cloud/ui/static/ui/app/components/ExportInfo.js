@@ -1,8 +1,12 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
+import 'openlayers/dist/ol.css';
+import ol from 'openlayers';
 import { reduxForm, Field } from 'redux-form'
 import { RadioButton } from 'material-ui/RadioButton'
 import { List, ListItem} from 'material-ui/List'
+import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
+import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField'
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle'
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked'
@@ -54,16 +58,57 @@ class ExportInfo extends React.Component {
     }
     componentDidMount() {
        console.log(this.props.providers)
+        this._initializeOpenLayers()
     }
+    _initializeOpenLayers() {
 
+        const scaleStyle = {
+            background: 'white',
+        };
+
+
+        this._map = new ol.Map({
+            controls: [
+                new ol.control.ScaleLine(),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: styles.olZoom
+                })
+            ],
+            interactions: ol.interaction.defaults({
+                keyboard: false,
+                altShiftDragRotate: false,
+                pinchRotate: false
+            }),
+            layers: [
+                // Order matters here
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+            ],
+            target: 'infoMap',
+            view: new ol.View({
+                projection: "EPSG:3857",
+                center: [110, 0],
+                zoom: 2.5,
+                minZoom: 2.5,
+                maxZoom: 22,
+            })
+        });
+    }
     render() {
         const providers = this.props.providers;
         console.log("this is it"+providers[0])
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
+
                 <form className={styles.form} onSubmit={this.onSubmit}>
                     <Paper className={styles.paper} zDepth={2} rounded>
+
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <TextField name="exportName"
@@ -172,21 +217,24 @@ class ExportInfo extends React.Component {
                                 ]}
                             />*/}
                         </List>
-<button type="submit">Submit data</button>
+
                         </div>
-                    {/*
+
                     <div className={styles.heading}>Select Export File Formats</div>
-                    <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
-                    <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>
+                        {/*<div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
+                    <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>*/}
                     <div className={styles.sectionBottom}>
                         <div className={styles.checkboxLabel}>
                             <Field name="geopackage"
                                    component={Checkbox}
-                                   className={styles.checkboxColor}
+                                   className={styles.checkboxColorDisabled}
+                                   checked={true}
+                                   enabled={false}
                                    checkedIcon={<ActionCheckCircle />}
                                    uncheckedIcon={<UncheckedCircle />}
                                    label="GeoPackage (gpkg)"/>
                         </div>
+                        {/*
                         <div className={styles.checkboxLabel}>
                             <Field name="esriShape"
                                    component={Checkbox}
@@ -238,10 +286,24 @@ class ExportInfo extends React.Component {
                               />
                             ]}
                         />
-                            </List>
+                            </List>*/}
                      </div>
-                     */}
 
+                        <div className={styles.mapCard}>
+                            <Card >
+                                <CardHeader
+                                    title="Selected Area of Interest"
+                                    actAsExpander={true}
+                                    showExpandableButton={true}
+                                />
+                                <CardText expandable={true}> <div id="infoMap" className={styles.map} ref={olmapDiv => this. _initializeOpenLayers(olmapDiv)}>
+
+                                </div>
+
+
+                                </CardText>
+                            </Card>
+                        </div>
                     </Paper>
                 </form>
 
