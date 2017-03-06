@@ -29,9 +29,9 @@ class ExportInfo extends React.Component {
             makePublic: false,
             osmData: false,
             osmTiles: false,
-            digitalGlobe: false
+            digitalGlobe: false,
+            expanded: false,
     }
-
         this.onChange = this.onChange.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
     }
@@ -48,6 +48,10 @@ class ExportInfo extends React.Component {
         });
     }
 
+    expandedChange(expanded) {
+        this.setState({expanded: expanded});
+    }
+
     onSubmit(e) {
         e.preventDefault()
         this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.osmData, this.state.osmTiles, this.state.digitalGlobe)
@@ -57,47 +61,55 @@ class ExportInfo extends React.Component {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
     componentDidMount() {
-       console.log(this.props.providers)
-        this._initializeOpenLayers()
+
+    }
+    componentDidUpdate(prevProps, prevState) {
+        if(prevState.expanded != this.state.expanded) {
+            if(this.state.expanded) {
+                this._initializeOpenLayers();
+            }
+        }
     }
     _initializeOpenLayers() {
+        console.log(this.props.geojson.features[0])
 
         const scaleStyle = {
             background: 'white',
         };
-
+        var osm = new ol.layer.Tile({
+            source: new ol.source.OSM()
+        });
 
         this._map = new ol.Map({
-            controls: [
-                new ol.control.ScaleLine(),
-                new ol.control.Attribution({
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new ol.control.Zoom({
-                    className: styles.olZoom
-                })
-            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
                 pinchRotate: false
             }),
-            layers: [
-                // Order matters here
-                new ol.layer.Tile({
-                    source: new ol.source.OSM()
-                }),
-            ],
+            layers: [osm],
             target: 'infoMap',
             view: new ol.View({
                 projection: "EPSG:3857",
                 center: [110, 0],
-                zoom: 2.5,
-                minZoom: 2.5,
+                zoom: 2,
+                minZoom: 2,
                 maxZoom: 22,
             })
         });
+        const source = new ol.source.Vector();
+        const geojson = new ol.format.GeoJSON();
+        const feature = geojson.readFeatures(this.props.geojson, {
+            'featureProjection': 'EPSG:3857',
+            'dataProjection': 'EPSG:4326'
+        });
+        source.addFeatures(feature);
+        const layer = new ol.layer.Vector({
+            source: source,
+        });
+
+        this._map.addLayer(layer);
+        this._map.getView().fit(source.getExtent(), this._map.getSize());
+
     }
     render() {
         const style ={
@@ -106,7 +118,7 @@ class ExportInfo extends React.Component {
             }
         }
         const providers = this.props.providers;
-        console.log("this is it"+providers[0])
+
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
@@ -302,13 +314,14 @@ class ExportInfo extends React.Component {
                      </div>
 
                         <div className={styles.mapCard}>
-                            <Card >
+                            <Card expandable={true}
+                                  onExpandChange={this.expandedChange.bind(this)}>
                                 <CardHeader
                                     title="Selected Area of Interest"
                                     actAsExpander={true}
                                     showExpandableButton={true}
                                 />
-                                <CardText expandable={true}> <div id="infoMap" className={styles.map} ref={olmapDiv => this. _initializeOpenLayers(olmapDiv)}>
+                                <CardText expandable={true}> <div id="infoMap" className={styles.map} >
 
                                 </div>
 
@@ -329,6 +342,7 @@ class ExportInfo extends React.Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
+        geojson: state.aoiInfo.geojson
 
     }
 }
@@ -355,7 +369,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 ExportInfo.propTypes = {
-    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
+    geojson:         React.PropTypes.object,
     providers:       PropTypes.array.isRequired
 }
 

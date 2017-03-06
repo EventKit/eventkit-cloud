@@ -64,8 +64,7 @@ class BreadcrumbStepper extends React.Component {
                 return <ExportAOI mode={this._mapMode}
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
-                return <ExportInfo bbox={this.props.bbox}
-                                   providers={this.props.providers} />
+                return <ExportInfo providers={this.props.providers} />
             case 2:
                 return <ExportSummary/>
             case 3:
