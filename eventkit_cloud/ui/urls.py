@@ -2,16 +2,18 @@
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
-
-from .views import clone_export, create_export, view_export, data_estimator, request_geonames
+from django.views.decorators.csrf import ensure_csrf_cookie
+from .views import logout, user, auth, data_estimator, request_geonames
 
 urlpatterns = [
-    url(r'^$', login_required(TemplateView.as_view(template_name='ui/list.html')), name='list'),
-    url(r'^create/$', login_required(create_export, redirect_field_name=None), name='create'),
-    url(r'^configurations/$', login_required(TemplateView.as_view(template_name='ui/configurations.html')),
-        name='configurations'),
-    url(r'^(?P<uuid>[^/]+)/$', login_required(view_export), name='detail'),
-    url(r'^clone/(?P<uuid>[^/]+)/$', login_required(clone_export), name='clone'),
-    url(r'^estimator$', data_estimator),
-    url(r'^request_geonames$', request_geonames)
+    url(r'^login/$', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name='login'),
+    url(r'^auth/$', ensure_csrf_cookie(auth), name='auth'),
+    url(r'^$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="home"),
+    url(r'^exports$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="exports"),
+    url(r'^create$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="create"),
+    url(r'^account', login_required(TemplateView.as_view(template_name='ui/index.html')), name="account"),
+    url(r'^user$', login_required(user), name="user"),
+    url(r'^logout', login_required(logout), name="logout"),
+    url(r'^estimator$', login_required(data_estimator)),
+    url(r'^request_geonames$', login_required(request_geonames)),
 ]

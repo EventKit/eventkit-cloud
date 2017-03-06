@@ -4,31 +4,13 @@ import json
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
-from django.shortcuts import RequestContext, redirect, render_to_response
+from django.shortcuts import RequestContext, redirect, render_to_response, HttpResponse
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from functools import wraps
 from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from .data_estimator import get_size_estimate
 import requests
-
-
-# def user_verification_required(func=None):
-#     """
-#     This is currently not implemented, but left here so that if it was to be added it would be straight forward.
-#     :param func: A view with a signature (request, uuid) where uuid is a job_uid.
-#     :return: The view if the user is authorized, else an unauthorized view.
-#     """
-#
-#     @wraps(func)
-#     def wrapper(request, uuid):
-#         # if user_owns_job(request.user, job_uid=uuid):
-#         return func(request, uuid)
-#         # else:
-#         #     return not_allowed_error_view(request)
-#
-#     return wrapper
+from django.contrib.auth import authenticate, login
 
 
 @require_http_methods(['GET'])
@@ -75,11 +57,28 @@ def view_export(request, uuid=None):  # NOQA
     return render_to_response('ui/detail.html', context, RequestContext(request))
 
 
-def login(request):
+def user(request):
     if not request.user.is_authenticated():
-        return redirect('login')
+        return HttpResponse(status=401)
     else:
-        return not_allowed_error_view(request)
+        user_data = {'username': request.user.username,
+                     'first_name': request.user.first_name,
+                     'last_name': request.user.last_name,
+                     'email': request.user.email}
+        return HttpResponse(json.dumps(user_data), status=200, content_type="application/json")
+
+
+def auth(request):
+    """Logs out user"""
+    auth_logout(request)
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user_data = authenticate(username=username, password=password)
+    if user_data is not None:
+        login(request, user_data)
+        return user(request)
+    else:
+        return HttpResponse(status=401)
 
 
 def logout(request):
@@ -170,8 +169,12 @@ def help_presets(request):
 
 @require_http_methods(['POST'])
 def data_estimator(request):
+    """
+
+    :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
+    :return: HttpResponse, with the size.
+    """
     request_data = json.loads(request.body)
-    # example request_data = {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
     size = 0
     providers = request_data.get('providers')
     bbox = request_data.get('bbox')
@@ -181,7 +184,7 @@ def data_estimator(request):
     for provider in providers:
         estimates = get_size_estimate(provider, bbox)
         size += estimates[1]
-    return HttpResponse([size])
+    return HttpResponse([size], status=200)
 
 
 

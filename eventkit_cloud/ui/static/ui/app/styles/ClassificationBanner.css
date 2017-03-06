@@ -1,0 +1,10 @@
+.classificationbanner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    line-height:25px;
+    background-color: green;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+}

@@ -79,19 +79,22 @@ services:
        expose:
         - "5672"
   httpd:
-       build:
-         context: .
-         dockerfile: config/Dockerfile_httpd
-       depends_on:
-        - eventkit
-       links:
-        - eventkit
-       volumes:
-         - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-         - ./exports_download:/var/lib/eventkit/exports_download
-       image: httpd:2.4.23
-       ports:
-          - "80:80"
+     build:
+       context: .
+       dockerfile: config/Dockerfile_httpd
+     volumes:
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+       - ./exports_download:/var/lib/eventkit/exports_download
+     image: httpd:2.4.23
+     links:
+       - eventkit
+       - webpack
+     ports:
+       - "80:80"
+       - "9229:9229"
+     environment:
+       - SITE_NAME=${SITE_NAME}
+       - LOG_LEVEL=warn
 #  memcached:
 #       image: memcached:1.4.34
 #       expose:
@@ -111,5 +114,24 @@ services:
        environment:
          - BROKER_API=http://guest:guest@rabbitmq:15672/api/
          - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+  webpack:
+     build:
+       context: .
+       dockerfile: config/Dockerfile_webpack
+     volumes:
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
+     ports:
+        - "8080:8080"
+     expose:
+        - "9229"
+        - "50000-60000"
+     extra_hosts:
+        - "${SITE_NAME}:${SITE_IP}"
+      #if wishing to use the dev server uncomment this or run it via the command line
+      # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:
     postgis_database:
+
+
+
+

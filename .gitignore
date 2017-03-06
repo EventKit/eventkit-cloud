@@ -71,9 +71,6 @@ media/*
 #settings_private.py
 #static
 #!eventkit_cloud/ui/static
-migrations
-!eventkit_cloud/jobs/migrations
-!eventkit_cloud/tasks/migrations
 
 nohup.out
 api/tests/examples
@@ -98,3 +95,6 @@ cache_data
 *~
 
 coverage
+
+# JS build dir
+eventkit_cloud/ui/static/ui/build

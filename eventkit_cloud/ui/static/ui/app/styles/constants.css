@@ -1,0 +1,61 @@
+@media (min-width: 1200px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 992px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+}
+
+@media (min-width: 768px){
+    .container, .container-fluid {
+        width: 100% !important;
+    }
+    #start-date {
+        padding-right: 0px;
+    }
+}
+div.sectionBar {
+    background-color: #161e2e;
+    border-width: 2px;
+    border-color: white;
+    height: 40px;
+    margin-top: 20px;
+    margin-left: 0px;
+    bottom: 0;
+    right: 0;
+}
+div.sectionMenu {
+    background-color: #161e2e;
+    padding: 5px;
+    line-height: 50px;
+    margin-left: 0px;
+    bottom: 0;
+    right: 0;
+    border: 0px solid;
+}
+
+div.primaryDiv {
+    position: relative;
+    margin-top: 100px;
+    margin-left: 200px;
+    height: 100%;
+}
+p.heading {
+    padding-left:10px;
+    padding-top: 10px;
+    color: white;
+    font-size: 18px;
+}
+
+.sectionTitle > h1 {
+    font-size: 18px !important;
+    line-height: 30px !important;
+    height: 25px !important;
+}
+.sectionTitle > div {
+    margin-top: -8px !important;
+}
