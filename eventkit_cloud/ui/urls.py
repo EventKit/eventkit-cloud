@@ -3,7 +3,7 @@ from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .views import logout, user, auth
+from .views import logout, user, auth, data_estimator, request_geonames
 
 urlpatterns = [
     url(r'^login/$', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name='login'),
@@ -14,4 +14,6 @@ urlpatterns = [
     url(r'^account', login_required(TemplateView.as_view(template_name='ui/index.html')), name="account"),
     url(r'^user$', login_required(user), name="user"),
     url(r'^logout', login_required(logout), name="logout"),
+    url(r'^estimator$', login_required(data_estimator)),
+    url(r'^request_geonames$', login_required(request_geonames)),
 ]
