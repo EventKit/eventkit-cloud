@@ -276,6 +276,7 @@ class SimpleJobSerializer(serializers.Serializer):
         lookup_field='uid'
     )
     extent = serializers.SerializerMethodField()
+    selection = serializers.CharField()
 
     @staticmethod
     def get_uid(obj):
@@ -569,6 +570,9 @@ class JobSerializer(serializers.Serializer):
     published = serializers.BooleanField(required=False)
     feature_save = serializers.BooleanField(required=False)
     feature_pub = serializers.BooleanField(required=False)
+    selection = serializers.CharField(
+        required=False,
+        allow_blank=True)
     xmin = serializers.FloatField(
         max_value=180, min_value=-180, write_only=True,
         error_messages={

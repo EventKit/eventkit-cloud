@@ -140,6 +140,8 @@ class ExportProvider(TimeStampedModelMixin):
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
                                    help_text="This information is used to display relevant copyright information.")
+    service_description = models.CharField(verbose_name="Description", max_length=4000, null=True, default='', blank=True,
+                                         help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
@@ -226,6 +228,7 @@ class Job(TimeStampedModelMixin):
     the_geom = models.PolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
+    selection = models.TextField(verbose_name='Selection Area (GeoJSON)', null=True, blank=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
 

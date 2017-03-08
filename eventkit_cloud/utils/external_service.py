@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from datetime import datetime
 from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
-from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError, ConfigurationError
+from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError
 from mapproxy.seed.spec import validate_seed_conf
 from mapproxy.config.loader import ProxyConfiguration
 from mapproxy.config.spec import validate_options
@@ -19,6 +19,9 @@ import logging
 from django.db import connections
 from ..tasks.task_process import TaskProcess
 import requests
+import os
+import subprocess
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +45,14 @@ class CustomLogger(ProgressLog):
                 self.log_step_counter -= 1
         super(CustomLogger, self).log_step(progress)
 
+
 class ExternalRasterServiceToGeopackage(object):
     """
     Convert a External service to a geopackage.
     """
 
     def __init__(self, config=None, gpkgfile=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 level_from=None, level_to=None, service_type=None, task_uid=None):
+                 level_from=None, level_to=None, service_type=None, task_uid=None, selection=None):
         """
         Initialize the ExternalServiceToGeopackage utility.
 
@@ -67,6 +71,7 @@ class ExternalRasterServiceToGeopackage(object):
         self.config = config
         self.service_type = service_type
         self.task_uid = task_uid
+        self.selection = selection
 
     def convert(self, ):
         """
@@ -103,10 +108,18 @@ class ExternalRasterServiceToGeopackage(object):
         # Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
-        seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to)
+        ## As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
+        if isclose(self.bbox[0], self.bbox[2], rel_tol=0.01) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.01):
+            logger.warn('Using bbox instead of selection, because the area is too small')
+            self.selection = None
+
+        seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to,
+                                      coverage_file=self.selection)
+
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
-        logger.info("Beginning seeding to {}".format(self.gpkgfile))
+
+        logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             check_service(conf_dict)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
@@ -158,12 +171,12 @@ def get_cache_template(sources, grids, geopackage):
     }}
 
 
-def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None):
-    return {
+def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None, coverage_file=None):
+
+    seed_template = {
         'coverages': {
             'geom': {
                 'srs': 'EPSG:4326',
-                'bbox': bbox
             }
         },
         'seeds': {
@@ -180,6 +193,15 @@ def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None)
             }
         }
     }
+
+    if coverage_file:
+        seed_template['coverages']['geom']['datasource'] = str(coverage_file)
+    else:
+        seed_template['coverages']['geom']['bbox'] = bbox
+
+    return seed_template
+
+
 
 
 def create_conf_from_url(service_url):
@@ -216,3 +238,7 @@ def check_service(conf_dict):
         elif response.status_code >= 500:
             logger.error("The provider reported a server error with status code {0} and the text: \n{1}".format(response.status_code, response.text))
             raise Exception("The provider reported a server error.")
+
+
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)

@@ -131,7 +131,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
         check_service.assert_called_once(json_config)
         load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
-        seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
+        seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], coverage_file=None, level_from=0, level_to=10)
 
     @patch('eventkit_cloud.utils.external_service.check_service')
     @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
@@ -188,7 +188,7 @@ class TestWMTSToGeopackage(TransactionTestCase):
         connections.close_all.assert_called_once()
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         check_service.assert_called_once(json_config)
-        seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], level_from=0, level_to=10)
+        seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], coverage_file=None, level_from=0, level_to=10)
 
 
 class TestHelpers(TransactionTestCase):

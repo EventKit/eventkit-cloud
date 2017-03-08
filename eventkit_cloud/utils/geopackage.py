@@ -70,7 +70,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         """
 
     if not geojson or not gpkg:
-        raise Exception("A geojson: {0} \nor a geopackage: {1} was not provided.".format(geojson, gpkg))
+        raise Exception("A valid geojson: {0} was not provided\nor a geopackage: {1} was not accessible.".format(geojson, gpkg))
 
     geojson_file = os.path.join(os.path.dirname(gpkg),
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]))
@@ -91,6 +91,41 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
     return gpkg
+
+
+def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
+    """Uses an ogr2ogr script to upload a geojson file.
+        Args:
+            geojson: A geojson string.
+            gpkg: Database dict from the django settings.
+            layer_name: A DB table.
+            task_uid: A task uid to update.
+        Returns:
+            True if the file is succesfully uploaded.
+        """
+
+    if not geojson_file or not gpkg:
+        raise Exception("A geojson_file: {0} \nor a geopackage: {1} was not accessible.".format(geojson_file, gpkg))
+
+    cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
+
+    in_gpkg = os.path.join(os.path.dirname(gpkg), "old_{0}".format(os.path.basename(gpkg)))
+    os.rename(gpkg, in_gpkg)
+
+    append_cmd = cmd.safe_substitute({'geojson_file': geojson_file,
+                                      'in_gpkg': in_gpkg,
+                                      'out_gpkg': gpkg})
+
+    logger.error(append_cmd)
+    task_process = TaskProcess(task_uid=task_uid)
+    task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stderr))
+        raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+    return gpkg
+
+
 
 def is_alnum(data):
     """

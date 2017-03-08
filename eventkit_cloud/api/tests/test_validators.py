@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from mock import patch
-
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from rest_framework import serializers
 
-from rest_framework.authtoken.models import Token
-from rest_framework.reverse import reverse
 
 from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox
-from eventkit_cloud.jobs.models import ExportProfile
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -31,3 +28,4 @@ class TestValidators(TestCase):
         bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
         area = get_geodesic_area(bbox)
         self.assertEquals(2006874.9259034647, area / 1000000)
+
