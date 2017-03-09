@@ -31,9 +31,7 @@ class BreadcrumbStepper extends React.Component {
         this.props.setNextDisabled();
     }
     componentWillReceiveProps(nextProps) {
-
-        console.log(this.state.stepIndex+" Step Index in component will receive props beginning")
-        //TODO:this is where the stepper index goes up after the new component loads
+        const {stepIndex} = this.state;
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             if(!isEqual(nextProps.aoiInfo.geojson, {})) {
                 this.props.setNextEnabled();
@@ -44,34 +42,33 @@ class BreadcrumbStepper extends React.Component {
             }
         }
 
-        if (this.state.stepIndex == 1 && this.props.exportInfo.exportName != "") {
+        if (stepIndex == 1 && this.props.exportInfo.exportName != "") {
             this.setState({
-                stepIndex: this.state.stepIndex + 1,
-                finished: this.state.stepIndex >= 2,
+                stepIndex: stepIndex + 1,
+                finished: stepIndex >= 2,
             });
         }
-        console.log(this.state.stepIndex+" Step Index in component will receive props end")
     }
 
     handleNext = () => {
         const {stepIndex} = this.state;
-        if (this.state.stepIndex == 1 && this.props.exportInfo.exportName == "") {
+        if (stepIndex == 1 && this.props.exportInfo.exportName == "") {
             this.props.setExportInfoDone();
         }
 
         else
         {
             this.setState({
-            stepIndex: this.state.stepIndex + 1,
-            finished: this.state.stepIndex >= 2,
+            stepIndex: stepIndex + 1,
+            finished: stepIndex >= 2,
          });
         }
     };
 
     handlePrev = () => {
         const {stepIndex} = this.state;
-        if (this.state.stepIndex > 0) {
-            this.setState({stepIndex: this.state.stepIndex - 1});
+        if (stepIndex > 0) {
+            this.setState({stepIndex: stepIndex - 1});
         }
     };
 
