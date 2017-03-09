@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .views import logout, user, auth, data_estimator, request_geonames
 
+
 urlpatterns = [
     url(r'^login/$', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name='login'),
     url(r'^auth/$', ensure_csrf_cookie(auth), name='auth'),

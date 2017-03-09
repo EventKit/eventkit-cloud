@@ -4,7 +4,8 @@ import json
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
-from django.shortcuts import RequestContext, redirect, render_to_response, HttpResponse
+from django.template import RequestContext
+from django.shortcuts import redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse

@@ -7,6 +7,7 @@ URL Configuration
 from django.conf.urls import include, url
 from django.contrib import admin
 from ..ui import urls as ui_urls
+from ..api.urls import schema_view
 from ..api.urls import router
 from ..api.views import HDMDataModelView, OSMDataModelView, RunJob
 
@@ -17,6 +18,7 @@ urlpatterns = []
 urlpatterns += [
     url(r'^', include(ui_urls), name='index'),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^api/docs$', schema_view),
     url(r'^api/', include(router.urls, namespace='api')),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^api/rerun$', RunJob.as_view(), name='rerun'),
