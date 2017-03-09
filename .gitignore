@@ -97,3 +97,4 @@ cache_data
 coverage
 
 # JS build dir
+eventkit_cloud/ui/static/ui/build
