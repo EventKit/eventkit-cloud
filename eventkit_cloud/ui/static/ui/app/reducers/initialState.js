@@ -39,4 +39,16 @@ export default {
         search: "DEFAULT",
     },
     drawerOpen: true,
+    exportInfo: {
+        exportName: '',
+        datapackDescription: '',
+        projectName: '',
+        makePublic: false,
+        providers: [],
+        area_str: '',
+        layers: '',
+    },
+    providers: [],
+    stepperNextEnabled: false,
+    setExportPackageFlag: false,
 }
