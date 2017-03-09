@@ -1,0 +1,7 @@
+.map {
+    background-color: none;
+}
+
+.map > div {
+    max-height: 200px;
+}
