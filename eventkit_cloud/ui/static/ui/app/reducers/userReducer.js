@@ -1,7 +1,7 @@
 import types from '../actions/actionTypes'
 
 const initialState = {
-  data: 'null',
+  data: null,
   isLoading: false
 }
 
