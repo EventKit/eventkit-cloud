@@ -7,6 +7,7 @@ import uuid
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.serializers import serialize
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.fields import CharField
 from django.db.models.signals import (
@@ -135,6 +136,12 @@ class ExportProvider(TimeStampedModelMixin):
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
+    preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
+                                   help_text="This url will be served to the front end for displaying in the map.")
+    service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
+                                   help_text="This information is used to display relevant copyright information.")
+    service_description = models.CharField(verbose_name="Description", max_length=4000, null=True, default='', blank=True,
+                                         help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
@@ -145,11 +152,18 @@ class ExportProvider(TimeStampedModelMixin):
                               verbose_name="Mapproxy Configuration",
                               help_text="This is an optional field which is needed if the service "
                                         "requires authentication.")
-    user = models.ForeignKey(User, related_name='+', null=True, default=None)
+    user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
 
     class Meta:  # pragma: no cover
         managed = True
         db_table = 'export_provider'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.name.replace(' ', '_').lower()
+            if len(self.slug) > 40:
+                self.slug = self.slug[0:39]
+        super(ExportProvider, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{0}'.format(self.name)
@@ -214,6 +228,7 @@ class Job(TimeStampedModelMixin):
     the_geom = models.PolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
+    selection = models.TextField(verbose_name='Selection Area (GeoJSON)', null=True, blank=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
 
@@ -239,6 +254,10 @@ class Job(TimeStampedModelMixin):
         overpass_extents = '{0},{1},{2},{3}'.format(str(extents[1]), str(extents[0]),
                                                     str(extents[3]), str(extents[2]))
         return overpass_extents
+
+    @property
+    def extents(self, ):
+        return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
     def tag_dict(self, ):
@@ -293,6 +312,12 @@ class Job(TimeStampedModelMixin):
                 if geom == 'polygon':
                     polygons.append(tag)
         return {'points': sorted(points), 'lines': sorted(lines), 'polygons': sorted(polygons)}
+
+    @property
+    def bounds_geojson(self,):
+        return serialize('geojson', [self],
+                         geometry_field='the_geom',
+                         fields=('name', 'the_geom'))
 
 
 class Tag(models.Model):

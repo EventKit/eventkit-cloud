@@ -8,6 +8,7 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.utils.translation import ugettext as _
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
@@ -28,9 +29,7 @@ from serializers import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 
-from ..tasks.export_tasks import PickUpRunTask
-from eventkit_cloud.tasks.util_tasks import RevokeTask
-
+from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
@@ -105,7 +104,7 @@ class JobViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = JobSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (FormParser, MultiPartParser, JSONParser)
     lookup_field = 'uid'
     pagination_class = LinkHeaderPagination
@@ -115,10 +114,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return all objects user can view."""
-        user = self.request.user
-        if user.is_authenticated():
-            return Job.objects.filter(Q(user=user) | Q(published=True))
-        return Job.objects.filter(published=True)
+        return Job.objects.filter(Q(user=self.request.user) | Q(published=True))
 
     def list(self, request, *args, **kwargs):
         """
@@ -201,6 +197,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
             export_providers = request.data.get('export_providers', [])
             provider_tasks = request.data.get('provider_tasks', [])
+            # selection = request.data.get('geojson', '{}')
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -282,9 +279,10 @@ class JobViewSet(viewsets.ModelViewSet):
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=job_uid)
+
             running = JobSerializer(job, context={'request': request})
             # Run is passed to celery to start the tasks.
-            PickUpRunTask().delay(run_uid=run_uid)
+            pick_up_run_task.delay(run_uid=run_uid)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -316,16 +314,15 @@ class RunJob(views.APIView):
             the serialized run data.
         """
         job_uid = request.query_params.get('job_uid', None)
-        # user = request.user
         if job_uid:
-            # run the tasks
-            # job = Job.objects.get(uid=job_uid)
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=job_uid)
             # Run is passed to celery to start the tasks.
             run = ExportRun.objects.get(uid=run_uid)
+            if run.user != request.user and not request.user.is_superuser:
+                return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
             if run:
-                PickUpRunTask().delay(run_uid=run_uid)
+                pick_up_run_task.delay(run_uid=run_uid)
                 running = ExportRunSerializer(run, context={'request': request})
                 return Response(running.data, status=status.HTTP_202_ACCEPTED)
             else:
@@ -341,7 +338,7 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     Endpoint exposing the supported export formats.
     """
     serializer_class = ExportFormatSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = ExportFormat.objects.all()
     lookup_field = 'slug'
     ordering = ['description']
@@ -354,10 +351,16 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     Endpoint exposing the supported export formats.
     """
     serializer_class = ExportProviderSerializer
-    permission_classes = (permissions.AllowAny,)
-    queryset = ExportProvider.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'id'
     ordering = ['name']
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        return ExportProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -367,7 +370,7 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     Endpoint exposing the supported regions.
     """
     serializer_class = RegionSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = Region.objects.all()
     lookup_field = 'uid'
 
@@ -380,11 +383,11 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
     HOT Regions as a GeoJSON Feature Collection.
     """
     serializer_class = RegionMaskSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = RegionMask.objects.all()
 
 
-class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportRunViewSet(viewsets.ModelViewSet):
     """
     ###Export Run API Endpoint.
 
@@ -394,16 +397,13 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
     `/api/runs?job_uid=a_job_uid&status=STATUS`
     """
     serializer_class = ExportRunSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_authenticated():
-            return ExportRun.objects.filter(Q(user=user) | Q(job__published=True)).order_by('-started_at')
-        return ExportRun.objects.filter(job__published=True)
+        return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True)).order_by('-started_at')
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -437,9 +437,26 @@ class ExportRunViewSet(viewsets.ReadOnlyModelViewSet):
             the serialized run data.
         """
         job_uid = self.request.query_params.get('job_uid', None)
-        queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
+        if job_uid:
+            queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
+        else:
+            queryset = self.get_queryset().order_by('-started_at')
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def patch(self, request, uid=None, *args, **kwargs):
+        field = self.request.query_params.get('field', None)
+        job_uid = self.request.query_params.get('job_uid', None)
+        if field == 'expiration' and job_uid:
+            updated_time = timezone.now() + timezone.timedelta(days=14)
+            run = ExportRun.objects.get(job__uid=job_uid)
+            if not run.expiration > updated_time:
+                run.expiration = updated_time
+                run.save()
+            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ExportConfigViewSet(viewsets.ModelViewSet):
@@ -453,7 +470,7 @@ class ExportConfigViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = ExportConfigFilter
     search_fields = ('name', 'config_type', 'user__username')
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+    permission_classes = (permissions.IsAuthenticated,
                           IsOwnerOrReadOnly)
     parser_classes = (FormParser, MultiPartParser, JSONParser)
     queryset = ExportConfig.objects.filter(config_type='PRESET')
@@ -467,9 +484,12 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportTaskSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    queryset = ExportTask.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
+    # queryset = ExportTask.objects.all()
     lookup_field = 'uid'
+
+    def get_queryset(self):
+        return ExportTask.objects.filter(Q(export_provider_task__run__user=self.request.user) | Q(export_provider_task__run__job__published=True)).order_by('-started_at')
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -490,16 +510,19 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportProviderTaskViewSet(viewsets.ModelViewSet):
     """
     ###ExportTask API endpoint.
 
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportProviderTaskSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    queryset = ExportTask.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'uid'
+
+    def get_queryset(self):
+        """Return all objects user can view."""
+        return ExportProviderTask.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -507,23 +530,26 @@ class ExportProviderTaskViewSet(viewsets.ReadOnlyModelViewSet):
 
         Args:
             request: the http request.
-            uid: the uid of the export task to GET.
+            uid: the uid of the export provider task to GET.
         Returns:
             the serialized ExportTask data
         """
-        queryset = ExportProviderTask.objects.filter(uid=uid)
         serializer = self.get_serializer(
-            queryset,
+            self.get_queryset().filter(uid=uid),
             many=True,
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, uid=None, *args, **kwargs):
-        rt = RevokeTask()
-        rt.run(uid)
-        return Response({'success': True}, status=status.HTTP_200_OK)
+    def partial_update(self, request, uid=None, *args, **kwargs):
 
+        export_provider_task = ExportProviderTask.objects.get(uid=uid)
+
+        if export_provider_task.run.user != request.user and not request.user.is_superuser:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
+        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -531,7 +557,7 @@ class PresetViewSet(viewsets.ReadOnlyModelViewSet):
     """
     CONFIG_TYPE = 'PRESET'
     serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
     lookup_field = 'uid'
 
@@ -542,7 +568,7 @@ class TranslationViewSet(viewsets.ReadOnlyModelViewSet):
     """
     CONFIG_TYPE = 'TRANSLATION'
     serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
     lookup_field = 'uid'
 
@@ -553,14 +579,14 @@ class TransformViewSet(viewsets.ReadOnlyModelViewSet):
     """
     CONFIG_TYPE = 'TRANSFORM'
     serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
     lookup_field = 'uid'
 
 
 class HDMDataModelView(views.APIView):
     """Endpoint exposing the HDM Data Model."""
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     @staticmethod
     def get(request, format='json'):
@@ -572,7 +598,7 @@ class HDMDataModelView(views.APIView):
 
 class OSMDataModelView(views.APIView):
     """Endpoint exposing the OSM Data Model."""
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticated,)
 
     @staticmethod
     def get(request, format='json'):

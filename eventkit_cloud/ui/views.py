@@ -1,31 +1,16 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
-
+import json
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
 from django.shortcuts import RequestContext, redirect, render_to_response, HttpResponse
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-import json
+from django.http import HttpResponse
+from .data_estimator import get_size_estimate
+import requests
 from django.contrib.auth import authenticate, login
-
-
-# def user_verification_required(func=None):
-#     """
-#     This is currently not implemented, but left here so that if it was to be added it would be straight forward.
-#     :param func: A view with a signature (request, uuid) where uuid is a job_uid.
-#     :return: The view if the user is authorized, else an unauthorized view.
-#     """
-#
-#     @wraps(func)
-#     def wrapper(request, uuid):
-#         # if user_owns_job(request.user, job_uid=uuid):
-#         return func(request, uuid)
-#         # else:
-#         #     return not_allowed_error_view(request)
-#
-#     return wrapper
 
 
 @require_http_methods(['GET'])
@@ -111,6 +96,19 @@ def require_email(request):
 
 
 @require_http_methods(['GET'])
+def request_geonames(request):
+    payload = {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': request.GET.get('q')}
+    geonames_url = getattr(settings, 'GEONAMES_API_URL')
+    if geonames_url:
+        response = requests.get(geonames_url, params=payload).json()
+        assert(isinstance(response, dict))
+        return HttpResponse(content=json.dumps(response), status=200, content_type="application/json")
+    else:
+        return HttpResponse(content=json.dumps({'error': 'A url was not provided for geonames'}),
+                            status=500, content_type="application/json")
+
+
+@require_http_methods(['GET'])
 def about(request):
     exports_url = reverse('list')
     help_url = reverse('help')
@@ -167,6 +165,27 @@ def help_presets(request):
         {'configurations_url': configurations_url},
         RequestContext(request)
     )
+
+
+@require_http_methods(['POST'])
+def data_estimator(request):
+    """
+
+    :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
+    :return: HttpResponse, with the size.
+    """
+    request_data = json.loads(request.body)
+    size = 0
+    providers = request_data.get('providers')
+    bbox = request_data.get('bbox')
+    if not providers and not bbox:
+        return HttpResponse("Providers or BBOX were not supplied in the request", status=400)
+
+    for provider in providers:
+        estimates = get_size_estimate(provider, bbox)
+        size += estimates[1]
+    return HttpResponse([size], status=200)
+
 
 
 # error views

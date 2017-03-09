@@ -4,7 +4,7 @@ import os
 from unittest import skip
 
 import mock
-from mock import patch, MagicMock
+from mock import patch, Mock
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -58,14 +58,17 @@ class TestOverpass(TestCase):
         q = overpass.get_query()
         self.assertEquals(q, self.query)
 
+    @patch('django.db.connection.close')
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('eventkit_cloud.utils.overpass.requests.post')
-    def test_run_query(self, mock_post):
-        progress_tracker = MagicMock(progress=None, estimated_finish=None)
+    def test_run_query(self, mock_post, export_task, mock_close):
+        verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
+        export_task_instance = Mock(progress=0, estimated_finish=None)
+        export_task.objects.get.return_value = export_task_instance
         op = Overpass(
             stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters,
-            progress_tracker=progress_tracker
+            filters=self.job.filters
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'
@@ -76,8 +79,11 @@ class TestOverpass(TestCase):
         mock_post.return_value = mock_response
         op.run_query()
         mock_post.assert_called_once_with(self.url,
-                                              data=q,
-                                              stream=True)
+                                          data=q,
+                                          stream=True,
+                                          verify=verify_ssl)
+        self.assertEqual(export_task_instance.progress, 100)
+        mock_close.assert_called()
         f = open(out)
         data = f.read()
         self.assertEqual(data, expected[0])

@@ -8,6 +8,5 @@ RUN npm install --quiet
 RUN npm install webpack webpack-dev-server -g --quiet
 
 COPY ./config/webpack.config.js /var/lib/eventkit/
-COPY ./scripts/webpack-entrypoint.sh /var/lib/eventkit/scripts/
 
 CMD ["webpack-dev-server", "--inline"]

@@ -16,7 +16,7 @@ sudo apt-get -y install git
 
 sudo pip install --upgrade pip
 sudo pip install virtualenvwrapper
-sudo echo 'export WORKON_HOME=/var/lib/eventkit/.virtualenvs' >> /etc/profile.d/path.sh
+sudo echo 'export WORKON_HOME=/var/lib/.virtualenvs' >> /etc/profile.d/path.sh
 sudo echo 'export PROJECT_HOME=/var/lib/eventkit' >> /etc/profile.d/path.sh
 sudo echo 'export DEVELOPMENT=True' >> /etc/profile.d/path.sh
 sudo echo 'source /usr/local/bin/virtualenvwrapper.sh' >> /etc/profile.d/path.sh
@@ -182,10 +182,10 @@ sudo ufw --force enable
 
 sudo echo "127.0.0.1 postgis rabbitmq" >> /etc/hosts
 
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
-sudo /var/lib/eventkit/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/admin_user.json
+sudo /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py collectstatic --noinput
+sudo /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py makemigrations
+sudo /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py migrate
+sudo /var/lib/.virtualenvs/eventkit/bin/python /var/lib/eventkit/manage.py loaddata /var/lib/eventkit/eventkit_cloud/fixtures/admin_user.json
 
 sudo service supervisor restart
 sudo update-rc.d supervisor enable

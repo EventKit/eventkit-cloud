@@ -1,22 +1,22 @@
 version: '2'
 services:
   base:
-     volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./exports_download:/var/lib/eventkit/exports_download
      build:
        context: .
        dockerfile: config/Dockerfile_test
      working_dir: /var/lib/eventkit
      user: eventkit
      environment:
-        - DATABASE_URL=postgis://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+        - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
         - DEBUG=True
-        - C_FORCE_ROOT=True
         - PRODUCTION=True
+        - DJANGO_LOG_LEVEL=ERROR
+        - LOG_LEVEL=ERROR
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
-        - SITE_NAME=${SITE_NAME}
+        - SITE_NAME
+        - PYTHONWARNINGS=ignore
+        - DISABLE_SSL_VERIFICATION=True
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -43,8 +43,8 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - LOGLEVEL=error
         - CONCURRENCY=1
+        - MAPPROXY_CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
@@ -54,26 +54,25 @@ services:
       - POSTGRES_DB=eventkit_exports
     expose:
       - "5432"
+    volumes:
+            - "postgis_database:/var/lib/postgresql/data"
   rabbitmq:
-     image: rabbitmq:3.6.5
+     image: rabbitmq:3.6.6-management
      expose:
        - "5672"
   httpd:
      build:
        context: .
        dockerfile: config/Dockerfile_httpd
+     depends_on:
+        - eventkit
+     links:
+        - eventkit
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
      ports:
         - "80:80"
-  webpack:
-     build:
-       context: .
-       dockerfile: config/Dockerfile_webpack
-     volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-     ports:
-        - "8080:8080"
-     command: webpack-dev-server --inline
+volumes:
+    postgis_database:

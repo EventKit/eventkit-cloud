@@ -38,6 +38,7 @@ from eventkit_cloud.tasks.models import (
     ExportTaskResult,
     ExportProviderTask
 )
+from eventkit_cloud.utils.s3 import get_presigned_url
 
 try:
     from collections import OrderedDict
@@ -162,7 +163,10 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         request = self.context['request']
-        return request.build_absolute_uri(obj.download_url)
+        if getattr(settings, 'USE_S3', False):
+            return get_presigned_url(download_url=obj.download_url)
+        else:
+            return request.build_absolute_uri(obj.download_url)
 
     @staticmethod
     def get_size(obj):
@@ -180,8 +184,8 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_exception(obj):
         exc_info = cPickle.loads(str(obj.exception)).exc_info
+        
         return str(exc_info[1])
-
 
 class ExportTaskSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
@@ -253,7 +257,7 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProviderTask
-        fields = ('uid', 'url', 'name', 'tasks',)
+        fields = ('uid', 'url', 'name', 'tasks', 'status')
 
 
 
@@ -272,6 +276,7 @@ class SimpleJobSerializer(serializers.Serializer):
         lookup_field='uid'
     )
     extent = serializers.SerializerMethodField()
+    selection = serializers.CharField()
 
     @staticmethod
     def get_uid(obj):
@@ -303,12 +308,13 @@ class ExportRunSerializer(serializers.ModelSerializer):
     duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField
 
     class Meta:
         model = ExportRun
         fields = (
             'uid', 'url', 'started_at', 'finished_at', 'duration', 'user',
-            'status', 'job', 'provider_tasks', 'zipfile_url'
+            'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration'
         )
 
     @staticmethod
@@ -338,7 +344,10 @@ class ExportRunSerializer(serializers.ModelSerializer):
             return None
 
         if obj.zipfile_url.startswith('http'):
-            return obj.zipfile_url
+            if getattr(settings, 'USE_S3', False):
+                return get_presigned_url(download_url=obj.zipfile_url)
+            else:
+                return obj.zipfile_url
 
         # get full URL path from current request
         uri = request.build_absolute_uri()
@@ -418,7 +427,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProvider
-        exclude = ('id', 'level_from', 'level_to')
+        extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
 
     @staticmethod
@@ -561,6 +570,9 @@ class JobSerializer(serializers.Serializer):
     published = serializers.BooleanField(required=False)
     feature_save = serializers.BooleanField(required=False)
     feature_pub = serializers.BooleanField(required=False)
+    selection = serializers.CharField(
+        required=False,
+        allow_blank=True)
     xmin = serializers.FloatField(
         max_value=180, min_value=-180, write_only=True,
         error_messages={
