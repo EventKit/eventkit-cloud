@@ -44,5 +44,17 @@ export default {
         fetched: false,
         jobs: [],
         error: null,
-    }
+    },
+    exportInfo: {
+        exportName: '',
+        datapackDescription: '',
+        projectName: '',
+        makePublic: false,
+        providers: [],
+        area_str: '',
+        layers: '',
+    },
+    providers: [],
+    stepperNextEnabled: false,
+    setExportPackageFlag: false,
 }

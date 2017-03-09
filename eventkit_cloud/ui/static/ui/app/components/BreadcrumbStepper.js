@@ -10,6 +10,8 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
+import ExportSummary from './ExportSummary'
+import { createExportRequest, getProviders, stepperNextDisabled, stepperNextEnabled, exportInfoDone} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -24,25 +26,43 @@ class BreadcrumbStepper extends React.Component {
         nextDisabled: true,
     };
 
+    componentDidMount(){
+        this.props.getProviders();
+        this.props.setNextDisabled();
+    }
     componentWillReceiveProps(nextProps) {
+        const {stepIndex} = this.state;
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             if(!isEqual(nextProps.aoiInfo.geojson, {})) {
-                //make the stepper button clickable
-                this.setState({nextDisabled: false});
+                this.props.setNextEnabled();
+
             }
             else {
-                //make the stepper button disabled
-                this.setState({nextDisabled: true});
+                this.props.setNextDisabled();
             }
+        }
+
+        if (stepIndex == 1 && this.props.exportInfo.exportName != "") {
+            this.setState({
+                stepIndex: stepIndex + 1,
+                finished: stepIndex >= 2,
+            });
         }
     }
 
     handleNext = () => {
         const {stepIndex} = this.state;
-        this.setState({
+        if (stepIndex == 1 && this.props.exportInfo.exportName == "") {
+            this.props.setExportInfoDone();
+        }
+
+        else
+        {
+            this.setState({
             stepIndex: stepIndex + 1,
             finished: stepIndex >= 2,
-        });
+         });
+        }
     };
 
     handlePrev = () => {
@@ -58,9 +78,9 @@ class BreadcrumbStepper extends React.Component {
                 return <ExportAOI mode={this._mapMode}
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
             case 1:
-                return <ExportInfo/>
+                return <ExportInfo providers={this.props.providers} />
             case 2:
-                return 'return preview export';
+                return <ExportSummary/>
             case 3:
                 return 'return export status';
             default:
@@ -70,6 +90,8 @@ class BreadcrumbStepper extends React.Component {
     }
 
     render() {
+
+        const { createExportRequest } = this.props
 
         const styles = {
             stepper: {
@@ -93,16 +115,16 @@ class BreadcrumbStepper extends React.Component {
                         <div className={style.stepperWrapper}>
                             <Stepper activeStep={stepIndex}>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Define Area of Interest (AOI)</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Select Data & Formats</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Review & Submit</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Status & Download</StepLabel>
                                 </Step>
                             </Stepper>
                         </div>
@@ -112,7 +134,7 @@ class BreadcrumbStepper extends React.Component {
                                                 onTouchTap={this.handlePrev}
                                                 className={style.backButtonDiv}><i className="material-icons" aria-hidden="false">arrow_back</i></FloatingActionButton>
                             <FloatingActionButton mini={true}
-                                                disabled={this.state.nextDisabled}
+                                                disabled={!this.props.stepperNextEnabled}
                                                 onTouchTap={this.handleNext}
                                                 className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
                         </div>
@@ -144,15 +166,39 @@ class BreadcrumbStepper extends React.Component {
 BreadcrumbStepper.propTypes = {
     bbox: React.PropTypes.arrayOf(React.PropTypes.number),
     aoiInfo: React.PropTypes.object,
+    createExportRequest: React.PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
         aoiInfo: state.aoiInfo,
+        providers: state.providers,
+        stepperNextEnabled: state.stepperNextEnabled,
+        exportInfo: state.exportInfo,
     };
+}
+function mapDispatchToProps(dispatch) {
+    return {
+        createExportRequest: () => {
+            dispatch(createExportRequest());
+        },
+        getProviders: () => {
+            dispatch(getProviders())
+        },
+        setNextDisabled: () => {
+            dispatch(stepperNextDisabled());
+        },
+        setNextEnabled: () => {
+            dispatch(stepperNextEnabled());
+        },
+        setExportInfoDone: () => {
+            dispatch(exportInfoDone());
+        }
+    }
 }
 
 export default connect(
     mapStateToProps,
+    mapDispatchToProps
 )(BreadcrumbStepper);

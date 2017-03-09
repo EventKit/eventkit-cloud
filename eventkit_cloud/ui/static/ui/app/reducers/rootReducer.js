@@ -2,7 +2,7 @@ import {combineReducers} from 'redux'
 import { reducer as reduxFormReducer } from 'redux-form'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
-import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer, drawerMenuReducer} from './exportsReducer';
+import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer} from './exportsReducer';
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
@@ -16,6 +16,7 @@ const rootReducer = combineReducers({
     jobs: exportJobsReducer,
     bbox: exportBboxReducer,
     aoiInfo: exportAoiInfoReducer,
+    exportInfo: exportInfoReducer,
     zoomToSelection: zoomToSelectionReducer,
     resetMap: resetMapReducer,
     geonames: getGeonamesReducer,
@@ -28,6 +29,9 @@ const rootReducer = combineReducers({
     routing: routerReducer,
     drawerOpen: drawerMenuReducer,
     jobsList: jobListReducer,
+    providers: getProvidersReducer,
+    stepperNextEnabled: stepperReducer,
+    setExportPackageFlag: startExportPackageReducer
 });
 
 export default rootReducer;
