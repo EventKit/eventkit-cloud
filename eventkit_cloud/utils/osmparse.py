@@ -5,6 +5,7 @@ import os
 import sqlite3
 import subprocess
 from string import Template
+from ..tasks.task_process import TaskProcess
 
 from osgeo import gdal, ogr, osr
 
@@ -17,7 +18,7 @@ class OSMParser(object):
     Creates an ouput spatialite file to be used in export pipeline.
     """
 
-    def __init__(self, osm=None, gpkg=None, osmconf=None, debug=None):
+    def __init__(self, osm=None, gpkg=None, osmconf=None, debug=None, task_uid=None):
         """
         Initialize the OSMParser.
 
@@ -32,10 +33,11 @@ class OSMParser(object):
             raise IOError('Cannot find PBF data for this task.')
         self.gpkg = gpkg
         self.debug = debug
+        self.task_uid = task_uid
         if osmconf:
             self.osmconf = osmconf
         else:
-            self.osmconf = os.path.join(os.path.join(self.path, 'conf'),'hotosm.ini')
+            self.osmconf = os.path.join(os.path.join(self.path, 'conf'), 'hotosm.ini')
             logger.debug('Found osmconf ini file at: {0}'.format(self.osmconf))
         """
         OGR Command to run.
@@ -60,19 +62,18 @@ class OSMParser(object):
         """
         ogr_cmd = self.ogr_cmd.safe_substitute({'gpkg': self.gpkg,
                                                 'osm': self.osm, 'osmconf': self.osmconf})
-        if(self.debug):
+        if (self.debug):
             print 'Running: %s' % ogr_cmd
-        proc = subprocess.Popen(ogr_cmd, shell=True, executable='/bin/bash',
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(ogr_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if returncode != 0:
-            logger.error('%s', stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(returncode)
-        if(self.debug):
-            print 'ogr2ogr returned: %s' % returncode
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+        if (self.debug):
+            print 'ogr2ogr returned: %s' % task_process.exitcode
 
-    def create_default_schema_gpkg(self,):
+    def create_default_schema_gpkg(self, ):
         """
         Create the default osm gpkg schema
         Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
@@ -81,7 +82,7 @@ class OSMParser(object):
         try:
             conn = sqlite3.connect(self.gpkg)
             cur = conn.cursor()
-            sql = open(os.path.join(os.path.join(self.path, 'sql'),'planet_osm_schema.sql'), 'r').read()
+            sql = open(os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r').read()
             cur.executescript(sql)
             conn.commit()
         except Exception as e:
@@ -93,8 +94,9 @@ class OSMParser(object):
 
         self.update_sql = Template("spatialite $gpkg < $update_sql")
         sql_cmd = self.update_sql.safe_substitute({'gpkg': self.gpkg,
-                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'spatial_index.sql')})
-        if(self.debug):
+                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),
+                                                                              'spatial_index.sql')})
+        if (self.debug):
             print 'Running: %s' % sql_cmd
         proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -105,7 +107,6 @@ class OSMParser(object):
             raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
         if self.debug:
             print 'spatialite returned: %s' % returncode
-
 
     def update_zindexes(self, ):
         """
@@ -171,7 +172,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('-o', '--osm-file', required=True, dest="osm", help='The OSM file to convert (xml or pbf)')
     parser.add_argument('-f', '--geopackage-file', required=True, dest="gpkg", help='The sqlite output file')
-    parser.add_argument('-q', '--schema-sql', required=False, dest="schema", help='A sql file to refactor the output schema')
+    parser.add_argument('-q', '--schema-sql', required=False, dest="schema",
+                        help='A sql file to refactor the output schema')
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}

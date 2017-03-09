@@ -6,7 +6,9 @@ import os
 import shutil
 import sqlite3
 import subprocess
+from ..tasks.task_process import TaskProcess
 from string import Template
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +18,14 @@ class ThematicGPKG(object):
     Thin wrapper around ogr2ogr to convert sqlite to shp using thematic layers.
     """
 
-    def __init__(self, gpkg=None, tags=None, job_name=None, zipped=True, debug=False):
+    def __init__(self, gpkg=None, stage_dir=None, tags=None, job_name=None, debug=False, task_uid=None):
         """
         Initialize the ThematicGPKG utility.
 
         Args:
-            sqlite: the sqlite file to convert
-            shapefile: the path to the shapefile output
+            gpkg: the gpkg file to convert
             tags: the selected tags for this export
             job_name: the name of the export job
-            zipped: true if output is to be zipped, false otherwise
             debug: turn on/off debug logging output.
         """
         self.gpkg = gpkg
@@ -33,34 +33,47 @@ class ThematicGPKG(object):
         self.job_name = job_name
         if not os.path.exists(self.gpkg):
             raise IOError('Cannot find gpkg file for this task.')
-        self.stage_dir = os.path.dirname(self.gpkg)
         self.debug = debug
         # create thematic gpkg file
-        self.thematic_gpkg = self.stage_dir + '/' + self.job_name + '.gpkg'
+        self.stage_dir = stage_dir
+        self.thematic_gpkg = os.path.join(self.stage_dir, '{0}.gpkg'.format(self.job_name))
         self.path = os.path.dirname(os.path.realpath(__file__))
+        self.task_uid = task_uid
 
         # think more about how to generate this more flexibly, eg. using admin / db / settings?
         self.thematic_spec = {
-            'amenities_all_points': {'type': 'point', 'key': 'amenity', 'table': 'planet_osm_point', 'select_clause': 'amenity is not null'},
-            'amenities_all_polygons': {'type': 'polygon', 'key': 'amenity', 'table': 'planet_osm_polygon', 'select_clause': 'amenity is not null'},
-            'health_schools_points': {'type': 'point', 'key': 'amenity', 'table': 'planet_osm_point', 'select_clause': 'amenity="clinic" OR amenity="hospital" OR amenity="school" OR amenity="pharmacy"'},
-            'health_schools_polygons': {'key': 'amenity', 'table': 'planet_osm_polygon', 'select_clause': 'amenity="clinic" OR amenity="hospital" OR amenity="school" OR amenity="pharmacy"'},
-            'airports_all_points': {'key': 'aeroway', 'table': 'planet_osm_point', 'select_clause': 'aeroway is not null'},
-            'airports_all_polygons': {'key': 'aeroway', 'table': 'planet_osm_polygon', 'select_clause': 'aeroway is not null'},
+            'amenities_all_points': {'type': 'point', 'key': 'amenity', 'table': 'planet_osm_point',
+                                     'select_clause': 'amenity is not null'},
+            'amenities_all_polygons': {'type': 'polygon', 'key': 'amenity', 'table': 'planet_osm_polygon',
+                                       'select_clause': 'amenity is not null'},
+            'health_schools_points': {'type': 'point', 'key': 'amenity', 'table': 'planet_osm_point',
+                                      'select_clause': 'amenity="clinic" OR amenity="hospital" OR amenity="school" OR amenity="pharmacy"'},
+            'health_schools_polygons': {'key': 'amenity', 'table': 'planet_osm_polygon',
+                                        'select_clause': 'amenity="clinic" OR amenity="hospital" OR amenity="school" OR amenity="pharmacy"'},
+            'airports_all_points': {'key': 'aeroway', 'table': 'planet_osm_point',
+                                    'select_clause': 'aeroway is not null'},
+            'airports_all_polygons': {'key': 'aeroway', 'table': 'planet_osm_polygon',
+                                      'select_clause': 'aeroway is not null'},
             'villages_points': {'key': 'place', 'table': 'planet_osm_point', 'select_clause': 'place is not null'},
-            'buildings_polygons': {'key': 'building', 'table': 'planet_osm_polygon', 'select_clause': 'building is not null'},
-            'natural_polygons': {'key': 'natural', 'table': 'planet_osm_polygon', 'select_clause': 'natural is not null'},
+            'buildings_polygons': {'key': 'building', 'table': 'planet_osm_polygon',
+                                   'select_clause': 'building is not null'},
+            'natural_polygons': {'key': 'natural', 'table': 'planet_osm_polygon',
+                                 'select_clause': 'natural is not null'},
             'natural_lines': {'key': 'natural', 'table': 'planet_osm_line', 'select_clause': 'natural is not null'},
-            'landuse_other_polygons': {'key': 'landuse', 'table': 'planet_osm_polygon', 'select_clause': 'landuse is not null AND landuse!="residential"'},
-            'landuse_residential_polygons': {'key': 'landuse', 'table': 'planet_osm_polygon', 'select_clause': 'landuse is not null AND landuse="residential"'},
+            'landuse_other_polygons': {'key': 'landuse', 'table': 'planet_osm_polygon',
+                                       'select_clause': 'landuse is not null AND landuse!="residential"'},
+            'landuse_residential_polygons': {'key': 'landuse', 'table': 'planet_osm_polygon',
+                                             'select_clause': 'landuse is not null AND landuse="residential"'},
             'roads_paths_lines': {'key': 'highway', 'table': 'planet_osm_line', 'select_clause': 'highway is not null'},
             'waterways_lines': {'key': 'waterway', 'table': 'planet_osm_line', 'select_clause': 'waterway is not null'},
-            'towers_antennas_points': {'key': 'man_made', 'table': 'planet_osm_point', 'select_clause': 'man_made="antenna" OR man_made="mast" OR man_made="tower"'},
+            'towers_antennas_points': {'key': 'man_made', 'table': 'planet_osm_point',
+                                       'select_clause': 'man_made="antenna" OR man_made="mast" OR man_made="tower"'},
             'harbours_points': {'key': 'harbour', 'table': 'planet_osm_point', 'select_clause': 'harbour is not null'},
-            'grassy_fields_polygons': {'key': 'leisure', 'table': 'planet_osm_polygon', 'select_clause': 'leisure="pitch" OR leisure="common" OR leisure="golf_course"'},
+            'grassy_fields_polygons': {'key': 'leisure', 'table': 'planet_osm_polygon',
+                                       'select_clause': 'leisure="pitch" OR leisure="common" OR leisure="golf_course"'},
         }
 
-    def convert(self,):
+    def convert(self, ):
         """
         Generate the thematic schema.
 
@@ -93,7 +106,8 @@ class ThematicGPKG(object):
             raise
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
-        sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, geom FROM $planet_table WHERE $select_clause')
+        sql_tmpl = Template(
+            'CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, geom FROM $planet_table WHERE $select_clause')
         for layer, spec in self.thematic_spec.iteritems():
             layer_type = layer.split('_')[-1]
             isPoly = layer_type == 'polygons'
@@ -117,7 +131,7 @@ class ThematicGPKG(object):
 
             # Ensure columns are available to migrate
             select_temp = Template('select * from $tablename LIMIT 1')
-            sql = select_temp.safe_substitute({'tablename':spec['table']})
+            sql = select_temp.safe_substitute({'tablename': spec['table']})
             try:
                 col_cursor = cur.execute(sql)
             except Exception:
@@ -136,22 +150,27 @@ class ThematicGPKG(object):
             sql = sql_tmpl.safe_substitute(params)
             try:
                 cur.execute(sql)
-            except Exception:
+            except Exception as e:
                 logger.error("SQL Execute for: {}, has failed.".format(sql))
-                raise
+                raise e
             geom_type = geom_types[layer_type]
             conn.commit()
 
-            insert_contents_temp = Template("INSERT INTO gpkg_contents VALUES ('$table_name', 'features', '$identifier', '', '$last_change', '$min_x', '$min_y', '$max_x', '$max_y', '$srs');")
-            insert_geom_temp = Template("INSERT INTO gpkg_geometry_columns VALUES ('$table_name', 'geom', '$geom_type', '$srs', '0', '0');")
+            insert_contents_temp = Template(
+                "INSERT INTO gpkg_contents VALUES ('$table_name', 'features', '$identifier', '', '$last_change', '$min_x', '$min_y', '$max_x', '$max_y', '$srs');")
+            insert_geom_temp = Template(
+                "INSERT INTO gpkg_geometry_columns VALUES ('$table_name', 'geom', '$geom_type', '$srs', '0', '0');")
             try:
-                insert_contents_cmd = insert_contents_temp.safe_substitute({'table_name': layer, 'identifier': layer, 'last_change': insert_data[4], 'min_x': insert_data[5], 'min_y': insert_data[6], 'max_x': insert_data[7], 'max_y': insert_data[8], 'srs': insert_data[9]})
+                insert_contents_cmd = insert_contents_temp.safe_substitute(
+                    {'table_name': layer, 'identifier': layer, 'last_change': insert_data[4], 'min_x': insert_data[5],
+                     'min_y': insert_data[6], 'max_x': insert_data[7], 'max_y': insert_data[8], 'srs': insert_data[9]})
                 cur.execute(insert_contents_cmd)
-                insert_geom_cmd = insert_geom_temp.safe_substitute({'table_name': layer, 'geom_type': geom_type, 'srs': insert_data[9]})
+                insert_geom_cmd = insert_geom_temp.safe_substitute(
+                    {'table_name': layer, 'geom_type': geom_type, 'srs': insert_data[9]})
                 cur.execute(insert_geom_cmd)
-            except Exception:
+            except Exception as e:
                 logger.error("GPKG Contents Insert failed for {}".format(layer))
-                raise
+                raise e
             conn.commit()
 
         cur.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_point'")
@@ -183,34 +202,33 @@ class ThematicGPKG(object):
         cur.close()
         conn.close()
 
-        sql_file = open(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'), 'w+')
-        convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
-        index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
-        convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
-        for layer in valid_layers:
-            convert_to_cmd = convert_to_cmd_temp.safe_substitute({'layer': layer})
-            index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
-            convert_from_cmd = convert_from_cmd_temp.safe_substitute({'layer': layer})
-            sql_file.write(convert_to_cmd)
-            sql_file.write(index_cmd)
-            sql_file.write(convert_from_cmd)
-        sql_file.close()
+        thematic_spatial_index_file = os.path.join(self.stage_dir, 'thematic_spatial_index.sql')
+
+        with open(thematic_spatial_index_file, 'w+') as sql_file:
+            convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
+            index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
+            convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
+            for layer in valid_layers:
+                convert_to_cmd = convert_to_cmd_temp.safe_substitute({'layer': layer})
+                index_cmd = index_cmd_temp.safe_substitute({'layer': layer})
+                convert_from_cmd = convert_from_cmd_temp.safe_substitute({'layer': layer})
+                sql_file.write(convert_to_cmd)
+                sql_file.write(index_cmd)
+                sql_file.write(convert_from_cmd)
 
         self.update_index = Template("spatialite $gpkg < $update_sql")
         index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
-                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql')})
-        if(self.debug):
-            print 'Running: %s' % index_cmd
-        proc = subprocess.Popen(index_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if returncode != 0:
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, returncode)
+                                                       'update_sql': thematic_spatial_index_file})
         if self.debug:
-            print 'spatialite returned: %s' % returncode
-
-        os.remove(os.path.join(os.path.join(self.path, 'sql'),'thematic_spatial_index.sql'))
+            print 'Running: %s' % index_cmd
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(index_cmd, shell=True, executable='/bin/bash',
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, task_process.exitcode)
+        if self.debug:
+            print 'spatialite returned: %s' % task_process.exitcode
+        os.remove(thematic_spatial_index_file)
 
         return self.thematic_gpkg

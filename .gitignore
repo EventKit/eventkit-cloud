@@ -71,9 +71,6 @@ media/*
 #settings_private.py
 #static
 #!eventkit_cloud/ui/static
-migrations
-!eventkit_cloud/jobs/migrations
-!eventkit_cloud/tasks/migrations
 
 nohup.out
 api/tests/examples
@@ -91,10 +88,13 @@ core/settings/secret.py
 
 *.iml
 
+# temp and generated data
 exports_download
+exports_stage
+cache_data
 *~
 
-eventkit_cloud/ui/static/ui/node_modules
-eventkit_cloud/ui/static/ui/webpack.config.js
 coverage
-eventkit_cloud/ui/static/ui/build/*
+
+# JS build dir
+eventkit_cloud/ui/static/ui/build

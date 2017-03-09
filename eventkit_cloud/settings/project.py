@@ -18,19 +18,17 @@ INSTALLED_APPS += (
     'django_classification_banner',
 )
 
-INSTALLED_APPS += ("djcelery", )
-import djcelery
-djcelery.setup_loader()
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
 LOGIN_URL = '/login/'
 
 EXPORT_TASKS = {
-    'shp': 'eventkit_cloud.tasks.export_tasks.ShpExportTask',
+    'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
     'obf': 'eventkit_cloud.tasks.export_tasks.ObfExportTask',
-    'sqlite': 'eventkit_cloud.tasks.export_tasks.SqliteExportTask',
-    'kml': 'eventkit_cloud.tasks.export_tasks.KmlExportTask',
+    'sqlite': 'eventkit_cloud.tasks.export_tasks.sqlite_export_task',
+    'kml': 'eventkit_cloud.tasks.export_tasks.kml_export_task',
     'thematic': 'eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask',
-    'gpkg': 'eventkit_cloud.tasks.export_tasks.GeopackageExportTask'
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task'
 }
 
 
@@ -58,28 +56,27 @@ GARMIN_CONFIG = os.getenv('GARMIN_CONFIG', '/var/lib/eventkit/conf/garmin_config
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
+GEONAMES_API_URL = os.getenv('GEONAMES_API_URL', 'http://api.geonames.org/searchJSON')
 
 """
 Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
-JOB_MAX_EXTENT = 2500000  # default export max extent in sq km
+JOB_MAX_EXTENT = os.getenv('JOB_MAX_EXTENT', 2500000)  # default export max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
 
+import socket
+HOSTNAME = os.getenv('HOSTNAME', socket.gethostname())
 if os.environ.get('VCAP_APPLICATION'):
     env = json.loads(os.environ.get('VCAP_APPLICATION'))
-    HOSTNAME = os.getenv('HOSTNAME', env['application_uris'][0])
-    SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
-    SITE_URL = os.getenv('SITE_URL', "https://{0}".format(SITE_NAME))
-else:
-    import socket
-    HOSTNAME = os.getenv('HOSTNAME', socket.gethostname())
-    SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
-    if SITE_NAME == '':
-        SITE_NAME = 'localhost'
-    SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
+    if env['application_uris']:
+        HOSTNAME = os.getenv('HOSTNAME', env['application_uris'][0])
+SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
+if SITE_NAME == '':
+    SITE_NAME = 'localhost'
+SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
 SITE_ID = 1
 
 """
@@ -92,6 +89,13 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'eventkit.team@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', None)
+
+if EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 EMAIL_USE_TLS = True
 
 """
@@ -102,7 +106,7 @@ Sets the max ram allowed for overpass query
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Element_limit_.28maxsize.29
 """
 
-OVERPASS_MAX_SIZE = 2147483648  # 2GB
+OVERPASS_MAX_SIZE = os.getenv('OVERPASS_MAX_SIZE', 2147483648)  # 2GB
 
 """
 Overpass timeout setting
@@ -112,6 +116,7 @@ Sets request timeout for overpass queries.
 http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 """
 
-OVERPASS_TIMEOUT = 1600  # query timeout in seconds
+OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
 
 USE_DISK_CACHE = True
+

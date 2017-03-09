@@ -4,22 +4,23 @@ import os
 
 from mock import Mock, patch
 
-from django.test import SimpleTestCase
+from django.test import TransactionTestCase
 
 from ..kml import GPKGToKml
 
 logger = logging.getLogger(__name__)
 
 
-class TestGPKGToKml(SimpleTestCase):
+class TestGPKGToKml(TransactionTestCase):
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
 
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_convert(self, popen, pipe, exists):
+    def test_convert(self, popen, pipe, exists, export_task):
         gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
         cmd = "ogr2ogr -f 'KML' {0} {1}".format(kmlfile, gpkg)
@@ -33,17 +34,19 @@ class TestGPKGToKml(SimpleTestCase):
                           zipped=False, debug=False)
         exists.assert_called_once_with(gpkg)
         out = s2k.convert()
+        export_task.assert_called_once()
         popen.assert_called_once_with(cmd, shell=True, executable='/bin/bash',
                                 stdout=pipe, stderr=pipe)
         proc.communicate.assert_called_once()
         proc.wait.assert_called_once()
         self.assertEquals(out, kmlfile)
 
+    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
     @patch('os.remove')
     @patch('subprocess.PIPE')
     @patch('subprocess.Popen')
-    def test_zip_kml_file(self, popen, pipe, remove, exists):
+    def test_zip_kml_file(self, popen, pipe, remove, exists, export_task):
         gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
         zipfile = '/path/to/query.kmz'
@@ -56,6 +59,7 @@ class TestGPKGToKml(SimpleTestCase):
         s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile,
                           zipped=False, debug=False)
         result = s2k._zip_kml_file()
+        export_task.assert_called_once()
         exists.assert_called_once_with(gpkg)
         # test subprocess getting called with correct command
         popen.assert_called_once_with(zip_cmd, shell=True, executable='/bin/bash',

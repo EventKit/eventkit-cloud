@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from .project import *  # NOQA
 import dj_database_url
 import os
-
+import logging
 
 # Authentication Settings
 if os.environ.get('LDAP_SERVER_URI'):
@@ -52,7 +52,7 @@ DATABASES = {}
 if os.environ.get('VCAP_SERVICES'):
     DATABASES = {'default': dj_database_url.config()}
 else:
-    DATABASES['default'] = dj_database_url.config(default='postgis://eventkit:eventkit_exports@localhost:5432/eventkit_exports')
+    DATABASES['default'] = dj_database_url.config(default='postgres://eventkit:eventkit_exports@localhost:5432/eventkit_exports')
 
 DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
@@ -81,14 +81,20 @@ TEMPLATES = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-# Disable caching while in development
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+if os.environ.get("MEMCACHED"):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+            'LOCATION': os.environ.get("MEMCACHED"),
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'eventkit_cache',
+        }
+    }
 
 
 # session settings
@@ -111,3 +117,32 @@ AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
+MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
+
+
+## WARNINGS ARE SUPPRESSED, PLEASE REVIEW PRIOR TO UPGRADING
+# http://stackoverflow.com/questions/29562070/how-to-suppress-the-deprecation-warnings-in-django
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARN'),
+        },
+        'eventkit_cloud': {
+            'handlers': ['console', ],
+            'propagate': True,
+            'level': os.getenv('LOG_LEVEL', 'INFO'),
+        },
+    },
+}
+
+DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)

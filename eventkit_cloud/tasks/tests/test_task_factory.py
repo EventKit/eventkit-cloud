@@ -2,13 +2,17 @@
 import logging
 import os
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from django.db import DatabaseError
+from mock import patch, Mock
 
 from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
 
 from celery.result import AsyncResult
+import uuid
 from ..task_factory import TaskFactory, create_run
 from ..models import ExportRun
 
@@ -30,7 +34,7 @@ class TestExportTaskFactory(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
-        provider = ExportProvider.objects.first()
+        provider = ExportProvider.objects.get(slug='osm')
         provider_task = ProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
         self.region = Region.objects.get(name='Africa')
@@ -38,14 +42,34 @@ class TestExportTaskFactory(TestCase):
         self.uid = str(provider_task.uid)
         self.job.save()
 
-    def test_create_run(self):
+    def test_create_run_success(self):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
 
-    def test_task_factory(self):
+    @patch('eventkit_cloud.tasks.task_factory.ExportRun')
+    def test_create_run_failure(self, ExportRun):
+        ExportRun.objects.create.side_effect = DatabaseError('FAIL')
+        with self.assertRaises(DatabaseError):
+            run_uid = create_run(job_uid=self.job.uid)
+            self.assertIsNone(run_uid)
+
+    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
+    @patch('eventkit_cloud.tasks.task_factory.create_task')
+    @patch('eventkit_cloud.tasks.task_factory.chain')
+    @patch('eventkit_cloud.tasks.task_runners.chain')
+    @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
+    def test_task_factory(self, task_runner, task_runner_chain, task_factory_chain, create_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
-        tasks_results = TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
-        self.assertIsInstance(tasks_results[0], AsyncResult)
+        task = Mock()
+        provider_uuid = uuid.uuid4
+        task_runner.run_task.return_value(provider_uuid, task)
+        create_task.return_value = task
+        TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
+        task_runner_chain.assert_called()
+        task_factory_chain.assert_called()
+        create_task.assert_called()
+        finalize_task.s.assert_called_once()
+

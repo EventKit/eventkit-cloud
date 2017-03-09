@@ -1,4 +1,6 @@
-# need to import tasks here to successfully register them
-from export_tasks import *  # NOQA
-from scheduled_tasks import *  # NOQA
-from .scripts.debug import *  # NOQA
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
+from .scheduled_tasks import *
+from .export_tasks import *
+from .scripts.debug import *

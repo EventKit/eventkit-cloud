@@ -6,6 +6,7 @@ import math
 import os
 from collections import OrderedDict
 from StringIO import StringIO
+import json
 
 import magic
 from lxml import etree

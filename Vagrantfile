@@ -15,22 +15,9 @@ end
 VAGRANTFILE_API_VERSION = "2"
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
-  config.vm.hostname = "cloud.eventkit.dev"
-  config.vm.network :private_network, ip: "192.168.99.130"
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
-  
-  config.vm.define "nodocker", autostart: false do |nodocker|
-    nodocker.vm.box = "bento/ubuntu-16.04"
-    nodocker.vm.provision :shell, path: "scripts/bootstrap.sh"
-    nodocker.vm.synced_folder "./eventkit_cloud", "/var/lib/eventkit/eventkit_cloud"
+    config.vm.hostname = "cloud.eventkit.dev"
+    config.vm.network :private_network, ip: "192.168.99.130"
 
-    # Example of share an additional folder to the guest VM.
-    nodocker.vm.provider :virtualbox do |vb|
-      vb.customize ["modifyvm", :id, "--memory", "4096", "--cpus", "4"]
-    end
-  end
-  
-  config.vm.define "docker", autostart: false do |docker|
     # Check required plugins
     DOCKER_REQUIRED_PLUGINS = %w(vagrant-reload)
     exit unless DOCKER_REQUIRED_PLUGINS.all? do |plugin|
@@ -41,20 +28,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         )
     end
 
-    docker.vm.box = "ubuntu/trusty64"
+    config.vm.box = "ubuntu/trusty64"
 
     ## create a private network visible only to the host machine
-    #config.vm.network :private_network, ip: "127.0.0.1"
-    docker.vm.provision :shell, path: "scripts/setup_dependencies.sh"
-    docker.vm.provision :reload
-    docker.vm.provision :shell, path: "scripts/install_docker.sh"
+    config.vm.provision :shell, path: "scripts/setup_dependencies.sh"
+    config.vm.provision :reload
+    config.vm.provision :shell, path: "scripts/install_docker.sh"
 
-    docker.vm.provider "virtualbox" do |vb|
-      
+    config.vm.provider "virtualbox" do |vb|
+
        # Customize the amount of memory on the VM:
        vb.memory = "8192"
     end
-  end
-
 
 end
