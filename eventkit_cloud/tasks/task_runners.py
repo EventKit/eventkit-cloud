@@ -45,7 +45,7 @@ class ExportGenericOSMTaskRunner(TaskRunner):
     Runs Generic OSM Export Tasks
     """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
         Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
@@ -53,7 +53,6 @@ class ExportGenericOSMTaskRunner(TaskRunner):
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
-        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
         :param worker: The celery worker assigned this task.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
@@ -173,7 +172,7 @@ class ExportGenericOSMTaskRunner(TaskRunner):
 class ExportThematicOSMTaskRunner(TaskRunner):
     """Run Thematic OSM Export Tasks, this requires an OSM file be available to it."""
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
         Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
@@ -181,7 +180,6 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
-        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
         :param worker: The celery worker assigned this task.
         :param osm_gpkg: A OSM geopackage with the planet osm schema.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
@@ -265,7 +263,7 @@ class ExportWFSTaskRunner(TaskRunner):
     """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
         Run WFS export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
@@ -273,7 +271,6 @@ class ExportWFSTaskRunner(TaskRunner):
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
-        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
         :param worker: The celery worker assigned this task.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
@@ -355,13 +352,12 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
-        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
         :param worker: The celery worker assigned this task.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None):
         """
         Run export tasks.
 
@@ -447,9 +443,9 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
         :param provider_task_uid: A reference uid for the ProviderTask model.
         :param user: The user executing the task.
+        :param service_type: The type name of the service type to autoconfigure the service (not yet implemented).
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
-        :param service_type: A descriptor for the OSM service (i.e. thematic or generic).  Used to control the pipeline.
         :param worker: The celery worker assigned this task.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
