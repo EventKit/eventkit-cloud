@@ -9,13 +9,13 @@ from django.test import TransactionTestCase
 from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
-                          add_geojson_to_geopackage)
+                          add_geojson_to_geopackage, clip_geopackage)
 
 
 logger = logging.getLogger(__name__)
 
 
-class TestSQliteToGeopackage(TransactionTestCase):
+class TestGeopackage(TransactionTestCase):
     def setUp(self, ):
         import eventkit_cloud.utils
         self.path = os.path.dirname(eventkit_cloud.utils.__file__)
@@ -216,4 +216,27 @@ class TestSQliteToGeopackage(TransactionTestCase):
         with self.assertRaises(Exception):
             add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=task_uid)
 
+    @patch('os.rename')
+    @patch('eventkit_cloud.utils.geopackage.TaskProcess')
+    def test_clip_geopackage(self, task_process, rename):
+        geojson = "{}"
+        gpkg = None
+        with self.assertRaises(Exception):
+            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg)
+
+        geojson_file = "test.geojson"
+        in_gpkg = "old_test.gpkg"
+        gpkg = "test.gpkg"
+        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {1} {2}".format(geojson_file, gpkg, in_gpkg)
+        task_uid = uuid.uuid4()
+        task_process_mock = Mock(exitcode=0)
+        task_process.return_value = task_process_mock
+        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=task_uid)
+        task_process.assert_called_once_with(task_uid=task_uid)
+        task_process_mock.start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
+        rename.assert_called_once_with(gpkg, in_gpkg)
+
+        task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            clip_geopackage(geojson=geojson, gpkg=gpkg, task_uid=task_uid)
 

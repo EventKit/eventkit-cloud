@@ -17,7 +17,8 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
-from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority, bounds_export_task
+from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
+                                  bounds_export_task, output_selection_geojson_task)
 from django.conf import settings
 from django.db import DatabaseError
 from django.utils import timezone
@@ -107,15 +108,19 @@ class TaskFactory:
                             export_provider_task_uids += [export_provider_task_uid]
 
                             if chain_task_runner_tasks:
+                                # Create a geojson for clipping this provider if needed
+                                selection_task = create_task(export_provider_task_uid=export_provider_task_uid,
+                                                                 stage_dir=stage_dir, worker=worker, task_type='selection', selection=job.selection)
 
                                 # Export the bounds for this provider
-                                bounds_task = create_bounds_task(export_provider_task_uid=export_provider_task_uid,
-                                                                 stage_dir=stage_dir, worker=worker)
+                                bounds_task = create_task(export_provider_task_uid=export_provider_task_uid,
+                                                                 stage_dir=stage_dir, worker=worker, task_type='bounds')
 
                                 # Run the task, and when it completes return the status of the task to the model.
                                 # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
                                 # it will call FinalizeTask which will mark the entire job complete/incomplete
-                                finalize_chain_task_runner_tasks = chain(chain_task_runner_tasks, bounds_task, finalize_export_provider_task.s(
+                                finalize_chain_task_runner_tasks = chain(selection_task, chain_task_runner_tasks,
+                                                                         bounds_task, finalize_export_provider_task.s(
                                         run_uid=run_uid,
                                         run_dir=run_dir,
                                         export_provider_task_uid=export_provider_task_uid,
@@ -174,15 +179,17 @@ def create_run(job_uid):
         raise e
 
 
-def create_bounds_task(export_provider_task_uid=None, stage_dir=None, worker=None):
+def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task_type=None):
     """
     Create a new task to export the bounds for an ExportProviderTask
     :param export_provider_task_uid: An export provider task UUID.
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
     """""
+    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task}
 
+    task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-    export_task = create_export_task(task_name=bounds_export_task.name, export_provider_task=export_provider_task, worker=worker)
-    return bounds_export_task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid,
+    export_task = create_export_task(task_name=task.name, export_provider_task=export_provider_task, worker=worker)
+    return task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
                                  stage_dir=stage_dir, provider_slug=export_provider_task.slug).set(queue=worker, routing_key=worker)

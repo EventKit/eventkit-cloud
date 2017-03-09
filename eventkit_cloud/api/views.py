@@ -197,6 +197,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
             export_providers = request.data.get('export_providers', [])
             provider_tasks = request.data.get('provider_tasks', [])
+            # selection = request.data.get('geojson', '{}')
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -547,7 +548,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(uid, request.user)
+        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 class PresetViewSet(viewsets.ReadOnlyModelViewSet):

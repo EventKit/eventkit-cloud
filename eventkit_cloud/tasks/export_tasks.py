@@ -26,6 +26,7 @@ from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
 )
+import json
 
 from .exceptions import CancelException
 
@@ -224,7 +225,7 @@ class ExportTask(LockingTask):
             return {'state': TaskStates.CANCELED.value}
         super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
-    def update_task_state(self, result=None, task_uid=None):
+    def update_task_state(self, result={}, task_uid=None):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -253,18 +254,19 @@ class ExportTask(LockingTask):
 
 
 @app.task(name="OSMConf", bind=True, base=ExportTask, abort_on_error=True)
-def osm_conf_task(self, result=None, categories=None, stage_dir=None, job_name=None, task_uid=None):
+def osm_conf_task(self, result={}, categories=None, stage_dir=None, job_name=None, task_uid=None):
     """
     Task to create the ogr2ogr conf file.
     """
     self.update_task_state(result=result, task_uid=task_uid)
     conf = osmconf.OSMConfig(categories, job_name=job_name)
     configfile = conf.create_osm_conf(stage_dir=stage_dir)
-    return {'result': configfile}
+    result['result'] = configfile
+    return result
 
 
 @app.task(name="OverpassQuery", bind=True, base=ExportTask, abort_on_error=True)
-def overpass_query_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, filters=None, bbox=None):
+def overpass_query_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, filters=None, bbox=None):
     """
     Runs the query and returns the path to the filtered osm file.
     """
@@ -276,11 +278,12 @@ def overpass_query_task(self, result=None, task_uid=None, stage_dir=None, job_na
     )
     op.run_query()  # run the query
     filtered_osm = op.filter()  # filter the results
-    return {'result': filtered_osm}
+    result['result'] = filtered_osm
+    return result
 
 
 @app.task(name="OSM2PBF", bind=True, base=ExportTask, abort_on_error=True)
-def osm_to_pbf_convert_task(self, result=None, task_uid=None, stage_dir=None, job_name=None):
+def osm_to_pbf_convert_task(self, result={}, task_uid=None, stage_dir=None, job_name=None):
     """
     Task to convert osm to pbf format.
     Returns the path to the pbf file.
@@ -291,11 +294,12 @@ def osm_to_pbf_convert_task(self, result=None, task_uid=None, stage_dir=None, jo
     pbffile = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
     o2p = pbf.OSMToPBF(osm=osm, pbffile=pbffile, task_uid=task_uid)
     pbffile = o2p.convert()
-    return {'result': pbffile}
+    result['result'] = pbffile
+    return result
 
 
 @app.task(name="OSMSchema", bind=True, base=ExportTask, abort_on_error=True)
-def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_name=None):
+def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_name=None):
     """
     Task to create the default sqlite schema.
     """
@@ -308,11 +312,13 @@ def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_n
     osmparser.create_geopackage()
     osmparser.create_default_schema_gpkg()
     osmparser.update_zindexes()
-    return {'result': gpkg, 'geopackage': gpkg}
+    result['result'] = gpkg
+    result['geopackage'] = gpkg
+    return result
 
 
 @app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
     """
     Task to create styles for osm.
     """
@@ -334,11 +340,13 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'bbox': bbox}))
-    return {'result': style_file, 'geopackage': input_gpkg}
+    result['result'] = style_file
+    result['geopackage'] = input_gpkg
+    return result
 
 
 @app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
-def osm_thematic_gpkg_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Task to export thematic gpkg.
     """
@@ -348,21 +356,23 @@ def osm_thematic_gpkg_export_task(self, result=None, run_uid=None, task_uid=None
     run = ExportRun.objects.get(uid=run_uid)
     tags = run.job.categorised_tags
     if os.path.isfile(os.path.join(stage_dir, '{0}.gpkg'.format(job_name))):
-        return {'result': os.path.join(stage_dir, '{0}.gpkg'.format(job_name))}
+        result['result'] = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        return result
     # This allows the thematic task to be chained with the osm task taking the output as an input here.
     input_gpkg = parse_result(result, 'geopackage')
     try:
         t2s = thematic_gpkg.ThematicGPKG(gpkg=input_gpkg, stage_dir=stage_dir, tags=tags, job_name=job_name,
                                          task_uid=task_uid)
         out = t2s.convert()
-        return {'result': out, 'geopackage': out}
+        result['result'] = out
+        return result
     except Exception as e:
         logger.error('Raised exception in thematic gpkg task, %s', str(e))
         raise Exception(e)  # hand off to celery..
 
 
 @app.task(name='ESRI Shapefile Format', bind=True, base=ExportTask)
-def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining SHP export function.
     """
@@ -374,14 +384,16 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
         out = s2s.convert()
-        return {'result': out, 'geopackage': gpkg}
+        result['result'] = out
+        result['geopackage'] = gpkg
+        return result
     except Exception as e:
         logger.error('Raised exception in shapefile export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='KML Format', bind=True, base=ExportTask)
-def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining KML export function.
     """
@@ -392,14 +404,16 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     try:
         s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
         out = s2k.convert()
-        return {'result': out, 'geopackage': gpkg}
+        result['result'] = out
+        result['geopackage'] = gpkg
+        return result
     except Exception as e:
         logger.error('Raised exception in kml export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='SQLITE Format', bind=True, base=ExportTask)
-def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining SQLITE export function.
     """
@@ -410,14 +424,16 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     try:
         s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
         out = s2g.convert()
-        return {'result': out, 'geopackage': gpkg}
+        result['result'] = out
+        result['geopackage'] = gpkg
+        return result
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='Bounds Export', bind=True, base=ExportTask)
-def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None):
+def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -427,29 +443,54 @@ def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     run = ExportRun.objects.get(uid=run_uid)
 
     result_gpkg = parse_result(result, 'geopackage')
+    bounds = run.job.selection or run.job.bounds_geojson
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
-    gpkg = geopackage.add_geojson_to_geopackage(geojson=run.job.bounds_geojson, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
+    gpkg = geopackage.add_geojson_to_geopackage(geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
 
-    # Pass the on_success handler the result of this task, and pass the previous task geopackage through to follow on.
-    return {'result': gpkg, 'geopackage': result_gpkg}
+    result['result'] = gpkg
+    result['geopackage'] = result_gpkg
+    return result
+
+
+@app.task(name='Create Selection GeoJSON', base=LockingTask)
+def output_selection_geojson_task(result={}, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+    """
+    Class defining geopackage export function.
+    """
+
+    geojson_file = os.path.join(stage_dir,
+                                "{0}_selection.geojson".format(provider_slug))
+
+    if selection and not os.path.isfile(geojson_file):
+        # Test if json.
+        json.loads(selection)
+        with open(geojson_file, 'w') as open_file:
+            open_file.write(selection)
+        result['selection'] = geojson_file
+
+    return result
 
 
 @app.task(name='Geopackage Format', bind=True, base=ExportTask)
-def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining geopackage export function.
     """
     from .models import ExportRun
 
     self.update_task_state(result=result, task_uid=task_uid)
-
-    gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-    return {'result': gpkg, 'geopackage': gpkg}
+    selection = parse_result(result, 'selection')
+    gpkg = parse_result(result, 'result')
+    if selection:
+        gpkg = geopackage.clip_geopackage(geojson_file=selection, gpkg=gpkg, task_uid=task_uid)
+    result['result'] = gpkg
+    result['geopackage'] = gpkg
+    return result
 
 
 @app.task(name='WFSExport', bind=True, base=ExportTask)
-def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
+def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None):
     """
     Class defining geopackage export for WFS service.
@@ -461,20 +502,21 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
                             config=config, service_type=service_type, task_uid=task_uid)
         out = w2g.convert()
-        return {'result': out, 'geopackage': out}
+        result['result'] = out
+        result['geopackage'] = out
+        return result
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='ArcFeatureServiceExport', bind=True, base=ExportTask)
-def arcgis_feature_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
+def arcgis_feature_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                        stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
                                        service_type=None):
     """
     Class defining sqlite export for ArcFeatureService service.
     """
-
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
@@ -483,14 +525,16 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
                                                                 config=config, service_type=service_type,
                                                                 task_uid=task_uid)
         out = w2g.convert()
-        return {'result': out, 'geopackage': out}
+        result['result'] = out
+        result['geopackage'] = out
+        return result
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='External Raster Service Export', bind=True, base=ExportTask)
-def external_raster_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
+def external_raster_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
                                         level_to=None, name=None, service_type=None, *args, **kwargs):
     """
@@ -501,22 +545,25 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
 
     self.update_task_state(result=result, task_uid=task_uid)
 
+    selection = parse_result(result, 'selection')
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
         w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
                                                                  service_url=service_url, name=name, layer=layer,
                                                                  config=config, level_from=level_from,
                                                                  level_to=level_to, service_type=service_type,
-                                                                 task_uid=task_uid)
+                                                                 task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
-        return {'result': gpkg, 'geopackage': gpkg}
+        result['result'] = gpkg
+        result['geopackage'] = gpkg
+        return result
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='Pickup Run', bind=True)
-def pick_up_run_task(self, result=None, run_uid=None):
+def pick_up_run_task(self, result={}, run_uid=None):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
@@ -532,7 +579,7 @@ def pick_up_run_task(self, result=None, run_uid=None):
 
 
 @app.task(name='Generate Preset', bind=True, base=ExportTask)
-def generate_preset_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def generate_preset_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Generates a JOSM Preset from the exports selected features.
     """
@@ -567,11 +614,12 @@ def generate_preset_task(self, result=None, run_uid=None, task_uid=None, stage_d
         output_path = config.upload.path
         job.configs.clear()
         job.configs.add(config)
-        return {'result': output_path}
+        result['result'] = output_path
+        return result
 
 
-@app.task(name='Clean Up Failure Task', base=LockingTask)
-def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
+@app.task(name='Clean Up Failure Task', base=Task)
+def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Used to close tasks in a failed chain.
 
@@ -612,10 +660,11 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
             max_retries=10,
             queue=worker,
             routing_key=worker)
+    return result
 
 
 @app.task(name='Finalize Export Provider Run', base=LockingTask)
-def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
+def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Finalizes provider task.
 
@@ -685,7 +734,7 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
 
 
 @app.task(name='Zip File Export', base=LockingTask)
-def zip_file_task(result=None, run_uid=None, include_files=None):
+def zip_file_task(result={}, run_uid=None, include_files=None):
     """
     rolls up runs into a zip file
     """
@@ -749,7 +798,8 @@ def zip_file_task(result=None, run_uid=None, include_files=None):
     run.zipfile_url = zipfile_url
     run.save()
 
-    return {'result': zip_st_filepath}
+    result['result'] = zip_st_filepath
+    return result
 
 
 class FinalizeRunTaskClass(LockingTask):
@@ -770,7 +820,7 @@ class FinalizeRunTaskClass(LockingTask):
 
 
 @app.task(name='Finalize Export Run', base=FinalizeRunTaskClass)
-def finalize_run_task(result=None, run_uid=None, stage_dir=None):
+def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     """
      Finalizes export run.
 
@@ -820,11 +870,12 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None):
     except Exception as e:
         logger.error("Encountered an error when sending status email: {}".format(e))
 
-    return {'stage_dir': stage_dir}
+    result['stage_dir'] = stage_dir
+    return result
 
 
 @app.task(name='Export Task Error Handler', bind=True, base=LockingTask)
-def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
+def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage_dir=None):
     """
     Handles un-recoverable errors in export tasks.
     """
@@ -858,10 +909,11 @@ def export_task_error_handler(self, run_uid, task_id=None, stage_dir=None):
     msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
     msg.attach_alternative(html, "text/html")
     msg.send()
+    return result
 
 
 @app.task(name='Cancel Export Provider Task', base=LockingTask)
-def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=None):
+def cancel_export_provider_task(result={}, export_provider_task_uid=None, canceling_user=None):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
     """
@@ -872,8 +924,10 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
     from datetime import datetime, timedelta
 
     export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
+
     if not export_provider_task:
-        return False
+        result['result'] = False
+        return result
 
     export_tasks = export_provider_task.tasks.all()
 
@@ -927,10 +981,11 @@ def cancel_export_provider_task(export_provider_task_uid=None, canceling_user=No
         routing_key=worker,
         queue=worker
     )
+    return result
 
 
 @app.task(name='Kill Task', base=LockingTask)
-def kill_task(task_pid=None, celery_uid=None):
+def kill_task(result={}, task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.
     """
@@ -944,13 +999,13 @@ def kill_task(task_pid=None, celery_uid=None):
         if task_pid <= 0:
             return
         try:
-
             # Ensure the task is still running otherwise the wrong process will be killed
             if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
                 # If the task finished prior to receiving this kill message it could throw an OSError.
                 os.kill(task_pid, signal.SIGTERM)
         except OSError:
             logger.info("{0} PID does not exist.")
+    return result
 
 
 def update_progress(task_uid, progress=None, estimated_finish=None):
@@ -996,5 +1051,4 @@ def parse_result(task_result, key=''):
                 return result.get(key)
     elif isinstance(task_result, dict):
         return task_result.get(key)
-    else:
-        return task_result
+

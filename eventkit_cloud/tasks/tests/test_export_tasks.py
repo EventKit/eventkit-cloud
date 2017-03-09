@@ -25,7 +25,7 @@ from ..export_tasks import (
     generate_preset_task, kml_export_task, osm_conf_task,
     external_raster_service_export_task, geopackage_export_task,
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
-    shp_export_task, arcgis_feature_service_export_task, update_progress,
+    shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
     parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
 )
@@ -263,28 +263,58 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.export_tasks.os.path.isfile')
+    @patch('__builtin__.open')
+    def test_output_selection_geojson_task(self, mock_open, mock_isfile):
+        import json
+
+        selection = {"data": "example"}
+        stage_dir = "/stage"
+        provider_slug = "provider"
+        expected_file = os.path.join(stage_dir,
+                                     "{0}_selection.geojson".format(provider_slug))
+
+        result = output_selection_geojson_task.run(stage_dir=stage_dir, provider_slug=provider_slug)
+        self.assertEqual(result, {})
+
+        mock_isfile.return_value = False
+        result = output_selection_geojson_task.run(selection=json.dumps(selection), stage_dir=stage_dir, provider_slug=provider_slug)
+        self.assertEqual(result['selection'], expected_file)
+        mock_isfile.assert_called_once_with(expected_file)
+        mock_open.assert_called_once_with(expected_file, 'w')
+
+
+    @patch('eventkit_cloud.tasks.export_tasks.geopackage.clip_geopackage')
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.geopackage.SQliteToGeopackage')
-    def test_run_gpkg_export_task(self, mock_gpkg, mock_request):
+    def test_run_gpkg_export_task(self, mock_request, mock_clip):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        sqlite_to_gpkg = mock_gpkg.return_value
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.gpkg'.format(job_name))
-        sqlite_to_gpkg.convert.return_value = expected_output_path
+
+        previous_task_result = {'result': expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=geopackage_export_task.name)
-        result = geopackage_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
-        sqlite_to_gpkg.convert.assert_called_once()
+        result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        mock_clip.assert_not_called()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+
+        mock_clip.return_value = expected_output_path
+        expected_geojson = "test.geojson"
+        previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
+        result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        mock_clip.assert_called_once_with(geojson_file=expected_geojson, gpkg=expected_output_path, task_uid=str(saved_export_task.uid))
+        self.assertEquals(expected_output_path, result['result'])
+        self.assertEquals(expected_output_path, result['geopackage'])
+
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.arcgis_feature_service.ArcGISFeatureServiceToGPKG')
@@ -624,7 +654,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(export_task_instance.estimated_finish, estimated)
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
-    def test_cancel_task(self, kill_task):
+    def test_cancel_task(self, mock_kill_task):
         worker_name = "test_worker"
         task_pid = 55
         celery_uid = uuid.uuid4()
@@ -643,11 +673,11 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
-        cancel_export_provider_task.run(export_provider_task.uid, user)
-        kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
-                                                      queue="{0}.cancel".format(worker_name),
-                                                      priority=TaskPriority.CANCEL.value,
-                                                      routing_key="{0}.cancel".format(worker_name))
+        cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid, canceling_user=user)
+        mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
+                                                           queue="{0}.cancel".format(worker_name),
+                                                           priority=TaskPriority.CANCEL.value,
+                                                           routing_key="{0}.cancel".format(worker_name))
         export_task = ExportTask.objects.get(uid=export_task.uid)
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task.uid)
         self.assertEquals(export_task.status, TaskStates.CANCELED.value)
@@ -665,11 +695,6 @@ class TestExportTasks(ExportTaskBase):
         task_result = {"test": True}
         expected_result = True
         returned_result = parse_result(task_result, "test")
-        self.assertEqual(expected_result, returned_result)
-
-        task_result = True
-        expected_result = True
-        returned_result = parse_result(task_result)
         self.assertEqual(expected_result, returned_result)
 
     @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
@@ -709,7 +734,7 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task_uids = [canceled_export_provider_task.uid, export_provider_task.uid]
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
-        clean_up_failure_task.run(export_provider_task_uids, export_provider_task_uids, run_uid=run_uid,
+        clean_up_failure_task.run(export_provider_task_uids=export_provider_task_uids, run_uid=run_uid,
                                   run_dir=run_dir)
         updated_task = ExportTask.objects.get(uid=task.uid)
         self.assertEqual(updated_task.status, TaskStates.CANCELED.value)
@@ -758,19 +783,19 @@ class TestExportTasks(ExportTaskBase):
         # Ensure that kill isn't called with default.
         task_pid = -1
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid)
+        kill_task.run(task_pid=task_pid)
         kill.assert_not_called()
 
         # Ensure that kill is not called with an invalid state
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.FAILURE)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid)
+        kill_task.run(task_pid=task_pid)
         kill.assert_not_called()
 
         # Ensure that kill is called with a valid pid
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.STARTED)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid)
+        kill_task.run(task_pid=task_pid)
         kill.assert_called_once_with(task_pid, signal.SIGTERM)

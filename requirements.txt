@@ -55,6 +55,7 @@ PyYAML==3.12
 requests==2.11.1
 requests-oauthlib==0.7.0
 s3transfer==0.1.9
+shapely==1.5.7
 six==1.10.0
 urllib3==1.19
 uWSGI==2.0.14
