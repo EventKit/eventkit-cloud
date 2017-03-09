@@ -1,12 +1,12 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
-import 'openlayers/dist/ol.css';
-import ol from 'openlayers';
+import 'openlayers/dist/ol.css'
+import numeral from 'numeral'
+import ol from 'openlayers'
 import { reduxForm, Field } from 'redux-form'
 import { RadioButton } from 'material-ui/RadioButton'
 import { List, ListItem} from 'material-ui/List'
-import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card'
 import TextField from 'material-ui/TextField'
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle'
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked'
@@ -16,7 +16,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
 import styles from '../styles/ExportInfo.css'
-import {updateExportInfo} from '../actions/exportsActions.js';
+import {updateExportInfo, stepperNextEnabled, stepperNextDisabled} from '../actions/exportsActions.js'
 
 
 class ExportInfo extends React.Component {
@@ -27,58 +27,111 @@ class ExportInfo extends React.Component {
             datapackDescription: '',
             projectName: '',
             makePublic: false,
-            osmData: false,
-            osmTiles: false,
-            digitalGlobe: false,
+            providers: [],
+            area: 0,
+            area_str: '',
             expanded: false,
+            layers: 'Geopackage',
     }
         this.onChange = this.onChange.bind(this)
         this.onSubmit = this.onSubmit.bind(this)
     }
 
-    onChange(e) {
-        this.setState({
-            [e.target.name]: e.target.value
+    onChange(event) {
+        console.log(this.state)
+        this.setState({[event.target.name]: event.target.value}, function () {
+            if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
+                this.props.setNextDisabled()
+            }
+            else {
+                this.props.setNextEnabled()
+            }
         })
+
     }
 
+    onChangeCheck(e){
+
+            // current array of providers
+            const providers = this.state.providers
+            let index
+
+            // check if the check box is checked or unchecked
+            if (e.target.checked) {
+                // add the numerical value of the checkbox to options array
+                providers.push(e.target.name)
+            } else {
+                // or remove the value from the unchecked checkbox from the array
+                index = providers.indexOf(e.target.name)
+                providers.splice(index, 1)
+            }
+            // update the state with the new array of options
+            this.setState({ providers: providers } ,function (){
+            if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
+                this.props.setNextDisabled()
+            }
+            else {
+                this.props.setNextEnabled()
+            }
+        })
+
+    }
     toggleCheckbox(event, checked) {
-        this.setState({
-            [event.target.name]: checked
-        });
+        this.setState({makePublic: checked})
     }
 
     expandedChange(expanded) {
-        this.setState({expanded: expanded});
+        this.setState({expanded: expanded})
     }
 
     onSubmit(e) {
         e.preventDefault()
-        this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.osmData, this.state.osmTiles, this.state.digitalGlobe)
+        //this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.area, this.state.area_str)
     }
 
     getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
+        return {muiTheme: getMuiTheme(baseTheme)}
     }
     componentDidMount() {
-
+        if (this.props.exportName == ''){
+            this.props.setNextDisabled()
+        }
+        this.setArea();
     }
+
     componentDidUpdate(prevProps, prevState) {
         if(prevState.expanded != this.state.expanded) {
             if(this.state.expanded) {
-                this._initializeOpenLayers();
+                this._initializeOpenLayers()
             }
         }
     }
-    _initializeOpenLayers() {
-        console.log(this.props.geojson.features[0])
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.setExportPackageFlag != false) {
+            this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
+        }
+    }
 
-        const scaleStyle = {
-            background: 'white',
-        };
+    setArea() {
+        const source = new ol.source.Vector()
+        const geojson = new ol.format.GeoJSON()
+        const feature = geojson.readFeature(this.props.geojson.features[0], {
+            'featureProjection': 'EPSG:3857',
+            'dataProjection': 'EPSG:4326'
+        })
+        source.addFeature(feature)
+        const layer = new ol.layer.Vector({
+            source: source,
+        })
+        const area = feature.getGeometry().getArea() / 1000000
+        const area_str = numeral(area).format('0,0')
+        this.setState({area: area, area_str: area_str + ' sq km'})
+
+    }
+    _initializeOpenLayers() {
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
-        });
+        })
 
         this._map = new ol.Map({
             interactions: ol.interaction.defaults({
@@ -95,20 +148,22 @@ class ExportInfo extends React.Component {
                 minZoom: 2,
                 maxZoom: 22,
             })
-        });
-        const source = new ol.source.Vector();
-        const geojson = new ol.format.GeoJSON();
-        const feature = geojson.readFeatures(this.props.geojson, {
+        })
+        const source = new ol.source.Vector()
+        const geojson = new ol.format.GeoJSON()
+        const feature = geojson.readFeature(this.props.geojson.features[0], {
             'featureProjection': 'EPSG:3857',
             'dataProjection': 'EPSG:4326'
-        });
-        source.addFeatures(feature);
+        })
+        source.addFeature(feature)
         const layer = new ol.layer.Vector({
             source: source,
-        });
+        })
+        const area = feature.getGeometry().getArea() / 1000000
+        const area_str = numeral(area).format('0,0')
 
-        this._map.addLayer(layer);
-        this._map.getView().fit(source.getExtent(), this._map.getSize());
+        this._map.addLayer(layer)
+        this._map.getView().fit(source.getExtent(), this._map.getSize())
 
     }
     render() {
@@ -117,13 +172,13 @@ class ExportInfo extends React.Component {
                 width: 'calc(100% - 10px)'
             }
         }
-        const providers = this.props.providers;
+        const providers = this.props.providers
 
         return (
             <div className={styles.wholeDiv}>
             <div className={styles.root}>
 
-                <form className={styles.form} onSubmit={this.onSubmit}>
+                <form className={styles.form} onSubmit={this.onSubmit} >
                     <Paper className={styles.paper} zDepth={2} rounded>
 
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
@@ -132,7 +187,7 @@ class ExportInfo extends React.Component {
                                underlineStyle={style.underlineStyle}
                                underlineFocusStyle={style.underlineStyle}
                                onChange={this.onChange}
-                               value={this.state.exportName}
+                               //value={this.state.exportName}
                                hintText="Datapack Name"
                                className={styles.textField}
                                />
@@ -143,7 +198,7 @@ class ExportInfo extends React.Component {
                             underlineFocusStyle={style.underlineStyle}
                             name="datapackDescription"
                             onChange={this.onChange}
-                            value={this.state.datapackDescription}
+                            //value={this.state.datapackDescription}
                             hintText="Description"
                             multiLine={true}
                             rows={2}/>
@@ -154,7 +209,7 @@ class ExportInfo extends React.Component {
                             underlineFocusStyle={style.underlineStyle}
                             name="projectName"
                             onChange={this.onChange}
-                            value={this.state.projectName}
+                            //value={this.state.projectName}
                             hintText="Project Name"
                             className={styles.textField}/>
                     </div>
@@ -163,6 +218,7 @@ class ExportInfo extends React.Component {
                             name="makePublic"
                             onCheck={this.toggleCheckbox.bind(this)}
                             checked={!!this.state.makePublic}
+
                             className={styles.checkboxColor}
                             label="Make Public"
                             checkedIcon={<ActionCheckCircle />}
@@ -180,8 +236,8 @@ class ExportInfo extends React.Component {
                                 primaryText={provider.name}
                                 leftCheckbox={<Checkbox
                                 name={provider.name}
-                                onCheck={this.toggleCheckbox.bind(this)}
-                                checked={!!this.state[provider.name]}
+
+                                onCheck={this.onChangeCheck.bind(this)}
                                 className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
                                 uncheckedIcon={<UncheckedCircle
@@ -192,7 +248,7 @@ class ExportInfo extends React.Component {
                             nestedItems={[
                                     <ListItem
                                       key={1}
-                                      primaryText="We need to add descriptive text to the backend providers information."
+                                      primaryText={provider.service_description}
 
                                     />
                                 ]}
@@ -248,15 +304,13 @@ class ExportInfo extends React.Component {
                     <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>*/}
                     <div className={styles.sectionBottom}>
                         <div className={styles.checkboxLabel}>
-                            <Field name="geopackage"
-                                   value="value"
-                                   component={Checkbox}
-                                   className={styles.checkboxColorDisabled}
-                                   checked={true}
-                                   enabled={false}
-                                   checkedIcon={<ActionCheckCircle />}
-                                   uncheckedIcon={<UncheckedCircle />}
-                                   label="GeoPackage (gpkg)"/>
+                            <Checkbox
+                                label="Geopackage (.gpkg)"
+                                name="Geopackage"
+                                checked={true}
+                                disabled={true}
+                                checkedIcon={<ActionCheckCircle />}
+                            />
                         </div>
                         {/*
                         <div className={styles.checkboxLabel}>
@@ -342,7 +396,12 @@ class ExportInfo extends React.Component {
 function mapStateToProps(state) {
     return {
         bbox: state.bbox,
-        geojson: state.aoiInfo.geojson
+        geojson: state.aoiInfo.geojson,
+        setExportPackageFlag: state.setExportPackageFlag,
+        exportName: state.exportInfo.exportName,
+        datapackDescription: state.exportInfo.datapackDescription,
+        projectName: state.exportInfo.projectName,
+        makePublic: state.exportInfo.makePublic,
 
     }
 }
@@ -353,16 +412,25 @@ function mapDispatchToProps(dispatch) {
                            datapackDescription,
                            projectName,
                            makePublic,
-                           osmData,
-                           osmTiles,
-                           digitalGlobe) => {
+                           providers,
+                           area_str,
+                           layers
+
+                           ) => {
             dispatch(updateExportInfo(exportName,
                 datapackDescription,
                 projectName,
                 makePublic,
-                osmData,
-                osmTiles,
-                digitalGlobe));
+                providers,
+                area_str,
+                layers
+                ))
+        },
+        setNextDisabled: () => {
+            dispatch(stepperNextDisabled())
+        },
+        setNextEnabled: () => {
+            dispatch(stepperNextEnabled())
         },
 
     }
@@ -370,7 +438,8 @@ function mapDispatchToProps(dispatch) {
 
 ExportInfo.propTypes = {
     geojson:         React.PropTypes.object,
-    providers:       PropTypes.array.isRequired
+    providers:       PropTypes.array.isRequired,
+
 }
 
 ExportInfo.childContextTypes = {

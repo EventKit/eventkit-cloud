@@ -11,6 +11,12 @@ export function createExportRequest(exportData) {
     }
 }
 
+export function exportInfoDone() {
+    return {
+        type: types.EXPORT_INFO_DONE,
+        setExportPackageFlag: true
+    }
+}
 export function loadJobsSuccess(jobs) {
     return {
         type: types.LOAD_JOBS_SUCCESS,
@@ -24,7 +30,7 @@ export function updateBbox(bbox) {
     }
 }
 
-export function updateAoiInfo(geojson, geomType, title, description) {
+export function updateAoiInfo(geojson, geomType, title, description,) {
     return {
         type: types.UPDATE_AOI_INFO,
         geojson: geojson,
@@ -33,16 +39,30 @@ export function updateAoiInfo(geojson, geomType, title, description) {
         description,
     }
 }
-export function updateExportInfo(exportName, datapackDescription, projectName, makePublic, osmData, osmTiles, digitalGlobe) {
+export function updateExportInfo(exportName, datapackDescription, projectName, makePublic, providers, area_str, layers) {
     return {
         type: types.UPDATE_EXPORT_INFO,
-        exportInfo: exportName,
+        exportName : exportName,
         datapackDescription,
         projectName,
         makePublic,
-        osmData,
-        osmTiles,
-        digitalGlobe,
+        providers,
+        area_str,
+        layers,
+    }
+}
+
+export function stepperNextDisabled() {
+    return {
+        type: types.MAKE_STEPPER_INACTIVE,
+        stepperNextEnabled: false
+    }
+}
+
+export function stepperNextEnabled() {
+    return {
+        type: types.MAKE_STEPPER_ACTIVE,
+        stepperNextEnabled: true
     }
 }
 

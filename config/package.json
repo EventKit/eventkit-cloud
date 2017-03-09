@@ -28,6 +28,7 @@
     "lodash": "~4.17.4",
     "material-ui": "~0.16.5",
     "material-design-icons": "~3.0.1",
+    "numeral": "~2.0.4",
     "openlayers": "~3.19.1",
     "style-loader": "~0.13.1",
     "react-dom": "~15.4.0",

@@ -13,6 +13,26 @@ export function drawerMenuReducer(state = initialState.drawerOpen, action) {
     }
 }
 
+export function stepperReducer(state = initialState.stepperNextEnabled, action) {
+    switch(action.type) {
+        case types.MAKE_STEPPER_ACTIVE:
+            return true;
+        case types.MAKE_STEPPER_INACTIVE:
+            return false;
+        default:
+            return state;
+    }
+}
+
+export function startExportPackageReducer(state = initialState.setExportPackageFlag, action) {
+    switch(action.type) {
+        case types.EXPORT_INFO_DONE:
+            return true;
+        default:
+            return state;
+    }
+}
+
 export function exportJobsReducer(state = initialState.jobs, action) {
     switch(action.type) {
         case types.LOAD_JOBS_SUCCESS:
@@ -69,9 +89,9 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 datapackDescription: action.datapackDescription,
                 projectName: action.projectName,
                 makePublic: action.makePublic,
-                osmData: action.osmData,
-                osmTiles: action.osmTiles,
-                digitalGlobe: action.digitalGlobe,
+                providers: action.providers,
+                area_str: action.area_str,
+                layers: action.layers,
             };
         default:
             return state;

@@ -5,55 +5,75 @@ import ol from 'openlayers';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
+import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import Paper from 'material-ui/Paper'
 import styles from '../styles/ExportSummary.css'
 
 class ExportSummary extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            expanded: false,
+        }
+    }
+
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
+    expandedChange(expanded) {
+        this.setState({expanded: expanded});
+    }
     componentDidMount() {
-        this._initializeOpenLayers();
+
+    }
+    componentDidUpdate(prevProps, prevState) {
+        if(prevState.expanded != this.state.expanded) {
+            if(this.state.expanded) {
+                this._initializeOpenLayers();
+            }
+        }
     }
 
     _initializeOpenLayers() {
+        console.log(this.props.geojson.features[0])
 
         const scaleStyle = {
             background: 'white',
         };
-
+        var osm = new ol.layer.Tile({
+            source: new ol.source.OSM()
+        });
 
         this._map = new ol.Map({
-            controls: [
-                new ol.control.ScaleLine(),
-                new ol.control.Attribution({
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new ol.control.Zoom({
-                    className: styles.olZoom
-                })
-            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
                 pinchRotate: false
             }),
-            layers: [
-                // Order matters here
-                new ol.layer.Tile({
-                    source: new ol.source.OSM()
-                }),
-            ],
+            layers: [osm],
             target: 'summaryMap',
             view: new ol.View({
                 projection: "EPSG:3857",
                 center: [110, 0],
-                zoom: 2.5,
-                minZoom: 2.5,
+                zoom: 2,
+                minZoom: 2,
                 maxZoom: 22,
             })
         });
+        const source = new ol.source.Vector();
+        const geojson = new ol.format.GeoJSON();
+        const feature = geojson.readFeatures(this.props.geojson, {
+            'featureProjection': 'EPSG:3857',
+            'dataProjection': 'EPSG:4326'
+        });
+        source.addFeatures(feature);
+        const layer = new ol.layer.Vector({
+            source: source,
+        });
+
+        this._map.addLayer(layer);
+        this._map.getView().fit(source.getExtent(), this._map.getSize());
+
     }
 
 
@@ -62,7 +82,7 @@ class ExportSummary extends React.Component {
         return (
             <div className={styles.wholeDiv}>
                 <div className={styles.root}>
-
+                    <form className={styles.form} >
                         <Paper className={styles.paper} zDepth={2} rounded>
                             <div id='mainHeading' className={styles.heading}>Preview and Run Export</div>
                             <div className={styles.subHeading}>
@@ -70,9 +90,9 @@ class ExportSummary extends React.Component {
                             </div>
 
                             <div>
-                                <table><tbody>
-                                    <tr>
-                                        <td className={styles.tdHeading}>Created By</td>
+                                {/*<table className={styles.table}><tbody>
+                                <tr>
+                                        <td className={styles.tdHeading}>User</td>
                                         <td className={styles.tdData}>Table Cell Data</td>
                                     </tr>
                                     <tr>
@@ -80,34 +100,36 @@ class ExportSummary extends React.Component {
                                         <td className={styles.tdData}>Table Cell Data</td>
                                     </tr>
                                 </tbody>
-                                </table>
+                                </table>*/}
                                 <div className={styles.exportHeading}>
                                     Export Information
                                 </div>
                                 <table><tbody>
                                 <tr>
                                     <td className={styles.tdHeading}>Name</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
+                                    <td className={styles.tdData}>{this.props.exportName}</td>
                                 </tr>
                                 <tr>
                                     <td className={styles.tdHeading}>Description</td>
-                                    <td className={styles.tdData}>This description is a long one.  So long that it needs to take up two lines of the table.</td>
+                                    <td className={styles.tdData}>{this.props.datapackDescription}</td>
                                 </tr>
                                 <tr>
                                     <td className={styles.tdHeading}>Project/Category</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
+                                    <td className={styles.tdData}>{this.props.projectName}</td>
                                 </tr>
                                 <tr>
                                     <td className={styles.tdHeading}>Published</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
+                                    <td className={styles.tdData}>{this.props.makePublic.toString()}</td>
                                 </tr>
                                 <tr>
                                     <td className={styles.tdHeading}>Layer Data</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
+                                    <td className={styles.tdData}>{this.props.layers}</td>
                                 </tr>
-                                <tr>
-                                    <td className={styles.tdHeading}>File Formats</td>
-                                    <td className={styles.tdData}>Array[0]<br/>Array[1]<br/>Array[2]</td>
+                                <tr >
+                                    <td className={styles.tdHeading} rowSpan={this.props.providers.length}>File Formats</td>
+
+                                    <td className={styles.tdData}>{this.props.providers.map((provider) => <p key={provider}>{provider}</p>)}</td>
+
                                 </tr>
                                 </tbody>
                                 </table>
@@ -115,24 +137,37 @@ class ExportSummary extends React.Component {
                                     Area of Interest (AOI)
                                 </div>
                                 <table><tbody>
-                                <tr>
+                                {/*<tr>
                                     <td className={styles.tdHeading}>Region</td>
                                     <td className={styles.tdData}>Table Cell Data</td>
                                 </tr>
+                                */}
                                 <tr>
                                     <td className={styles.tdHeading}>Area</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
+                                    <td className={styles.tdData}>{this.props.area_str}</td>
                                 </tr>
                                 </tbody>
                                 </table>
                             </div>
-                            <div id="summaryMap" className={styles.map} ref="olmap">
+                            <div className={styles.mapCard}>
+                                <Card expandable={true}
+                                      onExpandChange={this.expandedChange.bind(this)}>
+                                    <CardHeader
+                                        title="Selected Area of Interest"
+                                        actAsExpander={true}
+                                        showExpandableButton={true}
+                                    />
+                                    <CardText expandable={true}> <div id="summaryMap" className={styles.map} >
+
+                                    </div>
+
+
+                                    </CardText>
+                                </Card>
 
                             </div>
-
                         </Paper>
-
-
+                    </form>
                 </div>
             </div>
 
@@ -141,13 +176,30 @@ class ExportSummary extends React.Component {
     }
 }
 
+function mapStateToProps(state) {
+    return {
+        bbox: state.bbox,
+        geojson: state.aoiInfo.geojson,
+        exportName: state.exportInfo.exportName,
+        datapackDescription: state.exportInfo.datapackDescription,
+        projectName: state.exportInfo.projectName,
+        makePublic: state.exportInfo.makePublic,
+        providers: state.exportInfo.providers,
+        area_str: state.exportInfo.area_str,
+        layers: state.exportInfo.layers,
+    }
+}
+
+
 
 ExportSummary.propTypes = {
-
+    geojson:         React.PropTypes.object,
 }
 ExportSummary.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
 };
 
-export default (ExportSummary)
+export default connect(
+    mapStateToProps,
+)(ExportSummary);
 

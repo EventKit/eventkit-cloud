@@ -20,7 +20,7 @@
     display: flex;
     flex-wrap: wrap;
     overflow: auto;
-    height: 828px;
+    height: 950px;
 }
 .paper {
     margin: 0 auto;
@@ -32,7 +32,7 @@
 }
 .form {
    margin: 0 auto;
-   width: 50%
+   width: 60%
 }
 .sectionBottom {
    padding-bottom: 50px;
@@ -58,12 +58,14 @@
     margin-top: 15px!important;
     color: black!important;
     border:0;
+    padding: 5px!important;
 }
 .textField >  {
     font-size: 16px!important;
     color: #e2e2e2!important;
 }
 .textField > input{
+    padding: 5px!important;
     font-size: 16px!important;
     color: black!important;
 }

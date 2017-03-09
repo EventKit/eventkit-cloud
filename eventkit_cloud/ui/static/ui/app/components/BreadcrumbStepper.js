@@ -11,7 +11,7 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest, getProviders } from '../actions/exportsActions'
+import { createExportRequest, getProviders, stepperNextDisabled, stepperNextEnabled, exportInfoDone} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -28,33 +28,50 @@ class BreadcrumbStepper extends React.Component {
 
     componentDidMount(){
         this.props.getProviders();
+        this.props.setNextDisabled();
     }
     componentWillReceiveProps(nextProps) {
 
+        console.log(this.state.stepIndex+" Step Index in component will receive props beginning")
+        //TODO:this is where the stepper index goes up after the new component loads
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             if(!isEqual(nextProps.aoiInfo.geojson, {})) {
-                //make the stepper button clickable
-                this.setState({nextDisabled: false});
+                this.props.setNextEnabled();
+
             }
             else {
-                //make the stepper button disabled
-                this.setState({nextDisabled: true});
+                this.props.setNextDisabled();
             }
         }
+
+        if (this.state.stepIndex == 1 && this.props.exportInfo.exportName != "") {
+            this.setState({
+                stepIndex: this.state.stepIndex + 1,
+                finished: this.state.stepIndex >= 2,
+            });
+        }
+        console.log(this.state.stepIndex+" Step Index in component will receive props end")
     }
 
     handleNext = () => {
         const {stepIndex} = this.state;
-        this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
+        if (this.state.stepIndex == 1 && this.props.exportInfo.exportName == "") {
+            this.props.setExportInfoDone();
+        }
+
+        else
+        {
+            this.setState({
+            stepIndex: this.state.stepIndex + 1,
+            finished: this.state.stepIndex >= 2,
+         });
+        }
     };
 
     handlePrev = () => {
         const {stepIndex} = this.state;
-        if (stepIndex > 0) {
-            this.setState({stepIndex: stepIndex - 1});
+        if (this.state.stepIndex > 0) {
+            this.setState({stepIndex: this.state.stepIndex - 1});
         }
     };
 
@@ -101,16 +118,16 @@ class BreadcrumbStepper extends React.Component {
                         <div className={style.stepperWrapper}>
                             <Stepper activeStep={stepIndex}>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Set AOI</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Define Area of Interest (AOI)</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Add Info</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Select Data & Formats</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Preview & Export</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Review & Submit</StepLabel>
                                 </Step>
                                 <Step>
-                                    <StepLabel style={styles.stepLabel}>Export Status</StepLabel>
+                                    <StepLabel style={styles.stepLabel}>Status & Download</StepLabel>
                                 </Step>
                             </Stepper>
                         </div>
@@ -120,7 +137,7 @@ class BreadcrumbStepper extends React.Component {
                                                 onTouchTap={this.handlePrev}
                                                 className={style.backButtonDiv}><i className="material-icons" aria-hidden="false">arrow_back</i></FloatingActionButton>
                             <FloatingActionButton mini={true}
-                                                disabled={this.state.nextDisabled}
+                                                disabled={!this.props.stepperNextEnabled}
                                                 onTouchTap={this.handleNext}
                                                 className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
                         </div>
@@ -160,6 +177,8 @@ function mapStateToProps(state) {
         bbox: state.bbox,
         aoiInfo: state.aoiInfo,
         providers: state.providers,
+        stepperNextEnabled: state.stepperNextEnabled,
+        exportInfo: state.exportInfo,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -167,7 +186,18 @@ function mapDispatchToProps(dispatch) {
         createExportRequest: () => {
             dispatch(createExportRequest());
         },
-        getProviders: () => {dispatch(getProviders())},
+        getProviders: () => {
+            dispatch(getProviders())
+        },
+        setNextDisabled: () => {
+            dispatch(stepperNextDisabled());
+        },
+        setNextEnabled: () => {
+            dispatch(stepperNextEnabled());
+        },
+        setExportInfoDone: () => {
+            dispatch(exportInfoDone());
+        }
     }
 }
 
