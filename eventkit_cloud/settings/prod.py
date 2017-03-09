@@ -44,7 +44,7 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
-
+    'rest_framework_swagger',
 )
 
 DATABASES = {}

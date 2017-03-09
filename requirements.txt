@@ -17,8 +17,9 @@ django-celery-beat==1.0.1
 django-classification-banner==0.1.5
 django-extensions==1.7.4
 django-filter==0.14.0
+django-rest-swagger==2.1.1
 django-tastypie==0.13.3
-djangorestframework==3.2.5
+djangorestframework==3.5.4
 djangorestframework-gis==0.10.1
 docutils==0.12
 enum34==1.1.6
