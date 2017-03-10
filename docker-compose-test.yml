@@ -86,6 +86,6 @@ services:
         - "9229"
         - "50000-60000"
       extra_hosts:
-        - "${SITE_NAME}:${SITE_IP}", 
+        - "${SITE_NAME}:${SITE_IP}"
 volumes:
     postgis_database:
