@@ -74,7 +74,7 @@ services:
      image: httpd:2.4.23
      ports:
         - "80:80"
-    webpack:
+  webpack:
       build:
         context: .
         dockerfile: config/Dockerfile_webpack
