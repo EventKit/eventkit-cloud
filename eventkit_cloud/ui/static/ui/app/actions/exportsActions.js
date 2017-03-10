@@ -1,6 +1,5 @@
 import {Config} from '../config';
 import types from './actionTypes';
-import ExportApi from '../api/exportsApi';
 import axios from 'axios'
 
 
@@ -16,11 +15,6 @@ export function exportInfoDone() {
         type: types.EXPORT_INFO_DONE,
         setExportPackageFlag: true
     }
-}
-export function loadJobsSuccess(jobs) {
-    return {
-        type: types.LOAD_JOBS_SUCCESS,
-        jobs};
 }
 
 export function updateBbox(bbox) {
@@ -98,18 +92,6 @@ export function updateMode(mode) {
     return {
         type: types.SET_MODE,
         mode: mode
-    }
-}
-
-
-export function loadExports() {
-    // make async call to api, handle promise, dispatch action when promise is resolved
-    return function(dispatch) {
-        return ExportApi.getAllJobs().then(jobs => {
-            dispatch(loadJobsSuccess(jobs));
-        }).catch(error => {
-            throw(error);
-        });
     }
 }
 

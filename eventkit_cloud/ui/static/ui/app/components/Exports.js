@@ -1,13 +1,13 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
-import {getJobs} from '../actions/JobListActions';
+import {getRuns} from '../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar'
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Grid, Row, Col } from 'react-flexbox-grid/lib/index'
 import * as exportActions from '../actions/exportsActions';
-import JobList from './JobList';
+import DataPackList from './DataPackList';
 import primaryStyles from '../styles/constants.css'
 import sortBy from 'lodash/sortBy';
 import filter from 'lodash/filter';
@@ -21,25 +21,25 @@ class Exports extends React.Component {
         this.handleSearch = this.handleSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.state = {
-            jobs: [],
-            filteredJobs: [],
+            runs: [],
+            filteredRuns: [],
             searchbarWidth: '',
             dataPackButtonFontSize: '',
         }
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.jobsList.fetched == true) {
-            let jobsUnsorted = nextProps.jobsList.jobs;
-            let jobsSorted = sortBy(jobsUnsorted, [function(o) {return o.owner;}]);
-            this.setState({jobs: jobsUnsorted});
-            this.setState({filteredJobs: jobsSorted});
+        if (nextProps.runsList.fetched == true) {
+            let runsUnsorted = nextProps.runsList.runs;
+            let runsSorted = sortBy(runsUnsorted, [function(o) {return o.user;}]);
+            this.setState({runs: runsUnsorted});
+            this.setState({filteredRuns: runsSorted});
         }
     }
 
     componentWillMount() {
         this.screenSizeUpdate();
-        this.props.getJobs();
+        this.props.getRuns();
         window.addEventListener('resize', this.screenSizeUpdate);
     }
 
@@ -68,17 +68,17 @@ class Exports extends React.Component {
 
     handleSearch(searchText, ix) {
         const query = searchText.toUpperCase();
-        let searched = filter(this.state.jobs, function(o) {
-            if(o.name.toUpperCase().includes(query)) { return true}
-            if(o.description.toUpperCase().includes(query)) {return true}
-            if(o.event.toUpperCase().includes(query)) {return true}
+        let searched = filter(this.state.runs, function(o) {
+            if(o.job.name.toUpperCase().includes(query)) { return true}
+            if(o.job.description.toUpperCase().includes(query)) {return true}
+            if(o.job.event.toUpperCase().includes(query)) {return true}
         });
-        this.setState({filteredJobs: searched});
+        this.setState({filteredRuns: searched});
     }
 
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
-            this.setState({filteredJobs: this.state.jobs});
+            this.setState({filteredRuns: this.state.runs});
         }
     }
 
@@ -141,7 +141,7 @@ class Exports extends React.Component {
             
             <div className={styles.wholeDiv}>
                 <div>
-                    <JobList jobs={this.state.filteredJobs} />
+                    <DataPackList runs={this.state.filteredRuns} user={this.props.user} />
                 </div>
 
                 <div >
@@ -158,19 +158,20 @@ class Exports extends React.Component {
 
 
 Exports.propTypes = {
-    jobsList: PropTypes.object,
+    runsList: PropTypes.object,
 };
 
 function mapStateToProps(state) {
     return {
-        jobsList: state.jobsList,
+        runsList: state.runsList,
+        user: state.user,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        getJobs: () => {
-            dispatch(getJobs());
+        getRuns: () => {
+            dispatch(getRuns());
         }
     }
 }

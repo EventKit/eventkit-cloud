@@ -2,7 +2,6 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/SearchAOIToolbar.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
-import ExportsApi from '../api/exportsApi.js';
 import {getGeonames} from '../actions/searchToolbarActions';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';

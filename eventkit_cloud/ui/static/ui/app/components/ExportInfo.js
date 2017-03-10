@@ -19,7 +19,7 @@ import styles from '../styles/ExportInfo.css'
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled} from '../actions/exportsActions.js'
 
 
-class ExportInfo extends React.Component {
+export class ExportInfo extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -452,6 +452,7 @@ ExportInfo =  reduxForm({
     }
 })(ExportInfo)
 
-ExportInfo = connect(mapStateToProps, mapDispatchToProps)(ExportInfo)
-
-export default ExportInfo
+export default connect(
+    mapStateToProps, 
+    mapDispatchToProps
+)(ExportInfo)
