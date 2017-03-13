@@ -17,7 +17,6 @@ class CreateExport extends React.Component {
     }
 
     render() {
-        let location = this.props.location
         const pageTitle = "Create DataPack"
         const styles = {
             appBar: {
@@ -67,13 +66,11 @@ class CreateExport extends React.Component {
 
 
 CreateExport.propTypes = {
-    location:        React.PropTypes.object.isRequired,
     bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
 };
 
 function mapStateToProps(state) {
     return {
-        location: state.location,
         bbox: state.bbox,
     };
 }

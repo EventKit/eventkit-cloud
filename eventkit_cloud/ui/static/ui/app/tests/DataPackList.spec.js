@@ -2,10 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import {expect} from 'chai';
 import {mount} from 'enzyme';
-// import IconMenu from 'material-ui/IconMenu';
-// import MenuItem from 'material-ui/MenuItem';
 import {DataPackItem} from '../components/DataPackItem';
-// import IconButton from 'material-ui/IconButton';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {GridList, GridTile} from 'material-ui/GridList'

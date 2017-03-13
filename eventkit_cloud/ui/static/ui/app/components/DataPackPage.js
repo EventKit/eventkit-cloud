@@ -1,11 +1,10 @@
-import React, {PropTypes} from 'react'
-import {connect} from 'react-redux'
+import React, {PropTypes} from 'react';
+import {connect} from 'react-redux';
 import {getRuns} from '../actions/DataPackListActions';
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
-import { Grid, Row, Col } from 'react-flexbox-grid/lib/index'
 import * as exportActions from '../actions/exportsActions';
 import DataPackList from './DataPackList';
 import primaryStyles from '../styles/constants.css'
@@ -14,7 +13,7 @@ import filter from 'lodash/filter';
 import DataPackSearchbar from './DataPackSearchbar';
 import { Link } from 'react-router';
 
-class Exports extends React.Component {
+export class DataPackPage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -164,8 +163,10 @@ class Exports extends React.Component {
 }
 
 
-Exports.propTypes = {
-    runsList: PropTypes.object,
+DataPackPage.propTypes = {
+    runsList: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
+    getRuns: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -186,4 +187,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Exports);
+)(DataPackPage);
