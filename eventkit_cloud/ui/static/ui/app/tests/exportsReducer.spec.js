@@ -1,18 +1,5 @@
 import * as reducers from '../reducers/exportsReducer'
 
-describe('exportJobs reducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.exportJobsReducer(undefined, {})).toEqual([])
-    });
-
-    it('should handle LOAD_JOBS_SUCCESS', () => {
-        expect(reducers.exportJobsReducer(
-            [],
-            {type: 'LOAD_JOBS_SUCCESS', jobs: [{ 'jobs1': {}, 'job2': {} }]}
-        )).toEqual([{ 'jobs1': {}, 'job2': {} }])
-    });
-});
-
 describe('exportMode reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportModeReducer(undefined, {})).toEqual('DRAW_NORMAL')

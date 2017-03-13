@@ -6,11 +6,6 @@ const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares)
 
 describe('export actions', () => {
-
-    let jobs = {
-        uuid: '12345',
-        name: 'test-job-name'
-    };
     let bbox = [-180, -90, 180, 90];
 
     let geojson = { "type": "FeatureCollection",
@@ -27,13 +22,6 @@ describe('export actions', () => {
         ]
         };
     let mode = "DRAW_MODE_NORMAL";
-
-    it('loadJobSuccess should create LOAD_JOB_SUCCESS action', () => {
-        expect(actions.loadJobsSuccess(jobs)).toEqual({
-            type: 'LOAD_JOBS_SUCCESS',
-            jobs: jobs,
-        });
-    });
 
     it('updateBbox should return passed in bbox', () => {
         expect(actions.updateBbox(bbox)).toEqual({
@@ -78,27 +66,3 @@ describe('export actions', () => {
     });
 });
 
-describe('async export actions', () => {
-
-    afterEach(() => {
-        nock.cleanAll();
-    });
-
-    let jobs = {'job1': {'somedata': [1]}, 'job2': {'moredata': [2]}};
-    
-    it('loadExports should create LOAD_JOBS_SUCCESS after fetching', () => {
-        nock('http://http://cloud.eventkit.dev:8080/api/')
-            .get('/jobs')
-            .reply(200, jobs)
-
-        const expectedActions = [
-            {type: 'LOAD_JOBS_SUCCESS', jobs: jobs}
-        ]
-        const store = mockStore({ jobs: {} });
-        return store.dispatch(actions.loadExports())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions)
-            });
-    });
-    
-});

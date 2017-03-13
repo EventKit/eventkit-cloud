@@ -33,15 +33,6 @@ export function startExportPackageReducer(state = initialState.setExportPackageF
     }
 }
 
-export function exportJobsReducer(state = initialState.jobs, action) {
-    switch(action.type) {
-        case types.LOAD_JOBS_SUCCESS:
-            return action.jobs;
-        default:
-            return state;
-    }
-}
-
 export function exportModeReducer(state = initialState.mode, action) {
     switch(action.type) {
         case types.SET_MODE:

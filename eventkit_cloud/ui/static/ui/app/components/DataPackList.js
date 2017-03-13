@@ -8,10 +8,10 @@ import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import ol from 'openlayers';
-import JobItem from './JobItem';
+import DataPackItem from './DataPackItem';
 
 
-export class JobList extends Component {
+export class DataPackList extends Component {
     constructor(props) {
         super(props);
         this.updateColumns = this.updateColumns.bind(this);
@@ -67,8 +67,8 @@ export class JobList extends Component {
                     style={styles.gridList}
                     cols={this.state.cols}
                 >
-                    {this.props.jobs.map((job) => (
-                        <JobItem job={job} key={job.uid}/>
+                    {this.props.runs.map((run) => (
+                        <DataPackItem run={run} user={this.props.user} key={run.uid}/>
                     ))}
                 </GridList>
             </div>
@@ -76,8 +76,9 @@ export class JobList extends Component {
     }
 }
 
-JobList.propTypes = {
-    jobs: PropTypes.array.isRequired
+DataPackList.propTypes = {
+    runs: PropTypes.array.isRequired,
+    user: PropTypes.object.isRequired,
 };
 
-export default JobList;
+export default DataPackList;
