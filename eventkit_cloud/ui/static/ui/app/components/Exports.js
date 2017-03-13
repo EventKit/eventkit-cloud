@@ -23,7 +23,6 @@ class Exports extends React.Component {
         this.state = {
             jobs: [],
             filteredJobs: [],
-            searchbarWidth: '',
             dataPackButtonFontSize: '',
         }
     }
@@ -49,19 +48,15 @@ class Exports extends React.Component {
 
     screenSizeUpdate() {
         if(window.innerWidth <= 750) {
-            this.setState({searchbarWidth: '200px'});
             this.setState({dataPackButtonFontSize: '10px'});
         }
         else if (window.innerWidth <= 900) {
-            this.setState({searchbarWidth: '300px'});
             this.setState({dataPackButtonFontSize: '13px'});
         }
         else if (window.innerWidth <= 1000) {
-            this.setState({searchbarWidth: '400px'});
             this.setState({dataPackButtonFontSize: '13px'});
         }
         else {
-            this.setState({searchbarWidth: '500px'});
             this.setState({dataPackButtonFontSize: '14px'});
         }
     }
@@ -98,11 +93,9 @@ class Exports extends React.Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
-                marginTop: '25px'
             },
             toolbarCommon: {
                 backgroundColor: '#253447',
-                
             },
             toolbarTitleCommon: {
                 color: '#4598bf',
@@ -113,29 +106,42 @@ class Exports extends React.Component {
                 backgroundColor: '#161e2e',
                 opacity: '0.7',
             },
+            createDataPackStyle: {
+                margin: '0px', 
+                minWidth: '50px', 
+                height: '35px', 
+                borderRadius: '0px'
+            },
+            createDataPackLabel: {
+                fontSize: this.state.dataPackButtonFontSize,
+                paddingLeft: '30px', 
+                paddingRight: '30px', 
+                lineHeight: '35px'
+            },
         };
 
         return (
         <div>
             <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
                     iconElementLeft={<p></p>}
-            />
-            <Toolbar style={styles.toolbarCommon}>
-                <ToolbarGroup style={{margin: 'auto'}}>
-                    <DataPackSearchbar
-                        onSearchChange={this.checkForEmptySearch}
-                        onSearchSubmit={this.handleSearch}
-                        searchbarWidth={this.state.searchbarWidth} 
-                    />
-                    <ToolbarSeparator style={styles.separator}/>
-                    <RaisedButton 
+            >
+                <RaisedButton 
                         label={"Create DataPack"}
                         primary={true}
                         href={'/create'}
-                        labelStyle={{fontSize: this.state.dataPackButtonFontSize, paddingLeft: '10px', paddingRight: '10px'}}
-                        style={{margin: '10px 0px', minWidth: '50px'}}
-                    >
-                    </RaisedButton>
+                        labelStyle={styles.createDataPackLabel}
+                        style={styles.createDataPackStyle}
+                        buttonStyle={{borderRadius: '0px'}}
+                        overlayStyle={{borderRadius: '0px'}}
+                        />
+            </AppBar>
+            <Toolbar style={styles.toolbarCommon}>
+                <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
+                    <DataPackSearchbar
+                        onSearchChange={this.checkForEmptySearch}
+                        onSearchSubmit={this.handleSearch}
+                        searchbarWidth={'100%'} 
+                    />
                 </ToolbarGroup>
             </Toolbar>
             

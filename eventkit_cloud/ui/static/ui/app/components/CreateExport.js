@@ -25,22 +25,31 @@ class CreateExport extends React.Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
-                marginTop: '25px'
             },
+            iconButton: {
+                padding: 'none', 
+                width: '30px', 
+                height: '30px'
+            }
         }
 
         return (
             <div>
                 <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
-                        iconElementLeft={<p></p>}
-                        iconElementRight={<IconMenu iconButtonElement={<IconButton><MoreVertIcon /></IconButton>}
-                                              anchorOrigin={{horizontal: 'right', vertical: 'top'}}
-                                              targetOrigin={{horizontal: 'right', vertical: 'top'}}>
-                                              <MenuItem primaryText="Save & Exit" />
-                                              <MenuItem primaryText="Save & Share" />
-                                              <MenuItem primaryText="Discard" />
-
-                                            </IconMenu>}
+                        iconStyleRight={{marginTop: '2px'}}
+                        iconElementLeft={<p style={{display: 'none'}}/>}
+                        iconElementRight={
+                            <IconMenu style={{height: '30px', width: '30px'}} 
+                                iconButtonElement={
+                                    <IconButton style={styles.iconButton}>
+                                        <MoreVertIcon />
+                                    </IconButton>}
+                                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
+                                targetOrigin={{horizontal: 'right', vertical: 'top'}}>
+                                <MenuItem primaryText="Save & Exit" />
+                                <MenuItem primaryText="Save & Share" />
+                                <MenuItem primaryText="Discard" />
+                            </IconMenu>}
                 />
                 <BreadcrumbStepper/>
                 

@@ -18,7 +18,6 @@ class DataPackSearchbar extends React.Component {
                 borderBottom: '1px solid #e0e0e0',
             },
             autoCompleteText: {
-                color: 'purple',
                 width: this.props.searchbarWidth,
                 height: '36px',
                 lineHeight: '16px',
