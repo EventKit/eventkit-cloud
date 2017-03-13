@@ -12,6 +12,7 @@ import primaryStyles from '../styles/constants.css'
 import sortBy from 'lodash/sortBy';
 import filter from 'lodash/filter';
 import DataPackSearchbar from './DataPackSearchbar';
+import { Link } from 'react-router';
 
 class Exports extends React.Component {
 
@@ -123,17 +124,17 @@ class Exports extends React.Component {
         return (
         <div>
             <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
-                    iconElementLeft={<p></p>}
-            >
-                <RaisedButton 
+                    iconElementLeft={<p></p>}>
+                <Link to={'/create'}>
+                    <RaisedButton 
                         label={"Create DataPack"}
                         primary={true}
-                        href={'/create'}
                         labelStyle={styles.createDataPackLabel}
                         style={styles.createDataPackStyle}
                         buttonStyle={{borderRadius: '0px'}}
                         overlayStyle={{borderRadius: '0px'}}
-                        />
+                    />
+                </Link>
             </AppBar>
             <Toolbar style={styles.toolbarCommon}>
                 <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
