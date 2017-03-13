@@ -56,6 +56,7 @@ describe('DataPackPage component', () => {
         props.getRuns = new sinon.spy();
         const resizeSpy = new sinon.spy(DataPackPage.prototype, 'screenSizeUpdate');
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
+        const wrapper = shallow(<DataPackPage {...props}/>, {
             context: {muiTheme},
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
@@ -69,6 +70,7 @@ describe('DataPackPage component', () => {
     it('should do call componentWillUnmount', () => {
         const props = getProps();
         const unmountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
+        const wrapper = shallow(<DataPackPage {...props}/>, {
             context: {muiTheme},
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
