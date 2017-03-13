@@ -5,10 +5,10 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../styles/JobItem.css';
+import style from '../styles/DataPackItem.css';
 import ol from 'openlayers';
 
-export class JobItem extends Component {
+export class DataPackItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -27,7 +27,7 @@ export class JobItem extends Component {
 
     initMap() {
         const map = new ol.Map({
-            target: this.props.job.uid + '_map',
+            target: this.props.run.uid + '_map',
             layers: [
                 new ol.layer.Tile({
                     source: new ol.source.OSM()
@@ -45,7 +45,7 @@ export class JobItem extends Component {
         let source = new ol.source.Vector();
 
         const geojson = new ol.format.GeoJSON();
-        const feature = geojson.readFeature(this.props.job.extent, {
+        const feature = geojson.readFeature(this.props.run.job.extent, {
             'featureProjection': 'EPSG:3857',
             'dataProjection': 'EPSG:4326'
         });
@@ -74,18 +74,21 @@ export class JobItem extends Component {
             cardTitle:{
                 wordWrap: 'break-word',
             },
-            icon: {float: 'left', color: 'grey'},
-            label: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px'}
+            errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
+            runningIcon: {float: 'left', color: '#f4D225', fontSize: '20px'},
+            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '20px', marginRight: '5px'},
+            publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20x', marginRight: '5px'},
+            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px'}
         };
 
         return (
-            <Card style={styles.card} key={this.props.job.uid} expanded={this.state.expanded} onExpandChange={this.handleExpandChange}>
+            <Card style={styles.card} key={this.props.run.uid} expanded={this.state.expanded} onExpandChange={this.handleExpandChange}>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
                     title={
                         <div>
-                            <span>{this.props.job.name}</span>
+                            <span>{this.props.run.job.name}</span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
@@ -102,9 +105,9 @@ export class JobItem extends Component {
                                 <MenuItem 
                                     style={{fontSize: '13px'}}
                                     primaryText="Go to Export Detail"
-                                    onTouchTap={() => {window.location.href='/exports/' + this.props.job.uid}}/>
+                                    onTouchTap={() => {window.location.href='/exports/' + this.props.run.uid}}/>
                                
-                                {this.props.job.owner == 'owner' ?
+                                {this.props.run.user == this.props.user.data.username ?
                                 <MenuItem
                                     style={{fontSize: '13px'}}
                                     primaryText={'Delete Export'}
@@ -115,29 +118,38 @@ export class JobItem extends Component {
                     } 
                     subtitle={
                         <div>
-                        <span>{'Event: ' + this.props.job.event}</span><br/>
-                        <span>{'Added: ' + moment(this.props.job.created_at).format('YYYY-MM-DD')}</span><br/>
+                        <span>{'Event: ' + this.props.run.job.event}</span><br/>
+                        <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
                 <CardText>
-                    <span>{this.props.job.description}</span>
+                    <span>{this.props.run.job.description}</span>
                 </CardText>
                 <CardMedia expandable={true}>
-                    <div id={this.props.job.uid + '_map'} className={style.map} />
+                    <div id={this.props.run.uid + '_map'} className={style.map} />
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>
-                        {this.props.job.published ? 
-                            <i className={'material-icons'} style={styles.icon}>group</i>
+                        {this.props.run.status == "SUBMITTED" || this.props.run.status == "INCOMPLETE" ?
+                            <i className={'material-icons'} style={styles.runningIcon}>sync</i>
+                            :
+                            this.props.run.status == "FAILED"  ?
+                                <i className={'material-icons'} style={styles.errorIcon}>error</i>
+                                :
+                                null
+                        }
+                        {this.props.run.user == this.props.user.data.username ?
+                            <p style={styles.ownerLabel}>My DataPack</p>
+                            :
+                            <p style={styles.ownerLabel}>{this.props.run.user}</p>
+                        }
+                        {this.props.run.job.published ? 
+                            <i className={'material-icons'} style={styles.publishedIcon}>group</i>
                             :
                             
-                            <i className={'material-icons'} style={styles.icon}>person</i>
+                            <i className={'material-icons'} style={styles.unpublishedIcon}>person</i>
                         }
-                        {this.props.job.owner == 'owner' ?
-                            <p style={styles.label}>My DataPack</p>
-                            :
-                            <p style={styles.label}>{this.props.job.owner}</p>
-                        }
+                        
                     </span>
                 </CardActions>
             </Card>
@@ -145,8 +157,9 @@ export class JobItem extends Component {
     }
 }
 
-JobItem.propTypes = {
-    job: PropTypes.object
+DataPackItem.propTypes = {
+    run: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
 };
 
-export default JobItem;
+export default DataPackItem;

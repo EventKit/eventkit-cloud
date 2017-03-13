@@ -1,6 +1,5 @@
 import {Config} from '../config'
 import actions from './actionTypes'
-import ExportApi from '../api/exportsApi';
 
 export function clickZoomToSelection() {
     return {

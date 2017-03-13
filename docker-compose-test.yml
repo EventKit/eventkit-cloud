@@ -74,5 +74,18 @@ services:
      image: httpd:2.4.23
      ports:
         - "80:80"
+  webpack:
+      build:
+        context: .
+        dockerfile: config/Dockerfile_webpack
+      volumes:
+        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
+      ports:
+        - "8080:8080"
+      expose:
+        - "9229"
+        - "50000-60000"
+      extra_hosts:
+        - "${SITE_NAME}:${SITE_IP}"
 volumes:
     postgis_database:

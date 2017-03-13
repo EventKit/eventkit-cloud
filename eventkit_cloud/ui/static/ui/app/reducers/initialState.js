@@ -1,7 +1,6 @@
 import { initialState as userInitialState } from './userReducer'
 
 export default {
-    jobs: [],
     bbox: [],
     aoiInfo: {
         geojson: {},
@@ -39,10 +38,10 @@ export default {
         search: "DEFAULT",
     },
     drawerOpen: true,
-    jobsList: {
+    runsList: {
         fetching: false,
         fetched: false,
-        jobs: [],
+        runs: [],
         error: null,
     },
     exportInfo: {
