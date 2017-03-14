@@ -113,8 +113,6 @@ AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 
 
-## WARNINGS ARE SUPPRESSED, PLEASE REVIEW PRIOR TO UPGRADING
-# http://stackoverflow.com/questions/29562070/how-to-suppress-the-deprecation-warnings-in-django
 
 LOGGING = {
     'version': 1,

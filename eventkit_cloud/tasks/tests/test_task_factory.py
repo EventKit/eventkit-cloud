@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.db import DatabaseError
-from mock import patch, Mock
+from mock import patch, Mock, call, MagicMock
 
 from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
 
@@ -54,22 +54,22 @@ class TestExportTaskFactory(TestCase):
             run_uid = create_run(job_uid=self.job.uid)
             self.assertIsNone(run_uid)
 
-    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
+    @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    @patch('eventkit_cloud.tasks.task_runners.chain')
-    @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
-    def test_task_factory(self, task_runner, task_runner_chain, task_factory_chain, create_task, finalize_task):
+    def test_task_factory(self, task_factory_chain, create_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
+        worker = "some_worker"
+        provider_uuid = uuid.uuid4()
+        task_runner = MagicMock()
         task = Mock()
-        provider_uuid = uuid.uuid4
-        task_runner.run_task.return_value(provider_uuid, task)
+        task_runner().run_task.return_value = (provider_uuid, task)
         create_task.return_value = task
-        TaskFactory().parse_tasks(run_uid=run_uid, worker="some_worker")
-        task_runner_chain.assert_called()
+        task_factory = TaskFactory()
+        task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
+        task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
         create_task.assert_called()
-        finalize_task.s.assert_called_once()
-
+        finalize_task.s.assert_called()

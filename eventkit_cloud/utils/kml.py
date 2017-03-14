@@ -73,7 +73,7 @@ class GPKGToKml(object):
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception, 'Failed to create zipfile for {0}'.format(self.kmlfile)
-        if task_process.exitcode == 0:
+        else:
             # remove the kml file
             os.remove(self.kmlfile)
         if self.debug:

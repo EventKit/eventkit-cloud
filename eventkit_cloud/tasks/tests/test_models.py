@@ -7,7 +7,7 @@ import os
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
-from mock import patch, Mock, call
+from mock import patch
 
 from ...jobs.models import ExportFormat, Job, ProviderTask, ExportProvider
 from ..models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
@@ -22,21 +22,22 @@ class TestExportRun(TestCase):
 
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
-    def setUp(self, ):
+    @classmethod
+    def setUpTestData(cls):
         formats = ExportFormat.objects.all()
         Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         provider_task = ProviderTask.objects.create(provider=ExportProvider.objects.get(slug='osm-generic'))
         # add the formats to the provider task
         provider_task.formats.add(*formats)
-        job = Job.objects.create(name='TestJob', description='Test description', user=user, the_geom=the_geom)
+        job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
         job.provider_tasks.add(provider_task)
 
     def test_export_run(self, ):
-        job = Job.objects.all()[0]
-        run = ExportRun.objects.create(job=job, status='SUBMITTED')
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertIsNotNone(saved_run)
         self.assertEqual(run, saved_run)
@@ -45,8 +46,8 @@ class TestExportRun(TestCase):
         self.assertIsNone(saved_run.zipfile_url)
 
     def test_get_tasks_for_run(self, ):
-        job = Job.objects.all()[0]
-        run = ExportRun.objects.create(job=job)
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertEqual(run, saved_run)
         task_uid = str(uuid.uuid4())  # from celery
@@ -58,9 +59,9 @@ class TestExportRun(TestCase):
         self.assertEqual(tasks[0], saved_task)
 
     def test_get_runs_for_job(self, ):
-        job = Job.objects.all()[0]
+        job = Job.objects.first()
         for x in range(5):
-            run = ExportRun.objects.create(job=job)
+            run = ExportRun.objects.create(job=job, user=job.user)
             task_uid = str(uuid.uuid4())  # from celery
             export_provider_task = ExportProviderTask.objects.create(run=run)
             ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
@@ -70,8 +71,8 @@ class TestExportRun(TestCase):
         self.assertEquals(1, len(tasks))
 
     def test_delete_export_run(self, ):
-        job = Job.objects.all()[0]
-        run = ExportRun.objects.create(job=job)
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = ExportProviderTask.objects.create(run=run)
         ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
@@ -85,20 +86,22 @@ class TestExportTask(TestCase):
     Test cases for ExportTask model
     """
 
-    def setUp(self, ):
+    @classmethod
+    def setUpTestData(cls):
         formats = ExportFormat.objects.all()
         Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        Job.objects.create(name='TestJob', description='Test description', user=user, the_geom=the_geom)
-        self.job = Job.objects.all()[0]
+        Job.objects.create(name='TestExportTask', description='Test description', user=user, the_geom=the_geom)
+        job = Job.objects.first()
         # add the formats to the job
-        self.job.formats = formats
-        self.job.save()
-        self.run = ExportRun.objects.create(job=self.job)
-        saved_run = ExportRun.objects.get(uid=str(self.run.uid))
-        self.assertEqual(self.run, saved_run)
+        job.formats = formats
+        job.save()
+
+    def setUp(self):
+        job = Job.objects.get(name='TestExportTask')
+        self.run = ExportRun.objects.create(job=job, user=job.user)
         self.task_uid = uuid.uuid4()
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
         self.task = ExportTask.objects.create(export_provider_task=export_provider_task, uid=self.task_uid)
@@ -124,8 +127,8 @@ class TestExportTask(TestCase):
 
     @patch('eventkit_cloud.tasks.models.delete_from_s3')
     def test_exportrun_delete_exports(self, delete_from_s3):
-        job = Job.objects.all()[0]
-        run = ExportRun.objects.create(job=job)
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
         run_uid = run.uid
         task_uid = str(uuid.uuid4())  # from celery
         export_provider_task = ExportProviderTask.objects.create(run=run)

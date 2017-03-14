@@ -59,7 +59,7 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def user(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return HttpResponse(status=401)
     else:
         user_data = {'username': request.user.username,

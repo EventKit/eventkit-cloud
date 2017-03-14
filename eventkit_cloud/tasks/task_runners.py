@@ -357,7 +357,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         """
     export_task_registry = settings.EXPORT_TASKS
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
         Run export tasks.
 

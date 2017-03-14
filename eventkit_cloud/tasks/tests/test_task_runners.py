@@ -59,8 +59,6 @@ class TestExportTaskRunner(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        # assert delay method called on mock chord..
-        mock_chain.return_value.delay.assert_called_once()
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(5, len(tasks))  # 4 initial tasks + 1 shape export task
@@ -89,8 +87,6 @@ class TestExportTaskRunner(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        # assert delay method called on mock chord..
-        mock_chain.return_value.delay.assert_called_once()
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(3, len(tasks))
@@ -120,8 +116,6 @@ class TestExportTaskRunner(TestCase):
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        # assert delay method called on mock chord..
-        mock_chain.return_value.delay.assert_called_once()
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(1, len(tasks))

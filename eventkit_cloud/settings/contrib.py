@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import os
 from .base import *  # NOQA
 
 # Extra installed apps
@@ -29,4 +30,13 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
     'DEFAULT_VERSION': '1.0',
+}
+
+
+SWAGGER_SETTINGS = {
+    'LOGIN_URL': 'rest_framework:login',
+    'LOGOUT_URL': 'rest_framework:logout',
+    'JSON_EDITOR': False if os.getenv('SWAGGER_JSON_EDITOR', 'False').lower() == 'false' else True,
+    'SHOW_REQUEST_HEADERS': False if os.getenv('SWAGGER_SHOW_REQUEST_HEADERS', 'False').lower() == 'false' else True,
+    'VALIDATOR_URL': os.getenv('SWAGGER_VALIDATOR_URL', None)
 }

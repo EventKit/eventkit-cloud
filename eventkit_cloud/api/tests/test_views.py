@@ -129,12 +129,12 @@ class TestJobViewSet(APITestCase):
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0,
                                   'url': 'http://coolproviderurl.to',
                                   'preview_url': 'http://coolproviderurl.to'}],
-            'preset': config_uid,
+            'preset': str(config_uid),
             'transform': '',
             'translation': ''
         }
         url = reverse('api:jobs-list')
-        response = self.client.post(url, request_data, format='json')
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
         response = json.loads(response.content)
@@ -142,7 +142,7 @@ class TestJobViewSet(APITestCase):
 
         request_data['export_providers'][0]['name'] = 'test 2'
         # should be idempotent
-        self.client.post(url, request_data, format='json')
+        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
@@ -166,7 +166,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.get(url)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
@@ -190,7 +190,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.get(url)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
@@ -256,7 +256,7 @@ class TestJobViewSet(APITestCase):
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
@@ -304,7 +304,7 @@ class TestJobViewSet(APITestCase):
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
@@ -349,7 +349,7 @@ class TestJobViewSet(APITestCase):
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant response content
@@ -377,7 +377,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['xmin is required.'], response.data['xmin'])
 
@@ -396,7 +396,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['invalid xmin value.'], response.data['xmin'])
 
@@ -418,7 +418,7 @@ class TestJobViewSet(APITestCase):
         except Exception:
             pass
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['invalid_bounds'], response.data['id'])
 
@@ -437,7 +437,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(["Ensure this value is greater than or equal to -180."], response.data['xmin'])
 
@@ -456,7 +456,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['invalid xmin value.'], response.data['xmin'])
 
@@ -475,7 +475,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['inverted_coordinates'], response.data['id'])
 
@@ -492,9 +492,9 @@ class TestJobViewSet(APITestCase):
             'ymax': 27.6,
             'formats': formats
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['This field may not be blank.'], response.data['description'])
 
@@ -510,11 +510,10 @@ class TestJobViewSet(APITestCase):
             'ymax': 27.6,
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
-        response = self.client.post(url, request_data)
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['A provider and an export format must be selected.'], response.data['errors'])
+        self.assertEquals(response.data['provider_tasks'][0]['formats'], ['This field is required.'])
 
     def test_invalid_format_param(self, ):
         url = reverse('api:jobs-list')
@@ -530,7 +529,7 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data.get('provider_tasks')[0].get('formats'))
 
@@ -550,7 +549,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
 
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(response.data['provider_tasks'][0]['formats'],
                           ['Object with slug=broken-format-one does not exist.'])
@@ -569,9 +568,9 @@ class TestJobViewSet(APITestCase):
             'ymax': 20,
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['invalid_extents'], response.data['id'])
 
@@ -588,9 +587,7 @@ class TestBBoxSearch(APITestCase):
         self.user = None
         self.client = None
 
-    @patch('eventkit_cloud.tasks.task_runners.ExportGenericOSMTaskRunner')
-    def setUp(self, mock):
-        task_runner = mock.return_value
+    def setUp(self, ):
         url = reverse('api:jobs-list')
         # create dummy user
         Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -623,7 +620,6 @@ class TestBBoxSearch(APITestCase):
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
-        task_runner.assert_called_once()
         self.assertEquals(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
@@ -639,7 +635,7 @@ class TestBBoxSearch(APITestCase):
         url = reverse('api:jobs-list')
         response = self.client.get(url)
         self.assertEquals(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(response['Link'], '<http://testserver/api/jobs?page=2>; rel="next"')
         self.assertEquals(2, len(response.data))  # 8 jobs in total but response is paginated
@@ -649,7 +645,7 @@ class TestBBoxSearch(APITestCase):
         param = 'bbox='  # missing params
         response = self.client.get('{0}?{1}'.format(url, param))
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals('missing_bbox_parameter', response.data['id'])
 
@@ -659,7 +655,7 @@ class TestBBoxSearch(APITestCase):
         param = 'bbox={0},{1},{2}'.format(extent[0], extent[1], extent[2])
         response = self.client.get('{0}?{1}'.format(url, param))
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals('missing_bbox_parameter', response.data['id'])
 
@@ -766,7 +762,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
@@ -803,7 +799,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
@@ -987,7 +983,7 @@ class TestExportTaskViewSet(APITestCase):
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
@@ -1063,7 +1059,7 @@ class TestExportTaskViewSet(APITestCase):
         response = self.client.patch(url)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEquals(response['Content-Type'], 'application/json; version=1.0')
+        self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content

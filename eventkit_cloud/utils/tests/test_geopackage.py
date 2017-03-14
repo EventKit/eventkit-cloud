@@ -3,7 +3,7 @@ import logging
 import os
 
 from mock import Mock, patch, call
-import uuid
+from uuid import uuid4
 from django.test import TransactionTestCase
 
 from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
@@ -17,32 +17,30 @@ logger = logging.getLogger(__name__)
 
 class TestGeopackage(TransactionTestCase):
     def setUp(self, ):
-        import eventkit_cloud.utils
-        self.path = os.path.dirname(eventkit_cloud.utils.__file__)
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.task_process_patcher = patch('eventkit_cloud.utils.geopackage.TaskProcess')
+        self.task_process = self.task_process_patcher.start()
+        self.addCleanup(self.task_process_patcher.stop)
+        self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.isfile')
-    @patch('subprocess.PIPE')
-    @patch('subprocess.Popen')
-    def test_convert(self, popen, pipe, isfile, export_task):
+    def test_convert(self, isfile):
         sqlite = '/path/to/query.sqlite'
         gpkgfile = '/path/to/query.gpkg'
         cmd = "ogr2ogr -f 'GPKG' {0} {1}".format(gpkgfile, sqlite)
         isfile.return_value = True
-        proc = Mock()
-        popen.return_value = proc
-        proc.communicate.return_value = (Mock(), Mock())
-        proc.wait.return_value = 0
-        # set zipped to False for testing
-        s2g = SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile, debug=False)
+        self.task_process.return_value = Mock(exitcode=0)
+        s2g = SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile, debug=False, task_uid=self.task_uid)
         isfile.assert_called_once_with(sqlite)
         out = s2g.convert()
-        export_task.assert_called_once()
-        popen.assert_called_once_with(cmd, shell=True, executable='/bin/bash',
-                                      stdout=pipe, stderr=pipe)
-        proc.communicate.assert_called_once()
-        proc.wait.assert_called_once()
+        self.task_process.assert_called_once_with(task_uid=self.task_uid)
+        self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1,
+                                                                  stdout=-1)
         self.assertEquals(out, gpkgfile)
+
+        self.task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            s2g.convert()
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_table_count(self, sqlite3):
@@ -193,9 +191,8 @@ class TestGeopackage(TransactionTestCase):
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
 
-    @patch('eventkit_cloud.utils.geopackage.TaskProcess')
     @patch('__builtin__.open')
-    def test_add_geojson_to_geopackage(self, open, task_process):
+    def test_add_geojson_to_geopackage(self, open):
 
         geojson = "{}"
         gpkg = None
@@ -205,20 +202,18 @@ class TestGeopackage(TransactionTestCase):
         geojson = "{}"
         gpkg = "test.gpkg"
         layer_name = "test_layer"
-        task_uid = uuid.uuid4()
-        task_process.return_value = Mock(exitcode=0)
-        add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=task_uid)
-        task_process.assert_called_once_with(task_uid=task_uid)
+        self.task_process.return_value = Mock(exitcode=0)
+        add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
+        self.task_process.assert_called_once_with(task_uid=self.task_uid)
         open.assert_called_once_with(os.path.join(os.path.dirname(gpkg),
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), 'w')
 
-        task_process.return_value = Mock(exitcode=1)
+        self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
-            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=task_uid)
+            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
 
     @patch('os.rename')
-    @patch('eventkit_cloud.utils.geopackage.TaskProcess')
-    def test_clip_geopackage(self, task_process, rename):
+    def test_clip_geopackage(self, rename):
         geojson = "{}"
         gpkg = None
         with self.assertRaises(Exception):
@@ -228,15 +223,13 @@ class TestGeopackage(TransactionTestCase):
         in_gpkg = "old_test.gpkg"
         gpkg = "test.gpkg"
         expected_call = "ogr2ogr -f GPKG -clipsrc {0} {1} {2}".format(geojson_file, gpkg, in_gpkg)
-        task_uid = uuid.uuid4()
-        task_process_mock = Mock(exitcode=0)
-        task_process.return_value = task_process_mock
-        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=task_uid)
-        task_process.assert_called_once_with(task_uid=task_uid)
-        task_process_mock.start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
+        self.task_process.return_value = Mock(exitcode=0)
+        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
+        self.task_process.assert_called_once_with(task_uid=self.task_uid)
+        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
         rename.assert_called_once_with(gpkg, in_gpkg)
 
-        task_process.return_value = Mock(exitcode=1)
+        self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
-            clip_geopackage(geojson=geojson, gpkg=gpkg, task_uid=task_uid)
+            clip_geopackage(geojson=geojson, gpkg=gpkg, task_uid=self.task_uid)
 

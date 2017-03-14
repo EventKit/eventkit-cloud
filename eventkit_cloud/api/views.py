@@ -45,8 +45,6 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
 class JobViewSet(viewsets.ModelViewSet):
     """
-    ##Export API Endpoint.
-
     Main endpoint for export creation and managment. Provides endpoints
     for creating, listing and deleting export jobs.
 
@@ -71,41 +69,11 @@ class JobViewSet(viewsets.ModelViewSet):
     * published: `true` if this export is to be published globally, `false` otherwise.
         * Unpublished exports will be purged from the system 48 hours after they are created.
 
-    ###Example JSON Request
-
-    This example will create a publicly published export using the default set of HDM tags
-    for an area around Dar es Salaam, Tanzania. The export will create thematic shapefile, shapefile and kml files.
-
-    <pre>
-        {
-            "name": "Dar es Salaam",
-            "description": "A description of the test export",
-            "event": "A HOT project or activation",
-            "xmin": 39.054879,
-            "ymin": -7.036697,
-            "xmax": 39.484149,
-            "ymax": -6.610281,
-            "formats": ["thematic", "shp", "kml"],
-            "published": "true"
-        }
-    </pre>
-
-    To create an export with a default set of tags, save the example json request
-    to a local file called **request.json** and run the following command from the
-    directory where the file is saved. You will need an access token.
-
-    <code>
-    curl -v -H "Content-Type: application/json" -H "Authorization: Token [your token]"
-    --data @request.json http://export.hotosm.org/api/jobs
-    </code>
-
-    To monitor the resulting export run retreive the `uid` value from the returned json
-    and call http://export.hotosm.org/api/runs?job_uid=[the returned uid]
     """
 
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
-    parser_classes = (FormParser, MultiPartParser, JSONParser)
+    parser_classes = (JSONParser, )
     lookup_field = 'uid'
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
@@ -180,24 +148,128 @@ class JobViewSet(viewsets.ModelViewSet):
         The request data is validated by *api.serializers.JobSerializer*.
         Associates the *Job* with required *ExportFormats*, *ExportConfig* and *Tags*
 
-        Args:
-            request: the HTTP request.
-            *args: Variable length argument list.
-            **kwargs: Arbitary keyword arguments.
+        * request: the HTTP request in JSON.
 
-        Returns:
-            the newly created Job instance.
+            Example:
 
-        Raises:
-            ValidationError: in case of validation errors.
+                {
+                    "name" : "Example Name",
+                    "description" : "Example Description",
+                    "event" : "Example Event (Project)",
+                    "include_zipfile" : true,
+                    "xmin" : "-71.037555",
+                    "ymin" : "42.347380",
+                    "xmax" : "-71.033349",
+                    "ymax" : "42.349600",
+                    "tags" : [],
+                    "provider_tasks" : [{
+                            "provider" : "OpenStreetMap Data (Themes)",
+                            "formats" : ["shp", "gpkg"]
+                        }
+                    ]
+                }
+
+
+        To monitor the resulting export run retreive the `uid` value from the returned json
+        and call /api/runs?job_uid=[the returned uid]
+
+        * Returns: the newly created Job instance.
+
+            Example:
+
+                {
+                  "provider_tasks": [
+                    {
+                      "provider": "OpenStreetMap Tiles",
+                      "formats": [
+                        "gpkg"
+                      ]
+                    }
+                  ],
+                  "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://cloud.eventkit.dev/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "name": "test",
+                  "description": "test",
+                  "event": "test",
+                  "created_at": "2017-03-10T15:09:29.802364Z",
+                  "owner": "admin",
+                  "exports": [
+                    {
+                      "formats": [
+                        {
+                          "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
+                          "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+                          "slug": "gpkg",
+                          "name": "Geopackage",
+                          "description": "GeoPackage"
+                        }
+                      ],
+                      "provider": "OpenStreetMap Tiles"
+                    }
+                  ],
+                  "configurations": [],
+                  "published": false,
+                  "feature_save": false,
+                  "feature_pub": false,
+                  "selection": "",
+                  "region": null,
+                  "extent": {
+                    "type": "Feature",
+                    "properties": {
+                      "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                      "name": "test"
+                    },
+                    "geometry": {
+                      "type": "Polygon",
+                      "coordinates": [
+                        [
+                          [
+                            -43.248281,
+                            -22.816694
+                          ],
+                          [
+                            -43.248281,
+                            -22.812105
+                          ],
+                          [
+                            -43.242617,
+                            -22.812105
+                          ],
+                          [
+                            -43.242617,
+                            -22.816694
+                          ],
+                          [
+                            -43.248281,
+                            -22.816694
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  "tags": [
+                    {
+                      "key": "highway",
+                      "value": "path",
+                      "data_model": "HDM",
+                      "geom_types": [
+                        "line"
+                      ]
+                    }
+                  ],
+                  "include_zipfile": false
+                }
+
+        * Raises: ValidationError: in case of validation errors.
+        ** returns: Not 202
         """
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             """Get the required data from the validated request."""
 
             export_providers = request.data.get('export_providers', [])
             provider_tasks = request.data.get('provider_tasks', [])
-            # selection = request.data.get('geojson', '{}')
             tags = request.data.get('tags')
             preset = request.data.get('preset')
             translation = request.data.get('translation')
@@ -209,7 +281,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         ep['user'] = request.user.id
                     provider_serializer = ExportProviderSerializer(
                         data=export_providers,
-                        many=True
+                        many=True,
+                        context={'request': request}
                     )
                     if provider_serializer.is_valid():
                         provider_serializer.save()
@@ -307,10 +380,9 @@ class RunJob(views.APIView):
         Creates an instance of the TaskFactory and
         calls run_task on it, passing the job_uid and user.
 
-        Args:
-            the http request
+        *request: the http request
 
-        Returns:
+        *Returns:
             the serialized run data.
         """
         job_uid = request.query_params.get('job_uid', None)
@@ -346,8 +418,6 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ###ExportFormat API endpoint.
-
     Endpoint exposing the supported export formats.
     """
     serializer_class = ExportProviderSerializer
@@ -365,8 +435,6 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ###Region API endpoint.
-
     Endpoint exposing the supported regions.
     """
     serializer_class = RegionSerializer
@@ -377,8 +445,6 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ###Region Mask API Endpoint.
-
     Return a MULTIPOLYGON representing the mask of the
     HOT Regions as a GeoJSON Feature Collection.
     """
@@ -389,9 +455,8 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportRunViewSet(viewsets.ModelViewSet):
     """
-    ###Export Run API Endpoint.
-
     Provides an endpoint for querying export runs.
+
     Export runs for a particular job can be filtered by status by appending one of
     `COMPLETED`, `SUBMITTED`, `INCOMPLETE` or `FAILED` as the value of the `STATUS` parameter:
     `/api/runs?job_uid=a_job_uid&status=STATUS`
@@ -401,6 +466,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
+    search_fields = ('job__uid', )
 
     def get_queryset(self):
         return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True)).order_by('-started_at')
@@ -413,10 +479,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         associated ExportRun.
 
         Args:
-            request: the http request.
-            uid: the run uid.
 
-        Returns:
+            *request: the http request.
+
+            *uid: the run uid.
+
+        *Returns:
             the serialized run data.
         """
         queryset = self.get_queryset().filter(uid=uid)
@@ -430,11 +498,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         Gets the job_uid from the request and returns run data for the
         associated Job.
 
-        Args:
-            the http request.
+        * request: the http request.
 
-        Returns:
-            the serialized run data.
+        * Returns: the serialized run data.
         """
         job_uid = self.request.query_params.get('job_uid', None)
         if job_uid:
@@ -479,13 +545,10 @@ class ExportConfigViewSet(viewsets.ModelViewSet):
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ###ExportTask API endpoint.
-
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportTaskSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    # queryset = ExportTask.objects.all()
     lookup_field = 'uid'
 
     def get_queryset(self):
@@ -512,8 +575,6 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportProviderTaskViewSet(viewsets.ModelViewSet):
     """
-    ###ExportTask API endpoint.
-
     Provides List and Retrieve endpoints for ExportTasks.
     """
     serializer_class = ExportProviderTaskSerializer

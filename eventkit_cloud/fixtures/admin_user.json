@@ -1,6 +1,5 @@
 [
     {
-        "pk": 1,
         "model": "auth.User",
         "fields": {
             "is_staff": true,

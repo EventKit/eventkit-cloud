@@ -3,7 +3,7 @@ appdirs==1.4.1
 Babel==2.3.4
 backports.ssl-match-hostname==3.5.0.1
 beautifulsoup4==4.5.3
-billiard==3.5.0.2
+git+git://github.com/ikalnytskyi/billiard@acbcbf57e2dd9b75850af701becd9e51f0bd3833#egg=billiard
 boto3==1.4.4
 botocore==1.5.22
 celery==4.0.2
@@ -42,7 +42,7 @@ jsonfield==2.0.1
 kombu==4.0.2
 librabbitmq==1.6.1
 lxml==3.7.3
-MapProxy==1.10.0a0.post20170309
+git+git://github.com/mapproxy/mapproxy.git@b883029506bb30c20537bce5130c3e94890a060d#egg=MapProxy
 Markdown==2.6.8
 MarkupSafe==1.0
 mccabe==0.6.1

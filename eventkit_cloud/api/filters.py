@@ -48,6 +48,7 @@ class JobFilter(django_filters.FilterSet):
 class ExportRunFilter(django_filters.FilterSet):
     """Filter export runs by status."""
     status = django_filters.CharFilter(name="status", lookup_expr="icontains")
+    job_uid = django_filters.CharFilter(name="job__uid", lookup_expr="exact")
 
     class Meta:
         model = ExportRun

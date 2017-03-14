@@ -6,29 +6,35 @@ from mock import Mock, patch
 from django.test import TransactionTestCase
 
 from ..pbf import OSMToPBF
+from uuid import uuid4
+import os
 
 logger = logging.getLogger(__name__)
 
 
 class TestOSMToPBF(TransactionTestCase):
 
-    @patch('eventkit_cloud.tasks.models.ExportTask')
+    def setUp(self, ):
+        self.task_process_patcher = patch('eventkit_cloud.utils.pbf.TaskProcess')
+        self.task_process = self.task_process_patcher.start()
+        self.addCleanup(self.task_process_patcher.stop)
+        self.task_uid = uuid4()
+
     @patch('os.path.exists')
-    @patch('eventkit_cloud.utils.pbf.subprocess.PIPE')
-    @patch('eventkit_cloud.utils.pbf.subprocess.Popen')
-    def test_convert(self, popen, pipe, exists, export_task):
+    def test_convert(self, exists):
         osm = '/path/to/sample.osm'
         pbffile = '/path/to/sample.pbf'
         convert_cmd = 'osmconvert {0} --out-pbf >{1}'.format(osm, pbffile)
-        proc = Mock()
         exists.return_value = True
-        popen.return_value = proc
-        proc.communicate.return_value = (Mock(), Mock())
-        proc.wait.return_value = 0
-        o2p = OSMToPBF(osm=osm, pbffile=pbffile)
+        self.task_process.return_value = Mock(exitcode=0)
+        o2p = OSMToPBF(osm=osm, pbffile=pbffile, task_uid=self.task_uid)
         out = o2p.convert()
-        export_task.assert_called_once()
+        self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(osm)
-        popen.assert_called_once_with(convert_cmd, shell=True, executable='/bin/bash',
-                                stdout=pipe, stderr=pipe)
+        self.task_process().start_process.assert_called_once_with(convert_cmd, executable='/bin/bash', shell=True, stderr=-1,
+                                                                  stdout=-1)
         self.assertEquals(out, pbffile)
+
+        self.task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            o2p.convert()

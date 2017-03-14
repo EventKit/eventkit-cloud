@@ -98,15 +98,15 @@ class OSMParser(object):
                                                                               'spatial_index.sql')})
         if (self.debug):
             print 'Running: %s' % sql_cmd
-        proc = subprocess.Popen(sql_cmd, shell=True, executable='/bin/bash',
+
+        task_process = TaskProcess(task_uid=self.task_uid)
+        task_process.start_process(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate()
-        returncode = proc.wait()
-        if returncode != 0:
-            logger.error('%s', stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, returncode)
+        if task_process.exitcode != 0:
+            logger.error('%s', task_process.stderr)
+            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode)
         if self.debug:
-            print 'spatialite returned: %s' % returncode
+            print 'spatialite returned: %s' % task_process.exitcode
 
     def update_zindexes(self, ):
         """
