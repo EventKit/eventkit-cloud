@@ -450,7 +450,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None, **kwargs):
         """
         Run export tasks.
 

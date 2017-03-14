@@ -270,6 +270,7 @@ class SimpleJobSerializer(serializers.Serializer):
 
     uid = serializers.SerializerMethodField()
     name = serializers.CharField()
+    event = serializers.CharField()
     description = serializers.CharField()
     url = serializers.HyperlinkedIdentityField(
         view_name='api:jobs-detail',
@@ -277,6 +278,7 @@ class SimpleJobSerializer(serializers.Serializer):
     )
     extent = serializers.SerializerMethodField()
     selection = serializers.CharField()
+    published = serializers.BooleanField()
 
     @staticmethod
     def get_uid(obj):

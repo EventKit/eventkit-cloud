@@ -13,10 +13,21 @@ export function drawerMenuReducer(state = initialState.drawerOpen, action) {
     }
 }
 
-export function exportJobsReducer(state = initialState.jobs, action) {
+export function stepperReducer(state = initialState.stepperNextEnabled, action) {
     switch(action.type) {
-        case types.LOAD_JOBS_SUCCESS:
-            return action.jobs;
+        case types.MAKE_STEPPER_ACTIVE:
+            return true;
+        case types.MAKE_STEPPER_INACTIVE:
+            return false;
+        default:
+            return state;
+    }
+}
+
+export function startExportPackageReducer(state = initialState.setExportPackageFlag, action) {
+    switch(action.type) {
+        case types.EXPORT_INFO_DONE:
+            return true;
         default:
             return state;
     }
@@ -58,5 +69,34 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
             };
         default:
             return state;
+    }
+}
+
+export function exportInfoReducer(state = initialState.exportInfo, action) {
+    switch(action.type) {
+        case types.UPDATE_EXPORT_INFO:
+            return {
+                exportName: action.exportName,
+                datapackDescription: action.datapackDescription,
+                projectName: action.projectName,
+                makePublic: action.makePublic,
+                providers: action.providers,
+                area_str: action.area_str,
+                layers: action.layers,
+            };
+        default:
+            return state;
+    }
+}
+
+export function getProvidersReducer(state = initialState.providers, action ) {
+    console.log(state, action);
+    switch (action.type) {
+        case types.GETTING_PROVIDERS:
+            return  []
+        case types.PROVIDERS_RECEIVED:
+            return action.providers
+        default:
+            return state
     }
 }

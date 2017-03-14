@@ -1,13 +1,87 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
+import {getRuns} from '../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar'
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import DatePicker from 'material-ui/DatePicker';
+import RaisedButton from 'material-ui/RaisedButton';
 import { Grid, Row, Col } from 'react-flexbox-grid/lib/index'
 import * as exportActions from '../actions/exportsActions';
-import JobList from './JobList';
+import DataPackList from './DataPackList';
 import primaryStyles from '../styles/constants.css'
-
+import sortBy from 'lodash/sortBy';
+import filter from 'lodash/filter';
+import DataPackSearchbar from './DataPackSearchbar';
 
 class Exports extends React.Component {
+
+    constructor(props) {
+        super(props);
+        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
+        this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
+        this.state = {
+            runs: [],
+            filteredRuns: [],
+            searchbarWidth: '',
+            dataPackButtonFontSize: '',
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.runsList.fetched == true) {
+            let runsUnsorted = nextProps.runsList.runs;
+            let runsSorted = sortBy(runsUnsorted, [function(o) {return o.user;}]);
+            this.setState({runs: runsUnsorted});
+            this.setState({filteredRuns: runsSorted});
+        }
+    }
+
+    componentWillMount() {
+        this.screenSizeUpdate();
+        this.props.getRuns();
+        window.addEventListener('resize', this.screenSizeUpdate);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.screenSizeUpdate);
+    }
+
+    screenSizeUpdate() {
+        if(window.innerWidth <= 750) {
+            this.setState({searchbarWidth: '200px'});
+            this.setState({dataPackButtonFontSize: '10px'});
+        }
+        else if (window.innerWidth <= 900) {
+            this.setState({searchbarWidth: '300px'});
+            this.setState({dataPackButtonFontSize: '13px'});
+        }
+        else if (window.innerWidth <= 1000) {
+            this.setState({searchbarWidth: '400px'});
+            this.setState({dataPackButtonFontSize: '13px'});
+        }
+        else {
+            this.setState({searchbarWidth: '500px'});
+            this.setState({dataPackButtonFontSize: '14px'});
+        }
+    }
+
+    handleSearch(searchText, ix) {
+        const query = searchText.toUpperCase();
+        let searched = filter(this.state.runs, function(o) {
+            if(o.job.name.toUpperCase().includes(query)) { return true}
+            if(o.job.description.toUpperCase().includes(query)) {return true}
+            if(o.job.event.toUpperCase().includes(query)) {return true}
+        });
+        this.setState({filteredRuns: searched});
+    }
+
+    checkForEmptySearch(searchText, dataSource, params) {
+        if(searchText == '') {
+            this.setState({filteredRuns: this.state.runs});
+        }
+    }
+
     render() {
 
         const pageTitle = "DataPack Library"
@@ -26,27 +100,48 @@ class Exports extends React.Component {
                 fontSize: '14px',
                 marginTop: '25px'
             },
+            toolbarCommon: {
+                backgroundColor: '#253447',
+                
+            },
+            toolbarTitleCommon: {
+                color: '#4598bf',
+            },
+            separator: {
+                marginLeft: '12px', 
+                marginRight: '12px', 
+                backgroundColor: '#161e2e',
+                opacity: '0.7',
+            },
         };
-        //const jobs = this.props.jobs;
-        let jobs = []
-        jobs[0]  = {uid: '33434', name: 'Export number 1', date: '1/1/2016'}
-        jobs[1]  = {uid: '33435', name: 'Export number 2', date: '1/1/2016'}
-        jobs[2]  = {uid: '33436', name: 'Export number 3', date: '1/1/2016'}
-        jobs[3]  = {uid: '33437', name: 'Export number 4', date: '1/1/2016'}
-        jobs[4]  = {uid: '33438', name: 'Export number 5', date: '1/1/2016'}
-        jobs[5]  = {uid: '33439', name: 'Export number 6', date: '1/1/2016'}
-        jobs[6]  = {uid: '33430', name: 'Export number 7', date: '1/1/2016'}
 
         return (
         <div>
-
-
             <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
                     iconElementLeft={<p></p>}
             />
+            <Toolbar style={styles.toolbarCommon}>
+                <ToolbarGroup style={{margin: 'auto'}}>
+                    <DataPackSearchbar
+                        onSearchChange={this.checkForEmptySearch}
+                        onSearchSubmit={this.handleSearch}
+                        searchbarWidth={this.state.searchbarWidth} 
+                    />
+                    <ToolbarSeparator style={styles.separator}/>
+                    <RaisedButton 
+                        label={"Create DataPack"}
+                        primary={true}
+                        href={'/create'}
+                        labelStyle={{fontSize: this.state.dataPackButtonFontSize, paddingLeft: '10px', paddingRight: '10px'}}
+                        style={{margin: '10px 0px', minWidth: '50px'}}
+                    >
+                    </RaisedButton>
+                </ToolbarGroup>
+            </Toolbar>
+            
             <div className={styles.wholeDiv}>
                 <div>
-                    <JobList jobs={jobs} />
+                    <DataPackList runs={this.state.filteredRuns} user={this.props.user} />
                 </div>
 
                 <div >
@@ -63,13 +158,25 @@ class Exports extends React.Component {
 
 
 Exports.propTypes = {
-    jobs: PropTypes.array.isRequired
+    runsList: PropTypes.object,
 };
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
     return {
-        jobs: state.jobs
+        runsList: state.runsList,
+        user: state.user,
     };
 }
 
-export default connect(mapStateToProps)(Exports);
+function mapDispatchToProps(dispatch) {
+    return {
+        getRuns: () => {
+            dispatch(getRuns());
+        }
+    }
+}
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(Exports);
