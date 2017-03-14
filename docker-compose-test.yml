@@ -17,6 +17,7 @@ services:
         - SITE_NAME
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
+        - MEMCACHED=memcached:11211
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -46,6 +47,20 @@ services:
         - CONCURRENCY=1
         - MAPPROXY_CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
+  celery-beat:
+      extends:
+        service: base
+      depends_on:
+        - postgis
+        - rabbitmq
+        - celery
+        - eventkit
+      links:
+        - postgis
+        - rabbitmq
+      environment:
+        - CONCURRENCY=1
+      command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
     environment:
@@ -64,16 +79,18 @@ services:
      build:
        context: .
        dockerfile: config/Dockerfile_httpd
-     depends_on:
-        - eventkit
-     links:
-        - eventkit
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
+     links:
+        - eventkit
+        - webpack
      ports:
         - "80:80"
+     environment:
+        - SITE_NAME=${SITE_NAME}
+        - LOG_LEVEL=warn
   webpack:
       build:
         context: .
