@@ -17,7 +17,7 @@ services:
         - SITE_NAME
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
-        - MEMCACHED=memcached:11211
+#        - MEMCACHED=memcached:11211
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'
@@ -72,9 +72,9 @@ services:
     volumes:
             - "postgis_database:/var/lib/postgresql/data"
   rabbitmq:
-     image: rabbitmq:3.6.6-management
-     expose:
-       - "5672"
+       image: rabbitmq:3.6.6-management
+       expose:
+        - "5672"
   httpd:
      build:
        context: .
@@ -84,26 +84,26 @@ services:
        - ./exports_download:/var/lib/eventkit/exports_download
      image: httpd:2.4.23
      links:
-        - eventkit
-        - webpack
+       - eventkit
+       - webpack
      ports:
-        - "80:80"
-        - "9229:9229"
+       - "80:80"
+       - "9229:9229"
      environment:
-        - SITE_NAME=${SITE_NAME}
-        - LOG_LEVEL=warn
+       - SITE_NAME=${SITE_NAME}
+       - LOG_LEVEL=warn
   webpack:
-      build:
-        context: .
-        dockerfile: config/Dockerfile_webpack
-      volumes:
-        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-      ports:
+     build:
+       context: .
+       dockerfile: config/Dockerfile_webpack
+     volumes:
+       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
+     ports:
         - "8080:8080"
-      expose:
+     expose:
         - "9229"
         - "50000-60000"
-      extra_hosts:
+     extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
 volumes:
     postgis_database:
