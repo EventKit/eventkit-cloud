@@ -88,6 +88,7 @@ services:
         - webpack
      ports:
         - "80:80"
+        - "9229:9229"
      environment:
         - SITE_NAME=${SITE_NAME}
         - LOG_LEVEL=warn
