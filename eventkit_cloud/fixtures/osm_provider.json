@@ -13,7 +13,7 @@
 	},{
 		"model" : "jobs.exportprovider",
 		"fields" : {
-			"name" : "OpenStreetMap Data",
+			"name" : "OpenStreetMap Data (Themes)",
 			"slug" : "osm",
 			"url" : "",
 			"layer" : null,

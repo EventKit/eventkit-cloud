@@ -73,19 +73,16 @@ STATICFILES_DIRS = (
 )
 
 # default middleware classes
-MIDDLEWARE_CLASSES = [
-    # 'django.middleware.gzip.GZipMiddleware',
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'social.apps.django_app.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'eventkit_cloud.urls'
@@ -117,8 +114,5 @@ STATICFILES_FINDERS = (
 )
 
 AUTHENTICATION_BACKENDS = (
-    'social.backends.openstreetmap.OpenStreetMapOAuth',
-    'social.backends.email.EmailAuth',
-    'social.backends.username.UsernameAuth',
     'django.contrib.auth.backends.ModelBackend',
 )

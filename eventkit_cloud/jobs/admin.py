@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.template import RequestContext
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
@@ -83,11 +83,11 @@ class JobAdmin(OSMGeoAdmin):
 
     def get_urls(self):
         urls = super(JobAdmin, self).get_urls()
-        update_urls = patterns('',
-                               url(r'^select/$', self.admin_site.admin_view(self.select_exports)),
-                               url(r'^update/$', self.admin_site.admin_view(self.update_exports),
-                                   name="update_regions"),
-                               )
+        update_urls = [
+            url(r'^select/$', self.admin_site.admin_view(self.select_exports)),
+            url(r'^update/$', self.admin_site.admin_view(self.update_exports),
+                name="update_regions"),
+                         ]
         return update_urls + urls
 
 

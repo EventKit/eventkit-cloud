@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+from uuid import uuid4
 
 from mock import Mock, patch
 
@@ -15,54 +16,52 @@ class TestGPKGToKml(TransactionTestCase):
 
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
+        self.task_process_patcher = patch('eventkit_cloud.utils.kml.TaskProcess')
+        self.task_process = self.task_process_patcher.start()
+        self.addCleanup(self.task_process_patcher.stop)
+        self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.tasks.models.ExportTask')
     @patch('os.path.exists')
-    @patch('subprocess.PIPE')
-    @patch('subprocess.Popen')
-    def test_convert(self, popen, pipe, exists, export_task):
+    def test_convert(self, exists):
         gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
         cmd = "ogr2ogr -f 'KML' {0} {1}".format(kmlfile, gpkg)
         exists.return_value = True
-        proc = Mock()
-        popen.return_value = proc
-        proc.communicate.return_value = (Mock(), Mock())
-        proc.wait.return_value = 0
+        self.task_process.return_value = Mock(exitcode=0)
         # set zipped to False for testing
         s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile,
-                          zipped=False, debug=False)
-        exists.assert_called_once_with(gpkg)
+                        zipped=False, debug=False, task_uid=self.task_uid)
         out = s2k.convert()
-        export_task.assert_called_once()
-        popen.assert_called_once_with(cmd, shell=True, executable='/bin/bash',
-                                stdout=pipe, stderr=pipe)
-        proc.communicate.assert_called_once()
-        proc.wait.assert_called_once()
+        self.task_process.assert_called_once_with(task_uid=self.task_uid)
+        exists.assert_called_once_with(gpkg)
+        self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1,
+                                                                  stdout=-1)
         self.assertEquals(out, kmlfile)
 
-    @patch('eventkit_cloud.tasks.models.ExportTask')
+        self.task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            s2k.convert()
+
     @patch('os.path.exists')
     @patch('os.remove')
-    @patch('subprocess.PIPE')
-    @patch('subprocess.Popen')
-    def test_zip_kml_file(self, popen, pipe, remove, exists, export_task):
+    def test_zip_kml_file(self, remove, exists):
         gpkg = '/path/to/query.gpkg'
         kmlfile = '/path/to/query.kml'
         zipfile = '/path/to/query.kmz'
         zip_cmd = "zip -j {0} {1}".format(zipfile, kmlfile)
         exists.return_value = True
-        proc = Mock()
-        popen.return_value = proc
-        proc.communicate.return_value = (Mock(), Mock())
-        proc.wait.return_value = 0
+        self.task_process.return_value = Mock(exitcode=0)
         s2k = GPKGToKml(gpkg=gpkg, kmlfile=kmlfile,
-                          zipped=False, debug=False)
-        result = s2k._zip_kml_file()
-        export_task.assert_called_once()
+                        zipped=True, debug=False, task_uid=self.task_uid)
+        out = s2k._zip_kml_file()
+        self.task_process.assert_called_with(task_uid=self.task_uid)
         exists.assert_called_once_with(gpkg)
-        # test subprocess getting called with correct command
-        popen.assert_called_once_with(zip_cmd, shell=True, executable='/bin/bash',
-                                stdout=pipe, stderr=pipe)
         remove.assert_called_once_with(kmlfile)
-        self.assertEquals(result, zipfile)
+        self.task_process().start_process.assert_called_once_with(zip_cmd, executable='/bin/bash', shell=True,
+                                                                  stderr=-1,
+                                                                  stdout=-1)
+        self.assertEquals(out, zipfile)
+
+        self.task_process.return_value = Mock(exitcode=1)
+        with self.assertRaises(Exception):
+            s2k.convert()

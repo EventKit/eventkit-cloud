@@ -36,15 +36,13 @@ if os.environ.get('LDAP_SERVER_URI'):
 # Set debug to True for development
 DEBUG = os.environ.get('DEBUG', False)
 
-if not DEBUG:
-    ALLOWED_HOSTS = [HOSTNAME]
+ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 
 LOGGING_OUTPUT_ENABLED = DEBUG
 LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
-
 )
 
 DATABASES = {}
@@ -58,7 +56,6 @@ DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -69,11 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.core.context_processors.i18n',
-                'django.core.context_processors.media',
                 'django.contrib.messages.context_processors.messages',
-                'social.apps.django_app.context_processors.backends',
-                'social.apps.django_app.context_processors.login_redirect',
                 'django_classification_banner.context_processors.classification',
             ],
             'debug': DEBUG
@@ -120,8 +113,6 @@ AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 
 
-## WARNINGS ARE SUPPRESSED, PLEASE REVIEW PRIOR TO UPGRADING
-# http://stackoverflow.com/questions/29562070/how-to-suppress-the-deprecation-warnings-in-django
 
 LOGGING = {
     'version': 1,

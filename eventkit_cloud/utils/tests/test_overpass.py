@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from unittest import skip
 
 import mock
 from mock import patch, Mock

@@ -14,16 +14,16 @@ logger = logging.getLogger(__name__)
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""
-    name = django_filters.CharFilter(name="name", lookup_type="icontains")
-    description = django_filters.CharFilter(name="description", lookup_type="icontains")
-    event = django_filters.CharFilter(name="event", lookup_type="icontains")
-    start = django_filters.DateTimeFilter(name="created_at", lookup_type="gte")
-    end = django_filters.DateTimeFilter(name="created_at", lookup_type="lte")
+    name = django_filters.CharFilter(name="name", lookup_expr="icontains")
+    description = django_filters.CharFilter(name="description", lookup_expr="icontains")
+    event = django_filters.CharFilter(name="event", lookup_expr="icontains")
+    start = django_filters.DateTimeFilter(name="created_at", lookup_expr="gte")
+    end = django_filters.DateTimeFilter(name="created_at", lookup_expr="lte")
     region = django_filters.CharFilter(name="region__name")
-    user = django_filters.CharFilter(name="user__username", lookup_type="exact")
-    feature = django_filters.CharFilter(name="tags__name", lookup_type="icontains")
-    published = django_filters.BooleanFilter(name="published", lookup_type="exact")
-    user_private = django_filters.MethodFilter(action='user_private_filter')
+    user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
+    feature = django_filters.CharFilter(name="tags__name", lookup_expr="icontains")
+    published = django_filters.BooleanFilter(name="published", lookup_expr="exact")
+    user_private = django_filters.CharFilter(method='user_private_filter')
 
     class Meta:
         model = Job
@@ -47,7 +47,8 @@ class JobFilter(django_filters.FilterSet):
 
 class ExportRunFilter(django_filters.FilterSet):
     """Filter export runs by status."""
-    status = django_filters.CharFilter(name="status", lookup_type="icontains")
+    status = django_filters.CharFilter(name="status", lookup_expr="icontains")
+    job_uid = django_filters.CharFilter(name="job__uid", lookup_expr="exact")
 
     class Meta:
         model = ExportRun
@@ -57,13 +58,13 @@ class ExportRunFilter(django_filters.FilterSet):
 
 class ExportConfigFilter(django_filters.FilterSet):
     """Filter export configurations."""
-    name = django_filters.CharFilter(name="name", lookup_type="icontains")
-    config_type = django_filters.CharFilter(name="config_type", lookup_type="icontains")
-    start = django_filters.DateTimeFilter(name="created_at", lookup_type="gte")
-    end = django_filters.DateTimeFilter(name="created_at", lookup_type="lte")
-    user = django_filters.CharFilter(name="user__username", lookup_type="exact")
-    published = django_filters.BooleanFilter(name="published", lookup_type="exact")
-    user_private = django_filters.MethodFilter(action='user_private_filter')
+    name = django_filters.CharFilter(name="name", lookup_expr="icontains")
+    config_type = django_filters.CharFilter(name="config_type", lookup_expr="icontains")
+    start = django_filters.DateTimeFilter(name="created_at", lookup_expr="gte")
+    end = django_filters.DateTimeFilter(name="created_at", lookup_expr="lte")
+    user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
+    published = django_filters.BooleanFilter(name="published", lookup_expr="exact")
+    user_private = django_filters.CharFilter(method='user_private_filter')
 
     class Meta:
         model = ExportConfig

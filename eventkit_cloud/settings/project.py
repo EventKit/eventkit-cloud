@@ -20,7 +20,8 @@ INSTALLED_APPS += (
 
 INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/login'
+LOGOUT_URL = '/logout'
 
 EXPORT_TASKS = {
     'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',

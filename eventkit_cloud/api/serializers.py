@@ -431,6 +431,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
         model = ExportProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
+        fields = '__all__'
 
     @staticmethod
     def create(validated_data, **kwargs):

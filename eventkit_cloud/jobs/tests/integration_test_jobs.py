@@ -124,7 +124,7 @@ class TestJob(TestCase):
                     "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
                     "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_sqlite(self):
@@ -147,7 +147,7 @@ class TestJob(TestCase):
                     "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
                     "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["sqlite"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_shp(self):
@@ -169,7 +169,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
                     "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["shp"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_osm_kml(self):
@@ -191,7 +191,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
                     "ymax": self.bbox[3], "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["kml"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wms_gpkg(self):
@@ -292,7 +292,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-OSM-CLIP", "description": "Test Description",
                     "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
                     "ymax": self.bbox[3], "selection": json.dumps(geojson), "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_wms_geojson(self):
@@ -319,7 +319,7 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "OpenStreetMap Data (Generic)",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data",
+                                                   {"provider": "OpenStreetMap Data (Themes)",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wmts",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
@@ -344,7 +344,7 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "OpenStreetMap Data (Generic)",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data",
+                                                   {"provider": "OpenStreetMap Data (Themes)",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wmts",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},

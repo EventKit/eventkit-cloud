@@ -91,7 +91,7 @@ class TestEmailNotifications(TestCase):
         send_warning_email(now, url, addr)
         alternatives.assert_called_once_with("Your Eventkit Data Pack is set to expire.",
                                                  text, to=[addr], from_email='Eventkit Team <eventkit.team@gmail.com>')
-        alternatives.send.assert_called_once()
+        alternatives().send.assert_called_once()
 
 
 
