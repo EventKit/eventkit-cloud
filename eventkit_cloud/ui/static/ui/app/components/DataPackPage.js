@@ -1,19 +1,19 @@
-import React, {PropTypes} from 'react'
-import {connect} from 'react-redux'
+import React, {PropTypes} from 'react';
+import {connect} from 'react-redux';
 import {getRuns} from '../actions/DataPackListActions';
-import AppBar from 'material-ui/AppBar'
+import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
-import { Grid, Row, Col } from 'react-flexbox-grid/lib/index'
 import * as exportActions from '../actions/exportsActions';
 import DataPackList from './DataPackList';
 import primaryStyles from '../styles/constants.css'
 import sortBy from 'lodash/sortBy';
 import filter from 'lodash/filter';
 import DataPackSearchbar from './DataPackSearchbar';
+import { Link } from 'react-router';
 
-class Exports extends React.Component {
+export class DataPackPage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -23,7 +23,6 @@ class Exports extends React.Component {
         this.state = {
             runs: [],
             filteredRuns: [],
-            searchbarWidth: '',
             dataPackButtonFontSize: '',
         }
     }
@@ -49,19 +48,15 @@ class Exports extends React.Component {
 
     screenSizeUpdate() {
         if(window.innerWidth <= 750) {
-            this.setState({searchbarWidth: '200px'});
             this.setState({dataPackButtonFontSize: '10px'});
         }
         else if (window.innerWidth <= 900) {
-            this.setState({searchbarWidth: '300px'});
             this.setState({dataPackButtonFontSize: '13px'});
         }
         else if (window.innerWidth <= 1000) {
-            this.setState({searchbarWidth: '400px'});
             this.setState({dataPackButtonFontSize: '13px'});
         }
         else {
-            this.setState({searchbarWidth: '500px'});
             this.setState({dataPackButtonFontSize: '14px'});
         }
     }
@@ -98,11 +93,9 @@ class Exports extends React.Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
-                marginTop: '25px'
             },
             toolbarCommon: {
                 backgroundColor: '#253447',
-                
             },
             toolbarTitleCommon: {
                 color: '#4598bf',
@@ -113,29 +106,42 @@ class Exports extends React.Component {
                 backgroundColor: '#161e2e',
                 opacity: '0.7',
             },
+            createDataPackStyle: {
+                margin: '0px', 
+                minWidth: '50px', 
+                height: '35px', 
+                borderRadius: '0px'
+            },
+            createDataPackLabel: {
+                fontSize: this.state.dataPackButtonFontSize,
+                paddingLeft: '30px', 
+                paddingRight: '30px', 
+                lineHeight: '35px'
+            },
         };
 
         return (
         <div>
             <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
-                    iconElementLeft={<p></p>}
-            />
-            <Toolbar style={styles.toolbarCommon}>
-                <ToolbarGroup style={{margin: 'auto'}}>
-                    <DataPackSearchbar
-                        onSearchChange={this.checkForEmptySearch}
-                        onSearchSubmit={this.handleSearch}
-                        searchbarWidth={this.state.searchbarWidth} 
-                    />
-                    <ToolbarSeparator style={styles.separator}/>
+                    iconElementLeft={<p></p>}>
+                <Link to={'/create'}>
                     <RaisedButton 
                         label={"Create DataPack"}
                         primary={true}
-                        href={'/create'}
-                        labelStyle={{fontSize: this.state.dataPackButtonFontSize, paddingLeft: '10px', paddingRight: '10px'}}
-                        style={{margin: '10px 0px', minWidth: '50px'}}
-                    >
-                    </RaisedButton>
+                        labelStyle={styles.createDataPackLabel}
+                        style={styles.createDataPackStyle}
+                        buttonStyle={{borderRadius: '0px'}}
+                        overlayStyle={{borderRadius: '0px'}}
+                    />
+                </Link>
+            </AppBar>
+            <Toolbar style={styles.toolbarCommon}>
+                <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
+                    <DataPackSearchbar
+                        onSearchChange={this.checkForEmptySearch}
+                        onSearchSubmit={this.handleSearch}
+                        searchbarWidth={'100%'} 
+                    />
                 </ToolbarGroup>
             </Toolbar>
             
@@ -157,8 +163,10 @@ class Exports extends React.Component {
 }
 
 
-Exports.propTypes = {
-    runsList: PropTypes.object,
+DataPackPage.propTypes = {
+    runsList: PropTypes.object.isRequired,
+    user: PropTypes.object.isRequired,
+    getRuns: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -179,4 +187,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Exports);
+)(DataPackPage);

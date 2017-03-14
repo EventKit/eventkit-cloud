@@ -33,7 +33,7 @@ export class DataPackList extends Component {
         if(window.innerWidth <= 800) {
             this.setState({cols: 1});
         }
-        else if(window.innerWidth > 1300) {
+        else if(window.innerWidth > 1200) {
             this.setState({cols: 3});
         }
         else {
@@ -48,13 +48,14 @@ export class DataPackList extends Component {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginTop: '10px',
-                marginLeft: '10px',
-                marginRight: '10px',
+                marginTop: '20px',
+                marginLeft: '20px',
+                marginRight: '20px',
             },
             gridList: {
                 border: '1px',
-                width: '80%',
+                width: '100%',
+                margin: '0px',
                 height: 'auto',
             },
         };

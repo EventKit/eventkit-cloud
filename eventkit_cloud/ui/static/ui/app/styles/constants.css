@@ -55,7 +55,6 @@ p.heading {
     font-size: 18px !important;
     line-height: 30px !important;
     height: 25px !important;
+    padding-left: 10px;
 }
-.sectionTitle > div {
-    margin-top: -8px !important;
-}
+

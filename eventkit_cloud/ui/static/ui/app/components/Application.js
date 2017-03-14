@@ -86,7 +86,7 @@ export class Application extends Component {
             <MuiThemeProvider>
                 <div className={styles.root}>
                     <ClassificationBanner />
-                    <header className="header">
+                    <header className="header" style={{height: '95px'}}>
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
                         <Drawer className={css.drawer}
                                 containerStyle={styles.drawer}

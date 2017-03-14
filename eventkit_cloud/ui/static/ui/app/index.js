@@ -9,7 +9,7 @@ import LoginPage from './components/auth/LoginPage'
 import Loading from './components/auth/Loading'
 import Logout from './containers/logoutContainer'
 import About from './components/About'
-import Exports from './components/Exports'
+import DataPackPage from './components/DataPackPage'
 import Export from './components/Export'
 import CreateExport from './components/CreateExport'
 import ExportAOI from './components/ExportAOI'
@@ -45,7 +45,7 @@ render(
             <Route path="/" component={Application}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
-                    <Route path="/exports" component={UserIsAuthenticated(Exports)}>
+                    <Route path="/exports" component={UserIsAuthenticated(DataPackPage)}>
                         <Route path="/export/:uid" component={UserIsAuthenticated(Export)}/>
                     </Route>
                     <Route path="/create" component={UserIsAuthenticated(CreateExport)}>

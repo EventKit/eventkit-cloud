@@ -19,7 +19,7 @@ describe('DataPackSearchbar component', () => {
         const wrapper = mount(<MuiThemeProvider><DataPackSearchbar {...props}/></MuiThemeProvider>);
         expect(wrapper.find(AutoComplete)).to.have.length(1);
         expect(wrapper.find('.autoComplete')).to.have.length(1);
-        expect(wrapper.find('.autoComplete').children().first().text()).to.equal('Search exports');
+        expect(wrapper.find('.autoComplete').children().first().text()).to.equal('Search DataPacks');
     });
 
     it('should call onSearchChange', () => {
