@@ -68,7 +68,11 @@ export class DataPackList extends Component {
                     cols={this.state.cols}
                 >
                     {this.props.runs.map((run) => (
-                        <DataPackItem run={run} user={this.props.user} key={run.uid}/>
+                        <DataPackItem 
+                            run={run} 
+                            user={this.props.user} 
+                            key={run.uid}
+                            onRunDelete={this.props.onRunDelete}/>
                     ))}
                 </GridList>
             </div>
@@ -79,6 +83,7 @@ export class DataPackList extends Component {
 DataPackList.propTypes = {
     runs: PropTypes.array.isRequired,
     user: PropTypes.object.isRequired,
+    onRunDelete: PropTypes.func.isRequired,
 };
 
 export default DataPackList;

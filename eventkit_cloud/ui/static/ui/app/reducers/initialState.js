@@ -44,6 +44,11 @@ export default {
         runs: [],
         error: null,
     },
+    runsDeletion: {
+        deleting: false,
+        deleted: false,
+        error: null,
+    },
     exportInfo: {
         exportName: '',
         datapackDescription: '',
