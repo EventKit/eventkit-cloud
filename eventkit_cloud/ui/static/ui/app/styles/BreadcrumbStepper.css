@@ -160,6 +160,20 @@
 .forwardButtonDiv > button:not([disabled]) {
     background-color: #55ba63 !important;
 }
+.bigForwardButtonDiv {
+    color: black!important;
+    margin-right: 12px;
+    vertical-align: middle;
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+.bigForwardButtonDiv > button:not([disabled]) {
+    background-color: #55ba63 !important;
+}
+.bigForwardButtonDiv > button > div > div > i {
+    font-size: 46px!important;
+}
 
 .backButtonDiv > button {
     background-color: #161e2e !important;
