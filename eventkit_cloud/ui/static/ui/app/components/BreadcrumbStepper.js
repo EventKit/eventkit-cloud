@@ -73,16 +73,40 @@ class BreadcrumbStepper extends React.Component {
     };
 
     getStepContent(stepIndex) {
+    switch (stepIndex) {
+        case 0:
+            return <ExportAOI mode={this._mapMode}
+                              onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+        case 1:
+            return <ExportInfo providers={this.props.providers} />
+        case 2:
+            return <ExportSummary/>
+        case 3:
+            return 'return export status';
+        default:
+            return <ExportAOI mode={this._mapMode}
+                              onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+    }
+}
+    getButtonContent(stepIndex) {
         switch (stepIndex) {
             case 0:
-                return <ExportAOI mode={this._mapMode}
-                                  onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+                return <FloatingActionButton mini={true}
+                                             disabled={!this.props.stepperNextEnabled}
+                                             onTouchTap={this.handleNext}
+                                             className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
             case 1:
-                return <ExportInfo providers={this.props.providers} />
+                return <FloatingActionButton mini={true}
+                                             disabled={!this.props.stepperNextEnabled}
+                                             onTouchTap={this.handleNext}
+                                             className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
             case 2:
-                return <ExportSummary/>
+                return <FloatingActionButton mini={false}
+                                             disabled={!this.props.stepperNextEnabled}
+                                             onTouchTap={this.handleNext}
+                                             className={style.bigForwardButtonDiv}><i className="material-icons" aria-hidden="true">check</i></FloatingActionButton>
             case 3:
-                return 'return export status';
+                return <div></div>
             default:
                 return <ExportAOI mode={this._mapMode}
                                   onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
@@ -133,10 +157,7 @@ class BreadcrumbStepper extends React.Component {
                                                 disabled={stepIndex === 0}
                                                 onTouchTap={this.handlePrev}
                                                 className={style.backButtonDiv}><i className="material-icons" aria-hidden="false">arrow_back</i></FloatingActionButton>
-                            <FloatingActionButton mini={true}
-                                                disabled={!this.props.stepperNextEnabled}
-                                                onTouchTap={this.handleNext}
-                                                className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
+                            {this.getButtonContent(this.state.stepIndex)}
                         </div>
                     </div>
                 </div>
