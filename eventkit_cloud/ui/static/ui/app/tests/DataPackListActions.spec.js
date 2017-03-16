@@ -31,7 +31,7 @@ describe('DataPackList actions', () => {
 
     it('deleteRuns should dispatch deleting and deleted actions', () => {
         var mock = new MockAdapter(axios, {delayResponse: 1000});
-        mock.onGet('/api/runs').reply(200, {});
+
         mock.onDelete('/api/runs/123456789').reply(204);
         const expectedActions = [
             {type: types.DELETING_RUN},
