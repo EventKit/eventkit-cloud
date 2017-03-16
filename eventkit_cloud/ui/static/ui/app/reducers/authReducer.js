@@ -1,6 +1,6 @@
 import types from '../actions/actionTypes'
 
-const initialState = {
+export const initialState = {
   csrftoken: null
 }
 

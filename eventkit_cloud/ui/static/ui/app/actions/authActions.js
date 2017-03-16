@@ -2,9 +2,7 @@ import cookie from 'react-cookie'
 import actions from './actionTypes'
 
 
-export const setCSRF = () => {
-
-    const csrfmiddlewaretoken = cookie.load('csrftoken');
+export const setCSRF = csrfmiddlewaretoken => {
 
     return {
         type: actions.SET_CSRF,

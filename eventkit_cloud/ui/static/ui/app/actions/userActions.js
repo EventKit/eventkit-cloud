@@ -1,6 +1,5 @@
 import actions from './actionTypes'
 import 'isomorphic-fetch'
-import cookie from 'react-cookie'
 import {push} from 'react-router-redux'
 import axios from 'axios'
 
@@ -40,7 +39,6 @@ export const login = data => (dispatch, getState) => {
         data: form_data,
         headers: {"X-CSRFToken": csrftoken}
     }).then((response) => {
-        console.log(response)
         dispatch({
             type: actions.USER_LOGGED_IN,
             payload: response.data || {"ERROR": "No user response data"}
