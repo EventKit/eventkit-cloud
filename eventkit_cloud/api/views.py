@@ -14,6 +14,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.decorators import detail_route
 
 from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import (
@@ -361,46 +362,43 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-
-class RunJob(views.APIView):
-    """
-    ##Re-run Export
-
-    Re-runs an export job for the given `job_uid`: `/api/rerun?job_uid=<job_uid>`
-    """
-
-    permission_classes = (permissions.IsAuthenticated,)
-
-    @staticmethod
-    def get(request):
+    @detail_route(methods=['get','post'])
+    def run(self, request, uid=None, *args, **kwargs):
         """
-        Re-runs the job.
+        Creates the run (i.e. runs the job).
 
         Gets the job_uid and current user from the request.
         Creates an instance of the TaskFactory and
         calls run_task on it, passing the job_uid and user.
 
-        *request: the http request
+        *request:* the http request
 
-        *Returns:
-            the serialized run data.
+        *Returns:*
+            - the serialized run data.
         """
-        job_uid = request.query_params.get('job_uid', None)
-        if job_uid:
-            # run needs to be created so that the UI can be updated with the task list.
-            run_uid = create_run(job_uid=job_uid)
-            # Run is passed to celery to start the tasks.
-            run = ExportRun.objects.get(uid=run_uid)
-            if run.user != request.user and not request.user.is_superuser:
-                return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
-            if run:
-                pick_up_run_task.delay(run_uid=run_uid)
-                running = ExportRunSerializer(run, context={'request': request})
-                return Response(running.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
+        # run needs to be created so that the UI can be updated with the task list.
+        run_uid = create_run(job_uid=uid)
+        # Run is passed to celery to start the tasks.
+        run = ExportRun.objects.get(uid=run_uid)
+        if run.user != request.user and not request.user.is_superuser:
+            return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
+        if run:
+            pick_up_run_task.delay(run_uid=run_uid)
+            running = ExportRunSerializer(run, context={'request': request})
+            return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
-            return Response([{'detail': _('Export not found')}], status.HTTP_404_NOT_FOUND)
+            return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
+
+
+class PresetViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns the list of PRESET configuration files.
+    """
+    CONFIG_TYPE = 'PRESET'
+    serializer_class = ExportConfigSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
+    lookup_field = 'uid'
 
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
@@ -707,3 +705,5 @@ def get_provider_task(export_provider, export_formats):
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
+
+

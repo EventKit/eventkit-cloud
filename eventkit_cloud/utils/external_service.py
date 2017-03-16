@@ -19,9 +19,6 @@ import logging
 from django.db import connections
 from ..tasks.task_process import TaskProcess
 import requests
-import os
-import subprocess
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +81,7 @@ class ExternalRasterServiceToGeopackage(object):
             conf_dict = create_conf_from_url(self.service_url)
 
         if not conf_dict.get('grids'):
-            conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:3857',
+            conf_dict['grids'] = {'webmercator': {'srs': 'EPSG:4326',
                                                   'tile_size': [256, 256],
                                                   'origin': 'nw'}}
         conf_dict['caches'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
