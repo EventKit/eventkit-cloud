@@ -8,10 +8,12 @@ import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import authReducer from './authReducer'
 
 
 const rootReducer = combineReducers({
     // short hand property names
+    auth: authReducer,
     mode: exportModeReducer,
     bbox: exportBboxReducer,
     aoiInfo: exportAoiInfoReducer,
