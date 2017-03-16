@@ -70,16 +70,17 @@ def user(request):
 
 
 def auth(request):
-    """Logs out user"""
-    auth_logout(request)
-    username = request.POST.get('username')
-    password = request.POST.get('password')
-    user_data = authenticate(username=username, password=password)
-    if user_data is not None:
-        login(request, user_data)
-        return user(request)
-    else:
-        return HttpResponse(status=401)
+    if request.method == 'POST':
+        """Logs out user"""
+        auth_logout(request)
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user_data = authenticate(username=username, password=password)
+        if user_data is None:
+            return HttpResponse(status=401)
+        else:
+            login(request, user_data)
+    return user(request)
 
 
 def logout(request):

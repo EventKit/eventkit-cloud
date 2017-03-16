@@ -1,6 +1,8 @@
 import { initialState as userInitialState } from './userReducer'
+import { initialState as authInitialState } from './userReducer'
 
 export default {
+    auth: authInitialState,
     bbox: [],
     aoiInfo: {
         geojson: {},
