@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
-import {getRuns} from '../actions/DataPackListActions';
+import {getRuns, deleteRuns} from '../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import DatePicker from 'material-ui/DatePicker';
@@ -25,18 +25,36 @@ export class DataPackPage extends React.Component {
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.state = {
             runs: [],
-            filteredRuns: [],
+            displayedRuns: [],
             dataPackButtonFontSize: '',
             dropDownValue: 1,
+            search: {
+                searched: false,
+                searchQuery: ''
+            }
         }
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runsList.fetched == true) {
-            let runsUnsorted = nextProps.runsList.runs;
-            let runsSorted = sortBy(runsUnsorted, [function(o) {return o.user;}]);
-            this.setState({runs: runsUnsorted});
-            this.setState({filteredRuns: runsSorted});
+        if(nextProps.runsList.fetched != this.props.runsList.fetched) {
+            if (nextProps.runsList.fetched == true) {
+                let runs = nextProps.runsList.runs;                
+                if(this.state.search.searched) {
+                    this.setState({runs: runs}, () => {
+                        this.handleSearch(this.state.search.searchQuery, -1);
+                    });
+                    
+                }
+                else {
+                    this.setState({runs: runs});
+                    this.setState({displayedRuns: runs});
+                } 
+            }
+        }
+        if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
+            if(nextProps.runsDeletion.deleted) {
+                this.props.getRuns();
+            }
         }
     }
 
@@ -72,12 +90,15 @@ export class DataPackPage extends React.Component {
             if(o.job.description.toUpperCase().includes(query)) {return true}
             if(o.job.event.toUpperCase().includes(query)) {return true}
         });
-        this.setState({filteredRuns: searched});
+        this.setState({search: {searched: true, searchQuery: searchText}});
+        this.setState({displayedRuns: searched});
+        
     }
 
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
-            this.setState({filteredRuns: this.state.runs});
+            this.setState({search: {searched: false, searchQuery: ''}});
+            this.setState({displayedRuns: this.state.runs});
         }
     }
 
@@ -182,7 +203,10 @@ export class DataPackPage extends React.Component {
             
             <div className={styles.wholeDiv}>
                 <div>
-                    <DataPackList runs={this.state.filteredRuns} user={this.props.user} />
+                    <DataPackList 
+                        runs={this.state.displayedRuns} 
+                        user={this.props.user} 
+                        onRunDelete={this.props.deleteRuns}/>
                 </div>
 
                 <div >
@@ -201,13 +225,16 @@ export class DataPackPage extends React.Component {
 DataPackPage.propTypes = {
     runsList: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    getRuns: PropTypes.func.isRequired
+    getRuns: PropTypes.func.isRequired,
+    deleteRuns: PropTypes.func.isRequired,
+    runsDeletion: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
     return {
         runsList: state.runsList,
         user: state.user,
+        runsDeletion: state.runsDeletion,
     };
 }
 
@@ -215,6 +242,9 @@ function mapDispatchToProps(dispatch) {
     return {
         getRuns: () => {
             dispatch(getRuns());
+        },
+        deleteRuns: (uid) => {
+            dispatch(deleteRuns(uid));
         }
     }
 }

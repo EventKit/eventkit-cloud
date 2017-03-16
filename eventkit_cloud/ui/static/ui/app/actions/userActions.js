@@ -1,5 +1,4 @@
 import actions from './actionTypes'
-import 'isomorphic-fetch'
 import cookie from 'react-cookie'
 import { push } from 'react-router-redux'
 import axios from 'axios'

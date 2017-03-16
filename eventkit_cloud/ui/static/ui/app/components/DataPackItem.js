@@ -111,7 +111,7 @@ export class DataPackItem extends Component {
                                 <MenuItem
                                     style={{fontSize: '13px'}}
                                     primaryText={'Delete Export'}
-                                    onTouchTap={() => {console.log('deleting')}}/>
+                                    onTouchTap={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
                             </IconMenu>
                         </div>
@@ -160,6 +160,7 @@ export class DataPackItem extends Component {
 DataPackItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
+    onRunDelete: PropTypes.func.isRequired
 };
 
 export default DataPackItem;
