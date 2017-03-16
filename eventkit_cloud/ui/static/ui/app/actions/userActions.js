@@ -1,7 +1,7 @@
 import actions from './actionTypes'
-import 'isomorphic-fetch'
-import {push} from 'react-router-redux'
+import { push } from 'react-router-redux'
 import axios from 'axios'
+import cookie from 'react-cookie'
 
 
 export const logout = () => dispatch => {
@@ -17,9 +17,9 @@ export const logout = () => dispatch => {
 }
 
 
-export const login = data => (dispatch, getState) => {
+export const login = data => (dispatch) => {
 
-    const { csrftoken } = getState().auth;
+    const csrftoken = cookie.load('csrftoken');
 
     dispatch({
         type: actions.USER_LOGGING_IN,

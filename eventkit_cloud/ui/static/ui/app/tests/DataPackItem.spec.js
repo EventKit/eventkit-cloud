@@ -17,7 +17,7 @@ describe('DataPackItem component', () => {
     const user = {data: {username: 'admin'}};
 
     it('should display general run information', () => {
-        const props = {run: getRuns()[0], user: user};
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -40,7 +40,7 @@ describe('DataPackItem component', () => {
     });
 
     it('should display information specific to a unpublished & owned run', () => {
-        const props = {run: getRuns()[0], user: user};
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -50,7 +50,7 @@ describe('DataPackItem component', () => {
     });
 
     it('should display information specific to a published & owned run', () => {
-        const props = {run: getRuns()[2], user: user};
+        const props = {run: getRuns()[2], user: user, onRunDelete: () => {}};
         const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -60,7 +60,7 @@ describe('DataPackItem component', () => {
     });
 
     it('should display information specific to a published & not owned run', () => {
-        const props = {run: getRuns()[1], user: user};
+        const props = {run: getRuns()[1], user: user, onRunDelete: () => {}};
         const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -70,7 +70,7 @@ describe('DataPackItem component', () => {
     });
 
     it('should display a map when the card is expanded', () => {
-        const props = {run: getRuns()[0], user: user};
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const uid = props.run.uid;
         const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},

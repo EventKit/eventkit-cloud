@@ -6,50 +6,50 @@ describe('authReducer', () => {
     it('should return initial state', () => {
         expect(authReducer(undefined, {})).toEqual(
             {
-                csrftoken: null
+                token: null
             }
         )
-    })
+    });
 
-    it('SET_CSRF should add the csrf token to the store', () => {
+    it('SET_TOKEN should add the token to the store', () => {
 
-        const expected_csrftoken = "example_token";
+        const expected_token = "example_token";
 
         expect(authReducer(
             undefined,
             {
-                type: types.SET_CSRF,
-                payload: {csrftoken: expected_csrftoken}
+                type: types.SET_TOKEN,
+                payload: {token: expected_token}
             }
-        )).toEqual({...initialState, csrftoken: expected_csrftoken})
-    })
+        )).toEqual({...initialState, token: expected_token})
+    });
 
-    it('SET_CSRF should update the csrf token in the store', () => {
+    it('SET_TOKEN should update the token in the store', () => {
 
-        const original_csrftoken = "example_token";
-        const new_csrftoken = "example_token_2";
+        const original_token = "example_token";
+        const new_token = "example_token_2";
 
-        const state = { csrftoken: original_csrftoken }
+        const state = { token: original_token }
 
         expect(authReducer(
             state,
             {
-                type: types.SET_CSRF,
-                payload: {csrftoken: new_csrftoken}
+                type: types.SET_TOKEN,
+                payload: {token: new_token}
             }
-        )).toEqual({...state, csrftoken: new_csrftoken})
-    })
+        )).toEqual({...state, token: new_token})
+    });
 
-    it('REMOVE_CSRF should remove the csrf token from the store', () => {
-        const expected_csrftoken = "example_token";
-        const state = {...initialState, csrftoken: expected_csrftoken};
+    it('REMOVE_TOKEN should remove the token from the store', () => {
+        const expected_token = "example_token";
+        const state = {...initialState, token: expected_token};
 
         expect(authReducer(
             state,
             {
-                type: types.CLEAR_CSRF
+                type: types.CLEAR_TOKEN
             }
-        )).toEqual({...state, csrftoken: null})
-    })
+        )).toEqual({...state, token: null})
+    });
 
 })

@@ -2,17 +2,17 @@ import * as actions from '../actions/authActions'
 import types from '../actions/actionTypes'
 
 describe('auth actions', () => {
-    it('setCSRF should return the csrftoken along with the state', () => {
-        const example_csrf = 'testcsrf'
-        expect(actions.setCSRF(example_csrf)).toEqual({
-            type: types.SET_CSRF,
-            payload: {csrftoken: example_csrf}
+    it('setToken should return the token along with the state', () => {
+        const example_token = 'testToken'
+        expect(actions.setToken(example_token)).toEqual({
+            type: types.SET_TOKEN,
+            payload: {token: example_token}
         })
-    })
+    });
 
-    it('clearCSRF should return true', () => {
-        expect(actions.clearCSRF()).toEqual({
-            type: types.CLEAR_CSRF,
+    it('clearToken should return true', () => {
+        expect(actions.clearToken()).toEqual({
+            type: types.CLEAR_TOKEN,
         })
-    })
+    });
 })

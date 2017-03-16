@@ -28,6 +28,23 @@ describe('DataPackList actions', () => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
+
+    it('deleteRuns should dispatch deleting and deleted actions', () => {
+        var mock = new MockAdapter(axios, {delayResponse: 1000});
+        mock.onGet('/api/runs').reply(200, {});
+        mock.onDelete('/api/runs/123456789').reply(204);
+        const expectedActions = [
+            {type: types.DELETING_RUN},
+            {type: types.DELETED_RUN},
+        ];
+
+        const store = mockStore({deleteRuns: {}});
+
+        return store.dispatch(actions.deleteRuns('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
 });
 
 const expectedRuns = [

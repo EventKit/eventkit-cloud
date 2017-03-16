@@ -40,7 +40,7 @@ describe('userActions actions', () => {
 
         const expectedActions = [{type: types.USER_LOGGING_IN},  { payload: {}, type: 'USER_LOGGED_IN' }];
 
-        const store = mockStore({auth: {csrftoken: "ExampleCSRFToken", user: {username: "ExampleUser"}}});
+        const store = mockStore({user: {username: "ExampleUser"}});
         return store.dispatch(userActions.login({username: 'username', password: 'password'}))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions)
@@ -55,7 +55,7 @@ describe('userActions actions', () => {
 
         const expectedActions = [{type: types.USER_LOGGING_IN}, {type: types.USER_LOGGED_OUT}];
 
-        const store = mockStore({auth: {csrftoken: "ExampleCSRFToken", user: {username: "ExampleUser"}}});
+        const store = mockStore({user: {username: "ExampleUser"}});
         return store.dispatch(userActions.login({username: 'username', password: 'bad_password'}))
             .catch(() => {
                 expect(store.getActions()).toEqual(expectedActions)

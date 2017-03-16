@@ -18,7 +18,6 @@ import { UserAuthWrapper } from 'redux-auth-wrapper'
 import { applyMiddleware } from 'redux'
 import { login } from './actions/userActions'
 import { setCSRF } from './actions/authActions'
-import cookie from 'react-cookie'
 
 
 const store = configureStore();
@@ -43,9 +42,6 @@ const UserIsNotAuthenticated = UserAuthWrapper({
 })
 
 function checkAuth(store) {
-
-  const csrfmiddlewaretoken = cookie.load('csrftoken');
-  store.dispatch(setCSRF(csrfmiddlewaretoken))
 
   return (nextState, replace) => {
     let { user } = store.getState();

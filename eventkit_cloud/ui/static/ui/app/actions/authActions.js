@@ -2,18 +2,18 @@ import cookie from 'react-cookie'
 import actions from './actionTypes'
 
 
-export const setCSRF = csrfmiddlewaretoken => {
+export const setToken = token => {
 
     return {
-        type: actions.SET_CSRF,
-        payload: {csrftoken: csrfmiddlewaretoken}
+        type: actions.SET_TOKEN,
+        payload: {token: token}
     }
 }
 
-export const clearCSRF = () => {
+export const clearToken = () => {
 
     return {
-        type: actions.CLEAR_CSRF,
+        type: actions.CLEAR_TOKEN,
     }
 
 }
