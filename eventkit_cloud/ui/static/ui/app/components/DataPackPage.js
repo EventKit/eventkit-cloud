@@ -5,6 +5,8 @@ import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
+import DropDownMenu from 'material-ui/DropDownMenu';
+import MenuItem from 'material-ui/MenuItem';
 import * as exportActions from '../actions/exportsActions';
 import DataPackList from './DataPackList';
 import primaryStyles from '../styles/constants.css'
@@ -20,10 +22,12 @@ export class DataPackPage extends React.Component {
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.handleSearch = this.handleSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
+        this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.state = {
             runs: [],
             filteredRuns: [],
             dataPackButtonFontSize: '',
+            dropDownValue: 1,
         }
     }
 
@@ -77,6 +81,10 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    handleDropDownChange = (event, index, value) => {
+        this.setState({dropDownValue: value});
+    }
+
     render() {
 
         const pageTitle = "DataPack Library"
@@ -94,8 +102,12 @@ export class DataPackPage extends React.Component {
                 color: 'white',
                 fontSize: '14px',
             },
-            toolbarCommon: {
+            toolbarSearch: {
                 backgroundColor: '#253447',
+            },
+            toolbarSort: {
+                backgroundColor: '#253447',
+                height: '35px'
             },
             toolbarTitleCommon: {
                 color: '#4598bf',
@@ -118,6 +130,13 @@ export class DataPackPage extends React.Component {
                 paddingRight: '30px', 
                 lineHeight: '35px'
             },
+            dropDown: {
+                height: '30px',
+                lineHeight: '35px',
+            },
+            dropDownItem: {
+                fontSize: '12px',
+            }
         };
 
         return (
@@ -135,7 +154,7 @@ export class DataPackPage extends React.Component {
                     />
                 </Link>
             </AppBar>
-            <Toolbar style={styles.toolbarCommon}>
+            <Toolbar style={styles.toolbarSearch}>
                 <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
                     <DataPackSearchbar
                         onSearchChange={this.checkForEmptySearch}
@@ -143,6 +162,22 @@ export class DataPackPage extends React.Component {
                         searchbarWidth={'100%'} 
                     />
                 </ToolbarGroup>
+            </Toolbar>
+
+            <Toolbar style={styles.toolbarSort}>
+                <DropDownMenu 
+                    style={styles.dropDown}
+                    labelStyle={{lineHeight: '30px', color: '#4498c0'}} 
+                    iconStyle={{height: '30px', width: '30px', padding: 'none', marginRight: '5px', fill: '#4498c0'}}
+                    listStyle={{paddingTop: '5px', paddingBottom: '0px'}}
+                    selectedMenuItemStyle={{color: '#4498c0'}} 
+                    underlineStyle={{borderTopColor: '#4498c0'}}            
+                    value={this.state.dropDownValue}
+                    onChange={this.handleDropDownChange}>
+                    <MenuItem style={styles.dropDownItem} value={1} primaryText={"All DataPacks"} />
+                    <MenuItem style={styles.dropDownItem} value={2} primaryText={"My DataPacks"} />
+                </DropDownMenu>
+
             </Toolbar>
             
             <div className={styles.wholeDiv}>
