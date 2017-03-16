@@ -11,7 +11,7 @@ import DataPackList from '../components/DataPackList';
 describe('DataPackList component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
-    const props = {runs: getRuns(), user: {data: {username: 'admin'}}};
+    const props = {runs: getRuns(), user: {data: {username: 'admin'}}, onRunDelete: () => {}};
 
     it('should render a DataPackItem for each run passed in', () => {
         const mountSpy = new sinon.spy(DataPackList.prototype, 'componentWillMount');

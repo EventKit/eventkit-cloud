@@ -90,7 +90,6 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
 }
 
 export function getProvidersReducer(state = initialState.providers, action ) {
-    console.log(state, action);
     switch (action.type) {
         case types.GETTING_PROVIDERS:
             return  []
