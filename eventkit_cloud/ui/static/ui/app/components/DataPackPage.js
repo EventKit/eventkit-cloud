@@ -6,6 +6,7 @@ import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui
 import DatePicker from 'material-ui/DatePicker';
 import RaisedButton from 'material-ui/RaisedButton';
 import DropDownMenu from 'material-ui/DropDownMenu';
+import FlatButton from 'material-ui/FlatButton';
 import MenuItem from 'material-ui/MenuItem';
 import * as exportActions from '../actions/exportsActions';
 import DataPackList from './DataPackList';
@@ -14,41 +15,39 @@ import sortBy from 'lodash/sortBy';
 import filter from 'lodash/filter';
 import DataPackSearchbar from './DataPackSearchbar';
 import { Link } from 'react-router';
+import * as utils from '../utils/sortUtils';
+import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 
 export class DataPackPage extends React.Component {
 
     constructor(props) {
         super(props);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
-        this.handleSearch = this.handleSearch.bind(this);
+        this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
+        this.applyFilters = this.applyFilters.bind(this);
         this.state = {
             runs: [],
             displayedRuns: [],
             dataPackButtonFontSize: '',
             dropDownValue: 1,
+            sortDropDown: utils.orderNewest,
             search: {
                 searched: false,
                 searchQuery: ''
-            }
+            },
+            ordered: utils.orderNewest
         }
     }
 
     componentWillReceiveProps(nextProps) {
         if(nextProps.runsList.fetched != this.props.runsList.fetched) {
             if (nextProps.runsList.fetched == true) {
-                let runs = nextProps.runsList.runs;                
-                if(this.state.search.searched) {
-                    this.setState({runs: runs}, () => {
-                        this.handleSearch(this.state.search.searchQuery, -1);
-                    });
-                    
-                }
-                else {
-                    this.setState({runs: runs});
-                    this.setState({displayedRuns: runs});
-                } 
+                let runs = nextProps.runsList.runs;
+                this.setState({runs: runs});
+                this.applyFilters(runs);      
+                
             }
         }
         if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
@@ -83,28 +82,55 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleSearch(searchText, ix) {
-        const query = searchText.toUpperCase();
-        let searched = filter(this.state.runs, function(o) {
-            if(o.job.name.toUpperCase().includes(query)) { return true}
-            if(o.job.description.toUpperCase().includes(query)) {return true}
-            if(o.job.event.toUpperCase().includes(query)) {return true}
-        });
+    onSearch(searchText, ix) {
         this.setState({search: {searched: true, searchQuery: searchText}});
+        const searched = utils.search(searchText, this.state.displayedRuns);
         this.setState({displayedRuns: searched});
-        
     }
+
+    
 
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
-            this.setState({search: {searched: false, searchQuery: ''}});
-            this.setState({displayedRuns: this.state.runs});
+            this.setState({search: {searched: false, searchQuery: ''}}, () => {
+                this.applyFilters(this.state.runs);
+            });
         }
     }
 
-    handleDropDownChange = (event, index, value) => {
-        this.setState({dropDownValue: value});
+    handleSortChange = (event, index, value) => {
+        this.setState({sortDropDown: value});
+        const runs = value(this.state.displayedRuns);
+        this.setState({displayedRuns: runs});
     }
+
+    handleDropDownChange = (event, index, value) => {
+        if(value == 1) {
+            this.setState({dropDownValue: value}, () => {
+                this.applyFilters(this.state.runs);
+            });
+            
+        }
+        else {
+            this.setState({dropDownValue: value});
+            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.username);
+            this.setState({displayedRuns: filteredRuns});
+        }
+    }
+
+    applyFilters(runs) {
+        // run functions that remove first
+        if(this.state.search.searched) {
+            runs = utils.search(this.state.search.searchQuery, runs);
+        }
+        if(this.state.dropDownValue == 2) {
+            runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
+        }
+        runs = this.state.sortDropDown(runs);
+        this.setState({displayedRuns: runs});
+    }
+
+    
 
     render() {
 
@@ -128,16 +154,12 @@ export class DataPackPage extends React.Component {
             },
             toolbarSort: {
                 backgroundColor: '#253447',
-                height: '35px'
+                height: '35px',
+                display: 'inline-block',
+                width: '100%'
             },
             toolbarTitleCommon: {
                 color: '#4598bf',
-            },
-            separator: {
-                marginLeft: '12px', 
-                marginRight: '12px', 
-                backgroundColor: '#161e2e',
-                opacity: '0.7',
             },
             createDataPackStyle: {
                 margin: '0px', 
@@ -154,9 +176,34 @@ export class DataPackPage extends React.Component {
             dropDown: {
                 height: '30px',
                 lineHeight: '35px',
+                float: 'left',
+            },
+            dropDownSort: {
+                height: '30px',
+                lineHeight: '35px',
+                float: 'right',
             },
             dropDownItem: {
                 fontSize: '12px',
+            },
+            dropDownIcon: {
+                height: '30px', 
+                width: '30px', 
+                padding: '0px', 
+                marginRight: '5px', 
+                fill: '#4498c0'
+            },
+            sortIcon: {
+                height: '30px',
+                width: '30px',
+                padding: '0px',
+                fill: '#4498c0'
+            },
+            showFilterDrawerBtn: {
+                float: 'right',
+                height: '30px',
+                fontSize: '15px',
+                lineHeight: '30px'
             }
         };
 
@@ -179,26 +226,50 @@ export class DataPackPage extends React.Component {
                 <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
                     <DataPackSearchbar
                         onSearchChange={this.checkForEmptySearch}
-                        onSearchSubmit={this.handleSearch}
+                        onSearchSubmit={this.onSearch}
                         searchbarWidth={'100%'} 
                     />
                 </ToolbarGroup>
             </Toolbar>
 
             <Toolbar style={styles.toolbarSort}>
-                <DropDownMenu 
-                    style={styles.dropDown}
-                    labelStyle={{lineHeight: '30px', color: '#4498c0'}} 
-                    iconStyle={{height: '30px', width: '30px', padding: 'none', marginRight: '5px', fill: '#4498c0'}}
-                    listStyle={{paddingTop: '5px', paddingBottom: '0px'}}
-                    selectedMenuItemStyle={{color: '#4498c0'}} 
-                    underlineStyle={{borderTopColor: '#4498c0'}}            
-                    value={this.state.dropDownValue}
-                    onChange={this.handleDropDownChange}>
-                    <MenuItem style={styles.dropDownItem} value={1} primaryText={"All DataPacks"} />
-                    <MenuItem style={styles.dropDownItem} value={2} primaryText={"My DataPacks"} />
-                </DropDownMenu>
-
+                    <DropDownMenu 
+                        style={styles.dropDown}
+                        labelStyle={{lineHeight: '30px', color: '#4498c0', paddingLeft: '5px'}} 
+                        iconStyle={styles.dropDownIcon}
+                        listStyle={{paddingTop: '5px', paddingBottom: '0px'}}
+                        selectedMenuItemStyle={{color: '#4498c0'}} 
+                        underlineStyle={{borderTopColor: '#4498c0', marginLeft: '0px'}}            
+                        value={this.state.dropDownValue}
+                        onChange={this.handleDropDownChange}>
+                        <MenuItem style={styles.dropDownItem} value={1} primaryText={"All DataPacks"} />
+                        <MenuItem style={styles.dropDownItem} value={2} primaryText={"My DataPacks"} />
+                    </DropDownMenu>
+                    <FlatButton 
+                        style={styles.showFilterDrawerBtn}
+                        label={"Filter"}
+                        labelPosition={"before"}
+                        labelStyle={{color: '#4498c0', textTransform: 'none'}}
+                        icon={<NavigationArrowDropDown style={{fill: '#4498c0'}}/>}
+                        hoverColor={'#253447'}
+                        disableTouchRipple={true}
+                    >
+                    </FlatButton>
+                    <DropDownMenu
+                        style={styles.dropDownSort}
+                        labelStyle={{lineHeight: '30px', color: '#4498c0', paddingLeft: '0px', paddingRight: '46px'}} 
+                        iconStyle={styles.sortIcon}
+                        listStyle={{paddingTop: '5px', paddingBottom: '0px'}}
+                        selectedMenuItemStyle={{color: '#4498c0'}}
+                        underlineStyle={{display: 'none'}}
+                        value={this.state.sortDropDown}
+                        onChange={this.handleSortChange}
+                        autoWidth={false}>
+                        <MenuItem style={styles.dropDownItem} value={utils.orderNewest} primaryText={"Newest"}/>
+                        <MenuItem style={styles.dropDownItem} value={utils.orderOldest} primaryText={"Oldest "}/>
+                        <MenuItem style={styles.dropDownItem} value={utils.orderAZ} primaryText={"Name (A-Z)"}/>
+                        <MenuItem style={styles.dropDownItem} value={utils.orderZA} primaryText={"Name (Z-A)"}/>
+                    </DropDownMenu>
             </Toolbar>
             
             <div className={styles.wholeDiv}>
