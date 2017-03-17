@@ -16,6 +16,8 @@ import ExportAOI from './components/ExportAOI'
 import ExportInfo from './components/ExportInfo'
 import { UserAuthWrapper } from 'redux-auth-wrapper'
 import { applyMiddleware } from 'redux'
+import { login } from './actions/userActions'
+import { setCSRF } from './actions/authActions'
 
 
 const store = configureStore();
@@ -39,19 +41,30 @@ const UserIsNotAuthenticated = UserAuthWrapper({
     allowRedirectBack: false
 })
 
+function checkAuth(store) {
+
+  return (nextState, replace) => {
+    let { user } = store.getState();
+    console.log(user)
+    if (!user.data){
+        store.dispatch(login())
+    }
+  }
+}
+
 render(
     <Provider store={store}>
         <Router history={history}>
-            <Route path="/" component={Application}>
+            <Route path="/" component={Application} onEnter={checkAuth(store)}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
-                    <Route path="/exports" component={UserIsAuthenticated(DataPackPage)}>
-                        <Route path="/export/:uid" component={UserIsAuthenticated(Export)}/>
-                    </Route>
-                    <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
-                        <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
-                        <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
-                    </Route>
+                <Route path="/exports" component={UserIsAuthenticated(DataPackPage)}>
+                    <Route path="/export/:uid" component={UserIsAuthenticated(Export)}/>
+                </Route>
+                <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
+                    <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
+                    <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
+                </Route>
                 <Route path="/about" component={About}/>
             </Route>
         </Router>

@@ -19,22 +19,20 @@ export function getRuns() {
 }
 
 export function deleteRuns(uid) {
-    return (dispatch) => {
+    return (dispatch, getState) => {
+
         dispatch({type: types.DELETING_RUN});
 
-        axios.get('/api/runs').catch((error) => {
-            console.log(error);
-        });
+        const csrftoken = cookie.load('csrftoken');
 
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
         const form_data = new FormData();
-        form_data.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
+        form_data.append('csrfmiddlewaretoken', csrftoken);
 
         return axios({
             url: '/api/runs/' + uid,
             method: 'DELETE',
             data: form_data,
-            headers: {"X-CSRFToken": csrfmiddlewaretoken}
+            headers: {"X-CSRFToken": csrftoken}
         }).then((response) => {
             dispatch({type: types.DELETED_RUN});
         }).catch(error => {

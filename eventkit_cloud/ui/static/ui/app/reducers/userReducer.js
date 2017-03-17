@@ -2,10 +2,11 @@ import types from '../actions/actionTypes'
 
 const initialState = {
   data: null,
-  isLoading: false
+  isLoading: false,
 }
 
 export default (state = initialState, { type, payload }) => {
+
   switch (type) {
     case types.USER_LOGGING_IN:
       return { ...initialState, isLoading: true }
