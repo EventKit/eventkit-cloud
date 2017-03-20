@@ -5,7 +5,8 @@ from mock import Mock, patch
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
-from ..external_service import ExternalRasterServiceToGeopackage, create_conf_from_url, check_service
+from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
+                                 check_service, get_cache_template )
 from mapproxy.config.config import base_config
 from mapproxy.seed.config import SeedConfigurationError
 from uuid import uuid4
@@ -13,8 +14,8 @@ from uuid import uuid4
 logger = logging.getLogger(__name__)
 
 
-
 class TestGeopackage(TransactionTestCase):
+
     def setUp(self, ):
         self.path = settings.ABS_PATH()
         self.task_process_patcher = patch('eventkit_cloud.utils.external_service.TaskProcess')
@@ -36,8 +37,6 @@ class TestGeopackage(TransactionTestCase):
         w2g = create_conf_from_url(url)
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
-
-
 
     @patch('eventkit_cloud.utils.external_service.check_service')
     @patch('eventkit_cloud.utils.external_service.yaml')
@@ -86,7 +85,7 @@ class TestGeopackage(TransactionTestCase):
         connections.close_all.assert_called_once()
         self.assertEqual(result, gpkgfile)
 
-        cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')], gpkgfile)
+        cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')], gpkgfile, caches=None)
         json_config['caches'] = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
         json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
         json_config['sources']['imagery_wmts']['transparent'] = True
@@ -125,3 +124,22 @@ class TestHelpers(TransactionTestCase):
         with self.assertRaisesMessage(Exception, "The provider reported a server error."):
             check_service(conf_dict)
 
+    def get_cache_template(self):
+        example_geopackage = '/test/example.gpkg'
+        example_sources = ['raster_source']
+        example_grids = ['raster_grid']
+
+        cache_template = get_cache_template(example_sources, example_grids, example_geopackage)
+
+        expected_template = {"cache": {
+            "sources": example_sources,
+            "meta_size": [1, 1],
+            "cache": {
+                "type": "geopackage",
+                "filename": str(example_geopackage),
+            },
+            "grids": example_grids,
+            "format": "mixed",
+            "request_format": "image/png"}}
+
+        self.assertEqual(cache_template, expected_template)
