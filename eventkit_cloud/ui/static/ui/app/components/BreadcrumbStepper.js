@@ -52,24 +52,14 @@ class BreadcrumbStepper extends React.Component {
 
     handleSubmit = () => {
         const {stepIndex} = this.state;
-        console.log("Submitting Job Request");
-        // const name = this.props.exportInfo.exportName;
-        // const description = this.props.exportInfo.datapackDescription;
-        // const event = this.props.exportInfo.projectName;
-        // const include_zipfile = false;
-        // const published = this.props.exportInfo.makePublic;
-         let provider_tasks = [];
+        let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
         //TODO: Set formats up as an array for future need of other formats other than geopackage!
         for(let provider in providers){
             provider_tasks.push({'provider': providers[provider], 'formats': ['gpkg']});
         }
-        // const xmin = this.props.bbox[0];
-        // const ymin = this.props.bbox[1];
-        // const xmax = this.props.bbox[2];
-        // const ymax = this.props.bbox[3];
-        //const tags = [];
+
         const data = {
             name: this.props.exportInfo.exportName,
             description: this.props.exportInfo.datapackDescription,
