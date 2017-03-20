@@ -1,7 +1,7 @@
 import {Config} from '../config';
 import types from './actionTypes';
 import axios from 'axios'
-
+import cookie from 'react-cookie'
 
 export function createExportRequest(exportData) {
     return {
@@ -60,6 +60,35 @@ export function stepperNextEnabled() {
     }
 }
 
+export const submitJob = data => dispatch => {
+    dispatch({
+        type: types.SUBMITTING_JOB
+    });
+
+    axios.get('/api/jobs').catch((error) => {
+        console.log(error);
+    });
+
+    const csrfmiddlewaretoken = cookie.load('csrftoken');
+    return axios({
+        url: '/api/jobs',
+        method: 'POST',
+        contentType: 'application/json; version=1.0',
+        data: data,
+        headers: {"X-CSRFToken": csrfmiddlewaretoken}
+    }).then((response) => {
+        dispatch({
+            type: types.JOB_SUBMITTED_SUCCESS,
+            jobuid: response.data.uid
+
+        });
+    }).catch((error) => {console.log(error)
+        dispatch({
+            type: types.JOB_SUBMITTED_ERROR, error: error
+        });
+    });
+}
+
 export const getProviders = () => dispatch => {
     dispatch({
         type: types.GETTING_PROVIDERS
@@ -106,5 +135,6 @@ export function openDrawer() {
         type: types.OPEN_DRAWER
     }
 }
+
 
 

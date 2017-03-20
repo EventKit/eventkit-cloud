@@ -44,6 +44,12 @@ export default {
         runs: [],
         error: null,
     },
+    jobSubmit: {
+        fetching: false,
+        fetched: false,
+        jobuid: '',
+        error: null,
+    },
     exportInfo: {
         exportName: '',
         datapackDescription: '',

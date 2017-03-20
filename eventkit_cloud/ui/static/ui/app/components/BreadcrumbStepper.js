@@ -11,7 +11,7 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest, getProviders, stepperNextDisabled, stepperNextEnabled, exportInfoDone} from '../actions/exportsActions'
+import { createExportRequest, getProviders, stepperNextDisabled, stepperNextEnabled, exportInfoDone, submitJob} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -48,6 +48,48 @@ class BreadcrumbStepper extends React.Component {
                 finished: stepIndex >= 2,
             });
         }
+    }
+
+    handleSubmit = () => {
+        const {stepIndex} = this.state;
+        console.log("Submitting Job Request");
+        // const name = this.props.exportInfo.exportName;
+        // const description = this.props.exportInfo.datapackDescription;
+        // const event = this.props.exportInfo.projectName;
+        // const include_zipfile = false;
+        // const published = this.props.exportInfo.makePublic;
+         let provider_tasks = [];
+        const providers = this.props.exportInfo.providers;
+
+        //TODO: Set formats up as an array for future need of other formats other than geopackage!
+        for(let provider in providers){
+            provider_tasks.push({'provider': providers[provider], 'formats': ['gpkg']});
+        }
+        // const xmin = this.props.bbox[0];
+        // const ymin = this.props.bbox[1];
+        // const xmax = this.props.bbox[2];
+        // const ymax = this.props.bbox[3];
+        //const tags = [];
+        const data = {
+            name: this.props.exportInfo.exportName,
+            description: this.props.exportInfo.datapackDescription,
+            event: this.props.exportInfo.projectName,
+            include_zipfile : false,
+            published : this.props.exportInfo.makePublic,
+            provider_tasks : provider_tasks,
+            xmin : this.props.bbox[0],
+            ymin : this.props.bbox[1],
+            xmax : this.props.bbox[2],
+            ymax : this.props.bbox[3],
+            tags : [],
+    };
+
+        this.props.submitJob(data)
+        this.setState({
+            stepIndex: stepIndex + 1,
+            finished: stepIndex >= 2,
+        });
+
     }
 
     handleNext = () => {
@@ -103,7 +145,7 @@ class BreadcrumbStepper extends React.Component {
             case 2:
                 return <FloatingActionButton mini={false}
                                              disabled={!this.props.stepperNextEnabled}
-                                             onTouchTap={this.handleNext}
+                                             onTouchTap={this.handleSubmit}
                                              className={style.bigForwardButtonDiv}><i className="material-icons" aria-hidden="true">check</i></FloatingActionButton>
             case 3:
                 return <div></div>
@@ -203,6 +245,9 @@ function mapDispatchToProps(dispatch) {
     return {
         createExportRequest: () => {
             dispatch(createExportRequest());
+        },
+        submitJob: (data) => {
+            dispatch(submitJob(data))
         },
         getProviders: () => {
             dispatch(getProviders())

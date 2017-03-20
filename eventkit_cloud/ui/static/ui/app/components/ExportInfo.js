@@ -402,7 +402,6 @@ function mapStateToProps(state) {
         datapackDescription: state.exportInfo.datapackDescription,
         projectName: state.exportInfo.projectName,
         makePublic: state.exportInfo.makePublic,
-
     }
 }
 

@@ -100,3 +100,16 @@ export function getProvidersReducer(state = initialState.providers, action ) {
             return state
     }
 }
+
+export function submitJobReducer(state = initialState.jobSubmit, action) {
+    switch(action.type) {
+        case types.SUBMITTING_JOB:
+            return {fetching: true, fetched: false, jobuid: '', error: null}
+        case types.JOB_SUBMITTED_SUCCESS:
+            return {fetching: false, fetched: true, jobuid: action.jobuid, error: null}
+        case types.JOB_SUBMITTED_ERROR:
+            return {fetching: false, fetched: false, jobuid: '', error: action.error};
+        default:
+            return state;
+    }
+}
