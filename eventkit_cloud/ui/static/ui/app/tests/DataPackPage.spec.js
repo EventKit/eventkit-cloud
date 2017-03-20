@@ -27,7 +27,13 @@ describe('DataPackPage component', () => {
                 error: null,
             },
             user: {data: {username: 'admin'}},
-            getRuns: () => {}
+            getRuns: () => {},
+            deleteRuns: () => {},
+            runsDeletion: {
+                deleting: false,
+                deleted: false,
+                error: null
+            }
         }
     };
 
@@ -133,8 +139,8 @@ describe('DataPackPage component', () => {
         wrapper.setState({runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleSearch('TEST', -1);
-        expect(stateSpy.calledOnce).to.be.true;
-        expect(isEqual(wrapper.state().filteredRuns, [
+        expect(stateSpy.calledTwice).to.be.true;
+        expect(isEqual(wrapper.state().displayedRuns, [
             {
                 job: {
                     name: 'tEst name',
@@ -163,12 +169,23 @@ describe('DataPackPage component', () => {
     it('should handle a searchbar clear', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({filteredRuns: ['one', 'three', 'five']})
+        wrapper.setState({displayedRuns: ['one', 'three', 'five']})
         wrapper.setState({runs: ['one', 'two', 'three', 'four', 'five']});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().checkForEmptySearch('', [], {});
-        expect(stateSpy.calledOnce).to.be.true;
-        expect(isEqual(wrapper.state().runs, wrapper.state().filteredRuns)).to.be.true;
+        expect(stateSpy.calledTwice).to.be.true;
+        expect(isEqual(wrapper.state().runs, wrapper.state().displayedRuns)).to.be.true;
         DataPackPage.prototype.setState.restore();
-    })
+    });
+
+    it('if a run has been deleted it should call getRuns again', () => {
+        let props = getProps();
+        props.getRuns = sinon.spy();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(props.getRuns.calledOnce).to.be.true;
+        let nextProps = getProps();
+        nextProps.runsDeletion.deleted = true;
+        wrapper.setProps(nextProps);
+        expect(props.getRuns.calledTwice).to.be.true;
+    });
 });

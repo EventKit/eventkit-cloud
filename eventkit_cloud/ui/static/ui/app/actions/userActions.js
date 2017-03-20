@@ -1,43 +1,43 @@
 import actions from './actionTypes'
-import 'isomorphic-fetch'
-import cookie from 'react-cookie'
 import { push } from 'react-router-redux'
 import axios from 'axios'
+import cookie from 'react-cookie'
 
 
 export const logout = () => dispatch => {
 
     return axios('/logout', {method: 'GET'}).then((response) => {
-            dispatch({
-                type: actions.USER_LOGGED_OUT,
-            })
-            dispatch(push('/login'));
-        }).catch((error) => {
+        dispatch({
+            type: actions.USER_LOGGED_OUT,
+        })
+        dispatch(push('/login'));
+    }).catch((error) => {
         console.log(error);
     });
 }
 
-export const login = data => dispatch => {
+
+export const login = data => (dispatch) => {
+
+    const csrftoken = cookie.load('csrftoken');
 
     dispatch({
-        type: actions.USER_LOGGING_IN
+        type: actions.USER_LOGGING_IN,
     });
 
-    axios.get('/auth/').catch((error) => {
-        console.log(error);
-    });
-
-    const csrfmiddlewaretoken = cookie.load('csrftoken');
     const form_data = new FormData();
-    form_data.append('username', data.username);
-    form_data.append('password', data.password);
-    form_data.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
+    var method = 'get';
+    if(data && (data.username && data.password)) {
+        form_data.append('username', data.username);
+        form_data.append('password', data.password);
+        method = 'post';
+    }
 
     return axios({
         url: '/auth/',
-        method: 'post',
+        method: method,
         data: form_data,
-        headers: {"X-CSRFToken": csrfmiddlewaretoken}
+        headers: {"X-CSRFToken": csrftoken}
     }).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_IN,
@@ -46,5 +46,6 @@ export const login = data => dispatch => {
     }).catch((error) => {
         dispatch(logout());
     });
+
 }
 

@@ -6,12 +6,14 @@ import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoRe
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
-import {DataPackListReducer} from './DataPackListReducer';
+import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import authReducer from './authReducer'
 
 
 const rootReducer = combineReducers({
     // short hand property names
+    auth: authReducer,
     mode: exportModeReducer,
     bbox: exportBboxReducer,
     aoiInfo: exportAoiInfoReducer,
@@ -30,8 +32,9 @@ const rootReducer = combineReducers({
     runsList: DataPackListReducer,
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
-    setExportPackageFlag: startExportPackageReducer,
     submitJob: submitJobReducer,
+    setExportPackageFlag: startExportPackageReducer,
+    runsDeletion: DeleteRunsReducer
 });
 
 export default rootReducer;

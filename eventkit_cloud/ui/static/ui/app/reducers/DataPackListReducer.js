@@ -13,3 +13,16 @@ export function DataPackListReducer(state = initialState.runsList, action) {
             return state;
     }
 }
+
+export function DeleteRunsReducer(state = initialState.runsDeletion, action) {
+    switch(action.type) {
+        case types.DELETING_RUN:
+            return {deleting: true, deleted: false, error: null}
+        case types.DELETED_RUN:
+            return {deleting: false, deleted: true, error: null}
+        case types.DELETE_RUN_ERROR: 
+            return {deleting: false, deleted: false, error: action.error}
+        default:
+            return state;
+    }
+}
