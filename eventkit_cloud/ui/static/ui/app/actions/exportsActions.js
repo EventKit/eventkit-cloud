@@ -17,13 +17,6 @@ export function exportInfoDone() {
     }
 }
 
-export function updateBbox(bbox) {
-    return {
-        type: types.UPDATE_BBOX,
-        bbox: bbox || null
-    }
-}
-
 export function updateAoiInfo(geojson, geomType, title, description,) {
     return {
         type: types.UPDATE_AOI_INFO,
@@ -63,10 +56,6 @@ export function stepperNextEnabled() {
 export const submitJob = data => dispatch => {
     dispatch({
         type: types.SUBMITTING_JOB
-    });
-
-    axios.get('/api/jobs').catch((error) => {
-        console.log(error);
     });
 
     const csrfmiddlewaretoken = cookie.load('csrftoken');

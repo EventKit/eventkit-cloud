@@ -3,7 +3,6 @@ import { initialState as authInitialState } from './userReducer'
 
 export default {
     auth: authInitialState,
-    bbox: [],
     aoiInfo: {
         geojson: {},
         geomType: null,

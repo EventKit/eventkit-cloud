@@ -11,13 +11,14 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest, getProviders, stepperNextDisabled, stepperNextEnabled, exportInfoDone, submitJob} from '../actions/exportsActions'
+import { createExportRequest, getProviders, 
+    stepperNextDisabled, stepperNextEnabled, 
+    exportInfoDone, submitJob, clearAoiInfo} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
     constructor() {
         super()
-        this._handleBoundingBoxChange = this._handleBoundingBoxChange.bind(this)
     }
 
     state = {
@@ -30,18 +31,13 @@ class BreadcrumbStepper extends React.Component {
         this.props.getProviders();
         this.props.setNextDisabled();
     }
+
+    componentWillUnmount() {
+        this.props.clearAoiInfo();
+    }
+
     componentWillReceiveProps(nextProps) {
         const {stepIndex} = this.state;
-        if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
-            if(!isEqual(nextProps.aoiInfo.geojson, {})) {
-                this.props.setNextEnabled();
-
-            }
-            else {
-                this.props.setNextDisabled();
-            }
-        }
-
         if (stepIndex == 1 && this.props.exportInfo.exportName != "") {
             this.setState({
                 stepIndex: stepIndex + 1,
@@ -67,10 +63,7 @@ class BreadcrumbStepper extends React.Component {
             include_zipfile : false,
             published : this.props.exportInfo.makePublic,
             provider_tasks : provider_tasks,
-            xmin : this.props.bbox[0],
-            ymin : this.props.bbox[1],
-            xmax : this.props.bbox[2],
-            ymax : this.props.bbox[3],
+            selection: this.props.aoiInfo.geojson,
             tags : [],
     };
 
@@ -107,8 +100,7 @@ class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
     switch (stepIndex) {
         case 0:
-            return <ExportAOI mode={this._mapMode}
-                              onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+            return <ExportAOI mode={this._mapMode}/>;
         case 1:
             return <ExportInfo providers={this.props.providers} />
         case 2:
@@ -116,8 +108,7 @@ class BreadcrumbStepper extends React.Component {
         case 3:
             return 'return export status';
         default:
-            return <ExportAOI mode={this._mapMode}
-                              onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+            return <ExportAOI mode={this._mapMode}/>;
     }
 }
     getButtonContent(stepIndex) {
@@ -140,8 +131,7 @@ class BreadcrumbStepper extends React.Component {
             case 3:
                 return <div></div>
             default:
-                return <ExportAOI mode={this._mapMode}
-                                  onBoundingBoxChange={() => this._handleBoundingBoxChange()}/>;
+                return <ExportAOI mode={this._mapMode}/>;
         }
     }
 
@@ -209,22 +199,24 @@ class BreadcrumbStepper extends React.Component {
         return MODE_NORMAL
     }
 
-    _handleBoundingBoxChange(bbox) {
-        console.log('Running Handle bounding box change in CreateExport.js')
-        console.log(this.props.bbox)
-    }
-
 }
 
 BreadcrumbStepper.propTypes = {
-    bbox: React.PropTypes.arrayOf(React.PropTypes.number),
     aoiInfo: React.PropTypes.object,
+    providers: React.PropTypes.array,
+    stepperNextEnabled: React.PropTypes.bool,
+    exportInfo: React.PropTypes.object,
     createExportRequest: React.PropTypes.func.isRequired,
+    submitJob: React.PropTypes.func,
+    getProviders: React.PropTypes.func,
+    setNextDisabled: React.PropTypes.func,
+    setNextEnabled: React.PropTypes.func,
+    setExportInfoDone: React.PropTypes.func,
+    clearAoiInfo: React.PropTypes.func
 };
 
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
         aoiInfo: state.aoiInfo,
         providers: state.providers,
         stepperNextEnabled: state.stepperNextEnabled,
@@ -250,7 +242,10 @@ function mapDispatchToProps(dispatch) {
         },
         setExportInfoDone: () => {
             dispatch(exportInfoDone());
-        }
+        },
+        clearAoiInfo: () => {
+            dispatch(clearAoiInfo());
+        },
     }
 }
 

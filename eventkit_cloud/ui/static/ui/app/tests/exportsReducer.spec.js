@@ -13,19 +13,6 @@ describe('exportMode reducer', () => {
     });
 });
 
-describe('exportBboxReducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.exportBboxReducer(undefined, {})).toEqual([])
-    });
-
-    it('should handle UPDATE_BBOX', () => {
-        expect(reducers.exportBboxReducer(
-            [],
-            {type: 'UPDATE_BBOX', bbox: [-1,-1,1,1]}
-        )).toEqual([-1,-1,1,1])
-    });
-});
-
 describe('exportAoiInfo reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null})

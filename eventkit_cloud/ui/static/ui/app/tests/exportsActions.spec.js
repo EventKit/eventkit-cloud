@@ -33,20 +33,17 @@ describe('export actions', () => {
         include_zipfile : false,
         published : false,
         provider_tasks : {'provider': ['provider1'], 'formats': ['gpkg']},
-        xmin : -180,
-        ymin : -90,
-        xmax : 180,
-        ymax : 90,
+        selection: {"type": "FeatureCollection",
+                    "features": [{
+                        "type": "Feature",
+                        "bbox": [1,1,1,1],
+                        "geometry" : {
+                            "type": "Polygon",
+                            "coordinates": [[[1,1],[1,1],[1,1],[1,1]]]
+                        }}]},
         tags : [],
 
     };
-
-    it('updateBbox should return passed in bbox', () => {
-        expect(actions.updateBbox(bbox)).toEqual({
-            type: 'UPDATE_BBOX',
-            bbox: bbox
-        });
-    });
 
     it('updateAoiInfo should return passed in json', () => {
         expect(actions.updateAoiInfo(geojson, 'Polygon', 'title', 'description')).toEqual({
@@ -74,7 +71,6 @@ describe('export actions', () => {
     it('valid job should post', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onGet('/api/jobs').reply(200, {});
         mock.onPost('/api/jobs').reply(200, { uid: '123456789' });
 
         const expectedActions = [{type: types.SUBMITTING_JOB},  { jobuid:'123456789', type: types.JOB_SUBMITTED_SUCCESS, }];

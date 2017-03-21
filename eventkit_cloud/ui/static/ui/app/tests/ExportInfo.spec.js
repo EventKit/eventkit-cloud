@@ -9,7 +9,6 @@ describe('ExportInfo component', () => {
     const getProps = () => {
         return {
             providers: [],
-            bbox: [],
             geojson: { 
                 "type": "FeatureCollection",
                 "features": [{ "type": "Feature",

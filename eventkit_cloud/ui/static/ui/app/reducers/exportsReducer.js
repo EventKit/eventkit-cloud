@@ -42,15 +42,6 @@ export function exportModeReducer(state = initialState.mode, action) {
     }
 }
 
-export function exportBboxReducer(state = initialState.bbox, action) {
-    switch(action.type) {
-        case types.UPDATE_BBOX:
-            return action.bbox;
-        default:
-            return state;
-    }
-}
-
 export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
         case types.UPDATE_AOI_INFO:

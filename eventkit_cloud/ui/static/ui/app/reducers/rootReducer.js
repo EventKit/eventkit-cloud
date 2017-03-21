@@ -15,7 +15,6 @@ const rootReducer = combineReducers({
     // short hand property names
     auth: authReducer,
     mode: exportModeReducer,
-    bbox: exportBboxReducer,
     aoiInfo: exportAoiInfoReducer,
     exportInfo: exportInfoReducer,
     zoomToSelection: zoomToSelectionReducer,

@@ -395,7 +395,6 @@ export class ExportInfo extends React.Component {
 }
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
         geojson: state.aoiInfo.geojson,
         setExportPackageFlag: state.setExportPackageFlag,
         exportName: state.exportInfo.exportName,
