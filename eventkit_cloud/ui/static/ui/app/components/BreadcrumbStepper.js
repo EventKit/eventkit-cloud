@@ -11,9 +11,8 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest, getProviders, 
-    stepperNextDisabled, stepperNextEnabled, 
-    exportInfoDone, submitJob, clearAoiInfo} from '../actions/exportsActions'
+import { createExportRequest, getProviders, stepperNextDisabled, 
+    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -34,6 +33,7 @@ class BreadcrumbStepper extends React.Component {
 
     componentWillUnmount() {
         this.props.clearAoiInfo();
+        this.props.clearExportInfo();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -212,7 +212,8 @@ BreadcrumbStepper.propTypes = {
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
     setExportInfoDone: React.PropTypes.func,
-    clearAoiInfo: React.PropTypes.func
+    clearAoiInfo: React.PropTypes.func,
+    clearExportInfo: React.PropTypes.func,
 };
 
 function mapStateToProps(state) {
@@ -246,6 +247,9 @@ function mapDispatchToProps(dispatch) {
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
         },
+        clearExportInfo: () => {
+            dispatch(clearExportInfo());
+        }
     }
 }
 

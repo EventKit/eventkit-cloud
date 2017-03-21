@@ -39,6 +39,77 @@ describe('exportAoiInfo reducer', () => {
     });
 });
 
+describe('exportInfo reducer', () => {
+    it('should return initial state', () => {
+        expect(reducers.exportInfoReducer(undefined, {})).toEqual({
+            exportName: '',
+            datapackDescription: '',
+            projectName: '',
+            makePublic: false,
+            providers: [],
+            area_str: '',
+            layers: ''
+        });
+    });
+
+    it('should handle UPDATE_EXPORT_INFO', () => {
+        expect(reducers.exportInfoReducer(
+            {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: ''
+            },
+            {
+                type: 'UPDATE_EXPORT_INFO',
+                exportName: 'name',
+                datapackDescription: 'description',
+                projectName: 'project',
+                makePublic: true,
+                providers: ['provider'],
+                area_str: 'string',
+                layers: 'layer'
+            }
+        )).toEqual({
+            exportName: 'name',
+            datapackDescription: 'description',
+            projectName: 'project',
+            makePublic: true,
+            providers: ['provider'],
+            area_str: 'string',
+            layers: 'layer'
+        });
+    });
+
+    it('should handle CLEAR_EXPORT_INFO', () => {
+        expect(reducers.exportInfoReducer(
+            {
+                exportName: 'name',
+                datapackDescription: 'description',
+                projectName: 'project',
+                makePublic: true,
+                providers: ['provider'],
+                area_str: 'string',
+                layers: 'layer'
+            },
+            {type: 'CLEAR_EXPORT_INFO'}
+        )).toEqual(
+            {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: ''
+            }
+        )
+    });
+});
+
 describe('drawerMenu Reducer', () => {
     it('should return initial state', () => {
         expect(reducers.drawerMenuReducer(undefined, {})).toEqual(true);

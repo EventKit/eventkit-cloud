@@ -75,6 +75,16 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 area_str: action.area_str,
                 layers: action.layers,
             };
+        case types.CLEAR_EXPORT_INFO:
+            return {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: '',
+            }
         default:
             return state;
     }

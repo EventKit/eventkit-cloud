@@ -39,6 +39,12 @@ export function updateExportInfo(exportName, datapackDescription, projectName, m
     }
 }
 
+export function clearExportInfo() {
+    return {
+        type: types.CLEAR_EXPORT_INFO,
+    }
+}
+
 export function stepperNextDisabled() {
     return {
         type: types.MAKE_STEPPER_INACTIVE,

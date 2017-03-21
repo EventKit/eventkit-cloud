@@ -68,6 +68,12 @@ describe('export actions', () => {
         });
     });
 
+    it('clearExportInfo should return CLEAR_EXPORT_INFO', () => {
+        expect(actions.clearExportInfo()).toEqual({
+            type: 'CLEAR_EXPORT_INFO'
+        });
+    });
+
     it('valid job should post', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
