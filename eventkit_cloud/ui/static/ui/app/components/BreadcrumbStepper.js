@@ -11,7 +11,7 @@ import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
-import { createExportRequest, getProviders, stepperNextDisabled, 
+import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
 const isEqual = require('lodash/isEqual');
 
@@ -37,13 +37,7 @@ class BreadcrumbStepper extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        const {stepIndex} = this.state;
-        if (stepIndex == 1 && this.props.exportInfo.exportName != "") {
-            this.setState({
-                stepIndex: stepIndex + 1,
-                finished: stepIndex >= 2,
-            });
-        }
+
     }
 
     handleSubmit = () => {
@@ -77,7 +71,7 @@ class BreadcrumbStepper extends React.Component {
 
     handleNext = () => {
         const {stepIndex} = this.state;
-        if (stepIndex == 1 && this.props.exportInfo.exportName == "") {
+        if (stepIndex == 1) {
             this.props.setExportInfoDone();
         }
 
@@ -89,6 +83,13 @@ class BreadcrumbStepper extends React.Component {
          });
         }
     };
+
+    incrementStepper = () => {
+        const {stepIndex} = this.state;
+        this.setState({stepIndex: stepIndex + 1,
+            finished: stepIndex >= 2,
+        });
+    }
 
     handlePrev = () => {
         const {stepIndex} = this.state;
@@ -102,7 +103,8 @@ class BreadcrumbStepper extends React.Component {
         case 0:
             return <ExportAOI mode={this._mapMode}/>;
         case 1:
-            return <ExportInfo providers={this.props.providers} />
+            return <ExportInfo providers={this.props.providers}
+                                incrementStepper={this.incrementStepper}/>
         case 2:
             return <ExportSummary/>
         case 3:

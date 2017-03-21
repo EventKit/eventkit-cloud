@@ -28,6 +28,8 @@ export function startExportPackageReducer(state = initialState.setExportPackageF
     switch(action.type) {
         case types.EXPORT_INFO_DONE:
             return true;
+        case types.EXPORT_INFO_NOTDONE:
+            return false;
         default:
             return state;
     }

@@ -16,6 +16,12 @@ export function exportInfoDone() {
         setExportPackageFlag: true
     }
 }
+export function exportInfoNotDone() {
+    return {
+        type: types.EXPORT_INFO_NOTDONE,
+        setExportPackageFlag: false
+    }
+}
 
 export function updateAoiInfo(geojson, geomType, title, description,) {
     return {
