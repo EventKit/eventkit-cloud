@@ -21,13 +21,16 @@ describe('ExportInfo component', () => {
                     },}]
             },
             setExportPackageFlag: false,
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            makePublic: false,
+            exportInfo: {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+            },
             updateExportInfo: () => {},
             setNextDisabled: () => {},
             setNextEnabled: () => {},
+            setExportInfoNotDone: () => {},
         }
     }
     it('should render a form', () => {
