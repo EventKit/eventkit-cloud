@@ -3,7 +3,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
 import AutoComplete from 'material-ui/AutoComplete';
-import DataPackSearchbar from '../components/DataPackSearchbar';
+import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
 describe('DataPackSearchbar component', () => {

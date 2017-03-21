@@ -2,32 +2,88 @@ import React from 'react';
 import sinon from 'sinon';
 import {expect} from 'chai';
 import {mount} from 'enzyme';
-import {DataPackItem} from '../components/DataPackItem';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import {DataPackItem} from '../../components/DataPackPage/DataPackItem';
+import IconButton from 'material-ui/IconButton';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {GridList, GridTile} from 'material-ui/GridList'
-import DataPackList from '../components/DataPackList';
+import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card';
 
-describe('DataPackList component', () => {
+describe('DataPackItem component', () => {
     injectTapEventPlugin();
-    const muiTheme = getMuiTheme();
-    const props = {runs: getRuns(), user: {data: {username: 'admin'}}, onRunDelete: () => {}};
 
-    it('should render a DataPackItem for each run passed in', () => {
-        const mountSpy = new sinon.spy(DataPackList.prototype, 'componentWillMount');
-        const unmountSpy = new sinon.spy(DataPackList.prototype, 'componentWillUnmount');
-        const updateColumnSpy = new sinon.spy(DataPackList.prototype, 'updateColumns');
-        const wrapper = mount(<DataPackList {...props}/>, {
+    const muiTheme = getMuiTheme();
+    const user = {data: {username: 'admin'}};
+
+    it('should display general run information', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = mount(<DataPackItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(GridList)).to.have.length(1);
-        expect(wrapper.find(DataPackItem)).to.have.length(3);
-        expect(mountSpy.calledOnce).to.be.true;
-        expect(updateColumnSpy.calledOnce).to.be.true;
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).to.be.true;
-        
+        expect(wrapper.find(Card)).to.have.length(1);
+        expect(wrapper.find(CardTitle)).to.have.length(1);
+        expect(wrapper.find(CardTitle).find('span').first()
+            .childAt(0).childAt(0).text()).to.equal('Test1');
+        expect(wrapper.find(IconMenu)).to.have.length(1);
+        expect(wrapper.find(IconButton)).to.have.length(1);
+        expect(wrapper.find(IconButton).find('i').text()).to.equal('more_vert');
+        expect(wrapper.find(MenuItem)).to.have.length(0);
+        const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
+        expect(subtitle.find('span').first().text()).to.equal('Event: Test1 event');
+        expect(subtitle.find('span').last().text()).to.equal('Added: 2017-03-10');
+        expect(wrapper.find(CardText)).to.have.length(1);
+        expect(wrapper.find(CardText).find('span').text()).to.equal('Test1 description');
+        expect(wrapper.find(CardMedia)).to.have.length(0);
+        expect(wrapper.find(CardActions)).to.have.length(1);
+    });
+
+    it('should display information specific to a unpublished & owned run', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = mount(<DataPackItem {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(wrapper.find(CardActions).find('i').text()).to.equal('person');
+        expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
+    });
+
+    it('should display information specific to a published & owned run', () => {
+        const props = {run: getRuns()[2], user: user, onRunDelete: () => {}};
+        const wrapper = mount(<DataPackItem {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(wrapper.find(CardActions).find('i').text()).to.equal('group');
+        expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
+    });
+
+    it('should display information specific to a published & not owned run', () => {
+        const props = {run: getRuns()[1], user: user, onRunDelete: () => {}};
+        const wrapper = mount(<DataPackItem {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(wrapper.find(CardActions).find('i').text()).to.equal('group');
+        expect(wrapper.find(CardActions).find('p').text()).to.equal('notAdmin');
+    });
+
+    it('should display a map when the card is expanded', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const uid = props.run.uid;
+        const wrapper = mount(<DataPackItem {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        const updateSpy = new sinon.spy(DataPackItem.prototype, 'componentDidUpdate');
+        wrapper.instance().initMap = sinon.spy();
+        expect(wrapper.find('#' + uid + '_map')).to.have.length(0);
+        wrapper.setState({expanded: true});
+        expect(wrapper.find(CardMedia)).to.have.length(1);        
+        expect(updateSpy.called).to.be.true;
+        expect(wrapper.instance().initMap.called).to.be.true;
+        expect(wrapper.find('#' + uid + '_map')).to.have.length(1);
     });
 });
 

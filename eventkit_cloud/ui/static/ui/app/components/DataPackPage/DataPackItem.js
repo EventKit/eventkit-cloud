@@ -5,7 +5,7 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../styles/DataPackItem.css';
+import style from '../../styles/DataPackItem.css';
 import ol from 'openlayers';
 
 export class DataPackItem extends Component {
