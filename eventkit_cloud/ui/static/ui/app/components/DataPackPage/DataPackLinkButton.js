@@ -18,8 +18,8 @@ export class DataPackLinkButton extends React.Component {
             },
             label: {
                 fontSize: this.props.fontSize,
-                paddingLeft: '30px', 
-                paddingRight: '30px', 
+                paddingLeft: '20px', 
+                paddingRight: '20px', 
                 lineHeight: '35px'
             },
         };
