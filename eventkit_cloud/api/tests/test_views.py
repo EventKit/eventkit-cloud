@@ -433,7 +433,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([-180, -90, 180, 90]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
 

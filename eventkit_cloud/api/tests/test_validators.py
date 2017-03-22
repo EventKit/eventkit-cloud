@@ -2,12 +2,13 @@
 import logging
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon, GEOSException
 from django.test import TestCase
-from rest_framework import serializers
+from rest_framework.serializers import ValidationError
+from mock import patch, Mock
 
-
-from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox
+from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox, validate_selection, validate_bbox_params
+from eventkit_cloud.jobs.models import bbox_to_geojson
 import json
 
 logger = logging.getLogger(__name__)
@@ -20,12 +21,88 @@ class TestValidators(TestCase):
             username='demo1', email='demo@demo.com', password='demo'
         )
         self.extents = (13.473475, 7.441068, 24.002661, 23.450369)
+        self.selection = bbox_to_geojson(self.extents)
 
     def test_validate_bbox(self,):
-        validate_bbox(self.extents, user=self.user)
+
+        bbox = validate_bbox(self.extents, user=self.user)
+        self.assertIsInstance(bbox, Polygon)
+
+        with self.settings(JOB_MAX_EXTENT=1):
+            with self.assertRaises(ValidationError):
+                validate_bbox(self.extents)
+
+        with self.assertRaises(ValidationError):
+            broken_extents = (0, 0, 0, 0)
+            validate_bbox(broken_extents, user=self.user)
+
+        with patch('eventkit_cloud.api.validators.GEOSGeometry') as mock_geos:
+            with self.assertRaises(ValidationError):
+                mock_geos.return_value = Mock(valid=False)
+                validate_bbox(self.extents, user=self.user)
 
     def test_get_geodesic_area(self,):
         bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
         area = get_geodesic_area(bbox)
         self.assertEquals(2006874.9259034647, area / 1000000)
+
+    def test_validate_selection(self):
+        data = {'selection': self.selection}
+        geom = validate_selection(data)
+        self.assertIsInstance(geom, Polygon)
+
+        with self.assertRaises(ValidationError):
+            data = {'selection': []}
+            validate_selection(data)
+
+        with patch('eventkit_cloud.api.validators.GEOSGeometry') as mock_geos:
+            with self.assertRaises(ValidationError):
+                data = {'selection': self.selection}
+                mock_geos.return_value = Mock(valid=False)
+                validate_selection(data, user=self.user)
+
+        broken_geojson = self.selection
+        broken_geojson['geometry']['coordinates'] = [[[[], [], [], []], []]]
+        with self.assertRaises(ValidationError):
+            data = {'selection': broken_geojson}
+            validate_selection(data, user=self.user)
+
+        broken_geojson = self.selection
+        broken_geojson['geometry'] = None
+        with self.assertRaises(ValidationError):
+            data = {'selection': broken_geojson}
+            validate_selection(data, user=self.user)
+
+        with self.settings(JOB_MAX_EXTENT=1):
+            data = {'selection': self.selection}
+            with self.assertRaises(ValidationError):
+                validate_selection(data, user=self.user)
+
+    def test_validate_bbox_params(self):
+
+        data = {'xmin': self.extents[0], 'ymin': self.extents[1], 'xmax': self.extents[2], 'ymax': self.extents[3]}
+
+        (xmin, ymin, xmax, ymax) = validate_bbox_params(data)
+        self.assertEqual(xmin, data['xmin'])
+        self.assertEqual(ymin, data['ymin'])
+        self.assertEqual(xmax, data['xmax'])
+        self.assertEqual(ymax, data['ymax'])
+
+        data = {'xmin': 1, 'ymin': -1, 'xmax': -1, 'ymax': 1}
+        with self.assertRaises(ValidationError):
+           validate_bbox_params(data)
+
+        data = {'xmin': -1, 'ymin': 1, 'xmax': 1, 'ymax': -1}
+        with self.assertRaises(ValidationError):
+            validate_bbox_params(data)
+
+        data = {'xmin': -181, 'ymin': -1, 'xmax': 1, 'ymax': 1}
+        with self.assertRaises(ValidationError):
+            validate_bbox_params(data)
+
+        data = {'xmin': -1, 'ymin': -91, 'xmax': 1, 'ymax': 1}
+        with self.assertRaises(ValidationError):
+            validate_bbox_params(data)
+
+
 

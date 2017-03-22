@@ -200,6 +200,7 @@ class Region(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
     def save(self, *args, **kwargs):
+        self.the_geom = convert_polygon(self.the_geom)
         self.the_geog = GEOSGeometry(self.the_geom)
         self.the_geom_webmercator = self.the_geom.transform(ct=3857, clone=True)
         super(Region, self).save(*args, **kwargs)
@@ -254,6 +255,7 @@ class Job(TimeStampedModelMixin):
         db_table = 'jobs'
 
     def save(self, *args, **kwargs):
+        self.the_geom = convert_polygon(self.the_geom)
         self.the_geog = GEOSGeometry(self.the_geom)
         self.the_geom_webmercator = self.the_geom.transform(ct=3857, clone=True)
         super(Job, self).save(*args, **kwargs)
@@ -433,6 +435,7 @@ def user_owns_job(user=None, job_uid=None):
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)
+    return geom
 
 
 def bbox_to_geojson(bbox=None):

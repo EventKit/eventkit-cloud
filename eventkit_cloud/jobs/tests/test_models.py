@@ -10,7 +10,6 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
-from django.utils import timezone
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
     ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag, ExportProvider, ProviderTask

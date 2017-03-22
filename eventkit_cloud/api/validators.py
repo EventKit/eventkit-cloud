@@ -111,14 +111,15 @@ def validate_bbox(extents, user=None):
             are invalid.
     """
     max_extent = settings.JOB_MAX_EXTENT
-    for group in user.groups.all():
-        if hasattr(group, 'export_profile'):
-            max_extent = group.export_profile.max_extent
+    if user:
+        for group in user.groups.all():
+            if hasattr(group, 'export_profile'):
+                max_extent = group.export_profile.max_extent if group.export_profile.max_extent > max_extent else max_extent
     detail = OrderedDict()
     detail['id'] = _('invalid_bounds')
     detail['message'] = _('Invalid bounding box.')
     try:
-        bbox = (GEOSGeometry(Polygon.from_bbox(extents), srid=4326))
+        bbox = GEOSGeometry(Polygon.from_bbox(extents), srid=4326)
         if bbox.valid:
             area = get_geodesic_area(bbox) / 1000000
             if area > max_extent:
@@ -151,9 +152,10 @@ def validate_selection(data, user=None):
     """
 
     max_extent = settings.JOB_MAX_EXTENT
-    # for group in user.groups.all():
-    #     if hasattr(group, 'export_profile'):
-    #         max_extent = group.export_profile.max_extent
+    if user:
+        for group in user.groups.all():
+            if hasattr(group, 'export_profile'):
+                max_extent = group.export_profile.max_extent if group.export_profile.max_extent > max_extent else max_extent
     detail = OrderedDict()
     detail['id'] = _('invalid_selection')
     detail['message'] = _('Invalid Selection.')
@@ -224,40 +226,12 @@ def validate_bbox_params(data):
             detail['message'] = _('Invalid longitude coordinate: %(lon)s') % {'lon': lon}
             raise serializers.ValidationError(detail)
     for lat in lat_coords:
-        if -90 > lat > 90:
+        if lat < -90 or lat > 90:
             detail['id'] = _('invalid_latitude')
             detail['message'] = _('Invalid latitude coordinate: %(lat)s') % {'lat': lat}
             raise serializers.ValidationError(detail)
 
     return data['xmin'], data['ymin'], data['xmax'], data['ymax']
-
-
-def validate_string_field(name=None, data=None):
-    """
-    Validates a string.
-
-    Args:
-        name (string): the name of the form parameter.
-        data (dict): the dict of data submitted during form submission.
-
-    Returns:
-        the validated value from the data dict.
-
-    Raises:
-        ValidationError: if the value is blank or missing.
-    """
-    detail = OrderedDict()
-    detail['id'] = _('missing_parameter')
-    detail['message'] = _('Missing parameter: %(name)s') % {'name': name}
-    detail['param'] = name
-    try:
-        value = data[name]
-        if value is None or value == '':
-            raise serializers.ValidationError(detail)
-        else:
-            return value
-    except Exception:
-        raise serializers.ValidationError(detail)
 
 
 def validate_content_type(upload, config_type):
