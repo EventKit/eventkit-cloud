@@ -17,7 +17,6 @@ export class DataPackPage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
@@ -26,7 +25,6 @@ export class DataPackPage extends React.Component {
             open: false,
             runs: [],
             displayedRuns: [],
-            dataPackButtonFontSize: '',
             dropDownValue: 1,
             sortDropDown: utils.orderNewest,
             search: {
@@ -54,28 +52,7 @@ export class DataPackPage extends React.Component {
     }
 
     componentWillMount() {
-        this.screenSizeUpdate();
         this.props.getRuns();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
-        if(window.innerWidth <= 750) {
-            this.setState({dataPackButtonFontSize: '10px'});
-        }
-        else if (window.innerWidth <= 900) {
-            this.setState({dataPackButtonFontSize: '13px'});
-        }
-        else if (window.innerWidth <= 1000) {
-            this.setState({dataPackButtonFontSize: '13px'});
-        }
-        else {
-            this.setState({dataPackButtonFontSize: '14px'});
-        }
     }
 
     onSearch(searchText, ix) {
@@ -165,7 +142,7 @@ export class DataPackPage extends React.Component {
                     style={styles.appBar} title={pageTitle}
                     iconElementLeft={<p></p>}
                 >
-                    <DataPackLinkButton fontSize={this.state.dataPackButtonFontSize} />
+                    <DataPackLinkButton />
                 </AppBar>
                 <Toolbar style={styles.toolbarSearch}>
                     <ToolbarGroup style={{margin: 'auto', width: '100%'}}>

@@ -6,6 +6,43 @@ export class DataPackOwnerSort extends React.Component {
 
     constructor(props) {
         super(props);
+        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
+        this.state = {
+            labelFontSize: '16px',
+            itemFontSize: '15px',
+        }
+    }
+
+    componentWillMount() {
+        this.screenSizeUpdate();
+        window.addEventListener('resize', this.screenSizeUpdate);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.screenSizeUpdate);
+    }
+
+    screenSizeUpdate() {
+        if(window.innerWidth <= 575) {
+            this.setState({labelFontSize: '12px'});
+            this.setState({itemFontSize: '10px'});
+        }
+        else if (window.innerWidth <= 767) {
+            this.setState({labelFontSize: '13px'});
+            this.setState({itemFontSize: '11px'});
+        }
+        else if (window.innerWidth <= 991) {
+            this.setState({labelFontSize: '14px'});
+            this.setState({itemFontSize: '12px'});
+        }
+        else if(window.innerWidth <= 1199) {
+            this.setState({labelFontSize: '15px'});
+            this.setState({itemFontSize: '13px'});
+        }
+        else {
+            this.setState({labelFontSize: '16px'});
+            this.setState({itemFontSize: '14px'});
+        }
     }
 
     render() {
@@ -16,7 +53,7 @@ export class DataPackOwnerSort extends React.Component {
                 float: 'left',
             },
             item: {
-                fontSize: '12px',
+                fontSize: this.state.itemFontSize,
             },
             icon: {
                 height: '30px', 
@@ -28,7 +65,10 @@ export class DataPackOwnerSort extends React.Component {
             label: {
                 lineHeight: '30px', 
                 color: '#4498c0', 
-                paddingLeft: '5px'},
+                paddingLeft: '5px',
+                fontSize: this.state.labelFontSize,
+                fontWeight: 'bold'
+            },
             list: {
                 paddingTop: '5px', 
                 paddingBottom: '0px'

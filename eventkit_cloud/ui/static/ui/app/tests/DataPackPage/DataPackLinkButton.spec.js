@@ -10,11 +10,10 @@ import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton
 
 describe('DataPackLinkButton component', () => {
     injectTapEventPlugin();
-    const props = {fontSize: '15px'};
     const muiTheme = getMuiTheme();
 
     it('should render a linked button', () => {
-        const wrapper = mount(<DataPackLinkButton {...props} />, {
+        const wrapper = mount(<DataPackLinkButton />, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });

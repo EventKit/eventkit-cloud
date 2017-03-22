@@ -62,10 +62,9 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackList)).to.have.length(1);
     });
 
-    it('should call getRuns and sizeUpdate when mounting', () => {
+    it('should call getRuns when mounting', () => {
         let props = getProps();
         props.getRuns = new sinon.spy();
-        const resizeSpy = new sinon.spy(DataPackPage.prototype, 'screenSizeUpdate');
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
         const wrapper = shallow(<DataPackPage {...props}/>, {
             context: {muiTheme},
@@ -74,21 +73,7 @@ describe('DataPackPage component', () => {
             }
         });
         expect(props.getRuns.calledOnce).to.be.true;
-        expect(resizeSpy.calledOnce).to.be.true;
         expect(mountSpy.calledOnce).to.be.true;
-    });
-
-    it('should do call componentWillUnmount', () => {
-        const props = getProps();
-        const unmountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
-        const wrapper = shallow(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).to.be.true;
     });
 
     it('should handle fetched runs', () => {
