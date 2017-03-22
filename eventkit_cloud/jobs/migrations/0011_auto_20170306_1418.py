@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             name='service_description',
             field=models.CharField(blank=True, default='', help_text='This information is used to provide information about the service.', max_length=4000, null=True, verbose_name='Description'),
         ),
-        migrations.AddField(
-            model_name='job',
-            name='selection',
-            field=models.TextField(blank=True, default='', null=True, verbose_name='Selection Area (GeoJSON)'),
-        ),
     ]

@@ -13,6 +13,7 @@ from lxml import etree
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry, Polygon
+from django.contrib.gis.gdal import GDALException
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -117,7 +118,7 @@ def validate_bbox(extents, user=None):
     detail['id'] = _('invalid_bounds')
     detail['message'] = _('Invalid bounding box.')
     try:
-        bbox = GEOSGeometry(Polygon.from_bbox(extents), srid=4326)
+        bbox = (GEOSGeometry(Polygon.from_bbox(extents), srid=4326))
         if bbox.valid:
             area = get_geodesic_area(bbox) / 1000000
             if area > max_extent:
@@ -128,6 +129,60 @@ def validate_bbox(extents, user=None):
         else:
             raise serializers.ValidationError(detail)
     except GEOSException:
+        raise serializers.ValidationError(detail)
+
+
+def validate_selection(data, user=None):
+    """
+    Validates the extents by calculating the geodesic area of the extents,
+    then checking the resulting area against the max_extent for the user.
+
+    Args:
+        selection: a valid geojson.
+        user: the authenticated user.
+
+    Returns:
+        a valid GEOSGeometry.
+
+    Raises:
+        ValidationError: if the extents are greater than the allowed max_extent
+            for the user, or if the GEOSGeometry cannot be created or
+            are invalid.
+    """
+
+    max_extent = settings.JOB_MAX_EXTENT
+    # for group in user.groups.all():
+    #     if hasattr(group, 'export_profile'):
+    #         max_extent = group.export_profile.max_extent
+    detail = OrderedDict()
+    detail['id'] = _('invalid_selection')
+    detail['message'] = _('Invalid Selection.')
+    try:
+        if not isinstance(data.get("selection"), dict):
+            detail['id'] = _('no selection')
+            detail['message'] = _('Jobs must have a geojson provided via a selection attribute.\n {0}'.format(data))
+            raise serializers.ValidationError(detail)
+        geometry = data['selection'].get('geometry') or data['selection'].get('features', [{}])[0].get('geometry')
+        if not geometry:
+            detail['id'] = _('no geometry')
+            detail['message'] = _('The geojson did not have a geometry object or bbox.\n {0}'.format(data.get("selection")))
+            raise serializers.ValidationError(detail)
+        geom = GEOSGeometry(json.dumps(geometry), srid=4326)
+        if geom.valid:
+            area = get_geodesic_area(geom) / 1000000
+            if area > max_extent:
+                detail['id'] = _('invalid_extents')
+                detail['message'] = _('Job extents too large: %(area)s') % {'area': area}
+                raise serializers.ValidationError(detail)
+            return geom
+        else:
+            raise serializers.ValidationError(detail)
+    except GEOSException as geos_exception:
+        logger.error(geos_exception.message)
+        raise serializers.ValidationError(detail)
+    except GDALException as gdal_exception:
+        detail['id'] = _('GDAL Error')
+        detail['message'] = _('GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}'.format(gdal_exception.message, geometry))
         raise serializers.ValidationError(detail)
 
 
@@ -289,3 +344,5 @@ def get_geodesic_area(geom):
                                                    + math.sin(math.radians(p2[1])))
         area = area * 6378137 * 6378137 / 2.0
     return area
+
+

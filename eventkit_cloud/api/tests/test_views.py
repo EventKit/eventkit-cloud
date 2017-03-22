@@ -18,8 +18,7 @@ from rest_framework.test import APITestCase
 
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, \
-    ExportProviderType, \
-    ProviderTask
+    ExportProviderType, ProviderTask, bbox_to_geojson
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.api.views import get_models, get_provider_task
 
@@ -117,14 +116,12 @@ class TestJobViewSet(APITestCase):
         export_providers_start_len = len(export_providers)
         config_uid = self.config.uid
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
+
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0,
                                   'url': 'http://coolproviderurl.to',
@@ -211,10 +208,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
@@ -240,10 +234,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'published': True,
@@ -286,10 +277,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': config_uid,
             'transform': '',
@@ -331,10 +319,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             # 'preset': config_uid,
             'transform': '',
@@ -359,125 +344,23 @@ class TestJobViewSet(APITestCase):
                          request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
-        # configs = self.job.configs.all()
-        # self.assertIsNotNone(configs[0])
 
-    def test_missing_bbox_param(self, ):
+
+    def test_invalid_selection(self, ):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            # 'xmin': -3.9, missing
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  {},
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['xmin is required.'], response.data['xmin'])
-
-    def test_invalid_bbox_param(self, ):
-        url = reverse('api:jobs-list')
-        formats = [str(export_format.uid) for export_format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': '',  # empty
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
-        }
-        response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['invalid xmin value.'], response.data['xmin'])
-
-    def test_invalid_bbox(self, ):
-        url = reverse('api:jobs-list')
-        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': 7.0,  # invalid
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
-        }
-        try:
-            response = self.client.post(url, request_data, format='json')
-        except Exception:
-            pass
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['invalid_bounds'], response.data['id'])
-
-    def test_lat_lon_bbox(self, ):
-        url = reverse('api:jobs-list')
-        formats = [str(export_format.uid) for export_format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': -227.14,  # invalid
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
-        }
-        response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(["Ensure this value is greater than or equal to -180."], response.data['xmin'])
-
-    def test_coord_nan(self, ):
-        url = reverse('api:jobs-list')
-        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': 'xyz',  # invalid
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap', 'formats': formats}]
-        }
-        response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['invalid xmin value.'], response.data['xmin'])
-
-    def test_inverted_coords(self, ):
-        url = reverse('api:jobs-list')
-        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-        request_data = {
-            'name': 'TestJob',
-            'description': 'Test description',
-            'event': 'Test Activation',
-            'xmin': 7.0,  # inverted
-            'ymin': 16.1,
-            'xmax': -3.9,  # inverted
-            'ymax': 27.6,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
-        }
-        response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['inverted_coordinates'], response.data['id'])
+        self.assertEquals(['no geometry'], response.data['id'])
 
     def test_empty_string_param(self, ):
         url = reverse('api:jobs-list')
@@ -486,10 +369,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': '',  # empty
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'formats': formats
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -504,10 +384,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -521,10 +398,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
@@ -539,10 +413,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -3.9,
-            'ymin': 16.1,
-            'xmax': 7.0,
-            'ymax': 27.6,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [
                 {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
@@ -562,13 +433,13 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'xmin': -40,
-            'ymin': -10,
-            'xmax': 40,
-            'ymax': 20,
+            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
-        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+
+        with self.settings(JOB_MAX_EXTENT=100000):
+            response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
@@ -612,10 +483,7 @@ class TestBBoxSearch(APITestCase):
                 'name': 'TestJob',
                 'description': 'Test description',
                 'event': 'Test Activation',
-                'xmin': extent[0],
-                'ymin': extent[1],
-                'xmax': extent[2],
-                'ymax': extent[3],
+                'selection': bbox_to_geojson(extent),
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
