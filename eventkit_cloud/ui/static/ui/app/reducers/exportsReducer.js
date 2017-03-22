@@ -28,6 +28,8 @@ export function startExportPackageReducer(state = initialState.setExportPackageF
     switch(action.type) {
         case types.EXPORT_INFO_DONE:
             return true;
+        case types.EXPORT_INFO_NOTDONE:
+            return false;
         default:
             return state;
     }
@@ -37,15 +39,6 @@ export function exportModeReducer(state = initialState.mode, action) {
     switch(action.type) {
         case types.SET_MODE:
             return action.mode;
-        default:
-            return state;
-    }
-}
-
-export function exportBboxReducer(state = initialState.bbox, action) {
-    switch(action.type) {
-        case types.UPDATE_BBOX:
-            return action.bbox;
         default:
             return state;
     }
@@ -84,6 +77,16 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 area_str: action.area_str,
                 layers: action.layers,
             };
+        case types.CLEAR_EXPORT_INFO:
+            return {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: '',
+            }
         default:
             return state;
     }

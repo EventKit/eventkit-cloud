@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {setBoxButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
-import {updateMode, updateBbox} from '../actions/exportsActions.js';
+import {updateMode} from '../actions/exportsActions.js';
 
 
 

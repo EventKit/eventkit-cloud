@@ -16,11 +16,10 @@ export function exportInfoDone() {
         setExportPackageFlag: true
     }
 }
-
-export function updateBbox(bbox) {
+export function exportInfoNotDone() {
     return {
-        type: types.UPDATE_BBOX,
-        bbox: bbox || null
+        type: types.EXPORT_INFO_NOTDONE,
+        setExportPackageFlag: false
     }
 }
 
@@ -46,6 +45,12 @@ export function updateExportInfo(exportName, datapackDescription, projectName, m
     }
 }
 
+export function clearExportInfo() {
+    return {
+        type: types.CLEAR_EXPORT_INFO,
+    }
+}
+
 export function stepperNextDisabled() {
     return {
         type: types.MAKE_STEPPER_INACTIVE,
@@ -63,10 +68,6 @@ export function stepperNextEnabled() {
 export const submitJob = data => dispatch => {
     dispatch({
         type: types.SUBMITTING_JOB
-    });
-
-    axios.get('/api/jobs').catch((error) => {
-        console.log(error);
     });
 
     const csrfmiddlewaretoken = cookie.load('csrftoken');

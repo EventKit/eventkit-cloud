@@ -9,7 +9,6 @@ describe('ExportInfo component', () => {
     const getProps = () => {
         return {
             providers: [],
-            bbox: [],
             geojson: { 
                 "type": "FeatureCollection",
                 "features": [{ "type": "Feature",
@@ -22,13 +21,16 @@ describe('ExportInfo component', () => {
                     },}]
             },
             setExportPackageFlag: false,
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            makePublic: false,
+            exportInfo: {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+            },
             updateExportInfo: () => {},
             setNextDisabled: () => {},
             setNextEnabled: () => {},
+            setExportInfoNotDone: () => {},
         }
     }
     it('should render a form', () => {
