@@ -110,7 +110,7 @@ class TaskFactory:
                             if chain_task_runner_tasks:
                                 # Create a geojson for clipping this provider if needed
                                 selection_task = create_task(export_provider_task_uid=export_provider_task_uid,
-                                                                 stage_dir=stage_dir, worker=worker, task_type='selection', selection=job.selection)
+                                                                 stage_dir=stage_dir, worker=worker, task_type='selection', selection=job.the_geom.geojson)
 
                                 # Export the bounds for this provider
                                 bounds_task = create_task(export_provider_task_uid=export_provider_task_uid,

@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
-import {updateMode, updateBbox} from '../actions/exportsActions.js';
+import {updateMode} from '../actions/exportsActions.js';
 import {setImportButtonSelected, setAllButtonsDefault, setImportModalState} from '../actions/mapToolActions';
 
 export class ImportButton extends Component {

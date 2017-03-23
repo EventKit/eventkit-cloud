@@ -3,7 +3,6 @@ import { initialState as authInitialState } from './userReducer'
 
 export default {
     auth: authInitialState,
-    bbox: [],
     aoiInfo: {
         geojson: {},
         geomType: null,
@@ -49,6 +48,12 @@ export default {
     runsDeletion: {
         deleting: false,
         deleted: false,
+        error: null,
+    },
+    jobSubmit: {
+        fetching: false,
+        fetched: false,
+        jobuid: '',
         error: null,
     },
     exportInfo: {

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/SearchAOIButton.css';
 import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
-import {updateMode, updateBbox} from '../actions/exportsActions';
+import {updateMode} from '../actions/exportsActions';
 
 export class SearchAOIButton extends Component {
     

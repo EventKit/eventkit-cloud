@@ -277,7 +277,7 @@ class SimpleJobSerializer(serializers.Serializer):
         lookup_field='uid'
     )
     extent = serializers.SerializerMethodField()
-    selection = serializers.CharField()
+    # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
 
     @staticmethod
@@ -573,37 +573,6 @@ class JobSerializer(serializers.Serializer):
     published = serializers.BooleanField(required=False)
     feature_save = serializers.BooleanField(required=False)
     feature_pub = serializers.BooleanField(required=False)
-    selection = serializers.CharField(
-        required=False,
-        allow_blank=True)
-    xmin = serializers.FloatField(
-        max_value=180, min_value=-180, write_only=True,
-        error_messages={
-            'required': _('xmin is required.'),
-            'invalid': _('invalid xmin value.'),
-        }
-    )
-    ymin = serializers.FloatField(
-        max_value=90, min_value=-90, write_only=True,
-        error_messages={
-            'required': _('ymin is required.'),
-            'invalid': _('invalid ymin value.'),
-        }
-    )
-    xmax = serializers.FloatField(
-        max_value=180, min_value=-180, write_only=True,
-        error_messages={
-            'required': _('xmax is required.'),
-            'invalid': _('invalid xmax value.'),
-        }
-    )
-    ymax = serializers.FloatField(
-        max_value=90, min_value=-90, write_only=True,
-        error_messages={
-            'required': _('ymax is required.'),
-            'invalid': _('invalid ymax value.'),
-        }
-    )
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(
@@ -633,19 +602,16 @@ class JobSerializer(serializers.Serializer):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def validate(data, **kwargs):
+    def validate(self, data, **kwargs):
         """
         Validates the data submitted during Job creation.
 
         See api/validators.py for validation code.
         """
         user = data['user']
-        extents = validators.validate_bbox_params(data)
-        the_geom = validators.validate_bbox(extents, user=user)
-        data['the_geom'] = the_geom
-        for _key in ['xmin', 'ymin', 'xmax', 'ymax', 'provider_tasks']:
-            data.pop(_key)
+        selection = validators.validate_selection(self.context['request'].data, user=user)
+        data['the_geom'] = selection
+        data.pop('provider_tasks')
 
         return data
 

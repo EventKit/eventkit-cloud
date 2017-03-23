@@ -113,7 +113,6 @@ export class Application extends Component {
 }
 Application.propTypes = {
     children: PropTypes.object.isRequired,
-    bbox:     React.PropTypes.arrayOf(React.PropTypes.number),
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
 };
