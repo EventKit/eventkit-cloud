@@ -19,9 +19,6 @@ import logging
 from django.db import connections
 from ..tasks.task_process import TaskProcess
 import requests
-import os
-import subprocess
-import json
 
 logger = logging.getLogger(__name__)
 

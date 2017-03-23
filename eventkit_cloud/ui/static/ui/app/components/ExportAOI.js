@@ -260,7 +260,7 @@ export class ExportAOI extends Component {
                 right: '0px',
         }
 
-        if(this.props.drawerOpen && window.innerWidth > 600) {
+        if(this.props.drawerOpen && window.innerWidth > 700) {
             mapStyle.left = '200px';
         }
         else {

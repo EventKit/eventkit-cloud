@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react'
 import AutoComplete from 'material-ui/AutoComplete';
-import searchStyles from '../styles/DataPackSearchbar.css';
+import searchStyles from '../../styles/DataPackSearchbar.css';
 
 class DataPackSearchbar extends React.Component {
 

@@ -443,7 +443,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     run = ExportRun.objects.get(uid=run_uid)
 
     result_gpkg = parse_result(result, 'geopackage')
-    bounds = run.job.selection or run.job.bounds_geojson
+    bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
     gpkg = geopackage.add_geojson_to_geopackage(geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)

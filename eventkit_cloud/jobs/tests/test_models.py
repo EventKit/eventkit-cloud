@@ -5,12 +5,11 @@ import os
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.gdal import DataSource
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
-from django.utils import timezone
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
     ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag, ExportProvider, ProviderTask
@@ -85,8 +84,8 @@ class TestJob(TestCase):
 
     def test_spatial_fields(self, ):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        the_geog = GEOSGeometry(bbox)
+        the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
+        the_geog = MultiPolygon(GEOSGeometry(bbox))
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         job = Job.objects.all()[0]
         self.assertIsNotNone(job)
@@ -253,7 +252,7 @@ class TestJobRegionIntersection(TestCase):
     def test_job_outside_region(self, ):
         job = Job.objects.all()[0]
         bbox = Polygon.from_bbox((2.74, 47.66, 21.61, 60.24))  # outside any region
-        the_geom = GEOSGeometry(bbox, srid=4326)
+        the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326))
         job.the_geom = the_geom
         job.save()
         regions = Region.objects.filter(the_geom__intersects=job.the_geom).intersection(job.the_geom,
