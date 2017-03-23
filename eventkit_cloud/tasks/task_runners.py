@@ -500,7 +500,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                                   layer=provider_task.provider.layer,
                                                                   config=provider_task.provider.config,
                                                                   bbox=bbox,
-                                                                  selection=job.selection,
+                                                                  selection=job.the_geom.geojson,
                                                                   service_url=provider_task.provider.url,
                                                                   level_from=provider_task.provider.level_from,
                                                                   level_to=provider_task.provider.level_to,

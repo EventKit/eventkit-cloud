@@ -157,10 +157,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     "description" : "Example Description",
                     "event" : "Example Event (Project)",
                     "include_zipfile" : true,
-                    "xmin" : "-71.037555",
-                    "ymin" : "42.347380",
-                    "xmax" : "-71.033349",
-                    "ymax" : "42.349600",
+                    "selection": { ... valid geojson ... },
                     "tags" : [],
                     "provider_tasks" : [{
                             "provider" : "OpenStreetMap Data (Themes)",
@@ -211,7 +208,6 @@ class JobViewSet(viewsets.ModelViewSet):
                   "published": false,
                   "feature_save": false,
                   "feature_pub": false,
-                  "selection": "",
                   "region": null,
                   "extent": {
                     "type": "Feature",
@@ -265,7 +261,7 @@ class JobViewSet(viewsets.ModelViewSet):
         """
 
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
 
             export_providers = request.data.get('export_providers', [])

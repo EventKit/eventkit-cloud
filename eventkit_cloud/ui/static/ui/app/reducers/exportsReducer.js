@@ -28,6 +28,8 @@ export function startExportPackageReducer(state = initialState.setExportPackageF
     switch(action.type) {
         case types.EXPORT_INFO_DONE:
             return true;
+        case types.EXPORT_INFO_NOTDONE:
+            return false;
         default:
             return state;
     }
@@ -37,15 +39,6 @@ export function exportModeReducer(state = initialState.mode, action) {
     switch(action.type) {
         case types.SET_MODE:
             return action.mode;
-        default:
-            return state;
-    }
-}
-
-export function exportBboxReducer(state = initialState.bbox, action) {
-    switch(action.type) {
-        case types.UPDATE_BBOX:
-            return action.bbox;
         default:
             return state;
     }
@@ -84,6 +77,16 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 area_str: action.area_str,
                 layers: action.layers,
             };
+        case types.CLEAR_EXPORT_INFO:
+            return {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: '',
+            }
         default:
             return state;
     }
@@ -97,5 +100,18 @@ export function getProvidersReducer(state = initialState.providers, action ) {
             return action.providers
         default:
             return state
+    }
+}
+
+export function submitJobReducer(state = initialState.jobSubmit, action) {
+    switch(action.type) {
+        case types.SUBMITTING_JOB:
+            return {fetching: true, fetched: false, jobuid: '', error: null}
+        case types.JOB_SUBMITTED_SUCCESS:
+            return {fetching: false, fetched: true, jobuid: action.jobuid, error: null}
+        case types.JOB_SUBMITTED_ERROR:
+            return {fetching: false, fetched: false, jobuid: '', error: action.error};
+        default:
+            return state;
     }
 }

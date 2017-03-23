@@ -9,7 +9,7 @@ import BreadcrumbStepper from './BreadcrumbStepper'
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert'
 import primaryStyles from '../styles/constants.css'
 
-class CreateExport extends React.Component {
+export class CreateExport extends React.Component {
 
     constructor() {
         super()
@@ -66,16 +66,6 @@ class CreateExport extends React.Component {
 
 
 CreateExport.propTypes = {
-    bbox:            React.PropTypes.arrayOf(React.PropTypes.number),
 };
 
-function mapStateToProps(state) {
-    return {
-        bbox: state.bbox,
-    };
-}
-
-
-export default connect(
-    mapStateToProps,
-)(CreateExport);
+export default CreateExport;

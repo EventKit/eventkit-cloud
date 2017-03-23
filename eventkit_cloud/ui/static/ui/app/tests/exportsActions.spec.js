@@ -2,6 +2,9 @@ import * as actions from '../actions/exportsActions'
 import configureMockStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import nock from 'nock'
+import types from '../actions/actionTypes'
+import axios from 'axios'
+import MockAdapter from 'axios-mock-adapter';
 const middlewares = [thunk]
 const mockStore = configureMockStore(middlewares)
 
@@ -23,12 +26,24 @@ describe('export actions', () => {
         };
     let mode = "DRAW_MODE_NORMAL";
 
-    it('updateBbox should return passed in bbox', () => {
-        expect(actions.updateBbox(bbox)).toEqual({
-            type: 'UPDATE_BBOX',
-            bbox: bbox
-        });
-    });
+    let jobData = {
+        name: 'testJobName',
+        description: 'testJobDesc',
+        event: 'testJobEvent',
+        include_zipfile : false,
+        published : false,
+        provider_tasks : {'provider': ['provider1'], 'formats': ['gpkg']},
+        selection: {"type": "FeatureCollection",
+                    "features": [{
+                        "type": "Feature",
+                        "bbox": [1,1,1,1],
+                        "geometry" : {
+                            "type": "Polygon",
+                            "coordinates": [[[1,1],[1,1],[1,1],[1,1]]]
+                        }}]},
+        tags : [],
+
+    };
 
     it('updateAoiInfo should return passed in json', () => {
         expect(actions.updateAoiInfo(geojson, 'Polygon', 'title', 'description')).toEqual({
@@ -38,6 +53,39 @@ describe('export actions', () => {
             title: 'title',
             description: 'description',
         });
+    });
+
+    it('updateExportInfo should return passed in json', () => {
+        expect(actions.updateExportInfo('exportName', 'datapackDescription', 'projectName', true, ['provider1'], 'area_str', ['layer1'])).toEqual({
+            type: 'UPDATE_EXPORT_INFO',
+            exportName: 'exportName',
+            datapackDescription: 'datapackDescription',
+            projectName: 'projectName',
+            makePublic: true,
+            providers: ['provider1'],
+            area_str: 'area_str',
+            layers: ['layer1'],
+        });
+    });
+
+    it('clearExportInfo should return CLEAR_EXPORT_INFO', () => {
+        expect(actions.clearExportInfo()).toEqual({
+            type: 'CLEAR_EXPORT_INFO'
+        });
+    });
+
+    it('valid job should post', () => {
+        const mock = new MockAdapter(axios, {delayResponse: 1000});
+
+        mock.onPost('/api/jobs').reply(200, { uid: '123456789' });
+
+        const expectedActions = [{type: types.SUBMITTING_JOB},  { jobuid:'123456789', type: types.JOB_SUBMITTED_SUCCESS, }];
+
+        const store = mockStore({jobSubmit: {jobuid: {}}})
+        return store.dispatch(actions.submitJob(jobData))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions)
+            })
     });
 
     it('clearAoiInfo should return type CLEAR_AOI_INFO and no action', () => {
@@ -64,5 +112,27 @@ describe('export actions', () => {
             type: 'OPEN_DRAWER'
         });
     });
+
+    it('exportInfoDone should return EXPORT_INFO_DONE and setExportPackageFlag to true', () => {
+        expect(actions.exportInfoDone()).toEqual({
+            type: 'EXPORT_INFO_DONE',
+            setExportPackageFlag: true
+        });
+    });
+
+    it('stepperNextDisabled should return MAKE_STEPPER_INACTIVE and false', () => {
+        expect(actions.stepperNextDisabled()).toEqual({
+            type: 'MAKE_STEPPER_INACTIVE',
+            stepperNextEnabled: false
+        });
+    });
+
+    it('stepperNextEnabled should return MAKE_STEPPER_ACTIVE and true', () => {
+        expect(actions.stepperNextEnabled()).toEqual({
+            type: 'MAKE_STEPPER_ACTIVE',
+            stepperNextEnabled: true
+        });
+    });
+
 });
 
