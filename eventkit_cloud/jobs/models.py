@@ -3,10 +3,11 @@ from __future__ import unicode_literals
 
 import logging
 import uuid
+import json
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
 from django.core.serializers import serialize
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.fields import CharField
@@ -175,13 +176,19 @@ class Region(TimeStampedModelMixin):
     """
     Model for a HOT Export Region.
     """
+    def __init__(self, *args, **kwargs):
+        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
+        kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
+        kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
+        super(Region, self).__init__(*args, **kwargs)
+
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
-    the_geom = models.PolygonField(verbose_name='HOT Export Region', srid=4326, default='')
-    the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export region', srid=3857, default='')
-    the_geog = models.PolygonField(verbose_name='Geographic extent for export region', geography=True, default='')
+    the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
+    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857, default='')
+    the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export region', geography=True, default='')
     objects = models.GeoManager()
 
     class Meta:  # pragma: no cover
@@ -190,6 +197,12 @@ class Region(TimeStampedModelMixin):
 
     def __str__(self):
         return '{0}'.format(self.name)
+
+    def save(self, *args, **kwargs):
+        self.the_geom = convert_polygon(self.the_geom)
+        self.the_geog = GEOSGeometry(self.the_geom)
+        self.the_geom_webmercator = self.the_geom.transform(ct=3857, clone=True)
+        super(Region, self).save(*args, **kwargs)
 
 
 class ProviderTask(models.Model):
@@ -212,6 +225,12 @@ class Job(TimeStampedModelMixin):
     """
     Model for a Job.
     """
+    def __init__(self, *args, **kwargs):
+        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
+        kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
+        kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
+        super(Job, self).__init__(*args, **kwargs)
+
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     user = models.ForeignKey(User, related_name='owner')
@@ -224,10 +243,9 @@ class Job(TimeStampedModelMixin):
     published = models.BooleanField(default=False, db_index=True)  # publish export
     feature_save = models.BooleanField(default=False, db_index=True)  # save feature selections
     feature_pub = models.BooleanField(default=False, db_index=True)  # publish feature selections
-    the_geom = models.PolygonField(verbose_name='Extent for export', srid=4326, default='')
-    the_geom_webmercator = models.PolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
-    the_geog = models.PolygonField(verbose_name='Geographic extent for export', geography=True, default='')
-    selection = models.TextField(verbose_name='Selection Area (GeoJSON)', null=True, blank=True, default='')
+    the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
+    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
+    the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
 
@@ -236,6 +254,7 @@ class Job(TimeStampedModelMixin):
         db_table = 'jobs'
 
     def save(self, *args, **kwargs):
+        self.the_geom = convert_polygon(self.the_geom)
         self.the_geog = GEOSGeometry(self.the_geom)
         self.the_geom_webmercator = self.the_geom.transform(ct=3857, clone=True)
         super(Job, self).save(*args, **kwargs)
@@ -347,12 +366,20 @@ class RegionMask(models.Model):
     """
     Model to hold region mask.
     """
+    def __init__(self, *args, **kwargs):
+        kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
+        super(Region, self).__init__(*args, **kwargs)
+
     id = models.IntegerField(primary_key=True)
     the_geom = models.MultiPolygonField(verbose_name='Mask for export regions', srid=4326)
 
     class Meta:  # pragma: no cover
         managed = False
         db_table = 'region_mask'
+
+    def save(self, *args, **kwargs):
+        self.the_geom = convert_polygon(self.the_geom)
+        super(RegionMask, self).save(*args, **kwargs)
 
 
 class ExportProfile(models.Model):
@@ -402,3 +429,19 @@ def user_owns_job(user=None, job_uid=None):
         return True
     else:
         return False
+
+
+def convert_polygon(geom=None):
+    if geom and isinstance(geom, Polygon):
+        return MultiPolygon(geom, srid=geom.srid)
+    return geom
+
+
+def bbox_to_geojson(bbox=None):
+    """
+    :param bbox: A list [xmin, ymin, xmax, ymax]
+    :returns: A geojson of the bbox.
+    """
+    bbox = Polygon.from_bbox(bbox)
+    geometry = json.loads(GEOSGeometry(bbox, srid=4326).geojson)
+    return {"type": "Feature", "geometry": geometry}

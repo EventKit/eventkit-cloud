@@ -1,7 +1,7 @@
 import {Config} from '../config';
 import types from './actionTypes';
 import axios from 'axios'
-
+import cookie from 'react-cookie'
 
 export function createExportRequest(exportData) {
     return {
@@ -16,11 +16,10 @@ export function exportInfoDone() {
         setExportPackageFlag: true
     }
 }
-
-export function updateBbox(bbox) {
+export function exportInfoNotDone() {
     return {
-        type: types.UPDATE_BBOX,
-        bbox: bbox || null
+        type: types.EXPORT_INFO_NOTDONE,
+        setExportPackageFlag: false
     }
 }
 
@@ -46,6 +45,12 @@ export function updateExportInfo(exportName, datapackDescription, projectName, m
     }
 }
 
+export function clearExportInfo() {
+    return {
+        type: types.CLEAR_EXPORT_INFO,
+    }
+}
+
 export function stepperNextDisabled() {
     return {
         type: types.MAKE_STEPPER_INACTIVE,
@@ -58,6 +63,31 @@ export function stepperNextEnabled() {
         type: types.MAKE_STEPPER_ACTIVE,
         stepperNextEnabled: true
     }
+}
+
+export const submitJob = data => dispatch => {
+    dispatch({
+        type: types.SUBMITTING_JOB
+    });
+
+    const csrfmiddlewaretoken = cookie.load('csrftoken');
+    return axios({
+        url: '/api/jobs',
+        method: 'POST',
+        contentType: 'application/json; version=1.0',
+        data: data,
+        headers: {"X-CSRFToken": csrfmiddlewaretoken}
+    }).then((response) => {
+        dispatch({
+            type: types.JOB_SUBMITTED_SUCCESS,
+            jobuid: response.data.uid
+
+        });
+    }).catch((error) => {console.log(error)
+        dispatch({
+            type: types.JOB_SUBMITTED_ERROR, error: error
+        });
+    });
 }
 
 export const getProviders = () => dispatch => {
@@ -106,5 +136,6 @@ export function openDrawer() {
         type: types.OPEN_DRAWER
     }
 }
+
 
 
