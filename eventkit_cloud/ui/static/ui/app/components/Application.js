@@ -25,7 +25,7 @@ export class Application extends Component {
     }
 
     componentWillMount() {
-        if (window.innerWidth <= 600){
+        if (window.innerWidth <= 700){
             this.props.closeDrawer();
         }
     }

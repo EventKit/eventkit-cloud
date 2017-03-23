@@ -31,13 +31,13 @@ export class DataPackList extends Component {
 
     updateColumns() {
         if(window.innerWidth <= 800) {
-            this.setState({cols: 1});
+            this.setState({cols: 2});
         }
         else if(window.innerWidth > 1200) {
-            this.setState({cols: 3});
+            this.setState({cols: 4});
         }
         else {
-            this.setState({cols: 2});
+            this.setState({cols: 3});
         }
     }
 
@@ -48,9 +48,8 @@ export class DataPackList extends Component {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginTop: '20px',
-                marginLeft: '20px',
-                marginRight: '20px',
+                marginLeft: '3px',
+                marginRight: '3px',
             },
             gridList: {
                 border: '1px',
@@ -66,6 +65,7 @@ export class DataPackList extends Component {
                     cellHeight={'auto'}
                     style={styles.gridList}
                     cols={this.state.cols}
+                    padding={1}
                 >
                     {this.props.runs.map((run) => (
                         <DataPackItem 
