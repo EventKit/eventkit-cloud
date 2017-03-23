@@ -3,13 +3,13 @@ import filter from 'lodash/filter';
 
 export function orderAZ(runs) {
     return sortBy(runs, (o) => {
-        return o.job.name;
+        return o.job.name.toUpperCase();
     });
 }
 
 export function orderZA(runs) {
     return sortBy(runs, (o) => {
-        return o.job.name;
+        return o.job.name.toUpperCase();
     }).reverse();
 }
 
