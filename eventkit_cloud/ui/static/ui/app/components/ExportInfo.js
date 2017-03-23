@@ -16,7 +16,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
 import styles from '../styles/ExportInfo.css'
-import {updateExportInfo, stepperNextEnabled, stepperNextDisabled} from '../actions/exportsActions.js'
+import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../actions/exportsActions.js'
 
 
 export class ExportInfo extends React.Component {
@@ -34,11 +34,11 @@ export class ExportInfo extends React.Component {
             layers: 'Geopackage',
     }
         this.onChange = this.onChange.bind(this)
-        this.onSubmit = this.onSubmit.bind(this)
-    }
+            }
 
     onChange(event) {
-        console.log(this.state)
+
+        console.log(this.state);
         this.setState({[event.target.name]: event.target.value}, function () {
             if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
                 this.props.setNextDisabled()
@@ -51,10 +51,9 @@ export class ExportInfo extends React.Component {
     }
 
     onChangeCheck(e){
-
             // current array of providers
-            const providers = this.state.providers
-            let index
+            const providers = this.state.providers;
+            let index;
 
             // check if the check box is checked or unchecked
             if (e.target.checked) {
@@ -77,6 +76,7 @@ export class ExportInfo extends React.Component {
 
     }
     toggleCheckbox(event, checked) {
+
         this.setState({makePublic: checked})
     }
 
@@ -84,19 +84,26 @@ export class ExportInfo extends React.Component {
         this.setState({expanded: expanded})
     }
 
-    onSubmit(e) {
-        e.preventDefault()
-        //this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.area, this.state.area_str)
-    }
 
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)}
     }
     componentDidMount() {
-        if (this.props.exportName == ''){
+        this.props.setExportInfoNotDone();
+        if (this.props.exportInfo.exportName == ''){
             this.props.setNextDisabled()
         }
         this.setArea();
+        if (this.state.exportName == "" && this.props.exportInfo.exportName != ""){
+            this.setState({
+                exportName : this.props.exportInfo.exportName,
+                datapackDescription: this.props.exportInfo.datapackDescription,
+                projectName: this.props.exportInfo.projectName,
+                makePublic: this.props.exportInfo.makePublic,
+                providers: this.props.exportInfo.providers,
+            })
+        }
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -105,10 +112,12 @@ export class ExportInfo extends React.Component {
                 this._initializeOpenLayers()
             }
         }
+
     }
     componentWillReceiveProps(nextProps) {
         if (nextProps.setExportPackageFlag != false) {
             this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
+            this.props.incrementStepper();
         }
     }
 
@@ -184,10 +193,11 @@ export class ExportInfo extends React.Component {
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
                     <div className={styles.fieldWrapper}>
                         <TextField name="exportName"
+                                   ref="exportName"
                                underlineStyle={style.underlineStyle}
                                underlineFocusStyle={style.underlineStyle}
                                onChange={this.onChange}
-                               //value={this.state.exportName}
+                               defaultValue={this.props.exportInfo.exportName}
                                hintText="Datapack Name"
                                className={styles.textField}
                                />
@@ -198,7 +208,7 @@ export class ExportInfo extends React.Component {
                             underlineFocusStyle={style.underlineStyle}
                             name="datapackDescription"
                             onChange={this.onChange}
-                            //value={this.state.datapackDescription}
+                            defaultValue={this.props.exportInfo.datapackDescription}
                             hintText="Description"
                             multiLine={true}
                             rows={2}/>
@@ -209,7 +219,7 @@ export class ExportInfo extends React.Component {
                             underlineFocusStyle={style.underlineStyle}
                             name="projectName"
                             onChange={this.onChange}
-                            //value={this.state.projectName}
+                            defaultValue={this.props.exportInfo.projectName}
                             hintText="Project Name"
                             className={styles.textField}/>
                     </div>
@@ -217,8 +227,8 @@ export class ExportInfo extends React.Component {
                         <Checkbox
                             name="makePublic"
                             onCheck={this.toggleCheckbox.bind(this)}
-                            checked={!!this.state.makePublic}
-
+                            //checked={!!this.state.makePublic}
+                            defaultChecked={this.props.exportInfo.makePublic}
                             className={styles.checkboxColor}
                             label="Make Public"
                             checkedIcon={<ActionCheckCircle />}
@@ -236,7 +246,7 @@ export class ExportInfo extends React.Component {
                                 primaryText={provider.name}
                                 leftCheckbox={<Checkbox
                                 name={provider.name}
-
+                                defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
                                 onCheck={this.onChangeCheck.bind(this)}
                                 className={styles.checkboxColor}
                                 checkedIcon={<ActionCheckCircle />}
@@ -395,14 +405,9 @@ export class ExportInfo extends React.Component {
 }
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
         geojson: state.aoiInfo.geojson,
         setExportPackageFlag: state.setExportPackageFlag,
-        exportName: state.exportInfo.exportName,
-        datapackDescription: state.exportInfo.datapackDescription,
-        projectName: state.exportInfo.projectName,
-        makePublic: state.exportInfo.makePublic,
-
+        exportInfo: state.exportInfo,
     }
 }
 
@@ -432,6 +437,9 @@ function mapDispatchToProps(dispatch) {
         setNextEnabled: () => {
             dispatch(stepperNextEnabled())
         },
+        setExportInfoNotDone: () => {
+            dispatch(exportInfoNotDone());
+        }
 
     }
 }
@@ -439,6 +447,8 @@ function mapDispatchToProps(dispatch) {
 ExportInfo.propTypes = {
     geojson:         React.PropTypes.object,
     providers:       PropTypes.array.isRequired,
+    exportInfo:     React.PropTypes.object,
+    incrementStepper: React.PropTypes.func,
 
 }
 
@@ -448,6 +458,7 @@ ExportInfo.childContextTypes = {
 
 ExportInfo =  reduxForm({
     form: 'exportInfo',
+    destroyOnUnmount: false,
     initialValues: {
     }
 })(ExportInfo)

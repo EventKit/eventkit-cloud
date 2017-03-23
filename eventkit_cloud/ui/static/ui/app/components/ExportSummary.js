@@ -178,7 +178,6 @@ class ExportSummary extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
         geojson: state.aoiInfo.geojson,
         exportName: state.exportInfo.exportName,
         datapackDescription: state.exportInfo.datapackDescription,

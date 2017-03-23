@@ -9,7 +9,7 @@ import SearchAOIToolbar from './SearchAOIToolbar.js';
 import DrawAOIToolbar from './DrawAOIToolbar.js';
 import InvalidDrawWarning from './InvalidDrawWarning.js';
 import DropZone from './DropZone.js';
-import {updateMode, updateBbox, updateAoiInfo, clearAoiInfo} from '../actions/exportsActions.js';
+import {updateMode, updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled} from '../actions/exportsActions.js';
 import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../actions/drawToolBarActions.js';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -37,7 +37,17 @@ export class ExportAOI extends Component {
     componentDidMount() {
         this._initializeOpenLayers();
         this._updateInteractions();
-        this.props.clearAoiInfo();
+        if(Object.keys(this.props.aoiInfo.geojson).length != 0) {
+            const bbox = this.props.aoiInfo.geojson.features[0].bbox;
+            const reader = new ol.format.GeoJSON();
+            const feature = reader.readFeatures(this.props.aoiInfo.geojson, {
+                dataProjection: WGS84,
+                featureProjection: WEB_MERCATOR
+            });
+            this._drawLayer.getSource().addFeature(feature[0]);
+            this.handleZoomToSelection(bbox);
+            this.props.setNextEnabled();
+        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -46,7 +56,7 @@ export class ExportAOI extends Component {
             this._updateInteractions(nextProps.mode);
         }
         if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
-            this.handleZoomToSelection(nextProps.bbox);
+            this.handleZoomToSelection(nextProps.aoiInfo.geojson.features[0].bbox);
         }
         // Check if the reset map button has been clicked
         if(this.props.resetMap.click != nextProps.resetMap.click) {
@@ -63,8 +73,8 @@ export class ExportAOI extends Component {
             this.props.updateMode(MODE_NORMAL);
         }
         this._clearDraw();
-        this.props.updateBbox([]);
         this.props.clearAoiInfo();
+        this.props.setNextDisabled();
     }
 
     handleZoomToSelection(bbox) {
@@ -92,7 +102,6 @@ export class ExportAOI extends Component {
             geometry: geom
         });
         this._drawLayer.getSource().addFeature(bboxFeature);
-        this.props.updateBbox(bbox);
         let description = '';
         description = description + (result.countryName ? result.countryName : '');
         description = description + (result.adminName1 ? ', ' + result.adminName1 : '');
@@ -100,6 +109,7 @@ export class ExportAOI extends Component {
         
 
         this.props.updateAoiInfo(geojson, 'Polygon', result.name, description);
+        this.props.setNextEnabled();
         this.handleZoomToSelection(bbox);
     }
 
@@ -112,7 +122,6 @@ export class ExportAOI extends Component {
         )
         const bbox = serialize(geom.getExtent());
         const geojson = createGeoJSON(geom);
-        this.props.updateBbox(bbox);
         this.handleZoomToSelection(bbox);
         this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Import');
 
@@ -129,8 +138,8 @@ export class ExportAOI extends Component {
         });
         const bbox = serialize(extent)
         this._drawLayer.getSource().addFeature(bboxFeature);
-        this.props.updateBbox(bbox);
         this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View');
+        this.props.setNextEnabled();
     }
 
 
@@ -165,8 +174,8 @@ export class ExportAOI extends Component {
             this._drawLayer.getSource().addFeature(drawFeature);
 
             if(isGeoJSONValid(geojson)) {
-                this.props.updateBbox(serialize(geometry.getExtent()));
                 this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
+                this.props.setNextEnabled();
             }
             else {
                 this.props.showInvalidDrawWarning();
@@ -174,8 +183,8 @@ export class ExportAOI extends Component {
         }
         else if (this.props.mode == MODE_DRAW_BBOX) {
             const bbox = serialize(geometry.getExtent());
-            this.props.updateBbox(bbox);
             this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
+            this.props.setNextEnabled();
         }
         // exit drawing mode
         this.props.updateMode('MODE_NORMAL');
@@ -291,10 +300,26 @@ export class ExportAOI extends Component {
     }
 }
 
+ExportAOI.propTypes = {
+    aoiInfo: React.PropTypes.object,
+    mode: React.PropTypes.string,
+    zoomToSelection: React.PropTypes.object,
+    resetMap: React.PropTypes.object,
+    importGeom: React.PropTypes.object,
+    drawerOpen: React.PropTypes.bool,
+    updateMode: React.PropTypes.func,
+    hideInvalidDrawWarning: React.PropTypes.func,
+    showInvalidDrawWarning: React.PropTypes.func,
+    updateAoiInfo: React.PropTypes.func,
+    clearAoiInfo: React.PropTypes.func,
+    setNextDisabled: React.PropTypes.func,
+    setNextEnabled: React.PropTypes.func
+}
+
 
 function mapStateToProps(state) {
     return {
-        bbox: state.bbox,
+        aoiInfo: state.aoiInfo,
         mode: state.mode,
         zoomToSelection: state.zoomToSelection,
         resetMap: state.resetMap,
@@ -308,9 +333,6 @@ function mapDispatchToProps(dispatch) {
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
         },
-        updateBbox: (newBbox) => {
-            dispatch(updateBbox(newBbox));
-        },
         hideInvalidDrawWarning: () => {
             dispatch(hideInvalidDrawWarning());
         },
@@ -322,6 +344,12 @@ function mapDispatchToProps(dispatch) {
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
+        },
+        setNextDisabled: () => {
+            dispatch(stepperNextDisabled());
+        },
+        setNextEnabled: () => {
+            dispatch(stepperNextEnabled());
         },
     }
 }
@@ -458,6 +486,7 @@ function isGeoJSONValid(geojson) {
 }
 
 function createGeoJSON(ol3Geometry) {
+    const bbox = serialize(ol3Geometry.getExtent());
     const coords = ol3Geometry.getCoordinates();
     // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
     const polygonGeom = new ol.geom.Polygon(coords)
@@ -465,8 +494,11 @@ function createGeoJSON(ol3Geometry) {
     const wgs84Coords = polygonGeom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
                     "features": [
-                        {"type": "Feature",
-                        "geometry": {"type": "Polygon", "coordinates": wgs84Coords}}
+                        {
+                            "type": "Feature",
+                            "bbox": bbox,
+                            "geometry": {"type": "Polygon", "coordinates": wgs84Coords}
+                        }
                     ]}
     return geojson;
 }

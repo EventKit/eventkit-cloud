@@ -13,19 +13,6 @@ describe('exportMode reducer', () => {
     });
 });
 
-describe('exportBboxReducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.exportBboxReducer(undefined, {})).toEqual([])
-    });
-
-    it('should handle UPDATE_BBOX', () => {
-        expect(reducers.exportBboxReducer(
-            [],
-            {type: 'UPDATE_BBOX', bbox: [-1,-1,1,1]}
-        )).toEqual([-1,-1,1,1])
-    });
-});
-
 describe('exportAoiInfo reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null})
@@ -49,6 +36,77 @@ describe('exportAoiInfo reducer', () => {
             {},
             {type: 'UPDATE_AOI_INFO', geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'}
         )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'});
+    });
+});
+
+describe('exportInfo reducer', () => {
+    it('should return initial state', () => {
+        expect(reducers.exportInfoReducer(undefined, {})).toEqual({
+            exportName: '',
+            datapackDescription: '',
+            projectName: '',
+            makePublic: false,
+            providers: [],
+            area_str: '',
+            layers: ''
+        });
+    });
+
+    it('should handle UPDATE_EXPORT_INFO', () => {
+        expect(reducers.exportInfoReducer(
+            {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: ''
+            },
+            {
+                type: 'UPDATE_EXPORT_INFO',
+                exportName: 'name',
+                datapackDescription: 'description',
+                projectName: 'project',
+                makePublic: true,
+                providers: ['provider'],
+                area_str: 'string',
+                layers: 'layer'
+            }
+        )).toEqual({
+            exportName: 'name',
+            datapackDescription: 'description',
+            projectName: 'project',
+            makePublic: true,
+            providers: ['provider'],
+            area_str: 'string',
+            layers: 'layer'
+        });
+    });
+
+    it('should handle CLEAR_EXPORT_INFO', () => {
+        expect(reducers.exportInfoReducer(
+            {
+                exportName: 'name',
+                datapackDescription: 'description',
+                projectName: 'project',
+                makePublic: true,
+                providers: ['provider'],
+                area_str: 'string',
+                layers: 'layer'
+            },
+            {type: 'CLEAR_EXPORT_INFO'}
+        )).toEqual(
+            {
+                exportName: '',
+                datapackDescription: '',
+                projectName: '',
+                makePublic: false,
+                providers: [],
+                area_str: '',
+                layers: ''
+            }
+        )
     });
 });
 
