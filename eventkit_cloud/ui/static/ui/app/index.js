@@ -14,6 +14,8 @@ import Export from './components/Export'
 import CreateExport from './components/CreateExport'
 import ExportAOI from './components/ExportAOI'
 import ExportInfo from './components/ExportInfo'
+import ExportSummary from './components/ExportSummary'
+import StatusDownload from './components/StatusDownload'
 import { UserAuthWrapper } from 'redux-auth-wrapper'
 import { applyMiddleware } from 'redux'
 import { login } from './actions/userActions'
@@ -64,7 +66,9 @@ render(
                 <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
                     <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
                     <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
+                    <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
                 </Route>
+                <Route path="/status" component={UserIsAuthenticated(StatusDownload)}/>
                 <Route path="/about" component={About}/>
             </Route>
         </Router>

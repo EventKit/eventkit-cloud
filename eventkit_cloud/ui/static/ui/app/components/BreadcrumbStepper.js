@@ -1,4 +1,5 @@
 import React from 'react';
+import {browserHistory} from 'react-router';
 import { Link, IndexLink } from 'react-router'
 import {connect} from 'react-redux'
 import {
@@ -61,11 +62,13 @@ class BreadcrumbStepper extends React.Component {
             tags : [],
     };
 
-        this.props.submitJob(data)
-        this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
+        this.props.submitJob(data);
+        browserHistory.push('/status');
+
+        // this.setState({
+        //     stepIndex: stepIndex + 1,
+        //     finished: stepIndex >= 2,
+        // });
 
     }
 
@@ -255,7 +258,7 @@ function mapDispatchToProps(dispatch) {
     }
 }
 
-export default connect(
+export default  connect(
     mapStateToProps,
     mapDispatchToProps
 )(BreadcrumbStepper);

@@ -17,6 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     config.vm.hostname = "cloud.eventkit.dev"
     config.vm.network :private_network, ip: "192.168.99.130"
+    config.vm.network "forwarded_port", guest: 80, host: 80
 
     # Check required plugins
     DOCKER_REQUIRED_PLUGINS = %w(vagrant-reload)
