@@ -5,7 +5,7 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../styles/DataPackItem.css';
+import style from '../../styles/DataPackItem.css';
 import ol from 'openlayers';
 
 export class DataPackItem extends Component {
@@ -14,7 +14,45 @@ export class DataPackItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
-        this.state = { expanded: false };
+        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
+        this.state = { 
+            expanded: false,
+            titleFontSize: '24px',
+            cardTextFontSize: '14px',
+        };
+    }
+
+    componentWillMount() {
+        this.screenSizeUpdate();
+        window.addEventListener('resize', this.screenSizeUpdate);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.screenSizeUpdate);
+    }
+
+    screenSizeUpdate() {
+        if(window.innerWidth <= 575) {
+            this.setState({titleFontSize: '20px'});
+            this.setState({cardTextFontSize: '10px'});
+            
+        }
+        else if (window.innerWidth <= 767) {
+            this.setState({titleFontSize: '21px'});
+            this.setState({cardTextFontSize: '11px'});
+        }
+        else if (window.innerWidth <= 991) {
+            this.setState({titleFontSize: '22px'});
+            this.setState({cardTextFontSize: '12px'});
+        }
+        else if(window.innerWidth <= 1199) {
+            this.setState({titleFontSize: '23px'});
+            this.setState({cardTextFontSize: '13px'});
+        }
+        else {
+            this.setState({titleFontSize: '24px'});
+            this.setState({cardTextFontSize: '14px'});
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -74,11 +112,13 @@ export class DataPackItem extends Component {
             cardTitle:{
                 wordWrap: 'break-word',
             },
+            cardTitle2: {fontSize: this.state.titleFontSize},
+            cardSubtitle: {fontSize: this.state.cardTextFontSize},
             errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
-            runningIcon: {float: 'left', color: '#f4D225', fontSize: '20px'},
-            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '20px', marginRight: '5px'},
-            publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20x', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px'}
+            runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
+            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
+            publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
+            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: this.state.cardTextFontSize},
         };
 
         return (
@@ -86,32 +126,34 @@ export class DataPackItem extends Component {
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
+                    titleStyle={styles.cardTitle2}
+                    subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
                             <span>{this.props.run.job.name}</span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
-                                    <IconButton>
+                                    <IconButton style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}>
                                         <i className="material-icons" style={{color: '#4598bf'}}>more_vert</i>
                                     </IconButton>}
                                 anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
                                 <MenuItem 
-                                    style={{fontSize: '13px'}}
+                                    style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText={this.state.expanded ? "Hide Map" : "Show Map"}
-                                    onTouchTap={this.toggleExpanded}/>
+                                    onClick={this.toggleExpanded}/>
                                 <MenuItem 
-                                    style={{fontSize: '13px'}}
+                                    style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText="Go to Export Detail"
-                                    onTouchTap={() => {window.location.href='/exports/' + this.props.run.uid}}/>
+                                    onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
                                
                                 {this.props.run.user == this.props.user.data.username ?
                                 <MenuItem
-                                    style={{fontSize: '13px'}}
+                                    style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText={'Delete Export'}
-                                    onTouchTap={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                                    onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
                             </IconMenu>
                         </div>
@@ -122,7 +164,7 @@ export class DataPackItem extends Component {
                         <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
-                <CardText>
+                <CardText style={{fontSize: this.state.cardTextFontSize}}>
                     <span>{this.props.run.job.description}</span>
                 </CardText>
                 <CardMedia expandable={true}>

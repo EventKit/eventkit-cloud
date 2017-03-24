@@ -32,9 +32,14 @@ export class ExportInfo extends React.Component {
             area_str: '',
             expanded: false,
             layers: 'Geopackage',
+        }
+        this.onChange = this.onChange.bind(this);
+        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
     }
-        this.onChange = this.onChange.bind(this)
-            }
+
+    screenSizeUpdate() {
+        this.forceUpdate();
+    }
 
     onChange(event) {
 
@@ -114,6 +119,16 @@ export class ExportInfo extends React.Component {
         }
 
     }
+
+    componentWillMount() {
+        this.screenSizeUpdate();
+        window.addEventListener('resize', this.screenSizeUpdate);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.screenSizeUpdate);
+    }
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.setExportPackageFlag != false) {
             this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
@@ -179,15 +194,17 @@ export class ExportInfo extends React.Component {
         const style ={
             underlineStyle: {
                 width: 'calc(100% - 10px)'
+            },
+            window: {
+                height: window.innerHeight - 180
             }
         }
         const providers = this.props.providers
 
         return (
-            <div className={styles.wholeDiv}>
-            <div className={styles.root}>
+            <div className={styles.root} style={style.window}>
 
-                <form className={styles.form} onSubmit={this.onSubmit} >
+                <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
                     <Paper className={styles.paper} zDepth={2} rounded>
 
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
@@ -265,53 +282,9 @@ export class ExportInfo extends React.Component {
                             />
                             ))}
                         </List>
-                            {/*<ListItem
-                                primaryText="OpenStreetMap Tiles"
-                                leftIcon={<Checkbox
-                                    name="osmTiles"
-                                    onCheck={this.toggleCheckbox.bind(this)}
-                                    checked={this.state.osmTiles}
-                                    className={styles.checkboxColor}
-                                    checkedIcon={<ActionCheckCircle />}
-                                    uncheckedIcon={<UncheckedCircle />}
-                                />}
-                                initiallyOpen={false}
-                                primaryTogglesNestedList={true}
-                                nestedItems={[
-                                    <ListItem
-                                      key={1}
-                                      primaryText="bla blah blah blaaaaaaah blahalklasdfjlaksjdf asdldkfjasldfj asdlkfklsadfjlkasdfjlkasddfjlkasdfjlkasdfjlkdsajflkasdf"
-
-                                    />
-                                ]}
-                            />
-                            <ListItem
-                                primaryText="DigitalGlobe Satellite Imagery Foundation Mosaic"
-                                leftIcon={ <Checkbox
-                                    name="digitalGlobe"
-                                    onCheck={this.toggleCheckbox.bind(this)}
-                                    checked={this.state.digitalGlobe}
-                                    className={styles.checkboxColor}
-                                    checkedIcon={<ActionCheckCircle />}
-                                    uncheckedIcon={<UncheckedCircle />}
-                                />}
-                                initiallyOpen={false}
-                                primaryTogglesNestedList={true}
-                                nestedItems={[
-                                    <ListItem
-                                      key={1}
-                                      primaryText="bla blah blah blaaaaaaah blahalklasdfjlaksjdf asdldkfjasldfj asdlkfklsadfjlkasdfjlkasddfjlkasdfjlkasdfjlkdsajflkasdf"
-
-                                    />
-                                ]}
-                            />*/}
-
-
-                        </div>
+                    </div>
 
                     <div className={styles.heading}>Select Export File Formats</div>
-                        {/*<div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
-                    <div style={{marginTop: '15px'}} className={styles.subHeading}><strong>Recommended</strong></div>*/}
                     <div className={styles.sectionBottom}>
                         <div className={styles.checkboxLabel}>
                             <Checkbox
@@ -322,59 +295,6 @@ export class ExportInfo extends React.Component {
                                 checkedIcon={<ActionCheckCircle />}
                             />
                         </div>
-                        {/*
-                        <div className={styles.checkboxLabel}>
-                            <Field name="esriShape"
-                                   component={Checkbox}
-                                   className={styles.checkboxColor}
-                                   checkedIcon={<ActionCheckCircle />}
-                                   uncheckedIcon={<UncheckedCircle />}
-                                   label="Esri Shapefile (.shp)"/>
-                        </div>
-                        <List className={styles.listBottom}>
-                        <ListItem
-                            value={1}
-                            primaryText="Other Format Options"
-                            nestedItems={[
-                                <ListItem
-                                key={1}
-                                primaryText="GeoTiff (.tiff)"
-                                leftAvatar={<Field name="geoTiff"
-                                checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />}
-                               component={Checkbox}/>}
-                               className={styles.checkboxColor}
-                              />,
-                              <ListItem
-                                key={2}
-                                primaryText="Google Earth (.kmz)"
-                                leftAvatar={<Field name="googleEarth"
-                                checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />}
-                               component={Checkbox}/>}
-                               className={styles.checkboxColor}
-                              />,
-                              <ListItem
-                                key={3}
-                                primaryText="SQLite (.sqlite)"
-                                leftAvatar={<Field name="sqlite"
-                                checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />}
-                               component={Checkbox}/>}
-                               className={styles.checkboxColor}
-                              />,
-                              <ListItem
-                                key={4}
-                                primaryText="OSMAnd (.obf)"
-                                leftAvatar={<Field name="osmand"
-                                checkedIcon={<ActionCheckCircle />}
-                               uncheckedIcon={<UncheckedCircle />}
-                               component={Checkbox}/>}
-                               className={styles.checkboxColor}
-                              />
-                            ]}
-                        />
-                            </List>*/}
                      </div>
 
                         <div className={styles.mapCard}>
@@ -397,9 +317,6 @@ export class ExportInfo extends React.Component {
                 </form>
 
             </div>
-            </div>
-
-
         )
     }
 }
