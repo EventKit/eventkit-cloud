@@ -37,7 +37,6 @@ describe('ExportInfo component', () => {
         const store = fakeStore({});
         const props = getProps();
         const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
-        expect(wrapper.find('.wholeDiv')).to.have.length(1);
         expect(wrapper.find('.root')).to.have.length(1);
         expect(wrapper.find('.form')).to.have.length(1);
         expect(wrapper.find('.paper')).to.have.length(1);
