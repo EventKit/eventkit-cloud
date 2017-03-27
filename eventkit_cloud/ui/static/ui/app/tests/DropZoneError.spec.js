@@ -5,9 +5,10 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {PopupBox} from '../components/PopupBox';
 const Dropzone = require('react-dropzone');
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('DropZoneError component', () => {
-
+    const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
             importGeom: {
@@ -23,14 +24,20 @@ describe('DropZoneError component', () => {
 
     it('should render empty div by default', () => {
         const props = getProps();
-        const wrapper = mount(<DropZoneError {...props}/>);
+        const wrapper = mount(<DropZoneError {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(wrapper.find('div')).to.have.length(1);
         expect(wrapper.find('div').html()).to.equal('<div></div>');
     });
 
     it('should render error message when new props are received', () => {
         const props = getProps();
-        const wrapper = mount(<DropZoneError {...props}/>);
+        const wrapper = mount(<DropZoneError {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         let nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
@@ -46,7 +53,10 @@ describe('DropZoneError component', () => {
 
     it('should update state when new props are received', () => {
         const props = getProps();
-        const wrapper = mount(<DropZoneError {...props}/>);
+        const wrapper = mount(<DropZoneError {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         let nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
         wrapper.instance().setState = sinon.spy();
@@ -57,7 +67,10 @@ describe('DropZoneError component', () => {
 
     it('should handle button click', () => {
         const props = getProps();
-        const wrapper = mount(<DropZoneError {...props}/>);
+        const wrapper = mount(<DropZoneError {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         let nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
         nextProps.resetGeoJSONFile = sinon.spy();

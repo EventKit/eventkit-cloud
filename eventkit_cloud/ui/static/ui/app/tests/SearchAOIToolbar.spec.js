@@ -8,9 +8,10 @@ import {Typeahead, Menu} from 'react-bootstrap-typeahead';
 import {TypeaheadMenuItem} from '../components/TypeaheadMenuItem';
 import {fakeStore} from '../__mocks__/fakeStore'
 import { Provider } from 'react-redux';
-
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('SearchAOIToolbar button', () => {
+    const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
             toolbarIcons: {search: 'DEFAULT'},
@@ -31,7 +32,10 @@ describe('SearchAOIToolbar button', () => {
     it('should render a searchbar and button', () => {
         const store = fakeStore({});
         const props = getProps();
-        const wrapper = mount(<Provider store={store}><SearchAOIToolbar {...props}/></Provider>);
+        const wrapper = mount(<Provider store={store}><SearchAOIToolbar {...props}/></Provider>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(wrapper.find('.searchbarDiv')).to.have.length(1);
         expect(wrapper.find(Typeahead)).to.have.length(1);
         expect(wrapper.find(Menu)).to.have.length(0);

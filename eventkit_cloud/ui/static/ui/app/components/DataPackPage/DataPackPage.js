@@ -126,6 +126,8 @@ export class DataPackPage extends React.Component {
                 height: window.innerHeight - 221,
                 overflowY: 'scroll',
                 backgroundRepeat: 'repeat repeat',
+                paddingBottom: '30px',
+                paddingTop: '10px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
