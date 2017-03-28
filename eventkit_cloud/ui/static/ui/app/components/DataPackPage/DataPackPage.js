@@ -11,6 +11,7 @@ import DataPackSortDropDown from './DataPackSortDropDown';
 import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
+import DataPackDrawer from './DataPackDrawer.js';
 import * as utils from '../../utils/sortUtils';
 
 export class DataPackPage extends React.Component {
@@ -23,7 +24,7 @@ export class DataPackPage extends React.Component {
         this.applyFilters = this.applyFilters.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = {
-            open: false,
+            open: window.innerWidth > 991 ? true : false,
             runs: [],
             displayedRuns: [],
             dropDownValue: 1,
@@ -122,10 +123,12 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                width:'100%',
+                // width: this.state.open ? window.innerWidth - 200 : '100%',
                 height: window.innerHeight - 221,
-                overflowY: 'scroll',
+                overflowY: 'visible',
                 backgroundRepeat: 'repeat repeat',
+                marginRight: this.state.open && window.innerWidth > 991 ? '200px' : '0px',
+                marginLeft: this.props.drawerOpen && window.innerWidth > 991 ? '200px' : '0px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
@@ -169,15 +172,16 @@ export class DataPackPage extends React.Component {
                         <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
                         <DataPackViewButtons handleGridSelect={() => {console.log('grid')}} handleListSelect={() => {console.log('list')}} />
                 </Toolbar>
-                
-                <div style={styles.wholeDiv}>
-                    
+                <div style={{/* hides scrollbar */ overflowY: 'scroll', right: '-17px', position: 'absolute'}}>
+                    <div style={styles.wholeDiv}>
+                        <DataPackDrawer open={this.state.open}/>
                         <DataPackList 
                             runs={this.state.displayedRuns} 
                             user={this.props.user} 
                             onRunDelete={this.props.deleteRuns}/>
-                    <div >
-                        {this.props.children}
+                        <div >
+                            {this.props.children}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -192,6 +196,7 @@ DataPackPage.propTypes = {
     getRuns: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
+    drawerOpen: PropTypes.bool.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -199,6 +204,7 @@ function mapStateToProps(state) {
         runsList: state.runsList,
         user: state.user,
         runsDeletion: state.runsDeletion,
+        drawerOpen: state.drawerOpen,
     };
 }
 
