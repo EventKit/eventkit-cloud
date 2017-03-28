@@ -659,7 +659,8 @@ def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None,
             interval=1,
             max_retries=10,
             queue=worker,
-            routing_key=worker)
+            routing_key=worker,
+            priority=TaskPriority.FINALIZE_PROVIDER.value)
     return result
 
 
@@ -725,10 +726,15 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             if include_files:
                 zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
-        finalize_run_task.run(
+        finalize_run_task.si(
             run_uid=run_uid,
-            stage_dir=run_dir,
-        )
+            stage_dir=run_dir
+        ).set(queue=worker, routing_key=worker).apply_async(
+            interval=1,
+            max_retries=10,
+            queue=worker,
+            routing_key=worker,
+            priority=TaskPriority.FINALIZE_RUN.value)
     else:
         return result
 
