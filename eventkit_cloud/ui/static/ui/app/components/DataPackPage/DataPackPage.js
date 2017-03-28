@@ -21,6 +21,7 @@ export class DataPackPage extends React.Component {
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.applyFilters = this.applyFilters.bind(this);
+        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = {
             open: false,
             runs: [],
@@ -53,6 +54,15 @@ export class DataPackPage extends React.Component {
 
     componentWillMount() {
         this.props.getRuns();
+        window.addEventListener('resize', this.screenSizeUpdate);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.screenSizeUpdate);
+    }
+
+    screenSizeUpdate() {
+        this.forceUpdate();
     }
 
     onSearch(searchText, ix) {
@@ -112,10 +122,9 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                marginTop:'-10px',
-                width:'1000%',
-                height: '1000%',
-                backgroundImage: 'url(https://cdn.frontify.com/api/screen/thumbnail/aJdxI4Gb10WEO716VTHSrCi7_Loii0H5wGYb5MuB66RmTKhpWG-bQQJ2J68eAjT5ln4d2enQJkV4sVaOWCG2nw)',
+                width:'100%',
+                height: window.innerHeight - 221,
+                overflowY: 'scroll',
                 backgroundRepeat: 'repeat repeat',
             },
             appBar: {
@@ -161,7 +170,7 @@ export class DataPackPage extends React.Component {
                         <DataPackViewButtons handleGridSelect={() => {console.log('grid')}} handleListSelect={() => {console.log('list')}} />
                 </Toolbar>
                 
-                <div className={styles.wholeDiv}>
+                <div style={styles.wholeDiv}>
                     
                         <DataPackList 
                             runs={this.state.displayedRuns} 
