@@ -18,7 +18,7 @@ class TestGeopackage(TransactionTestCase):
 
     def setUp(self, ):
         self.path = settings.ABS_PATH()
-        self.task_process_patcher = patch('eventkit_cloud.utils.external_service.TaskProcess')
+        self.task_process_patcher = patch('eventkit_cloud.tasks.task_process.TaskProcess')
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
@@ -55,7 +55,7 @@ class TestGeopackage(TransactionTestCase):
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
     @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
+    @patch('eventkit_cloud.utils.geopackage.remove_empty_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.connections')
     @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
     @patch('eventkit_cloud.utils.external_service.seeder')
