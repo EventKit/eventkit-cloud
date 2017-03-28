@@ -11,20 +11,19 @@ from mapproxy.config.spec import validate_options
 from mapproxy.config.config import load_config, base_config, load_default_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
-from .geopackage import remove_empty_zoom_levels
 from django.conf import settings
 import yaml
 from django.core.files.temp import NamedTemporaryFile
 import logging
 from django.db import connections
-from ..tasks.task_process import TaskProcess
 import requests
 
 logger = logging.getLogger(__name__)
 
-
 class CustomLogger(ProgressLog):
+
     def __init__(self, task_uid=None, *args, **kwargs):
+
         self.task_uid = task_uid
         super(CustomLogger, self).__init__(*args, **kwargs)
         # Log mapproxy status but allow a setting to reduce database writes.
@@ -74,6 +73,9 @@ class ExternalRasterServiceToGeopackage(object):
         """
         Convert external service to gpkg.
         """
+
+        from ..tasks.task_process import TaskProcess
+        from .geopackage import remove_empty_zoom_levels
 
         if self.config:
             conf_dict = yaml.load(self.config)

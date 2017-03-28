@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
 import yaml as real_yaml
-from mock import Mock, patch
+from mock import Mock, patch, MagicMock
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
 from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
-                                 check_service, get_cache_template )
+                                 check_service, get_cache_template, CustomLogger )
 from mapproxy.config.config import load_default_config
 from uuid import uuid4
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -142,3 +143,21 @@ class TestHelpers(TransactionTestCase):
             "request_format": "image/png"}}
 
         self.assertEqual(cache_template, expected_template)
+
+
+class TestLogger(TransactionTestCase):
+
+    @patch('eventkit_cloud.tasks.export_tasks.update_progress')
+    def test_log_step(self, mock_update_progress):
+
+        test_task_uid = "1234"
+        test_timestamp = 1490641718
+        test_progress = 0.42
+        custom_logger = CustomLogger(task_uid=test_task_uid)
+        custom_logger.log_step_counter = 0
+        self.assertIsNotNone(custom_logger)
+        mock_progress = MagicMock()
+        mock_progress.progress = test_progress
+        mock_progress.eta.eta.return_value = test_timestamp
+        custom_logger.log_step(mock_progress)
+        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100, estimated_finish=datetime.utcfromtimestamp(float(test_timestamp)))
