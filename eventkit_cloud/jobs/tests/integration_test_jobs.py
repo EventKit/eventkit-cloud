@@ -35,7 +35,6 @@ class TestJob(TestCase):
         self.create_export_url = self.base_url + '/exports/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
-        self.rerun_url = self.base_url + '/api/rerun'
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir, mode=0660)
@@ -341,8 +340,7 @@ class TestJob(TestCase):
             self.assertTrue(check_content_exists(geopackage_file))
             os.remove(geopackage_file)
 
-        rerun_response = self.client.get(self.rerun_url,
-                                         params={'job_uid': job.get('uid')},
+        rerun_response = self.client.get('{0}/{1}/run'.format(self.jobs_url, job.get('uid')),
                                          headers={'X-CSRFToken': self.csrftoken,
                                                   'Referer': self.create_export_url})
 
