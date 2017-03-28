@@ -7,6 +7,9 @@ import {
     StepLabel,
 } from 'material-ui/Stepper';
 import FloatingActionButton from 'material-ui/FloatingActionButton'
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
@@ -119,17 +122,23 @@ class BreadcrumbStepper extends React.Component {
                 return <FloatingActionButton mini={true}
                                              disabled={!this.props.stepperNextEnabled}
                                              onTouchTap={this.handleNext}
-                                             className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
+                                             className={style.forwardButtonDiv} >
+                                             <NavigationArrowForward/>
+                        </FloatingActionButton>
             case 1:
                 return <FloatingActionButton mini={true}
                                              disabled={!this.props.stepperNextEnabled}
                                              onTouchTap={this.handleNext}
-                                             className={style.forwardButtonDiv}><i className="material-icons" aria-hidden="true">arrow_forward</i></FloatingActionButton>
+                                             className={style.forwardButtonDiv}>
+                                             <NavigationArrowForward/>
+                        </FloatingActionButton>
             case 2:
                 return <FloatingActionButton mini={false}
                                              disabled={!this.props.stepperNextEnabled}
                                              onTouchTap={this.handleSubmit}
-                                             className={style.bigForwardButtonDiv}><i className="material-icons" aria-hidden="true">check</i></FloatingActionButton>
+                                             className={style.bigForwardButtonDiv}>
+                                             <NavigationCheck/>
+                        </FloatingActionButton>
             case 3:
                 return <div></div>
             default:
@@ -180,7 +189,12 @@ class BreadcrumbStepper extends React.Component {
                             <FloatingActionButton mini={true}
                                                 disabled={stepIndex === 0}
                                                 onTouchTap={this.handlePrev}
-                                                className={style.backButtonDiv}><i className="material-icons" aria-hidden="false">arrow_back</i></FloatingActionButton>
+                                                className={style.backButtonDiv}>
+                                                <NavigationArrowBack
+                                                    style={stepIndex === 0 ?
+                                                        {fill: '#e2e2e2', opacity: '0.3'}
+                                                        : {fill: '#4598bf'}}/>
+                            </FloatingActionButton>
                             {this.getButtonContent(this.state.stepIndex)}
                         </div>
                     </div>

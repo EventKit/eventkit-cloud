@@ -9,8 +9,12 @@ import {MapViewButton} from '../components/MapViewButton';
 import {ImportButton} from '../components/ImportButton';
 import {fakeStore} from '../__mocks__/fakeStore';
 import { Provider } from 'react-redux';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
 
 describe('DrawAOIToolbar component', () => {
+    const muiTheme = getMuiTheme();
+
     it('should render a toolbar title and 4 sub components', () => {
         const props = {
             handleCancel: (sender) => {},
@@ -18,7 +22,10 @@ describe('DrawAOIToolbar component', () => {
             setAllButtonsDefault: sinon.spy(),
         }
         const store = fakeStore({});
-        const wrapper = mount(<Provider store={store}><DrawAOIToolbar {...props}/></Provider>);
+        const wrapper = mount(<Provider store={store}><DrawAOIToolbar {...props}/></Provider>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(wrapper.find('.drawButtonsContainer')).to.have.length(1);
         expect(wrapper.find('.drawButtonsTitle')).to.have.length(1);
         expect(wrapper.find('.drawButtonsTitle').text()).to.equal('TOOLS');

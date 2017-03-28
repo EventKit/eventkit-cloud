@@ -3,6 +3,8 @@ import {connect} from 'react-redux';
 import styles from '../styles/SearchAOIButton.css';
 import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 import {updateMode} from '../actions/exportsActions';
+import ActionSearch from 'material-ui/svg-icons/action/search';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 
 export class SearchAOIButton extends Component {
     
@@ -48,17 +50,17 @@ export class SearchAOIButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>search</i>
+                        <ActionSearch className={styles.defaultButton}/>
                         <div className={styles.buttonName}>SEARCH</div>
                     </div>
                     
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>search</i>
+                        <ActionSearch className={styles.inactiveButton}/>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>SEARCH</div>
                     </div>
 
 const SELECTED_ICON =<div>
-                        <i className={"material-icons " + styles.selectedButton}>clear</i>
+                        <ContentClear className={styles.selectedButton}/>
                         <div className={styles.buttonName}>SEARCH</div>
                     </div>
 

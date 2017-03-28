@@ -171,7 +171,7 @@
 .bigForwardButtonDiv > button:not([disabled]) {
     background-color: #55ba63 !important;
 }
-.bigForwardButtonDiv > button > div > div > i {
+.bigForwardButtonDiv > button > div > div > svg {
     font-size: 46px!important;
 }
 
@@ -188,16 +188,8 @@
     background-color: #161e2e !important;
 }
 
-.backButtonDiv > button:disabled > div > i {
-    color: #e2e2e2 !important;
-    opacity: .3 !important;
-}
-
 .backButtonDiv > button > div > div {
     transition: none !important;
 }
 
-.backButtonDiv > button:not([disabled]) > div > div > i {
-    color: #4598bf !important;
-}
 
