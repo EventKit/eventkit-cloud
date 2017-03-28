@@ -274,7 +274,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
-                    "event": "TestProject", "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
