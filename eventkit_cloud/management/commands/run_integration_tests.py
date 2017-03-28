@@ -16,7 +16,9 @@ class Command(BaseCommand):
             suite = unittest.TestLoader().loadTestsFromNames(options['tests'])
         else:
             suite = unittest.TestLoader().loadTestsFromTestCase(TestJob)
-        unittest.TextTestRunner().run(suite)
+        result = unittest.TextTestRunner().run(suite)
         print('Removing test providers')
         delete_providers()
+        if result.errors or result.failures:
+            exit(1)
 

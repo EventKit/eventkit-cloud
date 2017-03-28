@@ -1,6 +1,5 @@
 from billiard import Process
 import subprocess
-import time
 from django.db import connection
 
 import logging
