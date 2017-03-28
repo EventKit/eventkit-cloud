@@ -6,6 +6,8 @@
 
     .geometryIcon {
         font-size: 38px;
+        width: 38px !important;
+        height: 38px !important;
     }
 
     .aoiInfobar {
@@ -21,6 +23,8 @@
 
     .geometryIcon {
         font-size: 25px;
+        width: 25px !important;
+        height: 25px !important;
     }
 
     .aoiInfobar {
@@ -83,7 +87,7 @@
 }
 
 .geometryIcon {
-    color: grey;
+    color: grey !important;
     padding-left: 8px;
     float: left;
 }

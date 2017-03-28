@@ -9,6 +9,9 @@ import IconButton from 'material-ui/IconButton';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card';
+import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
+import SocialGroup from 'material-ui/svg-icons/social/group';
+import SocialPerson from 'material-ui/svg-icons/social/person';
 
 describe('DataPackItem component', () => {
     injectTapEventPlugin();
@@ -28,7 +31,7 @@ describe('DataPackItem component', () => {
             .childAt(0).childAt(0).text()).to.equal('Test1');
         expect(wrapper.find(IconMenu)).to.have.length(1);
         expect(wrapper.find(IconButton)).to.have.length(1);
-        expect(wrapper.find(IconButton).find('i').text()).to.equal('more_vert');
+        expect(wrapper.find(IconButton).find(NavigationMoreVert)).to.have.length(1);
         expect(wrapper.find(MenuItem)).to.have.length(0);
         const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
         expect(subtitle.find('span').first().text()).to.equal('Event: Test1 event');
@@ -45,7 +48,7 @@ describe('DataPackItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(CardActions).find('i').text()).to.equal('person');
+        expect(wrapper.find(SocialPerson)).to.have.length(1);
         expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
     });
 
@@ -55,7 +58,7 @@ describe('DataPackItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(CardActions).find('i').text()).to.equal('group');
+        expect(wrapper.find(SocialGroup)).to.have.length(1);
         expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
     });
 
@@ -65,7 +68,7 @@ describe('DataPackItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(CardActions).find('i').text()).to.equal('group');
+        expect(wrapper.find(SocialGroup)).to.have.length(1);
         expect(wrapper.find(CardActions).find('p').text()).to.equal('notAdmin');
     });
 

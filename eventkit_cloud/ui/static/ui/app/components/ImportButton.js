@@ -3,6 +3,8 @@ import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {updateMode} from '../actions/exportsActions.js';
 import {setImportButtonSelected, setAllButtonsDefault, setImportModalState} from '../actions/mapToolActions';
+import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 
 export class ImportButton extends Component {
 
@@ -51,17 +53,17 @@ export class ImportButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>file_upload</i>
+                        <FileFileUpload className={styles.defaultButton}/>
                         <div className={styles.buttonName}>IMPORT</div>
                     </div>
 
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>file_upload</i>
+                        <FileFileUpload className={styles.inactiveButton}/>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>IMPORT</div>
                     </div>
 
 const SELECTED_ICON =<div>
-                        <i className={"material-icons " + styles.selectedButton}>clear</i>
+                        <ContentClear className={styles.selectedButton}/>
                         <div className={styles.buttonName}>IMPORT</div>
                     </div>
 

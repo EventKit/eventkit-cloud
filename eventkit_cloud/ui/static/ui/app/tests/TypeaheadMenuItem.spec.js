@@ -4,8 +4,12 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {MenuItem} from 'react-bootstrap-typeahead';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import ImageCropDin from 'material-ui/svg-icons/image/crop-din';
+import ActionRoom from 'material-ui/svg-icons/action/room';
 
 describe('TypeaheadMenuItem component', () => {
+    const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
             result: {},
@@ -19,6 +23,7 @@ describe('TypeaheadMenuItem component', () => {
             onActiveItemChange: () => {},
             onInitialItemChange: () => {},
             onMenuItemClick: () => {},
+            muiTheme
         }
     }
 
@@ -33,6 +38,7 @@ describe('TypeaheadMenuItem component', () => {
                     onActiveItemChange: React.PropTypes.func.isRequired,
                     onInitialItemChange: React.PropTypes.func.isRequired,
                     onMenuItemClick: React.PropTypes.func.isRequired,
+                    muiTheme: React.PropTypes.object
                 }
             }
         );
@@ -40,7 +46,7 @@ describe('TypeaheadMenuItem component', () => {
         expect(wrapper.find('div')).to.have.length(3);
         expect(wrapper.find('.menuItem')).to.have.length(1);
         expect(wrapper.find('.menuItemIconDiv')).to.have.length(1);
-        expect(wrapper.find('i')).to.have.length(1);
+        expect(wrapper.find(ActionRoom)).to.have.length(1);
         expect(wrapper.find('.menuItemText')).to.have.length(2);
         expect(wrapper.find('.menuItemText').first().text()).to.equal('');
     });
@@ -57,6 +63,7 @@ describe('TypeaheadMenuItem component', () => {
                     onActiveItemChange: React.PropTypes.func.isRequired,
                     onInitialItemChange: React.PropTypes.func.isRequired,
                     onMenuItemClick: React.PropTypes.func.isRequired,
+                    muiTheme: React.PropTypes.object
                 }
             }
         );
@@ -80,10 +87,11 @@ describe('TypeaheadMenuItem component', () => {
                     onActiveItemChange: React.PropTypes.func.isRequired,
                     onInitialItemChange: React.PropTypes.func.isRequired,
                     onMenuItemClick: React.PropTypes.func.isRequired,
+                    muiTheme: React.PropTypes.object
                 }
             }
         );
-        expect(wrapper.find('i').text()).to.equal('crop_din');
+        expect(wrapper.find(ImageCropDin)).to.have.length(1);
         expect(wrapper.find('.menuItemText').first().text()).to.equal('test name');
         expect(wrapper.find('.menuItemText').last().text()).to.equal('admin name2, admin name1, country name');
     });

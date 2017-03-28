@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {setMapViewButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions'
+import ActionSettingsOverscan from 'material-ui/svg-icons/action/settings-overscan';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 
 export class MapViewButton extends Component {
 
@@ -49,17 +51,17 @@ export class MapViewButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>settings_overscan</i>
+                        <ActionSettingsOverscan className={styles.defaultButton}/>
                         <div className={styles.buttonName}>CURRENT VIEW</div>
                     </div>
                     
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>settings_overscan</i>
+                        <ActionSettingsOverscan className={styles.inactiveButton}/>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>CURRENT VIEW</div>
                     </div>
 
 const SELECTED_ICON =<div>
-                        <i className={"material-icons " + styles.selectedButton}>clear</i>
+                        <ContentClear className={styles.selectedButton}/>
                         <div className={styles.buttonName}>CURRENT VIEW</div>
                     </div>
 
