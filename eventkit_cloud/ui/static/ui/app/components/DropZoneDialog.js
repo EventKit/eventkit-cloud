@@ -3,6 +3,7 @@ import {connect} from 'react-redux';
 import styles from '../styles/DropZone.css';
 import {setImportButtonSelected, setAllButtonsDefault, setImportModalState, processGeoJSONFile, resetGeoJSONFile} from '../actions/mapToolActions';
 import {PopupBox} from './PopupBox.js';
+import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
 
 export class DropZoneDialog extends Component {
@@ -45,7 +46,7 @@ export class DropZoneDialog extends Component {
                             maxSize={28000000}>
                         <div className={styles.dropZoneText}>
                         <span><strong>GeoJSON</strong> format only, <strong>26MB</strong> max,<br/>Drag and drop or<br/></span>
-                        <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><i className={"material-icons"}>file_upload</i>Select A File</button>
+                        <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><FileFileUpload />Select A File</button>
                         </div>
                     </Dropzone>
             </PopupBox>

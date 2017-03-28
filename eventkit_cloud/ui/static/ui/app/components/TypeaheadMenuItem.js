@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import styles from '../styles/TypeaheadMenuItem.css';
 import {MenuItem} from 'react-bootstrap-typeahead';
 const isEqual = require('lodash/isEqual');
+import ImageCropDin from 'material-ui/svg-icons/image/crop-din';
+import ActionRoom from 'material-ui/svg-icons/action/room';
 
 export class TypeaheadMenuItem extends Component {
 
@@ -25,9 +27,10 @@ export class TypeaheadMenuItem extends Component {
                 <div className={styles.menuItemIconDiv}>
                     {this.props.result.bbox && !isEqual(this.props.result.bbox, {}) 
                     ?
-                    <i className={'material-icons ' + styles.menuItemIcon}>crop_din</i>
+                    <ImageCropDin className={styles.menuItemIcon}/>
                     : 
-                    <i className={'material-icons ' + styles.menuItemIcon}>room</i>}
+                    <ActionRoom className={styles.menuItemIcon}/>
+                    }
                 </div>
                 <div className={styles.menuItemText}><strong>{this.props.result.name}</strong></div>
                 <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>

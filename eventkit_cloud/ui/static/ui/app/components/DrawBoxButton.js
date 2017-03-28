@@ -4,6 +4,8 @@ import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {setBoxButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 import {updateMode} from '../actions/exportsActions.js';
+import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 
 
 
@@ -56,17 +58,17 @@ export class DrawBoxButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>crop_square</i>
+                        <ImageCropSquare className={styles.defaultButton}/>
                         <div className={styles.buttonName}>BOX</div>
                     </div>
 
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>crop_square</i>
+                        <ImageCropSquare className={styles.inactiveButton}/>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>BOX</div>
                     </div>
 
 const SELECTED_ICON = <div>
-                        <i className={"material-icons " + styles.selectedButton}>clear</i>
+                        <ContentClear className={styles.selectedButton}/>
                         <div className={styles.buttonName}>BOX</div>
                     </div>
 

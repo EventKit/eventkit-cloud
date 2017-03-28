@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/DrawAOIToolbar.css';
 import {setFreeButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
+import ContentCreate from 'material-ui/svg-icons/content/create';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 import {updateMode} from '../actions/exportsActions';
 
 export class DrawFreeButton extends Component {
@@ -53,17 +55,17 @@ export class DrawFreeButton extends Component {
 }
 
 const DEFAULT_ICON = <div>
-                        <i className={"material-icons " + styles.defaultButton}>create</i>
+                        <ContentCreate className={styles.defaultButton}/>
                         <div className={styles.buttonName}>DRAW</div>
                     </div>
 
 const INACTIVE_ICON = <div>
-                        <i className={"material-icons " + styles.inactiveButton}>create</i>
+                        <ContentCreate className={styles.inactiveButton}/>
                         <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>DRAW</div>
                     </div>
 
 const SELECTED_ICON =<div>
-                        <i className={"material-icons " + styles.selectedButton}>clear</i>
+                        <ContentClear className={styles.selectedButton}/>
                         <div className={styles.buttonName}>DRAW</div>
                     </div>
 
