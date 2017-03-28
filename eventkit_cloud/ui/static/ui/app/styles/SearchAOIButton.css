@@ -62,8 +62,8 @@
     outline: none;
 }
 
-.buttonGeneral i {
-    color: #4498c0;
+.buttonGeneral svg {
+    color: #4498c0 !important;
     padding: 0;
 }
 

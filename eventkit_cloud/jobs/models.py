@@ -150,9 +150,8 @@ class ExportProvider(TimeStampedModelMixin):
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
                                    help_text="This determine what zoom level your tile export will seed to")
     config = models.TextField(default='', null=True, blank=True,
-                              verbose_name="Mapproxy Configuration",
-                              help_text="This is an optional field which is needed if the service "
-                                        "requires authentication.")
+                              verbose_name="Configuration",
+                              help_text="This is an optional field to put in additional configuration.")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
 
     class Meta:  # pragma: no cover

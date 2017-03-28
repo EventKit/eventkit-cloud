@@ -31,11 +31,10 @@ class TestJob(TestCase):
         username = 'admin'
         password = '@dm1n'
         self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings,"SITE_NAME", "cloud.eventkit.dev")))
-        self.login_url = self.base_url + '/auth'
+        self.login_url = self.base_url + '/auth/'
         self.create_export_url = self.base_url + '/exports/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
-        self.rerun_url = self.base_url + '/api/rerun'
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir, mode=0660)
@@ -49,8 +48,20 @@ class TestJob(TestCase):
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
-        self.bbox = ["-0.077419", "50.778155", "-0.037251", "50.818517"]
-
+        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "MultiPolygon",
+                                                                                              "coordinates": [
+                                                                                                  [[[127.01, 37.01],
+                                                                                                    [127.03, 37.02],
+                                                                                                    [127.03, 37.03],
+                                                                                                    [127.02, 37.03],
+                                                                                                    [127.01, 37.01]]],
+                                                                                                  [[[127.03, 37.03],
+                                                                                                    [127.04, 37.03],
+                                                                                                    [127.05, 37.05],
+                                                                                                    [127.03, 37.04],
+                                                                                                    [127.03, 37.03]]]
+                                                                                              ]
+                                                                                              }}]}
     def tearDown(self):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
@@ -61,8 +72,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -75,8 +85,7 @@ class TestJob(TestCase):
         export_provider.save()
 
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "eventkit-integration-test-wms", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
 
         job_json = self.run_job(job_data, wait_for_run=False)
@@ -122,8 +131,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG",
                     "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -133,8 +141,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -145,8 +152,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE",
                     "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -156,8 +162,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -167,8 +172,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -178,8 +182,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -189,8 +192,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -200,8 +202,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -211,8 +212,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -223,8 +223,7 @@ class TestJob(TestCase):
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arc-Raster",
                     "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -234,8 +233,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -245,8 +243,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -256,8 +253,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -267,8 +263,7 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
@@ -278,43 +273,8 @@ class TestJob(TestCase):
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "tags": [],
+                    "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_geojson(self):
-        """
-        This test is to ensure that an osm job with a geojson selection will properly cache.
-        :returns:
-        """
-        geojson = {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{ "type": "MultiPolygon",
-    "coordinates": [
-[[[127.01, 37.01], [127.03, 37.02], [127.03, 37.03], [127.02, 37.03], [127.01, 37.01]]],
-[[[127.03, 37.03], [127.04, 37.03], [127.05, 37.05], [127.03, 37.04], [127.03, 37.03]]]
-      ]
-    }}]}
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-OSM-CLIP", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "selection": json.dumps(geojson), "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wms_geojson(self):
-        """
-        This test is to ensure that a wms job with a geojson selection will properly cache.
-        :returns:
-        """
-        geojson = {"type":"FeatureCollection","features":[{"type":"Feature","geometry":{ "type": "MultiPolygon",
-    "coordinates": [
-[[[127.01, 37.01], [127.03, 37.02], [127.03, 37.03], [127.02, 37.03], [127.01, 37.01]]],
-[[[127.03, 37.03], [127.04, 37.03], [127.05, 37.05], [127.03, 37.04], [127.03, 37.03]]]
-      ]
-    }}]}
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-OSM-CLIP", "description": "Test Description",
-                    "event": "TestProject", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3], "selection": json.dumps(geojson), "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_all(self):
@@ -323,8 +283,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3],
+                    "event": "test", "selection": self.selection,
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "OpenStreetMap Data (Generic)",
@@ -348,8 +307,7 @@ class TestJob(TestCase):
         :return:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "xmin": self.bbox[0], "ymin": self.bbox[1], "xmax": self.bbox[2],
-                    "ymax": self.bbox[3],
+                    "event": "test", "selection": self.selection,
                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "OpenStreetMap Data (Generic)",
@@ -382,8 +340,7 @@ class TestJob(TestCase):
             self.assertTrue(check_content_exists(geopackage_file))
             os.remove(geopackage_file)
 
-        rerun_response = self.client.get(self.rerun_url,
-                                         params={'job_uid': job.get('uid')},
+        rerun_response = self.client.get('{0}/{1}/run'.format(self.jobs_url, job.get('uid')),
                                          headers={'X-CSRFToken': self.csrftoken,
                                                   'Referer': self.create_export_url})
 
@@ -411,7 +368,6 @@ class TestJob(TestCase):
                                     json=data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
-
         self.assertEquals(response.status_code, 202)
         job = response.json()
 
@@ -448,9 +404,9 @@ class TestJob(TestCase):
             self.assertTrue(check_content_exists(geopackage_file))
             self.assertTrue(check_zoom_levels(geopackage_file))
             os.remove(geopackage_file)
-        # delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
-        #                                      headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
-        # self.assertTrue(delete_response)
+        delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
+                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+        self.assertTrue(delete_response)
         for provider_task in run.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
             if not geopackage_url:

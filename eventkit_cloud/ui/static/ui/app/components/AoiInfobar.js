@@ -3,10 +3,13 @@ import {connect} from 'react-redux';
 import styles from '../styles/AoiInfobar.css';
 import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../actions/AoiInfobarActions.js';
 import {PopupBox} from './PopupBox.js';
+import AlertWarning from 'material-ui/svg-icons/alert/warning';
+import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
+import ActionRoom from 'material-ui/svg-icons/action/room';
 
-export const NO_SELECTION_ICON = 'warning';
-export const POLYGON_ICON = 'crop_square';
-export const POINT_ICON = 'room';
+export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>;
+export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
+export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
 
 const isEqual = require('lodash/isEqual');
 
@@ -77,9 +80,7 @@ export class AoiInfobar extends Component {
                             </button>
                         </div>
                         <div className={styles.detailBar}>
-                            <i className={"material-icons " + styles.geometryIcon}>
-                                    {this.state.geometryIcon}
-                            </i>
+                            {this.state.geometryIcon}
                             <div className={styles.detailText}>
                                 <div className={styles.aoiTitle}>
                                     <strong>{this.state.aoiTitle}</strong>
