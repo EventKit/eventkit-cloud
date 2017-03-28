@@ -25,6 +25,8 @@ class StatusDownload extends React.Component {
     }
     componentDidMount() {
 
+        //TODO: Make a call to get the job and the details.  Put the details in the details box...
+        //TODO: Poll using jobuid until the status of the run comes back as completed
     }
     componentDidUpdate(prevProps, prevState) {
         if(prevState.expanded != this.state.expanded) {
@@ -136,21 +138,20 @@ class StatusDownload extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        geojson: state.aoiInfo.geojson,
-        exportName: state.exportInfo.exportName,
-        datapackDescription: state.exportInfo.datapackDescription,
-        projectName: state.exportInfo.projectName,
-        makePublic: state.exportInfo.makePublic,
-        providers: state.exportInfo.providers,
-        area_str: state.exportInfo.area_str,
-        layers: state.exportInfo.layers,
+        jobuid: state.submitJob.jobuid,
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+
     }
 }
 
 
 
 StatusDownload.propTypes = {
-    geojson:         React.PropTypes.object,
+
 }
 StatusDownload.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
@@ -158,5 +159,6 @@ StatusDownload.childContextTypes = {
 
 export default connect(
     mapStateToProps,
+    mapDispatchToProps,
 )(StatusDownload);
 
