@@ -3,6 +3,11 @@ import {connect} from 'react-redux';
 import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
+import Drawer from 'material-ui/Drawer';
+import PermissionFilter from './PermissionsFilter';
+import StatusFilter from './StatusFilter';
+import DateFilter from './DateFilter';
+import FilterHeader from './FilterHeader';
 import DataPackList from './DataPackList';
 import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
@@ -11,7 +16,6 @@ import DataPackSortDropDown from './DataPackSortDropDown';
 import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
-import DataPackDrawer from './DataPackDrawer.js';
 import * as utils from '../../utils/sortUtils';
 
 export class DataPackPage extends React.Component {
@@ -20,9 +24,16 @@ export class DataPackPage extends React.Component {
         super(props);
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
-        this.handleDropDownChange = this.handleDropDownChange.bind(this);
-        this.applyFilters = this.applyFilters.bind(this);
+        this.handleOwnerFilter = this.handleOwnerFilter.bind(this);
+        this.applySorts = this.applySorts.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
+        this.handleFilterApply = this.handleFilterApply.bind(this);
+        this.handleFilterClear = this.handleFilterClear.bind(this);
+        this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
+        this.handleStatusChange = this.handleStatusChange.bind(this);
+        this.handleMinDate = this.handleMinDate.bind(this);
+        this.handleMaxDate = this.handleMaxDate.bind(this);
+        this.applyAll = this.applyAll.bind(this);
         this.state = {
             open: window.innerWidth > 991 ? true : false,
             runs: [],
@@ -33,7 +44,12 @@ export class DataPackPage extends React.Component {
                 searched: false,
                 searchQuery: ''
             },
-            ordered: utils.orderNewest
+            ordered: utils.orderNewest,
+            permissions: null,
+            minDate: null,
+            maxDate: null,
+            status: null,
+            filtersApplied: false,
         }
     }
 
@@ -42,7 +58,8 @@ export class DataPackPage extends React.Component {
             if (nextProps.runsList.fetched == true) {
                 let runs = nextProps.runsList.runs;
                 this.setState({runs: runs});
-                this.applyFilters(runs);      
+                runs = this.applyAll(runs);
+                this.setState({displayedRuns:runs});
                 
             }
         }
@@ -66,18 +83,23 @@ export class DataPackPage extends React.Component {
         this.forceUpdate();
     }
 
+    handleToggle = () => {
+        this.setState({open: !this.state.open});
+    }
+
     onSearch(searchText, ix) {
         this.setState({search: {searched: true, searchQuery: searchText}});
         const searched = utils.search(searchText, this.state.displayedRuns);
         this.setState({displayedRuns: searched});
     }
 
-    
-
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
             this.setState({search: {searched: false, searchQuery: ''}}, () => {
-                this.applyFilters(this.state.runs);
+                let runs = this.applySorts(this.state.runs);
+                // this.handleFilterClear(); // ???? DO WE WANT IT TO BE LIKE THIS? //
+                runs = this.applyFilters(runs);
+                this.setState({displayedRuns: runs});
             });
         }
     }
@@ -88,12 +110,12 @@ export class DataPackPage extends React.Component {
         this.setState({displayedRuns: runs});
     }
 
-    handleDropDownChange = (event, index, value) => {
+    handleOwnerFilter = (event, index, value) => {
         if(value == 1) {
             this.setState({dropDownValue: value}, () => {
-                this.applyFilters(this.state.runs);
-            });
-            
+                let runs = this.applyAll(this.state.runs);
+                this.setState({displayedRuns: runs});
+            }); 
         }
         else {
             this.setState({dropDownValue: value});
@@ -102,35 +124,91 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    applyFilters(runs) {
-        // run functions that remove first
-        if(this.state.search.searched) {
-            runs = utils.search(this.state.search.searchQuery, runs);
-        }
+    applyAll(runs) {
+        runs = this.applySearch(runs);
+        runs = this.applyFilters(runs);
+        runs = this.applySorts(runs);
+        return runs;
+    }
+
+    applySorts(runs) {
         if(this.state.dropDownValue == 2) {
             runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
         }
         runs = this.state.sortDropDown(runs);
+        return runs;
+    }
+
+    applySearch(runs) {
+        if(this.state.search.searched) {
+            return utils.search(this.state.search.searchQuery, runs);
+        }
+        else return runs;
+    }
+
+    applyFilters(runs) {
+        if(this.state.permissions) {
+            runs = utils.filterPermissions(this.state.permissions, runs);
+        }
+        if(this.state.status) {
+            runs = utils.filterStatus(this.state.status, runs);
+        }
+        if(this.state.minDate || this.state.maxDate) {
+            runs = utils.filterDate(this.state.minDate, this.state.maxDate, runs);
+        }
+        return runs
+    }
+
+    handleFilterApply = () => {
+        if(window.innerWidth <= 991) {
+            this.setState({open: false});
+        }
+        this.setState({filtersApplied: true});
+        let runs = this.applyAll(this.state.runs);
         this.setState({displayedRuns: runs});
     }
 
-    handleToggle = () => {
-        this.setState({open: !this.state.open});
+    handleFilterClear = () => {
+        this.setState({
+            permissions: null,
+            status: null,
+            minDate: null,
+            maxDate: null,
+            filtersApplied: false,
+        });
+        if(window.innerWidth <= 991) {
+            this.setState({open: false});
+        }
+        let runs = this.applySearch(this.state.runs);
+        runs = this.applySorts(runs);
+        this.setState({displayedRuns: runs});
+    }
+    handlePermissionsChange = (event, value) => {
+        this.setState({permissions: value});
+    }
+    handleStatusChange = (event, value) => {
+        this.setState({status: value});
+    }
+    handleMinDate = (e, date) => {
+         this.setState({minDate: date});
+    }
+    handleMaxDate = (e, date) => {
+        this.setState({maxDate: date});
     }
 
-    render() {
 
+    render() {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                // width: this.state.open ? window.innerWidth - 200 : '100%',
                 height: window.innerHeight - 221,
-                overflowY: 'visible',
+                overflowY: 'auto',
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth > 991 ? '200px' : '0px',
-                marginLeft: this.props.drawerOpen && window.innerWidth > 991 ? '200px' : '0px',
+                // marginLeft: this.props.drawerOpen && window.innerWidth > 991 ? '200px' : '0px',
                 paddingBottom: '30px',
                 paddingTop: '10px',
+                // minWidth: window.innerWidth > 991 ? window.innerWidth - 400 : window.innerWidth,
             },
             appBar: {
                 backgroundColor: '#161e2e',
@@ -147,6 +225,13 @@ export class DataPackPage extends React.Component {
                 display: 'inline-block',
                 width: '100%'
             },
+            containerStyle: {
+                backgroundColor: '#fff',
+                top: '221px',
+                height: window.innerHeight - 221,
+                overflowY: 'auto',
+                overflowX: 'hidden'
+            }
         };
 
         return (
@@ -169,14 +254,40 @@ export class DataPackPage extends React.Component {
                 </Toolbar>
 
                 <Toolbar style={styles.toolbarSort}>
-                        <DataPackOwnerSort handleChange={this.handleDropDownChange} value={this.state.dropDownValue} />
+                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} />
                         <DataPackFilterButton open={this.state.open} handleToggle={this.handleToggle} />
                         <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
                         <DataPackViewButtons handleGridSelect={() => {console.log('grid')}} handleListSelect={() => {console.log('list')}} />
                 </Toolbar>
-                <div style={{/* hides scrollbar */ overflowY: 'scroll', right: '-17px', position: 'absolute'}}>
+                {/*<div style={{/* hides scrollbar *//* overflowY: 'scroll', right: '-17px', position: 'absolute'}}>*/}
                     <div style={styles.wholeDiv}>
-                        <DataPackDrawer open={this.state.open}/>
+                        <Drawer 
+                            width={200} 
+                            openSecondary={true} 
+                            open={this.state.open}
+                            containerStyle={styles.containerStyle}>
+                            <FilterHeader
+                                onApply={this.handleFilterApply}
+                                onClear={this.handleFilterClear}
+                            />
+                            <PermissionFilter
+                                onChange={this.handlePermissionsChange}
+                                onClear={this.handlePermissionsClear}
+                                valueSelected={this.state.permissions}
+                            />
+                            <StatusFilter
+                                onChange={this.handleStatusChange}
+                                onClear={this.handleStatusClear}
+                                valueSelected={this.state.status}
+                            />
+                            <DateFilter
+                                onClear={this.handleDateClear}
+                                onMinChange={this.handleMinDate}
+                                onMaxChange={this.handleMaxDate}
+                                minDate={this.state.minDate}
+                                maxDate={this.state.maxDate}
+                            />
+                        </Drawer>
                         <DataPackList 
                             runs={this.state.displayedRuns} 
                             user={this.props.user} 
@@ -185,7 +296,7 @@ export class DataPackPage extends React.Component {
                             {this.props.children}
                         </div>
                     </div>
-                </div>
+                {/*</div>*/}
             </div>
         );
     }

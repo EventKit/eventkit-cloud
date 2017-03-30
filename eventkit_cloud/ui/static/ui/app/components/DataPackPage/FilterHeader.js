@@ -1,0 +1,41 @@
+import React, {PropTypes, Component} from 'react'
+import Drawer from 'material-ui/Drawer';
+import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
+
+export class DataPackDrawer extends Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render () {
+        const styles = {
+            drawerHeader: {width: '100%', paddingTop: '10px', paddingLeft: '10px', paddingRight: '10px', paddingBottom: '5px', lineHeight: '36px'},
+        }
+        return (
+                <div style={styles.drawerHeader}>
+                    <RaisedButton
+                        style={{minWidth: 'none', borderRadius: '0px'}}
+                        buttonStyle={{borderRadius: '0px'}}
+                        backgroundColor={'#4598bf'}
+                        label={'Apply'}
+                        labelStyle={{color: '#fff', textTransform: 'none'}}
+                        onClick={this.props.onApply}/>
+                    <FlatButton
+                        style={{float: 'right', minWidth: 'none'}}
+                        hoverColor={'none'}
+                        label={'Clear All'}
+                        labelStyle={{color: '#4598bf', textTransform: 'none', paddingRight: '0px'}}
+                        onClick={this.props.onClear}
+                        disableTouchRipple={true}/>
+                </div>
+        )
+    }
+}
+
+DataPackDrawer.propTypes = {
+    onApply: React.PropTypes.func.isRequired,
+    onClear: React.PropTypes.func.isRequired,
+}
+
+export default DataPackDrawer;
