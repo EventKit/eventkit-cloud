@@ -331,6 +331,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
+    from ..tasks.models import ExportProvider
+    provider_name = ExportProvider.objects.get(slug=provider_slug).name
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
@@ -339,7 +341,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                       'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': bbox}))
+                                                                      'bbox': bbox,
+                                                                      'provider_name': provider_name}))
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result
