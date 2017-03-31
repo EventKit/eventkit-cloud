@@ -81,6 +81,16 @@ COPY ./scripts /var/lib/eventkit/scripts
 RUN chmod 755 /var/lib/eventkit /var/log/eventkit /home
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
+# --- Support for remote-debugging in containers.
+RUN pip install pydevd
+# Adds remote path mapping via env vars to pydevd.
+COPY ./config/pydevd_path_mapping_snippet.py /var/lib/eventkit/
+RUN bash -c '\
+    export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
+    export PYDEVD_FILE_UTILS=/var/lib/.virtualenvs/eventkit/lib/python2.7/site-packages/pydevd_file_utils.py;\
+    perl -0777 -i -pe "s/PATHS_FROM_ECLIPSE_TO_PYTHON = \[\]/$SNIPPET/" $PYDEVD_FILE_UTILS \
+'
+
 ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh"]
 CMD ["echo", "Override this command in the docker-compose.yaml"]
 
