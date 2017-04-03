@@ -18,7 +18,7 @@ export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
 const jsts = require('jsts');
-const isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 export class ExportAOI extends Component {
 

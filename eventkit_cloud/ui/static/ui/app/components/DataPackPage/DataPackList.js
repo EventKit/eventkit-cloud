@@ -50,6 +50,7 @@ export class DataPackList extends Component {
                 justifyContent: 'space-around',
                 marginLeft: '3px',
                 marginRight: '3px',
+                paddingBottom: '30px'
             },
             gridList: {
                 border: '1px',

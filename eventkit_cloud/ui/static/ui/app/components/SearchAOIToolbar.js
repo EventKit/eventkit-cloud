@@ -7,7 +7,7 @@ import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
 import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
 
-const debounce = require('lodash/debounce');
+import debounce from 'lodash/debounce';
 
 export class SearchAOIToolbar extends Component {
 

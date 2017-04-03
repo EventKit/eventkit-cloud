@@ -11,7 +11,7 @@ export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
 
-const isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 export class AoiInfobar extends Component {
 

@@ -1,5 +1,4 @@
 import React, {PropTypes, Component} from 'react'
-import Drawer from 'material-ui/Drawer';
 import {RadioButton, RadioButtonGroup} from 'material-ui/RadioButton';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
@@ -34,7 +33,7 @@ export class PermissionsFilter extends Component {
                             labelStyle={{color: 'grey'}}
                             value={"Public"}
                             label={"Public"}
-                        /> 
+                        />
                     </RadioButtonGroup>
                 </div>
                 <div style={{width: '60px', height: '58px', display: 'inline-block', float: 'right'}}>

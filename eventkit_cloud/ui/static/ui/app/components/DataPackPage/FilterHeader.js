@@ -1,5 +1,4 @@
 import React, {PropTypes, Component} from 'react'
-import Drawer from 'material-ui/Drawer';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 
