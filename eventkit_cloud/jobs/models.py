@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
 import logging
 import uuid
-import json
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.core.serializers import serialize
 from django.contrib.postgres.fields import ArrayField
+from django.core.serializers import serialize
 from django.db.models.fields import CharField
 from django.db.models.signals import (
     post_delete,
@@ -17,6 +17,7 @@ from django.db.models.signals import (
 )
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +108,7 @@ class ExportFormat(TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self, ):
+    def __unicode__(self,):
         return '{0}'.format(self.slug)
 
 
@@ -124,7 +125,7 @@ class ExportProviderType(TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.type_name)
 
-    def __unicode__(self, ):
+    def __unicode__(self,):
         return '{0}'.format(self.type_name)
 
 
@@ -168,7 +169,7 @@ class ExportProvider(TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self, ):
+    def __unicode__(self,):
         return '{0}'.format(self.name)
 
 
@@ -217,7 +218,7 @@ class ProviderTask(models.Model):
     def __str__(self):
         return '{0} - {1}'.format(self.uid, self.provider)
 
-    def __unicode__(self, ):
+    def __unicode__(self,):
         return '{0} - {1}'.format(self.uid, self.provider)
 
 
@@ -248,6 +249,7 @@ class Job(TimeStampedModelMixin):
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
+    json_filters = models.TextField(default='{}')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -263,7 +265,7 @@ class Job(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
     @property
-    def overpass_extents(self, ):
+    def overpass_extents(self,):
         """
         Return the export extents in order required by Overpass API.
         """
@@ -274,11 +276,11 @@ class Job(TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def extents(self, ):
+    def extents(self,):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def tag_dict(self, ):
+    def tag_dict(self,):
         """
         Return the unique set of Tag keys from this export
         with their associated geometry types.
@@ -301,20 +303,23 @@ class Job(TimeStampedModelMixin):
         return tag_dict
 
     @property
-    def filters(self, ):
+    def filters(self,):
         """
         Return key=value pairs for each tag in this export.
 
         Used in utils.overpass.filter to filter the export.
         """
-        filters = []
-        for tag in self.tags.all():
-            kv = '{0}={1}'.format(tag.key, tag.value)
-            filters.append(kv)
-        return filters
+        # Command-line key=value filters for osmfilter
+        cl_filters = []
+        # Dictionary of filters
+        filter_dict = json.loads(self.json_filters)
+        for key, value in filter_dict.items():
+            kv = '{0}={1}'.format(key, value)
+            cl_filters.append(kv)
+        return cl_filters
 
     @property
-    def categorised_tags(self, ):
+    def categorised_tags(self,):
         """
         Return tags mapped according to their geometry types.
         """
