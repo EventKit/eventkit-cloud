@@ -12,6 +12,17 @@ require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
+const muiTheme = getMuiTheme({
+    datePicker: {
+        selectColor: '#253447',
+    },
+    flatButton: {
+        textColor: '#253447',
+        primaryTextColor: '#253447'
+    },
+});
 
 
 export class Application extends Component {
@@ -90,7 +101,7 @@ export class Application extends Component {
         const img = <img style={styles.img} src={logo}/>
 
         return (
-            <MuiThemeProvider>
+            <MuiThemeProvider muiTheme={muiTheme}>
                 <div className={styles.root}>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>

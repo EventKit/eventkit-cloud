@@ -48,7 +48,11 @@ export class DataPackPage extends React.Component {
             permissions: null,
             minDate: null,
             maxDate: null,
-            status: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                running: false,
+            },
             filtersApplied: false,
         }
     }
@@ -141,7 +145,7 @@ export class DataPackPage extends React.Component {
         if(this.state.permissions) {
             runs = utils.filterPermissions(this.state.permissions, runs);
         }
-        if(this.state.status) {
+        if(this.state.status.completed || this.state.status.incomplete || this.state.status.running)  {
             runs = utils.filterStatus(this.state.status, runs);
         }
         if(this.state.minDate || this.state.maxDate) {
@@ -162,7 +166,11 @@ export class DataPackPage extends React.Component {
     handleFilterClear = () => {
         this.setState({
             permissions: null,
-            status: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                running: false,
+            },
             minDate: null,
             maxDate: null,
             filtersApplied: false,
@@ -179,8 +187,10 @@ export class DataPackPage extends React.Component {
         this.setState({permissions: value});
     }
 
-    handleStatusChange = (event, value) => {
-        this.setState({status: value});
+    handleStatusChange = (stateChange) => {
+        let status = this.state.status;
+        status = Object.assign(status, stateChange)
+        this.setState({status: status});
     }
 
     handleMinDate = (e, date) => {
@@ -270,16 +280,15 @@ export class DataPackPage extends React.Component {
                         />
                         <PermissionFilter
                             onChange={this.handlePermissionsChange}
-                            onClear={this.handlePermissionsClear}
                             valueSelected={this.state.permissions}
                         />
                         <StatusFilter
                             onChange={this.handleStatusChange}
-                            onClear={this.handleStatusClear}
-                            valueSelected={this.state.status}
+                            completed={this.state.status.completed}
+                            incomplete={this.state.status.incomplete}
+                            running={this.state.status.running}
                         />
                         <DateFilter
-                            onClear={this.handleDateClear}
                             onMinChange={this.handleMinDate}
                             onMaxChange={this.handleMaxDate}
                             minDate={this.state.minDate}

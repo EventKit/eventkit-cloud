@@ -57,7 +57,16 @@ export function filterPermissions(permission, runs) {
 
 export function filterStatus(status, runs) {
     return filter(runs, function(o) {
-        return o.status == status.toUpperCase();
+        if(status.completed && o.status == 'COMPLETED') {
+            return true;
+        }
+        if(status.incomplete && o.status == 'INCOMPLETE') {
+            return true;
+        }
+        if(status.running && o.status == 'SUBMITTED') {
+            return true;
+        }
+        return false;
     });
 };
 

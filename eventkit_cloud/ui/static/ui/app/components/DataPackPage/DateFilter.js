@@ -16,14 +16,14 @@ export class DateFilter extends Component {
                     <p style={{width: '100%', margin: '0px'}}><strong>Date Added</strong></p>
                     <DatePicker
                         autoOk={true}
-                        hintText={"Min Date"}
+                        hintText={"From"}
                         textFieldStyle={{fontSize: '14px', height: '36px'}}
                         onChange={this.props.onMinChange}
                         value={this.props.minDate}
                     />
                     <DatePicker
                         autoOk={true}
-                        hintText={"Max Date"}
+                        hintText={"To"}
                         textFieldStyle={{fontSize: '14px', height: '36px'}}
                         onChange={this.props.onMaxChange}
                         value={this.props.maxDate}

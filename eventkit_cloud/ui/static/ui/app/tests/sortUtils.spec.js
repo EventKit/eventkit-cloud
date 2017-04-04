@@ -89,12 +89,31 @@ describe('sorting utilities', () => {
         expect(filtered[1].job.published).to.be.true;
     });
 
-    it('filterStatus should return only runs with matching status', () => {
+    it('filterStatus should return only runs with COMPLETED  status', () => {
         const runs = getRuns();
-        const filtered = utils.filterStatus('COMPLETED', runs);
+        const status = {completed: true, incomplete: false, running: false};
+        const filtered = utils.filterStatus(status, runs);
         expect(filtered.length).to.equal(2);
         expect(filtered[0].status).to.equal('COMPLETED');
         expect(filtered[1].status).to.equal('COMPLETED');
+    });
+    
+    it('filterStatus should return only runs with SUBMITTED  status', () => {
+        const runs = getRuns();
+        const status = {completed: false, incomplete: false, running: true};
+        const filtered = utils.filterStatus(status, runs);
+        expect(filtered.length).to.equal(1);
+        expect(filtered[0].status).to.equal('SUBMITTED');
+    });
+
+    it('filterStatus should return only runs with SUBMITTED or COMPLETED status', () => {
+        const runs = getRuns();
+        const status = {completed: true, incomplete: false, running: true};
+        const filtered = utils.filterStatus(status, runs);
+        expect(filtered.length).to.equal(3);
+        expect(filtered[0].status).to.equal('COMPLETED');
+        expect(filtered[2].status).to.equal('COMPLETED');
+        expect(filtered[1].status).to.equal('SUBMITTED');
     });
 
     it('filterDate should return only runs started before maxDate', () => {

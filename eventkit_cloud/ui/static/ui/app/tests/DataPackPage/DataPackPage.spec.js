@@ -396,7 +396,7 @@ describe('DataPackPage component', () => {
             {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
             {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
          ];
-         wrapper.setState({status: 'COMPLETED'});
+         wrapper.setState({status: {completed: true, incomplete: false, running: false}});
          const returned_runs = wrapper.instance().applyFilters(runs);
          expect(permissionsSpy.called).to.be.false;
          expect(statusSpy.calledOnce).to.be.true;
@@ -467,7 +467,11 @@ describe('DataPackPage component', () => {
         expect(stateSpy.calledTwice).to.be.true;
         expect(stateSpy.calledWith({
             permissions: null,
-            status: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                running: false,
+            },
             minDate: null,
             maxDate: null,
             filtersApplied: false,
@@ -494,9 +498,9 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.instance().handleStatusChange(null, 'value');
+        wrapper.instance().handleStatusChange({completed: true});
         expect(stateSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledWith({status: 'value'}));
+        expect(stateSpy.calledWith({status: {completed: true, incomplete: false, running: false}})).to.be.true;
         stateSpy.restore();
     });
 

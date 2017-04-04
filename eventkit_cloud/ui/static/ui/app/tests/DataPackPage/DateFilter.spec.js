@@ -28,10 +28,10 @@ describe('DateFilter component', () => {
         });
         expect(wrapper.find('p').text()).to.equal('Date Added');
         expect(wrapper.find(DatePicker)).to.have.length(2);
-        expect(wrapper.find(DatePicker).first().text()).to.equal('Min Date');
+        expect(wrapper.find(DatePicker).first().text()).to.equal('From');
         expect(wrapper.find(DatePicker).first().props().onChange).to.equal(props.onMinChange);
         expect(wrapper.find(DatePicker).first().props().value).to.equal(null);
-        expect(wrapper.find(DatePicker).last().text()).to.equal('Max Date');
+        expect(wrapper.find(DatePicker).last().text()).to.equal('To');
         expect(wrapper.find(DatePicker).last().props().onChange).to.equal(props.onMaxChange);
         expect(wrapper.find(DatePicker).last().props().value).to.equal(null);
     });

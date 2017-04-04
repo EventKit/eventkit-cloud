@@ -10,7 +10,7 @@ export class PermissionsFilter extends Component {
 
     render () {
         const styles = {
-            drawerSection: {width: '100%', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
+            drawerSection: {width: '100%', height: '94px', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
         }
         return (
             <div style={styles.drawerSection}>
