@@ -314,7 +314,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                 Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                                    geom_types=entry['geom_types'], data_model='PRESET', job=job)
                                 filters[entry['key']] = entry['value']
-                            job.json_filters = json.dumps(filters)
+                            job.json_filters = filters
                             job.save()
                         elif tags:
                             """Get tags from request."""
@@ -324,7 +324,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                                    job=job, data_model=entry['data_model'],
                                                    geom_types=entry['geom_types'], groups=entry['groups'])
                                 filters[entry['key']] = entry['value']
-                            job.json_filters = json.dumps(filters)
+                            job.json_filters = filters
                             job.save()
                         else:
                             """
@@ -339,7 +339,7 @@ class JobViewSet(viewsets.ModelViewSet):
                                 Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                                    geom_types=entry['geom_types'], data_model='HDM', job=job)
                                 filters[entry['key']] = entry['value']
-                            job.json_filters = json.dumps(filters)
+                            job.json_filters = filters
                             job.save()
                         # check for translation file
                         if translation:

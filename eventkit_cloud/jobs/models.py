@@ -17,6 +17,7 @@ from django.db.models.signals import (
 )
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
+from django.contrib.postgres.fields.jsonb import JSONField
 
 
 logger = logging.getLogger(__name__)
@@ -249,7 +250,7 @@ class Job(TimeStampedModelMixin):
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
-    json_filters = models.TextField(default='{}')
+    json_filters = JSONField(default=dict)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -310,13 +311,11 @@ class Job(TimeStampedModelMixin):
         Used in utils.overpass.filter to filter the export.
         """
         # Command-line key=value filters for osmfilter
-        cl_filters = []
-        # Dictionary of filters
-        filter_dict = json.loads(self.json_filters)
-        for key, value in filter_dict.items():
+        filters = []
+        for key, value in self.json_filters.items():
             kv = '{0}={1}'.format(key, value)
-            cl_filters.append(kv)
-        return cl_filters
+            filters.append(kv)
+        return filters
 
     @property
     def categorised_tags(self,):
