@@ -81,9 +81,7 @@ COPY ./scripts /var/lib/eventkit/scripts
 RUN chmod 755 /var/lib/eventkit /var/log/eventkit /home
 RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
-# --- Support for remote-debugging in containers.
-RUN pip install pydevd
-# Adds remote path mapping via env vars to pydevd.
+# Adds remote path mapping via env vars to pydevd to support remote debugging.
 COPY ./config/pydevd_path_mapping_snippet.py /var/lib/eventkit/
 RUN bash -c '\
     export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
