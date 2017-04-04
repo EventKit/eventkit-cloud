@@ -11,6 +11,7 @@ from django.conf import settings  # noqa
 class TaskPriority(Enum):
     CANCEL = 80                 # If cancel isn't higher than new tasks, long running processes will needlessly
                                 # take resources while the cancel message is blocked.
+    FINALIZE_RUN = 70           # If a run is finished it should be cleaned up before starting new tasks.
     FINALIZE_PROVIDER = 60      # It is better to finalize a previous task before starting a new one so that the
                                 # processed file is made available to the user.
     TASK_RUNNER = 50            # Running tasks should be higher than picking up tasks

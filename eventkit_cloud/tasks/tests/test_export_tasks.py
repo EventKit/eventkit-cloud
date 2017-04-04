@@ -738,7 +738,9 @@ class TestExportTasks(ExportTaskBase):
         finalize_export_provider_task.si.assert_any_call(export_provider_task_uid=export_provider_task.uid,
                                                              run_uid=run_uid, worker=worker_name)
         finalize_export_provider_task.si().set.assert_any_call(queue=worker_name, routing_key=worker_name)
-        finalize_export_provider_task.si().set().apply_async.assert_any_call(interval=1, max_retries=10, queue=worker_name, routing_key=worker_name)
+        finalize_export_provider_task.si().set().apply_async.assert_any_call(interval=1, max_retries=10,
+                                                                             priority=TaskPriority.FINALIZE_PROVIDER.value,
+                                                                             queue=worker_name, routing_key=worker_name)
 
     @patch('eventkit_cloud.tasks.export_tasks.finalize_run_task')
     @patch('os.path.isfile')
@@ -775,8 +777,14 @@ class TestExportTasks(ExportTaskBase):
                                       export_provider_task.slug, filename)
         isfile.assert_called_once_with(full_file_path)
         zip_file_task.run.assert_called_with(run_uid=run_uid, include_files=[full_file_path])
-        finalize_run_task.run.assert_called_once_with(run_uid=run_uid,
-                                                 stage_dir=run_dir)
+        finalize_run_task.si.called_once_with(run_uid=run_uid,
+                                              stage_dir=run_dir)
+        finalize_run_task.si().set.called_once_with(queue=worker_name, routing_key=worker_name)
+        finalize_run_task.si().set().apply_async.called_once_with(interval=1,
+                                                                  max_retries=10,
+                                                                  queue=worker_name,
+                                                                  routing_key=worker_name,
+                                                                  priority=TaskPriority.FINALIZE_RUN.value)
 
     @patch('os.kill')
     @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
