@@ -118,6 +118,12 @@ export function clearAoiInfo() {
     }
 }
 
+export function clearJobInfo() {
+    return {
+        type: types.CLEAR_JOB_INFO,
+    }
+}
+
 export function updateMode(mode) {
     return {
         type: types.SET_MODE,

@@ -50,7 +50,7 @@ export default {
         deleted: false,
         error: null,
     },
-    jobSubmit: {
+    submitJob: {
         fetching: false,
         fetched: false,
         jobuid: '',
@@ -68,4 +68,11 @@ export default {
     providers: [],
     stepperNextEnabled: false,
     setExportPackageFlag: false,
+    datacartDetailsReceived:false,
+    datacartDetails: {
+        fetching: false,
+        fetched: false,
+        data: [],
+        error: null,
+    },
 }

@@ -13,7 +13,9 @@ import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
+    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
+
 const isEqual = require('lodash/isEqual');
 
 class BreadcrumbStepper extends React.Component {
@@ -35,10 +37,20 @@ class BreadcrumbStepper extends React.Component {
     componentWillUnmount() {
         this.props.clearAoiInfo();
         this.props.clearExportInfo();
+        this.props.clearJobInfo();
     }
 
     componentWillReceiveProps(nextProps) {
+        if(nextProps.datacartDetailsReceived){
+            browserHistory.push('/status/'+nextProps.jobuid);
+        }
+        if (this.props.jobFetched != nextProps.jobFetched) {
+            if (nextProps.jobFetched) {
+                this.props.setDatacartDetailsReceived();
+                //this.props.getDatacartDetails(nextProps.jobuid);
 
+            }
+        }
     }
 
     handleSubmit = () => {
@@ -62,13 +74,7 @@ class BreadcrumbStepper extends React.Component {
             tags : [],
     };
 
-        this.props.submitJob(data);
-        browserHistory.push('/status');
-
-        // this.setState({
-        //     stepIndex: stepIndex + 1,
-        //     finished: stepIndex >= 2,
-        // });
+        const jobid = this.props.submitJob(data);
 
     }
 
@@ -216,9 +222,13 @@ BreadcrumbStepper.propTypes = {
     getProviders: React.PropTypes.func,
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
+    setDatacartDetailsReceived: React.PropTypes.func,
     setExportInfoDone: React.PropTypes.func,
     clearAoiInfo: React.PropTypes.func,
     clearExportInfo: React.PropTypes.func,
+    clearJobInfo: React.PropTypes.func,
+    jobFetched: React.PropTypes.bool,
+    jobuid: React.PropTypes.string,
 };
 
 function mapStateToProps(state) {
@@ -226,7 +236,10 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         providers: state.providers,
         stepperNextEnabled: state.stepperNextEnabled,
+        datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
+        jobFetched: state.submitJob.fetched,
+        jobuid: state.submitJob.jobuid
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -254,7 +267,16 @@ function mapDispatchToProps(dispatch) {
         },
         clearExportInfo: () => {
             dispatch(clearExportInfo());
-        }
+        },
+        clearJobInfo: () => {
+            dispatch(clearJobInfo());
+        },
+        setDatacartDetailsReceived: () => {
+            dispatch(setDatacartDetailsReceived());
+        },
+        getDatacartDetails: (jobuid) => {
+            dispatch(getDatacartDetails(jobuid))
+        },
     }
 }
 

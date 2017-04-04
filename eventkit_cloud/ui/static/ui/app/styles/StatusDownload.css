@@ -1,0 +1,36 @@
+.root {
+    width:100%;
+    background-image: url('../../images/ek_topo_pattern.png');
+    background-repeat: repeat repeat;
+    justify-content: space-around;
+    display: flex;
+    flex-wrap: wrap;
+    overflow-y: scroll;
+}
+.paper {
+    margin: 0 auto;
+    padding: 20px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    width: 100%;
+    max-width: 700px;
+}
+.tdHeading {
+    vertical-align: top;
+    padding: 10px;
+    height:35px;
+    font-size: 16px;
+    width: 33%;
+    background-color: #f8f8f8;
+    font-weight: bold;
+    color: black;
+}
+.tdData {
+    padding: 10px;
+    height: 35px;
+    font-size: 16px;
+    width: 66%;
+    background-color: #f8f8f8;
+    font-weight: normal;
+    color: #8b9396
+}

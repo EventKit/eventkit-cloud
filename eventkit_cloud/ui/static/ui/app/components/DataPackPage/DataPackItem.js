@@ -1,4 +1,5 @@
 import React, {PropTypes, Component} from 'react'
+import {browserHistory} from 'react-router';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
 import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton';
@@ -147,7 +148,7 @@ export class DataPackItem extends Component {
                                 <MenuItem 
                                     style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText="Go to Export Detail"
-                                    onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
+                                    onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
                                 {this.props.run.user == this.props.user.data.username ?
                                 <MenuItem
