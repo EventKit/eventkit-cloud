@@ -63,6 +63,10 @@ EMAIL_HOST_PASSWORD='email-password'</pre>
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
 
+### Tests
+To run tests:
+<pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
+
 ## Export Directories
 If you need to change where export files are staged or downloaded you can add:
 <pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'
