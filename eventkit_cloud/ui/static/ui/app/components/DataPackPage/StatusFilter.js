@@ -23,6 +23,7 @@ export class StatusFilter extends Component {
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
                         labelStyle={{color: 'grey'}}
                         onCheck={(e, v)=> {this.props.onChange({completed: v})}}
+                        checked={this.props.completed}
                     />
                     <p style={{width: '60px', height: '29px', margin: '0px'}}/>
                     
