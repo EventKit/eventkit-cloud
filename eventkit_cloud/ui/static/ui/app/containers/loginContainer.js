@@ -11,6 +11,7 @@ import {login} from '../actions/userActions'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import '../components/tap_events';
+import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 
 export class Form extends React.Component {
 
@@ -80,7 +81,7 @@ const DISABLED_BUTTON = <div className={styles.disabledButton}>
                           type="submit"
                           style={{marginRight: 12}}
                           disabled={true}>
-        <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
+        <NavigationArrowForward />
     </FloatingActionButton>
     </div>
 
@@ -89,7 +90,7 @@ const ENABLED_BUTTON = <div className={styles.enabledButton}>
                           mini={false}
                           type="submit"
                           style={{marginRight: 12}}>
-        <i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i>
+        <NavigationArrowForward />
     </FloatingActionButton>
 </div>
 

@@ -10,7 +10,13 @@ import css from '../styles/TitleBar.css'
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
-
+import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
+import ContentAddBox from 'material-ui/svg-icons/content/add-box';
+import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
+import SocialPerson from 'material-ui/svg-icons/social/person';
+import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
@@ -118,38 +124,38 @@ export class Application extends Component {
                                 <div style={styles.mainMenu}>MAIN MENU</div>
                                 <div style={{display:'inline-block'}}>
                                     <a href="#">
-                                        <i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i>
+                                        <NavigationArrowBack style={{fill: '4498c0', verticalAlign: 'middle', paddingBottom: '3px'}} onClick={this.handleClose.bind(this)}/>
                                     </a>
                                 </div>
                             </span>
                         </Subheader>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} >
                             <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
-                                <i className="fa fa-book" aria-hidden="true"></i>
+                                <AVLibraryBooks style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;DataPack Library
                             </IndexLink>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} >
                             <Link className={css.link} activeClassName={css.active} to="/create" >
-                                <i className="fa fa-plus-square" aria-hidden="true"></i>
+                                <ContentAddBox style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Create Datapack
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} >
                             <Link className={css.link} activeClassName={css.active} to="/about" >
-                                <i className="fa fa-info-circle" aria-hidden="true"></i>
+                                <ActionInfoOutline style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;About EventKit
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} >
                             <Link className={css.link} activeClassName={css.active} to="/account" >
-                                <i className="fa fa-user" aria-hidden="true"></i>
+                                <SocialPerson style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} >
                             <Link className={css.link} activeClassName={css.active} to="/logout" >
-                                <i className="fa fa-sign-out" aria-hidden="true"></i>
+                                <ActionExitToApp style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Log Out
                             </Link>
                         </MenuItem>
@@ -163,7 +169,7 @@ export class Application extends Component {
     }
 }
 Application.propTypes = {
-    children: PropTypes.object.isRequired,
+    children: PropTypes.object,
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
 };

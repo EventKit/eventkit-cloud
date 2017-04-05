@@ -31,6 +31,12 @@
     text-decoration: none;
     color: #4498c0;
 }
+
+.link svg {
+    vertical-align: middle;
+    fill: #4498c0 !important;
+}
+
 .link:visited {
     text-decoration:none;
 }
@@ -43,9 +49,15 @@
     background-color: #161e2e;
     text-decoration: none;
 }
+
+.link:hover svg {
+    fill: #1675aa !important;
+}
+
 .link:active {
     text-decoration: none;
 }
+
 a:link {
     text-decoration: none;
 }
@@ -67,12 +79,10 @@ a:link {
     text-decoration: none;
 }
 
-.active .icon {
-    fill: #1675aa;
-    filter: none;
-    -webkit-filter: none;
-    box-shadow: 0 2px rgba(0,0,0,.1);
-    text-decoration: none;
+
+.active svg {
+    vertical-align: middle;
+    fill: #1675aa !important;
 }
 
 
