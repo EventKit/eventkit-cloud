@@ -13,6 +13,11 @@
     .aoiInfobar {
         width: 80%;
     }
+
+    .actionSearch {
+        height: 20px !important;
+        width: 20px !important;
+    }
 }
 
 @media screen and (max-width: 600px) {
@@ -34,11 +39,20 @@
     .activeButton {
         font-size: 8px;
     }
+
+    .actionSearch {
+        height: 18px !important;
+        width: 18px !important;
+    }
 }
 
 @media screen and (max-width: 400px) {
     .activeButton {
         font-size: 7px;
+    }
+    .actionSearch {
+        height: 16px !important;
+        width: 16px !important;
     }
 }
 

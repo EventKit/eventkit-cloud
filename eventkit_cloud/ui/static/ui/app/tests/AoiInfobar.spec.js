@@ -5,6 +5,7 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
+import ActionSearch from 'material-ui/svg-icons/action/search';
 
 describe('AoiInfobar component', () => {
     const muiTheme = getMuiTheme();
@@ -71,7 +72,7 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find('.aoiInfoTitle').text()).to.equal('Area Of Interest (AOI)');
         expect(wrapper.find('.simpleButton .activeButton')).to.have.length(1);
         expect(wrapper.find('.simpleButton').first().text()).to.equal(' ZOOM TO SELECTION');
-        expect(wrapper.find('.fa-search-plus')).to.have.length(1);
+        expect(wrapper.find(ActionSearch)).to.have.length(1);
         expect(wrapper.find('.aoiTitle').text()).to.equal('fake title');
         expect(wrapper.find('.aoiDescription').text()).to.equal('fake description');
         expect(wrapper.find(ImageCropSquare)).to.have.length(1);

@@ -18,7 +18,7 @@ export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
 const jsts = require('jsts');
-const isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 export class ExportAOI extends Component {
 
@@ -260,7 +260,7 @@ export class ExportAOI extends Component {
                 right: '0px',
         }
 
-        if(this.props.drawerOpen && window.innerWidth > 700) {
+        if(this.props.drawerOpen && window.innerWidth > 991) {
             mapStyle.left = '200px';
         }
         else {

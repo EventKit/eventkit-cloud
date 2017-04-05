@@ -10,8 +10,25 @@ import css from '../styles/TitleBar.css'
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
-
+import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
+import ContentAddBox from 'material-ui/svg-icons/content/add-box';
+import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
+import SocialPerson from 'material-ui/svg-icons/social/person';
+import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
+const muiTheme = getMuiTheme({
+    datePicker: {
+        selectColor: '#253447',
+    },
+    flatButton: {
+        textColor: '#253447',
+        primaryTextColor: '#253447'
+    },
+});
 
 
 export class Application extends Component {
@@ -22,10 +39,11 @@ export class Application extends Component {
 
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
+        this.onMenuItemClick = this.onMenuItemClick.bind(this);
     }
 
     componentWillMount() {
-        if (window.innerWidth <= 700){
+        if (window.innerWidth <= 991){
             this.props.closeDrawer();
         }
     }
@@ -41,6 +59,12 @@ export class Application extends Component {
 
     handleClose() { 
         this.props.closeDrawer();
+    }
+
+    onMenuItemClick() {
+        if(window.innerWidth <= 991) {
+            this.handleToggle();
+        }
     }
 
     render() {
@@ -83,7 +107,7 @@ export class Application extends Component {
         const img = <img style={styles.img} src={logo}/>
 
         return (
-            <MuiThemeProvider>
+            <MuiThemeProvider muiTheme={muiTheme}>
                 <div className={styles.root}>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>
@@ -95,12 +119,46 @@ export class Application extends Component {
                             docked={true}
                             open={this.props.drawerOpen}
                             onRequestChange={(open) => this.setState({open})}>
-                        <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU</div><div style={{display:'inline-block'}}><a href="#"><i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></a></div></span></Subheader>
-                        <MenuItem className={css.menuItem} ><IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports"><i className="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;DataPack Library</IndexLink></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/create" ><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Create Datapack</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/about" ><i className="fa fa-info-circle" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;About EventKit</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/account" ><i className="fa fa-user" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Account Settings</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/logout" ><i className="fa fa-sign-out" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Log Out</Link></MenuItem>
+                        <Subheader inset={false}>
+                            <span style={{width:'100%'}}>
+                                <div style={styles.mainMenu}>MAIN MENU</div>
+                                <div style={{display:'inline-block'}}>
+                                    <a href="#">
+                                        <NavigationArrowBack style={{fill: '4498c0', verticalAlign: 'middle', paddingBottom: '3px'}} onClick={this.handleClose.bind(this)}/>
+                                    </a>
+                                </div>
+                            </span>
+                        </Subheader>
+                        <MenuItem className={css.menuItem} >
+                            <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
+                                <AVLibraryBooks style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;DataPack Library
+                            </IndexLink>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} >
+                            <Link className={css.link} activeClassName={css.active} to="/create" >
+                                <ContentAddBox style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Create Datapack
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} >
+                            <Link className={css.link} activeClassName={css.active} to="/about" >
+                                <ActionInfoOutline style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;About EventKit
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} >
+                            <Link className={css.link} activeClassName={css.active} to="/account" >
+                                <SocialPerson style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Account Settings
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} >
+                            <Link className={css.link} activeClassName={css.active} to="/logout" >
+                                <ActionExitToApp style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Log Out
+                            </Link>
+                        </MenuItem>
                     </Drawer>
                     <div style={contentStyle} className={css.contentStyle}>
                     {this.props.children}
@@ -111,7 +169,7 @@ export class Application extends Component {
     }
 }
 Application.propTypes = {
-    children: PropTypes.object.isRequired,
+    children: PropTypes.object,
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
 };

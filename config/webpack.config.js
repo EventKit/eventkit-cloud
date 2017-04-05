@@ -10,6 +10,7 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var config = {
     devtool: 'inline-source-map',
     entry: [
+        'babel-polyfill', // for axios to work in IE
         'webpack-dev-server/client?http://0.0.0.0:8080', // WebpackDevServer host and port
         'webpack/hot/dev-server', // "only" prevents reload on syntax errors
         APP_DIR + '/index.js',
