@@ -16,7 +16,7 @@ import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
-const isEqual = require('lodash/isEqual');
+import  isEqual from 'lodash/isEqual';
 
 class BreadcrumbStepper extends React.Component {
     constructor() {

@@ -18,6 +18,17 @@ import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
+const muiTheme = getMuiTheme({
+    datePicker: {
+        selectColor: '#253447',
+    },
+    flatButton: {
+        textColor: '#253447',
+        primaryTextColor: '#253447'
+    },
+});
 
 
 export class Application extends Component {
@@ -28,10 +39,11 @@ export class Application extends Component {
 
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
+        this.onMenuItemClick = this.onMenuItemClick.bind(this);
     }
 
     componentWillMount() {
-        if (window.innerWidth <= 700){
+        if (window.innerWidth <= 991){
             this.props.closeDrawer();
         }
     }
@@ -47,6 +59,12 @@ export class Application extends Component {
 
     handleClose() { 
         this.props.closeDrawer();
+    }
+
+    onMenuItemClick() {
+        if(window.innerWidth <= 991) {
+            this.handleToggle();
+        }
     }
 
     render() {
@@ -89,7 +107,7 @@ export class Application extends Component {
         const img = <img style={styles.img} src={logo}/>
 
         return (
-            <MuiThemeProvider>
+            <MuiThemeProvider muiTheme={muiTheme}>
                 <div className={styles.root}>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>
