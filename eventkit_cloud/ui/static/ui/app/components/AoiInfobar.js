@@ -77,6 +77,7 @@ export class AoiInfobar extends Component {
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
                             <button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchZoomToSelection}>
+                                <ActionSearch style={{fill: '#4498c0', verticalAlign: 'middle'}} className={styles.actionSearch}/> ZOOM TO SELECTION
                             </button>
                         </div>
                         <div className={styles.detailBar}>
