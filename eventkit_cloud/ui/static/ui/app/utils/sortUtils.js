@@ -78,7 +78,8 @@ export function filterDate(minDate, maxDate, runs) {
     }
     if(maxDate) {
         runs = filter(runs, function(o) {
-            return o.started_at <= maxDate.toISOString();
+            let started = new Date(o.started_at).setHours(0,0,0,0);
+            return started <= maxDate;
         });
     }
     return runs;
