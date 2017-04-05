@@ -50,6 +50,10 @@ AWS_SECRET_KEY='my-secret-key'</pre>
 To use your own database connection string add:
 <pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
 
+To reset the database:
+<pre>docker volume rm eventkitcloud_postgis_database</pre>
+<pre>docker-compose run --rm eventkit python manage.py runinitial setup</pre>
+
 #### Broker URL
 To specify which RabbitMQ instance to use add:
 <pre>BROKER_URL='amqp://guest:guest@rabbitmq:5672/'</pre>

@@ -130,6 +130,18 @@ class ExportProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
+class DatamodelPreset(TimeStampedModelMixin):
+    """
+    Model provides admin interface to presets.
+    These were previously provided by files like hdm_presets.xml / osm_presets.xml.
+    """
+    name = models.CharField(max_length=10)
+    json_tags = JSONField(default=dict)
+
+    class Meta:
+        db_table = 'datamodel_preset'
+
+
 class ExportProvider(TimeStampedModelMixin):
     """
     Model for a ExportProvider.
