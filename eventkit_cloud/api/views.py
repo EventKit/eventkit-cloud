@@ -1,9 +1,9 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+import json
 import logging
 import os
-import json
 
 from django.db import transaction
 from django.db.models import Q
@@ -13,7 +13,7 @@ from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
+    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask, DatamodelPreset
 )
 from eventkit_cloud.jobs.presets import PresetParser
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
@@ -333,16 +333,8 @@ class JobViewSet(viewsets.ModelViewSet):
                             Use hdm preset as default tags if no preset or tags
                             are provided in the request.
                             """
-                            path = os.path.dirname(os.path.realpath(__file__))
-                            parser = presets.PresetParser(preset=path + '/presets/hdm_presets.xml')
-                            tags_dict = parser.parse()
-                            filters = []
-                            for entry in tags_dict:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   geom_types=entry['geom_types'], data_model='HDM', job=job)
-                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
-                                filters.append(tag)
-                            job.json_filters = filters
+                            hdm_default_tags = DatamodelPreset.objects.get(name='hdm').json_tags
+                            job.json_filters = hdm_default_tags
                             job.save()
                         # check for translation file
                         if translation:

@@ -3,7 +3,7 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand):
-    help="Runs all integration tests"
+    help = "Runs all integration tests"
 
     def add_arguments(self, parser):
         parser.add_argument('setup', nargs='*')
@@ -16,3 +16,4 @@ class Command(BaseCommand):
             call_command('loaddata', 'admin_user')
             call_command('loaddata', 'insert_provider_types')
             call_command('loaddata', 'osm_provider')
+            call_command('loaddata', 'datamodel_presets')
