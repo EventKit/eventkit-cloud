@@ -309,21 +309,23 @@ class JobViewSet(viewsets.ModelViewSet):
                             """Use the UnfilteredPresetParser."""
                             parser = presets.UnfilteredPresetParser(preset=preset_path)
                             tags_dict = parser.parse()
-                            filters = {}
+                            filters = []
                             for entry in tags_dict:
                                 Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                                    geom_types=entry['geom_types'], data_model='PRESET', job=job)
-                                filters[entry['key']] = entry['value']
+                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
+                                filters.append(tag)
                             job.json_filters = filters
                             job.save()
                         elif tags:
                             """Get tags from request."""
-                            filters = {}
+                            filters = []
                             for entry in tags:
                                 Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                                    job=job, data_model=entry['data_model'],
                                                    geom_types=entry['geom_types'], groups=entry['groups'])
-                                filters[entry['key']] = entry['value']
+                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
+                                filters.append(tag)
                             job.json_filters = filters
                             job.save()
                         else:
@@ -334,11 +336,12 @@ class JobViewSet(viewsets.ModelViewSet):
                             path = os.path.dirname(os.path.realpath(__file__))
                             parser = presets.PresetParser(preset=path + '/presets/hdm_presets.xml')
                             tags_dict = parser.parse()
-                            filters = {}
+                            filters = []
                             for entry in tags_dict:
                                 Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
                                                    geom_types=entry['geom_types'], data_model='HDM', job=job)
-                                filters[entry['key']] = entry['value']
+                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
+                                filters.append(tag)
                             job.json_filters = filters
                             job.save()
                         # check for translation file

@@ -312,8 +312,8 @@ class Job(TimeStampedModelMixin):
         """
         # Command-line key=value filters for osmfilter
         filters = []
-        for key, value in self.json_filters.items():
-            kv = '{0}={1}'.format(key, value)
+        for tag in self.json_filters:
+            kv = '{0}={1}'.format(tag['key'], tag['value'])
             filters.append(kv)
         return filters
 
@@ -322,18 +322,17 @@ class Job(TimeStampedModelMixin):
         """
         Return tags mapped according to their geometry types.
         """
-        points = []
-        lines = []
-        polygons = []
-        for tag in self.tag_dict:
-            for geom in self.tag_dict[tag]:
-                if geom == 'point':
-                    points.append(tag)
-                if geom == 'line':
-                    lines.append(tag)
-                if geom == 'polygon':
-                    polygons.append(tag)
-        return {'points': sorted(points), 'lines': sorted(lines), 'polygons': sorted(polygons)}
+        points = set()
+        lines = set()
+        polygons = set()
+        for tag2 in self.json_filters:
+            if 'point' in tag2['geom']:
+                points.add(tag2['key'])
+            if 'line' in tag2['geom']:
+                lines.add(tag2['key'])
+            if 'polygon' in tag2['geom']:
+                polygons.add(tag2['key'])
+        return {'points': sorted(list(points)), 'lines': sorted(list(lines)), 'polygons': sorted(list(polygons))}
 
     @property
     def bounds_geojson(self,):
