@@ -9,4 +9,4 @@ RUN npm install webpack webpack-dev-server -g --quiet
 
 COPY ./config/webpack.config.js /var/lib/eventkit/
 
-CMD ["webpack-dev-server", "--inline"]
+CMD ["npm", "start"]

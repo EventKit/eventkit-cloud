@@ -87,6 +87,8 @@
     "modulePathIgnorePatterns": ["staticfiles/"]
   },
   "scripts": {
+    "build": "PROD=1 webpack",
+    "start": "webpack-dev-server --inline",
     "test": "jest --verbose"
   },
   "repository": {
