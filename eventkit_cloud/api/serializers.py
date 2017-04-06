@@ -322,7 +322,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_finished_at(obj):
         if not obj.finished_at:
-            return {}
+            return ""
         else:
             return obj.finished_at
 

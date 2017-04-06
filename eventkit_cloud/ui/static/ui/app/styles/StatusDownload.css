@@ -7,13 +7,14 @@
     flex-wrap: wrap;
     overflow-y: scroll;
 }
+
 .paper {
     margin: 0 auto;
     padding: 20px;
     margin-top: 30px;
     margin-bottom: 30px;
-    width: 100%;
-    max-width: 700px;
+    width: 75%;
+    max-width: 1100px;
 }
 .tdHeading {
     vertical-align: top;
@@ -25,12 +26,65 @@
     font-weight: bold;
     color: black;
 }
+.tdHeadingStatus {
+    vertical-align: top;
+    padding: 10px;
+    height:35px;
+    font-size: 16px;
+    width: 33%;
+    font-weight: bold;
+    color: black;
+}
 .tdData {
     padding: 10px;
     height: 35px;
     font-size: 16px;
-    width: 66%;
+    width: 40%;
     background-color: #f8f8f8;
     font-weight: normal;
     color: #8b9396
+}
+
+.downloadDiv {
+    padding-top: 20px;
+}
+.heading {
+    font-size: 18px;
+    font-weight: bold;
+    color: black;
+    align-content: flex-start;
+    padding-bottom: 5px;
+}
+.subHeading {
+    font-size: 16px;
+    align-content: flex-start;
+    color: black;
+    padding-bottom: 10px;
+    padding-top:30px;
+    font-weight: bold;
+}
+.checkboxColor > div >  div > div > svg {
+    color: #4598bf!important;
+    fill: #4598bf!important;
+}
+.checkboxColor {
+    float:left!important;
+    paddding-top: 12px!important;
+    padding-left: 5px;
+}
+.checkbox > div{
+    padding-bottom: 60px;
+    margin-top: 15px!important;
+}
+.checkbox > div > div > label {
+    font-weight: normal!important;
+    font-size:16px!important;
+}
+.checkboxLabel > div > div > label {
+    font-weight:normal!important;
+    font-size:16px!important;
+}
+.map {
+    width:75%;
+    padding-top:15px;
 }

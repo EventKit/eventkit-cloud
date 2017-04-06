@@ -47,11 +47,7 @@ class ExportSummary extends React.Component {
     }
 
     _initializeOpenLayers() {
-        console.log(this.props.geojson.features[0])
 
-        const scaleStyle = {
-            background: 'white',
-        };
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
         });

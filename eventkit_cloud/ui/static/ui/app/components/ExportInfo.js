@@ -288,12 +288,12 @@ export class ExportInfo extends React.Component {
                     <div className={styles.sectionBottom}>
                         <div className={styles.checkboxLabel}>
                             <Checkbox
-                                label="Geopackage (.gpkg)"
-                                name="Geopackage"
-                                checked={true}
-                                disabled={true}
-                                checkedIcon={<ActionCheckCircle />}
-                            />
+                            label="Geopackage (.gpkg)"
+                            name="Geopackage"
+                            checked={true}
+                            disabled={true}
+                            checkedIcon={<ActionCheckCircle />}
+                        />
                         </div>
                      </div>
 

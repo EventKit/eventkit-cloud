@@ -30,9 +30,9 @@ class StatusDownload extends React.Component {
     componentWillReceiveProps(nextProps) {
         if(nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
             if (nextProps.datacartDetails.fetched == true) {
+                console.log(nextProps.datacartDetails.data)
                 let datacartDetails = nextProps.datacartDetails.data;
                 this.setState({datacartDetails: datacartDetails});
-
             }
         }
     }
@@ -51,17 +51,13 @@ class StatusDownload extends React.Component {
     render() {
 
         return (
-            <div className={styles.root} style={{height: window.innerHeight - 191}}>
-                <Paper className={styles.paper} zDepth={2} rounded>
+            <div className={styles.root} style={{height: window.innerHeight - 110}}>
+                <Paper className={styles.paper} zDepth={2} rounded style={{height: '1350px'}}>
                     <div className={styles.wholeDiv}>
+                        <div id='mainHeading' className={styles.heading}>Status & Download</div>
                     {this.state.datacartDetails.map((cartDetails) => (
-                        <DataCartDetails key={cartDetails.uid}
-                                     cartDetails={cartDetails}/>
+                        <DataCartDetails cartDetails={cartDetails}/>
                         ))}
-                    </div>
-
-                    <div className={styles.exportHeading}>
-                    Download Options
                     </div>
 
                 </Paper>
