@@ -262,7 +262,7 @@ class Job(TimeStampedModelMixin):
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
-    json_filters = JSONField(default=dict)
+    json_tags = JSONField(default=dict)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -324,7 +324,7 @@ class Job(TimeStampedModelMixin):
         """
         # Command-line key=value filters for osmfilter
         filters = []
-        for tag in self.json_filters:
+        for tag in self.json_tags:
             kv = '{0}={1}'.format(tag['key'], tag['value'])
             filters.append(kv)
         return filters
@@ -337,7 +337,7 @@ class Job(TimeStampedModelMixin):
         points = set()
         lines = set()
         polygons = set()
-        for tag2 in self.json_filters:
+        for tag2 in self.json_t:
             if 'point' in tag2['geom']:
                 points.add(tag2['key'])
             if 'line' in tag2['geom']:
