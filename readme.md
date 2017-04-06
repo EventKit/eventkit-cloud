@@ -70,4 +70,5 @@ EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
 
 
 ## Building the bundle
+By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
 <pre>docker-compose run --rm webpack npm run build</pre>
