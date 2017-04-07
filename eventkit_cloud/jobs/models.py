@@ -337,13 +337,13 @@ class Job(TimeStampedModelMixin):
         points = set()
         lines = set()
         polygons = set()
-        for tag2 in self.json_t:
-            if 'point' in tag2['geom']:
-                points.add(tag2['key'])
-            if 'line' in tag2['geom']:
-                lines.add(tag2['key'])
-            if 'polygon' in tag2['geom']:
-                polygons.add(tag2['key'])
+        for tag in self.json_tags:
+            if 'point' in tag['geom']:
+                points.add(tag['key'])
+            if 'line' in tag['geom']:
+                lines.add(tag['key'])
+            if 'polygon' in tag['geom']:
+                polygons.add(tag['key'])
         return {'points': sorted(list(points)), 'lines': sorted(list(lines)), 'polygons': sorted(list(polygons))}
 
     @property

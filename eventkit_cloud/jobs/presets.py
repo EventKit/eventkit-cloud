@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-import logging
-from collections import OrderedDict
 from StringIO import StringIO
+from collections import OrderedDict
+import logging
+import json
 
 from lxml import etree
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +38,28 @@ class PresetParser:
         self.preset = preset
         self.tags = []
 
-    def parse(self, ):
+    def parse(self,):
         """Read in the JOSM Preset and processes the 'item' elements."""
-        f = open(self.preset)
-        xml = f.read()
-        tree = etree.parse(StringIO(xml))
-        items = tree.xpath('//ns:item', namespaces=self.namespaces)
-        for item in items:
-            self.process_item_and_children(item)
+        if not self.tags:
+            with open(self.preset) as f:
+                xml = f.read()
+            tree = etree.parse(StringIO(xml))
+            items = tree.xpath('//ns:item', namespaces=self.namespaces)
+            for item in items:
+                self.process_item_and_children(item)
         # tags = OrderedDict(sorted(self.tags.items()))
         return self.tags
+
+    def as_simplified_json(self):
+        """ Convert the preset file to a json string retaining only 'key', 'value', and 'geom'.
+            json is of the form [{"key": <key>, "value": <value>, "geom": [<geom>, ...]}, ...]
+        """
+        tags = self.parse()
+        simplified_tags = []
+        for t in tags:
+            st = {"key": t['key'], "value": t['value'], "geom": t['geom_types']}
+            simplified_tags.append(st)
+        return json.dumps(simplified_tags)
 
     def process_item_and_children(self, item, geometrytype=None):
         """
@@ -94,7 +108,7 @@ class PresetParser:
             geometrytypes.append(self.types[osmtype])
         return geometrytypes
 
-    def build_hdm_preset_dict(self, ):
+    def build_hdm_preset_dict(self,):
         """
         Builds a python dict to represent the
         hierarchy of 'group' and 'item' elements
@@ -175,7 +189,7 @@ class UnfilteredPresetParser:
         self.tags = []
         self.keys = []
 
-    def parse(self, ):
+    def parse(self,):
         """Read in the JOSM Preset and processes the 'item' elements."""
         f = open(self.preset)
         xml = f.read()
@@ -246,7 +260,7 @@ class UnfilteredPresetParser:
             geometrytypes.append(self.types[osmtype])
         return geometrytypes
 
-    def build_hdm_preset_dict(self, ):
+    def build_hdm_preset_dict(self,):
         """
         NOT USED AT PRESENT EXCEPT IN TESTS.
 
@@ -321,7 +335,7 @@ class TagParser:
         """Initialized with a list of users tag selection."""
         self.tags = tags
 
-    def parse_tags(self, ):
+    def parse_tags(self,):
         """
         Construct the preset xml document.
 
