@@ -293,29 +293,6 @@ class Job(TimeStampedModelMixin):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def tag_dict(self,):
-        """
-        Return the unique set of Tag keys from this export
-        with their associated geometry types.
-
-        Used by Job.categorised_tags (below) to categorize tags
-        according to their geometry types.
-        """
-        # get the unique keys from the tags for this export
-        uniq_keys = list(self.tags.values('key').distinct('key'))
-        tag_dict = {}  # mapping of tags to geom_types
-        for entry in uniq_keys:
-            key = entry['key']
-            tag_dict['key'] = key
-            geom_types = list(self.tags.filter(key=key).values('geom_types'))
-            geom_type_list = []
-            for geom_type in geom_types:
-                geom_list = geom_type['geom_types']
-                geom_type_list.extend([i for i in geom_list])
-            tag_dict[key] = list(set(geom_type_list))  # get unique values for geomtypes
-        return tag_dict
-
-    @property
     def filters(self,):
         """
         Return key=value pairs for each tag in this export.
