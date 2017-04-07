@@ -11,15 +11,32 @@
     <link rel="stylesheet" href="{% static 'ui/app/styles/openlayers/ol.css'%}">
 
     <style>
+      body {
+        background-image: url('./images/ek_topo_pattern.png');
+        min-width: 360px;
+        overflow: hidden;
+      }
+
+      ::-webkit-scrollbar { 
+          display: none; 
+      }
+
       .ol-scale-line {
         background: rgba(0,0,0,0);
       }
-      .ol-scale-line-inner {
-        color: #171515;
-        border-bottom-color: black;
-        border-left-color: black;
-        border-right-color: black;
+      .ol-attribution.ol-uncollapsible {
+        bottom: 10px;
+        left: 10px;
+        right: auto;
+        border-radius: 4px 0 0;
+        height: 1.1em;
+        line-height: 1em;
       }
+
+      .ol-attribution:not(.ol-collapsed) {
+        background: rgba(255,255,255,.0);
+      }
+
       .form-control:focus {
         box-shadow: none
       }
@@ -32,7 +49,6 @@
         background-color: #cecece;
         outline: 0;
       }
-
     </style>
   </head>
   <body>
@@ -40,6 +56,7 @@
     <div id='root'></div>
 
     <script src="{% static 'ui/build/bundle.js' %}"></script>
+    <script src="{% static 'ui/build/vendor.bundle.js' %}"></script>
 
   </body>
 </html>
