@@ -13,7 +13,7 @@ from django.test import TestCase
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
     ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag, ExportProvider, ProviderTask
-)
+, DatamodelPreset)
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class TestJob(TestCase):
     """
     Test cases for Job model
     """
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json')
 
     def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
@@ -130,26 +130,18 @@ class TestJob(TestCase):
         self.assertEquals(4, len(extents))
 
     def test_categorised_tags(self,):
-        # delete existing tags
-        self.job.tags.all().delete()
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
-        self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        self.assertEquals(271, len(tags))
+
         # save all the tags from the preset
-        simplified_tags = []
-        for tag_dict in tags:
-            simplified_tags.append({'key': tag_dict['key'], 'value': tag_dict['value'], 'geom': tag_dict['geom_types']})
-        self.assertEquals(238, len(simplified_tags))
         job = Job.objects.first()
-        job.json_filters = simplified_tags
-        job.save()
+        job.json_tags = tags
         categories = job.categorised_tags
 
         self.assertIsNotNone(categories)
-        self.assertEquals(24, len(categories['points']))
-        self.assertEquals(12, len(categories['lines']))
-        self.assertEquals(22, len(categories['polygons']))
+        self.assertEquals(28, len(categories['points']))
+        self.assertEquals(15, len(categories['lines']))
+        self.assertEquals(26, len(categories['polygons']))
 
     def test_tags(self,):
         self.job.tags.all().delete()

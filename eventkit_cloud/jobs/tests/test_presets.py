@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import logging
 import os
 from StringIO import StringIO
+import json
 
 from lxml import etree
 
@@ -21,16 +22,21 @@ logger = logging.getLogger(__name__)
 
 
 class TestPresetParser(TestCase):
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
 
-    def test_parse_preset(self, ):
+    def test_parse_preset(self,):
         parser = PresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
         self.assertEquals(238, len(tags))
 
-    def test_validate_hdm_presets(self, ):
+    def test_as_simplified_json(self):
+        parser = PresetParser(self.path + '/files/hdm_presets.xml')
+        json_tags = parser.as_simplified_json()
+        tags = json.loads(json_tags)
+
+    def test_validate_hdm_presets(self,):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -39,7 +45,7 @@ class TestPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_validate_osm_presets(self, ):
+    def test_validate_osm_presets(self,):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -48,7 +54,7 @@ class TestPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_validate_custom_preset(self, ):
+    def test_validate_custom_preset(self,):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -57,17 +63,17 @@ class TestPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_build_hdm_preset_dict(self, ):
+    def test_build_hdm_preset_dict(self,):
         parser = PresetParser(self.path + '/files/hdm_presets.xml')
         parser.build_hdm_preset_dict()
 
-    def test_build_osm_preset_dict(self, ):
+    def test_build_osm_preset_dict(self,):
         parser = PresetParser(self.path + '/files/osm_presets.xml')
         parser.build_hdm_preset_dict()
 
 
 class TestUnfilteredPresetParser(TestCase):
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -81,13 +87,13 @@ class TestUnfilteredPresetParser(TestCase):
         self.job.formats = self.formats
         self.job.save()
 
-    def test_parse_preset(self, ):
+    def test_parse_preset(self,):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
         self.assertEquals(233, len(tags))
 
-    def test_validate_hdm_presets(self, ):
+    def test_validate_hdm_presets(self,):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -96,7 +102,7 @@ class TestUnfilteredPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_validate_osm_presets(self, ):
+    def test_validate_osm_presets(self,):
         schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
         xmlschema_doc = etree.parse(schema)
         xmlschema = etree.XMLSchema(xmlschema_doc)
@@ -105,15 +111,15 @@ class TestUnfilteredPresetParser(TestCase):
         valid = xmlschema.validate(tree)
         self.assertTrue(valid)
 
-    def test_build_hdm_preset_dict(self, ):
+    def test_build_hdm_preset_dict(self,):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
         parser.build_hdm_preset_dict()
 
-    def test_build_osm_preset_dict(self, ):
+    def test_build_osm_preset_dict(self,):
         parser = UnfilteredPresetParser(self.path + '/files/osm_presets.xml')
         parser.build_hdm_preset_dict()
 
-    def test_save_tags(self, ):
+    def test_save_tags(self,):
         parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
         tags = parser.parse()
         self.assertIsNotNone(tags)
@@ -128,7 +134,7 @@ class TestUnfilteredPresetParser(TestCase):
 class TestTagParser(TestCase):
     """Test generation of preset from HDM tags."""
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -153,7 +159,7 @@ class TestTagParser(TestCase):
                                groups=tag_dict['groups'])
         self.assertEquals(238, self.job.tags.all().count())
 
-    def test_parse_tags(self, ):
+    def test_parse_tags(self,):
         job = Job.objects.all()[0]
         tag_parser = TagParser(tags=job.tags.all())
         xml = tag_parser.parse_tags()
