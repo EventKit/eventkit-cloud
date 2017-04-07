@@ -43,7 +43,7 @@ export class Application extends Component {
     }
 
     componentWillMount() {
-        if (window.innerWidth <= 991){
+        if (window.innerWidth <= 991 || this.props.location.pathname == '/login/'){
             this.props.closeDrawer();
         }
     }
@@ -69,7 +69,7 @@ export class Application extends Component {
 
     render() {
 
-        const contentStyle = {  transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)' };
+        const contentStyle = {transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)'};
 
         if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
@@ -108,7 +108,7 @@ export class Application extends Component {
 
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
-                <div className={styles.root}>
+                <div>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
@@ -161,7 +161,7 @@ export class Application extends Component {
                         </MenuItem>
                     </Drawer>
                     <div style={contentStyle} className={css.contentStyle}>
-                    {this.props.children}
+                        {this.props.children}
                     </div>
                 </div>
             </MuiThemeProvider>

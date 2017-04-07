@@ -8,6 +8,7 @@ import {
 } from 'redux-form-material-ui'
 import styles from '../components/auth/Login.css'
 import {login} from '../actions/userActions'
+import {closeDrawer} from '../actions/exportsActions';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import '../components/tap_events';
