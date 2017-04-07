@@ -68,3 +68,7 @@ If you need to change where export files are staged or downloaded you can add:
 <pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'
 EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
 
+
+## Building the bundle
+By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
+<pre>docker-compose run --rm webpack npm run build</pre>

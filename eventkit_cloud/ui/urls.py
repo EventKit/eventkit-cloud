@@ -7,7 +7,7 @@ from .views import logout, user, auth, data_estimator, request_geonames
 
 
 urlpatterns = [
-    url(r'^login/$', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name='login'),
+    url(r'^login', ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html')), name='login'),
     url(r'^auth/$', ensure_csrf_cookie(auth), name='auth'),
     url(r'^$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="home"),
     url(r'^exports$', login_required(TemplateView.as_view(template_name='ui/index.html')), name="exports"),
