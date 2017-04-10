@@ -217,6 +217,8 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
+        msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
+        self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
 
         job = Job.objects.get(uid=job_uid)
@@ -262,9 +264,8 @@ class TestJobViewSet(APITestCase):
 
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
-        tags = job.tags.all()
-        self.assertIsNotNone(tags)
-        self.assertEquals(233, len(tags))
+        self.assertIsNotNone(job.json_tags)
+        self.assertEqual(233, len(job.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -310,8 +311,7 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
-        # delete the existing tags and test adding them with json
-        self.job.tags.all().delete()
+
         # config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]

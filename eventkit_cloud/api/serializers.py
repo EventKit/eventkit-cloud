@@ -27,7 +27,6 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionMask,
-    Tag,
     ExportProvider,
     ProviderTask
 )
@@ -48,14 +47,6 @@ except ImportError:
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
-
-class TagSerializer(serializers.ModelSerializer):
-    """Serialize the Tag model."""
-
-    class Meta:
-        model = Tag
-        fields = ('key', 'value', 'data_model', 'geom_types')
 
 
 class SimpleExportConfigSerializer(serializers.Serializer):
@@ -184,7 +175,7 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_exception(obj):
         exc_info = cPickle.loads(str(obj.exception)).exc_info
-        
+
         return str(exc_info[1])
 
 class ExportTaskSerializer(serializers.ModelSerializer):
@@ -662,9 +653,7 @@ class JobSerializer(serializers.Serializer):
     @staticmethod
     def get_tags(obj):
         """Return the Tags selected for this export."""
-        tags = obj.tags.all()
-        serializer = TagSerializer(tags, many=True)
-        return serializer.data
+        return obj.json_tags
 
     @staticmethod
     def get_owner(obj):
