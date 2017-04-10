@@ -57,7 +57,7 @@ class TestJob(TestCase):
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
-        tags = saved_job.tags.all()
+        tags = saved_job.json_tags
         self.assertEquals(4, len(tags))
         self.assertEquals('Test description', saved_job.description)
         self.assertEquals(0, saved_job.configs.all().count())
@@ -146,16 +146,13 @@ class TestJob(TestCase):
         self.assertEquals(26, len(categories['polygons']))
 
     def test_tags(self,):
-        self.job.tags.all().delete()
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
+        self.assertEquals(271, len(tags))
         # save all the tags from the preset
-        for tag_dict in tags:
-            Tag.objects.create(key=tag_dict['key'], value=tag_dict['value'], job=self.job, data_model='osm',
-                               geom_types=tag_dict['geom_types'])
-        self.assertEquals(238, self.job.tags.all().count())
+        self.job.json_tags = tags
+        self.job.save()
+        self.assertEquals(271, len(self.job.json_tags))
 
 
 class TestExportFormat(TestCase):
@@ -304,14 +301,17 @@ class TestExportConfig(TestCase):
 
 
 class TestTag(TestCase):
+    fixtures = ('datamodel_presets.json',)
+
     def setUp(self,):
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom)
+                                      the_geom=the_geom, json_tags=tags)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
@@ -321,47 +321,35 @@ class TestTag(TestCase):
     def test_create_tags(self,):
         tags = [
             {
-                'name': 'Airport Ground',
                 'key': 'aeroway',
                 'value': 'aerodrome',
-                'geom_types': ['node', 'area'],
-                'groups': ['HOT Presets v2.11', 'Transportation', 'Transportation means', 'Airport']
+                'geom': ['node', 'area'],
             },
         ]
-        for tag_dict in tags:
-            Tag.objects.create(key=tag_dict['key'], value=tag_dict['value'], job=self.job, data_model='osm',
-                               geom_types=tag_dict['geom_types'], groups=tag_dict['groups'])
-        saved_tags = Tag.objects.all()
-        self.assertEquals(saved_tags[0].key, 'aeroway')
-        geom_types = saved_tags[0].geom_types
-        self.assertEquals(1, len(saved_tags))
+        self.job.json_tags = tags
+        self.job.save()
+
+        self.assertEquals(self.job.json_tags[0]['key'], 'aeroway')
+        geom_types = self.job.json_tags[0]['geom']
+        self.assertEquals(1, len(self.job.json_tags))
         self.assertEqual(['node', 'area'], geom_types)
-        groups = saved_tags[0].groups
-        self.assertEquals(4, len(groups))
 
     def test_save_tags_from_preset(self,):
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
-        for tag_dict in tags:
-            Tag.objects.create(key=tag_dict['key'], value=tag_dict['value'], job=self.job, data_model='osm',
-                               geom_types=tag_dict['geom_types'], groups=tag_dict['groups'])
-        self.assertEquals(238, self.job.tags.all().count())
-        # check the groups got saved correctly
-        saved_tag = self.job.tags.filter(value='service')[0]
-        self.assertIsNotNone(saved_tag)
-        self.assertEquals(3, len(saved_tag.groups))
+        self.assertEquals(271, len(tags))
+        self.job.json_tags = tags
+        self.job.save()
+
+        self.assertEquals(271, len(self.job.json_tags))
 
     def test_get_categorised_tags(self,):
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
-        for tag_dict in tags:
-            Tag.objects.create(key=tag_dict['key'], value=tag_dict['value'], job=self.job, data_model='osm',
-                               geom_types=tag_dict['geom_types'], groups=tag_dict['groups'])
-        self.assertEquals(238, self.job.tags.all().count())
+        self.assertEquals(271, len(tags))
+        self.job.json_tags = tags
+        self.job.save()
+        self.assertEquals(271, len(self.job.json_tags))
 
 
 class TestExportProfile(TestCase):
