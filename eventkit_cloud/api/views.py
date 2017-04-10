@@ -13,7 +13,7 @@ from django.utils.translation import ugettext as _
 
 from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask, DatamodelPreset
+    ExportConfig, ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset
 )
 from eventkit_cloud.jobs.presets import PresetParser
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
@@ -149,7 +149,7 @@ class JobViewSet(viewsets.ModelViewSet):
         Create a Job from the supplied request data.
 
         The request data is validated by *api.serializers.JobSerializer*.
-        Associates the *Job* with required *ExportFormats*, *ExportConfig* and *Tags*
+        Associates the *Job* with required *ExportFormats*, *ExportConfig*
 
         * request: the HTTP request in JSON.
 
@@ -262,7 +262,6 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -309,24 +308,19 @@ class JobViewSet(viewsets.ModelViewSet):
                             """Use the UnfilteredPresetParser."""
                             parser = presets.UnfilteredPresetParser(preset=preset_path)
                             tags_dict = parser.parse()
-                            filters = []
+                            simplified_tags = []
                             for entry in tags_dict:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   geom_types=entry['geom_types'], data_model='PRESET', job=job)
                                 tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
-                                filters.append(tag)
-                            job.json_filters = filters
+                                simplified_tags.append(tag)
+                            job.json_tags = simplified_tags
                             job.save()
                         elif tags:
                             """Get tags from request."""
-                            filters = []
+                            simplified_tags = []
                             for entry in tags:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   job=job, data_model=entry['data_model'],
-                                                   geom_types=entry['geom_types'], groups=entry['groups'])
                                 tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
-                                filters.append(tag)
-                            job.json_filters = filters
+                                simplified_tags.append(tag)
+                            job.json_tags = simplified_tags
                             job.save()
                         else:
                             """
@@ -334,7 +328,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             are provided in the request.
                             """
                             hdm_default_tags = DatamodelPreset.objects.get(name='hdm').json_tags
-                            job.json_filters = hdm_default_tags
+                            job.json_tags = hdm_default_tags
                             job.save()
                         # check for translation file
                         if translation:
