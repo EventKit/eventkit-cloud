@@ -19,10 +19,10 @@ from mock import call, Mock, PropertyMock, patch, MagicMock
 import datetime
 
 from ...jobs import presets
-from ...jobs.models import Job, Tag
+from ...jobs.models import Job
 from ..export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
-    generate_preset_task, kml_export_task, osm_conf_task,
+    kml_export_task, osm_conf_task,
     external_raster_service_export_task, geopackage_export_task,
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
@@ -36,6 +36,7 @@ from eventkit_cloud.tasks.models import (
     ExportTaskResult,
     ExportProviderTask
 )
+from eventkit_cloud.jobs.models import DatamodelPreset
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +85,9 @@ class TestLockingTask(TestCase):
 
 
 class ExportTaskBase(TestCase):
-    def setUp(self, ):
+    fixtures = ('datamodel_presets.json',)
+
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(
@@ -93,26 +96,20 @@ class ExportTaskBase(TestCase):
             password='demo'
         )
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
+        self.assertEquals(271, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(
             name='TestJob',
             description='Test description',
             user=self.user,
-            the_geom=the_geom
+            the_geom=the_geom,
+            json_tags=tags
         )
         self.job.feature_save = True
         self.job.feature_pub = True
         self.job.save()
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
-        self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
-        # save all the tags from the preset
-        for tag_dict in tags:
-            Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
-                               data_model='osm', geom_types=tag_dict['geom_types'])
-        self.assertEquals(238, self.job.tags.all().count())
 
 
 class TestExportTasks(ExportTaskBase):
@@ -466,7 +463,7 @@ class TestExportTasks(ExportTaskBase):
         else:
             self.assertEquals(expected_url, str(result.download_url))
 
-    def test_task_on_failure(self, ):
+    def test_task_on_failure(self,):
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
@@ -488,21 +485,6 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(error_type, ValueError)
         self.assertEquals('some unexpected error', str(msg))
         # traceback.print_exception(error_type, msg, tb)
-
-    @patch('celery.app.task.Task.request')
-    def test_generate_preset_task(self, mock_request):
-        run_uid = self.run.uid
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
-        celery_uid = str(uuid.uuid4())
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        succeeded_task = ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
-                                                   status=TaskStates.RUNNING.value, name=generate_preset_task.name)
-        type(mock_request).id = PropertyMock(return_value=celery_uid)
-        result = generate_preset_task.run(run_uid=run_uid, task_uid=succeeded_task.uid, job_name='testjob')
-        config = self.job.configs.all()[0]
-        expected_path = config.upload.path
-        self.assertEquals(result['result'], expected_path)
-        os.remove(expected_path)
 
     @patch('shutil.copy')
     @patch('os.remove')
@@ -539,7 +521,7 @@ class TestExportTasks(ExportTaskBase):
             ['test.gpkg', 'test.om5', 'test.osm']  # om5 and osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
-        fname = 'test-osm-vector-{0}.gpkg'.format(date, )
+        fname = 'test-osm-vector-{0}.gpkg'.format(date,)
         zipfile_name = '{0}/TestJob-test-eventkit-{1}.zip'.format(run_uid, date)
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[
