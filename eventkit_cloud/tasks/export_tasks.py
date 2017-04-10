@@ -21,7 +21,6 @@ from celery.result import AsyncResult
 from celery import Task
 from celery.utils.log import get_task_logger
 from ..celery import app, TaskPriority
-from ..jobs.presets import TagParser
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite, geopackage

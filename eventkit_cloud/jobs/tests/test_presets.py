@@ -16,7 +16,7 @@ from django.test import TestCase
 from lxml import etree
 
 from ..models import ExportConfig, ExportFormat, Job, DatamodelPreset
-from ..presets import PresetParser, TagParser, UnfilteredPresetParser
+from ..presets import PresetParser, UnfilteredPresetParser
 
 
 logger = logging.getLogger(__name__)
