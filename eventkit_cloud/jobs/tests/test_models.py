@@ -12,7 +12,7 @@ from django.core.files import File
 from django.test import TestCase
 import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, ExportProfile, Job, Region, Tag, ExportProvider, ProviderTask
+    ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ProviderTask
 , DatamodelPreset)
 
 logger = logging.getLogger(__name__)
@@ -33,18 +33,20 @@ class TestJob(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         export_provider = ExportProvider.objects.get(slug='osm-generic')
         provider_task = ProviderTask.objects.create(provider=export_provider)
+        self.tags = [
+            {'key': 'building', 'value': 'yes'}, {'key': 'place', 'value': 'city'},
+            {'key': 'highway', 'value': 'service'}, {'key': 'aeroway', 'value': 'helipad'}
+        ]
+
         self.job = Job(name='TestJob',
                        description='Test description', event='Nepal activation',
-                       user=self.user, the_geom=the_geom)
+                       user=self.user, the_geom=the_geom, json_tags=self.tags)
         self.job.save()
         self.uid = self.job.uid
         # add the formats to the job
         provider_task.formats.add(*self.formats)
         self.job.provider_tasks.add(provider_task)
         self.job.save()
-        self.tags = [('building', 'yes'), ('place', 'city'), ('highway', 'service'), ('aeroway', 'helipad')]
-        for tag in self.tags:
-            Tag.objects.create(key=tag[0], value=tag[1], job=self.job)
 
     def test_job_creation(self,):
         saved_job = Job.objects.all()[0]

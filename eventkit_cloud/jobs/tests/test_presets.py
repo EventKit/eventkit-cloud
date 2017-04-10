@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import logging
-import os
 from StringIO import StringIO
 import json
-
-from lxml import etree
+import logging
+import os
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -15,8 +13,11 @@ from django.core.files import File
 from django.core.files.base import ContentFile
 from django.test import TestCase
 
-from ..models import ExportConfig, ExportFormat, Job, Tag
+from lxml import etree
+
+from ..models import ExportConfig, ExportFormat, Job, DatamodelPreset
 from ..presets import PresetParser, TagParser, UnfilteredPresetParser
+
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ class TestPresetParser(TestCase):
 
 
 class TestUnfilteredPresetParser(TestCase):
+    fixtures = ('datamodel_presets.json',)
+
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
@@ -120,76 +123,9 @@ class TestUnfilteredPresetParser(TestCase):
         parser.build_hdm_preset_dict()
 
     def test_save_tags(self,):
-        parser = UnfilteredPresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
+        tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(233, len(tags))
-        for tag_dict in tags:
-            Tag.objects.create(name=tag_dict['name'], key=tag_dict['key'], value=tag_dict['value'],
-                               job=self.job, data_model='PRESET', geom_types=tag_dict['geom_types'],
-                               groups=tag_dict['groups'])
-        self.assertEquals(233, self.job.tags.all().count())
-
-
-class TestTagParser(TestCase):
-    """Test generation of preset from HDM tags."""
-
-    def setUp(self,):
-        self.path = os.path.dirname(os.path.realpath(__file__))
-        self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob', description='Test description',
-                                      event='Nepal activation', user=self.user, the_geom=the_geom)
-        self.uid = self.job.uid
-        # add the formats to the job
-        self.job.formats = self.formats
+        self.assertEquals(271, len(tags))
+        self.job.json_tags = tags
         self.job.save()
-
-        # add tags
-        parser = PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
-        self.assertIsNotNone(tags)
-        self.assertEquals(238, len(tags))
-        for tag_dict in tags:
-            Tag.objects.create(name=tag_dict['name'], key=tag_dict['key'], value=tag_dict['value'],
-                               job=self.job, data_model='PRESET', geom_types=tag_dict['geom_types'],
-                               groups=tag_dict['groups'])
-        self.assertEquals(238, self.job.tags.all().count())
-
-    def test_parse_tags(self,):
-        job = Job.objects.all()[0]
-        tag_parser = TagParser(tags=job.tags.all())
-        xml = tag_parser.parse_tags()
-        test_file = ContentFile(xml)
-        name = 'Custom HDM Preset'
-        filename = 'hdm_custom_preset.xml'
-        content_type = 'application/xml'
-        config = ExportConfig.objects.create(name=name, filename=filename, config_type='PRESET',
-                                             content_type=content_type, user=self.user)
-        config.upload.save(filename, test_file)
-        self.assertIsNotNone(config)
-        uid = config.uid
-        saved_config = ExportConfig.objects.get(uid=uid)
-        self.assertEquals('PRESET', saved_config.config_type)
-        self.assertEquals(name, saved_config.name)
-        self.assertFalse(saved_config.published)
-        self.assertIsNotNone(saved_config)
-        self.assertEqual(config, saved_config)
-        self.assertIsNotNone(saved_config.upload)
-        # logger.debug(saved_config.upload)
-        sf = File(open(settings.ABS_PATH() + '/media/export/config/preset/hdm_custom_preset.xml'))
-        self.assertIsNotNone(sf)  # check the file gets created on disk
-        sf.close()
-
-        # validate the custom preset
-        schema = StringIO(open(self.path + '/files/tagging-preset.xsd').read())
-        xmlschema_doc = etree.parse(schema)
-        xmlschema = etree.XMLSchema(xmlschema_doc)
-        xml = StringIO(open(settings.ABS_PATH() + saved_config.upload.url).read())
-        tree = etree.parse(xml)
-        valid = xmlschema.validate(tree)
-        self.assertTrue(valid)
-        saved_config.delete()  # clean up
+        self.assertEquals(271, len(self.job.json_tags))

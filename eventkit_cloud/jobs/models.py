@@ -330,30 +330,6 @@ class Job(TimeStampedModelMixin):
                          fields=('name', 'the_geom'))
 
 
-class Tag(models.Model):
-    """
-    Model to hold Export tag selections.
-
-    Holds the data model (osm | hdm | preset)
-    and the geom_type mapping.
-    """
-    id = models.AutoField(primary_key=True, editable=False)
-    name = models.CharField(max_length=100, blank=False, default='', db_index=True)
-    key = models.CharField(max_length=50, blank=False, default='', db_index=True)
-    value = models.CharField(max_length=50, blank=False, default='', db_index=True)
-    job = models.ForeignKey(Job, related_name='tags')
-    data_model = models.CharField(max_length=10, blank=False, default='', db_index=True)
-    geom_types = ArrayField(models.CharField(max_length=10, blank=True, default=''), default=[])
-    groups = ArrayField(models.CharField(max_length=100, blank=True, default=''), default=[])
-
-    class Meta:  # pragma: no cover
-        managed = True
-        db_table = 'tags'
-
-    def __str__(self):  # pragma: no cover
-        return '{0}:{1}'.format(self.key, self.value)
-
-
 class RegionMask(models.Model):
     """
     Model to hold region mask.
