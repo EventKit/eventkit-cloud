@@ -141,6 +141,9 @@ class DatamodelPreset(TimeStampedModelMixin):
     class Meta:
         db_table = 'datamodel_preset'
 
+    def __str__(self):
+        return self.name
+
 
 class ExportProvider(TimeStampedModelMixin):
     """

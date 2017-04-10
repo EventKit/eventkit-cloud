@@ -7,13 +7,14 @@ from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
 from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
-    ProviderTask
+    ProviderTask, DatamodelPreset
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
 admin.site.register(ExportProviderType)
 admin.site.register(ProviderTask)
+admin.site.register(DatamodelPreset)
 
 
 class HOTRegionGeoAdmin(OSMGeoAdmin):
@@ -25,7 +26,7 @@ class HOTRegionGeoAdmin(OSMGeoAdmin):
     model = Region
     exclude = ['the_geom', 'the_geog']
 
-    def save_model(self, request, obj, form, change):  # pragma no cover    
+    def save_model(self, request, obj, form, change):  # pragma no cover
         geom_merc = obj.the_geom_webmercator
         obj.the_geom = geom_merc.transform(ct=4326, clone=True)
         obj.the_geog = GEOSGeometry(obj.the_geom.wkt)
