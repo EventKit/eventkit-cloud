@@ -112,7 +112,7 @@ describe('exportInfo reducer', () => {
 
 describe('drawerMenu Reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.drawerMenuReducer(undefined, {})).toEqual(true);
+        expect(reducers.drawerMenuReducer(undefined, {})).toEqual(false);
     });
 
     it('should handle OPEN_DRAWER', () => {
