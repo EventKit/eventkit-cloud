@@ -85,8 +85,7 @@ class Overpass(object):
 
         q = self.get_query()
         logger.debug(q)
-        if self.debug:
-            print 'Query started at: %s' % datetime.now()
+        logger.debug('Query started at: %s'.format(datetime.now()))
         try:
             req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
@@ -110,8 +109,8 @@ class Overpass(object):
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
         if self.debug:
-            print 'Query finished at %s' % datetime.now()
-            print 'Wrote overpass query results to: %s' % self.raw_osm
+            logger.debug('Query finished at %s'.format(datetime.now()))
+            logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
 
     def filter(self, ):

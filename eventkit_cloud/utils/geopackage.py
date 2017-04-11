@@ -268,6 +268,109 @@ def check_zoom_levels(gpkg):
             return False
     return True
 
+def get_table_info(gpkg, table):
+    """
+    Checks the zoom levels for the geopackage returns False if ANY gpkg_tile_matrix sets do no match the zoom levels
+    of the user data tables.
+
+    :param gpkg: Path to geopackage file.
+    :return: The type of the first value in  if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
+    """
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("PRAGMA table_info({0});".format(table))
+        return conn.execute("PRAGMA table_info({0});".format(table))
+    return False
+
+
+def get_geometry_column(gpkg, table):
+    """
+    Attempts to get a geometry column from the table info (see get_table_info()), 
+    otherwise returns the first column beginning with geom.
+
+    :param gpkg: Path to geopackage file.
+    :return: The type of the first value in  if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
+    """
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='{0}';".format(table))
+        result = conn.execute("SELECT column_name FROM gpkg_geometry_columns WHERE table_name='{0}';".format(table))
+        return result.fetchone()[0]
+    return False
+
+
+def add_geometry_column(gpkg, table, add_autoincrement=False):
+    """
+    Adds a geometry_column to the table in the gpkg provided.
+
+    :param gpkg: Path to geopackage file.
+    :return: None
+    """
+    geometry_column = get_geometry_column(gpkg, table)
+    if not geometry_column:
+        geometry_column = "geometry"
+        if 'line' in table:
+            geometry_type = "LINESTRING"
+        if 'point' in table:
+            geometry_type = "POINT"
+        if 'poly' in table:
+            geometry_type = "MULTIPOLYGON"
+        with sqlite3.connect(gpkg) as conn:
+            logger.debug("INSERT INTO gpkg_geometry_columns VALUES ({0}, {1}, {2}, 4326, 0, 0);".format(table, geometry_column, geometry_type))
+            conn.execute("INSERT INTO gpkg_geometry_columns VALUES ({0}, {1}, {2}, 4326, 0, 0);".format(table, geometry_column, geometry_type))
+    columns = []
+    if add_autoincrement:
+        columns += [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT')]
+    for (cid, name, type, notnull, dflt_value, pk) in get_table_info(gpkg, table):
+        if name == geometry_column:
+            type = "GEOMETRY"
+        columns += [(name, type)]
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("ALTER TABLE {0} RENAME TO tmp;".format(table))
+        conn.execute("ALTER TABLE {0} RENAME TO tmp;".format(table))
+        logger.debug("CREATE TABLE {0} ({1}));".format(table, ','.join(["{0} {1}".format(column[0], column[1]) for column in columns])))
+        conn.execute("CREATE TABLE {0} ({1}));".format(table, ','.join(["{0} {1}".format(column[0], column[1]) for column in columns])))
+        logger.debug("INSERT INTO {0}({1}) SELECT {1} FROM tmp;".format(table, ','.join([column[0] for column in columns])))
+        conn.execute("INSERT INTO {0}({1}) SELECT {1} FROM tmp;".format(table, ','.join([column[0] for column in columns])))
+        logger.debug("DROP TABLE tmp")
+        conn.execute("DROP TABLE tmp")
+
+
+def check_autoincrement(gpkg, table):
+    is_autoincrement = False
+    columns = []
+    for (cid, name, type, notnull, dflt_value, pk) in get_table_info(gpkg, table):
+        columns += [name]
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("INSERT INTO {0} VALUES({1});".format(table, ','.join(columns)))
+        conn.execute("INSERT INTO {0} VALUES({1});".format(table, ','.join(columns)))
+        logger.debug("SELECT COUNT(*) FROM sqlite_sequence WHERE name='{0}';".format(table))
+        result = conn.execute("SELECT COUNT(*) FROM sqlite_sequence WHERE name='{0}';".format(table))
+        if result.fetchone()[0]:
+            is_autoincrement = True
+        logger.debug("DELETE FROM {0} WHERE {1};".format(table, ','.join(['{0} and {0}'.format(column) for column in columns])))
+        conn.execute("DELETE FROM {0} WHERE {1};".format(table, ','.join(['{0} and {0}'.format(column) for column in columns])))
+    return is_autoincrement
+
+
+def repair_gpkg(gpkg):
+    """
+    Attempts to check and correct items that are not compliant with the OGC Geopackage Specification Version 1.
+
+    :param gpkg: Path to geopackage file.
+    :return: True if the geopackage is compliant, or False if a deficiency has been found and cannot be repaired.
+    """
+    tables = get_table_names(gpkg)
+    for table in tables:
+        if not table.startswith('gpkg_'):
+            geometry_column = get_geometry_column(gpkg, table)
+            valid_geometry_column = False
+            for (cid, name, type, notnull, dflt_value, pk) in get_table_info(gpkg, table):
+                if name == geometry_column and type == "GEOMETRY":
+                    valid_geometry_column=True
+            is_autoincrement = check_autoincrement(gpkg, table)
+            if not valid_geometry_column or not is_autoincrement:
+                add_geometry_column(gpkg, table, primary_key=(not is_autoincrement))
+    return True
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Converts a SQlite database to GPKG.')
