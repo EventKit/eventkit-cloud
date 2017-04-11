@@ -244,7 +244,7 @@ export class DataPackPage extends React.Component {
         };
 
         return (
-            <div>
+            <div style={{backgroundImage: "url('./images/ek_topo_pattern.png')"}}>
                 <AppBar 
                     className={primaryStyles.sectionTitle} 
                     style={styles.appBar} title={pageTitle}
@@ -334,7 +334,7 @@ function mapDispatchToProps(dispatch) {
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
-        }
+        },
     }
 }
 

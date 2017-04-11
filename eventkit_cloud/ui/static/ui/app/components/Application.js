@@ -34,19 +34,20 @@ const muiTheme = getMuiTheme({
 export class Application extends Component {
     constructor(props) {
         super(props);
-        this.state = {open: true}
-        this.state.drawerOpen = true
-
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
+        this.onLogoutClick = this.onLogoutClick.bind(this);
     }
 
-    componentWillMount() {
-        if (window.innerWidth <= 991){
-            this.props.closeDrawer();
-        }
-    }
+    componentWillReceiveProps(nextProps) {
+        // if the user is logged in and the screen is large the drawer should be open
+         if(nextProps.userData != this.props.userData) {
+             if(nextProps.userData != null && window.innerWidth > 991) {
+                 this.props.openDrawer();
+             }
+         }
+    } 
 
     handleToggle() {
         if(this.props.drawerOpen) {
@@ -67,9 +68,13 @@ export class Application extends Component {
         }
     }
 
+    onLogoutClick() {
+        this.props.closeDrawer();
+    }
+
     render() {
 
-        const contentStyle = {  transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)' };
+        const contentStyle = {transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)'};
 
         if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
@@ -108,7 +113,7 @@ export class Application extends Component {
 
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
-                <div className={styles.root}>
+                <div style={{backgroundColor: '#000'}}>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
@@ -118,7 +123,7 @@ export class Application extends Component {
                             overlayStyle={styles.drawer}
                             docked={true}
                             open={this.props.drawerOpen}
-                            onRequestChange={(open) => this.setState({open})}>
+                    >
                         <Subheader inset={false}>
                             <span style={{width:'100%'}}>
                                 <div style={styles.mainMenu}>MAIN MENU</div>
@@ -129,31 +134,31 @@ export class Application extends Component {
                                 </div>
                             </span>
                         </Subheader>
-                        <MenuItem className={css.menuItem} >
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
                                 <AVLibraryBooks style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;DataPack Library
                             </IndexLink>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} >
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/create" >
                                 <ContentAddBox style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Create Datapack
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} >
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/about" >
                                 <ActionInfoOutline style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;About EventKit
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} >
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/account" >
                                 <SocialPerson style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} >
+                        <MenuItem className={css.menuItem} onClick={this.onLogoutClick}>
                             <Link className={css.link} activeClassName={css.active} to="/logout" >
                                 <ActionExitToApp style={{height: '22px', width: '22px'}}/>
                                 &nbsp;&nbsp;&nbsp;Log Out
@@ -161,7 +166,7 @@ export class Application extends Component {
                         </MenuItem>
                     </Drawer>
                     <div style={contentStyle} className={css.contentStyle}>
-                    {this.props.children}
+                        {this.props.children}
                     </div>
                 </div>
             </MuiThemeProvider>
@@ -172,11 +177,15 @@ Application.propTypes = {
     children: PropTypes.object,
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
+    userDate: PropTypes.object,
+    drawerOpen: PropTypes.bool,
 };
 
 function mapStateToProps(state) {
     return {
         drawerOpen: state.drawerOpen,
+        userData: state.user.data,
+
     }
 }
 
