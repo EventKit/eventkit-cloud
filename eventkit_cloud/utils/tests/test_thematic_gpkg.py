@@ -47,11 +47,9 @@ class TestThematicGPKG(TestCase):
         expected_out = os.path.join(stage_dir,'{0}.gpkg'.format(job_name))
         expected_call = 'spatialite {0} < {1}'.format(expected_out, os.path.join(stage_dir, sql_file_name))
         exists.return_value = True
-        conn = Mock()
+        conn = MagicMock()
         connect.return_value = conn
-        cur = MagicMock()
-        conn.cursor = cur
-        cur.execute = MagicMock()
+        conn.execute = MagicMock()
         tags = self.job.categorised_tags
         generated_task_uid = uuid.uuid4()
 
@@ -69,7 +67,6 @@ class TestThematicGPKG(TestCase):
         exists.assert_has_calls([call(gpkg), call(os.path.join(stage_dir, '{0}.gpkg'.format(job_name)))])
         task_process.assert_called_with(task_uid=generated_task_uid)
         task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
-        connect.assert_called_once()
         conn.enable_load_extension.assert_called_once_with(True)
         mock_open.assert_called_once_with(os.path.join(stage_dir, sql_file_name), 'w+')
         remove.assert_called_once_with(os.path.join(stage_dir, sql_file_name))
