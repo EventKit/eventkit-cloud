@@ -50,6 +50,10 @@ export class ExportAOI extends Component {
         }
     }
 
+    componentDidUpdate() {
+        this._map.updateSize();
+    }
+
     componentWillReceiveProps(nextProps) {
         // Check if the map mode has changed (DRAW or NORMAL)
         if(this.props.mode != nextProps.mode) {

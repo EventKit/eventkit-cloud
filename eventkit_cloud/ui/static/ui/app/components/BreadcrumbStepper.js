@@ -1,33 +1,30 @@
 import React from 'react';
 import { Link, IndexLink } from 'react-router'
 import {connect} from 'react-redux'
-import {
-    Step,
-    Stepper,
-    StepLabel,
-} from 'material-ui/Stepper';
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import style from '../styles/BreadcrumbStepper.css'
 import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
 import  isEqual from 'lodash/isEqual';
+import {browserHistory} from 'react-router';
 
-class BreadcrumbStepper extends React.Component {
+export class BreadcrumbStepper extends React.Component {
     constructor() {
-        super()
+        super();
+        this.getStepLabel = this.getStepLabel.bind(this);
+        this.handleNext = this.handleNext.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handlePrev = this.handlePrev.bind(this);
+        this.incrementStepper = this.incrementStepper.bind(this);
+        this.state = {
+            stepIndex: 0,
+        };
     }
-
-    state = {
-        finished: false,
-        stepIndex: 0,
-        nextDisabled: true,
-    };
 
     componentDidMount(){
         this.props.getProviders();
@@ -39,12 +36,7 @@ class BreadcrumbStepper extends React.Component {
         this.props.clearExportInfo();
     }
 
-    componentWillReceiveProps(nextProps) {
-
-    }
-
-    handleSubmit = () => {
-        const {stepIndex} = this.state;
+    handleSubmit() {
         let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
@@ -62,94 +54,127 @@ class BreadcrumbStepper extends React.Component {
             provider_tasks : provider_tasks,
             selection: this.props.aoiInfo.geojson,
             tags : [],
-    };
-
-        this.props.submitJob(data)
-        this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
-
+        };
+        this.props.submitJob(data);
+        browserHistory.push('/');
     }
 
-    handleNext = () => {
+    handleNext() {
         const {stepIndex} = this.state;
         if (stepIndex == 1) {
             this.props.setExportInfoDone();
         }
-
-        else
-        {
-            this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-         });
+        else {
+            this.setState({stepIndex: stepIndex + 1});
         }
     };
 
-    incrementStepper = () => {
+    incrementStepper() {
         const {stepIndex} = this.state;
-        this.setState({stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
+        this.setState({stepIndex: stepIndex + 1});
     }
 
-    handlePrev = () => {
+    handlePrev() {
         const {stepIndex} = this.state;
         if (stepIndex > 0) {
             this.setState({stepIndex: stepIndex - 1});
         }
     };
 
-    getStepContent(stepIndex) {
-    switch (stepIndex) {
-        case 0:
-            return <ExportAOI mode={this._mapMode}/>;
-        case 1:
-            return <ExportInfo providers={this.props.providers}
-                                incrementStepper={this.incrementStepper}/>
-        case 2:
-            return <ExportSummary/>
-        case 3:
-            return 'return export status';
-        default:
-            return <ExportAOI mode={this._mapMode}/>;
+    getStepLabel(stepIndex) {
+        const labelStyle = {
+            color: 'white', 
+            height: '50px', 
+            minWidth: '200px', 
+            display: 'inline-block', 
+            lineHeight: '50px', 
+            marginLeft: '24px'
+        };
+
+        switch(stepIndex) {
+            case 0:
+                return  <div style={labelStyle}>
+                            STEP 1 OF 3:  Define Area of Interest 
+                        </div>;
+            case 1:
+                return  <div style={labelStyle}>
+                            STEP 2 OF 3:  Select Data & Formats 
+                        </div>;
+            case 2: 
+                return  <div style={labelStyle}>
+                            STEP 3 OF 3:  Review & Submit 
+                        </div>;
+            default:
+                return  <div style={labelStyle}>
+                            STEPPER ERROR
+                        </div>;
+        }
     }
-}
+
+    getStepContent(stepIndex) {
+        switch (stepIndex) {
+            case 0:
+                return <ExportAOI/>;
+            case 1:
+                return <ExportInfo providers={this.props.providers}
+                                    incrementStepper={this.incrementStepper}/>
+            case 2:
+                return <ExportSummary/>
+            default:
+                return <ExportAOI/>;
+        }
+    }
+    
     getButtonContent(stepIndex) {
+        const btnStyles = {
+            submit: {
+                color: 'black', 
+                marginRight: '12px', 
+                verticalAlign: 'middle', 
+                boxShadow: 'none', 
+                transition: 'none'
+            },
+            forward: {
+                marginRight: '12px',
+                verticalAlign: 'middle',
+                boxShadow: 'none',
+                transition: 'none'
+            }
+        };
+
         switch (stepIndex) {
             case 0:
                 return <FloatingActionButton mini={true}
-                                             disabled={!this.props.stepperNextEnabled}
-                                             onTouchTap={this.handleNext}
-                                             className={style.forwardButtonDiv} >
-                                             <NavigationArrowForward/>
+                            disabled={!this.props.stepperNextEnabled}
+                            backgroundColor={'#55ba63'}
+                            onClick={this.handleNext}
+                            style={btnStyles.forward} >
+                                <NavigationArrowForward/>
                         </FloatingActionButton>
             case 1:
                 return <FloatingActionButton mini={true}
-                                             disabled={!this.props.stepperNextEnabled}
-                                             onTouchTap={this.handleNext}
-                                             className={style.forwardButtonDiv}>
-                                             <NavigationArrowForward/>
+                            disabled={!this.props.stepperNextEnabled}
+                            backgroundColor={'#55ba63'}
+                            onClick={this.handleNext}
+                            style={btnStyles.forward}>
+                                <NavigationArrowForward/>
                         </FloatingActionButton>
             case 2:
                 return <FloatingActionButton mini={false}
-                                             disabled={!this.props.stepperNextEnabled}
-                                             onTouchTap={this.handleSubmit}
-                                             className={style.bigForwardButtonDiv}>
-                                             <NavigationCheck/>
+                            disabled={!this.props.stepperNextEnabled}
+                            backgroundColor={'#55ba63'}
+                            onClick={this.handleSubmit}
+                            style={btnStyles.submit}>
+                                <NavigationCheck/>
                         </FloatingActionButton>
-            case 3:
-                return <div></div>
             default:
-                return <ExportAOI mode={this._mapMode}/>;
+                return <div/>;
         }
     }
 
     render() {
-
         const { createExportRequest } = this.props
-
+        const {stepIndex} = this.state;
         const styles = {
             stepper: {
                 backgroundColor: '#161e2e',
@@ -161,60 +186,32 @@ class BreadcrumbStepper extends React.Component {
             stepLabel: {
                 color: 'white',
                 fontSize: '18px',
-        }
+            },
+            arrowBack: {
+                fill: stepIndex == 0 ? '#e2e2e2' : '#4598bf',
+                opacity: stepIndex == 0 ? '0.3' : '1',
+                cursor: stepIndex == 0 ? 'default' : 'pointer',
+                verticalAlign: 'middle',
+                marginRight: '10px',
+            },
         };
-        const {finished, stepIndex} = this.state;
-
+        
         return (
             <div style={{backgroundColor: '#161e2e'}}>
-                <div className={style.topWrapper}>
-                    <div className={style.stepperImageWrapper}>
-                        <div className={style.stepperWrapper}>
-                            <Stepper activeStep={stepIndex}>
-                                <Step>
-                                    <StepLabel style={styles.stepLabel}>Define Area of Interest (AOI)</StepLabel>
-                                </Step>
-                                <Step>
-                                    <StepLabel style={styles.stepLabel}>Select Data & Formats</StepLabel>
-                                </Step>
-                                <Step>
-                                    <StepLabel style={styles.stepLabel}>Review & Submit</StepLabel>
-                                </Step>
-                                <Step>
-                                    <StepLabel style={styles.stepLabel}>Status & Download</StepLabel>
-                                </Step>
-                            </Stepper>
-                        </div>
-                        <div className={style.imageWrapper} style={{maxWidth: '150px'}}>
-                            <FloatingActionButton mini={true}
-                                                disabled={stepIndex === 0}
-                                                onTouchTap={this.handlePrev}
-                                                className={style.backButtonDiv}>
-                                                <NavigationArrowBack
-                                                    style={stepIndex === 0 ?
-                                                        {fill: '#e2e2e2', opacity: '0.3'}
-                                                        : {fill: '#4598bf'}}/>
-                            </FloatingActionButton>
-                            {this.getButtonContent(this.state.stepIndex)}
-                        </div>
+                <div style={{width: '100%', height: '50px'}}>
+                    {this.getStepLabel(this.state.stepIndex)}
+                    <div style={{float: 'right', padding: '5px'}}>
+                        <NavigationArrowBack
+                            style={styles.arrowBack}
+                            onClick={this.handlePrev}
+                        />
+                        {this.getButtonContent(this.state.stepIndex)}
                     </div>
                 </div>
                 {this.getStepContent(this.state.stepIndex)}
             </div>
-
         );
     }
-    //
-    // Internal API
-    //
-
-    get _mapMode() {
-        if (this.props.location === 'exportAOI') {
-            return MODE_DRAW_BBOX
-        }
-        return MODE_NORMAL
-    }
-
 }
 
 BreadcrumbStepper.propTypes = {
