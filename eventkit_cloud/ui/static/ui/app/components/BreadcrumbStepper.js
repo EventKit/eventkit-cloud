@@ -1,11 +1,6 @@
 import React from 'react';
 import { Link, IndexLink } from 'react-router'
 import {connect} from 'react-redux'
-import {
-    Step,
-    Stepper,
-    StepLabel,
-} from 'material-ui/Stepper';
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
@@ -16,15 +11,17 @@ import ExportSummary from './ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
 import  isEqual from 'lodash/isEqual';
+import {browserHistory} from 'react-router';
 
-class BreadcrumbStepper extends React.Component {
+export class BreadcrumbStepper extends React.Component {
     constructor() {
         super();
         this.getStepLabel = this.getStepLabel.bind(this);
+        this.handleNext = this.handleNext.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handlePrev = this.handlePrev.bind(this);
         this.state = {
-            finished: false,
             stepIndex: 0,
-            nextDisabled: true,
         };
     }
 
@@ -38,8 +35,7 @@ class BreadcrumbStepper extends React.Component {
         this.props.clearExportInfo();
     }
 
-    handleSubmit = () => {
-        const {stepIndex} = this.state;
+    handleSubmit() {
         let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
@@ -57,39 +53,27 @@ class BreadcrumbStepper extends React.Component {
             provider_tasks : provider_tasks,
             selection: this.props.aoiInfo.geojson,
             tags : [],
-    };
-
-        this.props.submitJob(data)
-        this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
-
+        };
+        this.props.submitJob(data);
+        browserHistory.push('/');
     }
 
-    handleNext = () => {
+    handleNext() {
         const {stepIndex} = this.state;
         if (stepIndex == 1) {
             this.props.setExportInfoDone();
         }
-
-        else
-        {
-            this.setState({
-            stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-         });
+        else {
+            this.setState({stepIndex: stepIndex + 1});
         }
     };
 
-    incrementStepper = () => {
+    incrementStepper() {
         const {stepIndex} = this.state;
-        this.setState({stepIndex: stepIndex + 1,
-            finished: stepIndex >= 2,
-        });
+        this.setState({stepIndex: stepIndex + 1});
     }
 
-    handlePrev = () => {
+    handlePrev() {
         const {stepIndex} = this.state;
         if (stepIndex > 0) {
             this.setState({stepIndex: stepIndex - 1});
@@ -135,8 +119,6 @@ class BreadcrumbStepper extends React.Component {
                                     incrementStepper={this.incrementStepper}/>
             case 2:
                 return <ExportSummary/>
-            case 3:
-                return 'return export status';
             default:
                 return <ExportAOI/>;
         }
@@ -184,18 +166,14 @@ class BreadcrumbStepper extends React.Component {
                             style={btnStyles.submit}>
                                 <NavigationCheck/>
                         </FloatingActionButton>
-            case 3:
-                return <div></div>
             default:
-                return <ExportAOI/>;
+                return <div/>;
         }
     }
 
     render() {
-
         const { createExportRequest } = this.props
-        const {finished, stepIndex} = this.state;
-
+        const {stepIndex} = this.state;
         const styles = {
             stepper: {
                 backgroundColor: '#161e2e',
@@ -217,7 +195,6 @@ class BreadcrumbStepper extends React.Component {
             },
         };
         
-
         return (
             <div style={{backgroundColor: '#161e2e'}}>
                 <div style={{width: '100%', height: '50px'}}>
@@ -232,7 +209,6 @@ class BreadcrumbStepper extends React.Component {
                 </div>
                 {this.getStepContent(this.state.stepIndex)}
             </div>
-
         );
     }
 }
