@@ -9,7 +9,7 @@ from django.test import TransactionTestCase
 from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
-                          add_geojson_to_geopackage, clip_geopackage)
+                          add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info)
 
 
 logger = logging.getLogger(__name__)
@@ -233,3 +233,25 @@ class TestGeopackage(TransactionTestCase):
         with self.assertRaises(Exception):
             clip_geopackage(geojson=geojson, gpkg=gpkg, task_uid=self.task_uid)
 
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    @patch('eventkit_cloud.utils.geopackage.get_table_info')
+    def test_create_table_from_existing(self, mock_table_info, mock_sqlite3):
+        table_info = [(1, 'col1', 'INT', 0, 0, 1), (1, 'col2', 'INT', 0, 0, 0)]
+        mock_table_info.return_value = table_info
+        gpkg = "test.gpkg"
+        old_table = "old"
+        new_table = "new"
+        create_table_from_existing(gpkg, old_table, new_table)
+        mock_table_info.assert_called_once_with(gpkg, old_table)
+        mock_sqlite3.connect().__enter__().execute.assert_called_once_with(
+            "CREATE TABLE {0} (col1 INTEGER PRIMARY KEY AUTOINCREMENT,col2 INT);".format(new_table))
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_get_table_info(self, mock_sqlite3):
+        gpkg = "test.gpkg"
+        table = "table"
+        expected_response = [(1, 'col1', 'INT', 0, 0, 1), (1, 'col2', 'INT', 0, 0, 0)]
+        mock_sqlite3.connect().__enter__().execute.return_value = expected_response
+        response = get_table_info(gpkg, table)
+        mock_sqlite3.connect().__enter__().execute.assert_called_once_with("PRAGMA table_info({0});".format(table))
+        self.assertEqual(expected_response, response)
