@@ -20,6 +20,7 @@ export class BreadcrumbStepper extends React.Component {
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
+        this.incrementStepper = this.incrementStepper.bind(this);
         this.state = {
             stepIndex: 0,
         };
