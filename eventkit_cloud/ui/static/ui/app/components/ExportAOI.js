@@ -167,27 +167,32 @@ export class ExportAOI extends Component {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
         const geojson = createGeoJSON(geometry);
-        if (this.props.mode == MODE_DRAW_FREE) {
-            let drawFeature = new ol.Feature({
-                geometry: geometry
-            });
-            this._drawLayer.getSource().addFeature(drawFeature);
+        console.log(geojson);
+        const bbox = geojson.features[0].bbox;
+        //make sure the user didnt double click and create a polygon with no area
+        if(bbox[0] != bbox[2] || bbox[1] != bbox[3]) {
+            if (this.props.mode == MODE_DRAW_FREE) {
+                let drawFeature = new ol.Feature({
+                    geometry: geometry
+                });
+                this._drawLayer.getSource().addFeature(drawFeature);
 
-            if(isGeoJSONValid(geojson)) {
-                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
+                if(isGeoJSONValid(geojson)) {
+                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
+                    this.props.setNextEnabled();
+                }
+                else {
+                    this.props.showInvalidDrawWarning();
+                }
+            }
+            else if (this.props.mode == MODE_DRAW_BBOX) {
+                const bbox = serialize(geometry.getExtent());
+                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
                 this.props.setNextEnabled();
             }
-            else {
-                this.props.showInvalidDrawWarning();
-            }
+            // exit drawing mode
+            this.props.updateMode('MODE_NORMAL');
         }
-        else if (this.props.mode == MODE_DRAW_BBOX) {
-            const bbox = serialize(geometry.getExtent());
-            this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
-            this.props.setNextEnabled();
-        }
-        // exit drawing mode
-        this.props.updateMode('MODE_NORMAL');
     }
 
     _handleDrawStart() {
@@ -368,10 +373,10 @@ function generateDrawLayer() {
         }),
         style: new ol.style.Style({
             fill: new ol.style.Fill({
-                color: 'hsla(202, 70%, 50%, .35)'
+                color: 'rgba(22, 30, 46, 0.2)'
             }),
             stroke: new ol.style.Stroke({
-                color: 'hsla(202, 70%, 50%, .7)',
+                color: 'rgb(22, 30, 46)',
                 width: 1,
                 lineDash: [5, 5]
             })
@@ -382,14 +387,10 @@ function generateDrawLayer() {
 function _generateDrawBoxInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
-        maxPoints: 2,
-        type: 'LineString',
-        geometryFunction(coordinates, geometry) {
-            geometry = geometry || new ol.geom.Polygon(null)
-            const [[x1, y1], [x2, y2]] = coordinates
-            geometry.setCoordinates([[[x1, y1], [x1, y2], [x2, y2], [x2, y1], [x1, y1]]])
-            return geometry
-        },
+
+        type: 'Circle',
+
+        geometryFunction: ol.interaction.Draw.createBox(),
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
@@ -401,11 +402,8 @@ function _generateDrawBoxInteraction(drawLayer) {
                 radius2: 0,
                 angle: 0
             }),
-            fill: new ol.style.Fill({
-                color: 'hsla(202, 70%, 50%, .6)'
-            }),
             stroke: new ol.style.Stroke({
-                color: 'hsl(202, 70%, 50%)',
+                color: 'rgb(22, 30, 46)',
                 width: 1,
                 lineDash: [5, 5]
             })
@@ -431,11 +429,9 @@ function _generateDrawFreeInteraction(drawLayer) {
                 radius2: 0,
                 angle: 0
             }),
-            fill: new ol.style.Fill({
-                color: 'hsla(202, 70%, 50%, .6)'
-            }),
+            
             stroke: new ol.style.Stroke({
-                color: 'hsl(202, 70%, 50%)',
+                color: 'rgb(22, 30, 46)',
                 width: 1,
                 lineDash: [5, 5]
             })
