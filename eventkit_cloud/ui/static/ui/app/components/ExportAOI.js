@@ -167,10 +167,10 @@ export class ExportAOI extends Component {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
         const geojson = createGeoJSON(geometry);
-        console.log(geojson);
         const bbox = geojson.features[0].bbox;
-        //make sure the user didnt double click and create a polygon with no area
-        if(bbox[0] != bbox[2] || bbox[1] != bbox[3]) {
+        console.log(bbox);
+        //make sure the user didnt create a polygon with no area
+        if(bbox[0] != bbox[2] && bbox[1] != bbox[3]) {
             if (this.props.mode == MODE_DRAW_FREE) {
                 let drawFeature = new ol.Feature({
                     geometry: geometry
@@ -372,13 +372,9 @@ function generateDrawLayer() {
             wrapX: false
         }),
         style: new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(22, 30, 46, 0.2)'
-            }),
             stroke: new ol.style.Stroke({
-                color: 'rgb(22, 30, 46)',
-                width: 1,
-                lineDash: [5, 5]
+                color: '#ce4427',
+                width: 3,
             })
         })
     })
@@ -387,9 +383,7 @@ function generateDrawLayer() {
 function _generateDrawBoxInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
-
         type: 'Circle',
-
         geometryFunction: ol.interaction.Draw.createBox(),
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
@@ -403,8 +397,8 @@ function _generateDrawBoxInteraction(drawLayer) {
                 angle: 0
             }),
             stroke: new ol.style.Stroke({
-                color: 'rgb(22, 30, 46)',
-                width: 1,
+                color: '#ce4427',
+                width: 2,
                 lineDash: [5, 5]
             })
         })
@@ -429,10 +423,9 @@ function _generateDrawFreeInteraction(drawLayer) {
                 radius2: 0,
                 angle: 0
             }),
-            
             stroke: new ol.style.Stroke({
-                color: 'rgb(22, 30, 46)',
-                width: 1,
+                color: '#ce4427',
+                width: 2,
                 lineDash: [5, 5]
             })
         })
@@ -444,7 +437,7 @@ function _generateDrawFreeInteraction(drawLayer) {
 
 
 function truncate(number) {
-    return Math.round(number * 100) / 100
+    return Math.round(number * 100000) / 100000
 }
 
 function unwrapPoint([x, y]) {
