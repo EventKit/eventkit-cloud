@@ -133,7 +133,7 @@ class TestJob(TestCase):
 
     def test_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
-        self.assertEquals(271, len(tags))
+        self.assertEquals(255, len(tags))
 
         # save all the tags from the preset
         job = Job.objects.first()
@@ -141,18 +141,18 @@ class TestJob(TestCase):
         categories = job.categorised_tags
 
         self.assertIsNotNone(categories)
-        self.assertEquals(28, len(categories['points']))
-        self.assertEquals(15, len(categories['lines']))
-        self.assertEquals(26, len(categories['polygons']))
+        self.assertEquals(27, len(categories['points']))
+        self.assertEquals(14, len(categories['lines']))
+        self.assertEquals(24, len(categories['polygons']))
 
     def test_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(271, len(tags))
+        self.assertEquals(255, len(tags))
         # save all the tags from the preset
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(271, len(self.job.json_tags))
+        self.assertEquals(255, len(self.job.json_tags))
 
 
 class TestExportFormat(TestCase):
@@ -337,19 +337,19 @@ class TestTag(TestCase):
     def test_save_tags_from_preset(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(271, len(tags))
+        self.assertEquals(255, len(tags))
         self.job.json_tags = tags
         self.job.save()
 
-        self.assertEquals(271, len(self.job.json_tags))
+        self.assertEquals(255, len(self.job.json_tags))
 
     def test_get_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(271, len(tags))
+        self.assertEquals(255, len(tags))
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(271, len(self.job.json_tags))
+        self.assertEquals(255, len(self.job.json_tags))
 
 
 class TestExportProfile(TestCase):

@@ -125,7 +125,7 @@ class TestUnfilteredPresetParser(TestCase):
     def test_save_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(271, len(tags))
+        self.assertEquals(255, len(tags))
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(271, len(self.job.json_tags))
+        self.assertEquals(255, len(self.job.json_tags))
