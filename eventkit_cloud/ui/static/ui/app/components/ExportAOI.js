@@ -172,7 +172,6 @@ export class ExportAOI extends Component {
         const geometry = event.feature.getGeometry();
         const geojson = createGeoJSON(geometry);
         const bbox = geojson.features[0].bbox;
-        console.log(bbox);
         //make sure the user didnt create a polygon with no area
         if(bbox[0] != bbox[2] && bbox[1] != bbox[3]) {
             if (this.props.mode == MODE_DRAW_FREE) {
