@@ -11,7 +11,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 
 from eventkit_cloud.jobs import presets
-from eventkit_cloud.jobs.models import ExportFormat, Job, Tag
+from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
 
 from ..overpass import Overpass
 
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestOverpass(TestCase):
+    fixtures = ('datamodel_presets.json',)
 
     def setUp(self,):
         self.url = settings.OVERPASS_API_URL
@@ -29,24 +30,31 @@ class TestOverpass(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
+
+        preset = DatamodelPreset.objects.get(name='hdm')
+        tags = preset.json_tags
+        self.assertEquals(271, len(tags))
+
         self.job = Job.objects.create(name='TestJob', description='Test description',
-                                      event='Nepal activation', user=self.user, the_geom=the_geom)
+                                      event='Nepal activation', user=self.user, the_geom=the_geom,
+                                      json_tags=tags)
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats
         self.job.save()
         self.osm = self.path + '/files/query.osm'
         self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.40,-10.62);<;);out body;'
-        self.job.tags.all().delete()
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        tags = parser.parse()
-        self.assertIsNotNone(tags)
-        self.assertEquals(256, len(tags))
+
+#         parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
+#         self.assertIsNotNone(tags)
+#         self.job.tags.all().delete()
+#         tags = parser.parse()
+
         # save all the tags from the preset
-        for tag_dict in tags:
-            tag = Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
-                                     data_model='osm', geom_types=tag_dict['geom_types'])
-        self.assertEquals(256, self.job.tags.all().count())
+#         for tag_dict in tags:
+#             tag = Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
+#                                      data_model='osm', geom_types=tag_dict['geom_types'])
+#         self.assertEquals(256, self.job.tags.all().count())
 
     def test_get_query(self,):
         overpass = Overpass(
