@@ -268,6 +268,40 @@ def check_zoom_levels(gpkg):
             return False
     return True
 
+def get_table_info(gpkg, table):
+    """
+    Checks the zoom levels for the geopackage returns False if ANY gpkg_tile_matrix sets do no match the zoom levels
+    of the user data tables.
+
+    :param gpkg: Path to geopackage file.
+    :return: The type of the first value in  if the zoom levels in the data tables match the zoom levels in the gpkg_tile_matrix_table
+    """
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("PRAGMA table_info({0});".format(table))
+        return conn.execute("PRAGMA table_info({0});".format(table))
+    return False
+
+def create_table_from_existing(gpkg, old_table, new_table):
+    """
+    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such as a primary key column.
+    
+    :param gpkg: 
+    :param old_table: 
+    :param new_table: 
+    :return: 
+    """
+    columns = [('id', 'INTEGER PRIMARY KEY AUTOINCREMENT')]
+    for (cid, name, type, notnull, dflt_value, pk) in get_table_info(gpkg, old_table):
+        if pk:
+            columns = [(name, 'INTEGER PRIMARY KEY AUTOINCREMENT')]
+        else:
+            columns += [(name, type)]
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug("CREATE TABLE {0} ({1});".format(new_table, ','.join(
+            ["{0} {1}".format(column[0], column[1]) for column in columns])))
+        conn.execute("CREATE TABLE {0} ({1});".format(new_table, ','.join(
+            ["{0} {1}".format(column[0], column[1]) for column in columns])))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Converts a SQlite database to GPKG.')
