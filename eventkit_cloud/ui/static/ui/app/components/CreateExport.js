@@ -37,7 +37,7 @@ export class CreateExport extends React.Component {
                 <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
                         iconStyleRight={{marginTop: '2px'}}
                         iconElementLeft={<p style={{display: 'none'}}/>}
-                        iconElementRight={
+                        /*iconElementRight={
                             <IconMenu style={{height: '30px', width: '30px'}} 
                                 iconButtonElement={
                                     <IconButton style={styles.iconButton}>
@@ -48,7 +48,7 @@ export class CreateExport extends React.Component {
                                 <MenuItem primaryText="Save & Exit" />
                                 <MenuItem primaryText="Save & Share" />
                                 <MenuItem primaryText="Discard" />
-                            </IconMenu>}
+                            </IconMenu>}*/
                 />
                 <BreadcrumbStepper/>
                 
