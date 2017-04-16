@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-import logging
-from collections import OrderedDict
 from StringIO import StringIO
+from collections import OrderedDict
+import logging
+import json
 
 from lxml import etree
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,16 +38,28 @@ class PresetParser:
         self.preset = preset
         self.tags = []
 
-    def parse(self, ):
+    def parse(self,):
         """Read in the JOSM Preset and processes the 'item' elements."""
-        f = open(self.preset)
-        xml = f.read()
-        tree = etree.parse(StringIO(xml))
-        items = tree.xpath('//ns:item', namespaces=self.namespaces)
-        for item in items:
-            self.process_item_and_children(item)
+        if not self.tags:
+            with open(self.preset) as f:
+                xml = f.read()
+            tree = etree.parse(StringIO(xml))
+            items = tree.xpath('//ns:item', namespaces=self.namespaces)
+            for item in items:
+                self.process_item_and_children(item)
         # tags = OrderedDict(sorted(self.tags.items()))
         return self.tags
+
+    def as_simplified_json(self):
+        """ Convert the preset file to a json string retaining only 'key', 'value', and 'geom'.
+            json is of the form [{"key": <key>, "value": <value>, "geom": [<geom>, ...]}, ...]
+        """
+        tags = self.parse()
+        simplified_tags = []
+        for t in tags:
+            st = {"key": t['key'], "value": t['value'], "geom": t['geom_types']}
+            simplified_tags.append(st)
+        return json.dumps(simplified_tags)
 
     def process_item_and_children(self, item, geometrytype=None):
         """
@@ -94,7 +108,7 @@ class PresetParser:
             geometrytypes.append(self.types[osmtype])
         return geometrytypes
 
-    def build_hdm_preset_dict(self, ):
+    def build_hdm_preset_dict(self,):
         """
         Builds a python dict to represent the
         hierarchy of 'group' and 'item' elements
@@ -175,7 +189,7 @@ class UnfilteredPresetParser:
         self.tags = []
         self.keys = []
 
-    def parse(self, ):
+    def parse(self,):
         """Read in the JOSM Preset and processes the 'item' elements."""
         f = open(self.preset)
         xml = f.read()
@@ -246,7 +260,7 @@ class UnfilteredPresetParser:
             geometrytypes.append(self.types[osmtype])
         return geometrytypes
 
-    def build_hdm_preset_dict(self, ):
+    def build_hdm_preset_dict(self,):
         """
         NOT USED AT PRESENT EXCEPT IN TESTS.
 
@@ -300,90 +314,3 @@ class UnfilteredPresetParser:
             name = sub_group.get('name')
             group_dict[name] = sub_group_dict
             self._parse_group(sub_group, sub_group_dict)
-
-
-class TagParser:
-    """
-    Reconstruct a JOSM Preset from the users selected Tag's.
-
-    Used in tasks.export_tasks.generate_preset_task.
-    """
-    namespaces = {'ns': 'http://josm.openstreetmap.de/tagging-preset-1.0'}
-    nsmap = {None: 'http://josm.openstreetmap.de/tagging-preset-1.0'}
-
-    types = {
-        'point': 'node',
-        'line': 'way',
-        'polygon': 'closedway,relation',
-    }
-
-    def __init__(self, tags=None, *args, **kwargs):
-        """Initialized with a list of users tag selection."""
-        self.tags = tags
-
-    def parse_tags(self, ):
-        """
-        Construct the preset xml document.
-
-        Add the root 'presets' element.
-        Iterate through the groups for each tag in the users tags
-        to construct the group element along with its child 'item' elements.
-
-        Retuns:
-            the generated preset xml file.
-        """
-        root = etree.Element('presets', nsmap=self.nsmap)
-        doc = etree.ElementTree(root)
-        for tag in self.tags:
-            self._add_groups(root, tag)
-        xml = etree.tostring(doc, xml_declaration=True, encoding='UTF-8', pretty_print=True)
-        return xml
-
-    def _add_groups(self, parent, tag):
-        """
-        Add the 'group' elements to the preset xml document.
-
-        Recursively iterate through the groups for the provided tag and reconstruct
-        the group element and its child item elements. The 'item' elements
-        get their child 'key' elements added in turn.
-        """
-        for group in tag.groups:
-            # check if this group element exists already, if not create it...
-            found_groups = parent.xpath('group[@name="' + group + '"]', namespaces=self.namespaces)
-            if len(found_groups) == 0:
-                # create a new group element on the document
-                grp = etree.SubElement(parent, 'group', name=group)
-                # remove this group from the tag so we don't duplicate it
-                tag.groups.pop(0)
-                if len(tag.groups) == 0:
-                    # get the osm geometry types for this tag
-                    geom_types = self._get_types(tag.geom_types)
-                    # add the item element to the group
-                    item = etree.SubElement(grp, 'item', name=tag.name, type=geom_types)
-                    # add the 'key' element to the 'item'
-                    etree.SubElement(item, 'key', key=tag.key, value=tag.value)
-                # process any subgroups of this group
-                self._add_groups(grp, tag)
-            else:
-                # the group exists in the xml already
-                tag.groups.pop(0)
-                if len(tag.groups) == 0:
-                    # get the osm geometry type for this group
-                    geom_types = self._get_types(tag.geom_types)
-                    # add another item to the found group
-                    item = etree.SubElement(found_groups[0], 'item', name=tag.name, type=geom_types)
-                    # add the 'key' child element to the 'item'
-                    etree.SubElement(item, 'key', key=tag.key, value=tag.value)
-                # process any subgroups of this group
-                self._add_groups(found_groups[0], tag)
-
-    def _get_types(self, geom_types):
-        """
-        Maps the Tags geomtypes back to OSM geometry types.
-        """
-        types = []
-        for geom_type in geom_types:
-            gtype = self.types.get(geom_type)
-            if gtype is not None and gtype not in types:
-                types.append(self.types[geom_type])
-        return ','.join(types)
