@@ -1,6 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import Checkbox from 'material-ui/Checkbox';
-import ContentCreate from 'material-ui/svg-icons/content/create';
+import AlertError from 'material-ui/svg-icons/alert/error';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 
 export class StatusFilter extends Component {
@@ -28,16 +28,6 @@ export class StatusFilter extends Component {
                     <p style={{width: '60px', height: '29px', margin: '0px'}}/>
                     
                     <Checkbox
-                        label={'Incomplete'}
-                        style={{width: '100px', float: 'left'}}
-                        iconStyle={{fill: 'grey', marginRight: '5px'}}
-                        labelStyle={{color: 'grey'}}
-                        onCheck={(e, v)=> {this.props.onChange({incomplete: v})}}
-                        checked={this.props.incomplete}
-                    />
-                    <ContentCreate style={{float: 'right', marginLeft: '20px', fill: '#f4D225', height: '26px', marginBottom: '2px'}}/>
-                    
-                    <Checkbox
                         label={'Running'}
                         style={{width: '100px', float: 'left'}}
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
@@ -46,6 +36,16 @@ export class StatusFilter extends Component {
                         checked={this.props.running}
                     />
                     <NotificationSync style={{float: 'right', marginLeft: '20px', fill: '#f4D225', height: '26px', marginBottom: '2px'}}/>
+
+                    <Checkbox
+                        label={'Error'}
+                        style={{width: '100px', float: 'left'}}
+                        iconStyle={{fill: 'grey', marginRight: '5px'}}
+                        labelStyle={{color: 'grey'}}
+                        onCheck={(e, v)=> {this.props.onChange({incomplete: v})}}
+                        checked={this.props.incomplete}
+                    />
+                    <AlertError style={{float: 'right', marginLeft: '20px', fill: '#ce4427', height: '21px', marginBottom: '4px', marginTop: '4px', opacity: '0.6'}}/>
                 </div>
             </div>
         )
