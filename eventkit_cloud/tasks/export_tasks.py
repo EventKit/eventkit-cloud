@@ -685,6 +685,8 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             if include_files:
                 zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
+            qgis_project_task.run(task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None)
+
         finalize_run_task.si(
             run_uid=run_uid,
             stage_dir=run_dir
