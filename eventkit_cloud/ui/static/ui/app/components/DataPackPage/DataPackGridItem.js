@@ -13,7 +13,7 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import AlertError from 'material-ui/svg-icons/alert/error';
 
-export class DataPackItem extends Component {
+export class DataPackGridItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -206,10 +206,10 @@ export class DataPackItem extends Component {
     }
 }
 
-DataPackItem.propTypes = {
+DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired
 };
 
-export default DataPackItem;
+export default DataPackGridItem;

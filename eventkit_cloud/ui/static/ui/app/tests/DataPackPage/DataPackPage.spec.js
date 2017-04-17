@@ -12,7 +12,7 @@ import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
-import DataPackList from '../../components/DataPackPage/DataPackList';
+import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
@@ -70,7 +70,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(PermissionFilter)).to.have.length(1);
         expect(wrapper.find(StatusFilter)).to.have.length(1);
         expect(wrapper.find(DateFilter)).to.have.length(1);
-        expect(wrapper.find(DataPackList)).to.have.length(1);
+        expect(wrapper.find(DataPackGrid)).to.have.length(1);
     });
 
     it('should call getRuns when mounting', () => {

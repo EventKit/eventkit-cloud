@@ -49,7 +49,6 @@ export class DataPackViewButtons extends React.Component {
         return (
             <div>
                 <IconButton
-                    tooltip={"Grid View"}
                     onClick={this.props.handleGridSelect}
                     style={styles.button}
                     iconStyle={styles.icon}
@@ -57,7 +56,6 @@ export class DataPackViewButtons extends React.Component {
                     <ActionViewModule />
                 </IconButton>
                 <IconButton
-                    tooltip={"List View"}
                     onClick={this.props.handleListSelect}
                     style={styles.button}
                     iconStyle={styles.icon}

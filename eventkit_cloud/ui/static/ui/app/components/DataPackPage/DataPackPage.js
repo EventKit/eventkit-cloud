@@ -8,6 +8,7 @@ import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
+import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
@@ -34,6 +35,7 @@ export class DataPackPage extends React.Component {
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
         this.applyAll = this.applyAll.bind(this);
+        this.toggleView = this.toggleView.bind(this);
         this.state = {
             open: window.innerWidth > 991 ? true : false,
             runs: [],
@@ -54,6 +56,7 @@ export class DataPackPage extends React.Component {
                 running: false,
             },
             filtersApplied: false,
+            grid: true,
         }
     }
 
@@ -209,6 +212,10 @@ export class DataPackPage extends React.Component {
         this.forceUpdate();
     }
 
+    toggleView() {
+        this.setState({grid: !this.state.grid});
+    }
+
     render() { 
         const pageTitle = "DataPack Library"
         const styles = {
@@ -266,7 +273,7 @@ export class DataPackPage extends React.Component {
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} />
                         <DataPackFilterButton open={this.state.open} handleToggle={this.handleToggle} />
                         <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
-                        <DataPackViewButtons handleGridSelect={() => {console.log('grid')}} handleListSelect={() => {console.log('list')}} />
+                        <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
                 </Toolbar>
                 <div style={styles.wholeDiv}>
                     <Drawer 
@@ -295,10 +302,19 @@ export class DataPackPage extends React.Component {
                             maxDate={this.state.maxDate}
                         />
                     </Drawer>
-                    <DataPackList 
-                        runs={this.state.displayedRuns} 
-                        user={this.props.user} 
-                        onRunDelete={this.props.deleteRuns}/>
+                    {this.state.grid ? 
+                        <DataPackGrid 
+                            runs={this.state.displayedRuns} 
+                            user={this.props.user} 
+                            onRunDelete={this.props.deleteRuns}
+                        />
+                    : 
+                        <DataPackList
+                            runs={this.state.displayedRuns}
+                            user={this.props.user}
+                            onRunDelete={this.props.deleteRuns}
+                        />
+                    }
                     <div >
                         {this.props.children}
                     </div>
