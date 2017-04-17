@@ -20,6 +20,8 @@ services:
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
 #        - MEMCACHED=memcached:11211
+        - CONTAINER_CODE_PATH
+        - DEV_MACHINE_CODE_PATH
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'

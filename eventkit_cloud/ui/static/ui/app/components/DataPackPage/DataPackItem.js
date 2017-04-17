@@ -5,7 +5,7 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../../styles/DataPackItem.css';
+import style from '../../styles/DataPackPage.css';
 import ol from 'openlayers';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
@@ -179,10 +179,10 @@ export class DataPackItem extends Component {
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>
-                        {this.props.run.status == "SUBMITTED" || this.props.run.status == "INCOMPLETE" ?
+                        {this.props.run.status == "SUBMITTED" ?
                             <NotificationSync style={styles.runningIcon}/>
                             :
-                            this.props.run.status == "FAILED"  ?
+                            this.props.run.status == "INCOMPLETE" ?
                                 <AlertError style={styles.errorIcon}/>
                                 :
                                 null

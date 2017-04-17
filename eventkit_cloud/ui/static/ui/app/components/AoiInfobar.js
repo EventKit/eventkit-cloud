@@ -6,12 +6,13 @@ import {PopupBox} from './PopupBox.js';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
+import ActionSearch from 'material-ui/svg-icons/action/search';
 
 export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>;
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
 
-const isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 export class AoiInfobar extends Component {
 
@@ -76,7 +77,7 @@ export class AoiInfobar extends Component {
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
                             <button className={styles.simpleButton + ' ' + styles.activeButton} onClick={this.dispatchZoomToSelection}>
-                                <i className={"fa fa-search-plus"}></i> ZOOM TO SELECTION
+                                <ActionSearch style={{fill: '#4498c0', verticalAlign: 'middle'}} className={styles.actionSearch}/> ZOOM TO SELECTION
                             </button>
                         </div>
                         <div className={styles.detailBar}>

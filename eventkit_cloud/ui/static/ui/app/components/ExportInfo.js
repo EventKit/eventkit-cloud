@@ -193,7 +193,8 @@ export class ExportInfo extends React.Component {
     render() {
         const style ={
             underlineStyle: {
-                width: 'calc(100% - 10px)'
+                width: 'calc(100% - 10px)',
+                left: '5px'
             },
             window: {
                 height: window.innerHeight - 180
@@ -208,38 +209,41 @@ export class ExportInfo extends React.Component {
                     <Paper className={styles.paper} zDepth={2} rounded>
 
                 <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                    <div className={styles.fieldWrapper}>
-                        <TextField name="exportName"
-                                   ref="exportName"
-                               underlineStyle={style.underlineStyle}
-                               underlineFocusStyle={style.underlineStyle}
-                               onChange={this.onChange}
-                               defaultValue={this.props.exportInfo.exportName}
-                               hintText="Datapack Name"
-                               className={styles.textField}
-                               />
-                    </div>
-                    <div className={styles.fieldWrapperLarge}>
-                        <TextField
-                            underlineStyle={style.underlineStyle}
-                            underlineFocusStyle={style.underlineStyle}
-                            name="datapackDescription"
-                            onChange={this.onChange}
-                            defaultValue={this.props.exportInfo.datapackDescription}
-                            hintText="Description"
-                            multiLine={true}
-                            rows={2}/>
-                    </div>
-                    <div className={styles.fieldWrapper}>
-                        <TextField
-                            underlineStyle={style.underlineStyle}
-                            underlineFocusStyle={style.underlineStyle}
-                            name="projectName"
-                            onChange={this.onChange}
-                            defaultValue={this.props.exportInfo.projectName}
-                            hintText="Project Name"
-                            className={styles.textField}/>
-                    </div>
+                    <TextField name="exportName"
+                        ref="exportName"
+                        underlineStyle={style.underlineStyle}
+                        underlineFocusStyle={style.underlineStyle}
+                        onChange={this.onChange}
+                        defaultValue={this.props.exportInfo.exportName}
+                        hintText="Datapack Name"
+                        style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                        inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                    />
+                    <TextField
+                        underlineStyle={style.underlineStyle}
+                        underlineFocusStyle={style.underlineStyle}
+                        name="datapackDescription"
+                        onChange={this.onChange}
+                        defaultValue={this.props.exportInfo.datapackDescription}
+                        hintText="Description"
+                        multiLine={true}
+                        rows={2}
+                        style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
+                        textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                    />
+                    <TextField
+                        underlineStyle={style.underlineStyle}
+                        underlineFocusStyle={style.underlineStyle}
+                        name="projectName"
+                        onChange={this.onChange}
+                        defaultValue={this.props.exportInfo.projectName}
+                        hintText="Project Name"
+                        style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                        inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                    />
                     <div className={styles.checkbox}>
                         <Checkbox
                             name="makePublic"
