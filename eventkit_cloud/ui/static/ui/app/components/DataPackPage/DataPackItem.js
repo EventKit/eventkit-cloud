@@ -179,10 +179,10 @@ export class DataPackItem extends Component {
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>
-                        {this.props.run.status == "SUBMITTED" || this.props.run.status == "INCOMPLETE" ?
+                        {this.props.run.status == "SUBMITTED" ?
                             <NotificationSync style={styles.runningIcon}/>
                             :
-                            this.props.run.status == "FAILED"  ?
+                            this.props.run.status == "INCOMPLETE" ?
                                 <AlertError style={styles.errorIcon}/>
                                 :
                                 null
