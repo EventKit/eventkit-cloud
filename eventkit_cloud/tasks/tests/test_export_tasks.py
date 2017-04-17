@@ -399,20 +399,20 @@ class TestExportTasks(ExportTaskBase):
         provider_slug = 'example_provider'
         bbox = [-1, -1, 1, 1]
         mock_timezone.now.return_value = datetime.datetime(2017, 1, 2, 3, 4, 5)
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name, '20170102'))
+        download_dir = os.path.join(settings.EXPORT_DOWNLOAD_ROOT, str(self.run.uid))
+
+        style_file = os.path.join(download_dir, '{0}-osm-{1}.qgs'.format(job_name, '20170102'))
         expected_output_path = style_file
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=qgis_project_task.name)
-        result = qgis_project_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                            job_name=job_name, provider_slug=provider_slug, bbox=bbox)
+        result = qgis_project_task.run(run_uid=self.run.uid)
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
-        run_task = ExportTask.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(run_task)
-        self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+        #run_task = ExportTask.objects.get(celery_uid=celery_uid)
+        #self.assertIsNotNone(run_task)
+        #self.assertEquals(TaskStates.RUNNING.value, run_task.status)
         mock_open.assert_called_once_with(style_file, 'w')
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')

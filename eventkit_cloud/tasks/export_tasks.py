@@ -315,35 +315,6 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     result['geopackage'] = gpkg
     return result
 
-
-@app.task(name="Create QGIS Project File", bind=True, base=ExportTask, abort_on_error=False)
-def qgis_project_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
-    """
-    Task to create QGIS Project File (including styles for thematic osm).
-    """
-    self.update_task_state(result=result, task_uid=task_uid)
-    input_gpkg = parse_result(result, 'geopackage')
-
-    gpkg_file = '{0}-{1}-{2}.gpkg'.format(job_name,
-                                          provider_slug,
-                                          timezone.now().strftime('%Y%m%d'))
-    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
-
-    with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Project.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'bbox': bbox}))
-    result['result'] = style_file
-    result['geopackage'] = input_gpkg
-    return result
-
-
 @app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
 def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
@@ -634,6 +605,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
     from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
 
+    # Check if this is the last Task in the chain
     run_finished = False
     with transaction.atomic():
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
@@ -660,6 +632,10 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     if run_finished:
         run = ExportRun.objects.get(uid=run_uid)
 
+        qgis_project_task.run(run_uid=run.uid)
+
+        include_files = None
+
         if run.job.include_zipfile:
             # To prepare for the zipfile task, the files need to be checked to ensure they weren't
             # deleted during cancellation.
@@ -685,8 +661,6 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             if include_files:
                 zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
-            qgis_project_task.run(task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None)
-
         finalize_run_task.si(
             run_uid=run_uid,
             stage_dir=run_dir
@@ -696,8 +670,47 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             queue=worker,
             routing_key=worker,
             priority=TaskPriority.FINALIZE_RUN.value)
+
+
     else:
         return result
+
+
+@app.task(name="Create QGIS Project File", bind=True, base=ExportTask, abort_on_error=False)
+def qgis_project_task(self, result={}, run_uid=None):
+    """
+    Task to create QGIS Project File
+    """
+
+    # self.update_task_state(result=result, task_uid=task_uid)
+    # input_gpkg = parse_result(result, 'geopackage')
+
+    from eventkit_cloud.tasks.models import ExportRun
+    run = ExportRun.objects.get(uid=run_uid)
+
+    osm_gpkg_file = ""
+    for export_provider_task in run.provider_tasks.all():
+        if export_provider_task.name == "OpenStreetMap Data (Themes)":
+            osm_gpkg_file = '{0}-{1}-{2}.gpkg'.format(run.job.name.lower(),
+                                                  "osm",
+                                                  timezone.now().strftime('%Y%m%d'))
+
+    downloads_dir = os.path.join(settings.EXPORT_DOWNLOAD_ROOT, str(run.uid))
+    style_file = os.path.join(downloads_dir, '{0}-osm-{1}.qgs'.format(run.job.name.lower(),
+                                                                  timezone.now().strftime("%Y%m%d")))
+    with open(style_file, 'w') as open_file:
+        open_file.write(render_to_string('styles/Project.qgs', context={'gpkg_filename': osm_gpkg_file,
+                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(run.job.name.lower(),
+                                                                                                              timezone.now().strftime(
+                                                                                                                  "%Y%m%d")),
+                                                                      'layer_id_date_time': '{0}'.format(
+                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
+                                                                          :-3]),
+                                                                      'bbox': run.job.extents}))
+    result['result'] = style_file
+    result['geopackage'] = osm_gpkg_file
+    return result
+
 
 
 @app.task(name='Zip File Export', base=LockingTask)
@@ -799,8 +812,10 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     from eventkit_cloud.tasks.models import ExportRun
 
     run = ExportRun.objects.get(uid=run_uid)
+
     if run.job.include_zipfile and not run.zipfile_url:
         logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
+
     run.status = TaskStates.COMPLETED.value
     provider_tasks = run.provider_tasks.all()
     # mark run as incomplete if any tasks fail
