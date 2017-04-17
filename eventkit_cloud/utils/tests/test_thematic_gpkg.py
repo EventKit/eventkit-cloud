@@ -10,7 +10,7 @@ from django.test import TestCase
 import uuid
 
 import eventkit_cloud.jobs.presets as presets
-from eventkit_cloud.jobs.models import Job, Tag
+from eventkit_cloud.jobs.models import Job, DatamodelPreset
 
 from ..thematic_gpkg import ThematicGPKG
 
@@ -18,20 +18,22 @@ logger = logging.getLogger(__name__)
 
 
 class TestThematicGPKG(TestCase):
+    fixtures = ('datamodel_presets.json',)
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-        self.tags = parser.parse()
+
+        preset = DatamodelPreset.objects.get(name='hdm')
+        self.tags = preset.json_tags
+
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
+
         self.job = Job.objects.create(name='TestJob', description='Test description',
-                                      event='Nepal activation', user=self.user, the_geom=the_geom)
-        for entry in self.tags:
-            Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                     geom_types=entry['geom_types'], data_model='PRESET', job=self.job)
+                                      event='Nepal activation', user=self.user, the_geom=the_geom,
+                                      json_tags=preset.json_tags)
 
     @patch('os.remove')
     @patch('__builtin__.open')
@@ -44,14 +46,12 @@ class TestThematicGPKG(TestCase):
         stage_dir = '/test/path'
         job_name = 'test_thematic_gpkg'
         sql_file_name = 'thematic_spatial_index.sql'
-        expected_out = os.path.join(stage_dir,'{0}.gpkg'.format(job_name))
+        expected_out = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
         expected_call = 'spatialite {0} < {1}'.format(expected_out, os.path.join(stage_dir, sql_file_name))
         exists.return_value = True
-        conn = Mock()
+        conn = MagicMock()
         connect.return_value = conn
-        cur = MagicMock()
-        conn.cursor = cur
-        cur.execute = MagicMock()
+        conn.execute = MagicMock()
         tags = self.job.categorised_tags
         generated_task_uid = uuid.uuid4()
 
@@ -69,7 +69,6 @@ class TestThematicGPKG(TestCase):
         exists.assert_has_calls([call(gpkg), call(os.path.join(stage_dir, '{0}.gpkg'.format(job_name)))])
         task_process.assert_called_with(task_uid=generated_task_uid)
         task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
-        connect.assert_called_once()
         conn.enable_load_extension.assert_called_once_with(True)
         mock_open.assert_called_once_with(os.path.join(stage_dir, sql_file_name), 'w+')
         remove.assert_called_once_with(os.path.join(stage_dir, sql_file_name))

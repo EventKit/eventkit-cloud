@@ -11,14 +11,18 @@
 
     <style>
       body {
-        background-image: url('./images/ek_topo_pattern.png');
-        min-width: 380px;
         overflow: hidden;
+        min-width: 380px;
+      }
+
+      ::-webkit-scrollbar { 
+          display: none; 
       }
 
       .ol-scale-line {
         background: rgba(0,0,0,0);
       }
+
       .ol-attribution.ol-uncollapsible {
         bottom: 10px;
         left: 10px;
@@ -50,7 +54,7 @@
   <body>
 
     <div id='root'></div>
-
+    <script src="build/vendor.bundle.js"></script>
     <script src="build/bundle.js"></script>
 
   </body>

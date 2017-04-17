@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 import logging
 import yaml as real_yaml
-from mock import Mock, patch
+from mock import Mock, patch, MagicMock
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
-from ..external_service import ExternalRasterServiceToGeopackage, create_conf_from_url, check_service
-from mapproxy.config.config import base_config
-from mapproxy.seed.config import SeedConfigurationError
+from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
+                                 check_service, get_cache_template, CustomLogger )
+from mapproxy.config.config import load_default_config
 from uuid import uuid4
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
-
 class TestGeopackage(TransactionTestCase):
+
     def setUp(self, ):
         self.path = settings.ABS_PATH()
-        self.task_process_patcher = patch('eventkit_cloud.utils.external_service.TaskProcess')
+        self.task_process_patcher = patch('eventkit_cloud.tasks.task_process.TaskProcess')
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
@@ -37,8 +38,6 @@ class TestGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
-
-
     @patch('eventkit_cloud.utils.external_service.check_service')
     @patch('eventkit_cloud.utils.external_service.yaml')
     @patch('eventkit_cloud.utils.external_service.NamedTemporaryFile')
@@ -56,7 +55,7 @@ class TestGeopackage(TransactionTestCase):
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
     @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
+    @patch('eventkit_cloud.utils.geopackage.remove_empty_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.connections')
     @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
     @patch('eventkit_cloud.utils.external_service.seeder')
@@ -67,8 +66,8 @@ class TestGeopackage(TransactionTestCase):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
-        mapproxy_base = base_config()
-        cache_template.return_value = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
+        mapproxy_config = load_default_config()
+        cache_template.return_value = {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}
         seed_template.return_value = {'coverages': {'geom': {'srs': 'EPSG:4326', 'bbox': [-2, -2, 2, 2]}}, 'seeds': {'seed': {'coverages': ['geom'], 'refresh_before': {'minutes': 0}, 'levels': {'to': 10, 'from': 0}, 'caches': ['cache']}}}
         self.task_process.return_value = Mock(exitcode=0)
         w2g = ExternalRasterServiceToGeopackage(config=config,
@@ -93,7 +92,7 @@ class TestGeopackage(TransactionTestCase):
         json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
 
         check_service.assert_called_once_with(json_config)
-        load_config.assert_called_once_with(mapproxy_base, config_dict=json_config)
+        load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         seed_template.assert_called_once_with(bbox=[-2, -2, 2, 2], coverage_file=None, level_from=0, level_to=10)
         self.task_process.side_effect = Exception()
@@ -125,3 +124,40 @@ class TestHelpers(TransactionTestCase):
         with self.assertRaisesMessage(Exception, "The provider reported a server error."):
             check_service(conf_dict)
 
+    def get_cache_template(self):
+        example_geopackage = '/test/example.gpkg'
+        example_sources = ['raster_source']
+        example_grids = ['raster_grid']
+
+        cache_template = get_cache_template(example_sources, example_grids, example_geopackage)
+
+        expected_template = {"cache": {
+            "sources": example_sources,
+            "meta_size": [1, 1],
+            "cache": {
+                "type": "geopackage",
+                "filename": str(example_geopackage),
+            },
+            "grids": example_grids,
+            "format": "mixed",
+            "request_format": "image/png"}}
+
+        self.assertEqual(cache_template, expected_template)
+
+
+class TestLogger(TransactionTestCase):
+
+    @patch('eventkit_cloud.tasks.export_tasks.update_progress')
+    def test_log_step(self, mock_update_progress):
+
+        test_task_uid = "1234"
+        test_timestamp = 1490641718
+        test_progress = 0.42
+        custom_logger = CustomLogger(task_uid=test_task_uid)
+        custom_logger.log_step_counter = 0
+        self.assertIsNotNone(custom_logger)
+        mock_progress = MagicMock()
+        mock_progress.progress = test_progress
+        mock_progress.eta.eta.return_value = test_timestamp
+        custom_logger.log_step(mock_progress)
+        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100, estimated_finish=datetime.utcfromtimestamp(float(test_timestamp)))

@@ -6,10 +6,17 @@
 
     .geometryIcon {
         font-size: 38px;
+        width: 38px !important;
+        height: 38px !important;
     }
 
     .aoiInfobar {
         width: 80%;
+    }
+
+    .actionSearch {
+        height: 20px !important;
+        width: 20px !important;
     }
 }
 
@@ -21,6 +28,8 @@
 
     .geometryIcon {
         font-size: 25px;
+        width: 25px !important;
+        height: 25px !important;
     }
 
     .aoiInfobar {
@@ -30,11 +39,20 @@
     .activeButton {
         font-size: 8px;
     }
+
+    .actionSearch {
+        height: 18px !important;
+        width: 18px !important;
+    }
 }
 
 @media screen and (max-width: 400px) {
     .activeButton {
         font-size: 7px;
+    }
+    .actionSearch {
+        height: 16px !important;
+        width: 16px !important;
     }
 }
 
@@ -83,7 +101,7 @@
 }
 
 .geometryIcon {
-    color: grey;
+    color: grey !important;
     padding-left: 8px;
     float: left;
 }

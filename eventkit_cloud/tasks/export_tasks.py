@@ -21,7 +21,6 @@ from celery.result import AsyncResult
 from celery import Task
 from celery.utils.log import get_task_logger
 from ..celery import app, TaskPriority
-from ..jobs.presets import TagParser
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
@@ -578,46 +577,6 @@ def pick_up_run_task(self, result={}, run_uid=None):
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
 
 
-@app.task(name='Generate Preset', bind=True, base=ExportTask)
-def generate_preset_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
-    """
-    Generates a JOSM Preset from the exports selected features.
-    """
-
-    from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.jobs.models import ExportConfig
-    self.update_task_state(result=result, task_uid=task_uid)
-    run = ExportRun.objects.get(uid=run_uid)
-    job = run.job
-    user = job.user
-    feature_save = job.feature_save
-    feature_pub = job.feature_pub
-    # check if we should create a josm preset
-    if feature_save or feature_pub:
-        tags = job.tags.all()
-        tag_parser = TagParser(tags=tags)
-        xml = tag_parser.parse_tags()
-        preset_file = ContentFile(xml)
-        name = job.name
-        filename = job_name + '_preset.xml'
-        content_type = 'application/xml'
-        config = ExportConfig.objects.create(
-            name=name,
-            filename=filename,
-            config_type='PRESET',
-            content_type=content_type,
-            user=user,
-            published=feature_pub
-        )
-        config.upload.save(filename, preset_file)
-
-        output_path = config.upload.path
-        job.configs.clear()
-        job.configs.add(config)
-        result['result'] = output_path
-        return result
-
-
 @app.task(name='Clean Up Failure Task', base=Task)
 def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
@@ -659,7 +618,8 @@ def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None,
             interval=1,
             max_retries=10,
             queue=worker,
-            routing_key=worker)
+            routing_key=worker,
+            priority=TaskPriority.FINALIZE_PROVIDER.value)
     return result
 
 
@@ -725,10 +685,15 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             if include_files:
                 zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
-        finalize_run_task.run(
+        finalize_run_task.si(
             run_uid=run_uid,
-            stage_dir=run_dir,
-        )
+            stage_dir=run_dir
+        ).set(queue=worker, routing_key=worker).apply_async(
+            interval=1,
+            max_retries=10,
+            queue=worker,
+            routing_key=worker,
+            priority=TaskPriority.FINALIZE_RUN.value)
     else:
         return result
 

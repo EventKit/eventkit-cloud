@@ -10,25 +10,44 @@ import css from '../styles/TitleBar.css'
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
 import ClassificationBanner from './ClassificationBanner'
-
+import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
+import ContentAddBox from 'material-ui/svg-icons/content/add-box';
+import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
+import SocialPerson from 'material-ui/svg-icons/social/person';
+import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
+import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
+import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
+const muiTheme = getMuiTheme({
+    datePicker: {
+        selectColor: '#253447',
+    },
+    flatButton: {
+        textColor: '#253447',
+        primaryTextColor: '#253447'
+    },
+});
 
 
 export class Application extends Component {
     constructor(props) {
         super(props);
-        this.state = {open: true}
-        this.state.drawerOpen = true
-
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
+        this.onMenuItemClick = this.onMenuItemClick.bind(this);
+        this.onLogoutClick = this.onLogoutClick.bind(this);
     }
 
-    componentWillMount() {
-        if (window.innerWidth <= 700){
-            this.props.closeDrawer();
-        }
-    }
+    componentWillReceiveProps(nextProps) {
+        // if the user is logged in and the screen is large the drawer should be open
+         if(nextProps.userData != this.props.userData) {
+             if(nextProps.userData != null && window.innerWidth > 991) {
+                 this.props.openDrawer();
+             }
+         }
+    } 
 
     handleToggle() {
         if(this.props.drawerOpen) {
@@ -43,9 +62,19 @@ export class Application extends Component {
         this.props.closeDrawer();
     }
 
+    onMenuItemClick() {
+        if(window.innerWidth <= 991) {
+            this.handleToggle();
+        }
+    }
+
+    onLogoutClick() {
+        this.props.closeDrawer();
+    }
+
     render() {
 
-        const contentStyle = {  transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)' };
+        const contentStyle = {transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)'};
 
         if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
@@ -83,8 +112,8 @@ export class Application extends Component {
         const img = <img style={styles.img} src={logo}/>
 
         return (
-            <MuiThemeProvider>
-                <div className={styles.root}>
+            <MuiThemeProvider muiTheme={muiTheme}>
+                <div style={{backgroundColor: '#000'}}>
                     <ClassificationBanner />
                     <header className="header" style={{height: '95px'}}>
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
@@ -94,16 +123,50 @@ export class Application extends Component {
                             overlayStyle={styles.drawer}
                             docked={true}
                             open={this.props.drawerOpen}
-                            onRequestChange={(open) => this.setState({open})}>
-                        <Subheader inset={false}><span style={{width:'100%'}}><div style={styles.mainMenu}>MAIN MENU</div><div style={{display:'inline-block'}}><a href="#"><i className="fa fa-long-arrow-left fa-lg" style={{color: '#4498c0'}} onTouchTap={this.handleClose.bind(this)} aria-hidden="true"></i></a></div></span></Subheader>
-                        <MenuItem className={css.menuItem} ><IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports"><i className="fa fa-book" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;DataPack Library</IndexLink></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/create" ><i className="fa fa-plus-square" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Create Datapack</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/about" ><i className="fa fa-info-circle" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;About EventKit</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/account" ><i className="fa fa-user" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Account Settings</Link></MenuItem>
-                        <MenuItem className={css.menuItem} ><Link className={css.link} activeClassName={css.active} to="/logout" ><i className="fa fa-sign-out" aria-hidden="true"></i>&nbsp;&nbsp;&nbsp;Log Out</Link></MenuItem>
+                    >
+                        <Subheader inset={false}>
+                            <span style={{width:'100%'}}>
+                                <div style={styles.mainMenu}>MAIN MENU</div>
+                                <div style={{display:'inline-block'}}>
+                                    <a href="#">
+                                        <NavigationArrowBack style={{fill: '4498c0', verticalAlign: 'middle', paddingBottom: '3px'}} onClick={this.handleClose.bind(this)}/>
+                                    </a>
+                                </div>
+                            </span>
+                        </Subheader>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                            <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
+                                <AVLibraryBooks style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;DataPack Library
+                            </IndexLink>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                            <Link className={css.link} activeClassName={css.active} to="/create" >
+                                <ContentAddBox style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Create Datapack
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                            <Link className={css.link} activeClassName={css.active} to="/about" >
+                                <ActionInfoOutline style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;About EventKit
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
+                            <Link className={css.link} activeClassName={css.active} to="/account" >
+                                <SocialPerson style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Account Settings
+                            </Link>
+                        </MenuItem>
+                        <MenuItem className={css.menuItem} onClick={this.onLogoutClick}>
+                            <Link className={css.link} activeClassName={css.active} to="/logout" >
+                                <ActionExitToApp style={{height: '22px', width: '22px'}}/>
+                                &nbsp;&nbsp;&nbsp;Log Out
+                            </Link>
+                        </MenuItem>
                     </Drawer>
                     <div style={contentStyle} className={css.contentStyle}>
-                    {this.props.children}
+                        {this.props.children}
                     </div>
                 </div>
             </MuiThemeProvider>
@@ -111,14 +174,18 @@ export class Application extends Component {
     }
 }
 Application.propTypes = {
-    children: PropTypes.object.isRequired,
+    children: PropTypes.object,
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
+    userDate: PropTypes.object,
+    drawerOpen: PropTypes.bool,
 };
 
 function mapStateToProps(state) {
     return {
         drawerOpen: state.drawerOpen,
+        userData: state.user.data,
+
     }
 }
 

@@ -1,5 +1,5 @@
 import axios from 'axios'
-const isEqual = require('lodash/isEqual');
+import isEqual from 'lodash/isEqual';
 
 
 export function getGeonames(query) {

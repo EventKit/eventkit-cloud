@@ -3,8 +3,12 @@ import React from 'react';
 import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
+import ActionSearch from 'material-ui/svg-icons/action/search';
 
 describe('AoiInfobar component', () => {
+    const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
             aoiInfo: {
@@ -41,14 +45,20 @@ describe('AoiInfobar component', () => {
 
     it('should not display the infobar by default', () => {
         let props = getProps();
-        const wrapper = mount(<AoiInfobar {...props}/>);
+        const wrapper = mount(<AoiInfobar {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(wrapper.find('div')).to.have.length(2);
         expect(wrapper.find('aoiInfobar')).to.have.length(0);
     });
 
     it('should handle aoiInfo update', () => {
         let props = getProps();
-        const wrapper = mount(<AoiInfobar {...props}/>);
+        const wrapper = mount(<AoiInfobar {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         let nextProps = getProps();
         nextProps.aoiInfo.geojson = geojson;
         nextProps.aoiInfo.description = 'fake description';
@@ -62,23 +72,22 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find('.aoiInfoTitle').text()).to.equal('Area Of Interest (AOI)');
         expect(wrapper.find('.simpleButton .activeButton')).to.have.length(1);
         expect(wrapper.find('.simpleButton').first().text()).to.equal(' ZOOM TO SELECTION');
-        // expect(wrapper.find('.simpleButton').last().text()).to.equal(' RESET VIEW');
-        expect(wrapper.find('.fa-search-plus')).to.have.length(1);
-        // expect(wrapper.find('.fa-refresh')).to.have.length(1);
-
+        expect(wrapper.find(ActionSearch)).to.have.length(1);
         expect(wrapper.find('.aoiTitle').text()).to.equal('fake title');
         expect(wrapper.find('.aoiDescription').text()).to.equal('fake description');
-        expect(wrapper.find('.material-icons').first().text()).to.equal('crop_square');
+        expect(wrapper.find(ImageCropSquare)).to.have.length(1);
+        expect(wrapper.find(ImageCropSquare).hasClass('geometryIcon')).to.be.true;
     });
 
     it('clicking on active buttons should execute click functions', () => {
         let props = getProps();
-        const wrapper = mount(<AoiInfobar {...props}/>);
+        const wrapper = mount(<AoiInfobar {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         let nextProps = getProps();
-        // nextProps.clickResetMap = sinon.spy();
         nextProps.clickZoomToSelection = sinon.spy();
         nextProps.zoomToSelection.disabled = false,
-        // nextProps.resetMap.disabled = false,
         nextProps.aoiInfo.geojson = geojson;
         nextProps.aoiInfo.description = 'fake description';
         nextProps.aoiInfo.geomType = 'Polygon';
@@ -86,6 +95,5 @@ describe('AoiInfobar component', () => {
         wrapper.setProps(nextProps);
         wrapper.find('.activeButton').simulate('click');
         expect(nextProps.clickZoomToSelection.calledOnce).to.equal(true);
-        // expect(nextProps.clickResetMap.calledOnce).to.equal(true);
     })
 });

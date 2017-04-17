@@ -6,8 +6,13 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../../styles/DataPackItem.css';
+import style from '../../styles/DataPackPage.css';
 import ol from 'openlayers';
+import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
+import SocialGroup from 'material-ui/svg-icons/social/group';
+import SocialPerson from 'material-ui/svg-icons/social/person';
+import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import AlertError from 'material-ui/svg-icons/alert/error';
 
 export class DataPackItem extends Component {
     constructor(props) {
@@ -135,8 +140,10 @@ export class DataPackItem extends Component {
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
-                                    <IconButton style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}>
-                                        <i className="material-icons" style={{color: '#4598bf'}}>more_vert</i>
+                                    <IconButton 
+                                        style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
+                                        iconStyle={{color: '#4598bf'}}>
+                                        <NavigationMoreVert />
                                     </IconButton>}
                                 anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
@@ -173,11 +180,11 @@ export class DataPackItem extends Component {
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>
-                        {this.props.run.status == "SUBMITTED" || this.props.run.status == "INCOMPLETE" ?
-                            <i className={'material-icons'} style={styles.runningIcon}>sync</i>
+                        {this.props.run.status == "SUBMITTED" ?
+                            <NotificationSync style={styles.runningIcon}/>
                             :
-                            this.props.run.status == "FAILED"  ?
-                                <i className={'material-icons'} style={styles.errorIcon}>error</i>
+                            this.props.run.status == "INCOMPLETE" ?
+                                <AlertError style={styles.errorIcon}/>
                                 :
                                 null
                         }
@@ -187,10 +194,10 @@ export class DataPackItem extends Component {
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
                         {this.props.run.job.published ? 
-                            <i className={'material-icons'} style={styles.publishedIcon}>group</i>
+                            <SocialGroup style={styles.publishedIcon}/>
                             :
                             
-                            <i className={'material-icons'} style={styles.unpublishedIcon}>person</i>
+                            <SocialPerson style={styles.unpublishedIcon}/>
                         }
                         
                     </span>

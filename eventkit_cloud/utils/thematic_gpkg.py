@@ -7,6 +7,7 @@ import shutil
 import sqlite3
 import subprocess
 from ..tasks.task_process import TaskProcess
+from .geopackage import create_table_from_existing
 from string import Template
 from django.conf import settings
 
@@ -90,24 +91,23 @@ class ThematicGPKG(object):
         conn.enable_load_extension(True)
         try:
             cmd = "SELECT load_extension('mod_spatialite')"
-            cur = conn.cursor()
-            cur.execute(cmd)
+            with conn:
+                conn.execute(cmd)
         except sqlite3.OperationalError:
             cmd = "SELECT load_extension('libspatialite')"
-            cur = conn.cursor()
-            cur.execute(cmd)
+            with conn:
+                conn.execute(cmd)
         # get info for gpkg_contents
         try:
             cmd = "SELECT * FROM gpkg_contents LIMIT 1;"
-            select = cur.execute(cmd)
+            with conn:
+                select = conn.execute(cmd)
             insert_data = select.fetchone()
         except sqlite3.OperationalError:
             logger.error('Could not find entry in gpkg contents table')
             raise
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
-        sql_tmpl = Template(
-            'CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, geom FROM $planet_table WHERE $select_clause')
         for layer, spec in self.thematic_spec.iteritems():
             layer_type = layer.split('_')[-1]
             isPoly = layer_type == 'polygons'
@@ -129,78 +129,57 @@ class ThematicGPKG(object):
             params = {'tablename': layer, 'osm_way_id': osm_way_id,
                       'planet_table': spec['table'], 'select_clause': spec['select_clause']}
 
-            # Ensure columns are available to migrate
-            select_temp = Template('select * from $tablename LIMIT 1')
-            sql = select_temp.safe_substitute({'tablename': spec['table']})
-            try:
-                col_cursor = cur.execute(sql)
-            except Exception:
-                logger.error("SQL Execute for: {}, has failed.".format(sql))
-                raise
-            col_names = [description[0] for description in col_cursor.description]
-            temp_columns = []
-            for column in [tag.replace(':', '_') for tag in self.tags[layer_type]]:
-                if column in col_names:
-                    temp_columns += [column]
-            if temp_columns:
-                params['columns'] = ', '.join(temp_columns)
-            else:
-                sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id, geom '
-                                    'FROM $planet_table WHERE $select_clause')
+            create_table_from_existing(self.thematic_gpkg, spec['table'], layer)
+
+            sql_tmpl = Template('INSERT INTO $tablename SELECT * '
+                                'FROM $planet_table WHERE $select_clause')
             sql = sql_tmpl.safe_substitute(params)
             try:
-                cur.execute(sql)
+                with conn:
+                    conn.execute(sql)
             except Exception as e:
                 logger.error("SQL Execute for: {}, has failed.".format(sql))
                 raise e
             geom_type = geom_types[layer_type]
-            conn.commit()
 
             insert_contents_temp = Template(
                 "INSERT INTO gpkg_contents VALUES ('$table_name', 'features', '$identifier', '', '$last_change', '$min_x', '$min_y', '$max_x', '$max_y', '$srs');")
             insert_geom_temp = Template(
                 "INSERT INTO gpkg_geometry_columns VALUES ('$table_name', 'geom', '$geom_type', '$srs', '0', '0');")
             try:
-                insert_contents_cmd = insert_contents_temp.safe_substitute(
-                    {'table_name': layer, 'identifier': layer, 'last_change': insert_data[4], 'min_x': insert_data[5],
-                     'min_y': insert_data[6], 'max_x': insert_data[7], 'max_y': insert_data[8], 'srs': insert_data[9]})
-                cur.execute(insert_contents_cmd)
-                insert_geom_cmd = insert_geom_temp.safe_substitute(
-                    {'table_name': layer, 'geom_type': geom_type, 'srs': insert_data[9]})
-                cur.execute(insert_geom_cmd)
+                with conn:
+                    insert_contents_cmd = insert_contents_temp.safe_substitute(
+                        {'table_name': layer, 'identifier': layer, 'last_change': insert_data[4], 'min_x': insert_data[5],
+                         'min_y': insert_data[6], 'max_x': insert_data[7], 'max_y': insert_data[8], 'srs': insert_data[9]})
+                    conn.execute(insert_contents_cmd)
+                    insert_geom_cmd = insert_geom_temp.safe_substitute(
+                        {'table_name': layer, 'geom_type': geom_type, 'srs': insert_data[9]})
+                    conn.execute(insert_geom_cmd)
             except Exception as e:
                 logger.error("GPKG Contents Insert failed for {}".format(layer))
                 raise e
-            conn.commit()
+        with conn:
+            conn.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_point'")
+            conn.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_line'")
+            conn.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_polygon'")
 
-        cur.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_point'")
-        cur.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_line'")
-        cur.execute("DELETE FROM gpkg_contents WHERE table_name='planet_osm_polygon'")
-        conn.commit()
+            conn.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_point'")
+            conn.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_line'")
+            conn.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_polygon'")
 
-        cur.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_point'")
-        cur.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_line'")
-        cur.execute("DELETE FROM gpkg_geometry_columns WHERE table_name='planet_osm_polygon'")
-        conn.commit()
+            # drop existing spatial indexes
+            conn.execute('DROP TABLE rtree_planet_osm_point_geom')
+            conn.execute('DROP TABLE rtree_planet_osm_line_geom')
+            conn.execute('DROP TABLE rtree_planet_osm_polygon_geom')
 
-        # drop existing spatial indexes
-        cur.execute('DROP TABLE rtree_planet_osm_point_geom')
-        cur.execute('DROP TABLE rtree_planet_osm_line_geom')
-        cur.execute('DROP TABLE rtree_planet_osm_polygon_geom')
-        conn.commit()
+            conn.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_point'")
+            conn.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_line'")
+            conn.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_polygon'")
 
-        cur.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_point'")
-        cur.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_line'")
-        cur.execute("DELETE FROM gpkg_extensions WHERE table_name='planet_osm_polygon'")
-        conn.commit()
-
-        # drop default schema tables
-        cur.execute('DROP TABLE planet_osm_point')
-        cur.execute('DROP TABLE planet_osm_line')
-        cur.execute('DROP TABLE planet_osm_polygon')
-        conn.commit()
-        cur.close()
-        conn.close()
+            # drop default schema tables
+            conn.execute('DROP TABLE planet_osm_point')
+            conn.execute('DROP TABLE planet_osm_line')
+            conn.execute('DROP TABLE planet_osm_polygon')
 
         thematic_spatial_index_file = os.path.join(self.stage_dir, 'thematic_spatial_index.sql')
 

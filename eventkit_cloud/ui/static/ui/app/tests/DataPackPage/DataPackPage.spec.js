@@ -7,6 +7,11 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {DataPackPage} from '../../components/DataPackPage/DataPackPage';
 import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
+import Drawer from 'material-ui/Drawer';
+import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
+import StatusFilter from '../../components/DataPackPage/StatusFilter';
+import DateFilter from '../../components/DataPackPage/DateFilter';
+import FilterHeader from '../../components/DataPackPage/FilterHeader';
 import DataPackList from '../../components/DataPackPage/DataPackList';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
@@ -36,7 +41,8 @@ describe('DataPackPage component', () => {
                 deleting: false,
                 deleted: false,
                 error: null
-            }
+            },
+            drawerOpen: true,
         }
     };
 
@@ -59,6 +65,11 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackFilterButton)).to.have.length(1);
         expect(wrapper.find(DataPackSortDropDown)).to.have.length(1);
         expect(wrapper.find(DataPackViewButtons)).to.have.length(1);
+        expect(wrapper.find(Drawer)).to.have.length(1);
+        expect(wrapper.find(FilterHeader)).to.have.length(1);
+        expect(wrapper.find(PermissionFilter)).to.have.length(1);
+        expect(wrapper.find(StatusFilter)).to.have.length(1);
+        expect(wrapper.find(DateFilter)).to.have.length(1);
         expect(wrapper.find(DataPackList)).to.have.length(1);
     });
 
@@ -93,6 +104,7 @@ describe('DataPackPage component', () => {
         expect(propsSpy.calledOnce).to.be.true;
         expect(stateSpy.calledTwice).to.be.true;
         DataPackPage.prototype.setState.restore();
+        DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
     it('should search "TEST" with handleSearch', () => {
@@ -170,50 +182,16 @@ describe('DataPackPage component', () => {
             {name: 'five', started_at: '2017-03-17'}
         ]});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const applySortsSpy = new sinon.spy(DataPackPage.prototype, 'applySorts');
         const applyFiltersSpy = new sinon.spy(DataPackPage.prototype, 'applyFilters');
         wrapper.instance().checkForEmptySearch('', [], {});
         expect(stateSpy.calledWith({search: {searched: false, searchQuery: ''}})).to.be.true;
+        expect(applySortsSpy.calledWith(wrapper.state().runs));
         expect(applyFiltersSpy.calledWith(wrapper.state().runs));
+        expect(stateSpy.calledWith({displayedRuns: wrapper.state().displayedRuns})).to.be.true;
         DataPackPage.prototype.setState.restore();
+        DataPackPage.prototype.applySorts.restore();
         DataPackPage.prototype.applyFilters.restore();
-    });
-
-    it('applyFilters should modify displayedRuns correctly', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        let runs = [
-            {job: {name: 'one', description: '', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
-            {job: {name: 'two', description: 'key', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
-            {job: {name: 'three', description: '', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
-            {job: {name: 'four-key', description: '', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
-            {job: {name: 'five', description: '', event: 'test-key'}, user: 'admin', started_at: '2017-03-17'},
-            {job: {name: 'six', description: 'key', event: 'test'}, user: 'admin', started_at: '2017-03-15'}
-        ]
-        const sortSpy = new sinon.spy(utils, 'orderNewest');
-
-        wrapper.setState({
-            search: {searched: true, searchQuery: 'key'}, 
-            dropDownValue: 2,
-            sortDropDown: sortSpy
-        });
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        const searchSpy = new sinon.spy(utils, 'search');
-        const dataPackSpy = new sinon.spy(utils, 'myDataPacksOnly');
-        wrapper.instance().applyFilters(runs);
-        expect(searchSpy.calledOnce).to.be.true;
-        expect(dataPackSpy.calledOnce).to.be.true;
-        expect(sortSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledWith(
-            [
-            {job: {name: 'four-key', description: '', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
-            {job: {name: 'five', description: '', event: 'test-key'}, user: 'admin', started_at: '2017-03-17'},
-            {job: {name: 'six', description: 'key', event: 'test'}, user: 'admin', started_at: '2017-03-15'}
-            ]));
-        stateSpy.restore();
-        searchSpy.restore();
-        dataPackSpy.restore();
-        sortSpy.restore();
     });
 
     it('if a run has been deleted it should call getRuns again', () => {
@@ -239,7 +217,7 @@ describe('DataPackPage component', () => {
         wrapper.setState({runs: runs});
         wrapper.setState({displayedRuns: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        const filterSpy = new sinon.spy(utils, 'orderOldest');
+        const sortSpy = new sinon.spy(utils, 'orderOldest');
         wrapper.instance().handleSortChange(event, 1, utils.orderOldest);
         expect(stateSpy.calledWith({dropDownValue: utils.orderOldest}));
         expect(stateSpy.calledWith({displayedRuns: [
@@ -248,12 +226,13 @@ describe('DataPackPage component', () => {
             {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
         ]}));
         stateSpy.restore();
-        filterSpy.restore();
+        sortSpy.restore();
     });
 
-    it('handleDropDownChange should call applyFilters', () => {
+    it('handleOwnerFilter should call applyAll', () => {
         let props = getProps();
         const event = {persist: () => {}};
+        const applySpy = new sinon.spy(DataPackPage.prototype, 'applyAll');
         const wrapper = shallow(<DataPackPage {...props}/>);
         const runs = [
             {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
@@ -262,15 +241,15 @@ describe('DataPackPage component', () => {
         ];
         wrapper.setState({dropDownValue: 2, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        const filterSpy = new sinon.spy();
-        DataPackPage.prototype.applyFilters = filterSpy;
-        wrapper.instance().handleDropDownChange(event, 0, 1,);
-        expect(stateSpy.calledWith({dropDownValue: 1}));
-        expect(filterSpy.calledWith(runs));
+        wrapper.instance().handleOwnerFilter(event, 0, 1,);
+        expect(stateSpy.calledWith({dropDownValue: 1})).to.be.true;
+        expect(applySpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({displayedRuns: runs})).to.be.true;
         stateSpy.restore();
+        applySpy.restore();
     });
 
-    it('handleDropDownChange should call myDataPacksOnly', () => {
+    it('handleOwnerFilter should call myDataPacksOnly', () => {
         let props = getProps();
         const event = {persist: () => {}};
         const wrapper = shallow(<DataPackPage {...props}/>);
@@ -283,12 +262,287 @@ describe('DataPackPage component', () => {
         wrapper.setState({displayedRuns: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const filterSpy = new sinon.spy(utils, 'myDataPacksOnly');
-        wrapper.instance().handleDropDownChange(event, 1, 2);
+        wrapper.instance().handleOwnerFilter(event, 1, 2);
         expect(stateSpy.calledWith({dropDownValue: 2}));
         expect(filterSpy.calledWith(runs, 'admin'));
         expect(stateSpy.calledWith({displayedRuns: [
             {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
             {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
         ]}));
-    })
+        stateSpy.restore();
+        filterSpy.restore();
+    });
+
+    it('applyAll should call search, filter, and sorts', () => {
+        let props = getProps();
+        const searchSpy = new sinon.spy(DataPackPage.prototype, 'applySearch');
+        const filterSpy = new sinon.spy(DataPackPage.prototype, 'applyFilters');
+        const sortSpy = new sinon.spy(DataPackPage.prototype, 'applySorts');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        wrapper.instance().applyAll(runs);
+        expect(searchSpy.calledWith(runs)).to.be.true;
+        expect(filterSpy.calledWith(runs)).to.be.true;
+        expect(sortSpy.calledWith(runs)).to.be.true;
+        searchSpy.restore();
+        filterSpy.restore();
+        sortSpy.restore();
+    });
+
+    it('applySorts should call sortDropDown', () => {
+        let props = getProps();
+        const sortSpy = new sinon.spy(utils, 'orderNewest');
+        const ownerSpy = new sinon.spy(utils, 'myDataPacksOnly');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        const returned_runs = wrapper.instance().applySorts(runs);
+        expect(sortSpy.calledWith(runs)).to.be.true;
+        expect(ownerSpy.called).to.be.false;
+        expect(isEqual(returned_runs, runs)).to.be.true;
+        sortSpy.restore();
+        ownerSpy.restore();
+    });
+
+    it('applySorts should call sortDropDown and myDataPacksOnly', () => {
+        let props = getProps();
+        const sortSpy = new sinon.spy(utils, 'orderNewest');
+        const ownerSpy = new sinon.spy(utils, 'myDataPacksOnly');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        wrapper.setState({dropDownValue: 2});
+        const returned_runs = wrapper.instance().applySorts(runs);
+        expect(ownerSpy.calledWith(runs, 'admin')).to.be.true;
+        expect(sortSpy.calledWith([runs[0], runs[2]])).to.be.true;
+        expect(isEqual(returned_runs, [runs[0], runs[2]])).to.be.true;
+        sortSpy.restore();
+        ownerSpy.restore();
+    });
+
+    it('applySearch should return without doing anything when searched is not true', () => {
+        let props = getProps();
+        const searchSpy = new sinon.spy(utils, 'search');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        const returned_runs = wrapper.instance().applySearch(runs);
+        expect(searchSpy.called).to.be.false;
+        expect(isEqual(returned_runs, runs)).to.be.true;
+        searchSpy.restore();
+    });
+
+    it('applySearch should call the search util', () => {
+        let props = getProps();
+        const searchSpy = new sinon.spy(utils, 'search');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        wrapper.setState({search: {searched: true, searchQuery: 'one'}});
+        const returned_runs = wrapper.instance().applySearch(runs);
+        expect(searchSpy.calledWith('one', runs)).to.be.true;
+        expect(returned_runs.length).to.equal(1);
+        expect(returned_runs[0].job.name).to.equal('one');
+        searchSpy.restore();
+    });
+
+    it('applyFilter should call filterPermissions', () => {
+         let props = getProps();
+         const permissionsSpy = new sinon.spy(utils, 'filterPermissions');
+         const statusSpy = new sinon.spy(utils, 'filterStatus');
+         const dateSpy = new sinon.spy(utils, 'filterDate');
+         const wrapper = shallow(<DataPackPage {...props}/>);
+         const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19'},
+         ];
+         wrapper.setState({permissions: 'PRIVATE'});
+         const returned_runs = wrapper.instance().applyFilters(runs);
+         expect(permissionsSpy.calledOnce).to.be.true;
+         expect(statusSpy.called).to.be.false;
+         expect(dateSpy.called).to.be.false;
+         expect(returned_runs.length).to.equal(1);
+         expect(returned_runs[0].job.name).to.equal('three');
+         permissionsSpy.restore();
+         statusSpy.restore();
+         dateSpy.restore();
+    });
+
+    it('applyFilter should call filterStatus', () => {
+         let props = getProps();
+         const permissionsSpy = new sinon.spy(utils, 'filterPermissions');
+         const statusSpy = new sinon.spy(utils, 'filterStatus');
+         const dateSpy = new sinon.spy(utils, 'filterDate');
+         const wrapper = shallow(<DataPackPage {...props}/>);
+         const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+         ];
+         wrapper.setState({status: {completed: true, incomplete: false, running: false}});
+         const returned_runs = wrapper.instance().applyFilters(runs);
+         expect(permissionsSpy.called).to.be.false;
+         expect(statusSpy.calledOnce).to.be.true;
+         expect(dateSpy.called).to.be.false;
+         expect(returned_runs.length).to.equal(1);
+         expect(returned_runs[0].job.name).to.equal('one');
+         permissionsSpy.restore();
+         statusSpy.restore();
+         dateSpy.restore();
+    });
+
+    it('applyFilter should call filterDate', () => {
+         let props = getProps();
+         const permissionsSpy = new sinon.spy(utils, 'filterPermissions');
+         const statusSpy = new sinon.spy(utils, 'filterStatus');
+         const dateSpy = new sinon.spy(utils, 'filterDate');
+         const wrapper = shallow(<DataPackPage {...props}/>);
+         const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+         ];
+         wrapper.setState({minDate: new Date(2017,2,20,23,0)});
+         const returned_runs = wrapper.instance().applyFilters(runs);
+         expect(permissionsSpy.called).to.be.false;
+         expect(statusSpy.called).to.be.false;
+         expect(dateSpy.calledOnce).to.be.true;
+         expect(returned_runs.length).to.equal(1);
+         expect(returned_runs[0].job.name).to.equal('one');
+         permissionsSpy.restore();
+         statusSpy.restore();
+         dateSpy.restore();    
+    });
+
+    it('handleFilterApply should set state and call applyAll', () => {
+        const props = getProps();
+        const applySpy = new sinon.spy(DataPackPage.prototype, 'applyAll');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+        ];
+        wrapper.setState({displayedRuns: runs, runs: runs});
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleFilterApply();
+        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledWith({filtersApplied: true})).to.be.true;
+        expect(applySpy.calledWith(runs)).to.be.true;
+        expect(stateSpy.calledWith({displayedRuns: runs})).to.be.true;
+        stateSpy.restore();
+        applySpy.restore();
+    });
+
+    it('handleFilterClear should setState then re-apply search and sort', () => {
+        const props = getProps();
+        const searchSpy = new sinon.spy(DataPackPage.prototype, 'applySearch');
+        const sortSpy = new sinon.spy(DataPackPage.prototype, 'applySorts');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+        ];
+        wrapper.setState({displayedRuns: runs, runs: runs});
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleFilterClear();
+        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledWith({
+            permissions: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                running: false,
+            },
+            minDate: null,
+            maxDate: null,
+            filtersApplied: false,
+        })).to.be.true;
+        expect(searchSpy.calledWith(runs)).to.be.true;
+        expect(sortSpy.calledWith(runs)).to.be.true;
+        expect(stateSpy.calledWith({displayedRuns: runs}));
+        searchSpy.restore();
+        sortSpy.restore();
+        stateSpy.restore();
+    });
+
+    it('handlePermissionsChange should set state', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handlePermissionsChange(null, 'value');
+        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({permissions: 'value'}));
+        stateSpy.restore();
+    });
+
+    it('handleStatusChange should set state', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleStatusChange({completed: true});
+        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({status: {completed: true, incomplete: false, running: false}})).to.be.true;
+        stateSpy.restore();
+    });
+
+    it('handleMinDate should set state', () => {
+        const props = getProps();
+        const date = new Date(2017,2,30);
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleMinDate(null, date);
+        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({minDate: date}));
+        stateSpy.restore();
+    });
+
+    it('handleMaxDate should set state', () => {
+        const props = getProps();
+        const date = new Date(2017,2,30);
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleMaxDate(null, date);
+        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({maxDate: date}));
+        stateSpy.restore();
+    });
+
+    it('handleToggle should set state', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleToggle();
+        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledWith({open: false}));
+        stateSpy.restore();
+    });
+
+    it('screenSizeUpdate should force the component to update', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const updateSpy = new sinon.spy(DataPackPage.prototype, 'forceUpdate');
+        wrapper.instance().screenSizeUpdate();
+        expect(updateSpy.calledOnce).to.be.true;
+        updateSpy.restore();
+    });
 });
+

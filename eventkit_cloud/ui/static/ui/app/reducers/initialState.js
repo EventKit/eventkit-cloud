@@ -38,7 +38,7 @@ export default {
         import: "DEFAULT",
         search: "DEFAULT",
     },
-    drawerOpen: true,
+    drawerOpen: false,
     runsList: {
         fetching: false,
         fetched: false,

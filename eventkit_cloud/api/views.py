@@ -1,33 +1,35 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+import json
 import logging
 import os
 
 from django.db import transaction
-from django.http import JsonResponse
-from django.utils.translation import ugettext as _
 from django.db.models import Q
+from django.http import JsonResponse
 from django.utils import timezone
+from django.utils.translation import ugettext as _
+
+from eventkit_cloud.jobs import presets
+from eventkit_cloud.jobs.models import (
+    ExportConfig, ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset
+)
+from eventkit_cloud.jobs.presets import PresetParser
+from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.task_factory import create_run
 from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework.decorators import detail_route
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-
-from eventkit_cloud.jobs import presets
-from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, Tag, ExportProvider, ProviderTask
-)
-from eventkit_cloud.jobs.presets import PresetParser
 from serializers import (
     ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
     ExportProviderSerializer
 )
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
-from eventkit_cloud.tasks.task_factory import create_run
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
@@ -35,6 +37,7 @@ from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
 from .validators import validate_bbox_params, validate_search_bbox
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -73,7 +76,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
     serializer_class = JobSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
-    parser_classes = (JSONParser, )
+    parser_classes = (JSONParser,)
     lookup_field = 'uid'
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
@@ -146,7 +149,7 @@ class JobViewSet(viewsets.ModelViewSet):
         Create a Job from the supplied request data.
 
         The request data is validated by *api.serializers.JobSerializer*.
-        Associates the *Job* with required *ExportFormats*, *ExportConfig* and *Tags*
+        Associates the *Job* with required *ExportFormats*, *ExportConfig*
 
         * request: the HTTP request in JSON.
 
@@ -259,7 +262,6 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -306,26 +308,28 @@ class JobViewSet(viewsets.ModelViewSet):
                             """Use the UnfilteredPresetParser."""
                             parser = presets.UnfilteredPresetParser(preset=preset_path)
                             tags_dict = parser.parse()
+                            simplified_tags = []
                             for entry in tags_dict:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   geom_types=entry['geom_types'], data_model='PRESET', job=job)
+                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
+                                simplified_tags.append(tag)
+                            job.json_tags = simplified_tags
+                            job.save()
                         elif tags:
                             """Get tags from request."""
+                            simplified_tags = []
                             for entry in tags:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   job=job, data_model=entry['data_model'],
-                                                   geom_types=entry['geom_types'], groups=entry['groups'])
+                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
+                                simplified_tags.append(tag)
+                            job.json_tags = simplified_tags
+                            job.save()
                         else:
                             """
                             Use hdm preset as default tags if no preset or tags
                             are provided in the request.
                             """
-                            path = os.path.dirname(os.path.realpath(__file__))
-                            parser = presets.PresetParser(preset=path + '/presets/hdm_presets.xml')
-                            tags_dict = parser.parse()
-                            for entry in tags_dict:
-                                Tag.objects.create(name=entry['name'], key=entry['key'], value=entry['value'],
-                                                   geom_types=entry['geom_types'], data_model='HDM', job=job)
+                            hdm_default_tags = DatamodelPreset.objects.get(name='hdm').json_tags
+                            job.json_tags = hdm_default_tags
+                            job.save()
                         # check for translation file
                         if translation:
                             config = ExportConfig.objects.get(uid=translation)
@@ -357,46 +361,43 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
-
-class RunJob(views.APIView):
-    """
-    ##Re-run Export
-
-    Re-runs an export job for the given `job_uid`: `/api/rerun?job_uid=<job_uid>`
-    """
-
-    permission_classes = (permissions.IsAuthenticated,)
-
-    @staticmethod
-    def get(request):
+    @detail_route(methods=['get', 'post'])
+    def run(self, request, uid=None, *args, **kwargs):
         """
-        Re-runs the job.
+        Creates the run (i.e. runs the job).
 
         Gets the job_uid and current user from the request.
         Creates an instance of the TaskFactory and
         calls run_task on it, passing the job_uid and user.
 
-        *request: the http request
+        *request:* the http request
 
-        *Returns:
-            the serialized run data.
+        *Returns:*
+            - the serialized run data.
         """
-        job_uid = request.query_params.get('job_uid', None)
-        if job_uid:
-            # run needs to be created so that the UI can be updated with the task list.
-            run_uid = create_run(job_uid=job_uid)
-            # Run is passed to celery to start the tasks.
-            run = ExportRun.objects.get(uid=run_uid)
-            if run.user != request.user and not request.user.is_superuser:
-                return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
-            if run:
-                pick_up_run_task.delay(run_uid=run_uid)
-                running = ExportRunSerializer(run, context={'request': request})
-                return Response(running.data, status=status.HTTP_202_ACCEPTED)
-            else:
-                return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
+        # run needs to be created so that the UI can be updated with the task list.
+        run_uid = create_run(job_uid=uid)
+        # Run is passed to celery to start the tasks.
+        run = ExportRun.objects.get(uid=run_uid)
+        if run.user != request.user and not request.user.is_superuser:
+            return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
+        if run:
+            pick_up_run_task.delay(run_uid=run_uid)
+            running = ExportRunSerializer(run, context={'request': request})
+            return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
-            return Response([{'detail': _('Export not found')}], status.HTTP_404_NOT_FOUND)
+            return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
+
+
+class PresetViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns the list of PRESET configuration files.
+    """
+    CONFIG_TYPE = 'PRESET'
+    serializer_class = ExportConfigSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
+    lookup_field = 'uid'
 
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
@@ -462,7 +463,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
-    search_fields = ('job__uid', )
+    search_fields = ('job__uid',)
 
     def get_queryset(self):
         return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True)).order_by('-started_at')
@@ -703,3 +704,5 @@ def get_provider_task(export_provider, export_formats):
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
+
+

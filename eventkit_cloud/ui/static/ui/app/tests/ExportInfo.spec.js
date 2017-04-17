@@ -47,8 +47,8 @@ describe('ExportInfo component', () => {
         const props = getProps();
         const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
         expect(wrapper.find('#mainHeading').text()).to.equal('Enter General Information');
-        expect(wrapper.find('.fieldWrapper')).to.have.length(2);
-        expect(wrapper.find('.fieldWrapperLarge')).to.have.length(1);
+        // expect(wrapper.find('.fieldWrapper')).to.have.length(2);
+        // expect(wrapper.find('.fieldWrapperLarge')).to.have.length(1);
         // expect(wrapper.find('#datapackName')).to.have.length(1);
         // expect(wrapper.find('#description')).to.have.length(1);
         // expect(wrapper.find('#projectName')).to.have.length(1);

@@ -1,22 +1,19 @@
 -- create planet_osm_line
 -- add spatial metadata
 -- drop the old line table
-CREATE TABLE planet_osm_point AS SELECT * FROM points;
-DROP TABLE points;
+ALTER TABLE points RENAME TO planet_osm_point;
 UPDATE gpkg_contents SET table_name = "planet_osm_point",identifier = "planet_osm_point" WHERE table_name = "points";
 UPDATE gpkg_geometry_columns SET table_name = "planet_osm_point" WHERE table_name = "points";
 -- create planet_osm_line
 -- add spatial metadata
 -- drop the old line table
-CREATE TABLE planet_osm_line AS SELECT * FROM lines;
-DROP TABLE lines;
+ALTER TABLE lines RENAME TO planet_osm_line;
 UPDATE gpkg_contents SET table_name = "planet_osm_line",identifier = "planet_osm_line" WHERE table_name = "lines";
 UPDATE gpkg_geometry_columns SET table_name = "planet_osm_line" WHERE table_name = "lines";
 -- create planet_osm_line
 -- add spatial metadata
 -- drop the old line table
-CREATE TABLE planet_osm_polygon AS SELECT * FROM multipolygons;
-DROP TABLE multipolygons;
+ALTER TABLE multipolygons RENAME TO planet_osm_polygon;
 UPDATE gpkg_contents SET table_name = "planet_osm_polygon", identifier = "planet_osm_polygon" WHERE table_name = "multipolygons";
 UPDATE gpkg_geometry_columns SET table_name = "planet_osm_polygon" WHERE table_name = "multipolygons";
 -- drop other tables created by ogr -- for now!
