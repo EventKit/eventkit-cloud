@@ -23,7 +23,7 @@ export class DataPackList extends Component {
                 justifyContent: 'space-around',
                 marginLeft: '5px',
                 marginRight: '5px',
-                paddingBottom: '30px'
+                paddingBottom: '10px'
             },
             headerColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center',},
             rowColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center'},
@@ -36,7 +36,7 @@ export class DataPackList extends Component {
 
         return (
             <div style={styles.root}>
-            {window.innerWidth < 992 ?
+            {window.innerWidth < 768 ?
                 <GridList
                     cellHeight={'auto'}
                     cols={1}
@@ -52,16 +52,16 @@ export class DataPackList extends Component {
                     ))}
                 </GridList>
             :
-                <Table selectable={false}>
-                    <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
-                        <TableRow style={{marginLeft: '12px', paddingRight: '6px'}}>
-                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>Name<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>Event<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '98px', padding: '0px 0px 0px 10px',textAlign: 'left',}}>Date Addded<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '65px' ,padding: '0px 0px 0px 10px',textAlign: 'center',}}>Status<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '100px', padding: '0px 0px 0px 10px',textAlign: 'center',}}>Permissions<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px',textAlign: 'left',}}>Owner<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px', width: '30px'}}></TableHeaderColumn>
+                <Table height={`${window.innerHeight - 297}px`} selectable={false}>
+                    <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
+                        <TableRow style={{marginLeft: '12px', paddingRight: '6px', color: '#fff', height: '50px'}}>
+                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>Name<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>Event<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>Date Addded<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{width: '65px' ,padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'}}>Status<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'}}>Permissions<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>Owner<NavigationArrowDropDown style={styles.dropDownArrow}/></TableHeaderColumn>
+                            <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}></TableHeaderColumn>
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>

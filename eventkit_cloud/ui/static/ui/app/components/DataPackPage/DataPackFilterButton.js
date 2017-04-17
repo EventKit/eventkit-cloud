@@ -67,12 +67,7 @@ export class DataPackFilterButton extends React.Component {
                 label={"Filter"}
                 labelPosition={"after"}
                 labelStyle={styles.label}
-                icon={
-                this.props.open ? 
-                    <NavigationArrowDropDown style={styles.icon}/> 
-                :
-                    <NavigationArrowDropUp style={styles.icon}/>
-                }
+                
                 hoverColor={'#253447'}
                 disableTouchRipple={true}
                 onClick={this.props.handleToggle}

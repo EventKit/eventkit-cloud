@@ -37,7 +37,7 @@ export class DataPackPage extends React.Component {
         this.applyAll = this.applyAll.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.state = {
-            open: window.innerWidth > 991 ? true : false,
+            open: window.innerWidth >= 1200 ? true : false,
             runs: [],
             displayedRuns: [],
             dropDownValue: 1,
@@ -158,7 +158,7 @@ export class DataPackPage extends React.Component {
     }
 
     handleFilterApply = () => {
-        if(window.innerWidth <= 991) {
+        if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
         this.setState({filtersApplied: true});
@@ -178,7 +178,7 @@ export class DataPackPage extends React.Component {
             maxDate: null,
             filtersApplied: false,
         });
-        if(window.innerWidth <= 991) {
+        if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
         let runs = this.applySearch(this.state.runs);
@@ -223,7 +223,7 @@ export class DataPackPage extends React.Component {
                 height: window.innerHeight - 221,
                 overflowY: 'auto',
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && window.innerWidth > 991 ? '200px' : '0px',
+                marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 paddingTop: '10px',
             },
             appBar: {

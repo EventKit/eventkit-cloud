@@ -1,4 +1,5 @@
 import React, {PropTypes, Component} from 'react'
+import {Link} from 'react-router';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
 import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton';
@@ -9,6 +10,7 @@ import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
 
 export class DataPackListItem extends Component {
@@ -66,9 +68,9 @@ export class DataPackListItem extends Component {
             subtitleHeight = '20px';
         }
         else {
-            titleFontSize = '27px';
-            subtitleFontSize = '18px';
-            subtitleHeight = '24px';
+            titleFontSize = '25px';
+            subtitleFontSize = '16px';
+            subtitleHeight = '22px';
         }
 
         const styles = {
@@ -82,6 +84,7 @@ export class DataPackListItem extends Component {
                 wordWrap: 'break-word',
                 padding: '10px 15px',
             },
+            completeIcon: {height: subtitleHeight, float: 'right', color: '#bcdfbb', opacity: '0.6'},
             errorIcon: {height: subtitleHeight, float: 'right', color: '#ce4427', opacity: '0.6'},
             runningIcon: {height: subtitleHeight, float: 'right', color: '#f4D225'},
             unpublishedIcon: {height: subtitleHeight, float: 'right', color: 'grey', marginRight: '5px'},
@@ -98,7 +101,11 @@ export class DataPackListItem extends Component {
                     subtitleStyle={{fontSize: subtitleFontSize}}
                     title={
                         <div>
-                            <span>{this.props.run.job.name}</span>
+                            <span>
+                                <Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>
+                                    {this.props.run.job.name}
+                                </Link>
+                            </span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
@@ -148,7 +155,7 @@ export class DataPackListItem extends Component {
                                     this.props.run.status == "INCOMPLETE"  ?
                                         <AlertError style={styles.errorIcon}/>
                                         :
-                                        null
+                                        <NavigationCheck style={styles.completeIcon}/>
                                 }
                             </div>
                         </div>
