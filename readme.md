@@ -50,6 +50,10 @@ AWS_SECRET_KEY='my-secret-key'</pre>
 To use your own database connection string add:
 <pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
 
+To reset the database:
+<pre>docker volume rm eventkitcloud_postgis_database</pre>
+<pre>docker-compose run --rm eventkit python manage.py runinitial setup</pre>
+
 #### Broker URL
 To specify which RabbitMQ instance to use add:
 <pre>BROKER_URL='amqp://guest:guest@rabbitmq:5672/'</pre>
@@ -62,6 +66,10 @@ EMAIL_HOST_PASSWORD='email-password'</pre>
 #### Overpass API
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
+
+### Tests
+To run tests:
+<pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
 
 ## Export Directories
 If you need to change where export files are staged or downloaded you can add:

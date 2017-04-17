@@ -38,7 +38,7 @@ class TestJobViewSet(APITestCase):
         self.config = None
         self.tags = None
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user(
@@ -102,15 +102,15 @@ class TestJobViewSet(APITestCase):
             }
         ]
 
-    def tearDown(self, ):
+    def tearDown(self,):
         self.config.delete()  # clean up
 
-    def test_list(self, ):
+    def test_list(self,):
         expected = '/api/jobs'
         url = reverse('api:jobs-list')
         self.assertEquals(expected, url)
 
-    def test_make_job_with_export_providers(self, ):
+    def test_make_job_with_export_providers(self,):
         """tests job creation with export providers"""
         export_providers = ExportProvider.objects.all()
         export_providers_start_len = len(export_providers)
@@ -143,7 +143,7 @@ class TestJobViewSet(APITestCase):
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
-    def test_get_job_detail(self, ):
+    def test_get_job_detail(self,):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEquals(expected, url)
@@ -171,7 +171,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
-    def test_get_job_detail_no_permissions(self, ):
+    def test_get_job_detail_no_permissions(self,):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
         )
@@ -193,7 +193,7 @@ class TestJobViewSet(APITestCase):
         # test significant content
         self.assertEquals(response.data, {'detail': 'Not found.'})
 
-    def test_delete_job(self, ):
+    def test_delete_job(self,):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
@@ -217,6 +217,8 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
+        msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
+        self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
 
         job = Job.objects.get(uid=job_uid)
@@ -262,9 +264,8 @@ class TestJobViewSet(APITestCase):
 
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
-        tags = job.tags.all()
-        self.assertIsNotNone(tags)
-        self.assertEquals(233, len(tags))
+        self.assertIsNotNone(job.json_tags)
+        self.assertEqual(233, len(job.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -310,8 +311,7 @@ class TestJobViewSet(APITestCase):
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
-        # delete the existing tags and test adding them with json
-        self.job.tags.all().delete()
+
         # config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -346,7 +346,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['description'], request_data['description'])
 
 
-    def test_invalid_selection(self, ):
+    def test_invalid_selection(self,):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -362,7 +362,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['no geometry'], response.data['id'])
 
-    def test_empty_string_param(self, ):
+    def test_empty_string_param(self,):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -378,7 +378,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(['This field may not be blank.'], response.data['description'])
 
-    def test_missing_format_param(self, ):
+    def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
@@ -392,7 +392,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals(response.data['provider_tasks'][0]['formats'], ['This field is required.'])
 
-    def test_invalid_format_param(self, ):
+    def test_invalid_format_param(self,):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
@@ -407,7 +407,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data.get('provider_tasks')[0].get('formats'))
 
-    def test_no_matching_format_slug(self, ):
+    def test_no_matching_format_slug(self,):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
@@ -425,7 +425,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response.data['provider_tasks'][0]['formats'],
                           ['Object with slug=broken-format-one does not exist.'])
 
-    def test_extents_too_large(self, ):
+    def test_extents_too_large(self,):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         # job outside any region
@@ -451,14 +451,14 @@ class TestBBoxSearch(APITestCase):
     Test cases for testing bounding box searches.
     """
 
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json')
 
     def __init__(self, *args, **kwargs):
         super(TestBBoxSearch, self).__init__(*args, **kwargs)
         self.user = None
         self.client = None
 
-    def setUp(self, ):
+    def setUp(self,):
         url = reverse('api:jobs-list')
         # create dummy user
         Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -487,11 +487,11 @@ class TestBBoxSearch(APITestCase):
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
-            self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code)
+            self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code, response.content)
         self.assertEquals(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
-    def test_bbox_search_success(self, ):
+    def test_bbox_search_success(self,):
         url = reverse('api:jobs-list')
         extent = (-79.5, -16.16, 7.40, 52.44)
         param = 'bbox={0},{1},{2},{3}'.format(extent[0], extent[1], extent[2], extent[3])
@@ -499,7 +499,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
         self.assertEquals(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_list_jobs_no_bbox(self, ):
+    def test_list_jobs_no_bbox(self,):
         url = reverse('api:jobs-list')
         response = self.client.get(url)
         self.assertEquals(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
@@ -508,7 +508,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(response['Link'], '<http://testserver/api/jobs?page=2>; rel="next"')
         self.assertEquals(2, len(response.data))  # 8 jobs in total but response is paginated
 
-    def test_bbox_search_missing_params(self, ):
+    def test_bbox_search_missing_params(self,):
         url = reverse('api:jobs-list')
         param = 'bbox='  # missing params
         response = self.client.get('{0}?{1}'.format(url, param))
@@ -517,7 +517,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertEquals('missing_bbox_parameter', response.data['id'])
 
-    def test_bbox_missing_coord(self, ):
+    def test_bbox_missing_coord(self,):
         url = reverse('api:jobs-list')
         extent = (-79.5, -16.16, 7.40)  # one missing
         param = 'bbox={0},{1},{2}'.format(extent[0], extent[1], extent[2])
@@ -546,7 +546,7 @@ class TestExportRunViewSet(APITestCase):
         self.export_run = None
         self.run_uid = None
 
-    def setUp(self, ):
+    def setUp(self,):
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         token = Token.objects.create(user=self.user)
@@ -602,7 +602,7 @@ class TestExportRunViewSet(APITestCase):
             )
             get_url.assert_called_with(download_url=self.export_run.zipfile_url)
 
-    def test_retrieve_run(self, ):
+    def test_retrieve_run(self,):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
         url = reverse('api:runs-detail', args=[self.run_uid])
@@ -613,7 +613,7 @@ class TestExportRunViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
 
-    def test_retrieve_run_no_permissions(self, ):
+    def test_retrieve_run_no_permissions(self,):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
         )
@@ -637,7 +637,7 @@ class TestExportRunViewSet(APITestCase):
         # self.assertEquals(response.data, {'detail': 'Not found.'})
         self.assertEquals(response.data, [])
 
-    def test_list_runs(self, ):
+    def test_list_runs(self,):
         expected = '/api/runs'
         url = reverse('api:runs-list')
         self.assertEquals(expected, url)
@@ -649,7 +649,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(1, len(result))
         self.assertEquals(self.run_uid, result[0].get('uid'))
 
-    def test_list_runs_no_permissions(self, ):
+    def test_list_runs_no_permissions(self,):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
         )
@@ -687,7 +687,7 @@ class TestExportConfigViewSet(APITestCase):
         self.uid = None
         self.client = None
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -703,7 +703,7 @@ class TestExportConfigViewSet(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-    def test_create_config(self, ):
+    def test_create_config(self,):
         url = reverse('api:configs-list')
         path = os.path.dirname(os.path.realpath(__file__))
         f = File(open(path + '/files/Example Transform.sql', 'r'))
@@ -720,7 +720,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals('text/plain', saved_config.content_type)
         saved_config.delete()
 
-    def test_delete_no_permissions(self, ):
+    def test_delete_no_permissions(self,):
         """
         Test deletion of configuration when the user has no object permissions.
         """
@@ -756,7 +756,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         saved_config.delete()
 
-    def test_invalid_config_type(self, ):
+    def test_invalid_config_type(self,):
         url = reverse('api:configs-list')
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
@@ -764,7 +764,7 @@ class TestExportConfigViewSet(APITestCase):
         response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='multipart')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_invalid_preset(self, ):
+    def test_invalid_preset(self,):
         url = reverse('api:configs-list')
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/invalid_hdm_presets.xml', 'r')
@@ -773,7 +773,7 @@ class TestExportConfigViewSet(APITestCase):
                                     format='multipart')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_invalid_name(self, ):
+    def test_invalid_name(self,):
         url = reverse('api:configs-list')
         path = os.path.dirname(os.path.realpath(__file__))
         f = open(path + '/files/Example Transform.sql', 'r')
@@ -782,7 +782,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response.data['name'], ['This field is required.'])
 
-    def test_invalid_upload(self, ):
+    def test_invalid_upload(self,):
         url = reverse('api:configs-list')
         response = self.client.post(
             url,
@@ -792,7 +792,7 @@ class TestExportConfigViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     @skip('Transform not implemented.')
-    def test_update_config(self, ):
+    def test_update_config(self,):
         url = reverse('api:configs-list')
         # create an initial config we can then update..
         path = os.path.dirname(os.path.realpath(__file__))
@@ -848,7 +848,7 @@ class TestExportTaskViewSet(APITestCase):
         self.task = None
         self.task_uid = None
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo', is_active=True)
@@ -870,7 +870,7 @@ class TestExportTaskViewSet(APITestCase):
                                               celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 
-    def test_retrieve(self, ):
+    def test_retrieve(self,):
         expected = '/api/tasks/{0}'.format(self.task_uid)
         url = reverse('api:tasks-detail', args=[self.task_uid])
         self.assertEquals(expected, url)
@@ -882,7 +882,7 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
 
-    def test_list(self, ):
+    def test_list(self,):
         expected = '/api/tasks'.format(self.task_uid)
         url = reverse('api:tasks-list')
         self.assertEquals(expected, url)
@@ -896,7 +896,7 @@ class TestExportTaskViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.task_uid, data[0].get('uid'))
 
-    def test_patch_cancel_task(self, ):
+    def test_patch_cancel_task(self,):
         expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
         url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
         self.assertEquals(expected, url)
@@ -911,7 +911,7 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(pt.status, 'CANCELED')
         self.assertEqual(et.status, 'CANCELED')
 
-    def test_patch_cancel_task_no_permissions(self, ):
+    def test_patch_cancel_task_no_permissions(self,):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
         )
@@ -964,7 +964,7 @@ class TestStaticFunctions(APITestCase):
 
         # Assign the type to an arbitrary provider.
         export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
-        # Get a ProviderTask object to ensure that it is only trying to process 
+        # Get a ProviderTask object to ensure that it is only trying to process
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)
         assert len(provider_task.formats.all()) == 1
