@@ -244,17 +244,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         thematic_tasks = (thematic_task | format_tasks) if format_tasks else thematic_task
 
-        bbox = run.job.extents
-        project_task = qgis_project_task.s(task_uid=create_export_task(task_name=qgis_project_task.name,
-                                                                           export_provider_task=export_provider_task,
-                                                                           worker=worker).uid,
-                                               stage_dir=stage_dir,
-                                               job_name=job_name,
-                                               bbox=bbox,
-                                               provider_slug=provider_task.provider.slug).set(queue=worker,
-                                                                                              routing_key=worker)
-
-        return export_provider_task.uid, (thematic_tasks | project_task)
+        return export_provider_task.uid, (thematic_tasks)
 
 
 class ExportWFSTaskRunner(TaskRunner):

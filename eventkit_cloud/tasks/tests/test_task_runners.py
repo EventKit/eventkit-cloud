@@ -89,7 +89,7 @@ class TestExportTaskRunner(TestCase):
         self.assertIsNotNone(run)
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
-        self.assertEquals(3, len(tasks))
+        self.assertEquals(2, len(tasks))
         self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
