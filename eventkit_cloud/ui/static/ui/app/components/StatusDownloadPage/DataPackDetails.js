@@ -71,7 +71,7 @@ class DataPackDetails extends React.Component {
                     <td className={styles.tdData} style={{width:'35%'}}>{provider.name}</td>
                     <td className={styles.tdData} style={{width:'20%'}}>3/3</td>
                     <td className={styles.tdData} style={{width:'20%'}}>00:00:20</td>
-                    <td className={styles.tdData} style={{width:'20%'}}><CloudDownload/></td>
+                    <td className={styles.tdData} style={{width:'20%'}}><CloudDownload style={{color:'#4598bf'}}/></td>
                 </tr>
                 ))}
                 </tbody>
