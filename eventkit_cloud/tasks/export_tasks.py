@@ -316,10 +316,10 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     return result
 
 
-@app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+@app.task(name="Create QGIS Project File", bind=True, base=ExportTask, abort_on_error=False)
+def qgis_project_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
     """
-    Task to create styles for osm.
+    Task to create QGIS Project File (including styles for thematic osm).
     """
     self.update_task_state(result=result, task_uid=task_uid)
     input_gpkg = parse_result(result, 'geopackage')
@@ -331,7 +331,7 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                   timezone.now().strftime("%Y%m%d")))
 
     with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
+        open_file.write(render_to_string('styles/Project.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
                                                                                                               timezone.now().strftime(
                                                                                                                   "%Y%m%d")),
