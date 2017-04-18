@@ -246,7 +246,6 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         return export_provider_task.uid, (thematic_tasks)
 
-
 class ExportWFSTaskRunner(TaskRunner):
     """
     Runs External Service Export Tasks
