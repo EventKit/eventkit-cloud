@@ -399,9 +399,9 @@ class TestExportTasks(ExportTaskBase):
         provider_slug = 'example_provider'
         bbox = [-1, -1, 1, 1]
         mock_timezone.now.return_value = datetime.datetime(2017, 1, 2, 3, 4, 5)
-        download_dir = os.path.join(settings.EXPORT_DOWNLOAD_ROOT, str(self.run.uid))
+        staging_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
 
-        style_file = os.path.join(download_dir, '{0}-osm-{1}.qgs'.format(job_name, '20170102'))
+        style_file = os.path.join(staging_dir, '{0}-osm-{1}.qgs'.format(job_name, '20170102'))
         expected_output_path = style_file
         export_provider_task = ExportProviderTask.objects.create(run=self.run)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,

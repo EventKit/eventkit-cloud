@@ -605,7 +605,6 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
     from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
 
-    # Check if this is the last Task in the chain
     run_finished = False
     with transaction.atomic():
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
@@ -632,7 +631,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     if run_finished:
         run = ExportRun.objects.get(uid=run_uid)
 
-        qgis_project_task.run(run_uid=run.uid)
+        qgs_file = qgis_project_task.run(run_uid=run.uid)['result']
 
         include_files = None
 
@@ -655,6 +654,9 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
                                                                                           export_task.name))
                             continue
                         include_files += [full_file_path]
+
+            include_files += [qgs_file]
+
             # Need to remove duplicates from the list because
             # some intermediate tasks produce files with the same name.
             include_files = list(set(include_files))
@@ -670,8 +672,6 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             queue=worker,
             routing_key=worker,
             priority=TaskPriority.FINALIZE_RUN.value)
-
-
     else:
         return result
 
@@ -681,9 +681,6 @@ def qgis_project_task(self, result={}, run_uid=None):
     """
     Task to create QGIS Project File
     """
-
-    # self.update_task_state(result=result, task_uid=task_uid)
-    # input_gpkg = parse_result(result, 'geopackage')
 
     from eventkit_cloud.tasks.models import ExportRun
     run = ExportRun.objects.get(uid=run_uid)
@@ -695,10 +692,11 @@ def qgis_project_task(self, result={}, run_uid=None):
                                                   "osm",
                                                   timezone.now().strftime('%Y%m%d'))
 
-    downloads_dir = os.path.join(settings.EXPORT_DOWNLOAD_ROOT, str(run.uid))
-    style_file = os.path.join(downloads_dir, '{0}-osm-{1}.qgs'.format(run.job.name.lower(),
-                                                                  timezone.now().strftime("%Y%m%d")))
-    with open(style_file, 'w') as open_file:
+    staging_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run.uid))
+    style_filename = '{0}-osm-{1}.qgs'.format(run.job.name.lower(),
+                                                                  timezone.now().strftime("%Y%m%d"))
+    style_filepath = os.path.join(staging_dir, style_filename)
+    with open(style_filepath, 'w') as open_file:
         open_file.write(render_to_string('styles/Project.qgs', context={'gpkg_filename': osm_gpkg_file,
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(run.job.name.lower(),
                                                                                                               timezone.now().strftime(
@@ -707,7 +705,13 @@ def qgis_project_task(self, result={}, run_uid=None):
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'bbox': run.job.extents}))
-    result['result'] = style_file
+    dl_filepath = os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), str(run.uid))
+    style_dl_filepath = os.path.join(dl_filepath, style_filename)
+    if getattr(settings, "USE_S3", False):
+        style_url = s3.upload_to_s3(run_uid, style_filename, style_filename)
+    else:
+        shutil.copy(style_filepath, style_dl_filepath)
+    result['result'] = style_filepath
     result['geopackage'] = osm_gpkg_file
     return result
 
