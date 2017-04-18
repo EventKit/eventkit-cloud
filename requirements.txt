@@ -3,7 +3,7 @@ appdirs==1.4.1
 Babel==2.3.4
 backports.ssl-match-hostname==3.5.0.1
 beautifulsoup4==4.5.3
-git+git://github.com/ikalnytskyi/billiard@acbcbf57e2dd9b75850af701becd9e51f0bd3833#egg=billiard
+git+git://github.com/celery/billiard@da3e54e4b5bee32569c5128c041637174d5808e5#egg=billiard
 boto3==1.4.4
 botocore==1.5.22
 celery==4.0.2
