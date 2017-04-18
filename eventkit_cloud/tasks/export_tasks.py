@@ -315,33 +315,31 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     result['geopackage'] = gpkg
     return result
 
-@app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
+
+@app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
+def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
-    Task to create styles for osm.
+    Task to export thematic gpkg.
     """
+
+    from eventkit_cloud.tasks.models import ExportRun
     self.update_task_state(result=result, task_uid=task_uid)
+    run = ExportRun.objects.get(uid=run_uid)
+    tags = run.job.categorised_tags
+    if os.path.isfile(os.path.join(stage_dir, '{0}.gpkg'.format(job_name))):
+        result['result'] = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+        return result
+    # This allows the thematic task to be chained with the osm task taking the output as an input here.
     input_gpkg = parse_result(result, 'geopackage')
-
-    gpkg_file = '{0}-{1}-{2}.gpkg'.format(job_name,
-                                          provider_slug,
-                                          timezone.now().strftime('%Y%m%d'))
-    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
-
-    with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'bbox': bbox,
-                                                                      'provider_name': provider_name}))
-    result['result'] = style_file
-    result['geopackage'] = input_gpkg
-    return result
+    try:
+        t2s = thematic_gpkg.ThematicGPKG(gpkg=input_gpkg, stage_dir=stage_dir, tags=tags, job_name=job_name,
+                                         task_uid=task_uid)
+        out = t2s.convert()
+        result['result'] = out
+        return result
+    except Exception as e:
+        logger.error('Raised exception in thematic gpkg task, %s', str(e))
+        raise Exception(e)  # hand off to celery..
 
 
 @app.task(name='ESRI Shapefile Format', bind=True, base=ExportTask)
