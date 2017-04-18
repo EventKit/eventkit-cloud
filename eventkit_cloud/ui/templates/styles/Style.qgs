@@ -3,6 +3,8 @@
   <title></title>
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
+    <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ provider_name }}">
+    <customproperties/>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_points_any{{ layer_id_date_time }}" name="village">
       <customproperties/>
     </layer-tree-layer>
@@ -41,6 +43,7 @@
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_waterways_lines{{ layer_id_date_time }}" name="waterway">
       <customproperties/>
     </layer-tree-layer>
+  </layer-tree-group>
   </layer-tree-group>
   <relations/>
   <mapcanvas>
