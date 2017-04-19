@@ -10,7 +10,6 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 
-from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
 
 from ..overpass import Overpass
