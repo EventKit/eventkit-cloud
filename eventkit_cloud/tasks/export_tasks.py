@@ -2,23 +2,27 @@
 from __future__ import absolute_import
 
 import cPickle
+import json
 import logging
 import os
 import shutil
-from zipfile import ZipFile
 import socket
+from zipfile import ZipFile
 
-from django.core.cache import caches
 from django.conf import settings
+from django.core.cache import caches
+from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from enum import Enum
-from celery.result import AsyncResult
+
 from celery import Task
+from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
+from enum import Enum
+
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
@@ -56,6 +60,8 @@ class TaskStates(Enum):
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
+
+
 class LockingTask(Task):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
@@ -91,6 +97,8 @@ class LockingTask(Task):
 
 
 # ExportTask abstract base class and subclasses.
+
+
 class ExportTask(LockingTask):
     """
     Abstract base class for export tasks.
@@ -713,6 +721,85 @@ def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None,
     return result
 
 
+def qgis_project(run_uid=None):
+    any_new_files_that_should_be_part_of_zip = []
+    return {'extra_files': any_new_files_that_should_be_part_of_zip}
+
+
+def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
+    from eventkit_cloud.tasks.models import ExportRun
+    run = ExportRun.objects.get(uid=run_uid)
+
+    if run.job.include_zipfile:
+        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+        # deleted during cancellation.
+        include_files = []
+
+        for export_provider_task in provider_tasks:
+            if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
+                for export_task in export_provider_task.tasks.all():
+                    try:
+                        filename = export_task.result.filename
+                    except Exception:
+                        continue
+                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                  export_provider_task.slug, filename)
+                    if not os.path.isfile(full_file_path):
+                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                      export_task.name))
+                        continue
+                    include_files += [full_file_path]
+        # Need to remove duplicates from the list because
+        # some intermediate tasks produce files with the same name.
+        include_files = list(set(include_files))
+        include_files.extend(extra_files)
+        if include_files:
+            zip_file_task.run(run_uid=run_uid, include_files=include_files)
+
+
+class RunFinishedFinalizeHookTask(LockingTask):
+    pass
+
+
+@app.task(name='Do Some QGIS Thing', base=RunFinishedFinalizeHookTask, bind=True)
+def qgis_task(prev_task_result, run_uid=None, stage_dir=None):
+    new_zip_content = getattr(prev_task_result, 'new_zip_content')
+    result = {'new_zip_content': new_zip_content}
+    return result
+
+
+@app.task(name='Prepare Export Zip', base=RunFinishedFinalizeHookTask)
+def prepare_export_zip(prev_task_result, uid):
+    from eventkit_cloud.tasks.models import ExportRun
+    run = ExportRun.objects.get(uid=run_uid)
+    extra_files = getattr(prev_task_result, 'new_zip_content', [])
+
+    if run.job.include_zipfile:
+        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+        # deleted during cancellation.
+        include_files = extra_files
+
+        for export_provider_task in provider_tasks:
+            if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
+                for export_task in export_provider_task.tasks.all():
+                    try:
+                        filename = export_task.result.filename
+                    except Exception:
+                        continue
+                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                  export_provider_task.slug, filename)
+                    if not os.path.isfile(full_file_path):
+                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                      export_task.name))
+                        continue
+                    include_files += [full_file_path]
+        # Need to remove duplicates from the list because
+        # some intermediate tasks produce files with the same name.
+        include_files = list(set(include_files))
+        if include_files:
+            zip_file_task.run(run_uid=run_uid, include_files=include_files)
+
+
 @app.task(name='Finalize Export Provider Run', base=LockingTask)
 def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
@@ -721,8 +808,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     Cleans up staging directory.
     Updates run with finish time.
     """
-
-    from eventkit_cloud.tasks.models import ExportProviderTask, ExportRun
+    from eventkit_cloud.tasks.models import ExportProviderTask
 
     run_finished = False
     with transaction.atomic():
@@ -748,42 +834,10 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             run_finished = True
 
     if run_finished:
-        run = ExportRun.objects.get(uid=run_uid)
+        from eventkit_cloud.tasks.task_factory import create_run_finished_task_chain
 
-        if run.job.include_zipfile:
-            # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-            # deleted during cancellation.
-            include_files = []
-
-            for export_provider_task in provider_tasks:
-                if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-                    for export_task in export_provider_task.tasks.all():
-                        try:
-                            filename = export_task.result.filename
-                        except Exception:
-                            continue
-                        full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                      export_provider_task.slug, filename)
-                        if not os.path.isfile(full_file_path):
-                            logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                          export_task.name))
-                            continue
-                        include_files += [full_file_path]
-            # Need to remove duplicates from the list because
-            # some intermediate tasks produce files with the same name.
-            include_files = list(set(include_files))
-            if include_files:
-                zip_file_task.run(run_uid=run_uid, include_files=include_files)
-
-        finalize_run_task.si(
-            run_uid=run_uid,
-            stage_dir=run_dir
-        ).set(queue=worker, routing_key=worker).apply_async(
-            interval=1,
-            max_retries=10,
-            queue=worker,
-            routing_key=worker,
-            priority=TaskPriority.FINALIZE_RUN.value)
+        run_finished_tasks = create_run_finished_task_chain(run_uid=run_uid, run_dir=run_dir, worker=worker)
+        run_finished_tasks.apply_async()
     else:
         return result
 
@@ -865,23 +919,72 @@ def zip_file_task(result={}, run_uid=None, include_files=None, file_name=None, a
     return result
 
 
-class FinalizeRunTaskClass(LockingTask):
-    """
-    Finalizes Cleans up stage_dir for ExportRun
-    """
-
+class FinalizeRunTask(LockingTask):
     name = 'Finalize Export Run'
 
+    def run(self, result={}, run_uid=None, stage_dir=None):
+        """
+         Finalizes export run.
+    
+        Cleans up staging directory.
+        Updates run with finish time.
+        Emails user notification.
+        """
+
+        from eventkit_cloud.tasks.models import ExportRun
+
+        run = ExportRun.objects.get(uid=run_uid)
+        if run.job.include_zipfile and not run.zipfile_url:
+            logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
+        run.status = TaskStates.COMPLETED.value
+        provider_tasks = run.provider_tasks.all()
+        # mark run as incomplete if any tasks fail
+        if any(task.status in TaskStates.get_incomplete_states() for task in provider_tasks):
+            run.status = TaskStates.INCOMPLETE.value
+        if all(task.status == TaskStates.CANCELED.value for task in provider_tasks):
+            run.status = TaskStates.CANCELED.value
+        finished = timezone.now()
+        run.finished_at = finished
+        run.save()
+
+        # send notification email to user
+        hostname = settings.HOSTNAME
+        url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+        addr = run.user.email
+        if run.status == TaskStates.CANCELED.value:
+            subject = "Your Eventkit Data Pack was CANCELED."
+        else:
+            subject = "Your Eventkit Data Pack is ready."
+        to = [addr]
+        from_email = getattr(
+            settings,
+            'DEFAULT_FROM_EMAIL',
+            'Eventkit Team <eventkit.team@gmail.com>'
+        )
+        ctx = {'url': url, 'status': run.status}
+
+        text = get_template('email/email.txt').render(ctx)
+        html = get_template('email/email.html').render(ctx)
+        try:
+            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+            msg.attach_alternative(html, "text/html")
+            msg.send()
+        except Exception as e:
+            logger.error("Encountered an error when sending status email: {}".format(e))
+
+        result['stage_dir'] = stage_dir
+        return result
+
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        super(FinalizeRunTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
         stage_dir = retval['stage_dir']
         try:
             if stage_dir:
                 shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
-        super(FinalizeRunTaskClass, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
-
+<<<<<<< HEAD
 @app.task(name='Finalize Export Run', base=FinalizeRunTaskClass)
 def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     """
@@ -937,6 +1040,9 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
 
     result['stage_dir'] = stage_dir
     return result
+=======
+finalize_run_task = FinalizeRunTask()
+>>>>>>> f22aada... Update finalize_export_provider_task to perform run_finished tasks via new task
 
 
 @app.task(name='Export Task Error Handler', bind=True, base=LockingTask)
