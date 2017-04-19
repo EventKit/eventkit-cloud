@@ -6,6 +6,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import styles from '../../styles/StatusDownload.css'
+import moment from 'moment'
 
 class DataCartDetails extends React.Component {
     constructor(props) {
@@ -26,11 +27,14 @@ class DataCartDetails extends React.Component {
 
     }
     componentWillReceiveProps(nextProps) {
-        if(nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched == true) {
-                let cartDetails = nextProps.datacartDetails.data;
-                this.setState({cartDetails: cartDetails});
 
+        if (nextProps.cartDetails.fetched != null) {
+            if (nextProps.cartDetails.fetched != this.props.cartDetails.fetched) {
+                if (nextProps.cartDetails.fetched == true) {
+                    let cartDetails = nextProps.cartDetails.data;
+                    this.setState({cartDetails: cartDetails});
+
+                }
             }
         }
     }
@@ -39,9 +43,10 @@ class DataCartDetails extends React.Component {
         this._initializeOpenLayers();
         this._setTableColors();
 
+
     }
     componentDidUpdate(prevProps, prevState) {
-
+        this._setTableColors();
     }
 
     _setTableColors() {
@@ -101,7 +106,6 @@ class DataCartDetails extends React.Component {
             height: '35px',
             fontSize: '16px',
             backgroundColor: this.state.statusBackgroundColor,
-
             color: this.state.statusFontColor,
         },
 
@@ -133,8 +137,8 @@ class DataCartDetails extends React.Component {
                     </div>
                     <table><tbody>
                     <tr>
-                        <td className={styles.tdHeading}>Description</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.job.description}</td>
+                        <td className={styles.tdHeading} style={{width:'30%'}}>Description</td>
+                        <td className={styles.tdData}  style={{width:'70%'}}>{this.props.cartDetails.job.description}</td>
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Project/Catagory</td>
@@ -142,7 +146,7 @@ class DataCartDetails extends React.Component {
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Published</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.job.published}</td>
+                        <td className={styles.tdData}>{this.props.cartDetails.job.published.toString()}</td>
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Layer Data</td>
@@ -161,8 +165,8 @@ class DataCartDetails extends React.Component {
                     </div>
                     <table><tbody>
                     <tr>
-                        <td className={styles.tdHeading}>Run By</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.user}</td>
+                        <td className={styles.tdHeading} style={{width:'30%'}}>Run By</td>
+                        <td className={styles.tdData} style={{width:'70%'}}>{this.props.cartDetails.user}</td>
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Run Id</td>
@@ -170,11 +174,11 @@ class DataCartDetails extends React.Component {
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Started</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.started_at}</td>
+                        <td className={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Finished</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.finished_at}</td>
+                        <td className={styles.tdData}>{moment(this.props.cartDetails.finsihed_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                     </tr>
                     </tbody>
                     </table>

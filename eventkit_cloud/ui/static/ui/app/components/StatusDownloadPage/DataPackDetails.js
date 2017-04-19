@@ -4,12 +4,12 @@ import ol from 'openlayers';
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
+import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
+    from 'material-ui/Table';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle'
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked'
-import Paper from 'material-ui/Paper'
-import Checkbox from 'material-ui/Checkbox'
+import ProviderRow from './ProviderRow'
+
 
 class DataPackDetails extends React.Component {
     constructor(props) {
@@ -18,8 +18,26 @@ class DataPackDetails extends React.Component {
         this.state = {
             providerTasks: [],
             file: false,
+            fixedHeader: true,
+            fixedFooter: true,
+            stripedRows: false,
+            showRowHover: false,
+            selectable: true,
+            multiSelectable: true,
+            enableSelectAll: true,
+            showCheckboxes: true,
+            height: '300px',
         }
     }
+    handleToggle = (event, toggled) => {
+        this.setState({
+            [event.target.name]: toggled,
+        });
+    };
+
+    handleChange = (event) => {
+        this.setState({height: event.target.value});
+    };
 
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
@@ -28,13 +46,7 @@ class DataPackDetails extends React.Component {
 
     }
     componentWillReceiveProps(nextProps) {
-        if(nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched == true) {
-                let providerTasks = nextProps.datacartDetails.data.provider_tasks;
-                this.setState({providerTasks: providerTasks});
 
-            }
-        }
     }
 
     componentDidMount(){
@@ -54,28 +66,41 @@ class DataPackDetails extends React.Component {
                 <div className={styles.subHeading}>
                    Download Options
                 </div>
-                <table><tbody>
-                {this.props.providerTasks.map((provider) => (
-                <tr>
-                    <td className={styles.tdData} style={{width:'5%'}}>
-                    <div className={styles.checkboxLabel}>
-                        <Checkbox
-                            name="file"
-                            onCheck={this.toggleCheckbox.bind(this)}
-                            className={styles.checkboxColor}
-                            checkedIcon={<ActionCheckCircle />}
-                            uncheckedIcon={<UncheckedCircle />}
-                        />
-                    </div></td>
+                <Table
+                    fixedHeader={this.state.fixedHeader}
+                    fixedFooter={this.state.fixedFooter}
+                    selectable={this.state.selectable}
+                    multiSelectable={this.state.multiSelectable}
+                >
+                    <TableHeader
+                        displaySelectAll={this.state.showCheckboxes}
+                        adjustForCheckbox={this.state.showCheckboxes}
+                        enableSelectAll={this.state.enableSelectAll}
+                    >
+                        <TableRow>
+                            <TableHeaderColumn>Provider</TableHeaderColumn>
+                            <TableHeaderColumn style={{textAlign: 'center'}}># of Selections</TableHeaderColumn>
+                            <TableHeaderColumn style={{textAlign: 'center'}} >Run Time</TableHeaderColumn>
+                            <TableHeaderColumn style={{textAlign: 'center'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody
+                        displayRowCheckbox={this.state.showCheckboxes}
+                        deselectOnClickaway={false}
+                        showRowHover={this.state.showRowHover}
+                        stripedRows={this.state.stripedRows}
+                        stripedRowsStyles={{backgroundColor: 'red', color: 'blue'}}
+                    >
 
-                    <td className={styles.tdData} style={{width:'35%'}}>{provider.name}</td>
-                    <td className={styles.tdData} style={{width:'20%'}}>3/3</td>
-                    <td className={styles.tdData} style={{width:'20%'}}>00:00:20</td>
-                    <td className={styles.tdData} style={{width:'20%'}}><CloudDownload style={{color:'#4598bf'}}/></td>
-                </tr>
+
+                {this.props.providerTasks.map((provider) => (
+
+                    <ProviderRow key={provider.uid} providerTasks={provider}/>
+
                 ))}
-                </tbody>
-                </table>
+
+                    </TableBody>
+                </Table>
             </div>
 
         )

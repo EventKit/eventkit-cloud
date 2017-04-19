@@ -9,16 +9,17 @@ import DataCartDetails from './DataCartDetails'
 import DataPackDetails from './DataPackDetails'
 import styles from '../../styles/StatusDownload.css'
 import { getDatacartDetails} from '../../actions/statusDownloadActions'
+import TimerMixin from 'react-timer-mixin'
+import reactMixin from 'react-mixin'
 
 class StatusDownload extends React.Component {
+
     constructor(props) {
         super(props)
         this.state = {
             datacartDetails: [],
         }
-        //if(this.props.datacartDetails.length == 0){
-            //this.props.getDatacartDetails(this.props.params.jobuid);
-        //}
+
     }
 
     getChildContext() {
@@ -28,23 +29,32 @@ class StatusDownload extends React.Component {
         this.setState({expanded: expanded});
     }
     componentWillReceiveProps(nextProps) {
-        if(nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched == true) {
-                console.log(nextProps.datacartDetails.data)
-                let datacartDetails = nextProps.datacartDetails.data;
-                this.setState({datacartDetails: datacartDetails});
+        if (this.props.datacartDetails.fetched != null) {
+            if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
+                if (nextProps.datacartDetails.fetched == true) {
+                    console.log(nextProps.datacartDetails.data)
+                    let datacartDetails = nextProps.datacartDetails.data;
+                    this.setState({datacartDetails: datacartDetails});
+
+                    if(datacartDetails[0].status == "COMPLETED"){
+                        TimerMixin.clearInterval(this.timer);
+                    }
+                }
             }
         }
     }
-
     componentDidMount(){
-        this.props.getDatacartDetails(this.props.params.jobuid);
-
-        //TODO: Since we are getting job info (from datacartDetails) after submitting a job, here we will want to check
-        // to see if we already have that or if we are do not (then we got here from the library page, therefore
-        // will not have the info in the datacartDetails props)
+        this.timer = TimerMixin.setInterval(() => {
+            console.log('I do not leak!');
+            this.props.getDatacartDetails(this.props.params.jobuid);
+        }, 3000);
 
     }
+    componentWillUnmount() {
+        TimerMixin.clearInterval(this.timer);
+        console.log("undone")
+    }
+
     componentDidUpdate(prevProps, prevState) {
 
     }
@@ -56,7 +66,7 @@ class StatusDownload extends React.Component {
                     <div className={styles.wholeDiv}>
                         <div id='mainHeading' className={styles.heading}>Status & Download</div>
                     {this.state.datacartDetails.map((cartDetails) => (
-                        <DataCartDetails cartDetails={cartDetails}/>
+                        <DataCartDetails key={cartDetails.uid} cartDetails={cartDetails}/>
                         ))}
                     </div>
 
@@ -91,7 +101,7 @@ StatusDownload.propTypes = {
 StatusDownload.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
 };
-
+reactMixin(StatusDownload.prototype, TimerMixin);
 export default connect(
     mapStateToProps,
     mapDispatchToProps,

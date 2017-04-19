@@ -73,7 +73,7 @@ export class BreadcrumbStepper extends React.Component {
             tags : [],
         };
         this.props.submitJob(data);
-        browserHistory.push('/');
+        //browserHistory.push('/');
     }
 
     handleNext() {
