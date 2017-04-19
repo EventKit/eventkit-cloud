@@ -5,10 +5,19 @@ from datetime import datetime, timedelta
 import logging
 import os
 
+from django.conf import settings
+from django.db import DatabaseError
+from django.utils import timezone
+
 from celery import chain
+from eventkit_cloud import celery
+from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_export_zip
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
+from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
+                                  bounds_export_task, output_selection_geojson_task)
 from ..tasks.models import ExportRun, ExportProviderTask
+from ..tasks.task_runners import create_export_task
 from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
@@ -17,12 +26,6 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
-from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
-                                  bounds_export_task, output_selection_geojson_task, zip_export_provider)
-from django.conf import settings
-from django.db import DatabaseError
-from django.utils import timezone
-from ..tasks.task_runners import create_export_task
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ class TaskFactory:
     A class create Task Runners based on an Export Run.
     """
 
-    def __init__(self, ):
+    def __init__(self,):
         self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner, 'osm': ExportThematicOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
@@ -131,7 +134,8 @@ class TaskFactory:
                                 if not task_runner_tasks:
                                     task_runner_tasks = finalize_chain_task_runner_tasks
                                 else:
-                                    task_runner_tasks = chain(task_runner_tasks, finalize_chain_task_runner_tasks)
+                                    task_list = [task_runner_tasks, finalize_chain_task_runner_tasks]
+                                    task_runner_tasks = chain(task_list)
 
                     if not task_runner_tasks:
                         continue
@@ -194,6 +198,29 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(task_name=task.name, export_provider_task=export_provider_task, worker=worker)
-    return task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
-                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug,
-                  export_provider_task_uid=export_provider_task_uid, job_name=job_name).set(queue=worker, routing_key=worker)
+    return task.s(
+        run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
+        stage_dir=stage_dir, provider_slug=export_provider_task.slug,
+        export_provider_task_uid=export_provider_task_uid, job_name=job_name
+    ).set(queue=worker, routing_key=worker)
+
+
+def create_run_finished_task_chain(run_uid=None, run_dir=None, worker=None):
+    tasks = [qgis_task, prepare_export_zip, finalize_run_task]
+#     task_sigs = [
+#         t.s(run_uid=run_uid, stage_dir=run_dir)\
+#             .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
+#         for t in tasks
+#     ]
+    task_sigs = []
+    task_sigs.append(qgis_task.s(run_uid=run_uid, stage_dir=run_dir)\
+            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
+    )
+    task_sigs.append(prepare_export_zip.s(run_uid=run_uid, stage_dir=run_dir)\
+            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
+    )
+    task_sigs.append(finalize_run_task.s(run_uid=run_uid, stage_dir=run_dir)\
+            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
+    )
+    c = chain(task_sigs)
+    return c
