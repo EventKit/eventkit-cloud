@@ -21,7 +21,6 @@ from celery.result import AsyncResult
 from celery import Task
 from celery.utils.log import get_task_logger
 from ..celery import app, TaskPriority
-from ..jobs.presets import TagParser
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
@@ -318,7 +317,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
 
 
 @app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
     """
     Task to create styles for osm.
     """
@@ -339,7 +338,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                       'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': bbox}))
+                                                                      'bbox': bbox,
+                                                                      'provider_name': provider_name}))
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result
@@ -576,46 +576,6 @@ def pick_up_run_task(self, result={}, run_uid=None):
     run.worker = worker
     run.save()
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
-
-
-@app.task(name='Generate Preset', bind=True, base=ExportTask)
-def generate_preset_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
-    """
-    Generates a JOSM Preset from the exports selected features.
-    """
-
-    from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.jobs.models import ExportConfig
-    self.update_task_state(result=result, task_uid=task_uid)
-    run = ExportRun.objects.get(uid=run_uid)
-    job = run.job
-    user = job.user
-    feature_save = job.feature_save
-    feature_pub = job.feature_pub
-    # check if we should create a josm preset
-    if feature_save or feature_pub:
-        tags = job.tags.all()
-        tag_parser = TagParser(tags=tags)
-        xml = tag_parser.parse_tags()
-        preset_file = ContentFile(xml)
-        name = job.name
-        filename = job_name + '_preset.xml'
-        content_type = 'application/xml'
-        config = ExportConfig.objects.create(
-            name=name,
-            filename=filename,
-            config_type='PRESET',
-            content_type=content_type,
-            user=user,
-            published=feature_pub
-        )
-        config.upload.save(filename, preset_file)
-
-        output_path = config.upload.path
-        job.configs.clear()
-        job.configs.add(config)
-        result['result'] = output_path
-        return result
 
 
 @app.task(name='Clean Up Failure Task', base=Task)
