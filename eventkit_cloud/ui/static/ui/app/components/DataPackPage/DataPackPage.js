@@ -36,6 +36,7 @@ export class DataPackPage extends React.Component {
         this.handleMaxDate = this.handleMaxDate.bind(this);
         this.applyAll = this.applyAll.bind(this);
         this.toggleView = this.toggleView.bind(this);
+        this.handleTableSort = this.handleTableSort.bind(this);
         this.state = {
             open: window.innerWidth >= 1200 ? true : false,
             runs: [],
@@ -57,6 +58,7 @@ export class DataPackPage extends React.Component {
             },
             filtersApplied: false,
             grid: true,
+            tableSort: utils.orderNewest,
         }
     }
 
@@ -64,6 +66,10 @@ export class DataPackPage extends React.Component {
         if(nextProps.runsList.fetched != this.props.runsList.fetched) { 
             if (nextProps.runsList.fetched == true) {
                 let runs = nextProps.runsList.runs;
+                runs[1].status = 'SUBMITTED';
+                runs[3].status = 'INCOMPLETE';
+                runs[6].status = 'INCOMPLETE';
+                runs[7].status = 'SUBMITTED';
                 this.setState({runs: runs});
                 runs = this.applyAll(runs);
                 this.setState({displayedRuns:runs});
@@ -130,10 +136,16 @@ export class DataPackPage extends React.Component {
     }
 
     applySorts(runs) {
-        if(this.state.dropDownValue == 2) {
-            runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
+        if (this.state.dropDownValue == 2) {
+                runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
         }
-        runs = this.state.sortDropDown(runs);
+        // should we apply table sorts or card/mobile list sort?
+        if(!this.state.grid && window.innerWidth >= 768) {
+            runs = this.state.tableSort(runs);
+        }
+        else {
+            runs = this.state.sortDropDown(runs);
+        }
         return runs;
     }
 
@@ -164,6 +176,11 @@ export class DataPackPage extends React.Component {
         this.setState({filtersApplied: true});
         let runs = this.applyAll(this.state.runs);
         this.setState({displayedRuns: runs});
+    }
+
+    handleTableSort(sortFunction) {//test
+        const sorted_runs = sortFunction(this.state.displayedRuns);
+        this.setState({displayedRuns: sorted_runs, tableSort: sortFunction});
     }
 
     handleFilterClear = () => {
@@ -213,6 +230,10 @@ export class DataPackPage extends React.Component {
     }
 
     toggleView() {
+        if(!this.state.grid) {
+            let runs = this.state.sortDropDown(this.state.displayedRuns);
+            this.setState({displayedRuns: runs});
+        }
         this.setState({grid: !this.state.grid});
     }
 
@@ -272,7 +293,11 @@ export class DataPackPage extends React.Component {
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} />
                         <DataPackFilterButton open={this.state.open} handleToggle={this.handleToggle} />
-                        <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
+                        {(!this.state.grid) && window.innerWidth >= 768 ? 
+                            null
+                            : 
+                            <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
+                        }
                         <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
                 </Toolbar>
                 <div style={styles.wholeDiv}>
@@ -313,6 +338,7 @@ export class DataPackPage extends React.Component {
                             runs={this.state.displayedRuns}
                             user={this.props.user}
                             onRunDelete={this.props.deleteRuns}
+                            onSort={this.handleTableSort}
                         />
                     }
                     <div >

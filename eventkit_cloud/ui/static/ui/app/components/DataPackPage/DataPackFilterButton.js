@@ -67,7 +67,6 @@ export class DataPackFilterButton extends React.Component {
                 label={"Filter"}
                 labelPosition={"after"}
                 labelStyle={styles.label}
-                
                 hoverColor={'#253447'}
                 disableTouchRipple={true}
                 onClick={this.props.handleToggle}

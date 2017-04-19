@@ -47,7 +47,7 @@ export class DataPackViewButtons extends React.Component {
         }
 
         return (
-            <div>
+            <div style={{paddingRight: '5px', display: 'inline-block', float: 'right'}}>
                 <IconButton
                     onClick={this.props.handleGridSelect}
                     style={styles.button}

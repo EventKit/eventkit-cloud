@@ -28,11 +28,11 @@ export class DataPackTableItem extends Component {
         : <SocialPerson style={{color: 'grey'}}/>;
     }
 
-    getStatusIcon(status, name) {
-        if(status == 'SUBMITTED' || name == 'Centreville') {
+    getStatusIcon(status) {
+        if(status == 'SUBMITTED') {
             return <NotificationSync style={{color: '#f4d225'}}/>
         }
-        else if(status == 'INCOMPLETE' || name == 'Fairfax City') {
+        else if(status == 'INCOMPLETE') {
             return <AlertError style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>
         }
         else {
@@ -63,7 +63,7 @@ export class DataPackTableItem extends Component {
                     {moment(this.props.run.started_at).format('YYYY-MM-DD')}
                 </TableRowColumn>
                 <TableRowColumn style={{width: '65px', padding: '0px 0px 0px 0px', textAlign: 'center'}}>
-                    {this.getStatusIcon(this.props.run.status, this.props.run.job.name)}
+                    {this.getStatusIcon(this.props.run.status)}
                 </TableRowColumn>
                 <TableRowColumn style={{width: '100px' ,padding: '0px 0px 0px 0px',textAlign: 'center'}}>
                     {this.getPermissionsIcon(this.props.run.job.published)}

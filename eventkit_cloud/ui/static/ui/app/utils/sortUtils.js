@@ -13,15 +13,63 @@ export function orderZA(runs) {
     }).reverse();
 };
 
-export function orderOldest(runs) {
+export function orderEventAZ(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.job.event.toUpperCase();
+    });
+};
+
+export function orderEventZA(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.job.event.toUpperCase();
+    }).reverse();
+};
+
+export function orderOldest(runs) {//test
     return sortBy(runs, (o) => {
         return o.started_at;
     });
 };
 
-export function orderNewest(runs) {
+export function orderNewest(runs) {//test
     return sortBy(runs, (o) => {
         return o.started_at;
+    }).reverse();
+};
+
+export function orderComplete(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.status
+    });
+};
+
+export function orderIncomplete(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.status
+    }).reverse();
+};
+
+export function orderPrivate(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.job.published
+    });
+};
+
+export function orderPublic(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.job.published
+    }).reverse();
+};
+
+export function orderOwnerAZ(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.user
+    });
+};
+
+export function orderOwnerZA(runs) {//test
+    return sortBy(runs, (o) => {
+        return o.user
     }).reverse();
 };
 
