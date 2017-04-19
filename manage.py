@@ -17,7 +17,9 @@ if __name__ == "__main__":
         if os.getenv("COVERAGE"):
             import coverage
 
-            cov = coverage.coverage(config_file=".coveragerc",
+            cov = coverage.coverage(data_file=os.path.join('coverage', 'python'),
+                                    data_suffix="eventkit",
+                                    config_file=".coveragerc",
                                     source=["eventkit_cloud"])
             cov.erase()
             cov.start()
@@ -28,11 +30,13 @@ if __name__ == "__main__":
             cov.stop()
             cov.save()
             cov.report()
-            cov.html_report(directory='./coverage')
+            cov.xml_report(outfile=os.path.join('coverage', 'python.xml'))
+            cov.html_report(directory=os.path.join('.', 'coverage'))
 
         if os.getenv("TRAVIS"):
             coveralls = os.path.join(os.path.dirname(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit'))), '.virtualenvs/eventkit/bin/coveralls')
-            subprocess.call([coveralls])
+            subprocess.call([coveralls,
+                             '--merge={0}'.format(os.path.join('.', 'coverage', 'coveralls.json'))])
 
         logging.disable(logging.NOTSET)
 
