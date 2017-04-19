@@ -33,6 +33,8 @@ services:
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
+      volumes:
+        - ./coverage:/var/lib/eventkit/coverage
   celery:
       extends:
         service: base

@@ -17,9 +17,7 @@ if __name__ == "__main__":
         if os.getenv("COVERAGE"):
             import coverage
 
-            cov = coverage.coverage(data_file=os.path.join('coverage', 'python'),
-                                    data_suffix="eventkit",
-                                    config_file=".coveragerc",
+            cov = coverage.coverage(config_file=".coveragerc",
                                     source=["eventkit_cloud"])
             cov.erase()
             cov.start()
