@@ -251,7 +251,8 @@ class ExportThematicOSMTaskRunner(TaskRunner):
                                                stage_dir=stage_dir,
                                                job_name=job_name,
                                                bbox=bbox,
-                                               provider_slug=provider_task.provider.slug).set(queue=worker,
+                                               provider_slug=provider_task.provider.slug,
+                                               provider_name=provider_task.provider.name).set(queue=worker,
                                                                                               routing_key=worker)
 
         return export_provider_task.uid, (thematic_tasks | style_task)
