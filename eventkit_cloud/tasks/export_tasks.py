@@ -704,7 +704,6 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
     """
     rolls up runs into a zip file
     """
-
     from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
@@ -734,7 +733,7 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
-    with ZipFile(zip_st_filepath, 'w') as zipfile:
+    with ZipFile(zip_st_filepath, 'w', allowZip64=True) as zipfile:
         for filepath in files:
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
