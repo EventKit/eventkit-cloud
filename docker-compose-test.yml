@@ -1,6 +1,8 @@
 version: '2'
 services:
   base:
+     volumes:
+       - ./:/var/lib/eventkit/
      build:
        context: .
        dockerfile: config/Dockerfile_test
@@ -32,9 +34,9 @@ services:
         - rabbitmq
       expose:
         - "6080"
-      command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
       volumes:
         - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:ro
+      command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
   celery:
       extends:
         service: base
