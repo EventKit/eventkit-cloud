@@ -452,11 +452,13 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Create Selection GeoJSON', base=LockingTask)
-def output_selection_geojson_task(result={}, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+@app.task(name='Create Selection GeoJSON', bind=True, base=ExportTask)
+def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
+
+    self.update_task_state(result=result, task_uid=task_uid)
 
     geojson_file = os.path.join(stage_dir,
                                 "{0}_selection.geojson".format(provider_slug))
@@ -467,6 +469,9 @@ def output_selection_geojson_task(result={}, selection=None, stage_dir=None, pro
         with open(geojson_file, 'w') as open_file:
             open_file.write(selection)
         result['selection'] = geojson_file
+        result['result'] = geojson_file
+    else:
+        result['result'] = None
 
     return result
 
