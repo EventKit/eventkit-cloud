@@ -33,8 +33,6 @@ services:
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
-      volumes:
-        - ./coverage:/var/lib/eventkit/coverage:rw
   celery:
       extends:
         service: base
@@ -100,7 +98,7 @@ services:
        dockerfile: config/Dockerfile_webpack
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-       - ./coverage:/var/lib/eventkit/coverage:rw
+       - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
        - ./.git:/var/lib/eventkit/.git
      ports:
         - "8080:8080"

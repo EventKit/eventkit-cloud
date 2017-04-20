@@ -92,7 +92,7 @@
   "scripts": {
     "build": "PROD=1 webpack",
     "start": "webpack-dev-server --inline",
-    "test": "jest && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls.json"
+    "test": "jest && mkdir -p /var/lib/eventkit/coverage/coveralls && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls/coveralls.json"
   },
   "repository": {
     "type": "git",

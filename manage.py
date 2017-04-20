@@ -34,7 +34,7 @@ if __name__ == "__main__":
         if os.getenv("TRAVIS"):
             coveralls = os.path.join(os.path.dirname(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit'))), '.virtualenvs/eventkit/bin/coveralls')
             subprocess.call([coveralls,
-                             '--merge={0}'.format(os.path.join('.', 'coverage', 'coveralls.json'))])
+                             '--merge={0}'.format(os.path.join('.', 'coverage', 'coveralls', 'coveralls.json'))])
 
         logging.disable(logging.NOTSET)
 
