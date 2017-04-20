@@ -106,7 +106,6 @@ services:
         - "8080:8080"
      expose:
         - "9229"
-        - "50000-60000"
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
 volumes:
