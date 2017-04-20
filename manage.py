@@ -28,7 +28,6 @@ if __name__ == "__main__":
             cov.stop()
             cov.save()
             cov.report()
-            cov.xml_report(outfile=os.path.join('coverage', 'python.xml'))
             cov.html_report(directory=os.path.join('.', 'coverage'))
 
         if os.getenv("TRAVIS"):
