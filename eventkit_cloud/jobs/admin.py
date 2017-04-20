@@ -6,7 +6,7 @@ from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
-from .models import ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
+from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
     ProviderTask, DatamodelPreset
 
 admin.site.register(ExportFormat)
@@ -103,4 +103,3 @@ class ExportConfigAdmin(admin.ModelAdmin):
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
-admin.site.register(ExportConfig, ExportConfigAdmin)

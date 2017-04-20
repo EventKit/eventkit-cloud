@@ -12,18 +12,14 @@ import logging
 import os
 from urlparse import urlparse, urlunparse
 
-from rest_framework_gis import serializers as geo_serializers
-
-from django.contrib.gis.geos import GEOSGeometry
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from rest_framework import serializers
 
-import validators
 from eventkit_cloud.jobs.models import (
-    ExportConfig,
     ExportFormat,
+    DatamodelPreset,
     Job,
     Region,
     RegionMask,
@@ -38,6 +34,10 @@ from eventkit_cloud.tasks.models import (
     ExportProviderTask
 )
 from eventkit_cloud.utils.s3 import get_presigned_url
+from rest_framework import serializers
+from rest_framework_gis import serializers as geo_serializers
+import validators
+
 
 try:
     from collections import OrderedDict
@@ -83,7 +83,7 @@ class ExportConfigSerializer(serializers.Serializer):
     filename = serializers.CharField(max_length=255, read_only=True, default='')
     size = serializers.SerializerMethodField()
     content_type = serializers.CharField(max_length=50, read_only=True)
-    upload = serializers.FileField(allow_empty_file=False, max_length=100)
+    upload = serializers.FileField(allow_empty_file=True, max_length=100)
     published = serializers.BooleanField()
     created = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField(read_only=True)
@@ -560,7 +560,7 @@ class JobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
-    configurations = serializers.SerializerMethodField()
+    preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
     feature_save = serializers.BooleanField(required=False)
     feature_pub = serializers.BooleanField(required=False)
@@ -641,13 +641,6 @@ class JobSerializer(serializers.Serializer):
         """Return the export formats selected for this export."""
         providers = [provider_format for provider_format in obj.providers.all()]
         serializer = ExportProviderSerializer(providers, many=True, context={'request': self.context['request']})
-        return serializer.data
-
-    def get_configurations(self, obj):
-        """Return the configurations selected for this export."""
-        configs = obj.configs.all()
-        serializer = SimpleExportConfigSerializer(configs, many=True,
-                                                  context={'request': self.context['request']})
         return serializer.data
 
     @staticmethod
