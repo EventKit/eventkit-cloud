@@ -26,7 +26,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({completed: v})}}
                         checked={this.props.completed}
                     />
-                    <NavigationCheck style={{float: 'right', marginLeft: '20px', color: '#bcdfbb', opacity: '0.6', marginBottom: '2px'}}/>
+                    <NavigationCheck style={{float: 'right', marginLeft: '20px', color: '#bcdfbb', marginBottom: '2px'}}/>
                     
                     <Checkbox
                         label={'Running'}

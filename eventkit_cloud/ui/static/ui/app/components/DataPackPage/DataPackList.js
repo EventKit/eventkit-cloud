@@ -1,12 +1,8 @@
 import React, {PropTypes, Component} from 'react'
-import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
+import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow} from 'material-ui/Table';
 import {GridList} from 'material-ui/GridList'
 import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
-import AlertError from 'material-ui/svg-icons/alert/error';
-import SocialPerson from 'material-ui/svg-icons/social/person';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import * as sorts from '../../utils/sortUtils';
@@ -26,6 +22,8 @@ export class DataPackList extends Component {
         this.isStatusActive = this.isStatusActive.bind(this);
         this.isPermissionsActive = this.isPermissionsActive.bind(this);
         this.isOwnerActive = this.isOwnerActive.bind(this);
+        this.getIcon = this.getIcon.bind(this);
+        this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.state = {
             activeSort: sorts.orderNewest,
         }
@@ -134,6 +132,20 @@ export class DataPackList extends Component {
         return this.state.activeSort == sorts.orderOwnerAZ || this.state.activeSort == sorts.orderOwnerZA;
     }
 
+    //If it is a 'reversed' sort the arrow should be up, otherwise it should be down
+    getIcon(sortFunction) {
+        const style = {verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'};
+        const icon = this.state.activeSort == sortFunction ?
+            <NavigationArrowDropUp style={style}/>
+            :
+            <NavigationArrowDropDown style={style}/>
+        return icon;
+    }
+
+    getHeaderStyle(isActive) {
+        return isActive ? {color: '#000', fontWeight: 'bold'} : {color: 'inherit'}
+    }
+
     render() {
         const styles = {
             root: {
@@ -144,13 +156,14 @@ export class DataPackList extends Component {
                 marginRight: '5px',
                 paddingBottom: '10px'
             },
-            headerColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center',},
-            rowColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center'},
-            dropDownArrow: {
-                verticalAlign: 'middle',
-                marginBottom: '2px',
-                fill: '#4498c0',
-            }
+            clickable: {cursor: 'pointer', width: 'min-content'},
+            tableRow: {marginLeft: '12px', paddingRight: '6px', color: '#fff', height: '50px'},
+            nameColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
+            eventColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
+            dateColumn: {width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
+            statusColumn: {width: '65px' ,padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
+            permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
+            ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
         };
 
         return (
@@ -173,66 +186,42 @@ export class DataPackList extends Component {
             :
                 <Table height={49 * this.props.runs.length > window.innerHeight - 297 ? `${window.innerHeight - 297}px` : 'inherit'} selectable={false}>
                     <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
-                        <TableRow style={{marginLeft: '12px', paddingRight: '6px', color: '#fff', height: '50px'}}>
+                        <TableRow style={styles.tableRow}>
                             <TableHeaderColumn 
-                                style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>
-                                <div onClick={this.handleNameSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isNameActive() ? '#4498c0' : 'inherit'}}>Name</span>
-                                    {this.state.activeSort == sorts.orderZA ?
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                                style={styles.nameColumn}>
+                                <div onClick={this.handleNameSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isNameActive())}>Name</span>
+                                    {this.getIcon(sorts.orderZA)}
                                 </div>
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>
-                                <div onClick={this.handleEventSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isEventActive() ? '#4498c0' : 'inherit'}}>Event</span>
-                                    {this.state.activeSort == sorts.orderEventZA ?
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                            <TableHeaderColumn style={styles.eventColumn}>
+                                <div onClick={this.handleEventSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isEventActive())}>Event</span>
+                                    {this.getIcon(sorts.orderEventZA)}
                                 </div>
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>
-                                <div onClick={this.handleDateSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isDateActive() ? '#4498c0' : 'inherit'}}>Date Added</span>
-                                    {this.state.activeSort == sorts.orderOldest ?
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                            <TableHeaderColumn style={styles.dateColumn}>
+                                <div onClick={this.handleDateSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isDateActive())}>Date Added</span>
+                                    {this.getIcon(sorts.orderOldest)}
                                 </div>
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '65px' ,padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'}}>
-                                <div onClick={this.handleStatusSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isStatusActive() ? '#4498c0' : 'inherit'}}>Status</span>
-                                    {this.state.activeSort == sorts.orderIncomplete ?
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                            <TableHeaderColumn style={styles.statusColumn}>
+                                <div onClick={this.handleStatusSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isStatusActive())}>Status</span>
+                                    {this.getIcon(sorts.orderIncomplete)}
                                 </div>
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'}}>
-                                <div onClick={this.handlePermissionsSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isPermissionsActive() ? '#4498c0': 'inherit'}}>Permissions</span>
-                                    {this.state.activeSort == sorts.orderPublic ?
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                            <TableHeaderColumn style={styles.permissionsColumn}>
+                                <div onClick={this.handlePermissionsSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isPermissionsActive())}>Permissions</span>
+                                    {this.getIcon(sorts.orderPublic)}
                                 </div>
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'}}>
-                                <div onClick={this.handleOwnerSort} style={{cursor: 'pointer', width: 'min-content'}}>
-                                    <span style={{color: this.isOwnerActive() ? '#4498c0': 'inherit'}}>Owner</span>
-                                    {this.state.activeSort == sorts.orderOwnerZA ? 
-                                    <NavigationArrowDropUp style={styles.dropDownArrow}/>
-                                    :
-                                    <NavigationArrowDropDown style={styles.dropDownArrow}/>
-                                    }
+                            <TableHeaderColumn style={styles.ownerColumn}>
+                                <div onClick={this.handleOwnerSort} style={styles.clickable}>
+                                    <span style={this.getHeaderStyle(this.isOwnerActive())}>Owner</span>
+                                    {this.getIcon(sorts.orderOwnerZA)}
                                 </div>
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>

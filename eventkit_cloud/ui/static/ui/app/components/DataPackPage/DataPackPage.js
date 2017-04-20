@@ -135,9 +135,9 @@ export class DataPackPage extends React.Component {
         return runs;
     }
 
-    applySorts(runs) {
+    applySorts(runs) {//test
         if (this.state.dropDownValue == 2) {
-                runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
+            runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
         }
         // should we apply table sorts or card/mobile list sort?
         if(!this.state.grid && window.innerWidth >= 768) {
@@ -305,7 +305,8 @@ export class DataPackPage extends React.Component {
                         width={200} 
                         openSecondary={true} 
                         open={this.state.open}
-                        containerStyle={styles.containerStyle}>
+                        containerStyle={styles.containerStyle}
+                    >
                         <FilterHeader
                             onApply={this.handleFilterApply}
                             onClear={this.handleFilterClear}
@@ -349,7 +350,6 @@ export class DataPackPage extends React.Component {
         );
     }
 }
-
 
 DataPackPage.propTypes = {
     runsList: PropTypes.object.isRequired,

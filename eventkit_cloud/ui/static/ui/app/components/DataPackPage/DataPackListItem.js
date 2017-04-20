@@ -18,7 +18,7 @@ export class DataPackListItem extends Component {
         super(props);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = { 
-            deviceSize: 'm',
+            deviceSize: 's',
         };
     }
 
@@ -39,17 +39,10 @@ export class DataPackListItem extends Component {
                 });
             }            
         }
-        else if(window.innerWidth < 768) {
+        else {
             if(this.state.deviceSize != 's') {
                 this.setState({
                     deviceSize: 's',
-                });
-            }
-        }
-        else {
-            if(this.state.deviceSize != 'm') {
-                this.setState({
-                    deviceSize: 'm',
                 });
             }
         }
@@ -66,11 +59,6 @@ export class DataPackListItem extends Component {
             titleFontSize = '23px';
             subtitleFontSize = '14px';
             subtitleHeight = '20px';
-        }
-        else {
-            titleFontSize = '25px';
-            subtitleFontSize = '16px';
-            subtitleHeight = '22px';
         }
 
         const styles = {

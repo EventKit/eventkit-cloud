@@ -1,11 +1,9 @@
 import React, {PropTypes, Component} from 'react'
 import {Link} from 'react-router';
-import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
-import {GridList} from 'material-ui/GridList'
+import {TableRow, TableRowColumn} from 'material-ui/Table';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
-import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import SocialGroup from 'material-ui/svg-icons/social/group';
@@ -36,7 +34,7 @@ export class DataPackTableItem extends Component {
             return <AlertError style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>
         }
         else {
-            return <NavigationCheck style={{color: '#bcdfbb', opacity: '0.6', height: '22px'}}/>
+            return <NavigationCheck style={{color: '#bcdfbb', height: '22px'}}/>
         }
     }
 
