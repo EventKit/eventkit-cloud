@@ -122,7 +122,7 @@ services:
        dockerfile: config/Dockerfile_webpack
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-       - ./coverage:/var/lib/eventkit/coverage:rw
+       - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
        - ./.git:/var/lib/eventkit/.git
      ports:
         - "8080:8080"
