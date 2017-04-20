@@ -34,7 +34,7 @@ services:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
       volumes:
-        - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:r
+        - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:ro
   celery:
       extends:
         service: base
