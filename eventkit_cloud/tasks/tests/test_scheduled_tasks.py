@@ -68,8 +68,10 @@ class TestExpireRunsTask(TestCase):
             expire_runs.run()
             site_name = getattr(settings, "SITE_NAME", "cloud.eventkit.dev")
             expected_url = 'http://{0}/exports/{1}'.format(site_name, job.uid)
-            send_email.assert_any_call(now_time + timezone.timedelta(days=1), expected_url, job.user.email)
-            send_email.assert_any_call(now_time + timezone.timedelta(days=6), expected_url, job.user.email)
+            send_email.assert_any_call(date=now_time + timezone.timedelta(days=1), url=expected_url,
+                                       addr=job.user.email, job_name=job.name)
+            send_email.assert_any_call(date=now_time + timezone.timedelta(days=6), url=expected_url,
+                                       addr=job.user.email, job_name=job.name)
             self.assertEqual(3, ExportRun.objects.all().count())
 
 
@@ -81,15 +83,16 @@ class TestEmailNotifications(TestCase):
         site_name = getattr(settings, "SITE_NAME", "cloud.eventkit.dev")
         url = 'http://{0}/exports/1234'.format(site_name)
         addr = 'test@test.com'
+        job_name = "job"
 
-        ctx = {'url': url, 'date': str(now)}
+        ctx = {'url': url, 'date': str(now), 'job_name': job_name}
 
         text = get_template('email/expiration_warning.txt').render(ctx)
         html = get_template('email/expiration_warning.html').render(ctx)
         self.assertIsNotNone(html)
         self.assertIsNotNone(text)
-        send_warning_email(now, url, addr)
-        alternatives.assert_called_once_with("Your Eventkit Data Pack is set to expire.",
+        send_warning_email(date=now, url=url, addr=addr, job_name=job_name)
+        alternatives.assert_called_once_with("Your EventKit DataPack is set to expire.",
                                                  text, to=[addr], from_email='Eventkit Team <eventkit.team@gmail.com>')
         alternatives().send.assert_called_once()
 

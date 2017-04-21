@@ -52,13 +52,13 @@ def expire_runs():
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
             if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
-                send_warning_email(expiration, url, email, job_name=run.job.name)
+                send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
         elif expiration - now <= timezone.timedelta(days=7) and not notified:
-            send_warning_email(expiration, url, email, job_name=run.job.name)
+            send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
 
@@ -73,7 +73,7 @@ def send_warning_email(date=None, url=None, addr=None, job_name=None):
     Returns: None
     """
 
-    subject = "Your Eventkit DataPack is set to expire."
+    subject = "Your EventKit DataPack is set to expire."
     to = [addr]
     from_email = getattr(
         settings,
