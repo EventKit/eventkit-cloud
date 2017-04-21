@@ -1,8 +1,12 @@
 This is an automated email from the Eventkit Team.
 
-Unfortunately, your Eventkit Data Pack has a failure.
+Unfortunately, your Eventkit DataPack:
 
-Please copy and paste this link {{ url }} into your browser to see the status of your Eventkit Data Pack.
+   {{ job_name }}
+
+ has a failure.
+
+Please copy and paste this link {{ url }} into your browser to see the status of your Eventkit DataPack.
 
 Please quote this Task ID when reporting errors: {{ task_id }}.
 
