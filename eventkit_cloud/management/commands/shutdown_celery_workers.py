@@ -8,7 +8,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('Waiting for workers to finish up...')
-        t = gracefully_shutdown_workers.delay()
-        # Wait for it
-        t.get()
+        t = gracefully_shutdown_workers.run()
         print('Celery workers shut down')
