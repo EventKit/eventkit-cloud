@@ -1,12 +1,14 @@
 import types from './mapToolActionTypes'
 import ol from 'openlayers';
+import * as jsts from 'jsts';
+import { convertGeoJSONtoJSTS } from '../utils/mapUtils'
 
 export function setBoxButtonSelected() {
     return {type: types.SET_BOX_SELECTED}
 }
 
 export function setFreeButtonSelected() {
-    return {type: types.SET_FREE_SELECTED} 
+    return {type: types.SET_FREE_SELECTED}
 }
 
 export function setMapViewButtonSelected() {
@@ -38,39 +40,56 @@ export function resetGeoJSONFile() {
     }
 }
 
-export function processGeoJSONFile(file) {
-    return (dispatch) => {
-        dispatch({type: types.FILE_PROCESSING});
-        const fileName = file.name;
-        const ext = fileName.split('.').pop();
-        if(ext != 'geojson') {
-            dispatch({type: types.FILE_ERROR, error: 'File must be .geojson NOT .' + ext});
-            return;
+export const processGeoJSONFile = file => dispatch => {
+    dispatch({type: types.FILE_PROCESSING});
+    const fileName = file.name;
+    const ext = fileName.split('.').pop();
+    if (ext != 'geojson') {
+        const error_msg = 'File must be .geojson NOT .' + ext;
+        dispatch({type: types.FILE_ERROR, error: error_msg});
+        return Promise.reject(new Error(error_msg)).then(function (error) {
+        }, function (error) {
+            console.log(error);
+        });
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        const dataURL = reader.result;
+        let geojson = null;
+        try {
+            geojson = JSON.parse(dataURL);
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-            const dataURL = reader.result;
-            let geojson = null;
-            try {
-                geojson = JSON.parse(dataURL);
-            }
-            catch (e) {
-                dispatch({type: types.FILE_ERROR, error: 'Could not parse GeoJSON'});
-                return;
-            }
-            const geojsonReader = new ol.format.GeoJSON();
-            const feature = geojsonReader.readFeatures(geojson)[0];
-            const geom = feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-            if(geom.getType() == 'Polygon') {
+        catch (e) {
+            dispatch({type: types.FILE_ERROR, error: 'Could not parse GeoJSON'});
+            return Promise.reject(new Error(e)).then(function (error) {
+            }, function (error) {
+                console.log(error);
+            });
+        }
+        try {
+
+            //Because the UI doesn't support multiple features combine all polygons into one feature.
+            var multipolygon = convertGeoJSONtoJSTS(geojson);
+
+            const writer = new jsts.io.GeoJSONWriter();
+            const geom = (new ol.format.GeoJSON()).readGeometry(writer.write(multipolygon)).transform('EPSG:4326', 'EPSG:3857');
+            if (geom.getType() == 'Polygon' || geom.getType() == 'MultiPolygon') {
                 dispatch({type: types.FILE_PROCESSED, geom: geom});
             }
-            else {
-                dispatch({type: types.FILE_ERROR, error: 'Geometry must be Polygon type, not ' + geom.getType()})
-            }
         }
-        reader.onerror = () => {
-            dispatch({type: types.FILE_ERROR, error: 'An error was encountered while reading your file'});
+        catch (err) {
+            dispatch({type: types.FILE_ERROR, error: 'There was an error processing the geojson file.'});
+            return Promise.reject(new Error(err)).then(function (error) {
+            }, function (error) {
+                console.log(error);
+            });
         }
-        reader.readAsText(file);
+
     }
+    reader.onerror = () => {
+        dispatch({type: types.FILE_ERROR, error: 'An error was encountered while reading your file'});
+    }
+    reader.readAsText(file);
+    return Promise.resolve();
 }
+

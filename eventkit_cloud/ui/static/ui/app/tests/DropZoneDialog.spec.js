@@ -54,7 +54,7 @@ describe('DropZoneDialog component', () => {
         expect(wrapper.find(Dropzone)).to.have.length(1);
         expect(wrapper.find('.dropZoneText')).length(1);
         expect(wrapper.find('.dropZoneText').find('span')).to.have.length(1);
-        expect(wrapper.find('.dropZoneText').find('span').text()).to.equal('GeoJSON format only, 26MB max,Drag and drop or');
+        expect(wrapper.find('.dropZoneText').find('span').text()).to.equal('GeoJSON format only, 2MB max,Drag and drop or');
         expect(wrapper.find('.dropZoneImportButton')).length(1);
         expect(wrapper.find(FileFileUpload)).to.have.length(1);
     });
