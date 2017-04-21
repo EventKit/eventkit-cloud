@@ -2,31 +2,32 @@
 import json
 import logging
 import os
-import uuid
+from tempfile import NamedTemporaryFile
 from unittest import skip
-
-from mock import patch, Mock
-
-from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.core.files import File
+import uuid
 
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
+from django.contrib.auth.models import Group, User
+from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.core.files import File
+from django.core import serializers
 from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.jobs.models import ExportConfig, ExportFormat, ExportProfile, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.api.views import get_models, get_provider_task
+from eventkit_cloud.jobs.models import ExportFormat, Job, ExportProvider, \
+    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset
+from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from mock import patch, Mock
+
 
 logger = logging.getLogger(__name__)
 
 
 class TestJobViewSet(APITestCase):
-    fixtures = ('insert_provider_types.json', 'osm_provider.json',)
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestJobViewSet, self).__init__(*args, **kwargs)
@@ -63,47 +64,32 @@ class TestJobViewSet(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
         # create a test config
-        f = File(open(self.path + '/files/hdm_presets.xml'))
-        filename = f.name.split('/')[-1]
-        # name = 'Test Configuration File'
-        self.config = ExportConfig.objects.create(name='Test Preset Config', filename=filename, upload=f,
-                                                  config_type='PRESET', user=self.user)
-        f.close()
-        self.assertIsNotNone(self.config)
-        self.job.configs.add(self.config)
+        hdm_presets = DatamodelPreset.objects.get(name='hdm')
+        self.job.preset = hdm_presets
+        self.job.save()
+
         self.tags = [
             {
                 "name": "Telecommunication office",
                 "key": "office", "value": "telecommunication",
-                "data_model": "HDM",
-                "geom_types": ["point", "polygon"],
-                "groups": ['HDM Presets v2.11', 'Commercial and Economic', 'Telecommunication']
+                "geom": ["point", "polygon"],
             },
             {
                 "name": "Radio or TV Studio",
                 "key": "amenity", "value": "studio",
-                "data_model": "OSM",
-                "geom_types": ["point", "polygon"],
-                "groups": ['HDM Presets v2.11', 'Commercial and Economic', 'Telecommunication']
+                "geom": ["point", "polygon"],
             },
             {
                 "name": "Telecommunication antenna",
                 "key": "man_made", "value": "tower",
-                "data_model": "OSM",
-                "geom_types": ["point", "polygon"],
-                "groups": ['HDM Presets v2.11', 'Commercial and Economic', 'Telecommunication']
+                "geom": ["point", "polygon"],
             },
             {
                 "name": "Telecommunication company retail office",
                 "key": "office", "value": "telecommunication",
-                "data_model": "OSM",
-                "geom_types": ["point", "polygon"],
-                "groups": ['HDM Presets v2.11', 'Commercial and Economic', 'Telecommunication']
+                "geom": ["point", "polygon"],
             }
         ]
-
-    def tearDown(self,):
-        self.config.delete()  # clean up
 
     def test_list(self,):
         expected = '/api/jobs'
@@ -114,7 +100,6 @@ class TestJobViewSet(APITestCase):
         """tests job creation with export providers"""
         export_providers = ExportProvider.objects.all()
         export_providers_start_len = len(export_providers)
-        config_uid = self.config.uid
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
 
         request_data = {
@@ -126,7 +111,8 @@ class TestJobViewSet(APITestCase):
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0,
                                   'url': 'http://coolproviderurl.to',
                                   'preview_url': 'http://coolproviderurl.to'}],
-            'preset': str(config_uid),
+            'user': serializers.serialize('json', [self.user]),
+            'preset': self.job.preset.id,
             'transform': '',
             'translation': ''
         }
@@ -203,14 +189,13 @@ class TestJobViewSet(APITestCase):
 
     def test_create_zipfile(self):
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-        config_uid = self.config.uid
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
-            'preset': config_uid,
+            'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
             'include_zipfile': True
@@ -231,14 +216,13 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-list')
         logger.debug(url)
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
-        config_uid = self.config.uid
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
-            'preset': config_uid,
+            'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags
         }
@@ -264,14 +248,13 @@ class TestJobViewSet(APITestCase):
 
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
-        self.assertIsNotNone(job.json_tags)
-        self.assertEqual(233, len(job.json_tags))
+        self.assertIsNotNone(job.preset.json_tags)
+        self.assertEqual(255, len(job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_config_success(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
-        config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -280,10 +263,9 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
-            'preset': config_uid,
+            'preset': self.job.preset.id,
             'transform': '',
             'translation': ''
-
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
@@ -304,15 +286,13 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
-        configs = self.job.configs.all()
-        self.assertIsNotNone(configs[0])
+        self.assertEqual(255, len(self.job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
     def test_create_job_with_tags(self, create_run_mock, pickup_mock):
         create_run_mock.return_value = "some_run_uid"
 
-        # config_uid = self.config.uid
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -321,7 +301,7 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
-            # 'preset': config_uid,
+            'preset': self.job.preset.id,
             'transform': '',
             'translate': '',
             'tags': self.tags
@@ -354,6 +334,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  {},
+            'preset': self.job.preset.id,
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
@@ -672,163 +653,6 @@ class TestExportRunViewSet(APITestCase):
 
         # test significant content
         self.assertEquals(response.data, [])
-
-
-class TestExportConfigViewSet(APITestCase):
-    """
-    Test cases for ExportConfigViewSet
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(TestExportConfigViewSet, self).__init__(*args, **kwargs)
-        self.user = None
-        self.path = None
-        self.job = None
-        self.uid = None
-        self.client = None
-
-    def setUp(self,):
-        self.path = os.path.dirname(os.path.realpath(__file__))
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom)
-        self.uid = self.job.uid
-        # setup token authentication
-        token = Token.objects.create(user=self.user)
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-
-    def test_create_config(self,):
-        url = reverse('api:configs-list')
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = File(open(path + '/files/Example Transform.sql', 'r'))
-        name = 'Test Export Config'
-        response = self.client.post(url, {'name': name, 'upload': f, 'config_type': 'TRANSFORM', 'published': True},
-                                    format='multipart')
-        data = response.data
-        uid = data['uid']
-        saved_config = ExportConfig.objects.get(uid=uid)
-        self.assertIsNotNone(saved_config)
-        self.assertEquals(name, saved_config.name)
-        self.assertTrue(saved_config.published)
-        self.assertEquals('example_transform.sql', saved_config.filename)
-        self.assertEquals('text/plain', saved_config.content_type)
-        saved_config.delete()
-
-    def test_delete_no_permissions(self,):
-        """
-        Test deletion of configuration when the user has no object permissions.
-        """
-        post_url = reverse('api:configs-list')
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = File(open(path + '/files/hdm_presets.xml', 'r'))
-        name = 'Test Export Preset'
-        response = self.client.post(post_url, {'name': name, 'upload': f, 'config_type': 'PRESET', 'published': True},
-                                    format='multipart')
-        data = response.data
-        uid = data['uid']
-        saved_config = ExportConfig.objects.get(uid=uid)
-        self.assertIsNotNone(saved_config)
-        self.assertEquals(name, saved_config.name)
-        self.assertTrue(saved_config.published)
-        self.assertEquals('hdm_presets.xml', saved_config.filename)
-        self.assertEquals('application/xml', saved_config.content_type)
-
-        delete_url = reverse('api:configs-detail', args=[uid])
-        # create another user with token
-        user = User.objects.create_user(
-            username='other_user', email='other_user@demo.com', password='demo'
-        )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        # try to delete a configuration belonging to self.user
-        response = self.client.delete(delete_url)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-        saved_config.delete()
-
-    def test_invalid_config_type(self,):
-        url = reverse('api:configs-list')
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = open(path + '/files/Example Transform.sql', 'r')
-        self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM-WRONG'}, format='multipart')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-    def test_invalid_preset(self,):
-        url = reverse('api:configs-list')
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = open(path + '/files/invalid_hdm_presets.xml', 'r')
-        self.assertIsNotNone(f)
-        response = self.client.post(url, {'name': 'Invalid Preset', 'upload': f, 'config_type': 'PRESET'},
-                                    format='multipart')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-    def test_invalid_name(self,):
-        url = reverse('api:configs-list')
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = open(path + '/files/Example Transform.sql', 'r')
-        self.assertIsNotNone(f)
-        response = self.client.post(url, {'upload': f, 'config_type': 'TRANSFORM'}, format='multipart')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response.data['name'], ['This field is required.'])
-
-    def test_invalid_upload(self,):
-        url = reverse('api:configs-list')
-        response = self.client.post(
-            url,
-            {'upload': '', 'config_type': 'TRANSFORM-WRONG'},
-            format='json'
-        )
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-    @skip('Transform not implemented.')
-    def test_update_config(self,):
-        url = reverse('api:configs-list')
-        # create an initial config we can then update..
-        path = os.path.dirname(os.path.realpath(__file__))
-        f = File(open(path + '/files/Example Transform.sql', 'r'))
-        name = 'Test Export Config'
-        response = self.client.post(
-            url,
-            {'name': name, 'upload': f, 'config_type': 'TRANSFORM'},
-            format='JSON'
-        )
-        data = response.data
-        saved_uid = data['uid']
-        # saved_config = ExportConfig.objects.get(uid=saved_uid)
-
-        # update the config
-        url = reverse('api:configs-detail', args=[saved_uid])
-        f = File(open(path + '/files/hdm_presets.xml', 'r'))
-        updated_name = 'Test Export Config Updated'
-        response = self.client.put(
-            url,
-            {'name': updated_name, 'upload': f, 'config_type': 'PRESET'},
-            format='json'
-        )
-        data = response.data
-        updated_uid = data['uid']
-        self.assertEquals(saved_uid, updated_uid)  # check its the same uid
-        updated_config = ExportConfig.objects.get(uid=updated_uid)
-        self.assertIsNotNone(updated_config)
-        self.assertEquals('hdm_presets.xml', updated_config.filename)
-        self.assertEquals('application/xml', updated_config.content_type)
-        self.assertEquals('Test Export Config Updated', updated_config.name)
-        updated_config.delete()
-        try:
-            File(open(path + '/files/Example Transform.sql', 'r'))
-        except IOError:
-            pass  # expected.. old file has been deleted during update.
 
 
 class TestExportTaskViewSet(APITestCase):
