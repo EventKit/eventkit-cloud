@@ -33,7 +33,7 @@ def expire_runs():
     and 2 days before schedule expiration time.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    site_name = getattr(settings, "SITE_NAME", "cloud.eventkit.dev")
+    site_name = getattr(settings, "SITE_NAME")
     runs = ExportRun.objects.all()
 
     for run in runs:
@@ -52,18 +52,18 @@ def expire_runs():
         # if two days left and most recent notification was at the 7 day mark email user
         elif expiration - now <= timezone.timedelta(days=2):
             if not notified or (notified and notified < expiration - timezone.timedelta(days=2)):
-                send_warning_email(expiration, url, email)
+                send_warning_email(expiration, url, email, job_name=run.job.name)
                 run.notified = now
                 run.save()
 
         # if one week left and no notification yet email the user
         elif expiration - now <= timezone.timedelta(days=7) and not notified:
-            send_warning_email(expiration, url, email)
+            send_warning_email(expiration, url, email, job_name=run.job.name)
             run.notified = now
             run.save()
 
 
-def send_warning_email(date, url, addr):
+def send_warning_email(date=None, url=None, addr=None, job_name=None):
     """
     Args:
         date: A datetime object representing when the run will expire
@@ -73,14 +73,14 @@ def send_warning_email(date, url, addr):
     Returns: None
     """
 
-    subject = "Your Eventkit Data Pack is set to expire."
+    subject = "Your Eventkit DataPack is set to expire."
     to = [addr]
     from_email = getattr(
         settings,
         'DEFAULT_FROM_EMAIL',
         'Eventkit Team <eventkit.team@gmail.com>'
     )
-    ctx = {'url': url, 'date': str(date)}
+    ctx = {'url': url, 'date': str(date), 'job_name': job_name}
 
     text = get_template('email/expiration_warning.txt').render(ctx)
     html = get_template('email/expiration_warning.html').render(ctx)

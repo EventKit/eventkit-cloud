@@ -1,14 +1,15 @@
-{% load i18n %}
 <html>
     <head>
-        <title>Eventkit Data Pack</title>
+        <title>Eventkit DataPack</title>
     </head>
     <body>
-        <p>{% trans 'This is an automated email from the Eventkit Team.' %}</p>
-        <p>{% trans 'Your Eventkit Data Pack is set to expire on ' %} {{ date }}{% trans '.' %}</p>
-        <p>{% trans 'If you would like to reset the expiration countdown timer to 2 weeks, please go to the export summary page and click "Reset Expiration" ' %}<a href="{{ url }}/">{{ url }}</a></p>
-        <p>{% trans 'If you require an expiration of  more than 2 weeks, please contact the administrator.' %}</br></p>
-        <p>{% trans 'Thank you for using Eventkit' %}</p>
-        <p>{% trans 'Eventkit Team' %}</p>
+        <h3>This is an automated email from the Eventkit Team.</h3>
+        <p>Your Eventkit DataPack:</p>
+        <b>{{ job_name }}</b>
+        </p>is set to expire on: <b>{{ date }}</b>.</p>
+        <p>If you would like to reset the expiration countdown timer to 2 weeks, please go to the export summary page and click "Reset Expiration"<a href="{{ url }}/">{{ url }}</a><br/>
+        If you require an expiration of  more than 2 weeks, please contact the administrator.</p>
+        <p>Thank you for using Eventkit.</p>
+        <p>Eventkit Team</p>
     </body>
 </html>
