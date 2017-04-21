@@ -13,61 +13,61 @@ export function orderZA(runs) {
     }).reverse();
 };
 
-export function orderEventAZ(runs) {//test
+export function orderEventAZ(runs) {
     return sortBy(runs, (o) => {
         return o.job.event.toUpperCase();
     });
 };
 
-export function orderEventZA(runs) {//test
+export function orderEventZA(runs) {
     return sortBy(runs, (o) => {
         return o.job.event.toUpperCase();
     }).reverse();
 };
 
-export function orderOldest(runs) {//test
+export function orderOldest(runs) {
     return sortBy(runs, (o) => {
         return o.started_at;
     });
 };
 
-export function orderNewest(runs) {//test
+export function orderNewest(runs) {
     return sortBy(runs, (o) => {
         return o.started_at;
     }).reverse();
 };
 
-export function orderComplete(runs) {//test
+export function orderComplete(runs) {
     return sortBy(runs, (o) => {
         return o.status
     });
 };
 
-export function orderIncomplete(runs) {//test
+export function orderIncomplete(runs) {
     return sortBy(runs, (o) => {
         return o.status
     }).reverse();
 };
 
-export function orderPrivate(runs) {//test
+export function orderPrivate(runs) {
     return sortBy(runs, (o) => {
         return o.job.published
     });
 };
 
-export function orderPublic(runs) {//test
+export function orderPublic(runs) {
     return sortBy(runs, (o) => {
         return o.job.published
     }).reverse();
 };
 
-export function orderOwnerAZ(runs) {//test
+export function orderOwnerAZ(runs) {
     return sortBy(runs, (o) => {
         return o.user
     });
 };
 
-export function orderOwnerZA(runs) {//test
+export function orderOwnerZA(runs) {
     return sortBy(runs, (o) => {
         return o.user
     }).reverse();

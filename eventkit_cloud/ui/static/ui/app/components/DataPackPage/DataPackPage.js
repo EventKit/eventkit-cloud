@@ -66,10 +66,6 @@ export class DataPackPage extends React.Component {
         if(nextProps.runsList.fetched != this.props.runsList.fetched) { 
             if (nextProps.runsList.fetched == true) {
                 let runs = nextProps.runsList.runs;
-                runs[1].status = 'SUBMITTED';
-                runs[3].status = 'INCOMPLETE';
-                runs[6].status = 'INCOMPLETE';
-                runs[7].status = 'SUBMITTED';
                 this.setState({runs: runs});
                 runs = this.applyAll(runs);
                 this.setState({displayedRuns:runs});
@@ -135,7 +131,7 @@ export class DataPackPage extends React.Component {
         return runs;
     }
 
-    applySorts(runs) {//test
+    applySorts(runs) {
         if (this.state.dropDownValue == 2) {
             runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
         }
@@ -178,7 +174,7 @@ export class DataPackPage extends React.Component {
         this.setState({displayedRuns: runs});
     }
 
-    handleTableSort(sortFunction) {//test
+    handleTableSort(sortFunction) {
         const sorted_runs = sortFunction(this.state.displayedRuns);
         this.setState({displayedRuns: sorted_runs, tableSort: sortFunction});
     }

@@ -7,6 +7,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import Checkbox from 'material-ui/Checkbox';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import isEqual from 'lodash/isEqual';
 
@@ -37,7 +38,8 @@ describe('StatusFilter component', () => {
         expect(wrapper.find(Checkbox).at(2).props().checked).to.equal(false);
         expect(wrapper.find(AlertError)).to.have.length(1);
         expect(wrapper.find(NotificationSync)).to.have.length(1);
-        expect(wrapper.find('p')).to.have.length(2);
+        expect(wrapper.find(NavigationCheck)).to.have.length(1);
+        expect(wrapper.find('p')).to.have.length(1);
     });
 
     it('should call onChange with "COMPLETED"', () => {

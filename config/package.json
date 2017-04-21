@@ -57,6 +57,7 @@
     "enzyme": "~2.7.1",
     "identity-obj-proxy": "~3.0.0",
     "jest-cli": "~17.0.3",
+    "jsdom": "~9.12.0",
     "nock": "~9.0.2",
     "webpack-dev-server": "~1.16.2",
     "react-addons-test-utils": "~15.4.0",
@@ -84,7 +85,8 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
     },
-    "modulePathIgnorePatterns": ["staticfiles/"]
+    "modulePathIgnorePatterns": ["staticfiles/"],
+    "setupFiles": ["./setupFile.js"]
   },
   "scripts": {
     "build": "PROD=1 webpack",

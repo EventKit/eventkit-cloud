@@ -310,6 +310,24 @@ describe('DataPackPage component', () => {
         sortSpy.restore();
         ownerSpy.restore();
     });
+    
+    it('applySorts should call tableSort', () => {
+        let props = getProps();
+        const sortSpy = new sinon.spy(utils , 'orderOldest');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        wrapper.setState({tableSort: sortSpy, grid: false});
+        const returned_runs = wrapper.instance().applySorts(runs);
+        expect(sortSpy.calledOnce).to.be.true;
+        expect(sortSpy.calledWith(runs)).to.be.true;
+        expect(returned_runs[0].started_at).to.equal('2017-03-19');
+        expect(returned_runs[2].started_at).to.equal('2017-03-21');
+        sortSpy.restore();
+    })
 
     it('applySorts should call sortDropDown and myDataPacksOnly', () => {
         let props = getProps();
@@ -443,12 +461,30 @@ describe('DataPackPage component', () => {
         wrapper.setState({displayedRuns: runs, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleFilterApply();
-        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledThrice).to.be.true;
         expect(stateSpy.calledWith({filtersApplied: true})).to.be.true;
         expect(applySpy.calledWith(runs)).to.be.true;
         expect(stateSpy.calledWith({displayedRuns: runs})).to.be.true;
         stateSpy.restore();
         applySpy.restore();
+    });
+
+    it('handleTableSort should use the passed in function on displayed runs then update the state', () => {
+        const sortFunc = (runs) => {
+            return runs.reverse();
+        }
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+        ];
+        wrapper.setState({displayedRuns: runs, runs: runs});
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleTableSort(sortFunc);
+        expect(stateSpy.calledWith({displayedRuns: runs.reverse(), tableSort: sortFunc})).to.be.true;
+        stateSpy.restore();
     });
 
     it('handleFilterClear should setState then re-apply search and sort', () => {
@@ -464,7 +500,7 @@ describe('DataPackPage component', () => {
         wrapper.setState({displayedRuns: runs, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleFilterClear();
-        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledThrice).to.be.true;
         expect(stateSpy.calledWith({
             permissions: null,
             status: {

@@ -4,8 +4,6 @@ import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import FlatButton from 'material-ui/FlatButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterButton';
@@ -20,14 +18,13 @@ describe('DataPackFilterButton component', () => {
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
 
-    it('should render a flat button with proper lable and icon', () => {
+    it('should render a flat button with proper lable', () => {
         const props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         expect(wrapper.find(FlatButton)).to.have.length(1);
-        expect(wrapper.find(NavigationArrowDropUp)).to.have.length(1);
         expect(wrapper.text()).to.equal('Filter');
     });
 
@@ -40,17 +37,5 @@ describe('DataPackFilterButton component', () => {
         });
         wrapper.find('button').simulate('click');
         expect(props.handleToggle.calledOnce).to.equal(true);
-    });
-
-    it('should render a different icon when open is true', () => {
-        let props = getProps();
-        const wrapper = mount(<DataPackFilterButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        expect(wrapper.find(NavigationArrowDropUp)).to.have.length(1);
-        props.open = true;
-        wrapper.setProps(props);
-        expect(wrapper.find(NavigationArrowDropDown)).to.have.length(1);
     });
 });

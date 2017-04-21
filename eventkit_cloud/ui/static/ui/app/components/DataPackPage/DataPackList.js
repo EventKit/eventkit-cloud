@@ -165,7 +165,6 @@ export class DataPackList extends Component {
             permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
             ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
         };
-
         return (
             <div style={styles.root}>
             {window.innerWidth < 768 ?
