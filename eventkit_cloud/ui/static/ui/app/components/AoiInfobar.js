@@ -9,6 +9,7 @@ import ActionRoom from 'material-ui/svg-icons/action/room';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 
 export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>;
+export const MULTIPOLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
 
@@ -44,6 +45,9 @@ export class AoiInfobar extends Component {
             }
             else if(aoiInfo.geomType == 'Polygon') {
                 this.setState({geometryIcon: POLYGON_ICON});
+            }
+            else if(aoiInfo.geomType == 'MultiPolygon') {
+                this.setState({geometryIcon: MULTIPOLYGON_ICON});
             }
             this.setState({aoiTitle: aoiInfo.title});
             this.setState({aoiDescription: aoiInfo.description});
