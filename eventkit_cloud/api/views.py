@@ -11,28 +11,26 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from eventkit_cloud.jobs import presets
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset
+    ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset
 )
-from eventkit_cloud.jobs.presets import PresetParser
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from serializers import (
-    ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
+    ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
     ExportProviderSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
+from .filters import ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -302,17 +300,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: %s' % preset)
-                            config = ExportConfig.objects.get(uid=preset)
-                            job.configs.add(config)
-                            preset_path = config.upload.path
-                            """Use the UnfilteredPresetParser."""
-                            parser = presets.UnfilteredPresetParser(preset=preset_path)
-                            tags_dict = parser.parse()
-                            simplified_tags = []
-                            for entry in tags_dict:
-                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
-                                simplified_tags.append(tag)
-                            job.json_tags = simplified_tags
+                            job.json_tags = preset
                             job.save()
                         elif tags:
                             """Get tags from request."""
@@ -387,17 +375,6 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
-
-
-class PresetViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Returns the list of PRESET configuration files.
-    """
-    CONFIG_TYPE = 'PRESET'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
 
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
@@ -521,25 +498,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-class ExportConfigViewSet(viewsets.ModelViewSet):
-    """
-    Endpoint for operations on export configurations.
-
-    Lists all available configuration files.
-    """
-    serializer_class = ExportConfigSerializer
-    pagination_class = LinkHeaderPagination
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_class = ExportConfigFilter
-    search_fields = ('name', 'config_type', 'user__username')
-    permission_classes = (permissions.IsAuthenticated,
-                          IsOwnerOrReadOnly)
-    parser_classes = (FormParser, MultiPartParser, JSONParser)
-    queryset = ExportConfig.objects.filter(config_type='PRESET')
-    lookup_field = 'uid'
-
-
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
@@ -608,38 +566,6 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
 
         cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
-
-class PresetViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Returns the list of PRESET configuration files.
-    """
-    CONFIG_TYPE = 'PRESET'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
-
-
-class TranslationViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Return the list of TRANSLATION configuration files.
-    """
-    CONFIG_TYPE = 'TRANSLATION'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
-
-
-class TransformViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Return the list of TRANSFORM configuration files.
-    """
-    CONFIG_TYPE = 'TRANSFORM'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
 
 
 class HDMDataModelView(views.APIView):

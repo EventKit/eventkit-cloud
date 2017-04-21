@@ -9,7 +9,6 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 import uuid
 
-import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import Job, DatamodelPreset
 
 from ..thematic_gpkg import ThematicGPKG

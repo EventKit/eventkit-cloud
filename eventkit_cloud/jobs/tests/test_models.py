@@ -10,9 +10,8 @@ from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
-import eventkit_cloud.jobs.presets as presets
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, ExportProfile, Job, Region, ExportProvider, ProviderTask
+    ExportFormat, ExportProfile, Job, Region, ExportProvider, ProviderTask
 , DatamodelPreset)
 
 logger = logging.getLogger(__name__)
@@ -57,10 +56,8 @@ class TestJob(TestCase):
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
-        tags = saved_job.json_tags
-        self.assertEquals(4, len(tags))
         self.assertEquals('Test description', saved_job.description)
-        self.assertEquals(0, saved_job.configs.all().count())
+        self.assertEquals(4, len(saved_job.json_tags))
         self.assertEqual(False, saved_job.include_zipfile)  # default
 
     def test_job_creation_with_config(self,):
@@ -73,16 +70,9 @@ class TestJob(TestCase):
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job
-        f = File(open(self.path + '/files/hdm_presets.xml'))
-        filename = f.name.split('/')[-1]
-        config = ExportConfig.objects.create(name='Test Preset Config', filename=filename, upload=f,
-                                             config_type='PRESET', user=self.user)
-        f.close()
-        self.assertIsNotNone(config)
-        saved_job.configs.add(config)
-        saved_config = saved_job.configs.all()[0]
-        self.assertEqual(config, saved_config)
-        saved_config.delete()  # cleanup
+        hdm_preset = DatamodelPreset.objects.get(name='hdm')
+        saved_job.preset = hdm_preset
+        self.assertEqual(hdm_preset.json_tags, saved_job.preset.json_tags)
 
     def test_spatial_fields(self,):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
@@ -252,52 +242,6 @@ class TestJobRegionIntersection(TestCase):
                                                                                         field_name='the_geom').order_by(
             '-intersection')
         self.assertEquals(0, len(regions))
-
-
-class TestExportConfig(TestCase):
-    def setUp(self,):
-        self.abs_path = settings.ABS_PATH()
-        self.path = os.path.dirname(os.path.realpath(__file__))
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
-        the_geom = GEOSGeometry(bbox, srid=4326)
-        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom)
-        self.uid = self.job.uid
-
-    def test_create_config(self,):
-        f = open(self.path + '/files/hdm_presets.xml')
-        test_file = File(f)
-        filename = test_file.name.split('/')[-1]
-        name = 'Test Configuration File'
-        config = ExportConfig.objects.create(name=name, filename=filename, upload=test_file,
-                                             config_type='PRESET', user=self.user)
-        test_file.close()
-        self.assertIsNotNone(config)
-        uid = config.uid
-        saved_config = ExportConfig.objects.get(uid=uid)
-        self.assertEquals('PRESET', saved_config.config_type)
-        self.assertEquals(name, saved_config.name)
-        self.assertFalse(saved_config.published)
-        self.assertIsNotNone(saved_config)
-        self.assertEqual(config, saved_config)
-        sf = File(open(self.abs_path + '/media/export/config/preset/hdm_presets.xml'))
-        self.assertIsNotNone(sf)  # check the file gets created on disk
-        saved_config.delete()  # clean up
-        sf.close()
-
-    def test_add_config_to_job(self,):
-        f = open(self.path + '/files/hdm_presets.xml')
-        test_file = File(f)
-        filename = test_file.name.split('/')[-1]
-        name = 'Test Configuration File'
-        config = ExportConfig.objects.create(name=name, filename=filename, upload=test_file,
-                                             config_type='PRESET', user=self.user)
-        test_file.close()
-        self.assertIsNotNone(config)
-        self.job.configs.add(config)
-        self.assertEquals(1, self.job.configs.all().count())
 
 
 class TestTag(TestCase):

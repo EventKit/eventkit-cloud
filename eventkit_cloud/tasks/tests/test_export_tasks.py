@@ -18,7 +18,6 @@ from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch, MagicMock
 import datetime
 
-from ...jobs import presets
 from ...jobs.models import Job
 from ..export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,

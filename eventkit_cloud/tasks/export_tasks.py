@@ -317,7 +317,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
 
 
 @app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
     """
     Task to create styles for osm.
     """
@@ -338,7 +338,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                       'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': bbox}))
+                                                                      'bbox': bbox,
+                                                                      'provider_name': provider_name}))
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result

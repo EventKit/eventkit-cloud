@@ -5,9 +5,9 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_swagger.views import get_swagger_view
 
 from eventkit_cloud.api.views import (
-    ExportConfigViewSet, ExportFormatViewSet, ExportRunViewSet,
-    ExportTaskViewSet, JobViewSet, PresetViewSet, RegionMaskViewSet,
-    RegionViewSet, TransformViewSet, TranslationViewSet, ExportProviderViewSet,
+    ExportFormatViewSet, ExportRunViewSet,
+    ExportTaskViewSet, JobViewSet, RegionMaskViewSet,
+    RegionViewSet, ExportProviderViewSet,
     ExportProviderTaskViewSet
 )
 
@@ -20,9 +20,5 @@ router.register(r'provider_tasks', ExportProviderTaskViewSet, base_name='provide
 router.register(r'tasks', ExportTaskViewSet, base_name='tasks')
 router.register(r'regions', RegionViewSet, base_name='regions')
 router.register(r'maskregions', RegionMaskViewSet, base_name='mask')
-router.register(r'configurations', ExportConfigViewSet, base_name='configs')
-router.register(r'configuration/presets', PresetViewSet, base_name='presets')
-router.register(r'configuration/translations', TranslationViewSet, base_name='translations')
-router.register(r'configuration/transforms', TransformViewSet, base_name='transforms')
 
 schema_view = get_swagger_view(title='EventKit-Cloud API')
