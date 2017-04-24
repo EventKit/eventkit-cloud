@@ -21,7 +21,7 @@
     "font-awesome": "~4.7.0",
     "image-webpack-loader": "~3.0.0",
     "file-loader": "~0.9.0",
-    "jsts": "~1.3.0",
+    "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "material-ui": "~0.16.5",
     "material-design-icons": "~3.0.1",
@@ -79,6 +79,8 @@
     ]
   },
   "jest": {
+    "coverageDirectory": "/var/lib/eventkit/coverage",
+    "collectCoverageFrom" : ["**/*.{js,jsx}", "!**/coverage/**", "!**/webpack.config.js", "!**/build/**", "!**/staticfiles/**", "!**/styles/**", "!**/node_modules/**", "!**/vendor/**"],
     "moduleFileExtensions": ["js", "jsx"],
     "moduleDirectories": ["node_modules", "bower_components", "shared"],
     "moduleNameMapper": {
@@ -91,7 +93,8 @@
   "scripts": {
     "build": "PROD=1 webpack",
     "start": "webpack-dev-server --inline",
-    "test": "jest --verbose"
+    "coverage": "jest --coverage --silent && mkdir -p /var/lib/eventkit/coverage/coveralls && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls/coveralls.json",
+    "test": "jest --silent"
   },
   "repository": {
     "type": "git",
