@@ -1,8 +1,6 @@
 version: '2'
 services:
   base:
-     volumes:
-       - ./:/var/lib/eventkit/
      build:
        context: .
        dockerfile: config/Dockerfile_test
@@ -36,6 +34,8 @@ services:
         - "6080"
       volumes:
         - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:ro
+        - ./scripts:/var/lib/eventkit/scripts
+        - ./eventkit_cloud/management/tests:/var/lib/eventkit_cloud/management/tests
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
   celery:
       extends:
