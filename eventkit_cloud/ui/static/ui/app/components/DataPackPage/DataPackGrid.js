@@ -7,30 +7,27 @@ import DataPackGridItem from './DataPackGridItem';
 export class DataPackGrid extends Component {
     constructor(props) {
         super(props);
-        this.updateColumns = this.updateColumns.bind(this);
         this.state = {
-            cols: 2
+            cols: this.getColumns(window.innerWidth)
         }
     }
 
-    componentWillMount() {
-        this.updateColumns();
-        window.addEventListener('resize', this.updateColumns);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.updateColumns);
-    }
-
-    updateColumns() {
-        if(window.innerWidth <= 800) {
-            this.setState({cols: 2});
+    componentWillUpdate() {
+        const cols = this.getColumns(window.innerWidth);
+        if(cols != this.state.cols) {
+            this.setState({cols: cols});
         }
-        else if(window.innerWidth > 1200) {
-            this.setState({cols: 4});
+    }
+
+    getColumns(screenWidth) {
+        if(screenWidth <= 800) {
+            return 2;
+        }
+        else if(screenWidth > 1200) {
+            return 4;
         }
         else {
-            this.setState({cols: 3});
+            return 3;
         }
     }
 

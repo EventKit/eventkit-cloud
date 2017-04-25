@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount} from 'enzyme';
 import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
 import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -14,20 +13,49 @@ describe('DataPackGrid component', () => {
     const props = {runs: getRuns(), user: {data: {username: 'admin'}}, onRunDelete: () => {}};
 
     it('should render a DataPackGridItem for each run passed in', () => {
-        const mountSpy = new sinon.spy(DataPackGrid.prototype, 'componentWillMount');
-        const unmountSpy = new sinon.spy(DataPackGrid.prototype, 'componentWillUnmount');
-        const updateColumnSpy = new sinon.spy(DataPackGrid.prototype, 'updateColumns');
+        const getColumnSpy = new sinon.spy(DataPackGrid.prototype, 'getColumns');
         const wrapper = mount(<DataPackGrid {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(GridList)).to.have.length(1);
-        expect(wrapper.find(DataPackGridItem)).to.have.length(3);
-        expect(mountSpy.calledOnce).to.be.true;
-        expect(updateColumnSpy.calledOnce).to.be.true;
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).to.be.true;
-        
+        expect(wrapper.find(GridList)).toHaveLength(1);
+        expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
+        expect(getColumnSpy.calledOnce).toBe(true);
+        getColumnSpy.restore();
+    });
+
+    it('if screensize has changed it should update columns in state', () => {
+        const wrapper = mount(<DataPackGrid {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(window.innerWidth).toEqual(1024);
+        expect(wrapper.state().cols).toEqual(3);
+        const updateSpy = new sinon.spy(DataPackGrid.prototype, 'componentWillUpdate');
+        window.resizeTo(775, 800);
+        expect(window.innerWidth).toEqual(775);
+        wrapper.update();
+        expect(updateSpy.calledThrice).toBe(true);
+        expect(wrapper.state().cols).toEqual(2);
+        window.resizeTo(1333, 800);
+        expect(window.innerWidth).toEqual(1333);
+        wrapper.update();
+        expect(wrapper.state().cols).toEqual(4);
+        expect(updateSpy.callCount).toEqual(6);
+        updateSpy.restore();
+    });
+
+    it('getColumns should return 2, 3, or 4 depending on screensize', () => {
+        const wrapper = mount(<DataPackGrid {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        let cols = wrapper.instance().getColumns(600);
+        expect(cols).toEqual(2);
+        cols = wrapper.instance().getColumns(991);
+        expect(cols).toEqual(3);
+        cols = wrapper.instance().getColumns(1250);
+        expect(cols).toEqual(4);
     });
 });
 

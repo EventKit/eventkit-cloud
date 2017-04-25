@@ -7,36 +7,33 @@ export class DataPackFilterButton extends React.Component {
 
     constructor(props) {
         super(props);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = {
-            labelFontSize: '16px'
+            labelFontSize: this.getLabelFontSize(window.innerWidth)
+        }
+    }
+    
+    componentWillUpdate() {
+        const fontSize = this.getLabelFontSize(window.innerWidth);
+        if(fontSize !== this.state.labelFontSize) {
+            this.setState({labelFontSize: fontSize});
         }
     }
 
-    componentWillMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
-        if(window.innerWidth <= 575) {
-            this.setState({labelFontSize: '12px'});
+    getLabelFontSize(screenSize) {
+        if(screenSize <= 575) {
+            return '12px';
         }
-        else if (window.innerWidth <= 767) {
-            this.setState({labelFontSize: '13px'});
+        else if (screenSize <= 767) {
+            return '13px';
         }
-        else if (window.innerWidth <= 991) {
-            this.setState({labelFontSize: '14px'});
+        else if (screenSize <= 991) {
+            return '14px';
         }
-        else if(window.innerWidth <= 1199) {
-            this.setState({labelFontSize: '15px'});
+        else if(screenSize <= 1199) {
+            return '15px';
         }
         else {
-            this.setState({labelFontSize: '16px'});
+            return '16px';
         }
     }
     
