@@ -46,17 +46,17 @@ class DataCartDetails extends React.Component {
 
     }
     componentDidUpdate(prevProps, prevState) {
-        this._setTableColors();
+        //this._setTableColors();
     }
 
     _setTableColors() {
         switch(this.props.cartDetails.status) {
             case 'COMPLETED':
-                return this.setState({statusBackgroundColor: '#bcdfbb',statusFontColor: '#55ba63',});
+                return this.setState({statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
             case 'SUBMITTED':
-                return this.setState({statusBackgroundColor: '#fae9ad',statusFontColor: '#f4d225',});
+                return this.setState({statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
             case 'INCOMPLETE':
-                return this.setState({statusBackgroundColor: '#e8ac90',statusFontColor: '#ce4427',});
+                return this.setState({statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
             default:
                 return this.setState({statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
         }

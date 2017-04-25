@@ -19,7 +19,6 @@ class StatusDownload extends React.Component {
         this.state = {
             datacartDetails: [],
         }
-
     }
 
     getChildContext() {
@@ -29,10 +28,8 @@ class StatusDownload extends React.Component {
         this.setState({expanded: expanded});
     }
     componentWillReceiveProps(nextProps) {
-        if (this.props.datacartDetails.fetched != null) {
             if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
                 if (nextProps.datacartDetails.fetched == true) {
-                    console.log(nextProps.datacartDetails.data)
                     let datacartDetails = nextProps.datacartDetails.data;
                     this.setState({datacartDetails: datacartDetails});
 
@@ -41,23 +38,22 @@ class StatusDownload extends React.Component {
                     }
                 }
             }
-        }
     }
+
     componentDidMount(){
         this.timer = TimerMixin.setInterval(() => {
-            console.log('I do not leak!');
-            this.props.getDatacartDetails(this.props.params.jobuid);
+           this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
 
     }
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
-        console.log("undone")
     }
 
     componentDidUpdate(prevProps, prevState) {
 
     }
+
     render() {
 
         return (
@@ -92,16 +88,17 @@ function mapDispatchToProps(dispatch) {
     }
 }
 
-
-
 StatusDownload.propTypes = {
     datacartDetails: PropTypes.object.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
-}
+};
+
 StatusDownload.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
 };
+
 reactMixin(StatusDownload.prototype, TimerMixin);
+
 export default connect(
     mapStateToProps,
     mapDispatchToProps,

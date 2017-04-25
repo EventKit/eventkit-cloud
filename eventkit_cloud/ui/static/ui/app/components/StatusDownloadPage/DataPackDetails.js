@@ -60,6 +60,7 @@ class DataPackDetails extends React.Component {
         this.setState({file: checked})
     }
     render() {
+        console.log(this.props.providerTasks);
 
         return (
             <div className={styles.downloadDiv}>
@@ -67,6 +68,7 @@ class DataPackDetails extends React.Component {
                    Download Options
                 </div>
                 <Table
+
                     fixedHeader={this.state.fixedHeader}
                     fixedFooter={this.state.fixedFooter}
                     selectable={this.state.selectable}
@@ -78,29 +80,24 @@ class DataPackDetails extends React.Component {
                         enableSelectAll={this.state.enableSelectAll}
                     >
                         <TableRow>
-                            <TableHeaderColumn>Provider</TableHeaderColumn>
-                            <TableHeaderColumn style={{textAlign: 'center'}}># of Selections</TableHeaderColumn>
-                            <TableHeaderColumn style={{textAlign: 'center'}} >Run Time</TableHeaderColumn>
-                            <TableHeaderColumn style={{textAlign: 'center'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'35%', fontSize: '14px'}}>PROVIDER</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}># OF SELECTIONS</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}} >RUN TIME</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'25%',textAlign: 'center', fontSize: '14px'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
+
                         </TableRow>
                     </TableHeader>
-                    <TableBody
-                        displayRowCheckbox={this.state.showCheckboxes}
-                        deselectOnClickaway={false}
-                        showRowHover={this.state.showRowHover}
-                        stripedRows={this.state.stripedRows}
-                        stripedRowsStyles={{backgroundColor: 'red', color: 'blue'}}
-                    >
-
+                    </Table>
 
                 {this.props.providerTasks.map((provider) => (
-
                     <ProviderRow key={provider.uid} providerTasks={provider}/>
-
                 ))}
 
-                    </TableBody>
-                </Table>
+
+
+
+
+
             </div>
 
         )

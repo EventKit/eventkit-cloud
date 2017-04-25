@@ -215,7 +215,7 @@ export class ExportInfo extends React.Component {
                         underlineFocusStyle={style.underlineStyle}
                         onChange={this.onChange}
                         defaultValue={this.props.exportInfo.exportName}
-                        hintText="Datapack Name"
+                        hintText="DataPack Name"
                         style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
                         inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
                         hintStyle={{fontSize: '16px', paddingLeft: '5px'}}

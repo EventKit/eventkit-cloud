@@ -54,10 +54,11 @@ class TaskRow extends React.Component {
 
         return (
 
-                        <TableRowColumn>{this.props.tasks.name}</TableRowColumn>,
-                        <TableRowColumn>la la la</TableRowColumn>,
-                        <TableRowColumn>la la la</TableRowColumn>,
-                        <TableRowColumn style={{textAlign:'center'}}><CloudDownload style={{color:'#4598bf'}}/></TableRowColumn>
+                    <TableRow>
+                        <TableHeaderColumn>{this.props.task.name}</TableHeaderColumn>
+                        <TableHeaderColumn style={{textAlign: 'center'}} >Run Time</TableHeaderColumn>
+                        <TableHeaderColumn style={{textAlign: 'center'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
+                    </TableRow>
 
 
 
@@ -66,7 +67,7 @@ class TaskRow extends React.Component {
 }
 
 TaskRow.propTypes = {
-
+    task: PropTypes.object.isRequired,
 }
 TaskRow.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,

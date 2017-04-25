@@ -68,9 +68,7 @@
     fill: #4598bf!important;
 }
 .checkboxColor {
-    float:left!important;
-    paddding-top: 12px!important;
-    padding-left: 5px;
+
 }
 .checkbox > div{
     padding-bottom: 60px;
@@ -87,4 +85,7 @@
 .map {
     width:75%;
     padding-top:15px;
+}
+.checkboxField > tr > th {
+    padding-left: 0px!important;
 }
