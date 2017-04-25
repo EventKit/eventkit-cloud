@@ -28,11 +28,14 @@ if __name__ == "__main__":
             cov.stop()
             cov.save()
             cov.report()
-            cov.html_report(directory='./coverage')
 
         if os.getenv("TRAVIS"):
             coveralls = os.path.join(os.path.dirname(os.path.dirname(getattr(settings, "BASE_DIR", '/var/lib/eventkit'))), '.virtualenvs/eventkit/bin/coveralls')
-            subprocess.call([coveralls])
+            subprocess.call([coveralls,
+                             '--merge={0}'.format(os.path.join('.', 'coverage', 'coveralls', 'coveralls.json'))])
+        
+        if os.getenv("COVERAGE") and not os.getenv("TRAVIS"):
+            cov.html_report(directory=os.path.join('.', 'coverage'))
 
         logging.disable(logging.NOTSET)
 

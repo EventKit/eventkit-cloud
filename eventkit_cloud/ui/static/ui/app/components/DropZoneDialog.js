@@ -43,9 +43,9 @@ export class DropZoneDialog extends Component {
                             className={styles.dropZone}
                             ref={(node) => {this.dropzone = node;}} 
                             disableClick={true}
-                            maxSize={28000000}>
+                            maxSize={2000000}>
                         <div className={styles.dropZoneText}>
-                        <span><strong>GeoJSON</strong> format only, <strong>26MB</strong> max,<br/>Drag and drop or<br/></span>
+                        <span><strong>GeoJSON</strong> format only, <strong>2MB</strong> max,<br/>Drag and drop or<br/></span>
                         <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><FileFileUpload />Select A File</button>
                         </div>
                     </Dropzone>

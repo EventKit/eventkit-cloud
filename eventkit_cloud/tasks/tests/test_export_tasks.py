@@ -267,11 +267,16 @@ class TestExportTasks(ExportTaskBase):
         expected_file = os.path.join(stage_dir,
                                      "{0}_selection.geojson".format(provider_slug))
 
-        result = output_selection_geojson_task.run(stage_dir=stage_dir, provider_slug=provider_slug)
-        self.assertEqual(result, {})
+        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='GeoJSONTask')
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=output_selection_geojson_task.name)
+
+        result = output_selection_geojson_task.run(task_uid=saved_export_task.uid, stage_dir=stage_dir, provider_slug=provider_slug)
+        self.assertEqual(result, {'result': None})
 
         mock_isfile.return_value = False
-        result = output_selection_geojson_task.run(selection=json.dumps(selection), stage_dir=stage_dir,
+        result = output_selection_geojson_task.run(task_uid=saved_export_task.uid, selection=json.dumps(selection), stage_dir=stage_dir,
                                                    provider_slug=provider_slug)
         self.assertEqual(result['selection'], expected_file)
         mock_isfile.assert_called_once_with(expected_file)
