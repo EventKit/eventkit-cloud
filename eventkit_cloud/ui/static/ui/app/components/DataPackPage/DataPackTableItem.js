@@ -18,7 +18,7 @@ export class DataPackTableItem extends Component {
     }
 
     getOwnerText(run, user) {
-        return run.user == user ? 'My DataPack' : user;
+        return run.user == user ? 'My DataPack' : run.user;
     }
 
     getPermissionsIcon(published) {

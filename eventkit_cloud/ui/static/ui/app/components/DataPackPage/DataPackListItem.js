@@ -1,7 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import {Link} from 'react-router';
-import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
-import FlatButton from 'material-ui/FlatButton'
+import {Card, CardTitle} from 'material-ui/Card'
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -16,22 +15,12 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = { 
-            deviceSize: 's',
+            deviceSize: window.innerWidth < 576 ? 'xs' : 's',
         };
     }
 
-    componentWillMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
+    componentWillUpdate() {
         if(window.innerWidth < 576) {
             if(this.state.deviceSize != 'xs') {
                 this.setState({
