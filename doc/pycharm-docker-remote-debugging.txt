@@ -1,0 +1,32 @@
+As of 2017-03-27 this is only valid on Linux/OSX machines.  Pycharm doesn't provide a docker-compose option for windows.
+
+--- Configure Celery so tasks can be stepped through
+1. In eventkit_cloud/settings/prod.py add CELERY_ALWAYS_EAGER = True
+
+--- In PyCharm, Configure project remote interpretter:
+2. Under settings->Project->Project Interpreter, click the gear on the top right & add a remote interpreter.
+3. Select the Docker Compose option, select the docker-compose for eventkit, change the service to eventkit.
+4. Set env var SITE_NAME='cloud.eventkit.dev'
+5. Set interpreter path to /var/lib/.virtualenvs/eventkit/bin/python
+6. Click 'New...' to right of 'Server:'
+7. Set API URL to unix:///var/run/docker.sock,
+    after leaving the api url field there should be a 'Connection successful' message in the lower left.
+
+--- In PyCharm set up the debugging config
+8. Go to Run->Edit Configurations, click on the + and add a "Python" configuration.
+9. Script is the eventkit-cloud manage.py
+10. Script params: runserver 0.0.0.0:6080
+11. Add env var SITE_NAME='cloud.eventkit.dev'
+12. Python Interpreter is the one you just configured.
+13. Working directory is path to your machine's eventkit-cloud directory.
+14. Click ok
+
+You're now ready, set a breakpoint at export_tasks.py:260 then click on the little bug icon second from the left
+on the top right.  Visit cloud.eventkit.dev and attempt to create a datapack, on submission PyCharm should halt
+execution at your breakpoint.
+
+For additional insight into what's going on, you can stop the debugger and 'docker-compose up' the eventkit-cloud
+containers, then just stop the eventkit container before starting a debug session.  This will give you the output
+of all the containers in the window you ran the original 'docker-compose up' in.
+
+
