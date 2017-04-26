@@ -33,7 +33,7 @@ def expire_runs():
     and 2 days before schedule expiration time.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    site_name = getattr(settings, "SITE_NAME")
+    site_url = getattr(settings, "SITE_URL")
     runs = ExportRun.objects.all()
 
     for run in runs:
@@ -42,7 +42,7 @@ def expire_runs():
         if not email:
             break
         uid = run.job.uid
-        url = 'http://{0}/exports/{1}'.format(site_name, uid)
+        url = '{0}/exports/{1}'.format(site_url.rstrip('/'), uid)
         notified = run.notified
         now = timezone.now()
         # if expired delete the run:
