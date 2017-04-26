@@ -2,6 +2,7 @@ import React, {PropTypes, Component} from 'react'
 import Checkbox from 'material-ui/Checkbox';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 
 export class StatusFilter extends Component {
     constructor(props) {
@@ -25,7 +26,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({completed: v})}}
                         checked={this.props.completed}
                     />
-                    <p style={{width: '60px', height: '29px', margin: '0px'}}/>
+                    <NavigationCheck style={{float: 'right', marginLeft: '20px', color: '#bcdfbb', marginBottom: '2px'}}/>
                     
                     <Checkbox
                         label={'Running'}

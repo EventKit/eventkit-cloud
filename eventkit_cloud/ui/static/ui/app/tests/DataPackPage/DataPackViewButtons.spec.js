@@ -26,8 +26,6 @@ describe('DataPackViewButtons component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         expect(wrapper.find(IconButton)).to.have.length(2);
-        expect(wrapper.find(IconButton).first().props().tooltip).to.equal('Grid View');
-        expect(wrapper.find(IconButton).last().props().tooltip).to.equal('List View');
         expect(wrapper.find(ActionViewModule)).to.have.length(1);
         expect(wrapper.find(ActionViewStream)).to.have.length(1);
     });

@@ -98,3 +98,4 @@ coverage
 
 # JS build dir
 eventkit_cloud/ui/static/ui/build
+.vscode/settings.json

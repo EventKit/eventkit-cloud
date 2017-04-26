@@ -13,6 +13,18 @@ export function orderZA(runs) {
     }).reverse();
 };
 
+export function orderEventAZ(runs) {
+    return sortBy(runs, (o) => {
+        return o.job.event.toUpperCase();
+    });
+};
+
+export function orderEventZA(runs) {
+    return sortBy(runs, (o) => {
+        return o.job.event.toUpperCase();
+    }).reverse();
+};
+
 export function orderOldest(runs) {
     return sortBy(runs, (o) => {
         return o.started_at;
@@ -22,6 +34,42 @@ export function orderOldest(runs) {
 export function orderNewest(runs) {
     return sortBy(runs, (o) => {
         return o.started_at;
+    }).reverse();
+};
+
+export function orderComplete(runs) {
+    return sortBy(runs, (o) => {
+        return o.status
+    });
+};
+
+export function orderIncomplete(runs) {
+    return sortBy(runs, (o) => {
+        return o.status
+    }).reverse();
+};
+
+export function orderPrivate(runs) {
+    return sortBy(runs, (o) => {
+        return o.job.published
+    });
+};
+
+export function orderPublic(runs) {
+    return sortBy(runs, (o) => {
+        return o.job.published
+    }).reverse();
+};
+
+export function orderOwnerAZ(runs) {
+    return sortBy(runs, (o) => {
+        return o.user
+    });
+};
+
+export function orderOwnerZA(runs) {
+    return sortBy(runs, (o) => {
+        return o.user
     }).reverse();
 };
 
