@@ -43,7 +43,7 @@ export class Application extends Component {
     componentWillReceiveProps(nextProps) {
         // if the user is logged in and the screen is large the drawer should be open
          if(nextProps.userData != this.props.userData) {
-             if(nextProps.userData != null && window.innerWidth > 991) {
+             if(nextProps.userData != null && window.innerWidth >= 1200) {
                  this.props.openDrawer();
              }
          }
@@ -63,7 +63,7 @@ export class Application extends Component {
     }
 
     onMenuItemClick() {
-        if(window.innerWidth <= 991) {
+        if(window.innerWidth < 1200) {
             this.handleToggle();
         }
     }

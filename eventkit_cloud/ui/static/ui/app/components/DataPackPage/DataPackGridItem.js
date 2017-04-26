@@ -1,4 +1,5 @@
 import React, {PropTypes, Component} from 'react'
+import {Link} from 'react-router';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
 import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton';
@@ -11,9 +12,10 @@ import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
 
-export class DataPackItem extends Component {
+export class DataPackGridItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -119,6 +121,7 @@ export class DataPackItem extends Component {
             },
             cardTitle2: {fontSize: this.state.titleFontSize},
             cardSubtitle: {fontSize: this.state.cardTextFontSize},
+            completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
             errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
             runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
             unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
@@ -135,7 +138,7 @@ export class DataPackItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <span>{this.props.run.job.name}</span>
+                            <span><Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
@@ -185,7 +188,7 @@ export class DataPackItem extends Component {
                             this.props.run.status == "INCOMPLETE" ?
                                 <AlertError style={styles.errorIcon}/>
                                 :
-                                null
+                                <NavigationCheck style={styles.completeIcon}/>
                         }
                         {this.props.run.user == this.props.user.data.username ?
                             <p style={styles.ownerLabel}>My DataPack</p>
@@ -206,10 +209,10 @@ export class DataPackItem extends Component {
     }
 }
 
-DataPackItem.propTypes = {
+DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired
 };
 
-export default DataPackItem;
+export default DataPackGridItem;

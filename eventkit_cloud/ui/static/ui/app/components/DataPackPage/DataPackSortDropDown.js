@@ -30,31 +30,31 @@ export class DataPackSortDropDown extends React.Component {
             this.setState({labelFontSize: '12px'});
             this.setState({itemFontSize: '10px'});
             this.setState({labelLeftPadding: '16px'});
-            this.setState({labelRightPadding: '32px'});
+            this.setState({labelRightPadding: '24px'});
         }
         else if (window.innerWidth <= 767) {
             this.setState({labelFontSize: '13px'});
             this.setState({itemFontSize: '11px'});
             this.setState({labelLeftPadding: '18px'});
-            this.setState({labelRightPadding: '34px'});
+            this.setState({labelRightPadding: '24px'});
         }
         else if (window.innerWidth <= 991) {
             this.setState({labelFontSize: '14px'});
             this.setState({itemFontSize: '12px'});
             this.setState({labelLeftPadding: '20px'});
-            this.setState({labelRightPadding: '36px'});
+            this.setState({labelRightPadding: '26px'});
         }
         else if(window.innerWidth <= 1199) {
             this.setState({labelFontSize: '15px'});
             this.setState({itemFontSize: '13px'});
             this.setState({labelLeftPadding: '22px'});
-            this.setState({labelRightPadding: '38px'});
+            this.setState({labelRightPadding: '28px'});
         }
         else {
             this.setState({labelFontSize: '16px'});
             this.setState({itemFontSize: '14px'});
             this.setState({labelLeftPadding: '24px'});
-            this.setState({labelRightPadding: '40px'});
+            this.setState({labelRightPadding: '30px'});
         }
     }
 
@@ -78,7 +78,7 @@ export class DataPackSortDropDown extends React.Component {
             label: {
                 lineHeight: '30px', 
                 color: '#4498c0', 
-                paddingLeft: this.state.labelLeftPadding,
+                paddingLeft: 0,
                 paddingRight: this.state.labelRightPadding,
                 fontSize: this.state.labelFontSize
             },
