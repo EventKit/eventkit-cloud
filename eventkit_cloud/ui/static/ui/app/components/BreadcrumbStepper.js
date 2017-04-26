@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link, IndexLink } from 'react-router'
 import {connect} from 'react-redux'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
