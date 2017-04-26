@@ -4,7 +4,7 @@ import {expect} from 'chai';
 import {mount} from 'enzyme';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
-import {DataPackItem} from '../../components/DataPackPage/DataPackItem';
+import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
 import IconButton from 'material-ui/IconButton';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -13,7 +13,7 @@ import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 
-describe('DataPackItem component', () => {
+describe('DataPackGridItem component', () => {
     injectTapEventPlugin();
 
     const muiTheme = getMuiTheme();
@@ -21,7 +21,7 @@ describe('DataPackItem component', () => {
 
     it('should display general run information', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackItem {...props}/>, {
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -44,7 +44,7 @@ describe('DataPackItem component', () => {
 
     it('should display information specific to a unpublished & owned run', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackItem {...props}/>, {
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -54,7 +54,7 @@ describe('DataPackItem component', () => {
 
     it('should display information specific to a published & owned run', () => {
         const props = {run: getRuns()[2], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackItem {...props}/>, {
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -64,7 +64,7 @@ describe('DataPackItem component', () => {
 
     it('should display information specific to a published & not owned run', () => {
         const props = {run: getRuns()[1], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackItem {...props}/>, {
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -75,11 +75,11 @@ describe('DataPackItem component', () => {
     it('should display a map when the card is expanded', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const uid = props.run.uid;
-        const wrapper = mount(<DataPackItem {...props}/>, {
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        const updateSpy = new sinon.spy(DataPackItem.prototype, 'componentDidUpdate');
+        const updateSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
         expect(wrapper.find('#' + uid + '_map')).to.have.length(0);
         wrapper.setState({expanded: true});
