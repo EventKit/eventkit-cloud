@@ -57,7 +57,9 @@
     padding: 0px;
 }
 
+@media only screen and (min-width: 768px) {
     .searchbarDiv {
+        max-width: 691px;
     }
 }
 
