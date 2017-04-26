@@ -185,6 +185,12 @@ def get_tile_table_names(gpkg):
 
 
 def get_table_gpkg_contents_information(gpkg, table_name):
+    """
+    
+    :param gpkg: Path to geopackage file.
+    :param table_name: A table name to look up in gpkg_contents.
+    :return: A dict with the column names as the keys.
+    """
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
             "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
@@ -205,7 +211,7 @@ def get_table_gpkg_contents_information(gpkg, table_name):
 def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
-            "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;;".format(
+            "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;".format(
                 table_name))
         tile_matrix_information = []
         for table_information in result:
