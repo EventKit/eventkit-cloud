@@ -120,6 +120,28 @@ class ExportTask(models.Model):
         return 'ExportTask uid: {0}'.format(self.uid)
 
 
+class FinalizeRunHookTaskRecord(models.Model):
+    id = models.AutoField(primary_key=True, editable=False)
+    run = models.ForeignKey(ExportRun)
+    celery_uid = models.UUIDField()
+    task_name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    started_at = models.DateTimeField(editable=False, null=True)
+    finished_at = models.DateTimeField(editable=False, null=True)
+    status = models.CharField(blank=True, max_length=20, db_index=True)
+    pid = models.IntegerField(blank=True, default=-1)
+    worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
+    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+
+    class Meta:
+        ordering = ['created_at']
+        managed = True
+        db_table = 'finalize_run_hook_task_record'
+
+    def __str__(self):
+        return 'RunFinishedTaskRecord ({}): {}'.format(self.celery_uid, self.status)
+
+
 class ExportTaskResult(models.Model):
     """
          An ExportTaskResult holds the information from the task, i.e. the reason for executing the task.

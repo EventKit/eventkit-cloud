@@ -721,18 +721,49 @@ def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
             zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
 
-class RunFinishedFinalizeHookTask(LockingTask):
-    pass
+class FinalizeRunHookTask(LockingTask):
+    # Base for tasks which execute after all export provider tasks have completed, but before finalize_run_task.
+    # Ensures the task state is recorded when the task is started and after it has completed.
+    # @see create_run_finished_task_chain
+    def __call__(self, *args, **kwargs):
+        self.record_task_state()
+        super(FinalizeRunHookTask, self).__call__(*args, **kwargs)
+
+    def record_task_state(self, started_at=None, finished_at=None):
+        from eventkit_cloud.tasks.models import FinalizeRunHookTaskRecord
+
+        run_uid = self.request.kwargs['run_uid']
+        from eventkit_cloud.tasks.models import ExportRun
+        export_run = ExportRun.objects.get(uid=run_uid)
+        worker_name = self.request.hostname
+        status = self.status
+        tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
+            run=export_run, celery_uid=self.uid, task_name=self.name,
+            status=status, pid=os.getpid(), worker=worker_name
+        )
+
+        if started_at or finished_at:
+            if started_at:
+                tr.started_at = started_at
+            if finished_at:
+                tr.finished_at = finished_at
+            tr.save()
+
+    def on_success(self):
+        self.record_task_state(finished_at=timezone.now())
+
+    def on_failure(self):
+        self.record_task_state(finished_at=timezone.now())
 
 
-@app.task(name='Do Some QGIS Thing', base=RunFinishedFinalizeHookTask, bind=True)
-def qgis_task(prev_task_result, run_uid=None, stage_dir=None):
+@app.task(name='Do Some QGIS Thing', base=FinalizeRunHookTask, bind=True)
+def qgis_task(run_uid=None, stage_dir=None):
     new_zip_content = getattr(prev_task_result, 'new_zip_content', [])
     result = {'new_zip_content': new_zip_content}
     return result
 
 
-@app.task(name='Prepare Export Zip', base=RunFinishedFinalizeHookTask)
+@app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_export_zip(prev_task_result, uid):
     from eventkit_cloud.tasks.models import ExportRun
     run = ExportRun.objects.get(uid=run_uid)
@@ -1129,4 +1160,3 @@ def parse_result(task_result, key=''):
                 return result.get(key)
     elif isinstance(task_result, dict):
         return task_result.get(key)
-
