@@ -1,12 +1,15 @@
-{% load i18n %}
-{% trans 'This is an automated email from the Eventkit Team.' %}
+This is an automated email from the Eventkit Team.
 
-{% trans 'Unfortunately, your Eventkit Data Pack has a failure.' %}
+Unfortunately, your Eventkit DataPack:
 
-{% trans 'Please copy and paste this link ' %}{{ url }}{% trans ' into your browser to see the status of your Eventkit Data Pack.' %}
+   {{ job_name }}
 
-{% trans 'Please quote this Task ID when reporting errors:' %} {{ task_id }}.
+ has a failure.
 
-{% trans 'We apologise for any inconvenience this may cause.' %}
+Please copy and paste this link {{ url }} into your browser to see the status of your Eventkit DataPack.
 
-{% trans 'Eventkit Team' %}
+Please quote this Task ID when reporting errors: {{ task_id }}.
+
+We apologise for any inconvenience this may cause.
+
+Eventkit Team

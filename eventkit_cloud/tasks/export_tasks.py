@@ -817,8 +817,8 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     run.save()
 
     # send notification email to user
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL
+    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -830,7 +830,7 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
         'DEFAULT_FROM_EMAIL',
         'Eventkit Team <eventkit.team@gmail.com>'
     )
-    ctx = {'url': url, 'status': run.status}
+    ctx = {'url': url, 'status': run.status, 'job_name': run.job.name}
 
     text = get_template('email/email.txt').render(ctx)
     html = get_template('email/email.html').render(ctx)
@@ -864,8 +864,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL
+    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     subject = "Your Eventkit Data Pack has a failure."
     # email user and administrator
@@ -873,7 +873,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
     ctx = {
         'url': url,
-        'task_id': task_id
+        'task_id': task_id,
+        'job_name': run.job.name
     }
     text = get_template('email/error_email.txt').render(ctx)
     html = get_template('email/error_email.html').render(ctx)

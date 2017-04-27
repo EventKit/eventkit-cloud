@@ -1,16 +1,15 @@
-{% load i18n %}
-{% trans 'This is an automated email from the Eventkit Team.' %}
+This is an automated email from the Eventkit Team.
 
-{% trans 'Your Eventkit Data Pack is finished.' %}
+Your Eventkit Data Pack is finished.
 
 {% if status == 'CANCELED' %}
-{% trans 'Your data pack was CANCELED.' %}
+Your data pack was CANCELED.
 
 {% else %}
-{% trans 'Please copy and paste this link' %} {{ url }}/ {% trans ' into your browser to download your files.' %}
+Please copy and paste this link {{ url }} into your browser to download your files.
 
 {% endif %}
 
-{% trans 'Thank you for using Eventkit.' %}
+Thank you for using Eventkit.
 
-{% trans 'Eventkit Team' %}
+Eventkit Team

@@ -6,7 +6,7 @@ from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
 from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
-                                 check_service, get_cache_template, CustomLogger )
+                                 check_service, get_cache_template, CustomLogger, check_zoom_levels )
 from mapproxy.config.config import load_default_config
 from uuid import uuid4
 from datetime import datetime
@@ -54,6 +54,7 @@ class TestGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
+    @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.check_service')
     @patch('eventkit_cloud.utils.geopackage.remove_empty_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.connections')
@@ -62,7 +63,7 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -82,6 +83,7 @@ class TestGeopackage(TransactionTestCase):
                                service_type='wmts',
                                task_uid=self.task_uid)
         result = w2g.convert()
+        mock_check_zoom_levels.assert_called_once()
         connections.close_all.assert_called_once()
         self.assertEqual(result, gpkgfile)
 
@@ -143,6 +145,37 @@ class TestHelpers(TransactionTestCase):
             "request_format": "image/png"}}
 
         self.assertEqual(cache_template, expected_template)
+
+    @patch('eventkit_cloud.utils.external_service.sqlite3')
+    @patch('eventkit_cloud.utils.external_service.get_table_tile_matrix_information')
+    @patch('eventkit_cloud.utils.external_service.get_zoom_levels_table')
+    @patch('eventkit_cloud.utils.external_service.get_tile_table_names')
+    def test_check_zoom_levels(self, mock_get_tables, mock_get_zoom_levels, mock_tile_matrix, mock_sql):
+        from mapproxy.grid import TileGrid
+        from mapproxy.config.loader import ProxyConfiguration
+        example_geopackage = '/test/example.gpkg'
+        grid_name = 'geodetic'
+        tile_size = (256, 256)
+        table_name = 'tiles'
+        zoom_levels_table = [0,1,2]
+        # tile_matrix is abbreviated, for clarity.
+        tile_matrix = [{"table_name": table_name, "zoom_level": 0},
+                            {"table_name": table_name, "zoom_level": 1}]
+        configuration = {'caches': {'cache': {'cache': {'type': 'geopackage', 'filename': example_geopackage},
+                                              'grids': [grid_name]}},
+                       'grids': {'geodetic': {'srs': 'EPSG:4326', 'tile_size': tile_size, 'origin': 'nw'}}}
+
+        mapproxy_configuration = ProxyConfiguration(configuration)
+        mock_get_tables.return_value = (table_name,)
+        mock_get_zoom_levels.return_value = zoom_levels_table
+        mock_tile_matrix.return_value = tile_matrix
+        check_zoom_levels(example_geopackage, mapproxy_configuration)
+        mock_get_tables.assert_called_once_with(example_geopackage)
+        mock_get_zoom_levels.assert_called_once_with(example_geopackage, table_name)
+        mock_tile_matrix.assert_called_once_with(example_geopackage, table_name)
+        mock_sql.connect().__enter__().execute.assert_called_once_with(
+            '\nINSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) \nVALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            ('tiles', 2, 4, 2, 256, 256, 0.3515625, 0.3515625))
 
 
 class TestLogger(TransactionTestCase):

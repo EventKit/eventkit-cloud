@@ -17,6 +17,8 @@ from django.core.files.temp import NamedTemporaryFile
 import logging
 from django.db import connections
 import requests
+import sqlite3
+from .geopackage import (get_tile_table_names, get_zoom_levels_table, get_table_tile_matrix_information)
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +140,7 @@ class ExternalRasterServiceToGeopackage(object):
                                        kwargs={"tasks": seed_configuration.seeds(['seed']),
                                                "concurrency": int(getattr(settings, 'MAPPROXY_CONCURRENCY', 1)),
                                                "progress_logger": progress_logger})
+            check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
         except Exception as e:
             logger.error("Export failed for url {}.".format(self.service_url))
@@ -251,3 +254,24 @@ def check_service(conf_dict):
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def check_zoom_levels(gpkg, mapproxy_configuration):
+
+    try:
+        grid = mapproxy_configuration.caches.get('cache').conf.get('grids')[0]
+        tile_size = mapproxy_configuration.grids.get(grid).conf.get('tile_size')
+        tile_grid = mapproxy_configuration.grids.get(grid).tile_grid()
+        for table_name in get_tile_table_names(gpkg):
+            actual_zoom_levels = get_zoom_levels_table(gpkg, table_name)
+            gpkg_tile_matrix = get_table_tile_matrix_information(gpkg, table_name)
+            for actual_zoom_level in actual_zoom_levels:
+                if actual_zoom_level not in [level.get('zoom_level') for level in gpkg_tile_matrix]:
+                    res = tile_grid.resolution(actual_zoom_level)
+                    grid_sizes = tile_grid.grid_sizes[actual_zoom_level]
+                    with sqlite3.connect(gpkg) as conn:
+                        conn.execute("""
+INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) 
+VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (table_name, actual_zoom_level, grid_sizes[0], grid_sizes[1], tile_size[0], tile_size[1], res, res))
+    except Exception as e:
+        print(e)
