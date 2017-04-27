@@ -94,6 +94,17 @@ describe('DataPackPage component', () => {
         expect(props.getRuns.calledThrice).toBe(true);
     });
 
+    it('should remove the fetch interval on unmount', () => {
+        jest.useFakeTimers();
+        let props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(clearInterval.mock.calls.length).toEqual(0);
+        const fetch = wrapper.instance().fetch;
+        wrapper.unmount();
+        expect(clearInterval.mock.calls.length).toEqual(1);
+        expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
+    });
+
     it('should handle fetched runs', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
