@@ -1,5 +1,4 @@
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
 import LogoutContainer from './logoutContainer.js'
@@ -17,7 +16,7 @@ describe('logout container', () => {
             const dispatch = sinon.spy(store, 'dispatch')
 
             const wrapper = mount(<LogoutContainer store={store} />);
-            expect(dispatch.calledOnce).to.equal(true);
+            expect(dispatch.calledOnce).toEqual(true);
         });
     }
 );

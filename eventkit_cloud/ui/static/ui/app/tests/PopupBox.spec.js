@@ -1,6 +1,5 @@
 import {PopupBox} from '../components/PopupBox';
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -22,7 +21,7 @@ describe('PopupBox component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('div')).to.have.length(1);
+        expect(wrapper.find('div')).toHaveLength(1);
     });
 
     it('should display container, titlebar, body, and footer', () => {
@@ -32,15 +31,15 @@ describe('PopupBox component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.container')).to.have.length(1);
-        expect(wrapper.find('.titlebar')).to.have.length(1);
-        expect(wrapper.find('.title')).to.have.length(1);
-        expect(wrapper.find('span').text()).to.equal('test title');
-        expect(wrapper.find('.exit')).to.have.length(1);
-        expect(wrapper.find('button')).to.have.length(1);
-        expect(wrapper.find(ContentClear)).to.have.length(1);
-        expect(wrapper.find('.body')).to.have.length(1);
-        expect(wrapper.find('.footer')).to.have.length(1);
+        expect(wrapper.find('.container')).toHaveLength(1);
+        expect(wrapper.find('.titlebar')).toHaveLength(1);
+        expect(wrapper.find('.title')).toHaveLength(1);
+        expect(wrapper.find('span').text()).toEqual('test title');
+        expect(wrapper.find('.exit')).toHaveLength(1);
+        expect(wrapper.find('button')).toHaveLength(1);
+        expect(wrapper.find(ContentClear)).toHaveLength(1);
+        expect(wrapper.find('.body')).toHaveLength(1);
+        expect(wrapper.find('.footer')).toHaveLength(1);
     });
 
     it('should execute the passed in function when exit button is clicked', () =>{
@@ -52,7 +51,7 @@ describe('PopupBox component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find('button').simulate('click');
-        expect(props.onExit.calledOnce).to.equal(true);
+        expect(props.onExit.calledOnce).toEqual(true);
     });
 
     it('should render any child elements', () => {
@@ -62,7 +61,7 @@ describe('PopupBox component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('p')).to.have.length(1);
-        expect(wrapper.find('p').text()).to.equal('my child');
+        expect(wrapper.find('p')).toHaveLength(1);
+        expect(wrapper.find('p').text()).toEqual('my child');
     });
 });
