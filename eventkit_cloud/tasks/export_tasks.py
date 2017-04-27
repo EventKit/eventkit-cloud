@@ -763,7 +763,7 @@ class RunFinishedFinalizeHookTask(LockingTask):
 
 @app.task(name='Do Some QGIS Thing', base=RunFinishedFinalizeHookTask, bind=True)
 def qgis_task(prev_task_result, run_uid=None, stage_dir=None):
-    new_zip_content = getattr(prev_task_result, 'new_zip_content')
+    new_zip_content = getattr(prev_task_result, 'new_zip_content', [])
     result = {'new_zip_content': new_zip_content}
     return result
 
