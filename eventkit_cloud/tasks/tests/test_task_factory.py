@@ -26,7 +26,7 @@ class TestExportTaskFactory(TestCase):
 
     fixtures = ('insert_provider_types.json', 'osm_provider.json',)
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -56,8 +56,9 @@ class TestExportTaskFactory(TestCase):
 
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_task')
+    @patch('eventkit_cloud.tasks.task_factory.group')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, create_task, finalize_task):
+    def test_task_factory(self, task_factory_chain, task_factory_group, create_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
@@ -71,5 +72,6 @@ class TestExportTaskFactory(TestCase):
         task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
+        task_factory_group.assert_called()
         create_task.assert_called()
         finalize_task.s.assert_called()

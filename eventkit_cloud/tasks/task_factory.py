@@ -9,8 +9,7 @@ from django.conf import settings
 from django.db import DatabaseError
 from django.utils import timezone
 
-from celery import chain
-from eventkit_cloud import celery
+from celery import chain, group
 from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_export_zip
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
@@ -45,7 +44,6 @@ class TaskFactory:
 
     def parse_tasks(self, worker=None, run_uid=None):
         """
-
         :param worker: A worker node (hostname) for a celery worker, this should match the node name used when starting,
          the celery worker.
         :param run_uid: A uid to reference an ExportRun.
@@ -83,9 +81,11 @@ class TaskFactory:
 
             if grouped_provider_tasks:
                 tasks_results = []
+                # Contains one chain per item in grouped_provider_tasks
+                grouped_provider_subtask_chains = []
                 for grouped_provider_task in grouped_provider_tasks:
-                    task_runner_tasks = None
                     export_provider_task_uids = []
+                    provider_subtask_chains = []
                     for provider_task in grouped_provider_task:
                         if not provider_task:
                             continue
@@ -131,16 +131,18 @@ class TaskFactory:
                                         export_provider_task_uid=export_provider_task_uid,
                                         worker=worker
                                     ).set(queue=worker, routing_key=worker))
-                                if not task_runner_tasks:
-                                    task_runner_tasks = finalize_chain_task_runner_tasks
-                                else:
-                                    task_list = [task_runner_tasks, finalize_chain_task_runner_tasks]
-                                    task_runner_tasks = chain(task_list)
+                                provider_subtask_chains.append(finalize_chain_task_runner_tasks)
 
-                    if not task_runner_tasks:
+                    if not provider_subtask_chains:
                         continue
 
-                    tasks_results += [task_runner_tasks.apply_async(
+                    # This ensures the export provider's subtasks are sequenced in the order the providers appear
+                    # in the group.
+                    grouped_provider_subtask_chain = chain(provider_subtask_chains)
+                    grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
+
+                all_export_provider_task_group = group([
+                    gpsc.si(
                         interval=1,
                         max_retries=10,
                         expires=datetime.now() + timedelta(days=2),
@@ -149,7 +151,13 @@ class TaskFactory:
                         queue=worker,
                         link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
                                                             export_provider_task_uids=export_provider_task_uids,
-                                                            worker=worker).set(queue=worker, routing_key=worker))]
+                                                            worker=worker).set(queue=worker, routing_key=worker)
+                    )
+                    for gpsc in grouped_provider_subtask_chains
+                ])
+
+                tasks_results = all_export_provider_task_group.apply_async()
+
                 return tasks_results
             return False
 
@@ -192,8 +200,8 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     :param export_provider_task_uid: An export provider task UUID.
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
-    """""
-    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task, "zip": zip_export_provider}
+    """
+    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task}
 
     task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
