@@ -75,8 +75,9 @@ export class AoiInfobar extends Component {
     render() {
         return (
             <div>
+                {this.state.showAoiInfobar ? 
                 <div className={styles.aoiInfoWrapper}>
-                    {this.state.showAoiInfobar ? 
+                    
                     <div className={styles.aoiInfobar}>
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
@@ -101,8 +102,9 @@ export class AoiInfobar extends Component {
                             </div>
                         </div>   
                     </div>
-                    : null}
+                    
                 </div>
+                : null}
                 {/*<PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
                     <p> AOI Geojson </p>
                     <div style={{overflowY: 'scroll', maxHeight: '430px'}}>{JSON.stringify(this.props.aoiInfo.geojson, undefined, 2)}</div>
