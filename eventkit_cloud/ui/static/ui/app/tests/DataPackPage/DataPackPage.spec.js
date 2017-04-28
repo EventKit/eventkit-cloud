@@ -21,7 +21,6 @@ import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton
 import * as utils from '../../utils/sortUtils';
 import isEqual from 'lodash/isEqual';
 
-
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
@@ -76,24 +75,39 @@ describe('DataPackPage component', () => {
         let props = getProps();
         props.getRuns = new sinon.spy();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
-        const wrapper = shallow(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
+        const wrapper = shallow(<DataPackPage {...props}/>);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(mountSpy.calledOnce).toBe(true);
     });
 
+    it('should run getRuns at intervals', () => {
+        jest.useFakeTimers();
+        let props = getProps();
+        props.getRuns = new sinon.spy();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(setInterval.mock.calls.length).toEqual(1);
+        expect(setInterval.mock.calls[0][1]).toEqual(10000);
+        jest.runOnlyPendingTimers();
+        expect(props.getRuns.calledTwice).toBe(true);
+        jest.runOnlyPendingTimers();
+        expect(props.getRuns.calledThrice).toBe(true);
+    });
+
+    it('should remove the fetch interval on unmount', () => {
+        jest.useFakeTimers();
+        let props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(clearInterval.mock.calls.length).toEqual(0);
+        const fetch = wrapper.instance().fetch;
+        wrapper.unmount();
+        expect(clearInterval.mock.calls.length).toEqual(1);
+        expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
+    });
+
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
+        const wrapper = shallow(<DataPackPage {...props}/>);
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
