@@ -70,7 +70,8 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         """
 
     if not geojson or not gpkg:
-        raise Exception("A valid geojson: {0} was not provided\nor a geopackage: {1} was not accessible.".format(geojson, gpkg))
+        raise Exception(
+            "A valid geojson: {0} was not provided\nor a geopackage: {1} was not accessible.".format(geojson, gpkg))
 
     geojson_file = os.path.join(os.path.dirname(gpkg),
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]))
@@ -124,7 +125,6 @@ def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
     return gpkg
-
 
 
 def is_alnum(data):
@@ -182,6 +182,48 @@ def get_tile_table_names(gpkg):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute("SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';")
         return [table for (table,) in result]
+
+
+def get_table_gpkg_contents_information(gpkg, table_name):
+    """
+    
+    :param gpkg: Path to geopackage file.
+    :param table_name: A table name to look up in gpkg_contents.
+    :return: A dict with the column names as the keys.
+    """
+    with sqlite3.connect(gpkg) as conn:
+        result = conn.execute(
+            "SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
+                table_name))
+        table_information = result.fetchone()
+        return {"table_name": table_information[0],
+                "data_type": table_information[1],
+                "identifier": table_information[2],
+                "description": table_information[3],
+                "last_change": table_information[4],
+                "min_x": table_information[5],
+                "min_y": table_information[6],
+                "max_x": table_information[7],
+                "max_y": table_information[8],
+                "srs_id": table_information[9]}
+
+
+def get_table_tile_matrix_information(gpkg, table_name):
+    with sqlite3.connect(gpkg) as conn:
+        result = conn.execute(
+            "SELECT table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size FROM gpkg_tile_matrix WHERE table_name = '{0}' ORDER BY zoom_level;".format(
+                table_name))
+        tile_matrix_information = []
+        for table_information in result:
+            tile_matrix_information += [{"table_name": table_information[0],
+                                         "zoom_level": table_information[1],
+                                         "matrix_width": table_information[2],
+                                         "matrix_height": table_information[3],
+                                         "tile_width": table_information[4],
+                                         "tile_height": table_information[5],
+                                         "pixel_x_size": table_information[6],
+                                         "pixel_y_size": table_information[7]}]
+    return tile_matrix_information
 
 
 def get_zoom_levels_table(gpkg, table):
@@ -268,6 +310,7 @@ def check_zoom_levels(gpkg):
             return False
     return True
 
+
 def get_table_info(gpkg, table):
     """
     Checks the zoom levels for the geopackage returns False if ANY gpkg_tile_matrix sets do no match the zoom levels
@@ -280,6 +323,7 @@ def get_table_info(gpkg, table):
         logger.debug("PRAGMA table_info({0});".format(table))
         return conn.execute("PRAGMA table_info({0});".format(table))
     return False
+
 
 def create_table_from_existing(gpkg, old_table, new_table):
     """
