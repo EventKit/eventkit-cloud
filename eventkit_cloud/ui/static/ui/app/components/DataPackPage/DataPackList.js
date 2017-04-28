@@ -6,6 +6,7 @@ import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-u
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import * as sorts from '../../utils/sortUtils';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackList extends Component {
     constructor(props) {
@@ -172,7 +173,7 @@ export class DataPackList extends Component {
                     cellHeight={'auto'}
                     cols={1}
                     padding={0}
-                    style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                    style={{width: window.innerWidth - 10, minWidth: '360px', paddingBottom: '20px'}}
                 >   
                     {this.props.runs.map((run) => (
                         <DataPackListItem 
@@ -183,61 +184,69 @@ export class DataPackList extends Component {
                     ))}
                 </GridList>
             :
-                <Table height={49 * this.props.runs.length > window.innerHeight - 297 ? `${window.innerHeight - 297}px` : 'inherit'} selectable={false}>
-                    <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
-                        <TableRow style={styles.tableRow}>
-                            <TableHeaderColumn 
-                                style={styles.nameColumn}>
-                                <div onClick={this.handleNameSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isNameActive())}>Name</span>
-                                    {this.getIcon(sorts.orderZA)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.eventColumn}>
-                                <div onClick={this.handleEventSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isEventActive())}>Event</span>
-                                    {this.getIcon(sorts.orderEventZA)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.dateColumn}>
-                                <div onClick={this.handleDateSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isDateActive())}>Date Added</span>
-                                    {this.getIcon(sorts.orderOldest)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.statusColumn}>
-                                <div onClick={this.handleStatusSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isStatusActive())}>Status</span>
-                                    {this.getIcon(sorts.orderIncomplete)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.permissionsColumn}>
-                                <div onClick={this.handlePermissionsSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isPermissionsActive())}>Permissions</span>
-                                    {this.getIcon(sorts.orderPublic)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.ownerColumn}>
-                                <div onClick={this.handleOwnerSort} style={styles.clickable}>
-                                    <span style={this.getHeaderStyle(this.isOwnerActive())}>Owner</span>
-                                    {this.getIcon(sorts.orderOwnerZA)}
-                                </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody displayRowCheckbox={false}>
-                        {this.props.runs.map((run) => (
-                            <DataPackTableItem 
-                                run={run} 
-                                user={this.props.user} 
-                                key={run.uid}
-                                onRunDelete={this.props.onRunDelete}
-                            />
-                        ))}
-                    </TableBody>
-                </Table>
-            }
+                <div>
+                    <Table >
+                        <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
+                            <TableRow style={styles.tableRow}>
+                                <TableHeaderColumn 
+                                    style={styles.nameColumn}>
+                                    <div onClick={this.handleNameSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isNameActive())}>Name</span>
+                                        {this.getIcon(sorts.orderZA)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={styles.eventColumn}>
+                                    <div onClick={this.handleEventSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isEventActive())}>Event</span>
+                                        {this.getIcon(sorts.orderEventZA)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={styles.dateColumn}>
+                                    <div onClick={this.handleDateSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isDateActive())}>Date Added</span>
+                                        {this.getIcon(sorts.orderOldest)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={styles.statusColumn}>
+                                    <div onClick={this.handleStatusSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isStatusActive())}>Status</span>
+                                        {this.getIcon(sorts.orderIncomplete)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={styles.permissionsColumn}>
+                                    <div onClick={this.handlePermissionsSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isPermissionsActive())}>Permissions</span>
+                                        {this.getIcon(sorts.orderPublic)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={styles.ownerColumn}>
+                                    <div onClick={this.handleOwnerSort} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isOwnerActive())}>Owner</span>
+                                        {this.getIcon(sorts.orderOwnerZA)}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
+                            </TableRow>
+                        </TableHeader>
+                    </Table>
+                    <CustomScrollbar style={{height: window.innerHeight - 297}}>
+                    <Table>
+                        <TableBody displayRowCheckbox={false}>
+                            
+                            {this.props.runs.map((run) => (
+                                <DataPackTableItem 
+                                    run={run} 
+                                    user={this.props.user} 
+                                    key={run.uid}
+                                    onRunDelete={this.props.onRunDelete}
+                                />
+                            ))}
+                            
+                        </TableBody>          
+                    </Table>
+                    </CustomScrollbar>
+                </div>
+                }
             </div>
         )
     }

@@ -243,6 +243,7 @@ export class DataPackPage extends React.Component {
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 paddingTop: '10px',
+                paddingBottom: '10px'
             },
             appBar: {
                 backgroundColor: '#161e2e',
