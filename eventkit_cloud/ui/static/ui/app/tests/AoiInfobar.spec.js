@@ -48,7 +48,7 @@ describe('AoiInfobar component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('div')).toHaveLength(2);
+        expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('aoiInfobar')).toHaveLength(0);
     });
 
