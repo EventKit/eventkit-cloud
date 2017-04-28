@@ -1,35 +1,3 @@
-@media only screen and (min-width: 850px) {
-    .searchbarDiv {
-        max-width: 765px !important;
-    }
-}
-
-@media only screen and (max-width: 750px) {
-    .formControl {
-        font-size: .8em !important;
-    }
-}
-
-@media only screen and (max-width: 340px) {
-    .formControl {
-        font-size: .6em !important;
-    }
-}
-
-@media screen and (min-width: 601px) {
-    .searchAOIButtonContainer {
-        width: 60px;
-        height: 50px;
-    }
-}
-
-@media screen and (max-width: 600px) {
-    .searchAOIButtonContainer {
-        width: 50px;
-        height: 50px;
-    }
-}
-
 .searchbarDiv {
     z-index: 2;
     position: absolute;
@@ -44,6 +12,8 @@
 .searchAOIButtonContainer {
     position: absolute;
     right: 0px;
+    width: 50px;
+    height: 50px;
 }
 
 .typeahead {
@@ -87,7 +57,15 @@
     padding: 0px;
 }
 
-.formControl {
-    padding-left: 25px;
+@media only screen and (min-width: 768px) {
+    .searchbarDiv {
+        max-width: 691px;
+    }
 }
 
+@media screen and (min-width: 576px) {
+    .searchAOIButtonContainer {
+        width: 60px;
+        height: 50px;
+    }
+}
