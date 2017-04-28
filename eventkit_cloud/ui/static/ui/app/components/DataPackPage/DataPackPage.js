@@ -82,10 +82,12 @@ export class DataPackPage extends React.Component {
     componentWillMount() {
         this.props.getRuns();
         window.addEventListener('resize', this.screenSizeUpdate);
+        this.fetch = setInterval(this.props.getRuns, 10000);
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.screenSizeUpdate);
+        clearInterval(this.fetch);
     }
 
     onSearch(searchText, ix) { 
