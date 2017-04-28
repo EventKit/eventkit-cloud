@@ -34,6 +34,7 @@
     "react-flexbox-grid": "~0.10.2",
     "react-bootstrap-typeahead": "~1.0.0-beta4",
     "react-cookie": "~1.0.4",
+    "react-custom-scrollbars": "~4.1.1",
     "react-dropzone": "~3.9.2",
     "redux": "~3.6.0",
     "redux-auth-wrapper": "~1.0.0",

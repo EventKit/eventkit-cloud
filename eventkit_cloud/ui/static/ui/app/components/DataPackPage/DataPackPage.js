@@ -18,6 +18,8 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import * as utils from '../../utils/sortUtils';
+import {Scrollbars } from 'react-custom-scrollbars';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackPage extends React.Component {
 
@@ -238,7 +240,6 @@ export class DataPackPage extends React.Component {
         const styles = {
             wholeDiv: {
                 height: window.innerHeight - 221,
-                overflowY: 'auto',
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 paddingTop: '10px',
@@ -262,7 +263,7 @@ export class DataPackPage extends React.Component {
                 backgroundColor: '#fff',
                 top: '221px',
                 height: window.innerHeight - 221,
-                overflowY: 'auto',
+                overflowY: 'hidden',
                 overflowX: 'hidden'
             }
         };
@@ -296,6 +297,7 @@ export class DataPackPage extends React.Component {
                         }
                         <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
                 </Toolbar>
+                
                 <div style={styles.wholeDiv}>
                     <Drawer 
                         width={200} 
@@ -324,24 +326,25 @@ export class DataPackPage extends React.Component {
                             maxDate={this.state.maxDate}
                         />
                     </Drawer>
-                    {this.state.grid ? 
-                        <DataPackGrid 
-                            runs={this.state.displayedRuns} 
-                            user={this.props.user} 
-                            onRunDelete={this.props.deleteRuns}
-                        />
-                    : 
-                        <DataPackList
-                            runs={this.state.displayedRuns}
-                            user={this.props.user}
-                            onRunDelete={this.props.deleteRuns}
-                            onSort={this.handleTableSort}
-                        />
-                    }
-                    <div >
-                        {this.props.children}
-                    </div>
+                    <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
+                        {this.state.grid ? 
+                            <DataPackGrid 
+                                runs={this.state.displayedRuns} 
+                                user={this.props.user} 
+                                onRunDelete={this.props.deleteRuns}
+                            />
+                        : 
+                            <DataPackList
+                                runs={this.state.displayedRuns}
+                                user={this.props.user}
+                                onRunDelete={this.props.deleteRuns}
+                                onSort={this.handleTableSort}
+                            />
+                        }
+                    </CustomScrollbar>
+                    
                 </div>
+                
             </div>
         );
     }
