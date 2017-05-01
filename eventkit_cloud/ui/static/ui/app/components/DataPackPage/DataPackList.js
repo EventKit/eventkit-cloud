@@ -153,8 +153,8 @@ export class DataPackList extends Component {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginLeft: '5px',
-                marginRight: '5px',
+                marginLeft: '10px',
+                marginRight: '10px',
                 paddingBottom: '10px'
             },
             clickable: {cursor: 'pointer', width: 'min-content'},
@@ -166,15 +166,15 @@ export class DataPackList extends Component {
             permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
             ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
         };
-        return (
-            <div style={styles.root}>
-            {window.innerWidth < 768 ?
-                <GridList
-                    cellHeight={'auto'}
-                    cols={1}
-                    padding={0}
-                    style={{width: window.innerWidth - 10, minWidth: '360px', paddingBottom: '20px'}}
-                >   
+        if(window.innerWidth < 768) {
+            return (
+                <div style={styles.root}>
+                    <GridList
+                        cellHeight={'auto'}
+                        cols={1}
+                        padding={0}
+                        style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                    >   
                     {this.props.runs.map((run) => (
                         <DataPackListItem 
                             run={run} 
@@ -182,9 +182,13 @@ export class DataPackList extends Component {
                             key={run.uid}
                             onRunDelete={this.props.onRunDelete}/>
                     ))}
-                </GridList>
-            :
-                <div>
+                    </GridList>
+                </div>
+            )
+        }
+        else {
+            return (
+                <div style={styles.root}>
                     <Table >
                         <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
                             <TableRow style={styles.tableRow}>
@@ -230,25 +234,25 @@ export class DataPackList extends Component {
                         </TableHeader>
                     </Table>
                     <CustomScrollbar style={{height: window.innerHeight - 297}}>
-                    <Table>
-                        <TableBody displayRowCheckbox={false}>
-                            
-                            {this.props.runs.map((run) => (
-                                <DataPackTableItem 
-                                    run={run} 
-                                    user={this.props.user} 
-                                    key={run.uid}
-                                    onRunDelete={this.props.onRunDelete}
-                                />
-                            ))}
-                            
-                        </TableBody>          
-                    </Table>
+                        <Table>
+                            <TableBody displayRowCheckbox={false}>
+                                
+                                {this.props.runs.map((run) => (
+                                    <DataPackTableItem 
+                                        run={run} 
+                                        user={this.props.user} 
+                                        key={run.uid}
+                                        onRunDelete={this.props.onRunDelete}
+                                    />
+                                ))}
+                                
+                            </TableBody>          
+                        </Table>
                     </CustomScrollbar>
                 </div>
-                }
-            </div>
-        )
+            )
+        }
+        
     }
 }
 

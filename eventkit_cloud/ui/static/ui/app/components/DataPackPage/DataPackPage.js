@@ -239,11 +239,10 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 221,
+                height: window.innerHeight - 236,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
-                paddingTop: '10px',
-                paddingBottom: '10px'
+                marginTop: '10px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
@@ -263,7 +262,7 @@ export class DataPackPage extends React.Component {
             containerStyle: {
                 backgroundColor: '#fff',
                 top: '221px',
-                height: window.innerHeight - 221,
+                height: window.innerHeight - 236,
                 overflowY: 'hidden',
                 overflowX: 'hidden'
             }

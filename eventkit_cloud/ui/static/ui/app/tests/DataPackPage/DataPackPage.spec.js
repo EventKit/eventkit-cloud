@@ -19,6 +19,7 @@ import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDrop
 import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterButton';
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
+import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/sortUtils';
 import isEqual from 'lodash/isEqual';
 
@@ -70,6 +71,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(PermissionFilter)).to.have.length(1);
         expect(wrapper.find(StatusFilter)).to.have.length(1);
         expect(wrapper.find(DateFilter)).to.have.length(1);
+        expect(wrapper.find(CustomScrollbar)).to.have.length(1);
         expect(wrapper.find(DataPackGrid)).to.have.length(1);
     });
 
