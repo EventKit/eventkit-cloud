@@ -52,13 +52,13 @@ def validate_provider_tasks(data):
 
 def validate_providers(data):
     """
-    Validate the selected export formats.
+    Validate the selected providers.
 
     Args:
         data: the submitted form data.
 
     Raises:
-        ValidationError: if there are no formats selected.
+        ValidationError: if there are no providers selected.
     """
     for provider_task in data.get('provider_tasks', {"provider": None}):
         if provider_task.get('provider') is None or len(provider_task.get('provider')) == 0:
