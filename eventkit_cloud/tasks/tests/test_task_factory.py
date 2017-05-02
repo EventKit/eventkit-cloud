@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.test import TestCase
 from django.db import DatabaseError
+from django.test import TestCase
+
+from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider, License, UserLicense
+from eventkit_cloud.tasks.models import ExportRun
+from eventkit_cloud.tasks.task_factory import TaskFactory, create_run, create_finalize_run_task_collection,
+    get_invalid_licenses
 from mock import patch, Mock, MagicMock
 
-
-import uuid
-from ..task_factory import TaskFactory, create_run, get_invalid_licenses
-from ..models import ExportRun
-from ...jobs.models import Job, Region, ProviderTask, ExportProvider, License, UserLicense
 
 logger = logging.getLogger(__name__)
 
@@ -101,3 +102,50 @@ class TestExportTaskFactory(TestCase):
 
         UserLicense.objects.create(license=self.license, user=self.user)
 
+
+class CreateFinalizeRunTaskCollectionTests(TestCase):
+
+    @patch('eventkit_cloud.tasks.task_factory.qgis_task')
+    @patch('eventkit_cloud.tasks.task_factory.prepare_for_export_zip_task')
+    @patch('eventkit_cloud.tasks.task_factory.zip_file_task')
+    @patch('eventkit_cloud.tasks.task_factory.finalize_run_task')
+    @patch('eventkit_cloud.tasks.task_factory.chain')
+    def test_create_finalize_run_task_collection(
+            self, chain, finalize_run_task, zip_file_task, prepare_for_export_zip_task, qgis_task):
+        """ Checks that all of the expected tasks were prepared and combined in a chain for return.
+        """
+        chain.return_value = 'When not mocked, this would be a celery chain'
+        # None of these need correspond to real things, they're just to check the inner calls.
+        run_uid = 1
+        run_dir = 'test_dir'
+        worker = 'test_worker'
+        expected_task_settings = {
+            'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker, 'priority': 70}
+
+        ret = create_finalize_run_task_collection(run_uid=run_uid, run_dir=run_dir, worker=worker)
+        self.assertEqual(ret, 'When not mocked, this would be a celery chain')
+        self.assertEqual(chain.call_count, 1)
+
+        # Grab the args for the first (only) call
+        chain_inputs = chain.call_args[0]
+        # The result of setting the args & settings for each task,
+        # which unmocked would be a task signature, should be passed to celery.chain
+        expected_chain_inputs = (
+            qgis_task.s.return_value.set.return_value,
+            prepare_for_export_zip_task.s.return_value.set.return_value,
+            zip_file_task.s.return_value.set.return_value,
+            finalize_run_task.si.return_value.set.return_value,
+        )
+        self.assertEqual(chain_inputs, expected_chain_inputs)
+
+        qgis_task.s.assert_called_once_with(run_uid=run_uid)
+        qgis_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        prepare_for_export_zip_task.s.assert_called_once_with(run_uid=run_uid)
+        prepare_for_export_zip_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        zip_file_task.s.assert_called_once_with(run_uid=run_uid)
+        zip_file_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        finalize_run_task.si.assert_called_once_with(run_uid=run_uid, stage_dir=run_dir)
+        finalize_run_task.si.return_value.set.assert_called_once_with(**expected_task_settings)

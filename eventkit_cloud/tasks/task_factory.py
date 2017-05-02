@@ -4,13 +4,14 @@ from __future__ import absolute_import
 from datetime import datetime, timedelta
 import logging
 import os
+import itertools
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from celery import chain, group
-from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_export_zip
+from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
 from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
@@ -155,24 +156,31 @@ class TaskFactory:
                     grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
 
                 all_export_provider_task_group = group([
-                    gpsc.si(
-                        interval=1,
-                        max_retries=10,
-                        expires=datetime.now() + timedelta(days=2),
-                        priority=TaskPriority.TASK_RUNNER.value,
-                        routing_key=worker,
-                        queue=worker,
-                        user_details=user_details,
-                        link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
-                                                            export_provider_task_uids=export_provider_task_uids,
-                                                            worker=worker).set(queue=worker, routing_key=worker)
-                    )
+                    gpsc
+#                     gpsc.s(
+#                         interval=1,
+#                         max_retries=10,
+#                         expires=datetime.now() + timedelta(days=2),
+#                         priority=TaskPriority.TASK_RUNNER.value,
+#                         routing_key=worker,
+#                         queue=worker,
+#                         link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
+#                                                             export_provider_task_uids=export_provider_task_uids,
+#                                                             worker=worker).set(queue=worker, routing_key=worker)
+#                     )
                     for gpsc in grouped_provider_subtask_chains
                 ])
 
-                tasks_results = all_export_provider_task_group.apply_async()
+                finalize_tasks = create_finalize_run_task_collection(run_uid, run_dir, worker)
 
-                return tasks_results
+                export_run_tasks_chain = chain(all_export_provider_task_group, finalize_tasks)
+                export_run_tasks_chain.apply_async()
+
+#                 tasks_results = all_export_provider_task_group.apply_async()
+#
+#                 return tasks_results
+                return []
+
             return False
 
 
@@ -276,22 +284,26 @@ class InvalidLicense(Error):
         super(Error, self).__init__('InvalidLicense: {0}'.format(message))
 
 
-def create_run_finished_task_chain(run_uid=None, run_dir=None, worker=None):
-    tasks = [qgis_task, prepare_export_zip, finalize_run_task]
-#     task_sigs = [
-#         t.s(run_uid=run_uid, stage_dir=run_dir)\
-#             .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
-#         for t in tasks
-#     ]
-    task_sigs = []
-    task_sigs.append(qgis_task.s(run_uid=run_uid, stage_dir=run_dir)\
-            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
-    )
-    task_sigs.append(prepare_export_zip.s(run_uid=run_uid, stage_dir=run_dir)\
-            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
-    )
-    task_sigs.append(finalize_run_task.s(run_uid=run_uid, stage_dir=run_dir)\
-            .set(interval=1, max_retries=10, queue=worker, routing_key=worker, priority=TaskPriority.FINALIZE_RUN.value)
-    )
-    c = chain(task_sigs)
-    return c
+def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None):
+    """ Returns a celery chain of lenth 2 made up of a chord which executes post export provider tasks
+            & the finalize_run_task
+    """
+    finalize_task_settings = {
+        'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+        'priority': TaskPriority.FINALIZE_RUN.value}
+
+    # These should be subclassed from FinalizeRunHookTask
+    hook_tasks = [qgis_task]
+    hook_task_sigs = [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks]
+
+    prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
+
+    zip_task_sig = zip_file_task.s(run_uid=run_uid).set(**finalize_task_settings)
+
+    # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
+    finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
+
+    all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
+    finalize_chain = chain(*all_task_sigs)
+
+    return finalize_chain

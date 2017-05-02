@@ -7,6 +7,7 @@ import sys
 import uuid
 import celery
 import signal
+from celery import chain
 
 from billiard.einfo import ExceptionInfo
 from django.conf import settings
@@ -834,8 +835,7 @@ class TestExportTasks(ExportTaskBase):
                                                                              priority=TaskPriority.FINALIZE_PROVIDER.value,
                                                                              queue=worker_name, routing_key=worker_name)
 
-    @patch('eventkit_cloud.tasks.task_factory.create_run_finished_task_chain')
-    def test_finalize_export_provider_task(self, create_run_finished_task_chain):
+    def test_finalize_export_provider_task(self):
         worker_name = "test_worker"
         task_pid = 55
         filename = 'test.gpkg'
@@ -861,9 +861,9 @@ class TestExportTasks(ExportTaskBase):
 
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
-        finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
+        res = finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
                                           run_dir=run_dir)
-        create_run_finished_task_chain.assert_called_once()
+        self.assertEqual(res['finalize_status'], 'COMPLETED')
 
     @patch('os.kill')
     @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
@@ -893,3 +893,72 @@ class TestFormatTasks(ExportTaskBase):
 
     def test_ensure_display(self):
         self.assertTrue(FormatTask.display)
+
+
+class FinalizeRunHookTaskTests(ExportTaskBase):
+    def setUp(self):
+        from eventkit_cloud.tasks import FinalizeRunHookTask
+        from eventkit_cloud.celery import app
+
+        @app.task(bind=True, base=FinalizeRunHookTask)
+        def finalize_hook_file1(self, new_zip_filepaths=[], run_uid=None):
+            return ['file1']
+
+        @app.task(bind=True, base=FinalizeRunHookTask)
+        def finalize_hook_file2(self, new_zip_filepaths=[], run_uid=None):
+            return ['file2']
+
+        @app.task(bind=True, base=FinalizeRunHookTask)
+        def finalize_hook_file3(self, new_zip_filepaths=[], run_uid=None):
+            return ['file3']
+
+        self.finalize_hook_file1 = finalize_hook_file1
+        self.finalize_hook_file2 = finalize_hook_file2
+        self.finalize_hook_file3 = finalize_hook_file3
+
+    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
+    def test_new_files_in_chain_result(self, record_task_state):
+        # With record_task_state mocked there doesn't need to be an ExportRun instance with this id.
+        run_uid = 1
+        fh1_sig = self.finalize_hook_file1.s(run_uid=run_uid)
+        fh2_sig = self.finalize_hook_file2.s(run_uid=run_uid)
+        fh3_sig = self.finalize_hook_file3.s(run_uid=run_uid)
+
+        pf_chain = chain(fh1_sig, fh2_sig, fh3_sig)
+        eager_res = pf_chain.apply()
+        res = eager_res.get()
+
+        # 2 calls per task run
+        self.assertEqual(record_task_state.call_count, 6)
+        self.assertEqual(res, ['file1', 'file2', 'file3'])
+
+    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
+    def test_manually_passed_files_in_chain_result(self, record_task_state):
+        manual_filepath_list = ['my_file_a', 'my_file_b']
+        # With record_task_state mocked there doesn't need to be an ExportRun instance with this id.
+        run_uid = 1
+        pf1_sig = self.finalize_hook_file1.s(manual_filepath_list, run_uid=run_uid)
+        pf2_sig = self.finalize_hook_file2.s(run_uid=run_uid)
+
+        pf_chain = chain(pf1_sig, pf2_sig)
+        eager_res = pf_chain.apply()
+        res = eager_res.get()
+
+        # 2 calls per task run
+        self.assertEqual(record_task_state.call_count, 4)
+        self.assertEqual(res, ['my_file_a', 'my_file_b', 'file1', 'file2'])
+
+    def test_none_uid_raises_error(self):
+        run_uid = None
+        pf1_sig = self.finalize_hook_file1.s(run_uid=run_uid)
+        eager_res = pf1_sig.apply()
+
+        self.assertEqual(eager_res.state, 'FAILURE')
+
+        expected_assert_msg = '"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask'
+        self.assertEqual(type(eager_res.result), ValueError)
+        self.assertEqual(eager_res.result.message, expected_assert_msg)
+
+    def test_record_task_state(self):
+        self.fail('Test not implemented')
+>>>>>>> f58a530... Finish up export_tasks.FinalizeRunHookTask with tests.
