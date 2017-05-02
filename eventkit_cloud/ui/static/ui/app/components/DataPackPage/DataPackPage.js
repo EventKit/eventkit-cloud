@@ -264,7 +264,7 @@ export class DataPackPage extends React.Component {
             containerStyle: {
                 backgroundColor: '#fff',
                 top: '221px',
-                height: window.innerHeight - 236,
+                height: window.innerHeight - 221,
                 overflowY: 'hidden',
                 overflowX: 'hidden'
             }
@@ -307,26 +307,28 @@ export class DataPackPage extends React.Component {
                         open={this.state.open}
                         containerStyle={styles.containerStyle}
                     >
-                        <FilterHeader
-                            onApply={this.handleFilterApply}
-                            onClear={this.handleFilterClear}
-                        />
-                        <PermissionFilter
-                            onChange={this.handlePermissionsChange}
-                            valueSelected={this.state.permissions}
-                        />
-                        <StatusFilter
-                            onChange={this.handleStatusChange}
-                            completed={this.state.status.completed}
-                            incomplete={this.state.status.incomplete}
-                            running={this.state.status.running}
-                        />
-                        <DateFilter
-                            onMinChange={this.handleMinDate}
-                            onMaxChange={this.handleMaxDate}
-                            minDate={this.state.minDate}
-                            maxDate={this.state.maxDate}
-                        />
+                        <CustomScrollbar>
+                            <FilterHeader
+                                onApply={this.handleFilterApply}
+                                onClear={this.handleFilterClear}
+                            />
+                            <PermissionFilter
+                                onChange={this.handlePermissionsChange}
+                                valueSelected={this.state.permissions}
+                            />
+                            <StatusFilter
+                                onChange={this.handleStatusChange}
+                                completed={this.state.status.completed}
+                                incomplete={this.state.status.incomplete}
+                                running={this.state.status.running}
+                            />
+                            <DateFilter
+                                onMinChange={this.handleMinDate}
+                                onMaxChange={this.handleMaxDate}
+                                minDate={this.state.minDate}
+                                maxDate={this.state.maxDate}
+                            />
+                        </CustomScrollbar>
                     </Drawer>
                     <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
                         {this.state.grid ? 

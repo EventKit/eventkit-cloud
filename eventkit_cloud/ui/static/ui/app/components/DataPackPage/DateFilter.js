@@ -10,6 +10,7 @@ export class DateFilter extends Component {
     render () {
         const styles = {
             drawerSection: {width: '100%', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
+            textField: {fontSize: '14px', height: '36px', width: '180px'}
         }
         return (
                 <div style={styles.drawerSection}>
@@ -17,14 +18,14 @@ export class DateFilter extends Component {
                     <DatePicker
                         autoOk={true}
                         hintText={"From"}
-                        textFieldStyle={{fontSize: '14px', height: '36px'}}
+                        textFieldStyle={styles.textField}
                         onChange={this.props.onMinChange}
                         value={this.props.minDate}
                     />
                     <DatePicker
                         autoOk={true}
                         hintText={"To"}
-                        textFieldStyle={{fontSize: '14px', height: '36px'}}
+                        textFieldStyle={styles.textField}
                         onChange={this.props.onMaxChange}
                         value={this.props.maxDate}
                     />

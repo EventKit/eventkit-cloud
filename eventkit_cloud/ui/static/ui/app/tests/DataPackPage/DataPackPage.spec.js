@@ -69,7 +69,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(PermissionFilter)).toHaveLength(1);
         expect(wrapper.find(StatusFilter)).toHaveLength(1);
         expect(wrapper.find(DateFilter)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
         expect(wrapper.find(DataPackGrid)).toHaveLength(1);
     });
 
