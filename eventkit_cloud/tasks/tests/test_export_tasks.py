@@ -951,14 +951,63 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
     def test_none_uid_raises_error(self):
         run_uid = None
         pf1_sig = self.finalize_hook_file1.s(run_uid=run_uid)
-        eager_res = pf1_sig.apply()
 
-        self.assertEqual(eager_res.state, 'FAILURE')
+        expected_ex_msg = '"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask'
+        self.assertRaisesRegexp(ValueError, expected_ex_msg, pf1_sig.apply, throw=True)
 
-        expected_assert_msg = '"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask'
-        self.assertEqual(type(eager_res.result), ValueError)
-        self.assertEqual(eager_res.result.message, expected_assert_msg)
 
-    def test_record_task_state(self):
-        self.fail('Test not implemented')
->>>>>>> f58a530... Finish up export_tasks.FinalizeRunHookTask with tests.
+    @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
+    @patch('eventkit_cloud.tasks.models.ExportRun')
+    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get_or_create')
+    def test_record_task_state(self, get_or_create_mock, ExportRunMock, AsyncResultMock):
+        # With ExportRun mocked this uid doesn't need a corresponding instance.
+        run_uid = 1
+
+        def reset_mocks():
+            get_or_create_mock.reset_mock()
+            get_or_create_mock.return_value = (MagicMock(), None)
+            ExportRunMock.reset_mock()
+            AsyncResultMock.reset_mock()
+
+        reset_mocks()
+
+        # --- When neither started_at nor finished_at are provided a record is created/retrieved but that's it.
+        self.finalize_hook_file1.record_task_state(testing_run_uid=run_uid)
+        get_or_create_mock.assert_called_once()
+        frhtr_instance, _ = get_or_create_mock.return_value
+        frhtr_instance.save.assert_not_called()
+        # Check that no value has been assigned to started_at or finished_at
+        self.assertIsInstance(frhtr_instance.started_at, MagicMock)
+        self.assertIsInstance(frhtr_instance.finished_at, MagicMock)
+        reset_mocks()
+
+        # --- When started_at is provided it should be set & FinalizeRunHookTaskRecord saved.
+        started_at = datetime.datetime.now()
+
+        self.finalize_hook_file1.record_task_state(started_at=started_at, testing_run_uid=run_uid)
+        get_or_create_mock.assert_called_once()
+        frhtr_instance, _ = get_or_create_mock.return_value
+        self.assertEqual(frhtr_instance.started_at, started_at)
+        frhtr_instance.save.assert_called_once_with()
+        reset_mocks()
+
+        # --- When finished_at is provided it should be set & FinalizeRunHookTaskRecord saved.
+        finished_at = datetime.datetime.now()
+        self.finalize_hook_file1.record_task_state(finished_at=finished_at, testing_run_uid=run_uid)
+        get_or_create_mock.called_once_with()
+        frhtr_instance, _ = get_or_create_mock.return_value
+        self.assertEqual(frhtr_instance.finished_at, finished_at)
+        frhtr_instance.save.assert_called_once_with()
+        reset_mocks()
+
+        # --- When started_at and finished_at are provided, both should be set & FinalizeRunHookTaskRecord saved.
+        started_at = datetime.datetime.now()
+        finished_at = datetime.datetime.now() + datetime.timedelta(hours=1)
+        self.finalize_hook_file1.record_task_state(
+            started_at=started_at, finished_at=finished_at, testing_run_uid=run_uid)
+        get_or_create_mock.assert_called_once()
+        frhtr_instance, _ = get_or_create_mock.return_value
+        self.assertEqual(frhtr_instance.started_at, started_at)
+        self.assertEqual(frhtr_instance.finished_at, finished_at)
+        frhtr_instance.save.assert_called_once_with()
+>>>>>>> 6431007... Add test for FinalizeRunHookTask.record_task_state().
