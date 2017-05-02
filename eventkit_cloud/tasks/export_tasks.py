@@ -739,21 +739,25 @@ class FinalizeRunHookTask(LockingTask):
         if run_uid is None:
             raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
 
-        self.record_task_state(run_uid=run_uid)
+        self.record_task_state()
         res = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths=[], run_uid=run_uid)
         res = res or []
         new_zip_filepaths.extend(res)
         return new_zip_filepaths
 
-    def record_task_state(self, started_at=None, finished_at=None):
-        if not self.run_uid:
-            logger.error('ExportRun uid is "{}" unable to record task state.'.format(self.run_uid))
-            return
+    def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
+        """ When testing-only param testing_run_uid is set, this value will be used if self.run_uid is not set
+        """
+        run_uid = getattr(self, 'run_uid', None) or testing_run_uid
+        if run_uid is None:
+            msg = 'ExportRun uid is {}, unable to record task state.'.format(self.run_uid)
+            logger.error(msg)
+            raise TypeError(msg)
 
         from eventkit_cloud.tasks.models import FinalizeRunHookTaskRecord
-
         from eventkit_cloud.tasks.models import ExportRun
-        export_run = ExportRun.objects.get(uid=self.run_uid)
+
+        export_run = ExportRun.objects.get(uid=run_uid)
         worker_name = self.request.hostname
         status = AsyncResult(self.request.id).status
         tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
@@ -775,9 +779,11 @@ class FinalizeRunHookTask(LockingTask):
 
 @app.task(name='Do Some QGIS Thing', base=FinalizeRunHookTask, bind=True)
 def qgis_task(self, new_zip_filepaths=[], run_uid=None):
+    """ Just a placeholder hook task that doesn't do anything.
+        If this was a real task that created new files that should e included in the run's zip,
+        the paths of the new files should be returned as a list.
+    """
     logger.debug('qgis_task; new_zip_filepaths: {}, run_uid: {}'.format(new_zip_filepaths, run_uid))
-    filepath_created_here = 'my_new_file_to_include_in_zip'
-    return [filepath_created_here]
 
 
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
@@ -823,7 +829,6 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
 
-#     run_finished = False
     with transaction.atomic():
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
 
@@ -839,20 +844,6 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
             export_provider_task.status = TaskStates.INCOMPLETE.value
             export_provider_task.save()
 
-#         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-
-#         provider_tasks = export_provider_task.run.provider_tasks.all()
-#         if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
-#                provider_tasks):
-#             run_finished = True
-
-#     if run_finished:
-#         from eventkit_cloud.tasks.task_factory import create_run_finished_task_chain
-#
-#         run_finished_tasks = create_run_finished_task_chain(run_uid=run_uid, run_dir=run_dir, worker=worker)
-#         run_finished_tasks.apply_async()
-#     else:
-#         return result
     result['finalize_status'] = export_provider_task.status
     return result
 
