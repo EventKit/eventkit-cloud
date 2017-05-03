@@ -1,4 +1,3 @@
-import {expect} from 'chai';
 import * as utils from '../utils/sortUtils';
 
 describe('sorting utilities', () => {
@@ -6,199 +5,199 @@ describe('sorting utilities', () => {
         const runs = getRuns();
         const unordered_runs = [runs[1], runs[2], runs[0]];
         const ordered_runs = utils.orderAZ(unordered_runs);
-        expect(ordered_runs[0].job.name).to.equal('Name 1');
-        expect(ordered_runs[1].job.name).to.equal('Name 2');
-        expect(ordered_runs[2].job.name).to.equal('Name 3');
+        expect(ordered_runs[0].job.name).toEqual('Name 1');
+        expect(ordered_runs[1].job.name).toEqual('Name 2');
+        expect(ordered_runs[2].job.name).toEqual('Name 3');
     });
 
     it('orderZA should return a list sorted Z-A by name', () => {
         const runs = getRuns();
         const unordered_runs = [runs[1], runs[0], runs[2]];
         const ordered_runs = utils.orderZA(unordered_runs);
-        expect(ordered_runs[0].job.name).to.equal('Name 3');
-        expect(ordered_runs[1].job.name).to.equal('Name 2');
-        expect(ordered_runs[2].job.name).to.equal('Name 1'); 
+        expect(ordered_runs[0].job.name).toEqual('Name 3');
+        expect(ordered_runs[1].job.name).toEqual('Name 2');
+        expect(ordered_runs[2].job.name).toEqual('Name 1'); 
     });
 
     it('orderEventAZ should return a list sorted A-Z by event', () => {
         const runs = getRuns();
         const unordered_runs = [runs[2], runs[0], runs[1]];
         const ordered_runs = utils.orderEventAZ(unordered_runs);
-        expect(ordered_runs[0].job.event).to.equal('Event 1');
-        expect(ordered_runs[1].job.event).to.equal('Event 2');
-        expect(ordered_runs[2].job.event).to.equal('Event 3');
+        expect(ordered_runs[0].job.event).toEqual('Event 1');
+        expect(ordered_runs[1].job.event).toEqual('Event 2');
+        expect(ordered_runs[2].job.event).toEqual('Event 3');
     });
 
     it('orderEventZA should return a list sorted Z-A by event', () => {
         const unordered_runs = getRuns();
         const ordered_runs = utils.orderEventZA(unordered_runs);
-        expect(ordered_runs[0].job.event).to.equal('Event 3');
-        expect(ordered_runs[1].job.event).to.equal('Event 2');
-        expect(ordered_runs[2].job.event).to.equal('Event 1');
+        expect(ordered_runs[0].job.event).toEqual('Event 3');
+        expect(ordered_runs[1].job.event).toEqual('Event 2');
+        expect(ordered_runs[2].job.event).toEqual('Event 1');
     });
 
     it('ordeOldest should return a list sorted by the started_at date', () => {
         const runs = getRuns();
         const unordered_runs = [runs[1], runs[2], runs[0]];
         const ordered_runs = utils.orderOldest(unordered_runs);
-        expect(ordered_runs[0].job.name).to.equal('Name 1');
-        expect(ordered_runs[1].job.name).to.equal('Name 2');
-        expect(ordered_runs[2].job.name).to.equal('Name 3');
+        expect(ordered_runs[0].job.name).toEqual('Name 1');
+        expect(ordered_runs[1].job.name).toEqual('Name 2');
+        expect(ordered_runs[2].job.name).toEqual('Name 3');
     });
 
     it('orderNewest should return a list sorted by the started_at date', () => {
         const runs = getRuns();
         const unordered_runs = [runs[2], runs[0], runs[1]];
         const ordered_runs = utils.orderNewest(unordered_runs);
-        expect(ordered_runs[0].job.name).to.equal('Name 3');
-        expect(ordered_runs[1].job.name).to.equal('Name 2');
-        expect(ordered_runs[2].job.name).to.equal('Name 1'); 
+        expect(ordered_runs[0].job.name).toEqual('Name 3');
+        expect(ordered_runs[1].job.name).toEqual('Name 2');
+        expect(ordered_runs[2].job.name).toEqual('Name 1'); 
     });
 
     it('orderComplete should return a list with completed runs at the front', () => {
         const unordered_runs = getRuns();
         const ordered_runs = utils.orderComplete(unordered_runs);
-        expect(ordered_runs[0].status).to.equal('COMPLETED');
-        expect(ordered_runs[1].status).to.equal('COMPLETED');
-        expect(ordered_runs[2].status).to.equal('SUBMITTED');
+        expect(ordered_runs[0].status).toEqual('COMPLETED');
+        expect(ordered_runs[1].status).toEqual('COMPLETED');
+        expect(ordered_runs[2].status).toEqual('SUBMITTED');
     });
 
     it('orderIncomplete should return a list with not completed runs at the front', () => {
         const unordered_runs = getRuns();
         const ordered_runs = utils.orderIncomplete(unordered_runs);
-        expect(ordered_runs[0].status).to.equal('SUBMITTED');
-        expect(ordered_runs[1].status).to.equal('COMPLETED');
-        expect(ordered_runs[2].status).to.equal('COMPLETED');
+        expect(ordered_runs[0].status).toEqual('SUBMITTED');
+        expect(ordered_runs[1].status).toEqual('COMPLETED');
+        expect(ordered_runs[2].status).toEqual('COMPLETED');
     });
 
     it('orderPrivate should return a list with unpublished runs at the front', () => {
         const unordered_runs = getRuns();
         const ordered_runs = utils.orderPrivate(unordered_runs);
-        expect(ordered_runs[0].job.published).to.be.false;
-        expect(ordered_runs[1].job.published).to.be.true;
-        expect(ordered_runs[2].job.published).to.be.true;
+        expect(ordered_runs[0].job.published).toBe(false);
+        expect(ordered_runs[1].job.published).toBe(true);
+        expect(ordered_runs[2].job.published).toBe(true);
     });
 
     it('orderPublic should return a list with published runs at the front', () => {
         const runs = getRuns();
         const unordered_runs = [runs[0], runs[2], runs[1]];
         const ordered_runs = utils.orderPublic(unordered_runs);
-        expect(ordered_runs[0].job.published).to.be.true;
-        expect(ordered_runs[1].job.published).to.be.true;
-        expect(ordered_runs[2].job.published).to.be.false;
+        expect(ordered_runs[0].job.published).toBe(true);
+        expect(ordered_runs[1].job.published).toBe(true);
+        expect(ordered_runs[2].job.published).toBe(false);
     });
 
     it('orderOwnerAZ should return a list sorted A-Z by owner', () => {
         const runs = getRuns();
         const unordered_runs = [runs[2], runs[0], runs[0]];
         const ordered_runs = utils.orderOwnerAZ(unordered_runs);
-        expect(ordered_runs[0].user).to.equal('admin');
-        expect(ordered_runs[1].user).to.equal('admin');
-        expect(ordered_runs[2].user).to.equal('notAdmin');
+        expect(ordered_runs[0].user).toEqual('admin');
+        expect(ordered_runs[1].user).toEqual('admin');
+        expect(ordered_runs[2].user).toEqual('notAdmin');
     });
 
     it('orderOwnerZA should return a list sorted Z-A by owner', () => {
         const unordered_runs = getRuns();
         const ordered_runs = utils.orderOwnerZA(unordered_runs);
-        expect(ordered_runs[0].user).to.equal('notAdmin');
-        expect(ordered_runs[1].user).to.equal('admin');
-        expect(ordered_runs[2].user).to.equal('admin');
+        expect(ordered_runs[0].user).toEqual('notAdmin');
+        expect(ordered_runs[1].user).toEqual('admin');
+        expect(ordered_runs[2].user).toEqual('admin');
     });
 
     it('myDataPacksOnly should return only runs owned by the specified user', () => {
         const runs = getRuns();
-        expect(runs.length).to.equal(3);
+        expect(runs.length).toEqual(3);
         const search = utils.myDataPacksOnly(runs, 'admin');
-        expect(search.length).to.equal(2);
+        expect(search.length).toEqual(2);
         const empty_search = utils.myDataPacksOnly(runs, 'not found');
-        expect(empty_search.length).to.equal(0);
+        expect(empty_search.length).toEqual(0);
     });
 
     it('search should return run with matching name', () => {
         const runs = getRuns();
         const searched = utils.search('name 1', runs);
-        expect(searched.length).to.equal(1);
-        expect(searched[0].job.name).to.equal('Name 1');
+        expect(searched.length).toEqual(1);
+        expect(searched[0].job.name).toEqual('Name 1');
     });
 
     it('search should return run with matching event', () => {
         const runs = getRuns();
         const searched = utils.search('event 2', runs);
-        expect(searched.length).to.equal(1);
-        expect(searched[0].job.event).to.equal('Event 2');
+        expect(searched.length).toEqual(1);
+        expect(searched[0].job.event).toEqual('Event 2');
     });
 
     it('search should return run with matching description', () => {
         const runs = getRuns();
         const searched = utils.search('description 3', runs);
-        expect(searched.length).to.equal(1);
-        expect(searched[0].job.description).to.equal('Description 3');
+        expect(searched.length).toEqual(1);
+        expect(searched[0].job.description).toEqual('Description 3');
     });
 
     it('search should return mutiple, partial matches', () => {
         const runs = getRuns();
         const searched = utils.search('nam', runs);
-        expect(searched.length).to.equal(3);
+        expect(searched.length).toEqual(3);
     });
 
     it('filterPermissions should return only unpublished runs', () => {
         const runs = getRuns();
         const filtered = utils.filterPermissions('PRIVATE', runs);
-        expect(filtered.length).to.equal(1);
-        expect(filtered[0].job.published).to.be.false;
+        expect(filtered.length).toEqual(1);
+        expect(filtered[0].job.published).toBe(false);
     });
 
     it('filterPermissions should return only published runs', () => {
         const runs = getRuns();
         const filtered = utils.filterPermissions('PUBLIC', runs);
-        expect(filtered.length).to.equal(2);
-        expect(filtered[0].job.published).to.be.true;
-        expect(filtered[1].job.published).to.be.true;
+        expect(filtered.length).toEqual(2);
+        expect(filtered[0].job.published).toBe(true);
+        expect(filtered[1].job.published).toBe(true);
     });
 
     it('filterStatus should return only runs with COMPLETED  status', () => {
         const runs = getRuns();
         const status = {completed: true, incomplete: false, running: false};
         const filtered = utils.filterStatus(status, runs);
-        expect(filtered.length).to.equal(2);
-        expect(filtered[0].status).to.equal('COMPLETED');
-        expect(filtered[1].status).to.equal('COMPLETED');
+        expect(filtered.length).toEqual(2);
+        expect(filtered[0].status).toEqual('COMPLETED');
+        expect(filtered[1].status).toEqual('COMPLETED');
     });
     
     it('filterStatus should return only runs with SUBMITTED  status', () => {
         const runs = getRuns();
         const status = {completed: false, incomplete: false, running: true};
         const filtered = utils.filterStatus(status, runs);
-        expect(filtered.length).to.equal(1);
-        expect(filtered[0].status).to.equal('SUBMITTED');
+        expect(filtered.length).toEqual(1);
+        expect(filtered[0].status).toEqual('SUBMITTED');
     });
 
     it('filterStatus should return only runs with SUBMITTED or COMPLETED status', () => {
         const runs = getRuns();
         const status = {completed: true, incomplete: false, running: true};
         const filtered = utils.filterStatus(status, runs);
-        expect(filtered.length).to.equal(3);
-        expect(filtered[0].status).to.equal('COMPLETED');
-        expect(filtered[2].status).to.equal('COMPLETED');
-        expect(filtered[1].status).to.equal('SUBMITTED');
+        expect(filtered.length).toEqual(3);
+        expect(filtered[0].status).toEqual('COMPLETED');
+        expect(filtered[2].status).toEqual('COMPLETED');
+        expect(filtered[1].status).toEqual('SUBMITTED');
     });
 
     it('filterDate should return only runs started before maxDate', () => {
         const maxDate = new Date(2017, 2, 30, 14, 6);
         const runs = getRuns();
         const filtered = utils.filterDate(null, maxDate, runs);
-        expect(filtered.length).to.equal(2);
-        expect(filtered[0].job.name).to.equal('Name 1');
-        expect(filtered[1].job.name).to.equal('Name 2');
+        expect(filtered.length).toEqual(2);
+        expect(filtered[0].job.name).toEqual('Name 1');
+        expect(filtered[1].job.name).toEqual('Name 2');
     });
 
     it('filterDate should return only runs started after minDate', () => {
         const minDate = new Date(2017, 2, 29, 14, 20);
         const runs = getRuns();
         const filtered = utils.filterDate(minDate, null, runs);
-        expect(filtered.length).to.equal(2);
-        expect(filtered[0].job.name).to.equal('Name 2');
-        expect(filtered[1].job.name).to.equal('Name 3');
+        expect(filtered.length).toEqual(2);
+        expect(filtered[0].job.name).toEqual('Name 2');
+        expect(filtered[1].job.name).toEqual('Name 3');
     });
 
     it('filterDate should return only runs started between min and max date', () => {
@@ -206,8 +205,8 @@ describe('sorting utilities', () => {
         const maxDate = new Date(2017, 2, 30, 14, 6);
         const runs = getRuns();
         const filtered = utils.filterDate(minDate, maxDate, runs);
-        expect(filtered.length).to.equal(1);
-        expect(filtered[0].job.name).to.equal('Name 2');
+        expect(filtered.length).toEqual(1);
+        expect(filtered[0].job.name).toEqual('Name 2');
     });
 });
 

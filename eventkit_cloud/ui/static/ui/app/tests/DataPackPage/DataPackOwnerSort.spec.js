@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import Menu from 'material-ui/Menu';
@@ -25,7 +24,7 @@ describe('DataPackOwnerSort component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(DropDownMenu)).to.have.length(1);
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
 
     it('should render with text "All DataPacks"', () => {
@@ -34,7 +33,7 @@ describe('DataPackOwnerSort component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('All DataPacks');
+        expect(wrapper.text()).toEqual('All DataPacks');
     });
 
     it('should render with text "My DataPacks"', () => {
@@ -44,7 +43,7 @@ describe('DataPackOwnerSort component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('My DataPacks');
+        expect(wrapper.text()).toEqual('My DataPacks');
     });
 
     it('should display the right default selected value text', () => {
@@ -54,9 +53,9 @@ describe('DataPackOwnerSort component', () => {
                 childContextTypes: {muiTheme: React.PropTypes.object},
             }
         );
-        expect(wrapper.find(DropDownMenu)).to.have.length(1);
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
-        expect(menu.childAt(0).childAt(0).childAt(0).node).to.equal('All DataPacks');
+        expect(menu.childAt(0).childAt(0).childAt(0).node).toEqual('All DataPacks');
     });
 
     it('should have the correct menu item labels', () => {
@@ -65,10 +64,10 @@ describe('DataPackOwnerSort component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(DropDownMenu)).to.have.length(1);
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
-        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).to.equal('All DataPacks');
-        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).to.equal('My DataPacks');
+        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('All DataPacks');
+        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('My DataPacks');
     });
     
     it('should call onChange when an item is selected', () => {
@@ -91,7 +90,7 @@ describe('DataPackOwnerSort component', () => {
             },
             2
         );
-        expect(menu.state().open).to.equal(false);
-        expect(props.handleChange.calledWith(event, 2, 'My DataPacks')).to.equal(true);
+        expect(menu.state().open).toEqual(false);
+        expect(props.handleChange.calledWith(event, 2, 'My DataPacks')).toEqual(true);
     })
 });

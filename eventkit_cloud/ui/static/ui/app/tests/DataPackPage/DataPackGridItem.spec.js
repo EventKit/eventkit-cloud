@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount} from 'enzyme';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -25,21 +24,21 @@ describe('DataPackGridItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(Card)).to.have.length(1);
-        expect(wrapper.find(CardTitle)).to.have.length(1);
+        expect(wrapper.find(Card)).toHaveLength(1);
+        expect(wrapper.find(CardTitle)).toHaveLength(1);
         expect(wrapper.find(CardTitle).find('span').first()
-            .childAt(0).childAt(0).text()).to.equal('Test1');
-        expect(wrapper.find(IconMenu)).to.have.length(1);
-        expect(wrapper.find(IconButton)).to.have.length(1);
-        expect(wrapper.find(IconButton).find(NavigationMoreVert)).to.have.length(1);
-        expect(wrapper.find(MenuItem)).to.have.length(0);
+            .childAt(0).childAt(0).text()).toEqual('Test1');
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconButton)).toHaveLength(1);
+        expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
+        expect(wrapper.find(MenuItem)).toHaveLength(0);
         const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
-        expect(subtitle.find('span').first().text()).to.equal('Event: Test1 event');
-        expect(subtitle.find('span').last().text()).to.equal('Added: 2017-03-10');
-        expect(wrapper.find(CardText)).to.have.length(1);
-        expect(wrapper.find(CardText).find('span').text()).to.equal('Test1 description');
-        expect(wrapper.find(CardMedia)).to.have.length(0);
-        expect(wrapper.find(CardActions)).to.have.length(1);
+        expect(subtitle.find('span').first().text()).toEqual('Event: Test1 event');
+        expect(subtitle.find('span').last().text()).toEqual('Added: 2017-03-10');
+        expect(wrapper.find(CardText)).toHaveLength(1);
+        expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
+        expect(wrapper.find(CardMedia)).toHaveLength(0);
+        expect(wrapper.find(CardActions)).toHaveLength(1);
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -48,8 +47,8 @@ describe('DataPackGridItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(SocialPerson)).to.have.length(1);
-        expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
+        expect(wrapper.find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
     });
 
     it('should display information specific to a published & owned run', () => {
@@ -58,8 +57,8 @@ describe('DataPackGridItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(SocialGroup)).to.have.length(1);
-        expect(wrapper.find(CardActions).find('p').text()).to.equal('My DataPack');
+        expect(wrapper.find(SocialGroup)).toHaveLength(1);
+        expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
     });
 
     it('should display information specific to a published & not owned run', () => {
@@ -68,8 +67,8 @@ describe('DataPackGridItem component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(SocialGroup)).to.have.length(1);
-        expect(wrapper.find(CardActions).find('p').text()).to.equal('notAdmin');
+        expect(wrapper.find(SocialGroup)).toHaveLength(1);
+        expect(wrapper.find(CardActions).find('p').text()).toEqual('notAdmin');
     });
 
     it('should display a map when the card is expanded', () => {
@@ -81,12 +80,12 @@ describe('DataPackGridItem component', () => {
         });
         const updateSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
-        expect(wrapper.find('#' + uid + '_map')).to.have.length(0);
+        expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
         wrapper.setState({expanded: true});
-        expect(wrapper.find(CardMedia)).to.have.length(1);        
-        expect(updateSpy.called).to.be.true;
-        expect(wrapper.instance().initMap.called).to.be.true;
-        expect(wrapper.find('#' + uid + '_map')).to.have.length(1);
+        expect(wrapper.find(CardMedia)).toHaveLength(1);        
+        expect(updateSpy.called).toBe(true);
+        expect(wrapper.instance().initMap.called).toBe(true);
+        expect(wrapper.find('#' + uid + '_map')).toHaveLength(1);
     });
 });
 

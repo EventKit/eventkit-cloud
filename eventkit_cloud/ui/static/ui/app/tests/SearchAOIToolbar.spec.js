@@ -1,5 +1,4 @@
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {SearchAOIToolbar} from '../components/SearchAOIToolbar';
@@ -36,19 +35,19 @@ describe('SearchAOIToolbar button', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.searchbarDiv')).to.have.length(1);
-        expect(wrapper.find(Typeahead)).to.have.length(1);
-        expect(wrapper.find(Menu)).to.have.length(0);
-        expect(wrapper.find(TypeaheadMenuItem)).to.have.length(0);
-        expect(wrapper.find('.searchAOIButtonContainer')).to.have.length(1);
-        expect(wrapper.find(SearchAOIButton)).to.have.length(1);
+        expect(wrapper.find('.searchbarDiv')).toHaveLength(1);
+        expect(wrapper.find(Typeahead)).toHaveLength(1);
+        expect(wrapper.find(Menu)).toHaveLength(0);
+        expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(0);
+        expect(wrapper.find('.searchAOIButtonContainer')).toHaveLength(1);
+        expect(wrapper.find(SearchAOIButton)).toHaveLength(1);
     });
 
     it('should setup debouncer before mounting', () => {
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
-        expect(wrapper.instance().debouncer).to.exist;
-        expect(wrapper.instance().debouncer).to.be.a('function');
+        expect(wrapper.instance().debouncer).toBeDefined();
+        expect(wrapper.instance().debouncer).toBeInstanceOf(Function);
     });
 
     it('should handle geonames passed in', () => {
@@ -59,7 +58,7 @@ describe('SearchAOIToolbar button', () => {
         nextProps.geonames.fetched = true;
         nextProps.geonames.geonames = ['one', 'two', 'three'];
         wrapper.setProps(nextProps);
-        expect(spy.calledWith({suggestions: ['one', 'two', 'three']})).to.be.true;
+        expect(spy.calledWith({suggestions: ['one', 'two', 'three']})).toBe(true);
     });
 
     it('should clear suggestions when props update', () => {
@@ -70,7 +69,7 @@ describe('SearchAOIToolbar button', () => {
         nextProps.geonames.error = 'Fake error';
         wrapper.setState({suggestions: ['one', 'two', 'three']})
         wrapper.setProps(nextProps);
-        expect(spy.calledWith({suggestions: []})).to.be.true;
+        expect(spy.calledWith({suggestions: []})).toBe(true);
     });
 
     it('handleChange should reset the suggestions', () => {
@@ -78,9 +77,9 @@ describe('SearchAOIToolbar button', () => {
         let props = getProps();
         const wrapper = shallow(<SearchAOIToolbar  {...props}/>);
         wrapper.setState({suggestions: suggestions});
-        expect(wrapper.state().suggestions).to.equal(suggestions);
+        expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleChange('e');
-        expect(wrapper.state().suggestions.length).to.equal(0);
+        expect(wrapper.state().suggestions.length).toEqual(0);
 
     });
 
@@ -89,7 +88,7 @@ describe('SearchAOIToolbar button', () => {
         props.getGeonames = sinon.spy();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         wrapper.instance().handleChange('rio');
-        expect(props.getGeonames.calledWith('rio')).to.equal(true);
+        expect(props.getGeonames.calledWith('rio')).toEqual(true);
     });
 
     it('handleEnter should only clear the suggestions', () => {
@@ -97,8 +96,8 @@ describe('SearchAOIToolbar button', () => {
         let props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         wrapper.setState({suggestions: suggestions});
-        expect(wrapper.state().suggestions).to.equal(suggestions);
+        expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleEnter('');
-        expect(wrapper.state().suggestions.length).to.equal(0);
+        expect(wrapper.state().suggestions.length).toEqual(0);
     });
 });
