@@ -9,6 +9,8 @@ from django.db.models import Q
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 
+from rest_framework.filters import BaseFilterBackend
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,3 +56,4 @@ class ExportRunFilter(django_filters.FilterSet):
         model = ExportRun
         fields = ('status',)
         order_by = ('-started_at',)
+

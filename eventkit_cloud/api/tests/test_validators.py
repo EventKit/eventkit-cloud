@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon, GEOSException
+from django.contrib.auth.models import User
+from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 from mock import patch, Mock
