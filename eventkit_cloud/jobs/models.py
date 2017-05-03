@@ -80,6 +80,35 @@ class DatamodelPreset(TimeStampedModelMixin):
     def to_dict(self):
         return {"name": self.name, "json_tags": self.json_tags}
 
+
+class License(models.Model):
+    """
+    Model to hold license information to be used with ExportProviders.
+    """
+    slug = LowerCaseCharField(max_length=40, unique=True, default='')
+    name = models.CharField(max_length=100, db_index=True)
+    text = models.TextField(default="")
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
+    def __unicode__(self,):
+        return '{0}'.format(self.slug)
+
+
+class UserLicenses(models.Model):
+    """
+    Model to hold which licenses a User acknowledges. 
+    """
+    user = models.ForeignKey(User)
+    license = models.ForeignKey(License)
+
+    def __str__(self):
+        return '{0}: {1}'.format(self.user.username, self.license.name)
+
+    def __unicode__(self):
+        return '{0}: {1}'.format(self.user.username, self.license.slug)
+
 class ExportFormat(TimeStampedModelMixin):
     """
     Model for a ExportFormat.
@@ -145,6 +174,7 @@ class ExportProvider(TimeStampedModelMixin):
                               verbose_name="Configuration",
                               help_text="This is an optional field to put in additional configuration.")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
+    license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
 
     class Meta:  # pragma: no cover
         managed = True

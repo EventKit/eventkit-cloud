@@ -18,6 +18,8 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import * as utils from '../../utils/sortUtils';
+import {Scrollbars } from 'react-custom-scrollbars';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackPage extends React.Component {
 
@@ -239,11 +241,10 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 221,
-                overflowY: 'auto',
+                height: window.innerHeight - 236,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
-                paddingTop: '10px',
+                marginTop: '10px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
@@ -264,7 +265,7 @@ export class DataPackPage extends React.Component {
                 backgroundColor: '#fff',
                 top: '221px',
                 height: window.innerHeight - 221,
-                overflowY: 'auto',
+                overflowY: 'hidden',
                 overflowX: 'hidden'
             }
         };
@@ -298,6 +299,7 @@ export class DataPackPage extends React.Component {
                         }
                         <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
                 </Toolbar>
+                
                 <div style={styles.wholeDiv}>
                     <Drawer 
                         width={200} 
@@ -305,45 +307,48 @@ export class DataPackPage extends React.Component {
                         open={this.state.open}
                         containerStyle={styles.containerStyle}
                     >
-                        <FilterHeader
-                            onApply={this.handleFilterApply}
-                            onClear={this.handleFilterClear}
-                        />
-                        <PermissionFilter
-                            onChange={this.handlePermissionsChange}
-                            valueSelected={this.state.permissions}
-                        />
-                        <StatusFilter
-                            onChange={this.handleStatusChange}
-                            completed={this.state.status.completed}
-                            incomplete={this.state.status.incomplete}
-                            running={this.state.status.running}
-                        />
-                        <DateFilter
-                            onMinChange={this.handleMinDate}
-                            onMaxChange={this.handleMaxDate}
-                            minDate={this.state.minDate}
-                            maxDate={this.state.maxDate}
-                        />
+                        <CustomScrollbar>
+                            <FilterHeader
+                                onApply={this.handleFilterApply}
+                                onClear={this.handleFilterClear}
+                            />
+                            <PermissionFilter
+                                onChange={this.handlePermissionsChange}
+                                valueSelected={this.state.permissions}
+                            />
+                            <StatusFilter
+                                onChange={this.handleStatusChange}
+                                completed={this.state.status.completed}
+                                incomplete={this.state.status.incomplete}
+                                running={this.state.status.running}
+                            />
+                            <DateFilter
+                                onMinChange={this.handleMinDate}
+                                onMaxChange={this.handleMaxDate}
+                                minDate={this.state.minDate}
+                                maxDate={this.state.maxDate}
+                            />
+                        </CustomScrollbar>
                     </Drawer>
-                    {this.state.grid ? 
-                        <DataPackGrid 
-                            runs={this.state.displayedRuns} 
-                            user={this.props.user} 
-                            onRunDelete={this.props.deleteRuns}
-                        />
-                    : 
-                        <DataPackList
-                            runs={this.state.displayedRuns}
-                            user={this.props.user}
-                            onRunDelete={this.props.deleteRuns}
-                            onSort={this.handleTableSort}
-                        />
-                    }
-                    <div >
-                        {this.props.children}
-                    </div>
+                    <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
+                        {this.state.grid ? 
+                            <DataPackGrid 
+                                runs={this.state.displayedRuns} 
+                                user={this.props.user} 
+                                onRunDelete={this.props.deleteRuns}
+                            />
+                        : 
+                            <DataPackList
+                                runs={this.state.displayedRuns}
+                                user={this.props.user}
+                                onRunDelete={this.props.deleteRuns}
+                                onSort={this.handleTableSort}
+                            />
+                        }
+                    </CustomScrollbar>
+                    
                 </div>
+                
             </div>
         );
     }

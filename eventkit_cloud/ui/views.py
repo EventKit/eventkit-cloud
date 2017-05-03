@@ -12,6 +12,8 @@ from django.http import HttpResponse
 from .data_estimator import get_size_estimate
 import requests
 from django.contrib.auth import authenticate, login
+from ..api.serializers import UserDataSerializer
+from rest_framework.renderers import JSONRenderer
 
 
 @require_http_methods(['GET'])
@@ -58,17 +60,6 @@ def view_export(request, uuid=None):  # NOQA
     return render_to_response('ui/detail.html', context, RequestContext(request))
 
 
-def user(request):
-    if not request.user.is_authenticated:
-        return HttpResponse(status=401)
-    else:
-        user_data = {'username': request.user.username,
-                     'first_name': request.user.first_name,
-                     'last_name': request.user.last_name,
-                     'email': request.user.email}
-        return HttpResponse(json.dumps(user_data), status=200, content_type="application/json")
-
-
 def auth(request):
     if request.method == 'POST':
         """Logs out user"""
@@ -80,7 +71,9 @@ def auth(request):
             return HttpResponse(status=401)
         else:
             login(request, user_data)
-    return user(request)
+    return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+                        content_type="application/json",
+                        status=200)
 
 
 def logout(request):

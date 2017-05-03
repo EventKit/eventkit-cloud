@@ -56,8 +56,6 @@ table{
     justify-content: space-around;
     display: flex;
     flex-wrap: wrap;
-    overflow-y: scroll;
-
 }
 .form {
     margin: 0 auto;
