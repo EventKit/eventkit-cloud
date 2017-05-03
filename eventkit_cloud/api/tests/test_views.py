@@ -18,7 +18,7 @@ from django.core import serializers
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task
 from eventkit_cloud.jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset
+    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicenses
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from mock import patch, Mock
 
@@ -108,13 +108,11 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
-            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 0,
+            'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 1,
                                   'url': 'http://coolproviderurl.to',
                                   'preview_url': 'http://coolproviderurl.to'}],
             'user': serializers.serialize('json', [self.user]),
-            'preset': self.job.preset.id,
-            'transform': '',
-            'translation': ''
+            'preset': self.job.preset.id
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -125,7 +123,8 @@ class TestJobViewSet(APITestCase):
 
         request_data['export_providers'][0]['name'] = 'test 2'
         # should be idempotent
-        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
@@ -793,6 +792,75 @@ class TestStaticFunctions(APITestCase):
         provider_task = get_provider_task(export_provider, requested_types)
         assert len(provider_task.formats.all()) == 1
 
+
+class TestUserDataViewSet(APITestCase):
+
+    def setUp(self,):
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
+        self.user = User.objects.create_user(
+            username='demo', email='demo@demo.com', password='demo'
+        )
+        self.licenses  = [License.objects.create(slug='test1', name='Test1', text='text')]
+        self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+    def test_get_userdata_list(self):
+        expected = '/api/user'
+        url = reverse('api:user-list')
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEquals(200, response.status_code)
+        data = json.loads(response.content)
+        self.assertEquals(self.user.username, data[0].get('user').get('username'))
+        self.assertIsNotNone(data[0].get('accepted_licenses').get(self.licenses[0].slug))
+
+    def test_get_userdata(self):
+        expected = '/api/user/{0}'.format(self.user)
+        url = reverse('api:user-detail', args=[self.user])
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEquals(200, response.status_code)
+        data = json.loads(response.content)
+        self.assertEquals(self.user.username, data.get('user').get('username'))
+        self.assertIsNotNone(data.get('accepted_licenses').get(self.licenses[0].slug))
+
+    def test_set_licenses(self):
+        url = reverse('api:user-detail', args=[self.user])
+        response = self.client.get(url)
+        data = json.loads(response.content)
+        #check both licenses are NOT accepted.
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), False)
+        # update single license.
+        request_data = data
+        request_data['accepted_licenses'][self.licenses[0].slug] = True
+        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = self.client.get(url)
+        data = json.loads(response.content)
+        #check that the response body matches a new request
+        self.assertEqual(patch_response.data, response.data)
+        # check single licenses is accepted.
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), False)
+        request_data = data
+        request_data['accepted_licenses'][self.licenses[1].slug] = True
+        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        data = json.loads(patch_response.content)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
+        request_data = data
+        request_data['accepted_licenses'][self.licenses[0].slug] = False
+        patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        data = json.loads(patch_response.content)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
+        self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):
