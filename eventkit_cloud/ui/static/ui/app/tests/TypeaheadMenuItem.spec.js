@@ -1,6 +1,5 @@
 import {TypeaheadMenuItem} from '../components/TypeaheadMenuItem';
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {MenuItem} from 'react-bootstrap-typeahead';
@@ -42,13 +41,13 @@ describe('TypeaheadMenuItem component', () => {
                 }
             }
         );
-        expect(wrapper.find(TypeaheadMenuItem)).to.have.length(1);
-        expect(wrapper.find('div')).to.have.length(3);
-        expect(wrapper.find('.menuItem')).to.have.length(1);
-        expect(wrapper.find('.menuItemIconDiv')).to.have.length(1);
-        expect(wrapper.find(ActionRoom)).to.have.length(1);
-        expect(wrapper.find('.menuItemText')).to.have.length(2);
-        expect(wrapper.find('.menuItemText').first().text()).to.equal('');
+        expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
+        expect(wrapper.find('div')).toHaveLength(3);
+        expect(wrapper.find('.menuItem')).toHaveLength(1);
+        expect(wrapper.find('.menuItemIconDiv')).toHaveLength(1);
+        expect(wrapper.find(ActionRoom)).toHaveLength(1);
+        expect(wrapper.find('.menuItemText')).toHaveLength(2);
+        expect(wrapper.find('.menuItemText').first().text()).toEqual('');
     });
 
     it('createDescription should return the proper description', () => {
@@ -68,7 +67,7 @@ describe('TypeaheadMenuItem component', () => {
             }
         );
         let description = wrapper.instance().createDescription(result)
-        expect(description).to.equal('admin name2, admin name1, country name');
+        expect(description).toEqual('admin name2, admin name1, country name');
     });
 
     it('should have the proper text and icon', () => {
@@ -91,8 +90,8 @@ describe('TypeaheadMenuItem component', () => {
                 }
             }
         );
-        expect(wrapper.find(ImageCropDin)).to.have.length(1);
-        expect(wrapper.find('.menuItemText').first().text()).to.equal('test name');
-        expect(wrapper.find('.menuItemText').last().text()).to.equal('admin name2, admin name1, country name');
+        expect(wrapper.find(ImageCropDin)).toHaveLength(1);
+        expect(wrapper.find('.menuItemText').first().text()).toEqual('test name');
+        expect(wrapper.find('.menuItemText').last().text()).toEqual('admin name2, admin name1, country name');
     });
 });

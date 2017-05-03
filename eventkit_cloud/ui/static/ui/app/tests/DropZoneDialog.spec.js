@@ -1,6 +1,5 @@
 import {DropZoneDialog} from '../components/DropZoneDialog';
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {PopupBox} from '../components/PopupBox.js';
@@ -25,7 +24,7 @@ describe('DropZoneDialog component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('div')).to.have.length(1);
+        expect(wrapper.find('div')).toHaveLength(1);
     })
 
     it('should have a titlebar', () => {
@@ -35,12 +34,12 @@ describe('DropZoneDialog component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.container')).to.have.length(1);
-        expect(wrapper.find('.titlebar')).to.have.length(1);
-        expect(wrapper.find('.title')).to.have.length(1);
-        expect(wrapper.find('.title').text()).to.equal('Import AOI');
-        expect(wrapper.find('.exit')).to.have.length(1);
-        expect(wrapper.find(ContentClear)).to.have.length(1);
+        expect(wrapper.find('.container')).toHaveLength(1);
+        expect(wrapper.find('.titlebar')).toHaveLength(1);
+        expect(wrapper.find('.title')).toHaveLength(1);
+        expect(wrapper.find('.title').text()).toEqual('Import AOI');
+        expect(wrapper.find('.exit')).toHaveLength(1);
+        expect(wrapper.find(ContentClear)).toHaveLength(1);
     });
 
     it('should have a dropzone', () => {
@@ -50,13 +49,13 @@ describe('DropZoneDialog component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.container')).to.have.length(1);
-        expect(wrapper.find(Dropzone)).to.have.length(1);
-        expect(wrapper.find('.dropZoneText')).length(1);
-        expect(wrapper.find('.dropZoneText').find('span')).to.have.length(1);
-        expect(wrapper.find('.dropZoneText').find('span').text()).to.equal('GeoJSON format only, 2MB max,Drag and drop or');
-        expect(wrapper.find('.dropZoneImportButton')).length(1);
-        expect(wrapper.find(FileFileUpload)).to.have.length(1);
+        expect(wrapper.find('.container')).toHaveLength(1);
+        expect(wrapper.find(Dropzone)).toHaveLength(1);
+        expect(wrapper.find('.dropZoneText')).toHaveLength(1);
+        expect(wrapper.find('.dropZoneText').find('span')).toHaveLength(1);
+        expect(wrapper.find('.dropZoneText').find('span').text()).toEqual('GeoJSON format only, 2MB max,Drag and drop or');
+        expect(wrapper.find('.dropZoneImportButton')).toHaveLength(1);
+        expect(wrapper.find(FileFileUpload)).toHaveLength(1);
     });
 
     it('should handle button click', () => {
@@ -68,7 +67,7 @@ describe('DropZoneDialog component', () => {
         });
         const openSpy = sinon.spy(wrapper.instance().dropzone, 'open');
         wrapper.find(Dropzone).find('button').simulate('click');
-        expect(openSpy.calledOnce).to.equal(true);
+        expect(openSpy.calledOnce).toEqual(true);
     });
 
     it('should handle exit button click', () => {
@@ -81,8 +80,8 @@ describe('DropZoneDialog component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find('.titlebar').find('button').simulate('click');
-        expect(props.setAllButtonsDefault.calledOnce).to.equal(true);
-        expect(props.setImportModalState.calledOnce).to.equal(true);
+        expect(props.setAllButtonsDefault.calledOnce).toEqual(true);
+        expect(props.setImportModalState.calledOnce).toEqual(true);
     });
 
     it('should handle onDrop', () => {
@@ -97,8 +96,8 @@ describe('DropZoneDialog component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find(Dropzone).simulate('drop', { dataTransfer: {files: [fakeFile] } });
-        expect(props.setImportModalState.calledOnce).to.equal(true);
-        expect(props.processGeoJSONFile.calledWith(fakeFile)).to.equal(true);
+        expect(props.setImportModalState.calledOnce).toEqual(true);
+        expect(props.processGeoJSONFile.calledWith(fakeFile)).toEqual(true);
     });
 
     it('should reject oversized file', () => {
@@ -113,7 +112,7 @@ describe('DropZoneDialog component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find(Dropzone).simulate('drop', { dataTransfer: {files: oversizedFile } });
-        expect(props.setImportModalState.calledOnce).to.equal(false);
-        expect(props.processGeoJSONFile.calledWith(oversizedFile)).to.equal(false);
+        expect(props.setImportModalState.calledOnce).toEqual(false);
+        expect(props.processGeoJSONFile.calledWith(oversizedFile)).toEqual(false);
     });
 });

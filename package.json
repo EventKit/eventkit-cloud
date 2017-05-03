@@ -53,10 +53,9 @@
   "devDependencies": {
     "babel-jest": "17.0.2",
     "axios-mock-adapter": "~1.7.1",
-    "chai": "~3.5.0",
     "enzyme": "~2.7.1",
     "identity-obj-proxy": "~3.0.0",
-    "jest-cli": "~17.0.3",
+    "jest-cli": "~19.0.2",
     "jsdom": "~9.12.0",
     "nock": "~9.0.2",
     "webpack-dev-server": "~1.16.2",
