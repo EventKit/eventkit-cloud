@@ -10,6 +10,7 @@ import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-u
 import DataPackList from '../../components/DataPackPage/DataPackList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
+import CustomScrollbar from '../../components/CustomScrollbar';
 import * as sorts from '../../utils/sortUtils';
 
 describe('DataPackList component', () => {
@@ -52,7 +53,8 @@ describe('DataPackList component', () => {
         wrapper.update();
 
         expect(wrapper.find(GridList)).toHaveLength(0);
-        expect(wrapper.find(Table)).toHaveLength(1);
+        expect(wrapper.find(Table)).toHaveLength(2);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(7);
         const headerColumns = wrapper.find(TableHeaderColumn);

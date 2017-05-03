@@ -38,9 +38,9 @@ export class DataPackGrid extends Component {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginLeft: '3px',
-                marginRight: '3px',
-                paddingBottom: '30px'
+                marginLeft: '10px',
+                marginRight: '10px',
+                paddingBottom: '10px'
             },
             gridList: {
                 border: '1px',

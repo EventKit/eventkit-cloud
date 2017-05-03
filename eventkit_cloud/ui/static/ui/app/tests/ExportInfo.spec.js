@@ -3,6 +3,7 @@ import React from 'react'
 import {mount, shallow} from 'enzyme'
 import {fakeStore} from '../__mocks__/fakeStore'
 import { Provider } from 'react-redux'
+import CustomScrollbar from '../components/CustomScrollbar';
 
 describe('ExportInfo component', () => {
     const getProps = () => {
@@ -39,6 +40,13 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('.root')).toHaveLength(1);
         expect(wrapper.find('.form')).toHaveLength(1);
         expect(wrapper.find('.paper')).toHaveLength(1);
+    })
+
+    it('should render a CustomScrollbar component', () => {
+        const store = fakeStore({});
+        const props = getProps();
+        const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
     })
 
     it('should render a General Information Div', () => {
