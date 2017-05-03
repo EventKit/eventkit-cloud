@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import ActionViewModule from 'material-ui/svg-icons/action/view-module';
 import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
@@ -25,9 +24,9 @@ describe('DataPackViewButtons component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(IconButton)).to.have.length(2);
-        expect(wrapper.find(ActionViewModule)).to.have.length(1);
-        expect(wrapper.find(ActionViewStream)).to.have.length(1);
+        expect(wrapper.find(IconButton)).toHaveLength(2);
+        expect(wrapper.find(ActionViewModule)).toHaveLength(1);
+        expect(wrapper.find(ActionViewStream)).toHaveLength(1);
     });
 
     it('should call handleGridSelect', () => {
@@ -38,7 +37,7 @@ describe('DataPackViewButtons component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find(IconButton).first().simulate('click');
-        expect(props.handleGridSelect.calledOnce).to.be.true;
+        expect(props.handleGridSelect.calledOnce).toBe(true);
     });
 
     it('should call handleListSelect', () => {
@@ -49,6 +48,6 @@ describe('DataPackViewButtons component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find(IconButton).last().simulate('click');
-        expect(props.handleListSelect.calledOnce).to.be.true;
+        expect(props.handleListSelect.calledOnce).toBe(true);
     });
 });

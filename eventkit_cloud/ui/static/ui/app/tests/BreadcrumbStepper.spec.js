@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -53,12 +52,12 @@ describe('BreadcrumbStepper component', () => {
     it('should render step 1 with disabled next arrow by default', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(NavigationArrowBack)).to.have.length(1);
-        expect(wrapper.find(ExportAOI)).to.have.length(1);
-        expect(wrapper.childAt(0).childAt(0).childAt(0).text()).to.equal('STEP 1 OF 3:  Define Area of Interest');
-        expect(wrapper.find(FloatingActionButton)).to.have.length(1);
-        expect(wrapper.find(FloatingActionButton).props().disabled).to.equal(true);
-        expect(wrapper.find(NavigationArrowForward)).to.have.length(1);
+        expect(wrapper.find(NavigationArrowBack)).toHaveLength(1);
+        expect(wrapper.find(ExportAOI)).toHaveLength(1);
+        expect(wrapper.childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
+        expect(wrapper.find(FloatingActionButton)).toHaveLength(1);
+        expect(wrapper.find(FloatingActionButton).props().disabled).toEqual(true);
+        expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
     });
 
     it('handleSubmit should submit a job with the correct data', () => {
@@ -81,19 +80,19 @@ describe('BreadcrumbStepper component', () => {
         const handleSpy = new sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
         const wrapper = getWrapper(props);
         wrapper.instance().handleSubmit();
-        expect(handleSpy.calledOnce).to.be.true;
-        expect(props.submitJob.calledOnce).to.be.true;
-        expect(props.submitJob.calledWith(expectedProps)).to.be.true;
-        expect(stub.calledOnce).to.be.true;
+        expect(handleSpy.calledOnce).toBe(true);
+        expect(props.submitJob.calledOnce).toBe(true);
+        expect(props.submitJob.calledWith(expectedProps)).toBe(true);
+        expect(stub.calledOnce).toBe(true);
     });
 
     it('handleNext should increment the stepIndex', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).to.be.false;
+        expect(stateSpy.called).toBe(false);
         wrapper.instance().handleNext();
-        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
         stateSpy.restore();
     });
 
@@ -102,19 +101,19 @@ describe('BreadcrumbStepper component', () => {
         props.setExportInfoDone = new sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setState({stepIndex: 1});
-        expect(props.setExportInfoDone.called).to.be.false;
+        expect(props.setExportInfoDone.called).toBe(false);
         wrapper.instance().handleNext();
-        expect(props.setExportInfoDone.calledOnce).to.be.true; 
+        expect(props.setExportInfoDone.calledOnce).toBe(true); 
     });
 
     it('incrementStepper should increment the stepIndex', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).to.be.false;
+        expect(stateSpy.called).toBe(false);
         wrapper.instance().incrementStepper();
-        expect(stateSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledWith({stepIndex: 1})).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({stepIndex: 1})).toBe(true);
         stateSpy.restore();
     });
 
@@ -122,13 +121,13 @@ describe('BreadcrumbStepper component', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).to.be.false;
+        expect(stateSpy.called).toBe(false);
         wrapper.instance().handlePrev();
-        expect(stateSpy.called).to.be.false;
+        expect(stateSpy.called).toBe(false);
         wrapper.setState({stepIndex: 1});
         wrapper.instance().handlePrev();
-        expect(stateSpy.called).to.be.true;
-        expect(stateSpy.calledWith({stepIndex: 0})).to.be.true;
+        expect(stateSpy.called).toBe(true);
+        expect(stateSpy.calledWith({stepIndex: 0})).toBe(true);
         stateSpy.restore();
     });
 
@@ -137,16 +136,16 @@ describe('BreadcrumbStepper component', () => {
         const wrapper = getWrapper(props);
 
         let elem = mount(wrapper.instance().getStepLabel(0));
-        expect(elem.text()).to.equal('STEP 1 OF 3:  Define Area of Interest');
+        expect(elem.text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
 
         elem = mount(wrapper.instance().getStepLabel(1));
-        expect(elem.text()).to.equal('STEP 2 OF 3:  Select Data & Formats');
+        expect(elem.text()).toEqual('STEP 2 OF 3:  Select Data & Formats');
 
         elem = mount(wrapper.instance().getStepLabel(2));
-        expect(elem.text()).to.equal('STEP 3 OF 3:  Review & Submit');
+        expect(elem.text()).toEqual('STEP 3 OF 3:  Review & Submit');
 
         elem = mount(wrapper.instance().getStepLabel(3));
-        expect(elem.text()).to.equal('STEPPER ERROR');
+        expect(elem.text()).toEqual('STEPPER ERROR');
     });
 
     it('getStepContent should return the correct content for each stepIndex', () => {
@@ -154,18 +153,18 @@ describe('BreadcrumbStepper component', () => {
         const wrapper = getWrapper(props);
 
         let content = wrapper.instance().getStepContent(0);
-        expect(isEqual(content, <ExportAOI/>)).to.be.true;
+        expect(isEqual(content, <ExportAOI/>)).toBe(true);
 
         content = wrapper.instance().getStepContent(1);
         expect(isEqual(content, <ExportInfo 
             providers={props.providers} 
-            incrementStepper={wrapper.instance().incrementStepper}/>)).to.be.true;
+            incrementStepper={wrapper.instance().incrementStepper}/>)).toBe(true);
         
         content = wrapper.instance().getStepContent(2);
-        expect(isEqual(content, <ExportSummary/>)).to.be.true;
+        expect(isEqual(content, <ExportSummary/>)).toBe(true);
 
         content = wrapper.instance().getStepContent(3);
-        expect(isEqual(content, <ExportAOI/>)).to.be.true;
+        expect(isEqual(content, <ExportAOI/>)).toBe(true);
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
@@ -178,8 +177,8 @@ describe('BreadcrumbStepper component', () => {
                 muiTheme: React.PropTypes.object
             }
         });
-        expect(content.find(FloatingActionButton)).to.have.length(1);
-        expect(content.find(NavigationArrowForward)).to.have.length(1);
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(1),{
             context: {muiTheme},
@@ -187,8 +186,8 @@ describe('BreadcrumbStepper component', () => {
                 muiTheme: React.PropTypes.object
             }
         });
-        expect(content.find(FloatingActionButton)).to.have.length(1);
-        expect(content.find(NavigationArrowForward)).to.have.length(1);
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(2),{
             context: {muiTheme},
@@ -196,11 +195,11 @@ describe('BreadcrumbStepper component', () => {
                 muiTheme: React.PropTypes.object
             }
         });
-        expect(content.find(FloatingActionButton)).to.have.length(1);
-        expect(content.find(NavigationCheck)).to.have.length(1);
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationCheck)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(3));
-        expect(content.find('div')).to.have.length(1);
+        expect(content.find('div')).toHaveLength(1);
     })
 });
 

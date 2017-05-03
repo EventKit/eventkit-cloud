@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount} from 'enzyme';
 import { Link } from 'react-router';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -17,9 +16,9 @@ describe('DataPackLinkButton component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(Link)).to.have.length(1);
-        expect(wrapper.find(Link).props().to).to.equal('/create');
-        expect(wrapper.find(RaisedButton)).to.have.length(1);
-        expect(wrapper.find('span').text()).to.equal('Create DataPack');
+        expect(wrapper.find(Link)).toHaveLength(1);
+        expect(wrapper.find(Link).props().to).toEqual('/create');
+        expect(wrapper.find(RaisedButton)).toHaveLength(1);
+        expect(wrapper.find('span').text()).toEqual('Create DataPack');
     });
 });
