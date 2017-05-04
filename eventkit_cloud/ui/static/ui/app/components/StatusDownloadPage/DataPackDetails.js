@@ -9,11 +9,14 @@ import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow,
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
 import ProviderRow from './ProviderRow'
+import RaisedButton from 'material-ui/RaisedButton';
 
 
 class DataPackDetails extends React.Component {
     constructor(props) {
         super(props)
+
+        this.onSelectionToggle = this.onSelectionToggle.bind(this);
 
         this.state = {
             providerTasks: [],
@@ -27,8 +30,12 @@ class DataPackDetails extends React.Component {
             enableSelectAll: true,
             showCheckboxes: true,
             height: '300px',
+            downloadUrls: [],
+            selectedTasks: {},
+            provider: [],
         }
     }
+
     handleToggle = (event, toggled) => {
         this.setState({
             [event.target.name]: toggled,
@@ -42,9 +49,7 @@ class DataPackDetails extends React.Component {
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
-    expandedChange(expanded) {
 
-    }
     componentWillReceiveProps(nextProps) {
 
     }
@@ -59,8 +64,38 @@ class DataPackDetails extends React.Component {
 
         this.setState({file: checked})
     }
+
+    onSelectionToggle(selectedTasks, provider){
+        this.setState({selectedTasks, provider})
+    }
+
+    handleDownload(event){
+        let downloadUids = [];
+        let selectedTasks = this.state.selectedTasks;
+        Object.keys(selectedTasks).map(function(keyName, keyIndex) {
+            if(selectedTasks[keyName] == true) {
+                downloadUids.push(keyName);
+            }
+        });
+
+        let tasks = this.state.provider.tasks;
+        let downloadUrls = [];
+        downloadUids.forEach(function(uid) {
+            let a = tasks.find(x => x.uid === uid)
+            downloadUrls.push(a.result.url);
+        })
+
+        downloadUrls.forEach(function (value, idx) {
+        const response = {
+              file: value,
+        };
+            setTimeout(() => {
+                window.location.href = response.file;
+            }, idx * 100)
+        })
+    }
+
     render() {
-        console.log(this.props.providerTasks);
 
         return (
             <div className={styles.downloadDiv}>
@@ -80,25 +115,25 @@ class DataPackDetails extends React.Component {
                         enableSelectAll={this.state.enableSelectAll}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'35%', fontSize: '14px'}}>PROVIDER</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'30%', fontSize: '14px'}}>DATA SETS</TableHeaderColumn>
                             <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}># OF SELECTIONS</TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}} >RUN TIME</TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'25%',textAlign: 'center', fontSize: '14px'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
-
+                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}} >STATUS</TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}> <RaisedButton
+                                backgroundColor={'#e2e2e2'}
+                                disableTouchRipple={true}
+                                onTouchTap={this.handleDownload.bind(this)}
+                                label="Download All Selected"
+                                icon={<CloudDownload style={{color:'#4598bf', fill:'#4598bf',verticalAlign: 'middle'}}/>} />
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'10%', fontSize: '14px'}}></TableHeaderColumn>
                         </TableRow>
                     </TableHeader>
                     </Table>
 
                 {this.props.providerTasks.map((provider) => (
-                    <ProviderRow key={provider.uid} providerTasks={provider}/>
+                    <ProviderRow key={provider.uid} onSelectionToggle={this.onSelectionToggle} updateSelectionNumber={this.updateSelectionNumber} provider={provider}/>
                 ))}
-
-
-
-
-
-
-            </div>
+           </div>
 
         )
     }

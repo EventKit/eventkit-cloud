@@ -7,8 +7,13 @@
     flex-wrap: wrap;
     overflow-y: scroll;
 }
+.wholeDiv {
+    width: 100%;
+    display: inline-block
+}
 
 .paper {
+    background-color: white;
     margin: 0 auto;
     padding: 20px;
     margin-top: 30px;
@@ -20,7 +25,7 @@
     vertical-align: top;
     padding: 10px;
     height:35px;
-    font-size: 16px;
+    font-size: 14px;
     width: 33%;
     background-color: #f8f8f8;
     font-weight: bold;
@@ -30,7 +35,7 @@
     vertical-align: top;
     padding: 10px;
     height:35px;
-    font-size: 16px;
+    font-size: 14px;
     width: 33%;
     font-weight: bold;
     color: black;
@@ -38,7 +43,7 @@
 .tdData {
     padding: 10px;
     height: 35px;
-    font-size: 16px;
+    font-size: 14px;
     width: 40%;
     background-color: #f8f8f8;
     font-weight: normal;

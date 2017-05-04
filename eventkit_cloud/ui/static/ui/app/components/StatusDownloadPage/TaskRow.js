@@ -46,35 +46,22 @@ class TaskRow extends React.Component {
     componentDidUpdate(prevProps, prevState) {
 
     }
-    toggleCheckbox(event, checked) {
 
-        this.setState({file: checked})
-    }
     render() {
 
+
+
+
         return (
-
-                    <TableRow>
-                        <TableHeaderColumn>{this.props.task.name}</TableHeaderColumn>
-                        <TableHeaderColumn style={{textAlign: 'center'}} >Run Time</TableHeaderColumn>
-                        <TableHeaderColumn style={{textAlign: 'center'}}> <CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/>&nbsp;&nbsp;Download All Selected</TableHeaderColumn>
-                    </TableRow>
-
-
-
+        {tableData}
         )
     }
 }
 
 TaskRow.propTypes = {
-    task: PropTypes.object.isRequired,
-}
-TaskRow.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
+    open: PropTypes.bool.isRequired,
+    //handleToggle: PropTypes.func.isRequired
 };
 
-export default connect(
 
-)(TaskRow);
-
-
+export default TaskRow;
