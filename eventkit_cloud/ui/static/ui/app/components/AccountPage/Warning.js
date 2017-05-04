@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 
-export class UserInfoBlock extends Component {
+export class Warning extends Component {
 
     constructor(props) {
         super(props);
@@ -11,25 +11,25 @@ export class UserInfoBlock extends Component {
             backgroundColor: 'whitesmoke', 
             width: '100%', 
             margin: '5px 0px 20px 0px', 
-            lineHeight: '35px', 
-            padding: '0px 16px', 
-            color: 'grey',
-    }
+            lineHeight: '25px', 
+            padding: '16px', 
+            color: 'red',
+            border: '2px solid red',
+            textAlign: 'center',
+        }
 
         return (
             <div>
-                <strong>{this.props.title}</strong>
                 <div style={bodyStyle}>
-                    {this.props.data}
+                    {this.props.text}
                 </div>
             </div>
         )
     };
 };
 
-UserInfoBlock.protoTypes = {
-    title: React.PropTypes.string.isRequired,
-    data: React.PropTypes.string.isRequired,
+Warning.protoTypes = {
+    text: React.PropTypes.string.isRequired,
 };
 
-export default UserInfoBlock;
+export default Warning;

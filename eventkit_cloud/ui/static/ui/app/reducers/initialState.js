@@ -68,4 +68,10 @@ export default {
     providers: [],
     stepperNextEnabled: false,
     setExportPackageFlag: false,
+    licenses: {
+        fetching: false,
+        fetched: false,
+        licenses: [],
+        error: null
+    },
 }

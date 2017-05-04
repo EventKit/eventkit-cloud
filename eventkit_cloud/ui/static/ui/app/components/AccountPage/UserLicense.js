@@ -3,6 +3,7 @@ import Checkbox from 'material-ui/Checkbox';
 import {Card, CardHeader, CardText} from 'material-ui/Card';
 import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
 import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class UserLicense extends Component {
 
@@ -14,12 +15,12 @@ export class UserLicense extends Component {
         const styles = {
             card: {boxShadow: 'none', marginBottom: '10px'},
             checkbox: {width: '24px', display: 'inline-block', verticalAlign: 'middle', marginRight: '10px'},
-            cardText: {margin: '10xp, 0px', border: '2px solid #dedede'}
+            cardText: {border: '2px solid #dedede', padding: '0px'}
         }
 
         return (
             <Card 
-                initiallyExpanded={true} 
+                initiallyExpanded={false} 
                 style={styles.card}
             >
                 <CardHeader
@@ -31,7 +32,7 @@ export class UserLicense extends Component {
                                 checked={this.props.checked}
                                 onCheck={(e,v) => {this.props.onCheck(this.props.license.slug, v)}}
                                 checkedIcon={<ToggleCheckBox style={{fill: '4498c0'}}/>}
-                                uncheckedIcon={<ToggleCheckBoxOutlineBlank style={{fill: 'grey'}}/>}
+                                uncheckedIcon={<ToggleCheckBoxOutlineBlank style={{fill: 'red'}}/>}
                             />
                             <span style={{lineHeight: '24px'}}>
                                 {'I agree to the '}<strong>{this.props.license.name}</strong>
@@ -42,7 +43,11 @@ export class UserLicense extends Component {
                     showExpandableButton={true}
                 />
                 <CardText expandable={true} style={styles.cardText}>
-                    {this.props.license.text}
+                    <CustomScrollbar style={{height: '200px', width: '100%'}}>
+                        <div style={{padding: '16px'}}>
+                            {this.props.license.text}
+                        </div>
+                    </CustomScrollbar>
                 </CardText>
             </Card>
         );

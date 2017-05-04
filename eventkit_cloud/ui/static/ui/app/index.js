@@ -43,12 +43,12 @@ const UserIsNotAuthenticated = UserAuthWrapper({
     allowRedirectBack: false
 });
 
-const LicensesAreAgreed = UserAuthWrapper({
-    authSelector: state => state.user,
-    authenticatingSelector: state => state.user.isLoading,
-    LoadingComponent: Loading,
+const UserHasAgreed = UserAuthWrapper({
+    authSelector: state => state.user.data,
     redirectAction: routerActions.replace,
-    wrapperDisplayName: 'LicensesAreAgreed'
+    failureRedirectPath: '/account',
+    wrapperDisplayName: 'UserHasAgreed',
+    predicate: userData => allTrue(userData.accepted_licenses)
 });
 
 function checkAuth(store) {
@@ -61,21 +61,32 @@ function checkAuth(store) {
   }
 };
 
+function allTrue(accepted_licenses) {
+    for (const l in accepted_licenses) {
+        if(accepted_licenses[l]) {continue;}
+        else {return false;}
+    }
+    return true
+}
+
 render(
     <Provider store={store}>
         <Router history={history}>
+            <Redirect from="/" to="/exports"/>
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
-                <Route path="/login" component={UserIsNotAuthenticated(LicensesAreAgreed(LoginPage))}/>
+                
+                <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
-                <Route path="/exports" component={UserIsAuthenticated(LicensesAreAgreed(DataPackPage))}>
-                    <Route path="/export/:uid" component={UserIsAuthenticated(LicensesAreAgreed(Export))}/>
+                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}>
+                    <Route path="/export/:uid" component={UserIsAuthenticated(UserHasAgreed(Export))}/>
                 </Route>
-                <Route path="/create" component={UserIsAuthenticated(LicensesAreAgreed(CreateExport))}>
-                    <Route path="/exportAOI" component={UserIsAuthenticated(LicensesAreAgreed(ExportAOI))}/>
-                    <Route path="/exportInfo" component={UserIsAuthenticated(LicensesAreAgreed(ExportInfo))}/>
+                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}>
+                    <Route path="/exportAOI" component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}/>
+                    <Route path="/exportInfo" component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}/>
                 </Route>
                 <Route path="/about" component={About}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
+                
             </Route>
         </Router>
     </Provider>,

@@ -123,7 +123,7 @@ export class DataPackPage extends React.Component {
         }
         else {
             this.setState({dropDownValue: value});
-            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.username);
+            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.user.username);
             this.setState({displayedRuns: filteredRuns});
         }
     }
@@ -137,7 +137,7 @@ export class DataPackPage extends React.Component {
 
     applySorts(runs) {
         if (this.state.dropDownValue == 2) {
-            runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
+            runs = utils.myDataPacksOnly(runs, this.props.user.data.user.username);
         }
         // should we apply table sorts or card/mobile list sort?
         if(!this.state.grid && window.innerWidth >= 768) {

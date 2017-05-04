@@ -1,10 +1,17 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
+import {browserHistory} from 'react-router';
 import AppBar from 'material-ui/AppBar';
-import RaisedButton from 'material-ui/RaisedButton';
+import RefreshIndicator from 'material-ui/RefreshIndicator';
 import UserInfoBlock from './UserInfoBlock';
+import Warning from './Warning';
 import UserLicense from './UserLicense';
+import getLicenses from '../../actions/licenseActions';
+import {patchUser} from '../../actions/userActions';
+import CustomScrollbar from '../CustomScrollbar';
 import moment from 'moment';
+
+const USAGE_STATEMENT = 'Oops! It looks like you have not agreed to all the licenses required for access to the EventKit system. Please read through the agreements below and agree to all if you wish to continue using EventKit.'
 
 export class Account extends Component {
 
@@ -12,27 +19,11 @@ export class Account extends Component {
         super(props);
         this.handleResize = this.handleResize.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
-        this.state = {
-            licenses: [
-                {
-                    slug: 'next-view',
-                    name: 'NextView End User License Agreement (EULA)',
-                    text: 'This data is licensed for use by the US Government (USG) under the NextView (NV) license and copyrighted by DigitalGlobe or GeoEye. The NV license allows the USG to share the imagery and Literal Imagery Derived Products (LIDP) with entities outside the USG when that entity is working directly with the USG, for the USG, or in a manner that is directly beneficial to the USG. The party receiving the data can only use the imagery or LIDP for the original purpose or only as otherwise agreed to by the USG. The party receiving the data cannot share the imagery or LIDP with a third party without express permission from the USG. At no time should this imagery or LIDP be used for other than USG-related purposes and must not be used for commercial gain. The copyright information should be maintained at all times. Your acceptance of these license terms is implied by your use'
-                },
-                {
-                    slug: 'other-one',
-                    name: 'This is some other license',
-                    text: 'You should agree to this or something . . .'
-                }
-            ],
-            user: {data: {username: 'admin', email: 'some.email@email.com', licenses: ['next-view']}},
-            userLicenses: [],
-        }
     };
 
     componentWillMount() {
+        this.props.getLicenses();
         window.addEventListener('resize', this.handleResize);
-        this.setState({userLicenses: this.state.user.data.licenses});
     };
 
     componentWillUnmount() {
@@ -44,22 +35,23 @@ export class Account extends Component {
     };
 
     handleCheck(slug, checked) {
-        if(checked && this.state.userLicenses.indexOf(slug) == -1) {
-            const licenses = this.state.userLicenses;
-            licenses.push(slug);
-            this.setState({userLicenses: licenses});
+        let licenses = this.props.user.data.accepted_licenses
+        if(checked) {
+            licenses[slug] = true;
         }
         else {
-            const licenses = this.state.userLicenses;
-            const ix = licenses.findIndex((e) => {
-                return e == slug;
-            });
-            if(ix != -1) {
-                licenses.splice(ix, 1);
-                this.setState({userLicenses: licenses});
-            }
+            licenses[slug] = false;
         }
+        this.props.patchUser(licenses, this.props.user.data.user.username);
     };
+
+    allTrue(accepted_licenses) {
+        for (const l in accepted_licenses) {
+            if(accepted_licenses[l]) {continue;}
+            else {return false;}
+        }
+        return true
+    }
 
     render() {
         const styles = {
@@ -78,12 +70,20 @@ export class Account extends Component {
             body: {
                 height: window.innerHeight - 130,
                 width: '100%',
-                padding: '30px 34px',
-                maxWidth: '1000px',
                 margin: 'auto',
-                overflowY: 'scroll'
+                overflowY: 'hidden',
             },
+            bodyContent: {
+                padding: '30px 34px',
+                maxWidth: '1000px', 
+                margin: 'auto'
+            }
         };
+
+        const nextPage = this.props.location.query.redirect || this.props.location.query.next;
+        if(nextPage && this.allTrue(this.props.user.data.accepted_licenses)) {
+            browserHistory.push(nextPage);
+        }
 
         return (
             <div style={{backgroundColor: 'white'}}>
@@ -93,23 +93,32 @@ export class Account extends Component {
                         titleStyle={styles.headerTitle}
                         showMenuIconButton={false}
                     />
+                
                 <div style={styles.body}>
-                    <UserInfoBlock title={'Username'} data={this.props.user.data.username}/>
-                    <UserInfoBlock title={'Email'} data={this.props.user.data.email}/>
-                    <UserInfoBlock title={'Date Joined'} data={moment('2017-05-02T14:25:19Z').format('YYYY-MM-DD')}/>
-                    
-                    {this.state.licenses.map((license) => {
-                        return (
-                            <UserLicense 
-                                key={license.slug}
-                                license={license}
-                                checked={this.state.userLicenses.includes(license.slug)}
-                                onCheck={this.handleCheck}
-                            />
-                        );
-                    })}
-                    <RaisedButton backgroundColor={'#4498c0'} labelColor={'#fff'} fullWidth={true} label={'Update Settings'}/>
+                    <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
+                        <div style={styles.bodyContent}>
+                            {this.allTrue(this.props.user.data.accepted_licenses) ? null: <Warning text={USAGE_STATEMENT}/>}
+                            <UserInfoBlock title={'Username'} data={this.props.user.data.user.username}/>
+                            {this.props.user.data.user.first_name ? <UserInfoBlock title={'First name'} data={this.props.user.data.user.first_name}/> : null}
+                            {this.props.user.data.user.last_name ? <UserInfoBlock title={'Last name'} data={this.props.user.data.user.last_name}/> : null}
+                            <UserInfoBlock title={'Email'} data={this.props.user.data.user.email}/>
+                            <UserInfoBlock title={'Date Joined'} data={moment(this.props.user.data.user.date_joined).format('YYYY-MM-DD')}/>
+                            <UserInfoBlock title={'Last Login'} data={moment(this.props.user.data.user.last_login).format('YYYY-MM-DD, h:mm:ss a')}/>
+                            
+                            {this.props.licenses.licenses.map((license) => {
+                                return (
+                                    <UserLicense 
+                                        key={license.slug}
+                                        license={license}
+                                        checked={this.props.user.data.accepted_licenses[license.slug]}
+                                        onCheck={this.handleCheck}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </CustomScrollbar> 
                 </div>
+                
             </div>
         )
     };
@@ -117,11 +126,23 @@ export class Account extends Component {
 
 function mapStateToProps(state) {
     return {
-        user: state.user
+        user: state.user,
+        licenses: state.licenses,
     }
 };
 
+function mapDispatchToProps(dispatch) {
+    return {
+        getLicenses: () => {
+            dispatch(getLicenses());
+        },
+        patchUser: (accepted_licenses, username) => {
+            dispatch(patchUser(accepted_licenses, username));
+        },
+    }
+}
+
 export default connect(
     mapStateToProps,
-    null
+    mapDispatchToProps
 )(Account);
