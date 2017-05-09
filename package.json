@@ -23,7 +23,7 @@
     "file-loader": "~0.9.0",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
-    "material-ui": "~0.16.5",
+    "material-ui": "~0.18.0",
     "material-design-icons": "~3.0.1",
     "moment": "~2.17.1",
     "numeral": "~2.0.4",

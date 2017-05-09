@@ -19,7 +19,7 @@ export function getLicenses() {
         }).catch((error) => {
             dispatch({
                 type: actions.FETCH_LICENSES_ERROR,
-                error: error
+                error: error.response.status || error
             });
         });
     }

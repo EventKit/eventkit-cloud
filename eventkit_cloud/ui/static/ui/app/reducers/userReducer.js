@@ -1,6 +1,6 @@
 import types from '../actions/actionTypes'
 
-const initialState = {
+export const initialState = {
   data: null,
   isLoading: false,
   patching: false,
@@ -21,7 +21,7 @@ export default (state = initialState, { type, payload, error }) => {
     case types.PATCHED_USER:
       return { ...state, patching: false, patched: true, data: payload}
     case types.PATCHING_USER_ERROR:
-      return { ...state, error: error}
+      return { ...state, patching: false, error: error}
     default:
       return state
   }

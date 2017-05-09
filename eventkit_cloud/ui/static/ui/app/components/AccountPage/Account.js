@@ -1,17 +1,14 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import {browserHistory} from 'react-router';
 import AppBar from 'material-ui/AppBar';
-import RefreshIndicator from 'material-ui/RefreshIndicator';
-import UserInfoBlock from './UserInfoBlock';
+import UserInfo from './UserInfo';
 import Warning from './Warning';
-import UserLicense from './UserLicense';
+import LicenseInfo from './LicenseInfo';
+import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
 import {patchUser} from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-import moment from 'moment';
-
-const USAGE_STATEMENT = 'Oops! It looks like you have not agreed to all the licenses required for access to the EventKit system. Please read through the agreements below and agree to all if you wish to continue using EventKit.'
+import isEqual from 'lodash/isEqual';
 
 export class Account extends Component {
 
@@ -19,9 +16,16 @@ export class Account extends Component {
         super(props);
         this.handleResize = this.handleResize.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
+        this.handleAll = this.handleAll.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.state = {
+            acceptedLicenses: [],
+            showSavedMessage: false,
+        }
     };
 
     componentWillMount() {
+        this.setState({acceptedLicenses: {...this.props.user.data.accepted_licenses}});
         this.props.getLicenses();
         window.addEventListener('resize', this.handleResize);
     };
@@ -29,28 +33,38 @@ export class Account extends Component {
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
     };
+    
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.user.patched && !this.props.user.patched) {
+            this.setState({showSavedMessage: true});
+            window.setTimeout(() => {
+                this.setState({showSavedMessage: false});
+            }, 3000);
+        }
+    }
 
     handleResize() {
         this.forceUpdate();
     };
 
     handleCheck(slug, checked) {
-        let licenses = this.props.user.data.accepted_licenses
-        if(checked) {
-            licenses[slug] = true;
-        }
-        else {
-            licenses[slug] = false;
-        }
-        this.props.patchUser(licenses, this.props.user.data.user.username);
+        const licenses = this.state.acceptedLicenses;
+        licenses[slug] = checked;
+        this.setState({acceptedLicenses: licenses});
     };
 
-    allTrue(accepted_licenses) {
-        for (const l in accepted_licenses) {
-            if(accepted_licenses[l]) {continue;}
-            else {return false;}
+    handleAll(event, checked) {
+        const licenses = this.state.acceptedLicenses;
+        for(const license in licenses) {
+            if(licenses.hasOwnProperty(license)) {
+                licenses[license] = checked;
+            }
         }
-        return true
+        this.setState({acceptedLicenses: licenses});
+    }
+
+    handleSubmit() {
+        this.props.patchUser(this.state.acceptedLicenses, this.props.user.data.user.username);
     }
 
     render() {
@@ -60,12 +74,12 @@ export class Account extends Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
+                padding: '0px 34px'
             },
             headerTitle: {
                 fontSize: '18px',
                 lineHeight: '30px',
                 height: '25px',
-                paddingLeft: '10px',
             },
             body: {
                 height: window.innerHeight - 130,
@@ -80,45 +94,45 @@ export class Account extends Component {
             }
         };
 
-        const nextPage = this.props.location.query.redirect || this.props.location.query.next;
-        if(nextPage && this.allTrue(this.props.user.data.accepted_licenses)) {
-            browserHistory.push(nextPage);
-        }
-
         return (
             <div style={{backgroundColor: 'white'}}>
                 <AppBar
-                        title={'Account'}
-                        style={styles.header}
-                        titleStyle={styles.headerTitle}
-                        showMenuIconButton={false}
+                    title={'Account'}
+                    style={styles.header}
+                    titleStyle={styles.headerTitle}
+                    showMenuIconButton={false}
+                >
+                    <SaveButton 
+                        saved={this.state.showSavedMessage} 
+                        saveDisabled={isEqual(this.state.acceptedLicenses, this.props.user.data.accepted_licenses)} 
+                        handleSubmit={this.handleSubmit}
                     />
+                </AppBar>
                 
                 <div style={styles.body}>
                     <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
                         <div style={styles.bodyContent}>
-                            {this.allTrue(this.props.user.data.accepted_licenses) ? null: <Warning text={USAGE_STATEMENT}/>}
-                            <UserInfoBlock title={'Username'} data={this.props.user.data.user.username}/>
-                            {this.props.user.data.user.first_name ? <UserInfoBlock title={'First name'} data={this.props.user.data.user.first_name}/> : null}
-                            {this.props.user.data.user.last_name ? <UserInfoBlock title={'Last name'} data={this.props.user.data.user.last_name}/> : null}
-                            <UserInfoBlock title={'Email'} data={this.props.user.data.user.email}/>
-                            <UserInfoBlock title={'Date Joined'} data={moment(this.props.user.data.user.date_joined).format('YYYY-MM-DD')}/>
-                            <UserInfoBlock title={'Last Login'} data={moment(this.props.user.data.user.last_login).format('YYYY-MM-DD, h:mm:ss a')}/>
+                            {this.props.licenses.licenses.length > 0 ?
+                                <div style={{marginBottom: '34px'}}>
+                                    <LicenseInfo
+                                        user={this.props.user}
+                                        licenses={this.props.licenses}
+                                        acceptedLicenses={this.state.acceptedLicenses}
+                                        onLicenseCheck={this.handleCheck}
+                                        onAllCheck={this.handleAll}
+                                    /> 
+                                </div> 
+                            : null}
                             
-                            {this.props.licenses.licenses.map((license) => {
-                                return (
-                                    <UserLicense 
-                                        key={license.slug}
-                                        license={license}
-                                        checked={this.props.user.data.accepted_licenses[license.slug]}
-                                        onCheck={this.handleCheck}
-                                    />
-                                );
-                            })}
+                            {this.props.user.data ? 
+                                <div style={{marginBottom: '34px'}}>
+                                    <UserInfo user={this.props.user.data.user} updateLink={''}/>
+                                </div> 
+                            : null}
+                            
                         </div>
                     </CustomScrollbar> 
                 </div>
-                
             </div>
         )
     };
