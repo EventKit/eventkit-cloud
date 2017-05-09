@@ -58,7 +58,8 @@ class StatusDownload extends React.Component {
 
         return (
             <div className={styles.root} style={{height: window.innerHeight - 110}}>
-                <Paper className={styles.paper} zDepth={2} style={{height: '2000px'}}>
+                <form className={styles.form} >
+                <Paper className={styles.paper} zDepth={2} >
                     <div className={styles.wholeDiv}>
                         <div id='mainHeading' className={styles.heading}>Status & Download</div>
                     {this.state.datacartDetails.map((cartDetails) => (
@@ -67,6 +68,7 @@ class StatusDownload extends React.Component {
                     </div>
 
                 </Paper>
+                </form>
             </div>
 
         )

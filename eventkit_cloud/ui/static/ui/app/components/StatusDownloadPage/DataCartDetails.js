@@ -5,6 +5,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
+import RaisedButton from 'material-ui/RaisedButton';
 import styles from '../../styles/StatusDownload.css'
 import moment from 'moment'
 
@@ -129,9 +130,43 @@ class DataCartDetails extends React.Component {
             <div style={{paddingBottom:'10px'}}>
             <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks} />
             </div>
+            <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
+                <div className={styles.subHeading}>
+                    Other Options
+                </div>
+                <div>
+                    <RaisedButton
+                        style={{margin: '10px'}}
+                        backgroundColor={'rgba(226,226,226,0.5)'}
+                        disableTouchRipple={true}
+                        labelColor={'#4598bf'}
+                        labelStyle={{fontWeight:'bold'}}
+                        //onTouchTap={this.handleDownload.bind(this)}
+                        label="RUN EXPORT AGAIN"
+                         />
+                    <RaisedButton
+                        style={{margin: '10px'}}
+                        backgroundColor={'rgba(226,226,226,0.5)'}
+                        disableTouchRipple={true}
+                        labelColor={'#4598bf'}
+                        labelStyle={{fontWeight:'bold'}}
+                        //onTouchTap={this.handleDownload.bind(this)}
+                        label="CLONE"
+                    />
+                    <RaisedButton
+                        style={{margin: '10px'}}
+                        backgroundColor={'rgba(226,226,226,0.5)'}
+                        disableTouchRipple={true}
+                        labelColor={'red'}
+                        labelStyle={{fontWeight:'bold'}}
+                        //onTouchTap={this.handleDownload.bind(this)}
+                        label="DELETE"
+                    />
+                </div>
 
-            <div style={{width:'100%'}}>
-                <div style={{float:'left', width:'50%'}}>
+            </div>
+            <div style={{width:'100%', paddingTop:'10px',paddingBottom:'20px'}}>
+
                     <div className={styles.subHeading}>
                         General Information
                     </div>
@@ -159,44 +194,39 @@ class DataCartDetails extends React.Component {
                     </tbody>
                     </table>
                 </div>
-                <div style={{float:'right', width:'50%'}}>
-                    <div className={styles.subHeading}>
-                        Export Information
-                    </div>
-                    <table><tbody>
-                    <tr>
-                        <td className={styles.tdHeading} style={{width:'30%'}}>Run By</td>
-                        <td className={styles.tdData} style={{width:'70%'}}>{this.props.cartDetails.user}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Run Id</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.uid}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Started</td>
-                        <td className={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Finished</td>
-                        <td className={styles.tdData}>{moment(this.props.cartDetails.finsihed_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                    </tr>
-                    </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <div style={{width:'100%', float:'left', paddingTop:'10px'}}>
+
+            <div style={{width:'100%', float:'left', paddingBottom:'30px'}}>
                 <div className={styles.subHeading}>
                         Selected Area of Interest (AOI)
                 </div>
                 <div id="summaryMap" className={styles.map} ></div>
             </div>
-            <div style={{width:'100%', float:'left', paddingTop:'10px'}}>
+            <div style={{width:'100%', paddingTop:'30px'}}>
                 <div className={styles.subHeading}>
-                    BUTTON BUTTON BUTTON
+                    Export Information
                 </div>
-
+                <table><tbody>
+                <tr>
+                    <td className={styles.tdHeading} style={{width:'30%'}}>Run By</td>
+                    <td className={styles.tdData} style={{width:'70%'}}>{this.props.cartDetails.user}</td>
+                </tr>
+                <tr>
+                    <td className={styles.tdHeading}>Run Id</td>
+                    <td className={styles.tdData}>{this.props.cartDetails.uid}</td>
+                </tr>
+                <tr>
+                    <td className={styles.tdHeading}>Started</td>
+                    <td className={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                </tr>
+                <tr>
+                    <td className={styles.tdHeading}>Finished</td>
+                    <td className={styles.tdData}>{moment(this.props.cartDetails.finsihed_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                </tr>
+                </tbody>
+                </table>
             </div>
+
         </div>
 
         )

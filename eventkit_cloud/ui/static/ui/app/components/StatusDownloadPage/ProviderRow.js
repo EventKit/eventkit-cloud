@@ -15,6 +15,7 @@ import TaskRow from './TaskRow'
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
 import Checkbox from 'material-ui/Checkbox'
+import LinearProgress from 'material-ui/LinearProgress';
 
 
 
@@ -25,7 +26,7 @@ class ProviderRow extends React.Component {
             providerTasks: [],
             file: false,
             checkboxDisabled: false,
-            stripedRows: false,
+            stripedRows: true,
             showRowHover: false,
             selectable: true,
             multiSelectable: true,
@@ -39,6 +40,7 @@ class ProviderRow extends React.Component {
             selectedRows: { },
             selectionCount: 0,
             taskCount: 0,
+
         }
     }
 
@@ -49,6 +51,33 @@ class ProviderRow extends React.Component {
     handleToggle = () => {
         this.setState({openTable: !this.state.openTable});
     }
+
+    handleDownload = () => {
+        let downloadUids = [];
+        let selectedTasks = this.state.selectedRows;
+        Object.keys(selectedTasks).map(function (keyName, keyIndex) {
+            if (selectedTasks[keyName] == true) {
+                downloadUids.push(keyName);
+            }
+        });
+
+        let tasks = this.props.provider.tasks;
+        let downloadUrls = [];
+        downloadUids.forEach(function (uid) {
+            let a = tasks.find(x => x.uid === uid)
+            downloadUrls.push(a.result.url);
+        })
+
+        downloadUrls.forEach(function (value, idx) {
+            const response = {
+                file: value,
+            };
+            setTimeout(() => {
+                window.location.href = response.file;
+            }, idx * 100)
+        })
+    }
+
 
     componentWillReceiveProps(nextProps) {
 
@@ -110,6 +139,7 @@ class ProviderRow extends React.Component {
 
         //this means it was a task checkbox that was checked and not a parent provider
         else{
+            console.log(e.target.id);
             const selectedRows = this.state.selectedRows;
             selectedRows[e.target.name] = checked;
             if(checked == false ){
@@ -124,7 +154,7 @@ class ProviderRow extends React.Component {
                 selectedRows, selectionCount
             });
         }
-        this.props.onSelectionToggle(this.state.selectedRows, this.props.provider);
+        this.props.onSelectionToggle(this.state.selectedRows);
 
     }
 
@@ -140,13 +170,22 @@ class ProviderRow extends React.Component {
             arrowToggle = <ArrowDown style={{color: '#4598bf', verticalAlign: 'middle'}} />
         }
 
+        let cloudToggle;
+        if(this.state.selectionCount > 0){
+            cloudToggle = <IconButton className={styles.cloudButton} disableTouchRipple={true} onTouchTap={this.handleDownload.bind(this)}><CloudDownload style={{fill:'#4598bf', align:'right'}}/> </IconButton>
+        }
+        else {
+            cloudToggle = <IconButton disableTouchRipple={true} disabled={true} onTouchTap={this.handleDownload.bind(this)}><CloudDownload style={{color:'gray', align:'right'}}/> </IconButton>
+            //cloudToggle = <CloudDownload style={{color:'gray'}}/>
+        }
+
         let tableData;
         if(this.state.openTable == true){
             tableData = <TableBody
                 displayRowCheckbox={false}
                 deselectOnClickaway={false}
                 showRowHover={this.state.showRowHover}
-                stripedRows={this.state.stripedRows}
+                className={styles.tableRowHighlight}
             >
                 {provider.tasks.map((task) => (
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
@@ -162,7 +201,7 @@ class ProviderRow extends React.Component {
                         /></TableRowColumn>
                     <TableRowColumn style={{width: '20%', fontSize: '14px'}}>{task.name}</TableRowColumn>
                     <TableRowColumn style={{width: '25%', textAlign: 'center', fontSize: '14px'}} ></TableRowColumn>
-                    <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px', fontWeight: 'bold'}} >{task.status}</TableRowColumn>
+                    <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px', fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
                     <TableRowColumn style={{width: '10%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
                     </TableRow>
@@ -193,7 +232,7 @@ class ProviderRow extends React.Component {
                         <TableHeaderColumn style={{width:'30%', color: 'black!important', fontWeight: 'bold', fontSize: '14px'}}>{this.props.provider.name}</TableHeaderColumn>
                         <TableHeaderColumn style={{width:'20%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}>{this.state.selectionCount}/{this.state.taskCount}</TableHeaderColumn>
                         <TableHeaderColumn style={{width:'15%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}></TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'15%',textAlign: 'center'}}> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<CloudDownload style={{color:'#4598bf', verticalAlign: 'middle'}}/></TableHeaderColumn>
+                        <TableHeaderColumn style={{width:'15%',textAlign: 'right'}}>{cloudToggle} </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'10%',textAlign: 'left'}}> <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle.bind(this)}>{arrowToggle}</IconButton></TableHeaderColumn>
                     </TableRow>
                 </TableHeader>

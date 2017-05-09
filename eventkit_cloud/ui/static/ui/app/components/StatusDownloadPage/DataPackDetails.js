@@ -65,8 +65,10 @@ class DataPackDetails extends React.Component {
         this.setState({file: checked})
     }
 
-    onSelectionToggle(selectedTasks, provider){
-        this.setState({selectedTasks, provider})
+    onSelectionToggle(selectedTasks){
+        console.log(this.state.selectedTasks)
+        const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
+        this.setState({selectedTasks : tasks})
     }
 
     handleDownload(event){
@@ -78,11 +80,19 @@ class DataPackDetails extends React.Component {
             }
         });
 
-        let tasks = this.state.provider.tasks;
+        let tasks = this.props.providerTasks;
+        let taskArray = [];
         let downloadUrls = [];
-        downloadUids.forEach(function(uid) {
-            let a = tasks.find(x => x.uid === uid)
-            downloadUrls.push(a.result.url);
+
+        tasks.forEach(function (url) {
+            url.tasks.forEach(function (task) {
+                taskArray.push([task]);
+                downloadUids.forEach(function(uid) {
+                if (task.uid === uid) {
+                    downloadUrls.push(task.result.url);
+                }
+                })
+            })
         })
 
         downloadUrls.forEach(function (value, idx) {
@@ -119,11 +129,13 @@ class DataPackDetails extends React.Component {
                             <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}># OF SELECTIONS</TableHeaderColumn>
                             <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}} >STATUS</TableHeaderColumn>
                             <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}> <RaisedButton
-                                backgroundColor={'#e2e2e2'}
+                                backgroundColor={'rgba(179,205,224,0.5)'}
                                 disableTouchRipple={true}
+                                labelColor={'#4598bf'}
+                                labelStyle={{fontWeight:'bold'}}
                                 onTouchTap={this.handleDownload.bind(this)}
                                 label="Download All Selected"
-                                icon={<CloudDownload style={{color:'#4598bf', fill:'#4598bf',verticalAlign: 'middle'}}/>} />
+                                icon={<CloudDownload style={{fill:'#4598bf',verticalAlign: 'middle'}}/>} />
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width:'10%', fontSize: '14px'}}></TableHeaderColumn>
                         </TableRow>
