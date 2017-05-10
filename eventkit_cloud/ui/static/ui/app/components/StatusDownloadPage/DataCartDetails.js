@@ -6,6 +6,8 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
 import styles from '../../styles/StatusDownload.css'
 import moment from 'moment'
 
@@ -15,8 +17,12 @@ class DataCartDetails extends React.Component {
 
         this.state = {
             cartDetails: {},
+            status: '',
             statusBackgroundColor: '',
             statusFontColor: '',
+            deleteDialogOpen: false,
+            rerunDialogOpen: false,
+            cloneDialogOpen: false,
         };
 
     }
@@ -28,13 +34,25 @@ class DataCartDetails extends React.Component {
 
     }
     componentWillReceiveProps(nextProps) {
+        if(nextProps.cartDetails.status != this.state.status){
+            switch(nextProps.cartDetails.status) {
+                case 'COMPLETED':
+                    return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
+                case 'SUBMITTED':
+                    return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
+                case 'INCOMPLETE':
+                    return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
+                default:
+                    return this.setState({status: '', statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
+            }
+        }
+
 
         if (nextProps.cartDetails.fetched != null) {
             if (nextProps.cartDetails.fetched != this.props.cartDetails.fetched) {
                 if (nextProps.cartDetails.fetched == true) {
                     let cartDetails = nextProps.cartDetails.data;
-                    this.setState({cartDetails: cartDetails});
-
+                    this.setState({cartDetails: cartDetails, status:cartDetails.status});
                 }
             }
         }
@@ -43,23 +61,18 @@ class DataCartDetails extends React.Component {
     componentDidMount(){
         this._initializeOpenLayers();
         this._setTableColors();
-
-
-    }
-    componentDidUpdate(prevProps, prevState) {
-        //this._setTableColors();
     }
 
     _setTableColors() {
         switch(this.props.cartDetails.status) {
             case 'COMPLETED':
-                return this.setState({statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
+                return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
             case 'SUBMITTED':
-                return this.setState({statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
+                return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
             case 'INCOMPLETE':
-                return this.setState({statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
+                return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
             default:
-                return this.setState({statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
+                return this.setState({status: '', statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
         }
     }
     _initializeOpenLayers() {
@@ -99,6 +112,42 @@ class DataCartDetails extends React.Component {
         this._map.getView().fit(source.getExtent(), this._map.getSize());
 
     }
+    handleDeleteOpen = () => {
+        this.setState({deleteDialogOpen: true});
+    };
+
+    handleDeleteClose = () => {
+        this.setState({deleteDialogOpen: false});
+    };
+
+    handleRerunOpen = () => {
+        this.setState({rerunDialogOpen: true});
+    };
+
+    handleRerunClose = () => {
+        this.setState({rerunDialogOpen: false});
+    };
+    handleCloneOpen = () => {
+        this.setState({cloneDialogOpen: true});
+    };
+
+    handleCloneClose = () => {
+        this.setState({cloneDialogOpen: false});
+    };
+
+    handleDelete = () => {
+        this.props.onRunDelete(this.props.cartDetails.uid)
+        this.setState({dialogOpen: false});
+    };
+
+    handleRerun = () => {
+        this.props.onRunRerun(this.props.cartDetails.job.uid)
+        this.setState({rerunDialogOpen: false});
+    };
+
+    handleClone = () => {
+        this.setState({deleteDialogOpen: false});
+    };
 
     render() {
     let localStyles = {
@@ -109,8 +158,56 @@ class DataCartDetails extends React.Component {
             backgroundColor: this.state.statusBackgroundColor,
             color: this.state.statusFontColor,
         },
-
-}
+    }
+        const deleteActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                className={styles.cancelButton}
+                disableTouchRipple={true}
+                label="Cancel"
+                primary={false}
+                onTouchTap={this.handleDeleteClose.bind(this)}
+            />,<RaisedButton
+                style={{margin: '10px'}}
+                className={styles.deleteButton}
+                disableTouchRipple={true}
+                label="Delete"
+                primary={true}
+                onTouchTap={this.handleDeleteOpen.bind(this)}
+            />,
+        ];
+        const rerunExportActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                className={styles.cancelButton}
+                disableTouchRipple={true}
+                label="Cancel"
+                primary={false}
+                onTouchTap={this.handleRerunClose.bind(this)}
+            />,
+            <RaisedButton
+                style={{margin: '10px'}}
+                label="Rerun"
+                primary={true}
+                onTouchTap={this.handleRerun.bind(this)}
+            />,
+        ];
+        const cloneExportActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                className={styles.cancelButton}
+                disableTouchRipple={true}
+                label="Cancel"
+                primary={false}
+                onTouchTap={this.handleCloneClose.bind(this)}
+            />,
+            <RaisedButton
+                style={{margin: '10px'}}
+                label="Clone"
+                primary={true}
+                onTouchTap={this.handleClone.bind(this)}
+            />,
+        ];
         return (
         <div>
             <div>
@@ -141,27 +238,55 @@ class DataCartDetails extends React.Component {
                         disableTouchRipple={true}
                         labelColor={'#4598bf'}
                         labelStyle={{fontWeight:'bold'}}
-                        //onTouchTap={this.handleDownload.bind(this)}
+                        onTouchTap={this.handleRerunOpen.bind(this)}
                         label="RUN EXPORT AGAIN"
                          />
+                    <Dialog
+                        contentStyle={{width:'30%'}}
+                        actions={rerunExportActions}
+                        modal={false}
+                        open={this.state.rerunDialogOpen}
+                        onRequestClose={this.handleRerunClose.bind(this)}
+                    >
+                        <strong>Are you sure you want to run this export again?</strong>
+                    </Dialog>
                     <RaisedButton
                         style={{margin: '10px'}}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'#4598bf'}
                         labelStyle={{fontWeight:'bold'}}
-                        //onTouchTap={this.handleDownload.bind(this)}
+                        onTouchTap={this.handleCloneOpen.bind(this)}
                         label="CLONE"
                     />
+                    <Dialog
+                        contentStyle={{width:'30%'}}
+                        actions={cloneExportActions}
+                        modal={false}
+                        open={this.state.cloneDialogOpen}
+                        onRequestClose={this.handleCloneClose.bind(this)}
+                    >
+                        <strong>Are you sure you want to Clone this DataPack?</strong>
+                    </Dialog>
                     <RaisedButton
                         style={{margin: '10px'}}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'red'}
                         labelStyle={{fontWeight:'bold'}}
-                        //onTouchTap={this.handleDownload.bind(this)}
+                        onTouchTap={this.handleDeleteOpen.bind(this)}
                         label="DELETE"
                     />
+
+                    <Dialog
+                        contentStyle={{width:'30%'}}
+                        actions={deleteActions}
+                        modal={false}
+                        open={this.state.deleteDialogOpen}
+                        onRequestClose={this.handleDeleteClose.bind(this)}
+                    >
+                        <strong>Are you sure you want to delete the DataPack?</strong>
+                    </Dialog>
                 </div>
 
             </div>
@@ -221,7 +346,7 @@ class DataCartDetails extends React.Component {
                 </tr>
                 <tr>
                     <td className={styles.tdHeading}>Finished</td>
-                    <td className={styles.tdData}>{moment(this.props.cartDetails.finsihed_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                    <td className={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                 </tr>
                 </tbody>
                 </table>
@@ -235,6 +360,8 @@ class DataCartDetails extends React.Component {
 
 DataCartDetails.propTypes = {
     cartDetails: PropTypes.object,
+    onRunDelete: PropTypes.func.isRequired,
+    onRunRerun:  PropTypes.func.isRequired,
 }
 DataCartDetails.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,

@@ -75,4 +75,15 @@ export default {
         data: [],
         error: null,
     },
+    runDeletion: {
+        deleting: false,
+        deleted: false,
+        error: null,
+    },
+    exportReRun: {
+        fetching: false,
+        fetched: false,
+        data: [],
+        error: null,
+    },
 }

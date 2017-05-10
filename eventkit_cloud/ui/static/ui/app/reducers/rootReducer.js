@@ -9,7 +9,7 @@ import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 import authReducer from './authReducer'
-import {getDatacartDetailsReducer, setDatacartDetailsReducer} from './statusDownloadReducer'
+import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer} from './statusDownloadReducer'
 
 
 const rootReducer = combineReducers({
@@ -37,6 +37,8 @@ const rootReducer = combineReducers({
     runsDeletion: DeleteRunsReducer,
     datacartDetails: getDatacartDetailsReducer,
     datacartDetailsReceived: setDatacartDetailsReducer,
+    runDeletion: deleteRunReducer,
+    exportReRun: rerunExportReducer,
 });
 
 export default rootReducer;

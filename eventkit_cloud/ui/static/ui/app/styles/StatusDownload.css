@@ -103,3 +103,19 @@
 }
 .tableRowHighlight > tr:nth-child(even) {background: #f8f8f8}
 .tableRowHighlight > tr:nth-child(odd) {background: #FFF}
+
+
+.cancelButton > button {
+    background-color: rgba(226,226,226,0.5)!important;
+}
+.cancelButton > button > div > span {
+    color: #4598bf!important;
+    font-weight: bold!important;
+}
+.deleteButton > button {
+    background-color: rgba(226,226,226,0.5)!important;
+}
+.deleteButton > button > div > span {
+    color: red!important;
+    font-weight: bold!important;
+}
