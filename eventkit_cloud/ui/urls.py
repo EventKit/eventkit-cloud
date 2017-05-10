@@ -19,5 +19,5 @@ urlpatterns = [
 ]
 
 urlpatterns += [
-    url(r'^auth/$', ensure_csrf_cookie(auth), name='auth'),
+    url(r'^auth$', ensure_csrf_cookie(auth), name='auth'),
     ]

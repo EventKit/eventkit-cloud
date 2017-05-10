@@ -1,5 +1,3 @@
-import configureMockStore from 'redux-mock-store'
-import thunk from 'redux-thunk'
 import React from 'react'
 import {Form} from './loginContainer';
 import sinon from 'sinon';
@@ -43,13 +41,11 @@ describe('loginContainer', () => {
         const props = {
             handleLogin: sinon.spy(),
         }
-        const expected_username = "UserName";
-        const expected_password = "Password";
-        const expected_button = "Button";
+
         const state = {
-            username: expected_username,
-            password: expected_password,
-            button: expected_button,
+            username: "UserName",
+            password:  "Password",
+            button: "Button",
             login_form: true,
             oauth_name: ""
         };
@@ -62,52 +58,105 @@ describe('loginContainer', () => {
         expect(props.handleLogin.calledWith(state)).toEqual(true);
     });
 
-    // it('shows only the form if auth endpoint is available', () => {
-    //
-    //     const props = {
-    //         handleLogin: sinon.spy(),
-    //     }
-    //
-    //     const mock = new MockAdapter(axios);//, {delayResponse: 100});
-    //     mock.onGet('/auth').reply(200);
-    //     mock.onGet('/oauth', { params: {query: 'name'}}).reply(200, {"name": "oauth_provider"});
-    //     const wrapper = mount(<Form {...props}/>);
-    //     expect(wrapper.render().find('form').exists()).toEqual(true);
-    //     expect(wrapper.find('.mui-btn--raised').exists()).toEqual(false);
-    // });
+    it('shows only the form if auth endpoint is available', () => {
 
-    // it('shows only the oauth button if oauth endpoint is available', () => {
-    //     const props = {
-    //         handleLogin: sinon.spy(),
-    //     }
-    //
-    //     const mock = new MockAdapter(axios, {delayResponse: 100});
-    //     mock.onGet('/auth').reply(400);
-    //     mock.onGet('/oauth', { params: {query: 'name'}}).reply(200, {"name": "oauth_provider"});
-    //
-    //     const wrapper = mount(<Form {...props}/>);
-    //     expect(wrapper.render().find('form').exists()).toEqual(false);
-    //     expect(wrapper.render().find('.mui-btn--raised').exists()).toEqual(true);
-    // });
-    //
-    // it('shows both the form and oauth button if endpoints are available', () => {
-    //     const props = {
-    //         handleLogin: sinon.spy(),
-    //     }
-    //
-    //     const mock = new MockAdapter(axios, {delayResponse: 100});
-    //     mock.onGet('/auth').reply(200);
-    //     mock.onGet('/oauth', { params: {query: 'name'}}).reply(200, {"name": "oauth_provider"});
-    //
-    //
-    //     const wrapper = mount(<Form {...props}/>);
-    //     wrapper.render().componentDidMount();
-    //     // console.log(wrapper.find('div').debug())
-    //     // console.log(wrapper.state())
-    //     // console.log(wrapper.find('form').html())
-    //     // console.log(wrapper.find('.mui-btn--raised').html())
-    //     expect(wrapper.find('form').exists()).toEqual(true);
-    //     expect(wrapper.find('.mui-btn--raised').exists()).toEqual(true);
-    // });
+        const props = {
+            handleLogin: sinon.spy(),
+        }
+
+        const state = {
+            username: "UserName",
+            password:  "Password",
+            button: "Button",
+            login_form: true,
+            oauth_name: ""
+        };
+
+        const wrapper = mount(<Form {...props}/>);
+        wrapper.setState(state);
+        expect(wrapper.find('form').exists()).toEqual(true);
+        expect(wrapper.find('.OAuthButton').exists()).toEqual(false);
+    });
+
+    it('shows only the oauth button if oauth endpoint is available', () => {
+        const props = {
+            handleLogin: sinon.spy(),
+        }
+
+        const state = {
+            username: "UserName",
+            password:  "Password",
+            button: "Button",
+            login_form: false,
+            oauth_name: "OAuth"
+        };
+
+        const wrapper = mount(<Form {...props}/>);
+        wrapper.setState(state);
+        expect(wrapper.find('form').exists()).toEqual(false);
+        expect(wrapper.find('.OAuthButton').exists()).toEqual(true);
+    });
+
+    it('shows both the form and oauth button if endpoints are available', () => {
+        const props = {
+            handleLogin: sinon.spy(),
+        }
+
+        const state = {
+            username: "UserName",
+            password:  "Password",
+            button: "Button",
+            login_form: true,
+            oauth_name: "OAuth"
+        };
+
+        const wrapper = mount(<Form {...props}/>);
+        wrapper.setState(state);
+        expect(wrapper.find('form').exists()).toEqual(true);
+        expect(wrapper.find('.OAuthButton').exists()).toEqual(true);
+    });
+
+    it('checkAuthEndpoint updates state if available', async () => {
+        const props = {
+            handleLogin: sinon.spy(),
+        }
+
+        const mock = new MockAdapter(axios, {delayResponse: 100});
+
+        mock.onGet('/auth').reply(200, {
+            users: [
+                {id: 1, name: 'John Smith'}
+            ]
+        });
+
+        const wrapper = shallow(<Form {...props}/>);
+        expect(wrapper.state('login_form')).toEqual(false);
+
+
+        await wrapper.instance().checkAuthEndpoint();
+        wrapper.update();
+        expect(wrapper.state('login_form')).toEqual(true);
+    });
+
+    it('checkOAuthEndpoint updates state if available', async () => {
+        const oauth_name = "oauth_provider"
+        const props = {
+            handleLogin: sinon.spy(),
+        }
+
+        const mock = new MockAdapter(axios, {delayResponse: 100});
+
+        mock.onGet('/oauth').reply(200, {
+            name: oauth_name
+        });
+
+        const wrapper = shallow(<Form {...props}/>);
+        expect(wrapper.state('oauth_name')).toEqual("");
+
+
+        await wrapper.instance().checkOAuthEndpoint();
+        wrapper.update();
+        expect(wrapper.state('oauth_name')).toEqual(oauth_name);
+    });
 
 });

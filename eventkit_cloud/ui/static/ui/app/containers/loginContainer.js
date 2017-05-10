@@ -42,22 +42,23 @@ export class Form extends React.Component {
         });
     }
 
-    componentDidMount() {
-        axios.get('/oauth', {params: {query: "name"}}).then(function (response) {
-            console.log("success in oauth")
-            this.setState({oauth_name: response.data.name});
-            console.log(this.state)
-        }.bind(this)).catch(function (response) {
-            console.log("failure in oauth")
-        });
-
-        axios.get('/auth').then(function (response) {
-            console.log("success in auth")
+    checkAuthEndpoint = () => {
+        return axios.get('/auth').then(function (response) {
             this.setState({login_form: true});
-            console.log(this.state)
         }.bind(this)).catch(function (response) {
-            console.log("failure in auth")
         });
+    }
+
+    checkOAuthEndpoint = () => {
+        return axios.get('/oauth', {params: {query: "name"}}).then(function (response) {
+            this.setState({oauth_name: response.data.name});
+        }.bind(this)).catch(function (response) {
+        });
+    }
+
+    componentDidMount() {
+        this.checkAuthEndpoint();
+        this.checkOAuthEndpoint();
     }
 
     handleSubmit(event) {
@@ -84,16 +85,15 @@ export class Form extends React.Component {
                     <input id="username"
                            name="username"
                            placeholder="Username"
-                           className={styles.textField}
+                           style={{fontSize: '16px', color: '#e2e2e2'}}
                            type="text"/>
-
                 </div>
                 <div className={styles.fieldWrapper}>
                     <input id="password"
                            name="password"
                            placeholder="Password"
-                           className={styles.textField}
                            onChange={this.onChange}
+                           style={{fontSize: '16px', color: '#e2e2e2'}}
                            type="password"
                     />
                 </div>
@@ -101,8 +101,15 @@ export class Form extends React.Component {
             </form>
         }
         if (this.state.oauth_name) {
-            oauth_button = <RaisedButton
-                style={{minWidth: 'none', borderRadius: 'px', margin:10, marginTop:50, marginLeft: 'auto', marginRight: 'auto'}}
+            oauth_button = <RaisedButton className={'OAuthButton'}
+                style={{
+                    minWidth: 'none',
+                    borderRadius: 'px',
+                    margin: 10,
+                    marginTop: 50,
+                    marginLeft: 'auto',
+                    marginRight: 'auto'
+                }}
                 buttonStyle={{borderRadius: '0px'}}
                 backgroundColor={'#4598bf'}
                 label={"Log in with " + this.state.oauth_name}
@@ -130,7 +137,7 @@ const ENABLED_BUTTON = <div className={styles.enabledButton}>
     <FloatingActionButton name="submit"
                           mini={false}
                           type="submit"
-                    style={{marginLeft: 'auto', marginRight: 'auto'}}>
+                          style={{marginLeft: 'auto', marginRight: 'auto'}}>
         <NavigationArrowForward />
     </FloatingActionButton>
 </div>
@@ -142,6 +149,7 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
+
 
 Form.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,

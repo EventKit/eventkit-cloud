@@ -21,7 +21,6 @@ if os.environ.get('OAUTH_AUTHORIZATION_URL'):
     OAUTH_RESPONSE_TYPE = os.environ.get('OAUTH_RESPONSE_TYPE', 'code')
     OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI')
     OAUTH_SCOPE = os.environ.get('OAUTH_SCOPE')
-    AUTHENTICATION_BACKENDS += ('oauth2_provider.backends.OAuth2Backend',)
     MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
 
     # The OAuth profile needs to map to the User model.
@@ -47,6 +46,9 @@ if os.environ.get('LDAP_SERVER_URI') :
     LDAP_SEARCH_DN = os.environ.get('LDAP_SEARCH_DN')
     AUTH_LDAP_USER = os.environ.get('LDAP_USER')
     AUTH_LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN')
+    AUTHENTICATION_BACKENDS += (
+        'django_auth_ldap.backend.LDAPBackend',
+    )
 
     AUTH_LDAP_USER_ATTR_MAP = {
       'first_name': 'givenName',

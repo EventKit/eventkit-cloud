@@ -27,7 +27,7 @@ from eventkit_cloud.jobs.models import (
     ExportProvider,
     ProviderTask,
     License,
-    UserLicenses
+    UserLicense
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -311,7 +311,7 @@ class UserDataSerializer(serializers.Serializer):
     @staticmethod
     def get_accepted_licenses(instance):
         licenses = dict()
-        user_licenses = UserLicenses.objects.filter(user=instance)
+        user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
             if user_licenses.filter(license=license):
                 licenses[license.slug] = True
@@ -322,11 +322,11 @@ class UserDataSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
             for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
-                user_license = UserLicenses.objects.filter(user=instance, license=License.objects.get(slug=slug))
+                user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
                 if not user_license and selected:
-                    UserLicenses.objects.create(user=instance, license=License.objects.get(slug=slug))
+                    UserLicense.objects.create(user=instance, license=License.objects.get(slug=slug))
         return instance
 
     def create(self, validated_data, **kwargs):

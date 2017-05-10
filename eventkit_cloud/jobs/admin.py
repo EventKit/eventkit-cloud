@@ -7,7 +7,7 @@ from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
 
 from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
-    ProviderTask, DatamodelPreset, License, UserLicenses
+    ProviderTask, DatamodelPreset, License, UserLicense
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProvider)
@@ -16,7 +16,7 @@ admin.site.register(ExportProviderType)
 admin.site.register(ProviderTask)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
-admin.site.register(UserLicenses)
+admin.site.register(UserLicense)
 
 class HOTRegionGeoAdmin(OSMGeoAdmin):
     """

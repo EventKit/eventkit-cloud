@@ -34,14 +34,14 @@ export const login = data => (dispatch) => {
     }
 
     return axios({
-        url: '/auth/',
+        url: '/auth',
         method: method,
         data: form_data,
         headers: {"X-CSRFToken": csrftoken}
     }).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_IN,
-            payload: response.data || {"ERROR": "No user response data"}
+            payload: response.data
         });
     }).catch((error) => {
         dispatch(logout());

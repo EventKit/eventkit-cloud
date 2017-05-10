@@ -40,10 +40,10 @@ var config = {
                     presets: ["es2015", "react", "stage-0"]
                 }
             },
-            {
-                test: /\.(png|jpg|gif)$/,
-                loader: 'file'
-            },
+            // {
+            //     test: /\.(png|jpg|gif)$/,
+            //     loader: 'file'
+            // },
             {
                 test: /\.css$/,
                 loader: 'style-loader'
@@ -56,12 +56,16 @@ var config = {
                 }
             },
             {
-                test: /\.(woff2?|ttf|eot|svg)$/,
+                test: /\.(woff2?|ttf|eot|svg|png|jpg|gif)$/,
                 loader: 'url-loader?limit=100000',
                 options: {
                     name: 'fonts/[hash].[ext]',
                 }
-            }
+            },
+            // {
+            //     test: /\.(png|jpg|gif)$/,
+            //     loader: "file-loader"
+            // }
         ],
     },
     plugins: plugins,
@@ -79,7 +83,7 @@ var config = {
     },
 };
 
-if(PROD) {
+if (PROD) {
     config.plugins.push(new webpack.optimize.AggressiveMergingPlugin());
     config.plugins.push(new webpack.DefinePlugin({'process.env': {'NODE_ENV': JSON.stringify('production')}}));
     config.plugins.push(new webpack.optimize.UglifyJsPlugin({compressor: {warnings: false}}));

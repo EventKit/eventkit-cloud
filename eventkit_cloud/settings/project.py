@@ -18,8 +18,6 @@ INSTALLED_APPS += (
     'eventkit_cloud.utils',
     'eventkit_cloud',
     'django_classification_banner',
-    'oauth2_provider',
-    'corsheaders',
 )
 
 INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )

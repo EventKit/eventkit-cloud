@@ -18,7 +18,7 @@ from django.core import serializers
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task
 from eventkit_cloud.jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicenses
+    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from mock import patch, Mock
 

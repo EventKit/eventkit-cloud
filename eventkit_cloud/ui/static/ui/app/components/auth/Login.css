@@ -50,14 +50,6 @@
     color: #e2e2e2!important;
     padding-left: 10px;
 }
-.textField >  {
-    font-size: 16px!important;
-    color: #e2e2e2!important;
-}
-.textField > input{
-    font-size: 16px!important;
-    color: #e2e2e2!important;
-}
 
 .fieldWrapper > svg {
     float: left!important;

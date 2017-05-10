@@ -94,7 +94,7 @@ class License(models.Model):
         return '{0}'.format(self.slug)
 
 
-class UserLicenses(models.Model):
+class UserLicense(models.Model):
     """
     Model to hold which licenses a User acknowledges. 
     """
