@@ -115,6 +115,10 @@
                 "value": "motorway",
                 "key": "highway"
             }, {
+                "geom": ["line", "polygon"],
+                "value": "yes",
+                "key": "bridge"
+            }, {
                 "geom": ["point"],
                 "value": "kitchen",
                 "key": "shop"
