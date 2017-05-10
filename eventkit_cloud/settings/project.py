@@ -9,6 +9,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Project apps
 INSTALLED_APPS += (
+    'eventkit_cloud.core',
+    'eventkit_cloud.auth',
     'eventkit_cloud.jobs',
     'eventkit_cloud.tasks',
     'eventkit_cloud.api',
@@ -16,6 +18,8 @@ INSTALLED_APPS += (
     'eventkit_cloud.utils',
     'eventkit_cloud',
     'django_classification_banner',
+    'oauth2_provider',
+    'corsheaders',
 )
 
 INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
@@ -47,12 +51,6 @@ EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/expo
 
 # the root url for export downloads
 EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
-
-# home dir of the OSMAnd Map Creator
-OSMAND_MAP_CREATOR_DIR = os.getenv('OSMAND_MAP_CREATOR_DIR', '/var/lib/eventkit/OsmAndMapCreator')
-
-# location of the garmin config file
-GARMIN_CONFIG = os.getenv('GARMIN_CONFIG', '/var/lib/eventkit/conf/garmin_config.xml')
 
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
@@ -120,4 +118,5 @@ http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
 
 USE_DISK_CACHE = True
+
 

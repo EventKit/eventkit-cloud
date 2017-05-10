@@ -7,7 +7,37 @@ import os
 import logging
 
 # Authentication Settings
-if os.environ.get('LDAP_SERVER_URI'):
+
+AUTHENTICATION_BACKENDS = tuple()
+
+if os.environ.get('OAUTH_AUTHORIZATION_URL'):
+    OAUTH_NAME = os.environ.get('OAUTH_NAME', 'OAUTH')
+    OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID')
+    OAUTH_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET')
+    OAUTH_AUTHORIZATION_URL = os.environ.get('OAUTH_AUTHORIZATION_URL')
+    OAUTH_LOGOUT_URL = os.environ.get('OAUTH_LOGOUT_URL')
+    OAUTH_TOKEN_URL = os.environ.get('OAUTH_TOKEN_URL')
+    OAUTH_TOKEN_KEY = os.environ.get('OAUTH_TOKEN_KEY', 'access_token')
+    OAUTH_RESPONSE_TYPE = os.environ.get('OAUTH_RESPONSE_TYPE', 'code')
+    OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI')
+    OAUTH_SCOPE = os.environ.get('OAUTH_SCOPE')
+    AUTHENTICATION_BACKENDS += ('oauth2_provider.backends.OAuth2Backend',)
+    MIDDLEWARE += ('django.contrib.auth.middleware.SessionAuthenticationMiddleware',)
+
+    # The OAuth profile needs to map to the User model.
+
+    # The required fields are:
+    # identification, username, email, commonname
+    # The optional fields are:
+    # first_name, last_name
+
+    # Example:
+    # OAUTH_PROFILE_SCHEMA = {"identification": "ID", "username": "username", "email": "email", "first_name": "firstname"...}
+    OAUTH_PROFILE_SCHEMA = os.environ.get('OAUTH_PROFILE_SCHEMA')
+    OAUTH_PROFILE_URL = os.environ.get('OAUTH_PROFILE_URL')
+
+if os.environ.get('LDAP_SERVER_URI') :
+
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
@@ -18,10 +48,6 @@ if os.environ.get('LDAP_SERVER_URI'):
     AUTH_LDAP_USER = os.environ.get('LDAP_USER')
     AUTH_LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN')
 
-    AUTHENTICATION_BACKENDS = (
-      'django_auth_ldap.backend.LDAPBackend',
-      'django.contrib.auth.backends.ModelBackend',
-    )
     AUTH_LDAP_USER_ATTR_MAP = {
       'first_name': 'givenName',
       'last_name': 'sn',
@@ -31,6 +57,11 @@ if os.environ.get('LDAP_SERVER_URI'):
       LDAP_SEARCH_DN,
       ldap.SCOPE_SUBTREE,
       AUTH_LDAP_USER
+    )
+
+DJANGO_MODEL_LOGIN = os.environ.get('DJANGO_MODEL_LOGIN')
+AUTHENTICATION_BACKENDS += (
+      'django.contrib.auth.backends.ModelBackend',
     )
 
 # Set debug to True for development

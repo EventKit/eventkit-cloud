@@ -26,15 +26,14 @@
     font-size: 20px;
     font-weight: bold;
     color: white;
-    transform: translateX(10%);
 }
 .enabledButton{
     margin-top: 30px;
-    margin-left: 40%;
+    margin-left: auto;
 }
 .disabledButton{
     margin-top: 30px;
-    margin-left: 40%;
+    margin-left: auto;
 }
 .disabledButton > div > button {
     background-color: #b4b7b8!important;
