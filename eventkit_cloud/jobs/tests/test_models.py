@@ -132,8 +132,8 @@ class TestJob(TestCase):
 
         self.assertIsNotNone(categories)
         self.assertEquals(27, len(categories['points']))
-        self.assertEquals(14, len(categories['lines']))
-        self.assertEquals(24, len(categories['polygons']))
+        self.assertEquals(15, len(categories['lines']))
+        self.assertEquals(25, len(categories['polygons']))
 
     def test_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags

@@ -248,7 +248,7 @@ class TestJobViewSet(APITestCase):
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
         self.assertIsNotNone(job.preset.json_tags)
-        self.assertEqual(255, len(job.preset.json_tags))
+        self.assertEqual(256, len(job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -285,7 +285,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
-        self.assertEqual(255, len(self.job.preset.json_tags))
+        self.assertEqual(256, len(self.job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
