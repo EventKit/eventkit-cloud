@@ -6,7 +6,1027 @@
             "created_at": "2017-04-05T22:17:19.652Z",
             "updated_at": "2017-04-05T22:17:19.652Z",
             "name": "hdm",
-            "json_tags": [{"geom": ["polygon", "point"], "value": "station", "key": "power"}, {"geom": ["polygon", "point"], "value": "water_tower", "key": "man_made"}, {"geom": ["line"], "value": "river", "key": "waterway"}, {"geom": ["polygon"], "value": "yes", "key": "area"}, {"geom": ["line"], "value": "motorway_link", "key": "highway"}, {"geom": ["point"], "value": "baby_hatch", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "pedestrian", "key": "highway"}, {"geom": ["point"], "value": "pole", "key": "power"}, {"geom": ["polygon", "point"], "value": "hospital", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "clothes", "key": "shop"}, {"geom": ["line"], "value": "path", "key": "highway"}, {"geom": ["polygon", "point"], "value": "nightclub", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "monument", "key": "historic"}, {"geom": ["line"], "value": "stream", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "post_office", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "water_works", "key": "man_made"}, {"geom": ["line"], "value": "1", "key": "layer"}, {"geom": ["polygon"], "value": "residential", "key": "landuse"}, {"geom": ["line", "polygon"], "value": "wall", "key": "barrier"}, {"geom": ["polygon"], "value": "scree", "key": "natural"}, {"geom": ["polygon", "point"], "value": "terminal", "key": "aeroway"}, {"geom": ["line", "polygon", "point"], "value": "artwork", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "yes", "key": "bladder"}, {"geom": ["point"], "value": "town", "key": "place"}, {"geom": ["polygon", "point"], "value": "memorial", "key": "historic"}, {"geom": ["point"], "value": "fabric", "key": "shop"}, {"geom": ["line"], "value": "motorway", "key": "highway"}, {"geom": ["point"], "value": "kitchen", "key": "shop"}, {"geom": ["point"], "value": "chemist", "key": "shop"}, {"geom": ["line"], "value": "runway", "key": "aeroway"}, {"geom": ["line", "point"], "value": "waterfall", "key": "waterway"}, {"geom": ["point"], "value": "crossing", "key": "highway"}, {"geom": ["polygon"], "value": "stadium", "key": "leisure"}, {"geom": ["point"], "value": "dry_cleaning", "key": "shop"}, {"geom": ["point"], "value": "toll_booth", "key": "barrier"}, {"geom": ["point"], "value": "bureau_de_change", "key": "amenity"}, {"geom": ["point"], "value": "bicycle", "key": "shop"}, {"geom": ["polygon", "point"], "value": "college", "key": "amenity"}, {"geom": ["polygon"], "value": "grass", "key": "surface"}, {"geom": ["point"], "value": "electronics", "key": "shop"}, {"geom": ["point"], "value": "mall", "key": "shop"}, {"geom": ["polygon", "point"], "value": "wastewater_plant", "key": "man_made"}, {"geom": ["polygon"], "value": "common", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "school", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "guest_house", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "library", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "police", "key": "amenity"}, {"geom": ["point"], "value": "mini_roundabout", "key": "highway"}, {"geom": ["polygon", "point"], "value": "shower", "key": "amenity"}, {"geom": ["line"], "value": "tertiary_link", "key": "highway"}, {"geom": ["point"], "value": "tower", "key": "power"}, {"geom": ["point"], "value": "turning_circle", "key": "highway"}, {"geom": ["point"], "value": "administrative", "key": "office"}, {"geom": ["point"], "value": "bank", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "water", "key": "natural"}, {"geom": ["point"], "value": "blacksmith", "key": "craft"}, {"geom": ["polygon", "point"], "value": "taxi", "key": "amenity"}, {"geom": ["point"], "value": "hardware", "key": "shop"}, {"geom": ["line", "point"], "value": "bollard", "key": "barrier"}, {"geom": ["point"], "value": "laundry", "key": "shop"}, {"geom": ["polygon"], "value": "industrial", "key": "building"}, {"geom": ["point"], "value": "car_sharing", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "arts_centre", "key": "amenity"}, {"geom": ["point"], "value": "kiosk", "key": "shop"}, {"geom": ["line"], "value": "primary_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "yes", "key": "borehole"}, {"geom": ["polygon", "point"], "value": "camp_site", "key": "tourism"}, {"geom": ["point"], "value": "sports", "key": "shop"}, {"geom": ["point"], "value": "video", "key": "shop"}, {"geom": ["point"], "value": "hearing_aids", "key": "shop"}, {"geom": ["line", "polygon"], "value": "tertiary", "key": "highway"}, {"geom": ["point"], "value": "atm", "key": "amenity"}, {"geom": ["point"], "value": "funeral_directors", "key": "shop"}, {"geom": ["line", "polygon"], "value": "city_wall", "key": "barrier"}, {"geom": ["line"], "value": "construction", "key": "highway"}, {"geom": ["point"], "value": "car_wash", "key": "amenity"}, {"geom": ["line", "polygon", "point"], "value": "", "key": "name"}, {"geom": ["point"], "value": "musical_instrument", "key": "shop"}, {"geom": ["point"], "value": "car_repair", "key": "shop"}, {"geom": ["point"], "value": "isolated_dwelling", "key": "place"}, {"geom": ["polygon", "point"], "value": "kindergarten", "key": "amenity"}, {"geom": ["polygon"], "value": "apron", "key": "aeroway"}, {"geom": ["point"], "value": "motorcycle", "key": "shop"}, {"geom": ["point"], "value": "travel_agency", "key": "shop"}, {"geom": ["point"], "value": "curtain", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bay", "key": "natural"}, {"geom": ["point"], "value": "dentist", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "fountain", "key": "amenity"}, {"geom": ["point"], "value": "street_lamp", "key": "highway"}, {"geom": ["point"], "value": "watermill", "key": "man_made"}, {"geom": ["point"], "value": "seafood", "key": "shop"}, {"geom": ["point"], "value": "doityourself", "key": "shop"}, {"geom": ["line", "point"], "value": "marketplace", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "secondary", "key": "highway"}, {"geom": ["point"], "value": "copyshop", "key": "shop"}, {"geom": ["polygon"], "value": "church", "key": "building"}, {"geom": ["polygon", "point"], "value": "beach", "key": "natural"}, {"geom": ["polygon"], "value": "recreation_ground", "key": "landuse"}, {"geom": ["point"], "value": "variety_store", "key": "shop"}, {"geom": ["line", "polygon"], "value": "fence", "key": "barrier"}, {"geom": ["point"], "value": "post_box", "key": "amenity"}, {"geom": ["point"], "value": "waste_disposal", "key": "amenity"}, {"geom": ["point"], "value": "nursing_home", "key": "amenity"}, {"geom": ["polygon"], "value": "mosque", "key": "building"}, {"geom": ["polygon", "point"], "value": "yes", "key": "tank"}, {"geom": ["point"], "value": "gate", "key": "barrier"}, {"geom": ["point"], "value": "shoes", "key": "shop"}, {"geom": ["line", "polygon"], "value": "unclassified", "key": "highway"}, {"geom": ["polygon", "point"], "value": "house", "key": "building"}, {"geom": ["polygon", "point"], "value": "office", "key": "information"}, {"geom": ["point"], "value": "toys", "key": "shop"}, {"geom": ["polygon", "point"], "value": "cinema", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "pipeline", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "bicycle_parking", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "", "key": "addr:housenumber"}, {"geom": ["point"], "value": "government", "key": "office"}, {"geom": ["polygon", "point"], "value": "hotel", "key": "tourism"}, {"geom": ["point"], "value": "passing_place", "key": "highway"}, {"geom": ["polygon", "point"], "value": "", "key": "addr:street"}, {"geom": ["point"], "value": "bicycle_rental", "key": "amenity"}, {"geom": ["point"], "value": "sports_centre", "key": "leisure"}, {"geom": ["line", "polygon"], "value": "track", "key": "leisure"}, {"geom": ["point"], "value": "doctors", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "yes", "key": "tap"}, {"geom": ["polygon"], "value": "village_green", "key": "landuse"}, {"geom": ["point"], "value": "boutique", "key": "shop"}, {"geom": ["point"], "value": "vacuum_cleaner", "key": "shop"}, {"geom": ["polygon"], "value": "residential", "key": "building"}, {"geom": ["polygon", "point"], "value": "bus_station", "key": "amenity"}, {"geom": ["point"], "value": "confectionery", "key": "shop"}, {"geom": ["polygon"], "value": "nature_reserve", "key": "leisure"}, {"geom": ["point"], "value": "tailor", "key": "shop"}, {"geom": ["polygon", "point"], "value": "restaurant", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "aerodrome", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "hostel", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "theatre", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "attraction", "key": "tourism"}, {"geom": ["point"], "value": "greengrocer", "key": "shop"}, {"geom": ["polygon"], "value": "forest", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "viewpoint", "key": "tourism"}, {"geom": ["point"], "value": "stationery", "key": "shop"}, {"geom": ["line"], "value": "trunk", "key": "highway"}, {"geom": ["line"], "value": "taxiway", "key": "aeroway"}, {"geom": ["point"], "value": "veterinary", "key": "amenity"}, {"geom": ["point"], "value": "fire_hydrant", "key": "emergency"}, {"geom": ["point"], "value": "pharmacy", "key": "amenity"}, {"geom": ["point"], "value": "entrance", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "mud", "key": "natural"}, {"geom": ["polygon", "point"], "value": "pub", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "bar", "key": "amenity"}, {"geom": ["polygon"], "value": "heath", "key": "natural"}, {"geom": ["point"], "value": "alcohol", "key": "shop"}, {"geom": ["polygon"], "value": "scrub", "key": "natural"}, {"geom": ["polygon", "point"], "value": "platform", "key": "highway"}, {"geom": ["point"], "value": "waste_basket", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "wetland", "key": "natural"}, {"geom": ["polygon"], "value": "school", "key": "building"}, {"geom": ["line", "polygon"], "value": "retaining_wall", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "alpine_hut", "key": "tourism"}, {"geom": ["polygon"], "value": "fell", "key": "natural"}, {"geom": ["point"], "value": "stop", "key": "highway"}, {"geom": ["polygon", "point"], "value": "well", "key": "man_made"}, {"geom": ["point"], "value": "erotic", "key": "shop"}, {"geom": ["point"], "value": "hairdresser", "key": "shop"}, {"geom": ["point"], "value": "neighbourhood", "key": "place"}, {"geom": ["polygon", "point"], "value": "helipad", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "hangar", "key": "building"}, {"geom": ["point"], "value": "mobile_phone", "key": "shop"}, {"geom": ["line", "polygon"], "value": "hedge", "key": "barrier"}, {"geom": ["point"], "value": "optician", "key": "shop"}, {"geom": ["point"], "value": "spikes", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "golf_course", "key": "leisure"}, {"geom": ["point"], "value": "paint", "key": "shop"}, {"geom": ["point"], "value": "tyres", "key": "shop"}, {"geom": ["polygon", "point"], "value": "courthouse", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "place_of_worship", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "motel", "key": "tourism"}, {"geom": ["point"], "value": "bakery", "key": "shop"}, {"geom": ["polygon", "point"], "value": "toilets", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "university", "key": "amenity"}, {"geom": ["polygon"], "value": "park", "key": "leisure"}, {"geom": ["point"], "value": "photo", "key": "shop"}, {"geom": ["line"], "value": "yes", "key": "bicycle_road"}, {"geom": ["polygon"], "value": "pitch", "key": "leisure"}, {"geom": ["point"], "value": "computer", "key": "shop"}, {"geom": ["point"], "value": "frame", "key": "shop"}, {"geom": ["polygon"], "value": "stadium", "key": "building"}, {"geom": ["polygon", "point"], "value": "sub_station", "key": "power"}, {"geom": ["point"], "value": "city", "key": "place"}, {"geom": ["point"], "value": "hifi", "key": "shop"}, {"geom": ["line"], "value": "track", "key": "highway"}, {"geom": ["polygon", "point"], "value": "prison", "key": "amenity"}, {"geom": ["point"], "value": "car", "key": "shop"}, {"geom": ["point"], "value": "peak", "key": "natural"}, {"geom": ["polygon"], "value": "synagogue", "key": "building"}, {"geom": ["point"], "value": "deli", "key": "shop"}, {"geom": ["point"], "value": "outdoor", "key": "shop"}, {"geom": ["point"], "value": "cable_distribution_cabinet", "key": "power"}, {"geom": ["point"], "value": "border_control", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "beach_resort", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "parking_entrance", "key": "amenity"}, {"geom": ["polygon"], "value": "wood", "key": "natural"}, {"geom": ["polygon", "point"], "value": "grave_yard", "key": "amenity"}, {"geom": ["point"], "value": "garden_centre", "key": "shop"}, {"geom": ["point"], "value": "florist", "key": "shop"}, {"geom": ["point"], "value": "beverages", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "block", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "parking", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "fast_food", "key": "amenity"}, {"geom": ["point"], "value": "gate", "key": "aeroway"}, {"geom": ["point"], "value": "jewelry", "key": "shop"}, {"geom": ["polygon", "point"], "value": "miniature_golf", "key": "leisure"}, {"geom": ["point"], "value": "furniture", "key": "shop"}, {"geom": ["point"], "value": "fuel", "key": "amenity"}, {"geom": ["line", "polygon", "point"], "value": "cliff", "key": "natural"}, {"geom": ["line"], "value": "service", "key": "highway"}, {"geom": ["point"], "value": "suburb", "key": "place"}, {"geom": ["line"], "value": "yes", "key": "tunnel"}, {"geom": ["line", "polygon"], "value": "primary", "key": "highway"}, {"geom": ["polygon", "point"], "value": "community_centre", "key": "amenity"}, {"geom": ["point"], "value": "butcher", "key": "shop"}, {"geom": ["point"], "value": "village", "key": "place"}, {"geom": ["line", "polygon"], "value": "living_street", "key": "highway"}, {"geom": ["polygon"], "value": "yes", "key": "building"}, {"geom": ["point"], "value": "traffic_signals", "key": "highway"}, {"geom": ["point"], "value": "supermarket", "key": "shop"}, {"geom": ["point"], "value": "car_rental", "key": "amenity"}, {"geom": ["point"], "value": "tree", "key": "natural"}, {"geom": ["line"], "value": "secondary_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "motorcycle_parking", "key": "amenity"}, {"geom": ["point"], "value": "locality", "key": "place"}, {"geom": ["polygon", "point"], "value": "food_court", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "fire_station", "key": "amenity"}, {"geom": ["point"], "value": "gambling", "key": "amenity"}, {"geom": ["point"], "value": "organic", "key": "shop"}, {"geom": ["point"], "value": "hamlet", "key": "place"}, {"geom": ["point"], "value": "department_store", "key": "shop"}, {"geom": ["polygon", "point"], "value": "townhall", "key": "amenity"}, {"geom": ["line", "point"], "value": "yes", "key": "ford"}, {"geom": ["point"], "value": "books", "key": "shop"}, {"geom": ["line", "polygon"], "value": "water_canal", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "caravan_site", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "museum", "key": "tourism"}, {"geom": ["line", "polygon"], "value": "residential", "key": "highway"}, {"geom": ["polygon", "point"], "value": "generator", "key": "power"}, {"geom": ["point"], "value": "recycling", "key": "amenity"}, {"geom": ["point"], "value": "convenience", "key": "shop"}, {"geom": ["polygon"], "value": "landfill", "key": "landuse"}, {"geom": ["point"], "value": "bus_stop", "key": "highway"}, {"geom": ["line"], "value": "trunk_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "tower", "key": "man_made"}, {"geom": ["polygon"], "value": "roundabout", "key": "junction"}, {"geom": ["polygon", "point"], "value": "biergarten", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "castle", "key": "historic"}, {"geom": ["point"], "value": "yes", "key": "traffic_calming"}]
+            "json_tags": [{
+                "geom": ["polygon", "point"],
+                "value": "station",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_tower",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "river",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon"],
+                "value": "yes",
+                "key": "area"
+            }, {
+                "geom": ["line"],
+                "value": "motorway_link",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "baby_hatch",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "pedestrian",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "pole",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hospital",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "clothes",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "path",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "nightclub",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "monument",
+                "key": "historic"
+            }, {
+                "geom": ["line"],
+                "value": "stream",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "post_office",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_works",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "1",
+                "key": "layer"
+            }, {
+                "geom": ["polygon"],
+                "value": "residential",
+                "key": "landuse"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "wall",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon"],
+                "value": "scree",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "terminal",
+                "key": "aeroway"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "artwork",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "bladder"
+            }, {
+                "geom": ["point"],
+                "value": "town",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "memorial",
+                "key": "historic"
+            }, {
+                "geom": ["point"],
+                "value": "fabric",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "motorway",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "kitchen",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "chemist",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "runway",
+                "key": "aeroway"
+            }, {
+                "geom": ["line", "point"],
+                "value": "waterfall",
+                "key": "waterway"
+            }, {
+                "geom": ["point"],
+                "value": "crossing",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "stadium",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "dry_cleaning",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "toll_booth",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "bureau_de_change",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "bicycle",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "college",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "grass",
+                "key": "surface"
+            }, {
+                "geom": ["point"],
+                "value": "electronics",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "mall",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wastewater_plant",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon"],
+                "value": "common",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "school",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "guest_house",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "library",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "police",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "mini_roundabout",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "shower",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "tertiary_link",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "tower",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "turning_circle",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "administrative",
+                "key": "office"
+            }, {
+                "geom": ["point"],
+                "value": "bank",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "blacksmith",
+                "key": "craft"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "taxi",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "hardware",
+                "key": "shop"
+            }, {
+                "geom": ["line", "point"],
+                "value": "bollard",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "laundry",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "industrial",
+                "key": "building"
+            }, {
+                "geom": ["point"],
+                "value": "car_sharing",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "arts_centre",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "kiosk",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "primary_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "borehole"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "camp_site",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "sports",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "video",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "hearing_aids",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "tertiary",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "atm",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "funeral_directors",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "city_wall",
+                "key": "barrier"
+            }, {
+                "geom": ["line"],
+                "value": "construction",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "car_wash",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "",
+                "key": "name"
+            }, {
+                "geom": ["point"],
+                "value": "musical_instrument",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "car_repair",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "isolated_dwelling",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "kindergarten",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "apron",
+                "key": "aeroway"
+            }, {
+                "geom": ["point"],
+                "value": "motorcycle",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "travel_agency",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "curtain",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bay",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "dentist",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fountain",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "street_lamp",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "watermill",
+                "key": "man_made"
+            }, {
+                "geom": ["point"],
+                "value": "seafood",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "doityourself",
+                "key": "shop"
+            }, {
+                "geom": ["line", "point"],
+                "value": "marketplace",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "secondary",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "copyshop",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "church",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "beach",
+                "key": "natural"
+            }, {
+                "geom": ["polygon"],
+                "value": "recreation_ground",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "variety_store",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "fence",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "post_box",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "waste_disposal",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "nursing_home",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "mosque",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "tank"
+            }, {
+                "geom": ["point"],
+                "value": "gate",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "shoes",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "unclassified",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "house",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "office",
+                "key": "information"
+            }, {
+                "geom": ["point"],
+                "value": "toys",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cinema",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "pipeline",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bicycle_parking",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "",
+                "key": "addr:housenumber"
+            }, {
+                "geom": ["point"],
+                "value": "government",
+                "key": "office"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hotel",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "passing_place",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "",
+                "key": "addr:street"
+            }, {
+                "geom": ["point"],
+                "value": "bicycle_rental",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "sports_centre",
+                "key": "leisure"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "track",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "doctors",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "tap"
+            }, {
+                "geom": ["polygon"],
+                "value": "village_green",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "boutique",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "vacuum_cleaner",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "residential",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bus_station",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "confectionery",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "nature_reserve",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "tailor",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "restaurant",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "aerodrome",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hostel",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "theatre",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "attraction",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "greengrocer",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "forest",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "viewpoint",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "stationery",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "trunk",
+                "key": "highway"
+            }, {
+                "geom": ["line"],
+                "value": "taxiway",
+                "key": "aeroway"
+            }, {
+                "geom": ["point"],
+                "value": "veterinary",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "fire_hydrant",
+                "key": "emergency"
+            }, {
+                "geom": ["point"],
+                "value": "pharmacy",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "entrance",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "mud",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pub",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bar",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "heath",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "alcohol",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "scrub",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "platform",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "waste_basket",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wetland",
+                "key": "natural"
+            }, {
+                "geom": ["polygon"],
+                "value": "school",
+                "key": "building"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "retaining_wall",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "alpine_hut",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon"],
+                "value": "fell",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "stop",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "well",
+                "key": "man_made"
+            }, {
+                "geom": ["point"],
+                "value": "erotic",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "hairdresser",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "neighbourhood",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "helipad",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hangar",
+                "key": "building"
+            }, {
+                "geom": ["point"],
+                "value": "mobile_phone",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "hedge",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "optician",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "spikes",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "golf_course",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "paint",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "tyres",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "courthouse",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "place_of_worship",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motel",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "bakery",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "toilets",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "university",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "park",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "photo",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "yes",
+                "key": "bicycle_road"
+            }, {
+                "geom": ["polygon"],
+                "value": "pitch",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "computer",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "frame",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "stadium",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "sub_station",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "city",
+                "key": "place"
+            }, {
+                "geom": ["point"],
+                "value": "hifi",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "track",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "prison",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "car",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "peak",
+                "key": "natural"
+            }, {
+                "geom": ["polygon"],
+                "value": "synagogue",
+                "key": "building"
+            }, {
+                "geom": ["point"],
+                "value": "deli",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "outdoor",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "cable_distribution_cabinet",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "border_control",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "beach_resort",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "parking_entrance",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "wood",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "grave_yard",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "garden_centre",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "florist",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "beverages",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "block",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "parking",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fast_food",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "gate",
+                "key": "aeroway"
+            }, {
+                "geom": ["point"],
+                "value": "jewelry",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "miniature_golf",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "furniture",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "fuel",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "cliff",
+                "key": "natural"
+            }, {
+                "geom": ["line"],
+                "value": "service",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "suburb",
+                "key": "place"
+            }, {
+                "geom": ["line"],
+                "value": "yes",
+                "key": "tunnel"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "primary",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "community_centre",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "butcher",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "village",
+                "key": "place"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "living_street",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "yes",
+                "key": "building"
+            }, {
+                "geom": ["point"],
+                "value": "traffic_signals",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "supermarket",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "car_rental",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "tree",
+                "key": "natural"
+            }, {
+                "geom": ["line"],
+                "value": "secondary_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motorcycle_parking",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "locality",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "food_court",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fire_station",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "gambling",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "organic",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "hamlet",
+                "key": "place"
+            }, {
+                "geom": ["point"],
+                "value": "department_store",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "townhall",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "point"],
+                "value": "yes",
+                "key": "ford"
+            }, {
+                "geom": ["point"],
+                "value": "books",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "water_canal",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "caravan_site",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "museum",
+                "key": "tourism"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "residential",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "generator",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "recycling",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "convenience",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "landfill",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "bus_stop",
+                "key": "highway"
+            }, {
+                "geom": ["line"],
+                "value": "trunk_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tower",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon"],
+                "value": "roundabout",
+                "key": "junction"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "biergarten",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "castle",
+                "key": "historic"
+            }, {
+                "geom": ["point"],
+                "value": "yes",
+                "key": "traffic_calming"
+            }]
         }
     },
     {
@@ -16,7 +1036,2179 @@
             "created_at": "2017-04-05T22:17:58.286Z",
             "updated_at": "2017-04-05T22:17:58.286Z",
             "name": "osm",
-            "json_tags": [{"geom": ["line", "polygon", "point"], "value": "knowledge", "key": "source"}, {"geom": ["line"], "value": "magic_carpet", "key": "aerialway"}, {"geom": ["polygon"], "value": "brownfield", "key": "landuse"}, {"geom": ["point"], "value": "street_lamp", "key": "highway"}, {"geom": ["polygon", "point"], "value": "clothes", "key": "shop"}, {"geom": ["polygon", "point"], "value": "nightclub", "key": "amenity"}, {"geom": ["polygon"], "value": "apron", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "post_office", "key": "amenity"}, {"geom": ["polygon"], "value": "bridge", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "garden", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "terminal", "key": "aeroway"}, {"geom": ["point"], "value": "column", "key": "advertising"}, {"geom": ["point"], "value": "drinking_water", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "memorial", "key": "historic"}, {"geom": ["line"], "value": "motorway", "key": "highway"}, {"geom": ["line", "polygon"], "value": "runway", "key": "aeroway"}, {"geom": ["line", "point"], "value": "waterfall", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "hangar", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "soccer", "key": "sport"}, {"geom": ["polygon", "point"], "value": "art", "key": "shop"}, {"geom": ["polygon", "point"], "value": "college", "key": "amenity"}, {"geom": ["point"], "value": "kissing_gate", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "pelota", "key": "sport"}, {"geom": ["polygon"], "value": "farmyard", "key": "landuse"}, {"geom": ["point"], "value": "hunting_stand", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "county", "key": "place"}, {"geom": ["point"], "value": "subway_entrance", "key": "railway"}, {"geom": ["polygon", "point"], "value": "shower", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "maritime", "key": "boundary"}, {"geom": ["point"], "value": "cattle_grid", "key": "barrier"}, {"geom": ["point"], "value": "halt", "key": "railway"}, {"geom": ["polygon"], "value": "water", "key": "natural"}, {"geom": ["polygon", "point"], "value": "continent", "key": "place"}, {"geom": ["polygon", "point"], "value": "taxi", "key": "amenity"}, {"geom": ["polygon"], "value": "enforcement", "key": "type"}, {"geom": ["polygon"], "value": "plant_nursery", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "station", "key": "public_transport"}, {"geom": ["line"], "value": "primary_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "sports", "key": "shop"}, {"geom": ["polygon", "point"], "value": "video", "key": "shop"}, {"geom": ["polygon", "point"], "value": "rest_area", "key": "highway"}, {"geom": ["polygon"], "value": "greenfield", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "casino", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "city_wall", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "miniature_golf", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "station", "key": "aerialway"}, {"geom": ["polygon", "point"], "value": "lighthouse", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "motorcycle", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bay", "key": "natural"}, {"geom": ["polygon", "point"], "value": "yes", "key": "junction"}, {"geom": ["polygon", "point"], "value": "fishing", "key": "leisure"}, {"geom": ["polygon"], "value": "waterway", "key": "type"}, {"geom": ["polygon", "point"], "value": "copyshop", "key": "shop"}, {"geom": ["polygon"], "value": "beach", "key": "natural"}, {"geom": ["polygon", "point"], "value": "brothel", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "electronics", "key": "shop"}, {"geom": ["polygon", "point"], "value": "variety_store", "key": "shop"}, {"geom": ["polygon"], "value": "scrub", "key": "natural"}, {"geom": ["polygon", "point"], "value": "nursing_home", "key": "amenity"}, {"geom": ["point"], "value": "give_way", "key": "highway"}, {"geom": ["polygon", "point"], "value": "region", "key": "place"}, {"geom": ["polygon", "point"], "value": "driving_school", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "chimney", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "diesel", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "pharmacy", "key": "amenity"}, {"geom": ["point"], "value": "charging_station", "key": "amenity"}, {"geom": ["point"], "value": "stop", "key": "highway"}, {"geom": ["polygon", "point"], "value": "mall", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "canoe", "key": "sport"}, {"geom": ["line"], "value": "avalanche_protector", "key": "tunnel"}, {"geom": ["point"], "value": "gate", "key": "aeroway"}, {"geom": ["line", "point"], "value": "parking_position", "key": "aeroway"}, {"geom": ["line", "polygon"], "value": "road", "key": "highway"}, {"geom": ["polygon", "point"], "value": "shoes", "key": "shop"}, {"geom": ["polygon", "point"], "value": "hostel", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "ice_hockey", "key": "sport"}, {"geom": ["polygon", "point"], "value": "spring", "key": "natural"}, {"geom": ["polygon", "point"], "value": "clinic", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "movable", "key": "bridge"}, {"geom": ["polygon", "point"], "value": "wave", "key": "generator:source"}, {"geom": ["point"], "value": "speed_camera", "key": "highway"}, {"geom": ["polygon", "point"], "value": "gymnastics", "key": "sport"}, {"geom": ["point"], "value": "turning_point", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "archaeological_site", "key": "historic"}, {"geom": ["polygon", "point"], "value": "oil", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "transformer", "key": "power"}, {"geom": ["polygon"], "value": "bridge", "key": "type"}, {"geom": ["polygon", "point"], "value": "coffee", "key": "shop"}, {"geom": ["polygon"], "value": "wetland", "key": "natural"}, {"geom": ["polygon"], "value": "street", "key": "type"}, {"geom": ["polygon", "point"], "value": "american_football", "key": "sport"}, {"geom": ["polygon", "point"], "value": "alpine_hut", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "bunker_silo", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "handball", "key": "sport"}, {"geom": ["polygon", "point"], "value": "farm", "key": "place"}, {"geom": ["point"], "value": "bump_gate", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "mobile_phone", "key": "shop"}, {"geom": ["polygon", "point"], "value": "shooting", "key": "sport"}, {"geom": ["polygon", "point"], "value": "music", "key": "shop"}, {"geom": ["polygon", "point"], "value": "motel", "key": "tourism"}, {"geom": ["polygon"], "value": "riverbank", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "compensator", "key": "power"}, {"geom": ["polygon", "point"], "value": "toilets", "key": "amenity"}, {"geom": ["polygon"], "value": "political", "key": "boundary"}, {"geom": ["point"], "value": "crossing", "key": "railway"}, {"geom": ["polygon", "point"], "value": "city", "key": "place"}, {"geom": ["polygon", "point"], "value": "wine", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bicycle_repair_station", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "outdoor", "key": "shop"}, {"geom": ["polygon", "point"], "value": "deli", "key": "shop"}, {"geom": ["polygon", "point"], "value": "motorcycle_parking", "key": "amenity"}, {"geom": ["polygon"], "value": "associatedStreet", "key": "type"}, {"geom": ["point"], "value": "swing_gate", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "embassy", "key": "amenity"}, {"geom": ["line"], "value": "culvert", "key": "tunnel"}, {"geom": ["line"], "value": "tertiary_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "hospital", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "horse_riding", "key": "leisure"}, {"geom": ["polygon"], "value": "village_green", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "alcohol", "key": "shop"}, {"geom": ["polygon", "point"], "value": "furniture", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "cliff", "key": "natural"}, {"geom": ["polygon", "point"], "value": "pet", "key": "shop"}, {"geom": ["polygon", "point"], "value": "suburb", "key": "place"}, {"geom": ["line"], "value": "yes", "key": "tunnel"}, {"geom": ["line", "polygon"], "value": "primary", "key": "highway"}, {"geom": ["polygon", "point"], "value": "yes", "key": "building"}, {"geom": ["polygon", "point"], "value": "volleyball", "key": "sport"}, {"geom": ["polygon", "point"], "value": "car_rental", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "veterinary", "key": "amenity"}, {"geom": ["polygon"], "value": "orchard", "key": "landuse"}, {"geom": ["line", "polygon"], "value": "administrative", "key": "boundary"}, {"geom": ["polygon", "point"], "value": "stripclub", "key": "amenity"}, {"geom": ["line", "polygon", "point"], "value": "historical", "key": "source"}, {"geom": ["line"], "value": "cycleway", "key": "highway"}, {"geom": ["point"], "value": "defibrillator", "key": "emergency"}, {"geom": ["polygon"], "value": "switchgear", "key": "power"}, {"geom": ["polygon", "point"], "value": "baby_hatch", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "museum", "key": "tourism"}, {"geom": ["point"], "value": "motorway_junction", "key": "highway"}, {"geom": ["polygon", "point"], "value": "beverages", "key": "shop"}, {"geom": ["point"], "value": "city_limit", "key": "traffic_sign"}, {"geom": ["line"], "value": "trunk_link", "key": "highway"}, {"geom": ["polygon", "point"], "value": "water_park", "key": "leisure"}, {"geom": ["line"], "value": "light_rail", "key": "railway"}, {"geom": ["polygon", "point"], "value": "water_tower", "key": "man_made"}, {"geom": ["line"], "value": "motorway_link", "key": "highway"}, {"geom": ["line", "polygon"], "value": "pedestrian", "key": "highway"}, {"geom": ["polygon", "point"], "value": "guest_house", "key": "tourism"}, {"geom": ["line", "polygon", "point"], "value": "block", "key": "barrier"}, {"geom": ["point"], "value": "level_crossing", "key": "railway"}, {"geom": ["line"], "value": "colonnade", "key": "covered"}, {"geom": ["polygon", "point"], "value": "coal", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "tailor", "key": "shop"}, {"geom": ["line", "polygon"], "value": "ridge", "key": "natural"}, {"geom": ["point"], "value": "pylon", "key": "aerialway"}, {"geom": ["polygon", "point"], "value": "town", "key": "place"}, {"geom": ["polygon", "point"], "value": "horse_racing", "key": "sport"}, {"geom": ["polygon", "point"], "value": "fabric", "key": "shop"}, {"geom": ["polygon", "point"], "value": "chemist", "key": "shop"}, {"geom": ["point"], "value": "crossing", "key": "highway"}, {"geom": ["polygon", "point"], "value": "stadium", "key": "leisure"}, {"geom": ["point"], "value": "clock", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "works", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "windmill", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "bureau_de_change", "key": "amenity"}, {"geom": ["polygon"], "value": "common", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "school", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "kiosk", "key": "shop"}, {"geom": ["polygon", "point"], "value": "multi", "key": "sport"}, {"geom": ["polygon", "point"], "value": "medical_supply", "key": "shop"}, {"geom": ["polygon", "point"], "value": "toll_booth", "key": "barrier"}, {"geom": ["point"], "value": "tower", "key": "power"}, {"geom": ["point"], "value": "turning_circle", "key": "highway"}, {"geom": ["polygon", "point"], "value": "newsagent", "key": "shop"}, {"geom": ["polygon", "point"], "value": "dog_park", "key": "leisure"}, {"geom": ["polygon"], "value": "farmland", "key": "landuse"}, {"geom": ["line", "polygon"], "value": "secondary", "key": "highway"}, {"geom": ["polygon", "point"], "value": "laundry", "key": "shop"}, {"geom": ["polygon", "point"], "value": "storage_tank", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "community_centre", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "camp_site", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "biofuel", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "neighbourhood", "key": "place"}, {"geom": ["polygon"], "value": "plant", "key": "power"}, {"geom": ["polygon", "point"], "value": "9pin", "key": "sport"}, {"geom": ["polygon", "point"], "value": "rugby_league", "key": "sport"}, {"geom": ["polygon", "point"], "value": "pub", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "beachvolleyball", "key": "sport"}, {"geom": ["polygon", "point"], "value": "curtain", "key": "shop"}, {"geom": ["polygon", "point"], "value": "castle", "key": "historic"}, {"geom": ["point"], "value": "flagpole", "key": "man_made"}, {"geom": ["line"], "value": "abandoned", "key": "railway"}, {"geom": ["polygon"], "value": "restriction", "key": "type"}, {"geom": ["polygon", "point"], "value": "seafood", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "marketplace", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "dentist", "key": "amenity"}, {"geom": ["point"], "value": "waste_disposal", "key": "amenity"}, {"geom": ["line"], "value": "drain", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "safety_training", "key": "sport"}, {"geom": ["point"], "value": "gate", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "golf", "key": "sport"}, {"geom": ["line", "polygon"], "value": "unclassified", "key": "highway"}, {"geom": ["polygon", "point"], "value": "toys", "key": "shop"}, {"geom": ["line"], "value": "pipeline", "key": "man_made"}, {"geom": ["line", "polygon", "point"], "value": "bicycle_parking", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "pawnbroker", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "climbing", "key": "sport"}, {"geom": ["polygon", "point"], "value": "sports_centre", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "reservoir", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "grave_yard", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "rugby_union", "key": "sport"}, {"geom": ["polygon", "point"], "value": "courthouse", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "scuba_diving", "key": "sport"}, {"geom": ["point"], "value": "stile", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "greengrocer", "key": "shop"}, {"geom": ["line"], "value": "cable_car", "key": "aerialway"}, {"geom": ["polygon", "point"], "value": "glacier", "key": "natural"}, {"geom": ["line"], "value": "trunk", "key": "highway"}, {"geom": ["line", "polygon"], "value": "taxiway", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "arts_centre", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "social_facility", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "sanitary_dump_station", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "farm", "key": "shop"}, {"geom": ["polygon", "point"], "value": "services", "key": "highway"}, {"geom": ["point"], "value": "telephone", "key": "amenity"}, {"geom": ["point"], "value": "picnic_table", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "cave_entrance", "key": "natural"}, {"geom": ["polygon", "point"], "value": "wayside_cross", "key": "historic"}, {"geom": ["line", "polygon"], "value": "living_street", "key": "highway"}, {"geom": ["polygon", "point"], "value": "department_store", "key": "shop"}, {"geom": ["point"], "value": "lift_gate", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "sauna", "key": "leisure"}, {"geom": ["line"], "value": "mixed_lift", "key": "aerialway"}, {"geom": ["polygon", "point"], "value": "cricket", "key": "sport"}, {"geom": ["polygon", "point"], "value": "golf_course", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "fuel", "key": "waterway"}, {"geom": ["polygon"], "value": "military", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "university", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "pitch", "key": "leisure"}, {"geom": ["line", "polygon", "point"], "value": "track", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "car_wash", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "mineshaft", "key": "man_made"}, {"geom": ["line"], "value": "subway", "key": "railway"}, {"geom": ["polygon"], "value": "meadow", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "skateboard", "key": "sport"}, {"geom": ["polygon"], "value": "destination_sign", "key": "type"}, {"geom": ["point"], "value": "peak", "key": "natural"}, {"geom": ["point"], "value": "phone", "key": "emergency"}, {"geom": ["point"], "value": "switch", "key": "railway"}, {"geom": ["line", "polygon"], "value": "raceway", "key": "highway"}, {"geom": ["point"], "value": "border_control", "key": "barrier"}, {"geom": ["polygon"], "value": "wood", "key": "natural"}, {"geom": ["polygon", "point"], "value": "croquet", "key": "sport"}, {"geom": ["line", "polygon", "point"], "value": "platform", "key": "public_transport"}, {"geom": ["polygon", "point"], "value": "tidal", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "beauty", "key": "shop"}, {"geom": ["polygon", "point"], "value": "fuel", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "viewpoint", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "converter", "key": "power"}, {"geom": ["polygon"], "value": "bare_rock", "key": "natural"}, {"geom": ["line", "polygon"], "value": "postal_code", "key": "boundary"}, {"geom": ["polygon", "point"], "value": "ferry_terminal", "key": "amenity"}, {"geom": ["polygon"], "value": "sand", "key": "natural"}, {"geom": ["line"], "value": "secondary_link", "key": "highway"}, {"geom": ["line"], "value": "disused", "key": "railway"}, {"geom": ["polygon", "point"], "value": "boules", "key": "sport"}, {"geom": ["point"], "value": "adit", "key": "man_made"}, {"geom": ["line", "point"], "value": "bench", "key": "amenity"}, {"geom": ["line", "point"], "value": "yes", "key": "ford"}, {"geom": ["line"], "value": "building_passage", "key": "tunnel"}, {"geom": ["line", "polygon"], "value": "residential", "key": "highway"}, {"geom": ["polygon"], "value": "mud", "key": "natural"}, {"geom": ["point"], "value": "turning_loop", "key": "highway"}, {"geom": ["point"], "value": "bus_stop", "key": "highway"}, {"geom": ["polygon", "point"], "value": "dock", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "tea", "key": "shop"}, {"geom": ["polygon", "point"], "value": "biergarten", "key": "amenity"}, {"geom": ["line"], "value": "monorail", "key": "railway"}, {"geom": ["polygon"], "value": "route_master", "key": "type"}, {"geom": ["line", "polygon"], "value": "tertiary", "key": "highway"}, {"geom": ["line", "polygon"], "value": "construction", "key": "highway"}, {"geom": ["polygon", "point"], "value": "monument", "key": "historic"}, {"geom": ["polygon", "point"], "value": "public_building", "key": "amenity"}, {"geom": ["line"], "value": "stream", "key": "waterway"}, {"geom": ["line"], "value": "embankment", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "water_works", "key": "man_made"}, {"geom": ["polygon"], "value": "grass", "key": "landuse"}, {"geom": ["point"], "value": "traffic_mirror", "key": "highway"}, {"geom": ["line"], "value": "goods", "key": "aerialway"}, {"geom": ["polygon"], "value": "garages", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "country", "key": "place"}, {"geom": ["polygon", "point"], "value": "gas", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "cafe", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "tattoo", "key": "shop"}, {"geom": ["line"], "value": "preserved", "key": "railway"}, {"geom": ["line", "polygon"], "value": "platform", "key": "railway"}, {"geom": ["polygon", "point"], "value": "crane", "key": "man_made"}, {"geom": ["line"], "value": "escape", "key": "highway"}, {"geom": ["polygon", "point"], "value": "wastewater_plant", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "solar", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "surveillance", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "archery", "key": "sport"}, {"geom": ["polygon", "point"], "value": "supermarket", "key": "shop"}, {"geom": ["polygon", "point"], "value": "picnic_site", "key": "tourism"}, {"geom": ["point"], "value": "passing_place", "key": "highway"}, {"geom": ["polygon"], "value": "cemetery", "key": "landuse"}, {"geom": ["point"], "value": "turnstile", "key": "barrier"}, {"geom": ["line", "polygon"], "value": "ferry", "key": "route"}, {"geom": ["polygon"], "value": "public_transport", "key": "type"}, {"geom": ["point"], "value": "buffer_stop", "key": "railway"}, {"geom": ["polygon", "point"], "value": "station", "key": "railway"}, {"geom": ["polygon", "point"], "value": "car_sharing", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "rc_car", "key": "sport"}, {"geom": ["line"], "value": "survey", "key": "source"}, {"geom": ["polygon"], "value": "tunnel", "key": "type"}, {"geom": ["polygon", "point"], "value": "gift", "key": "shop"}, {"geom": ["polygon", "point"], "value": "frame", "key": "shop"}, {"geom": ["polygon", "point"], "value": "gasoline", "key": "generator:source"}, {"geom": ["line", "polygon"], "value": "coastline", "key": "natural"}, {"geom": ["polygon", "point"], "value": "musical_instrument", "key": "shop"}, {"geom": ["polygon"], "value": "religious", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "isolated_dwelling", "key": "place"}, {"geom": ["polygon", "point"], "value": "ticket", "key": "shop"}, {"geom": ["polygon"], "value": "park", "key": "leisure"}, {"geom": ["polygon"], "value": "allotments", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "ranger_station", "key": "amenity"}, {"geom": ["point"], "value": "grit_bin", "key": "amenity"}, {"geom": ["line"], "value": "gondola", "key": "aerialway"}, {"geom": ["polygon", "point"], "value": "wind", "key": "generator:source"}, {"geom": ["point"], "value": "billboard", "key": "advertising"}, {"geom": ["polygon"], "value": "protected_area", "key": "boundary"}, {"geom": ["polygon", "point"], "value": "cinema", "key": "amenity"}, {"geom": ["line"], "value": "cable", "key": "power"}, {"geom": ["line", "polygon"], "value": "track", "key": "highway"}, {"geom": ["polygon", "point"], "value": "doctors", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "bus_station", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "confectionery", "key": "shop"}, {"geom": ["polygon", "point"], "value": "nature_reserve", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "hydro", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "nuclear", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "theatre", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "attraction", "key": "tourism"}, {"geom": ["polygon"], "value": "forest", "key": "landuse"}, {"geom": ["polygon"], "value": "national_park", "key": "boundary"}, {"geom": ["polygon", "point"], "value": "bbq", "key": "amenity"}, {"geom": ["polygon"], "value": "commercial", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "studio", "key": "amenity"}, {"geom": ["point"], "value": "fire_hydrant", "key": "emergency"}, {"geom": ["polygon", "point"], "value": "house", "key": "building"}, {"geom": ["point"], "value": "entrance", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "field_hockey", "key": "sport"}, {"geom": ["polygon", "point"], "value": "stone", "key": "natural"}, {"geom": ["line"], "value": "bridleway", "key": "highway"}, {"geom": ["polygon", "point"], "value": "bar", "key": "amenity"}, {"geom": ["polygon"], "value": "multipolygon", "key": "type"}, {"geom": ["point"], "value": "switch", "key": "power"}, {"geom": ["polygon", "point"], "value": "parking_space", "key": "amenity"}, {"geom": ["line"], "value": "steps", "key": "highway"}, {"geom": ["polygon", "point"], "value": "motor", "key": "sport"}, {"geom": ["polygon", "point"], "value": "cycling", "key": "sport"}, {"geom": ["point"], "value": "sally_port", "key": "barrier"}, {"geom": ["line", "polygon"], "value": "retaining_wall", "key": "barrier"}, {"geom": ["polygon"], "value": "railway", "key": "landuse"}, {"geom": ["point"], "value": "parking_entrance", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "guard_rail", "key": "barrier"}, {"geom": ["line", "point"], "value": "slipway", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "fire_station", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "bag", "key": "shop"}, {"geom": ["polygon"], "value": "residential", "key": "landuse"}, {"geom": ["polygon"], "value": "network", "key": "type"}, {"geom": ["line"], "value": "ditch", "key": "waterway"}, {"geom": ["line", "polygon", "point"], "value": "image", "key": "source"}, {"geom": ["line", "polygon", "point"], "value": "kerb", "key": "barrier"}, {"geom": ["polygon"], "value": "construction", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "theme_park", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "tennis", "key": "sport"}, {"geom": ["line"], "value": "yes", "key": "bicycle_road"}, {"geom": ["polygon", "point"], "value": "boundary_stone", "key": "historic"}, {"geom": ["line"], "value": "tree_row", "key": "natural"}, {"geom": ["polygon", "point"], "value": "hifi", "key": "shop"}, {"geom": ["line", "polygon"], "value": "valley", "key": "natural"}, {"geom": ["polygon", "point"], "value": "10pin", "key": "sport"}, {"geom": ["polygon", "point"], "value": "paint", "key": "shop"}, {"geom": ["polygon", "point"], "value": "car", "key": "shop"}, {"geom": ["line", "polygon", "point"], "value": "pier", "key": "man_made"}, {"geom": ["line", "polygon"], "value": "groyne", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "athletics", "key": "sport"}, {"geom": ["polygon", "point"], "value": "car_parts", "key": "shop"}, {"geom": ["polygon", "point"], "value": "tower", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "running", "key": "sport"}, {"geom": ["polygon"], "value": "vineyard", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "fast_food", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "jewelry", "key": "shop"}, {"geom": ["polygon", "point"], "value": "dry_cleaning", "key": "shop"}, {"geom": ["line", "polygon"], "value": "ditch", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "battlefield", "key": "historic"}, {"geom": ["line"], "value": "canal", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "racquet", "key": "sport"}, {"geom": ["point"], "value": "traffic_signals", "key": "highway"}, {"geom": ["point"], "value": "lock_gate", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "chalet", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "locality", "key": "place"}, {"geom": ["polygon", "point"], "value": "food_court", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "hamlet", "key": "place"}, {"geom": ["line"], "value": "rail", "key": "railway"}, {"geom": ["line"], "value": "footway", "key": "highway"}, {"geom": ["polygon", "point"], "value": "caravan_site", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "antiques", "key": "shop"}, {"geom": ["polygon", "point"], "value": "books", "key": "shop"}, {"geom": ["polygon", "point"], "value": "convenience", "key": "shop"}, {"geom": ["polygon", "point"], "value": "dog_racing", "key": "sport"}, {"geom": ["polygon"], "value": "landfill", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "interior_decoration", "key": "shop"}, {"geom": ["polygon"], "value": "grassland", "key": "natural"}, {"geom": ["line", "polygon", "point"], "value": "roundabout", "key": "junction"}, {"geom": ["polygon", "point"], "value": "swimming", "key": "sport"}, {"geom": ["polygon", "point"], "value": "water_well", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "basin", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "florist", "key": "shop"}, {"geom": ["line"], "value": "river", "key": "waterway"}, {"geom": ["point"], "value": "volcano", "key": "natural"}, {"geom": ["point"], "value": "tram_stop", "key": "railway"}, {"geom": ["polygon", "point"], "value": "parking", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "biogas", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "library", "key": "amenity"}, {"geom": ["line", "polygon"], "value": "wall", "key": "barrier"}, {"geom": ["polygon"], "value": "scree", "key": "natural"}, {"geom": ["line", "polygon", "point"], "value": "artwork", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "police", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "island", "key": "place"}, {"geom": ["polygon", "point"], "value": "model_aerodrome", "key": "sport"}, {"geom": ["polygon", "point"], "value": "kitchen", "key": "shop"}, {"geom": ["polygon", "point"], "value": "gasometer", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "gaelic_games", "key": "sport"}, {"geom": ["polygon", "point"], "value": "karting", "key": "sport"}, {"geom": ["polygon", "point"], "value": "basketball", "key": "sport"}, {"geom": ["point"], "value": "windsock", "key": "aeroway"}, {"geom": ["point"], "value": "mini_roundabout", "key": "highway"}, {"geom": ["polygon", "point"], "value": "butcher", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bank", "key": "amenity"}, {"geom": ["line"], "value": "tram", "key": "railway"}, {"geom": ["polygon", "point"], "value": "hardware", "key": "shop"}, {"geom": ["polygon", "point"], "value": "state", "key": "place"}, {"geom": ["polygon", "point"], "value": "islet", "key": "place"}, {"geom": ["polygon", "point"], "value": "boatyard", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "hearing_aids", "key": "shop"}, {"geom": ["polygon", "point"], "value": "waste", "key": "generator:source"}, {"geom": ["point"], "value": "atm", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "zoo", "key": "tourism"}, {"geom": ["line", "polygon", "point"], "value": "", "key": "name"}, {"geom": ["polygon", "point"], "value": "car_repair", "key": "shop"}, {"geom": ["polygon"], "value": "retail", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "travel_agency", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bed", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bookmaker", "key": "shop"}, {"geom": ["polygon", "point"], "value": "fountain", "key": "amenity"}, {"geom": ["polygon"], "value": "quarry", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "doityourself", "key": "shop"}, {"geom": ["polygon", "point"], "value": "bicycle", "key": "shop"}, {"geom": ["polygon", "point"], "value": "garden_centre", "key": "shop"}, {"geom": ["polygon", "point"], "value": "reservoir_covered", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "video_games", "key": "shop"}, {"geom": ["polygon"], "value": "recreation_ground", "key": "landuse"}, {"geom": ["line", "polygon"], "value": "fence", "key": "barrier"}, {"geom": ["point"], "value": "post_box", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "equestrian", "key": "sport"}, {"geom": ["polygon", "point"], "value": "australian_football", "key": "sport"}, {"geom": ["polygon", "point"], "value": "motocross", "key": "sport"}, {"geom": ["line"], "value": "bus_guideway", "key": "highway"}, {"geom": ["polygon"], "value": "industrial", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "hotel", "key": "tourism"}, {"geom": ["polygon", "point"], "value": "monitoring_station", "key": "man_made"}, {"geom": ["polygon", "point"], "value": "bicycle_rental", "key": "amenity"}, {"geom": ["point"], "value": "hampshire_gate", "key": "barrier"}, {"geom": ["line", "point"], "value": "bollard", "key": "barrier"}, {"geom": ["point"], "value": "tree", "key": "natural"}, {"geom": ["polygon", "point"], "value": "boutique", "key": "shop"}, {"geom": ["polygon", "point"], "value": "vacuum_cleaner", "key": "shop"}, {"geom": ["polygon", "point"], "value": "residential", "key": "building"}, {"geom": ["polygon", "point"], "value": "townhall", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "table_tennis", "key": "sport"}, {"geom": ["polygon", "point"], "value": "restaurant", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "aerodrome", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "stationery", "key": "shop"}, {"geom": ["line"], "value": "cutline", "key": "man_made"}, {"geom": ["line", "polygon", "point"], "value": "dam", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "substation", "key": "power"}, {"geom": ["point"], "value": "spikes", "key": "barrier"}, {"geom": ["line"], "value": "narrow_gauge", "key": "railway"}, {"geom": ["polygon", "point"], "value": "biomass", "key": "generator:source"}, {"geom": ["line", "point"], "value": "weir", "key": "waterway"}, {"geom": ["polygon", "point"], "value": "watermill", "key": "man_made"}, {"geom": ["polygon"], "value": "heath", "key": "natural"}, {"geom": ["line", "polygon", "point"], "value": "platform", "key": "highway"}, {"geom": ["line", "polygon"], "value": "breakwater", "key": "man_made"}, {"geom": ["point"], "value": "waste_basket", "key": "amenity"}, {"geom": ["point"], "value": "saddle", "key": "natural"}, {"geom": ["polygon"], "value": "fell", "key": "natural"}, {"geom": ["polygon", "point"], "value": "erotic", "key": "shop"}, {"geom": ["polygon", "point"], "value": "hairdresser", "key": "shop"}, {"geom": ["polygon", "point"], "value": "funeral_directors", "key": "shop"}, {"geom": ["polygon", "point"], "value": "helipad", "key": "aeroway"}, {"geom": ["polygon", "point"], "value": "wayside_shrine", "key": "historic"}, {"geom": ["polygon"], "value": "boundary", "key": "type"}, {"geom": ["line", "polygon"], "value": "hedge", "key": "barrier"}, {"geom": ["polygon", "point"], "value": "swimming_pool", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "tyres", "key": "shop"}, {"geom": ["polygon", "point"], "value": "ruins", "key": "historic"}, {"geom": ["polygon", "point"], "value": "emergency_access_point", "key": "highway"}, {"geom": ["polygon", "point"], "value": "bakery", "key": "shop"}, {"geom": ["point"], "value": "cycle_barrier", "key": "barrier"}, {"geom": ["line"], "value": "chair_lift", "key": "aerialway"}, {"geom": ["line", "polygon", "point"], "value": "elevator", "key": "highway"}, {"geom": ["polygon", "point"], "value": "marina", "key": "leisure"}, {"geom": ["point"], "value": "stop_position", "key": "public_transport"}, {"geom": ["polygon", "point"], "value": "prison", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "playground", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "lottery", "key": "shop"}, {"geom": ["point"], "value": "cable_distribution_cabinet", "key": "power"}, {"geom": ["polygon", "point"], "value": "canadian_football", "key": "sport"}, {"geom": ["polygon"], "value": "greenhouse_horticulture", "key": "landuse"}, {"geom": ["polygon", "point"], "value": "bowls", "key": "sport"}, {"geom": ["point"], "value": "bus_trap", "key": "barrier"}, {"geom": ["point"], "value": "survey_point", "key": "man_made"}, {"geom": ["line", "polygon", "point"], "value": "chain", "key": "barrier"}, {"geom": ["line"], "value": "arcade", "key": "covered"}, {"geom": ["polygon", "point"], "value": "osmotic", "key": "generator:source"}, {"geom": ["polygon", "point"], "value": "turntable", "key": "railway"}, {"geom": ["polygon", "point"], "value": "village", "key": "place"}, {"geom": ["polygon", "point"], "value": "kindergarten", "key": "amenity"}, {"geom": ["polygon", "point"], "value": "shelter", "key": "amenity"}, {"geom": ["polygon"], "value": "site", "key": "type"}, {"geom": ["polygon", "point"], "value": "palaeontological_site", "key": "geological"}, {"geom": ["polygon", "point"], "value": "skating", "key": "sport"}, {"geom": ["polygon", "point"], "value": "baseball", "key": "sport"}, {"geom": ["polygon", "point"], "value": "geothermal", "key": "generator:source"}, {"geom": ["point"], "value": "yes", "key": "mountain_pass"}, {"geom": ["polygon", "point"], "value": "computer", "key": "shop"}, {"geom": ["polygon", "point"], "value": "firepit", "key": "leisure"}, {"geom": ["polygon", "point"], "value": "rock", "key": "natural"}, {"geom": ["polygon", "point"], "value": "optician", "key": "shop"}, {"geom": ["polygon", "point"], "value": "billiards", "key": "sport"}]
+            "json_tags": [{
+                "geom": ["line", "polygon", "point"],
+                "value": "knowledge",
+                "key": "source"
+            }, {
+                "geom": ["line"],
+                "value": "magic_carpet",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon"],
+                "value": "brownfield",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "street_lamp",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "clothes",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "nightclub",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "apron",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "post_office",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "bridge",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "garden",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "terminal",
+                "key": "aeroway"
+            }, {
+                "geom": ["point"],
+                "value": "column",
+                "key": "advertising"
+            }, {
+                "geom": ["point"],
+                "value": "drinking_water",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "memorial",
+                "key": "historic"
+            }, {
+                "geom": ["line"],
+                "value": "motorway",
+                "key": "highway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "runway",
+                "key": "aeroway"
+            }, {
+                "geom": ["line", "point"],
+                "value": "waterfall",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hangar",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "soccer",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "art",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "college",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "kissing_gate",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pelota",
+                "key": "sport"
+            }, {
+                "geom": ["polygon"],
+                "value": "farmyard",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "hunting_stand",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "county",
+                "key": "place"
+            }, {
+                "geom": ["point"],
+                "value": "subway_entrance",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "shower",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "maritime",
+                "key": "boundary"
+            }, {
+                "geom": ["point"],
+                "value": "cattle_grid",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "halt",
+                "key": "railway"
+            }, {
+                "geom": ["polygon"],
+                "value": "water",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "continent",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "taxi",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "enforcement",
+                "key": "type"
+            }, {
+                "geom": ["polygon"],
+                "value": "plant_nursery",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "station",
+                "key": "public_transport"
+            }, {
+                "geom": ["line"],
+                "value": "primary_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "sports",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "video",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "rest_area",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "greenfield",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "casino",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "city_wall",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "miniature_golf",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "station",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "lighthouse",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motorcycle",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bay",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "junction"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fishing",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon"],
+                "value": "waterway",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "copyshop",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "beach",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "brothel",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "electronics",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "variety_store",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "scrub",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "nursing_home",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "give_way",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "region",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "driving_school",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "chimney",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "diesel",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pharmacy",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "charging_station",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "stop",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "mall",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "canoe",
+                "key": "sport"
+            }, {
+                "geom": ["line"],
+                "value": "avalanche_protector",
+                "key": "tunnel"
+            }, {
+                "geom": ["point"],
+                "value": "gate",
+                "key": "aeroway"
+            }, {
+                "geom": ["line", "point"],
+                "value": "parking_position",
+                "key": "aeroway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "road",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "shoes",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hostel",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "ice_hockey",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "spring",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "clinic",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "movable",
+                "key": "bridge"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wave",
+                "key": "generator:source"
+            }, {
+                "geom": ["point"],
+                "value": "speed_camera",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gymnastics",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "turning_point",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "archaeological_site",
+                "key": "historic"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "oil",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "transformer",
+                "key": "power"
+            }, {
+                "geom": ["polygon"],
+                "value": "bridge",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "coffee",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "wetland",
+                "key": "natural"
+            }, {
+                "geom": ["polygon"],
+                "value": "street",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "american_football",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "alpine_hut",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bunker_silo",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "handball",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "farm",
+                "key": "place"
+            }, {
+                "geom": ["point"],
+                "value": "bump_gate",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "mobile_phone",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "shooting",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "music",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motel",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon"],
+                "value": "riverbank",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "compensator",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "toilets",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "political",
+                "key": "boundary"
+            }, {
+                "geom": ["point"],
+                "value": "crossing",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "city",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wine",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bicycle_repair_station",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "outdoor",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "deli",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motorcycle_parking",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "associatedStreet",
+                "key": "type"
+            }, {
+                "geom": ["point"],
+                "value": "swing_gate",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "embassy",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "culvert",
+                "key": "tunnel"
+            }, {
+                "geom": ["line"],
+                "value": "tertiary_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hospital",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "horse_riding",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon"],
+                "value": "village_green",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "alcohol",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "furniture",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "cliff",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pet",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "suburb",
+                "key": "place"
+            }, {
+                "geom": ["line"],
+                "value": "yes",
+                "key": "tunnel"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "primary",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "yes",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "volleyball",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car_rental",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "veterinary",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "orchard",
+                "key": "landuse"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "administrative",
+                "key": "boundary"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "stripclub",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "historical",
+                "key": "source"
+            }, {
+                "geom": ["line"],
+                "value": "cycleway",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "defibrillator",
+                "key": "emergency"
+            }, {
+                "geom": ["polygon"],
+                "value": "switchgear",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "baby_hatch",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "museum",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "motorway_junction",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "beverages",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "city_limit",
+                "key": "traffic_sign"
+            }, {
+                "geom": ["line"],
+                "value": "trunk_link",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_park",
+                "key": "leisure"
+            }, {
+                "geom": ["line"],
+                "value": "light_rail",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_tower",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "motorway_link",
+                "key": "highway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "pedestrian",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "guest_house",
+                "key": "tourism"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "block",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "level_crossing",
+                "key": "railway"
+            }, {
+                "geom": ["line"],
+                "value": "colonnade",
+                "key": "covered"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "coal",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tailor",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "ridge",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "pylon",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "town",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "horse_racing",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fabric",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "chemist",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "crossing",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "stadium",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "clock",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "works",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "windmill",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bureau_de_change",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "common",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "school",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "kiosk",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "multi",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "medical_supply",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "toll_booth",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "tower",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "turning_circle",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "newsagent",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "dog_park",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon"],
+                "value": "farmland",
+                "key": "landuse"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "secondary",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "laundry",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "storage_tank",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "community_centre",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "camp_site",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "biofuel",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "neighbourhood",
+                "key": "place"
+            }, {
+                "geom": ["polygon"],
+                "value": "plant",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "9pin",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "rugby_league",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pub",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "beachvolleyball",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "curtain",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "castle",
+                "key": "historic"
+            }, {
+                "geom": ["point"],
+                "value": "flagpole",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "abandoned",
+                "key": "railway"
+            }, {
+                "geom": ["polygon"],
+                "value": "restriction",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "seafood",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "marketplace",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "dentist",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "waste_disposal",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "drain",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "safety_training",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "gate",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "golf",
+                "key": "sport"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "unclassified",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "toys",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "pipeline",
+                "key": "man_made"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "bicycle_parking",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pawnbroker",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "climbing",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "sports_centre",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "reservoir",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "grave_yard",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "rugby_union",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "courthouse",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "scuba_diving",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "stile",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "greengrocer",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "cable_car",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "glacier",
+                "key": "natural"
+            }, {
+                "geom": ["line"],
+                "value": "trunk",
+                "key": "highway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "taxiway",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "arts_centre",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "social_facility",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "sanitary_dump_station",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "farm",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "services",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "telephone",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "picnic_table",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cave_entrance",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wayside_cross",
+                "key": "historic"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "living_street",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "department_store",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "lift_gate",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "sauna",
+                "key": "leisure"
+            }, {
+                "geom": ["line"],
+                "value": "mixed_lift",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cricket",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "golf_course",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fuel",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon"],
+                "value": "military",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "university",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "pitch",
+                "key": "leisure"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "track",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car_wash",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "mineshaft",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "subway",
+                "key": "railway"
+            }, {
+                "geom": ["polygon"],
+                "value": "meadow",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "skateboard",
+                "key": "sport"
+            }, {
+                "geom": ["polygon"],
+                "value": "destination_sign",
+                "key": "type"
+            }, {
+                "geom": ["point"],
+                "value": "peak",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "phone",
+                "key": "emergency"
+            }, {
+                "geom": ["point"],
+                "value": "switch",
+                "key": "railway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "raceway",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "border_control",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon"],
+                "value": "wood",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "croquet",
+                "key": "sport"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "platform",
+                "key": "public_transport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tidal",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "beauty",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fuel",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "viewpoint",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "converter",
+                "key": "power"
+            }, {
+                "geom": ["polygon"],
+                "value": "bare_rock",
+                "key": "natural"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "postal_code",
+                "key": "boundary"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "ferry_terminal",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "sand",
+                "key": "natural"
+            }, {
+                "geom": ["line"],
+                "value": "secondary_link",
+                "key": "highway"
+            }, {
+                "geom": ["line"],
+                "value": "disused",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "boules",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "adit",
+                "key": "man_made"
+            }, {
+                "geom": ["line", "point"],
+                "value": "bench",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "point"],
+                "value": "yes",
+                "key": "ford"
+            }, {
+                "geom": ["line"],
+                "value": "building_passage",
+                "key": "tunnel"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "residential",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "mud",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "turning_loop",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "bus_stop",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "dock",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tea",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "biergarten",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "monorail",
+                "key": "railway"
+            }, {
+                "geom": ["polygon"],
+                "value": "route_master",
+                "key": "type"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "tertiary",
+                "key": "highway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "construction",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "monument",
+                "key": "historic"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "public_building",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "stream",
+                "key": "waterway"
+            }, {
+                "geom": ["line"],
+                "value": "embankment",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_works",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon"],
+                "value": "grass",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "traffic_mirror",
+                "key": "highway"
+            }, {
+                "geom": ["line"],
+                "value": "goods",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon"],
+                "value": "garages",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "country",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gas",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cafe",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tattoo",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "preserved",
+                "key": "railway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "platform",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "crane",
+                "key": "man_made"
+            }, {
+                "geom": ["line"],
+                "value": "escape",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wastewater_plant",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "solar",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "surveillance",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "archery",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "supermarket",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "picnic_site",
+                "key": "tourism"
+            }, {
+                "geom": ["point"],
+                "value": "passing_place",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "cemetery",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "turnstile",
+                "key": "barrier"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "ferry",
+                "key": "route"
+            }, {
+                "geom": ["polygon"],
+                "value": "public_transport",
+                "key": "type"
+            }, {
+                "geom": ["point"],
+                "value": "buffer_stop",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "station",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car_sharing",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "rc_car",
+                "key": "sport"
+            }, {
+                "geom": ["line"],
+                "value": "survey",
+                "key": "source"
+            }, {
+                "geom": ["polygon"],
+                "value": "tunnel",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gift",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "frame",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gasoline",
+                "key": "generator:source"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "coastline",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "musical_instrument",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "religious",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "isolated_dwelling",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "ticket",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "park",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon"],
+                "value": "allotments",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "ranger_station",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "grit_bin",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "gondola",
+                "key": "aerialway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wind",
+                "key": "generator:source"
+            }, {
+                "geom": ["point"],
+                "value": "billboard",
+                "key": "advertising"
+            }, {
+                "geom": ["polygon"],
+                "value": "protected_area",
+                "key": "boundary"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cinema",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "cable",
+                "key": "power"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "track",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "doctors",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bus_station",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "confectionery",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "nature_reserve",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hydro",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "nuclear",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "theatre",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "attraction",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon"],
+                "value": "forest",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon"],
+                "value": "national_park",
+                "key": "boundary"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bbq",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "commercial",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "studio",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "fire_hydrant",
+                "key": "emergency"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "house",
+                "key": "building"
+            }, {
+                "geom": ["point"],
+                "value": "entrance",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "field_hockey",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "stone",
+                "key": "natural"
+            }, {
+                "geom": ["line"],
+                "value": "bridleway",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bar",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "multipolygon",
+                "key": "type"
+            }, {
+                "geom": ["point"],
+                "value": "switch",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "parking_space",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "steps",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motor",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "cycling",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "sally_port",
+                "key": "barrier"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "retaining_wall",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon"],
+                "value": "railway",
+                "key": "landuse"
+            }, {
+                "geom": ["point"],
+                "value": "parking_entrance",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "guard_rail",
+                "key": "barrier"
+            }, {
+                "geom": ["line", "point"],
+                "value": "slipway",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fire_station",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bag",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "residential",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon"],
+                "value": "network",
+                "key": "type"
+            }, {
+                "geom": ["line"],
+                "value": "ditch",
+                "key": "waterway"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "image",
+                "key": "source"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "kerb",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon"],
+                "value": "construction",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "theme_park",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tennis",
+                "key": "sport"
+            }, {
+                "geom": ["line"],
+                "value": "yes",
+                "key": "bicycle_road"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "boundary_stone",
+                "key": "historic"
+            }, {
+                "geom": ["line"],
+                "value": "tree_row",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hifi",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "valley",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "10pin",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "paint",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "pier",
+                "key": "man_made"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "groyne",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "athletics",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car_parts",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tower",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "running",
+                "key": "sport"
+            }, {
+                "geom": ["polygon"],
+                "value": "vineyard",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fast_food",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "jewelry",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "dry_cleaning",
+                "key": "shop"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "ditch",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "battlefield",
+                "key": "historic"
+            }, {
+                "geom": ["line"],
+                "value": "canal",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "racquet",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "traffic_signals",
+                "key": "highway"
+            }, {
+                "geom": ["point"],
+                "value": "lock_gate",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "chalet",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "locality",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "food_court",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hamlet",
+                "key": "place"
+            }, {
+                "geom": ["line"],
+                "value": "rail",
+                "key": "railway"
+            }, {
+                "geom": ["line"],
+                "value": "footway",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "caravan_site",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "antiques",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "books",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "convenience",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "dog_racing",
+                "key": "sport"
+            }, {
+                "geom": ["polygon"],
+                "value": "landfill",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "interior_decoration",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "grassland",
+                "key": "natural"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "roundabout",
+                "key": "junction"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "swimming",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "water_well",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "basin",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "florist",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "river",
+                "key": "waterway"
+            }, {
+                "geom": ["point"],
+                "value": "volcano",
+                "key": "natural"
+            }, {
+                "geom": ["point"],
+                "value": "tram_stop",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "parking",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "biogas",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "library",
+                "key": "amenity"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "wall",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon"],
+                "value": "scree",
+                "key": "natural"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "artwork",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "police",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "island",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "model_aerodrome",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "kitchen",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gasometer",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "gaelic_games",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "karting",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "basketball",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "windsock",
+                "key": "aeroway"
+            }, {
+                "geom": ["point"],
+                "value": "mini_roundabout",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "butcher",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bank",
+                "key": "amenity"
+            }, {
+                "geom": ["line"],
+                "value": "tram",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hardware",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "state",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "islet",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "boatyard",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hearing_aids",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "waste",
+                "key": "generator:source"
+            }, {
+                "geom": ["point"],
+                "value": "atm",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "zoo",
+                "key": "tourism"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "",
+                "key": "name"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "car_repair",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "retail",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "travel_agency",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bed",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bookmaker",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "fountain",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "quarry",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "doityourself",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bicycle",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "garden_centre",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "reservoir_covered",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "video_games",
+                "key": "shop"
+            }, {
+                "geom": ["polygon"],
+                "value": "recreation_ground",
+                "key": "landuse"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "fence",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "post_box",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "equestrian",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "australian_football",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "motocross",
+                "key": "sport"
+            }, {
+                "geom": ["line"],
+                "value": "bus_guideway",
+                "key": "highway"
+            }, {
+                "geom": ["polygon"],
+                "value": "industrial",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hotel",
+                "key": "tourism"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "monitoring_station",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bicycle_rental",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "hampshire_gate",
+                "key": "barrier"
+            }, {
+                "geom": ["line", "point"],
+                "value": "bollard",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "tree",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "boutique",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "vacuum_cleaner",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "residential",
+                "key": "building"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "townhall",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "table_tennis",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "restaurant",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "aerodrome",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "stationery",
+                "key": "shop"
+            }, {
+                "geom": ["line"],
+                "value": "cutline",
+                "key": "man_made"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "dam",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "substation",
+                "key": "power"
+            }, {
+                "geom": ["point"],
+                "value": "spikes",
+                "key": "barrier"
+            }, {
+                "geom": ["line"],
+                "value": "narrow_gauge",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "biomass",
+                "key": "generator:source"
+            }, {
+                "geom": ["line", "point"],
+                "value": "weir",
+                "key": "waterway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "watermill",
+                "key": "man_made"
+            }, {
+                "geom": ["polygon"],
+                "value": "heath",
+                "key": "natural"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "platform",
+                "key": "highway"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "breakwater",
+                "key": "man_made"
+            }, {
+                "geom": ["point"],
+                "value": "waste_basket",
+                "key": "amenity"
+            }, {
+                "geom": ["point"],
+                "value": "saddle",
+                "key": "natural"
+            }, {
+                "geom": ["polygon"],
+                "value": "fell",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "erotic",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "hairdresser",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "funeral_directors",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "helipad",
+                "key": "aeroway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "wayside_shrine",
+                "key": "historic"
+            }, {
+                "geom": ["polygon"],
+                "value": "boundary",
+                "key": "type"
+            }, {
+                "geom": ["line", "polygon"],
+                "value": "hedge",
+                "key": "barrier"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "swimming_pool",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "tyres",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "ruins",
+                "key": "historic"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "emergency_access_point",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bakery",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "cycle_barrier",
+                "key": "barrier"
+            }, {
+                "geom": ["line"],
+                "value": "chair_lift",
+                "key": "aerialway"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "elevator",
+                "key": "highway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "marina",
+                "key": "leisure"
+            }, {
+                "geom": ["point"],
+                "value": "stop_position",
+                "key": "public_transport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "prison",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "playground",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "lottery",
+                "key": "shop"
+            }, {
+                "geom": ["point"],
+                "value": "cable_distribution_cabinet",
+                "key": "power"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "canadian_football",
+                "key": "sport"
+            }, {
+                "geom": ["polygon"],
+                "value": "greenhouse_horticulture",
+                "key": "landuse"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "bowls",
+                "key": "sport"
+            }, {
+                "geom": ["point"],
+                "value": "bus_trap",
+                "key": "barrier"
+            }, {
+                "geom": ["point"],
+                "value": "survey_point",
+                "key": "man_made"
+            }, {
+                "geom": ["line", "polygon", "point"],
+                "value": "chain",
+                "key": "barrier"
+            }, {
+                "geom": ["line"],
+                "value": "arcade",
+                "key": "covered"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "osmotic",
+                "key": "generator:source"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "turntable",
+                "key": "railway"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "village",
+                "key": "place"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "kindergarten",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "shelter",
+                "key": "amenity"
+            }, {
+                "geom": ["polygon"],
+                "value": "site",
+                "key": "type"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "palaeontological_site",
+                "key": "geological"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "skating",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "baseball",
+                "key": "sport"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "geothermal",
+                "key": "generator:source"
+            }, {
+                "geom": ["point"],
+                "value": "yes",
+                "key": "mountain_pass"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "computer",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "firepit",
+                "key": "leisure"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "rock",
+                "key": "natural"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "optician",
+                "key": "shop"
+            }, {
+                "geom": ["polygon", "point"],
+                "value": "billiards",
+                "key": "sport"
+            }]
         }
     }
 ]
