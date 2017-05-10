@@ -72,6 +72,7 @@ class ThematicGPKG(object):
             'harbours_points': {'key': 'harbour', 'table': 'planet_osm_point', 'select_clause': 'harbour is not null'},
             'grassy_fields_polygons': {'key': 'leisure', 'table': 'planet_osm_polygon',
                                        'select_clause': 'leisure="pitch" OR leisure="common" OR leisure="golf_course"'},
+            'bridges_lines': {'key': 'bridge', 'table': 'planet_osm_line', 'select_clause': 'bridge is not null'},
         }
 
     def convert(self, ):
