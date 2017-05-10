@@ -32,7 +32,7 @@ class TestOverpass(TestCase):
 
         preset = DatamodelPreset.objects.get(name='hdm')
         tags = preset.json_tags
-        self.assertEquals(255, len(tags))
+        self.assertEquals(256, len(tags))
 
         self.job = Job.objects.create(name='TestJob', description='Test description',
                                       event='Nepal activation', user=self.user, the_geom=the_geom,

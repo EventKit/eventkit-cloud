@@ -123,7 +123,7 @@ class TestJob(TestCase):
 
     def test_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
-        self.assertEquals(255, len(tags))
+        self.assertEquals(256, len(tags))
 
         # save all the tags from the preset
         job = Job.objects.first()
@@ -138,11 +138,11 @@ class TestJob(TestCase):
     def test_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(255, len(tags))
+        self.assertEquals(256, len(tags))
         # save all the tags from the preset
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(255, len(self.job.json_tags))
+        self.assertEquals(256, len(self.job.json_tags))
 
 
 class TestExportFormat(TestCase):
@@ -281,19 +281,19 @@ class TestTag(TestCase):
     def test_save_tags_from_preset(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(255, len(tags))
+        self.assertEquals(256, len(tags))
         self.job.json_tags = tags
         self.job.save()
 
-        self.assertEquals(255, len(self.job.json_tags))
+        self.assertEquals(256, len(self.job.json_tags))
 
     def test_get_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(255, len(tags))
+        self.assertEquals(256, len(tags))
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(255, len(self.job.json_tags))
+        self.assertEquals(256, len(self.job.json_tags))
 
 
 class TestExportProfile(TestCase):
