@@ -30,19 +30,21 @@ export class LicenseInfo extends Component {
                 width: '100%', padding: '16px'
             }
         };
-
+        const allAgreedSaved = this.allTrue(this.props.user.data.accepted_licenses);
+        const allAgreedUnsaved = this.allTrue(this.props.acceptedLicenses);
         return (
             <div>
                 <h4><strong>Licenses and Terms of Use</strong></h4>
                 <div style={{color: 'grey'}}>Usage of this product and all assets requires agreement to the following legalities:</div>
-                {this.allTrue(this.props.user.data.accepted_licenses) ? null: <Warning text={USAGE_STATEMENT}/>}
+                {allAgreedSaved ? null: <Warning text={USAGE_STATEMENT}/>}
                 
                 <div style={styles.checkboxContainer}>
                     <Checkbox 
                         style={styles.checkbox}
-                        checked={this.allTrue(this.props.acceptedLicenses)}
+                        disabled={allAgreedSaved}
+                        checked={allAgreedUnsaved}
                         onCheck={this.props.onAllCheck}
-                        checkedIcon={<ToggleCheckBox style={{fill: '#4498c0'}}/>}
+                        checkedIcon={<ToggleCheckBox style={{fill: allAgreedSaved ? 'grey' : '#4498c0'}}/>}
                         uncheckedIcon={<ToggleCheckBoxOutlineBlank style={{fill: '#4498c0'}}/>}
                     />
                     <span>ALL</span>
@@ -54,6 +56,7 @@ export class LicenseInfo extends Component {
                             license={license}
                             checked={this.props.acceptedLicenses[license.slug]}
                             onCheck={this.props.onLicenseCheck}
+                            disabled={this.props.user.data.accepted_licenses[license.slug]}
                         />
                     );
                 })}

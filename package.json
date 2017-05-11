@@ -29,7 +29,7 @@
     "numeral": "~2.0.4",
     "openlayers": "~3.19.1",
     "style-loader": "~0.13.1",
-    "react-dom": "~15.4.0",
+    "react-dom": "~15.5.4",
     "react": "~15.4.0",
     "react-flexbox-grid": "~0.10.2",
     "react-bootstrap-typeahead": "~1.0.0-beta4",

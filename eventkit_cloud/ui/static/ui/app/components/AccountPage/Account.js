@@ -19,7 +19,7 @@ export class Account extends Component {
         this.handleAll = this.handleAll.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.state = {
-            acceptedLicenses: [],
+            acceptedLicenses: {},
             showSavedMessage: false,
         }
     };
@@ -54,9 +54,13 @@ export class Account extends Component {
     };
 
     handleAll(event, checked) {
-        const licenses = this.state.acceptedLicenses;
+        const licenses = {...this.state.acceptedLicenses};
         for(const license in licenses) {
             if(licenses.hasOwnProperty(license)) {
+                //if the command is to uncheck, make sure not to uncheck already agreed licenses
+                if(!checked && this.props.user.data.accepted_licenses[license]) {
+                    continue;
+                }
                 licenses[license] = checked;
             }
         }
@@ -124,7 +128,7 @@ export class Account extends Component {
                                 </div> 
                             : null}
                             
-                            {this.props.user.data ? 
+                            {Object.keys(this.props.user.data.user).length > 0 ?
                                 <div style={{marginBottom: '34px'}}>
                                     <UserInfo user={this.props.user.data.user} updateLink={''}/>
                                 </div> 
@@ -137,6 +141,13 @@ export class Account extends Component {
         )
     };
 };
+
+Account.PropTypes = {
+    user: React.PropTypes.object.isRequired,
+    licenses: React.PropTypes.object.isRequired,
+    getLicenses: React.PropTypes.func.isRequired,
+    patchUser: React.PropTypes.func.isRequired,
+}
 
 function mapStateToProps(state) {
     return {
