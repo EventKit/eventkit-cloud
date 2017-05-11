@@ -105,10 +105,7 @@ export class Form extends React.Component {
                 style={{
                     minWidth: 'none',
                     borderRadius: 'px',
-                    margin: 10,
-                    marginTop: 50,
-                    marginLeft: 'auto',
-                    marginRight: 'auto'
+                    margin: '15px auto 15px auto',
                 }}
                 buttonStyle={{borderRadius: '0px'}}
                 backgroundColor={'#4598bf'}
@@ -116,7 +113,7 @@ export class Form extends React.Component {
                 labelStyle={{color: '#fff', textTransform: 'none'}}
                 onClick={this.handleOAuth}/>
         }
-        return <div style={{textAlign: 'center'}}>
+        return <div style={{verticalAlign: 'center', textAlign: 'center'}}>
             {login_form}
             {oauth_button}
         </div>
