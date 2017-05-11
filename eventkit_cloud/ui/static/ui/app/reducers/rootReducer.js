@@ -8,6 +8,7 @@ import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
 
 
@@ -33,7 +34,8 @@ const rootReducer = combineReducers({
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,
     setExportPackageFlag: startExportPackageReducer,
-    runsDeletion: DeleteRunsReducer
+    runsDeletion: DeleteRunsReducer,
+    licenses: licenseReducer,
 });
 
 export default rootReducer;

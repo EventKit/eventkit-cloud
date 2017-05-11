@@ -46,6 +46,30 @@ export const login = data => (dispatch) => {
     }).catch((error) => {
         dispatch(logout());
     });
+}
 
+export const patchUser = (acceptedLicenses, username) => (dispatch) => {
+    const csrftoken = cookie.load('csrftoken');
+    dispatch({
+        type: actions.PATCHING_USER,
+    });
+
+    return axios({
+        url: '/api/user/' + username,
+        method: 'PATCH',
+        data: {accepted_licenses: acceptedLicenses},
+        headers: {'X-CSRFToken': csrftoken}
+    }).then((response) => {
+
+        dispatch({
+            type: actions.PATCHED_USER,
+            payload: response.data || {"ERROR": "No user response data"}
+        });
+    }).catch((error) => {
+        dispatch({
+            type: actions.PATCHING_USER_ERROR,
+            error: error
+        });
+    });
 }
 

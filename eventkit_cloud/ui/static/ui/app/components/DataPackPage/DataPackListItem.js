@@ -99,7 +99,7 @@ export class DataPackListItem extends Component {
                                     primaryText="Go to Export Detail"
                                     onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
                                
-                                {this.props.run.user == this.props.user.data.username ?
+                                {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText={'Delete Export'}
@@ -115,7 +115,7 @@ export class DataPackListItem extends Component {
                             </div>
                             <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
                                 {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
-                                {this.props.run.user == this.props.user.data.username ?
+                                {this.props.run.user == this.props.user.data.user.username ?
                                     <p style={styles.ownerLabel}>My DataPack</p>
                                     :
                                     <p style={styles.ownerLabel}>{this.props.run.user}</p>

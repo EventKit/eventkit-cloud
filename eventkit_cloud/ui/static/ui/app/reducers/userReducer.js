@@ -16,7 +16,7 @@ export default (state = initialState, { type, payload, error }) => {
       if(payload){
         return { ...state, data: payload, isLoading: false }
       } else {
-          return {...state, data: null, isLoading: false}
+        return {...state, data: null, isLoading: false}
       }
     case types.USER_LOGGED_OUT:
       return { ...state, data: null, isLoading: false}
