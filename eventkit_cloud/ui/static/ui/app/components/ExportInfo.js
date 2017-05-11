@@ -16,6 +16,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
 import styles from '../styles/ExportInfo.css'
+import CustomScrollbar from '../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../actions/exportsActions.js'
 
 
@@ -204,89 +205,88 @@ export class ExportInfo extends React.Component {
 
         return (
             <div className={styles.root} style={style.window}>
+                <CustomScrollbar>
+                    <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
+                        <Paper className={styles.paper} zDepth={2} rounded>
+                            <div id='mainHeading' className={styles.heading}>Enter General Information</div>
+                                <TextField name="exportName"
+                                    ref="exportName"
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    onChange={this.onChange}
+                                    defaultValue={this.props.exportInfo.exportName}
+                                    hintText="Datapack Name"
+                                    style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                                    inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                />
+                                <TextField
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    name="datapackDescription"
+                                    onChange={this.onChange}
+                                    defaultValue={this.props.exportInfo.datapackDescription}
+                                    hintText="Description"
+                                    multiLine={true}
+                                    rows={2}
+                                    style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
+                                    textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                />
+                                <TextField
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    name="projectName"
+                                    onChange={this.onChange}
+                                    defaultValue={this.props.exportInfo.projectName}
+                                    hintText="Project Name"
+                                    style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                                    inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                />
+                                <div className={styles.checkbox}>
+                                    <Checkbox
+                                        name="makePublic"
+                                        onCheck={this.toggleCheckbox.bind(this)}
+                                        //checked={!!this.state.makePublic}
+                                        defaultChecked={this.props.exportInfo.makePublic}
+                                        className={styles.checkboxColor}
+                                        label="Make Public"
+                                        checkedIcon={<ActionCheckCircle />}
+                                        uncheckedIcon={<UncheckedCircle />}
+                                />
+                            </div>
 
-                <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
-                    <Paper className={styles.paper} zDepth={2} rounded>
-
-                <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                    <TextField name="exportName"
-                        ref="exportName"
-                        underlineStyle={style.underlineStyle}
-                        underlineFocusStyle={style.underlineStyle}
-                        onChange={this.onChange}
-                        defaultValue={this.props.exportInfo.exportName}
-                        hintText="DataPack Name"
-                        style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
-                        inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                    />
-                    <TextField
-                        underlineStyle={style.underlineStyle}
-                        underlineFocusStyle={style.underlineStyle}
-                        name="datapackDescription"
-                        onChange={this.onChange}
-                        defaultValue={this.props.exportInfo.datapackDescription}
-                        hintText="Description"
-                        multiLine={true}
-                        rows={2}
-                        style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
-                        textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                    />
-                    <TextField
-                        underlineStyle={style.underlineStyle}
-                        underlineFocusStyle={style.underlineStyle}
-                        name="projectName"
-                        onChange={this.onChange}
-                        defaultValue={this.props.exportInfo.projectName}
-                        hintText="Project Name"
-                        style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
-                        inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                        hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                    />
-                    <div className={styles.checkbox}>
-                        <Checkbox
-                            name="makePublic"
-                            onCheck={this.toggleCheckbox.bind(this)}
-                            //checked={!!this.state.makePublic}
-                            defaultChecked={this.props.exportInfo.makePublic}
-                            className={styles.checkboxColor}
-                            label="Make Public"
-                            checkedIcon={<ActionCheckCircle />}
-                            uncheckedIcon={<UncheckedCircle />}
-                            />
-                    </div>
-
-                    <div id="layersHeader" className={styles.heading}>Select Layers</div>
-                    <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
-                    <div className={styles.sectionBottom}>
-                        <List className={styles.list}>
-                            {providers.map((provider) => (
-                            <ListItem
-                                key={provider.uid}
-                                primaryText={provider.name}
-                                leftCheckbox={<Checkbox
-                                name={provider.name}
-                                defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
-                                onCheck={this.onChangeCheck.bind(this)}
-                                className={styles.checkboxColor}
-                                checkedIcon={<ActionCheckCircle />}
-                                uncheckedIcon={<UncheckedCircle
-                                className={styles.checkboxColor}/>}
-                            />}
-                            initiallyOpen={false}
-                            primaryTogglesNestedList={false}
-                            nestedItems={[
+                            <div id="layersHeader" className={styles.heading}>Select Layers</div>
+                            <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
+                            <div className={styles.sectionBottom}>
+                                <List className={styles.list}>
+                                    {providers.map((provider) => (
                                     <ListItem
-                                      key={1}
-                                      primaryText={provider.service_description}
+                                        key={provider.uid}
+                                        primaryText={provider.name}
+                                        leftCheckbox={<Checkbox
+                                        name={provider.name}
+                                        defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
+                                        onCheck={this.onChangeCheck.bind(this)}
+                                        className={styles.checkboxColor}
+                                        checkedIcon={<ActionCheckCircle />}
+                                        uncheckedIcon={<UncheckedCircle
+                                        className={styles.checkboxColor}/>}
+                                    />}
+                                    initiallyOpen={false}
+                                    primaryTogglesNestedList={false}
+                                    nestedItems={[
+                                            <ListItem
+                                            key={1}
+                                            primaryText={provider.service_description}
 
+                                            />
+                                        ]}
                                     />
-                                ]}
-                            />
-                            ))}
-                        </List>
-                    </div>
+                                    ))}
+                                </List>
+                            </div>
 
                     <div className={styles.heading}>Select Export File Formats</div>
                     <div className={styles.sectionBottom}>
@@ -300,26 +300,35 @@ export class ExportInfo extends React.Component {
                         />
                         </div>
                      </div>
-
-                        <div className={styles.mapCard}>
-                            <Card expandable={true}
-                                  onExpandChange={this.expandedChange.bind(this)}>
-                                <CardHeader
-                                    title="Selected Area of Interest"
-                                    actAsExpander={true}
-                                    showExpandableButton={true}
-                                />
-                                <CardText expandable={true}> <div id="infoMap" className={styles.map} >
-
+                            <div className={styles.heading}>Select Export File Formats</div>
+                            <div className={styles.sectionBottom}>
+                                <div className={styles.checkboxLabel}>
+                                    <Checkbox
+                                        label="Geopackage (.gpkg)"
+                                        name="Geopackage"
+                                        checked={true}
+                                        disabled={true}
+                                        checkedIcon={<ActionCheckCircle />}
+                                    />
                                 </div>
+                            </div>
 
-
-                                </CardText>
-                            </Card>
-                        </div>
-                    </Paper>
-                </form>
-
+                            <div className={styles.mapCard}>
+                                <Card expandable={true}
+                                    onExpandChange={this.expandedChange.bind(this)}>
+                                    <CardHeader
+                                        title="Selected Area of Interest"
+                                        actAsExpander={true}
+                                        showExpandableButton={true}
+                                    />
+                                    <CardText expandable={true}>
+                                        <div id="infoMap" className={styles.map}></div>
+                                    </CardText>
+                                </Card>
+                            </div>
+                        </Paper>
+                    </form>
+                </CustomScrollbar>
             </div>
         )
     }

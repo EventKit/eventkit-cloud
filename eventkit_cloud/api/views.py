@@ -1,43 +1,45 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
-import json
 import logging
-import os
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
-from eventkit_cloud.jobs import presets
+from django.contrib.auth.models import User
+
 from eventkit_cloud.jobs.models import (
-    ExportConfig, ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset
+    ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
 )
-from eventkit_cloud.jobs.presets import PresetParser
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from eventkit_cloud.tasks.task_factory import create_run
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from serializers import (
-    ExportConfigSerializer, ExportFormatSerializer, ExportRunSerializer,
+    ExportFormatSerializer, ExportRunSerializer,
     ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    ExportProviderSerializer
+    ExportProviderSerializer, LicenseSerializer, UserDataSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportConfigFilter, ExportRunFilter, JobFilter
+from .filters import ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
 from .validators import validate_bbox_params, validate_search_bbox
-
+from rest_framework.permissions import AllowAny
+from rest_framework.schemas import SchemaGenerator
+from rest_framework_swagger import renderers
+from rest_framework.renderers import CoreJSONRenderer
+from rest_framework import exceptions
+import coreapi
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -68,7 +70,7 @@ class JobViewSet(viewsets.ModelViewSet):
         * Use the format `slug` as the value of the formats parameter, eg `formats=thematic&formats=shp`.
     * preset: One of the published preset files ([html](/api/configurations) or [json](/api/configurations.json)).
         * Use the `uid` as the value of the preset parameter, eg `preset=eed84023-6874-4321-9b48-2f7840e76257`.
-        * If no preset parameter is provided, then the default [HDM](http://export.hotosm.org/api/hdm-data-model?format=json) tags will be used for the export.
+        * If no preset parameter is provided, then the default HDM tags will be used for the export.
     * published: `true` if this export is to be published globally, `false` otherwise.
         * Unpublished exports will be purged from the system 48 hours after they are created.
 
@@ -265,13 +267,10 @@ class JobViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
-
             export_providers = request.data.get('export_providers', [])
             provider_tasks = request.data.get('provider_tasks', [])
             tags = request.data.get('tags')
             preset = request.data.get('preset')
-            translation = request.data.get('translation')
-            transform = request.data.get('transform')
 
             with transaction.atomic():
                 if export_providers:
@@ -302,17 +301,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: %s' % preset)
-                            config = ExportConfig.objects.get(uid=preset)
-                            job.configs.add(config)
-                            preset_path = config.upload.path
-                            """Use the UnfilteredPresetParser."""
-                            parser = presets.UnfilteredPresetParser(preset=preset_path)
-                            tags_dict = parser.parse()
-                            simplified_tags = []
-                            for entry in tags_dict:
-                                tag = {'key': entry['key'], 'value': entry['value'], 'geom': entry['geom_types']}
-                                simplified_tags.append(tag)
-                            job.json_tags = simplified_tags
+                            job.json_tags = preset
                             job.save()
                         elif tags:
                             """Get tags from request."""
@@ -330,14 +319,6 @@ class JobViewSet(viewsets.ModelViewSet):
                             hdm_default_tags = DatamodelPreset.objects.get(name='hdm').json_tags
                             job.json_tags = hdm_default_tags
                             job.save()
-                        # check for translation file
-                        if translation:
-                            config = ExportConfig.objects.get(uid=translation)
-                            job.configs.add(config)
-                        # check for transform file
-                        if transform:
-                            config = ExportConfig.objects.get(uid=transform)
-                            job.configs.add(config)
                     except Exception as e:
                         error_data = OrderedDict()
                         error_data['id'] = _('server_error')
@@ -389,17 +370,6 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
 
-class PresetViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Returns the list of PRESET configuration files.
-    """
-    CONFIG_TYPE = 'PRESET'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
-
-
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -413,9 +383,22 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['description']
 
 
+
+
+class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Endpoint to get detailed information about the data licenses.
+    """
+    serializer_class = LicenseSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = License.objects.all()
+    lookup_field = 'slug'
+    ordering = ['name']
+
+
 class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Endpoint exposing the supported export formats.
+    Endpoint exposing the supported data providers.
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -521,25 +504,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-class ExportConfigViewSet(viewsets.ModelViewSet):
-    """
-    Endpoint for operations on export configurations.
-
-    Lists all available configuration files.
-    """
-    serializer_class = ExportConfigSerializer
-    pagination_class = LinkHeaderPagination
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    filter_class = ExportConfigFilter
-    search_fields = ('name', 'config_type', 'user__username')
-    permission_classes = (permissions.IsAuthenticated,
-                          IsOwnerOrReadOnly)
-    parser_classes = (FormParser, MultiPartParser, JSONParser)
-    queryset = ExportConfig.objects.filter(config_type='PRESET')
-    lookup_field = 'uid'
-
-
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
@@ -609,62 +573,86 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
-class PresetViewSet(viewsets.ReadOnlyModelViewSet):
+
+class UserDataViewSet(viewsets.GenericViewSet):
     """
-    Returns the list of PRESET configuration files.
+    This endpoint is used to retrieve information about a user. Post is  
+
     """
-    CONFIG_TYPE = 'PRESET'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
+    serializer_class = UserDataSerializer
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
+    parser_classes = (JSONParser,)
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    lookup_field = 'username'
+    search_fields = ('user__username', 'accepted_licenses')
 
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        return User.objects.filter(username=self.request.user.username)
 
-class TranslationViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Return the list of TRANSLATION configuration files.
-    """
-    CONFIG_TYPE = 'TRANSLATION'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
+    def partial_update(self, request, username=None, *args, **kwargs):
+        """
+            Update user data. 
 
+            User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
+            with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to 
+            download data.
 
-class TransformViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    Return the list of TRANSFORM configuration files.
-    """
-    CONFIG_TYPE = 'TRANSFORM'
-    serializer_class = ExportConfigSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    queryset = ExportConfig.objects.filter(config_type=CONFIG_TYPE)
-    lookup_field = 'uid'
+            Request data can be posted as `application/json`.
 
+            * request: the HTTP request in JSON.
 
-class HDMDataModelView(views.APIView):
-    """Endpoint exposing the HDM Data Model."""
-    permission_classes = (permissions.IsAuthenticated,)
+            Example:
 
-    @staticmethod
-    def get(request, format='json'):
-        path = os.path.dirname(os.path.realpath(__file__))
-        parser = PresetParser(path + '/presets/hdm_presets.xml')
-        data = parser.build_hdm_preset_dict()
-        return JsonResponse(data, status=status.HTTP_200_OK)
+                    {"accepted_licenses": {
+                        "odbl": true
+                        }
+                  }
+        """
+        queryset = self.get_queryset().get(username=username)
+        serializer = UserDataSerializer(queryset, data=request.data, context={'request': request})
 
+        if serializer.is_valid():
 
-class OSMDataModelView(views.APIView):
-    """Endpoint exposing the OSM Data Model."""
-    permission_classes = (permissions.IsAuthenticated,)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @staticmethod
-    def get(request, format='json'):
-        # TODO: move __file__ reference to pkgutil
-        path = os.path.dirname(os.path.realpath(__file__))
-        parser = PresetParser(path + '/presets/osm_presets.xml')
-        data = parser.build_hdm_preset_dict()
-        return JsonResponse(data, status=status.HTTP_200_OK)
+    def list(self, request, *args, **kwargs):
+        """
+             * GET request
+
+                Example:
+
+                    [
+                      {
+                        "user": {
+                          "username": "admin",
+                          "first_name": "",
+                          "last_name": "",
+                          "email": "admin@eventkit.dev",
+                          "last_login": "2017-05-01T17:33:33.845698Z",
+                          "date_joined": "2016-06-15T14:25:19Z"
+                        },
+                        "accepted_licenses": {
+                          "odbl": true,
+                        }
+                      }
+                    ]
+        """
+
+        queryset = self.get_queryset()
+        serializer = UserDataSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, username=None):
+        queryset = self.get_queryset().get(username=username)
+        serializer = UserDataSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
@@ -706,3 +694,47 @@ def get_provider_task(export_provider, export_formats):
     return provider_task
 
 
+class SwaggerSchemaView(views.APIView):
+    _ignore_model_permissions = True
+    exclude_from_schema = True
+    permission_classes = [AllowAny]
+    renderer_classes = [
+        CoreJSONRenderer,
+        renderers.OpenAPIRenderer,
+        renderers.SwaggerUIRenderer
+    ]
+
+    def get(self, request):
+        generator = SchemaGenerator()
+        generator.get_schema(request=request)
+        links = generator.get_links(request=request)
+        # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
+        partial_update_link = links.get('user',{}).get('partial_update')
+        if partial_update_link:
+            links['user']['partial_update'] = coreapi.Link(
+                url=partial_update_link.url,
+                action=partial_update_link.action,
+                fields=[
+                    (coreapi.Field(
+                        name='username',
+                        required=True,
+                        location='path')),
+                    (coreapi.Field(
+                        name='data',
+                        required=True,
+                        location='form',
+                        )),
+                ],
+                description=partial_update_link.description
+            )
+        schema = coreapi.Document(
+            title='EventKit API',
+            url='/api/docs',
+            content = links
+        )
+
+        if not schema:
+            raise exceptions.ValidationError(
+                'A schema could not be generated, please ensure that you are logged in.'
+            )
+        return Response(schema)

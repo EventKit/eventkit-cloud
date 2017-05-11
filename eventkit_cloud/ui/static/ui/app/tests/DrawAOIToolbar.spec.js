@@ -1,6 +1,5 @@
 import {DrawAOIToolbar} from '../components/DrawAOIToolbar';
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {DrawBoxButton} from '../components/DrawBoxButton';
@@ -26,13 +25,13 @@ describe('DrawAOIToolbar component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.drawButtonsContainer')).to.have.length(1);
-        expect(wrapper.find('.drawButtonsTitle')).to.have.length(1);
-        expect(wrapper.find('.drawButtonsTitle').text()).to.equal('TOOLS');
-        expect(wrapper.find(DrawBoxButton)).to.have.length(1);
-        expect(wrapper.find(DrawFreeButton)).to.have.length(1);
-        expect(wrapper.find(MapViewButton)).to.have.length(1);
-        expect(wrapper.find(ImportButton)).to.have.length(1);
-        expect(props.setAllButtonsDefault.calledOnce).to.equal(true);
+        expect(wrapper.find('.drawButtonsContainer')).toHaveLength(1);
+        expect(wrapper.find('.drawButtonsTitle')).toHaveLength(1);
+        expect(wrapper.find('.drawButtonsTitle').text()).toEqual('TOOLS');
+        expect(wrapper.find(DrawBoxButton)).toHaveLength(1);
+        expect(wrapper.find(DrawFreeButton)).toHaveLength(1);
+        expect(wrapper.find(MapViewButton)).toHaveLength(1);
+        expect(wrapper.find(ImportButton)).toHaveLength(1);
+        expect(props.setAllButtonsDefault.calledOnce).toEqual(true);
     });
 });

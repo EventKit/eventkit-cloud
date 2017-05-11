@@ -1,17 +1,20 @@
-{% load i18n %}
 <html>
     <head>
         <title>Eventkit Data Pack</title>
     </head>
-    <body>
-        <p>{% trans 'This is an automated email from the Eventkit Team.' %}</p>
+        <body>
+        <div class="root">
+        <div class="heading">This is an automated email from the Eventkit Team.</div>
+        <p>Your data pack: </p>
+        <p><b>{{ job_name }}</b></p>
         {% if status == 'CANCELED' %}
-        <p>{% trans 'Your data pack was CANCELED.' %}</p>
+        </p>was CANCELED.</p>
         {% else %}
-        <p>{% trans 'Your Eventkit Data Pack is finished.' %}</p>
-        <p>{% trans 'Please follow this link ' %}<a href="{{ url }}/">{{ url }}</a>{% trans ' to download your files.' %}</p>
+        </p> is finished.</p>
+        <p>Please follow this link <a href="{{ url }}/">{{ url }}</a> to download your files.</p>
         {% endif %}
-        <p>{% trans 'Thank you for using Eventkit' %}</p>
-        <p>{% trans 'Eventkit Team' %}</p>
+        <p>Thank you for using Eventkit</p>
+        <p>Eventkit Team</p>
+        </div>
     </body>
 </html>

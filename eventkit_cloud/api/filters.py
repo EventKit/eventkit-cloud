@@ -6,8 +6,10 @@ import django_filters
 
 from django.db.models import Q
 
-from eventkit_cloud.jobs.models import ExportConfig, Job
+from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
+
+from rest_framework.filters import BaseFilterBackend
 
 logger = logging.getLogger(__name__)
 
@@ -55,31 +57,3 @@ class ExportRunFilter(django_filters.FilterSet):
         fields = ('status',)
         order_by = ('-started_at',)
 
-
-class ExportConfigFilter(django_filters.FilterSet):
-    """Filter export configurations."""
-    name = django_filters.CharFilter(name="name", lookup_expr="icontains")
-    config_type = django_filters.CharFilter(name="config_type", lookup_expr="icontains")
-    start = django_filters.DateTimeFilter(name="created_at", lookup_expr="gte")
-    end = django_filters.DateTimeFilter(name="created_at", lookup_expr="lte")
-    user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
-    published = django_filters.BooleanFilter(name="published", lookup_expr="exact")
-    user_private = django_filters.CharFilter(method='user_private_filter')
-
-    class Meta:
-        model = ExportConfig
-        fields = ('name', 'config_type', 'start', 'end', 'user', 'published', 'user_private')
-        order_by = ('-created_at',)
-
-    @staticmethod
-    def user_private_filter(queryset, value):
-        """
-        Filter export configurations by user and/or published status.
-
-        Return configurations for the specified user where configurations are either published or unpublished.
-        OR
-        Return configurations for all other users and where the configuration is published.
-        """
-        return queryset.filter(
-            (Q(user__username=value) | (~Q(user__username=value) & Q(published=True)))
-        )

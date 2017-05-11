@@ -9,7 +9,8 @@ from django.test import TransactionTestCase
 from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
-                          add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info)
+                          add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info,
+                          get_table_gpkg_contents_information)
 
 
 logger = logging.getLogger(__name__)
@@ -254,4 +255,25 @@ class TestGeopackage(TransactionTestCase):
         mock_sqlite3.connect().__enter__().execute.return_value = expected_response
         response = get_table_info(gpkg, table)
         mock_sqlite3.connect().__enter__().execute.assert_called_once_with("PRAGMA table_info({0});".format(table))
+        self.assertEqual(expected_response, response)
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_get_table_gpkg_contents_information(self, mock_sqlite3):
+        gpkg = "test.gpkg"
+        table = "table"
+        query_response = (table, 'tiles', 'identifier', 'description', 'datetime', -180, -90, 190, 90, 4326)
+        expected_response = {"table_name": query_response[0],
+                             "data_type": query_response[1],
+                             "identifier": query_response[2],
+                             "description": query_response[3],
+                             "last_change": query_response[4],
+                             "min_x": query_response[5],
+                             "min_y": query_response[6],
+                             "max_x": query_response[7],
+                             "max_y": query_response[8],
+                             "srs_id": query_response[9]}
+        mock_sqlite3.connect().__enter__().execute().fetchone.return_value = query_response
+        response = get_table_gpkg_contents_information(gpkg, table)
+        mock_sqlite3.connect().__enter__().execute.assert_called_with("SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
+            table))
         self.assertEqual(expected_response, response)

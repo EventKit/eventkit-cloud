@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import {Link} from 'react-router';
+import {browserHistory} from 'react-router';
 import {TableRow, TableRowColumn} from 'material-ui/Table';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
@@ -83,7 +84,7 @@ export class DataPackTableItem extends Component {
                         <MenuItem 
                             style={{fontSize: '12px'}}
                             primaryText="Go to Export Detail"
-                            onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
+                            onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                         
                         {this.props.run.user == this.props.user.data.username ?
                         <MenuItem

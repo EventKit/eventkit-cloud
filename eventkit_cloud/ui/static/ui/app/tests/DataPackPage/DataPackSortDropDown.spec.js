@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -26,7 +25,7 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(DropDownMenu)).to.have.length(1);
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
 
     it('should render with text "Newest"', () => {
@@ -35,7 +34,7 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('Newest');
+        expect(wrapper.text()).toEqual('Newest');
     });
 
     it('should render with text "Oldest"', () => {
@@ -45,7 +44,7 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('Oldest ');
+        expect(wrapper.text()).toEqual('Oldest ');
     });
 
     it('should render with text "Name (A-Z)"', () => {
@@ -55,7 +54,7 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('Name (A-Z)');
+        expect(wrapper.text()).toEqual('Name (A-Z)');
     });
 
     it('should render with text "Name (Z-A)"', () => {
@@ -65,7 +64,7 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.text()).to.equal('Name (Z-A)');
+        expect(wrapper.text()).toEqual('Name (Z-A)');
     });
 
     it('should have the correct menu item labels', () => {
@@ -74,12 +73,12 @@ describe('DataPackSortDropDown component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(DropDownMenu)).to.have.length(1);
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
-        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).to.equal('Newest');
-        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).to.equal('Oldest ');
-        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).to.equal('Name (A-Z)');
-        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).to.equal('Name (Z-A)');
+        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Newest');
+        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Oldest ');
+        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).toEqual('Name (A-Z)');
+        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).toEqual('Name (Z-A)');
     });
     
     it('should call onChange when an item is selected', () => {
@@ -102,7 +101,7 @@ describe('DataPackSortDropDown component', () => {
             },
             2
         );
-        expect(menu.state().open).to.equal(false);
-        expect(props.handleChange.calledWith(event, 2, utils.orderOldest)).to.equal(true);
+        expect(menu.state().open).toEqual(false);
+        expect(props.handleChange.calledWith(event, 2, utils.orderOldest)).toEqual(true);
     });
 });

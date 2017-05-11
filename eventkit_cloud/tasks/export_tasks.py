@@ -317,7 +317,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
 
 
 @app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, bbox=None):
+def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
     """
     Task to create styles for osm.
     """
@@ -338,7 +338,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                       'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': bbox}))
+                                                                      'bbox': bbox,
+                                                                      'provider_name': provider_name}))
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result
@@ -452,11 +453,13 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Create Selection GeoJSON', base=LockingTask)
-def output_selection_geojson_task(result={}, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+@app.task(name='Create Selection GeoJSON', bind=True, base=ExportTask)
+def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
+
+    self.update_task_state(result=result, task_uid=task_uid)
 
     geojson_file = os.path.join(stage_dir,
                                 "{0}_selection.geojson".format(provider_slug))
@@ -467,6 +470,9 @@ def output_selection_geojson_task(result={}, selection=None, stage_dir=None, pro
         with open(geojson_file, 'w') as open_file:
             open_file.write(selection)
         result['selection'] = geojson_file
+        result['result'] = geojson_file
+    else:
+        result['result'] = None
 
     return result
 
@@ -703,7 +709,6 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
     """
     rolls up runs into a zip file
     """
-
     from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
@@ -733,7 +738,7 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
-    with ZipFile(zip_st_filepath, 'w') as zipfile:
+    with ZipFile(zip_st_filepath, 'w', allowZip64=True) as zipfile:
         for filepath in files:
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
@@ -811,8 +816,8 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     run.save()
 
     # send notification email to user
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL
+    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -824,7 +829,7 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
         'DEFAULT_FROM_EMAIL',
         'Eventkit Team <eventkit.team@gmail.com>'
     )
-    ctx = {'url': url, 'status': run.status}
+    ctx = {'url': url, 'status': run.status, 'job_name': run.job.name}
 
     text = get_template('email/email.txt').render(ctx)
     html = get_template('email/email.html').render(ctx)
@@ -858,8 +863,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL
+    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     subject = "Your Eventkit Data Pack has a failure."
     # email user and administrator
@@ -867,7 +872,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
     ctx = {
         'url': url,
-        'task_id': task_id
+        'task_id': task_id,
+        'job_name': run.job.name
     }
     text = get_template('email/error_email.txt').render(ctx)
     html = get_template('email/error_email.html').render(ctx)

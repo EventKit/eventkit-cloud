@@ -63,32 +63,51 @@ class TimeStampedModelMixin(models.Model):
         abstract = True
 
 
-class ExportConfig(TimeStampedModelMixin):
+class DatamodelPreset(TimeStampedModelMixin):
     """
-    Model for export configuration.
+    Model provides admin interface to presets.
+    These were previously provided by files like hdm_presets.xml / osm_presets.xml.
     """
-    PRESET = 'PRESET'
-    TRANSLATION = 'TRANSLATION'
-    TRANSFORM = 'TRANSFORM'
-    CONFIG_TYPES = (
-        (PRESET, 'Preset'),
-        (TRANSLATION, 'Translation'),
-        (TRANSFORM, 'Transform')
-    )
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=255, default='', db_index=True)
-    user = models.ForeignKey(User, related_name='user')
-    config_type = models.CharField(max_length=11, choices=CONFIG_TYPES, default=PRESET)
-    filename = models.CharField(max_length=255)
-    upload = models.FileField(max_length=255, upload_to=get_upload_path)
-    content_type = models.CharField(max_length=30, editable=False)
-    published = models.BooleanField(default=False)
+    name = models.CharField(max_length=10)
+    json_tags = JSONField(default=list)
 
-    class Meta:  # pragma: no cover
-        managed = True
-        db_table = 'export_configurations'
+    class Meta:
+        db_table = 'datamodel_preset'
 
+    def __str__(self):
+        return self.name
+
+    def to_dict(self):
+        return {"name": self.name, "json_tags": self.json_tags}
+
+
+class License(models.Model):
+    """
+    Model to hold license information to be used with ExportProviders.
+    """
+    slug = LowerCaseCharField(max_length=40, unique=True, default='')
+    name = models.CharField(max_length=100, db_index=True)
+    text = models.TextField(default="")
+
+    def __str__(self):
+        return '{0}'.format(self.name)
+
+    def __unicode__(self,):
+        return '{0}'.format(self.slug)
+
+
+class UserLicenses(models.Model):
+    """
+    Model to hold which licenses a User acknowledges. 
+    """
+    user = models.ForeignKey(User)
+    license = models.ForeignKey(License)
+
+    def __str__(self):
+        return '{0}: {1}'.format(self.user.username, self.license.name)
+
+    def __unicode__(self):
+        return '{0}: {1}'.format(self.user.username, self.license.slug)
 
 class ExportFormat(TimeStampedModelMixin):
     """
@@ -130,21 +149,6 @@ class ExportProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
-class DatamodelPreset(TimeStampedModelMixin):
-    """
-    Model provides admin interface to presets.
-    These were previously provided by files like hdm_presets.xml / osm_presets.xml.
-    """
-    name = models.CharField(max_length=10)
-    json_tags = JSONField(default=dict)
-
-    class Meta:
-        db_table = 'datamodel_preset'
-
-    def __str__(self):
-        return self.name
-
-
 class ExportProvider(TimeStampedModelMixin):
     """
     Model for a ExportProvider.
@@ -170,6 +174,7 @@ class ExportProvider(TimeStampedModelMixin):
                               verbose_name="Configuration",
                               help_text="This is an optional field to put in additional configuration.")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
+    license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -256,7 +261,7 @@ class Job(TimeStampedModelMixin):
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
     region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
     provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
-    configs = models.ManyToManyField(ExportConfig, related_name='configs', blank=True)
+    preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     feature_save = models.BooleanField(default=False, db_index=True)  # save feature selections
     feature_pub = models.BooleanField(default=False, db_index=True)  # publish feature selections
@@ -367,18 +372,6 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
-
-
-@receiver(post_delete, sender=ExportConfig)
-def exportconfig_delete_upload(sender, instance, **kwargs):
-    """
-    Delete the associated file when the export config is deleted.
-    """
-    instance.upload.delete(False)
-    # remove config from related jobs
-    exports = Job.objects.filter(configs__uid=instance.uid)
-    for export in exports.all():
-        export.configs.remove(instance)
 
 
 @receiver(post_save, sender=User)

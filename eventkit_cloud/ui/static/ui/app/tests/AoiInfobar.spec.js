@@ -1,6 +1,5 @@
 import {AoiInfobar} from '../components/AoiInfobar';
 import React from 'react';
-import {expect} from 'chai';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -49,8 +48,8 @@ describe('AoiInfobar component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('div')).to.have.length(2);
-        expect(wrapper.find('aoiInfobar')).to.have.length(0);
+        expect(wrapper.find('div')).toHaveLength(1);
+        expect(wrapper.find('aoiInfobar')).toHaveLength(0);
     });
 
     it('should handle aoiInfo update', () => {
@@ -66,17 +65,17 @@ describe('AoiInfobar component', () => {
         nextProps.aoiInfo.title = 'fake title';
         wrapper.setProps(nextProps);
 
-        expect(wrapper.find('div')).to.have.length(8);
-        expect(wrapper.find('.aoiInfoWrapper')).to.have.length(1);
-        expect(wrapper.find('.topBar')).to.have.length(1);
-        expect(wrapper.find('.aoiInfoTitle').text()).to.equal('Area Of Interest (AOI)');
-        expect(wrapper.find('.simpleButton .activeButton')).to.have.length(1);
-        expect(wrapper.find('.simpleButton').first().text()).to.equal(' ZOOM TO SELECTION');
-        expect(wrapper.find(ActionSearch)).to.have.length(1);
-        expect(wrapper.find('.aoiTitle').text()).to.equal('fake title');
-        expect(wrapper.find('.aoiDescription').text()).to.equal('fake description');
-        expect(wrapper.find(ImageCropSquare)).to.have.length(1);
-        expect(wrapper.find(ImageCropSquare).hasClass('geometryIcon')).to.be.true;
+        expect(wrapper.find('div')).toHaveLength(8);
+        expect(wrapper.find('.aoiInfoWrapper')).toHaveLength(1);
+        expect(wrapper.find('.topBar')).toHaveLength(1);
+        expect(wrapper.find('.aoiInfoTitle').text()).toEqual('Area Of Interest (AOI)');
+        expect(wrapper.find('.simpleButton .activeButton')).toHaveLength(1);
+        expect(wrapper.find('.simpleButton').first().text()).toEqual(' ZOOM TO SELECTION');
+        expect(wrapper.find(ActionSearch)).toHaveLength(1);
+        expect(wrapper.find('.aoiTitle').text()).toEqual('fake title');
+        expect(wrapper.find('.aoiDescription').text()).toEqual('fake description');
+        expect(wrapper.find(ImageCropSquare)).toHaveLength(1);
+        expect(wrapper.find(ImageCropSquare).hasClass('geometryIcon')).toBe(true);
     });
 
     it('clicking on active buttons should execute click functions', () => {
@@ -94,6 +93,6 @@ describe('AoiInfobar component', () => {
         nextProps.aoiInfo.title = 'fake title';
         wrapper.setProps(nextProps);
         wrapper.find('.activeButton').simulate('click');
-        expect(nextProps.clickZoomToSelection.calledOnce).to.equal(true);
+        expect(nextProps.clickZoomToSelection.calledOnce).toEqual(true);
     })
 });

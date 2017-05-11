@@ -6,6 +6,7 @@ import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../components/tap_events'
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
+import CustomScrollbar from './CustomScrollbar'
 import Paper from 'material-ui/Paper'
 import styles from '../styles/ExportSummary.css'
 
@@ -89,6 +90,7 @@ class ExportSummary extends React.Component {
 
         return (
             <div className={styles.root} style={{height: window.innerHeight - 191}}>
+                <CustomScrollbar>
                 <form className={styles.form} >
                     <Paper className={styles.paper} zDepth={2} rounded>
                         <div id='mainHeading' className={styles.heading}>Preview and Run Export</div>
@@ -175,6 +177,7 @@ class ExportSummary extends React.Component {
                         </div>
                     </Paper>
                 </form>
+                </CustomScrollbar>
             </div>
         )
     }

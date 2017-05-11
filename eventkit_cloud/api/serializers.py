@@ -12,23 +12,22 @@ import logging
 import os
 from urlparse import urlparse, urlunparse
 
-from rest_framework_gis import serializers as geo_serializers
-
-from django.contrib.gis.geos import GEOSGeometry
 from django.conf import settings
-from django.utils import timezone
+from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
-from rest_framework import serializers
 
-import validators
+from django.contrib.auth.models import User
+
 from eventkit_cloud.jobs.models import (
-    ExportConfig,
     ExportFormat,
+    DatamodelPreset,
     Job,
     Region,
     RegionMask,
     ExportProvider,
-    ProviderTask
+    ProviderTask,
+    License,
+    UserLicenses
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -38,6 +37,10 @@ from eventkit_cloud.tasks.models import (
     ExportProviderTask
 )
 from eventkit_cloud.utils.s3 import get_presigned_url
+from rest_framework import serializers
+from rest_framework_gis import serializers as geo_serializers
+import validators
+
 
 try:
     from collections import OrderedDict
@@ -47,100 +50,6 @@ except ImportError:
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
-
-class SimpleExportConfigSerializer(serializers.Serializer):
-    """Return a sub-set of ExportConfig model attributes."""
-
-    def update(self, instance, validated_data):
-        super(SimpleExportConfigSerializer, self).update(instance, validated_data)
-
-    uid = serializers.UUIDField(read_only=True)
-    name = serializers.CharField()
-    config_type = serializers.CharField()
-    filename = serializers.CharField()
-    published = serializers.BooleanField()
-    created = serializers.SerializerMethodField()
-    url = serializers.HyperlinkedIdentityField(
-        view_name='api:configs-detail',
-        lookup_field='uid'
-    )
-
-    @staticmethod
-    def get_created(obj):
-        return obj.created_at
-
-
-class ExportConfigSerializer(serializers.Serializer):
-    """Return the full set of ExportConfig model attributes."""
-    uid = serializers.UUIDField(read_only=True)
-    url = serializers.HyperlinkedIdentityField(
-        view_name='api:configs-detail',
-        lookup_field='uid'
-    )
-    name = serializers.CharField(max_length=255)
-    config_type = serializers.ChoiceField(['PRESET', 'TRANSLATION', 'TRANSFORM'])
-    filename = serializers.CharField(max_length=255, read_only=True, default='')
-    size = serializers.SerializerMethodField()
-    content_type = serializers.CharField(max_length=50, read_only=True)
-    upload = serializers.FileField(allow_empty_file=False, max_length=100)
-    published = serializers.BooleanField()
-    created = serializers.SerializerMethodField()
-    owner = serializers.SerializerMethodField(read_only=True)
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
-    @staticmethod
-    def create(validated_data, **kwargs):
-        """Create an ExportConfig instance.
-        :param **kwargs:
-        """
-        return ExportConfig.objects.create(**validated_data)
-
-    @staticmethod
-    def update(instance, validated_data, **kwargs):
-        """Update an ExportConfig instance.
-        :param **kwargs:
-        """
-        instance.config_type = validated_data.get('config_type', instance.config_type)
-        instance.upload.delete(False)  # delete the old file..
-        instance.upload = validated_data.get('upload', instance.upload)
-        instance.name = validated_data.get('name', instance.name)
-        instance.filename = validated_data.get('filename', instance.filename)
-        instance.content_type = validated_data.get('content_type', instance.content_type)
-        instance.updated_at = timezone.now()
-        instance.save()
-        return instance
-
-    @staticmethod
-    def validate(data, **kwargs):
-        """Validate the form data.
-        :param **kwargs:
-        """
-        logger.debug(data)
-        upload = data['upload']
-        config_type = data['config_type']
-        content_type = validators.validate_content_type(upload, config_type)
-        if config_type == 'PRESET':
-            validators.validate_preset(upload)
-        data['content_type'] = content_type
-        fname = data['upload'].name
-        data['filename'] = fname.replace(' ', '_').lower()
-        return data
-
-    @staticmethod
-    def get_size(obj):
-        size = obj.upload.size
-        return size
-
-    @staticmethod
-    def get_created(obj):
-        return obj.created_at
-
-    @staticmethod
-    def get_owner(obj):
-        return obj.user.username
 
 
 class ExportTaskResultSerializer(serializers.ModelSerializer):
@@ -251,8 +160,6 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
         fields = ('uid', 'url', 'name', 'tasks', 'status')
 
 
-
-
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
 
@@ -287,6 +194,16 @@ class SimpleJobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+
+class LicenseSerializer(serializers.ModelSerializer):
+    """Serialize Licenses."""
+
+    class Meta:
+        model = License
+        fields = (
+            'slug', 'name', 'text'
+        )
 
 
 class ExportRunSerializer(serializers.ModelSerializer):
@@ -353,11 +270,67 @@ class ExportRunSerializer(serializers.ModelSerializer):
         return urlunparse(uri)
 
 
-class UserSerializer(serializers.Serializer):
-    def update(self, instance, validated_data):
-        super(UserSerializer, self).update(instance, validated_data)
+class UserSerializer(serializers.ModelSerializer):
 
-    id = serializers.IntegerField()
+    username = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    email = serializers.CharField()
+    last_login = serializers.DateTimeField(read_only=True)
+    date_joined = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined'
+        )
+        read_only_fields = ('username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined')
+
+
+class UserDataSerializer(serializers.Serializer):
+    """
+        Return a GeoJSON representation of the user data.
+        
+    """
+    user = serializers.SerializerMethodField()
+    accepted_licenses = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            'user',
+            'accepted_licenses'
+        )
+        read_only_fields = (
+            'user',
+        )
+
+    @staticmethod
+    def get_user(instance):
+        return UserSerializer(instance).data
+
+    @staticmethod
+    def get_accepted_licenses(instance):
+        licenses = dict()
+        user_licenses = UserLicenses.objects.filter(user=instance)
+        for license in License.objects.all():
+            if user_licenses.filter(license=license):
+                licenses[license.slug] = True
+            else:
+                licenses[license.slug] = False
+        return licenses
+
+    def update(self, instance, validated_data):
+        if self.context.get('request').data.get('accepted_licenses'):
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+                user_license = UserLicenses.objects.filter(user=instance, license=License.objects.get(slug=slug))
+                if user_license and not selected:
+                    user_license.delete()
+                if not user_license and selected:
+                    UserLicenses.objects.create(user=instance, license=License.objects.get(slug=slug))
+        return instance
+
+    def create(self, validated_data, **kwargs):
+        raise NotImplementedError("UserData can only be updated using this interface.")
 
 
 class RegionMaskSerializer(geo_serializers.GeoFeatureModelSerializer):
@@ -417,11 +390,12 @@ class ExportProviderSerializer(serializers.ModelSerializer):
         lookup_field='id'
     )
     type = serializers.SerializerMethodField(read_only=True)
+    license = LicenseSerializer(required=False)
 
     class Meta:
         model = ExportProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
-        read_only_fields = ('uid',)
+        read_only_fields = ('uid', )
         fields = '__all__'
 
     @staticmethod
@@ -429,6 +403,9 @@ class ExportProviderSerializer(serializers.ModelSerializer):
         # try to get existing export Provider
         url = validated_data.get('url')
         user = validated_data.get('user')
+        license_data = validated_data.pop('license', None)
+        if license_data:
+            License.objects.create(**license_data)
 
         ep = ExportProvider.objects.filter(url=url, user=user).first()
         if not ep:
@@ -560,7 +537,7 @@ class JobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
-    configurations = serializers.SerializerMethodField()
+    preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
     feature_save = serializers.BooleanField(required=False)
     feature_pub = serializers.BooleanField(required=False)
@@ -641,13 +618,6 @@ class JobSerializer(serializers.Serializer):
         """Return the export formats selected for this export."""
         providers = [provider_format for provider_format in obj.providers.all()]
         serializer = ExportProviderSerializer(providers, many=True, context={'request': self.context['request']})
-        return serializer.data
-
-    def get_configurations(self, obj):
-        """Return the configurations selected for this export."""
-        configs = obj.configs.all()
-        serializer = SimpleExportConfigSerializer(configs, many=True,
-                                                  context={'request': self.context['request']})
         return serializer.data
 
     @staticmethod

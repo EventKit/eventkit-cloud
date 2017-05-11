@@ -1,62 +1,6 @@
-@media screen and (min-width: 601px) {
-    .aoiInfoWrapper {
-        font-size: 12px;
-        height: 70px;
-    }
-
-    .geometryIcon {
-        font-size: 38px;
-        width: 38px !important;
-        height: 38px !important;
-    }
-
-    .aoiInfobar {
-        width: 80%;
-    }
-
-    .actionSearch {
-        height: 20px !important;
-        width: 20px !important;
-    }
-}
-
-@media screen and (max-width: 600px) {
-    .aoiInfoWrapper {
-        font-size: 10px;
-        height: 50px;
-    }
-
-    .geometryIcon {
-        font-size: 25px;
-        width: 25px !important;
-        height: 25px !important;
-    }
-
-    .aoiInfobar {
-        width: 60%;
-    }
-
-    .activeButton {
-        font-size: 8px;
-    }
-
-    .actionSearch {
-        height: 18px !important;
-        width: 18px !important;
-    }
-}
-
-@media screen and (max-width: 400px) {
-    .activeButton {
-        font-size: 7px;
-    }
-    .actionSearch {
-        height: 16px !important;
-        width: 16px !important;
-    }
-}
-
 .aoiInfoWrapper {
+    font-size: 10px;
+    height: 50px;
     z-index: 2;
     position: absolute;
     width: 100%;
@@ -64,6 +8,7 @@
 }
 
 .aoiInfobar {
+    width: 60%;
     max-width: 600px;
     margin: 0 auto;
     height: 100%;
@@ -73,9 +18,7 @@
 .topBar {
     width: 100%;
     float: left;
-    padding-top: 5px;
-    /*padding-left: 10px;*/
-    
+    padding-top: 5px;    
 }
 
 .aoiInfoTitle {
@@ -89,6 +32,7 @@
 }
 
 .activeButton {
+    font-size: 8px;
     background: none;
     border: none;
     float: right;
@@ -104,6 +48,9 @@
     color: grey !important;
     padding-left: 8px;
     float: left;
+    font-size: 25px;
+    width: 25px !important;
+    height: 25px !important;
 }
 
 .detailText {
@@ -128,4 +75,41 @@
     background-color: #fff;
     height: 100%;
     line-height: 100%;
+}
+
+.actionSearch {
+    height: 16px !important;
+    width: 16px !important;
+}
+
+@media screen and (min-width: 576px) {
+    .aoiInfoWrapper {
+        font-size: 12px;
+        height: 70px;
+    }
+
+    .geometryIcon {
+        font-size: 38px;
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .aoiInfobar {
+        width: 80%;
+    }
+
+    .actionSearch {
+        height: 18px !important;
+        width: 18px !important;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .activeButton {
+        font-size: 7px;
+    }
+    .actionSearch {
+        height: 14px !important;
+        width: 14px !important;
+    }
 }

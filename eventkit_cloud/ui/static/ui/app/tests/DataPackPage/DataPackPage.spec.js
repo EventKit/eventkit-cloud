@@ -1,6 +1,5 @@
 import React from 'react';
 import sinon from 'sinon';
-import {expect} from 'chai';
 import {mount, shallow} from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -12,16 +11,16 @@ import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
-import DataPackList from '../../components/DataPackPage/DataPackList';
+import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
 import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterButton';
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
+import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/sortUtils';
 import isEqual from 'lodash/isEqual';
-
 
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
@@ -54,55 +53,71 @@ describe('DataPackPage component', () => {
                 muiTheme: React.PropTypes.object,
             }
         });
-        expect(wrapper.find(AppBar)).to.have.length(1);
-        expect(wrapper.find(AppBar).hasClass('sectionTitle')).to.be.true;
-        expect(wrapper.find(AppBar).find('h1').text()).to.equal('DataPack Library');
-        expect(wrapper.find(DataPackLinkButton)).to.have.length(1);
-        expect(wrapper.find(Toolbar)).to.have.length(2);
-        expect(wrapper.find(ToolbarGroup)).to.have.length(1);
-        expect(wrapper.find(DataPackSearchbar)).to.have.length(1);
-        expect(wrapper.find(DataPackOwnerSort)).to.have.length(1);
-        expect(wrapper.find(DataPackFilterButton)).to.have.length(1);
-        expect(wrapper.find(DataPackSortDropDown)).to.have.length(1);
-        expect(wrapper.find(DataPackViewButtons)).to.have.length(1);
-        expect(wrapper.find(Drawer)).to.have.length(1);
-        expect(wrapper.find(FilterHeader)).to.have.length(1);
-        expect(wrapper.find(PermissionFilter)).to.have.length(1);
-        expect(wrapper.find(StatusFilter)).to.have.length(1);
-        expect(wrapper.find(DateFilter)).to.have.length(1);
-        expect(wrapper.find(DataPackList)).to.have.length(1);
+        expect(wrapper.find(AppBar)).toHaveLength(1);
+        expect(wrapper.find(AppBar).hasClass('sectionTitle')).toBe(true);
+        expect(wrapper.find(AppBar).find('h1').text()).toEqual('DataPack Library');
+        expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
+        expect(wrapper.find(Toolbar)).toHaveLength(2);
+        expect(wrapper.find(ToolbarGroup)).toHaveLength(1);
+        expect(wrapper.find(DataPackSearchbar)).toHaveLength(1);
+        expect(wrapper.find(DataPackOwnerSort)).toHaveLength(1);
+        expect(wrapper.find(DataPackFilterButton)).toHaveLength(1);
+        expect(wrapper.find(DataPackSortDropDown)).toHaveLength(1);
+        expect(wrapper.find(DataPackViewButtons)).toHaveLength(1);
+        expect(wrapper.find(Drawer)).toHaveLength(1);
+        expect(wrapper.find(FilterHeader)).toHaveLength(1);
+        expect(wrapper.find(PermissionFilter)).toHaveLength(1);
+        expect(wrapper.find(StatusFilter)).toHaveLength(1);
+        expect(wrapper.find(DateFilter)).toHaveLength(1);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
+        expect(wrapper.find(DataPackGrid)).toHaveLength(1);
     });
 
     it('should call getRuns when mounting', () => {
         let props = getProps();
         props.getRuns = new sinon.spy();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
-        const wrapper = shallow(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
-        expect(props.getRuns.calledOnce).to.be.true;
-        expect(mountSpy.calledOnce).to.be.true;
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(mountSpy.calledOnce).toBe(true);
+    });
+
+    it('should run getRuns at intervals', () => {
+        jest.useFakeTimers();
+        let props = getProps();
+        props.getRuns = new sinon.spy();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(setInterval.mock.calls.length).toEqual(1);
+        expect(setInterval.mock.calls[0][1]).toEqual(10000);
+        jest.runOnlyPendingTimers();
+        expect(props.getRuns.calledTwice).toBe(true);
+        jest.runOnlyPendingTimers();
+        expect(props.getRuns.calledThrice).toBe(true);
+    });
+
+    it('should remove the fetch interval on unmount', () => {
+        jest.useFakeTimers();
+        let props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(clearInterval.mock.calls.length).toEqual(0);
+        const fetch = wrapper.instance().fetch;
+        wrapper.unmount();
+        expect(clearInterval.mock.calls.length).toEqual(1);
+        expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
     });
 
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
+        const wrapper = shallow(<DataPackPage {...props}/>);
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
         const propsSpy = new sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledTwice).to.be.true;
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.componentWillReceiveProps.restore();
     });
@@ -143,7 +158,7 @@ describe('DataPackPage component', () => {
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const searchSpy = new sinon.spy(utils, 'search');
         wrapper.instance().onSearch('TEST', -1);
-        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledTwice).toBe(true);
         expect(searchSpy.calledWith('TEST', runs))
         expect(isEqual(wrapper.state().displayedRuns, [
             {
@@ -166,7 +181,7 @@ describe('DataPackPage component', () => {
                     event: 'test event',
                 }
             },
-            ])).to.be.true;
+            ])).toBe(true);
         stateSpy.restore();
         searchSpy.restore();
     });
@@ -185,10 +200,10 @@ describe('DataPackPage component', () => {
         const applySortsSpy = new sinon.spy(DataPackPage.prototype, 'applySorts');
         const applyFiltersSpy = new sinon.spy(DataPackPage.prototype, 'applyFilters');
         wrapper.instance().checkForEmptySearch('', [], {});
-        expect(stateSpy.calledWith({search: {searched: false, searchQuery: ''}})).to.be.true;
+        expect(stateSpy.calledWith({search: {searched: false, searchQuery: ''}})).toBe(true);
         expect(applySortsSpy.calledWith(wrapper.state().runs));
         expect(applyFiltersSpy.calledWith(wrapper.state().runs));
-        expect(stateSpy.calledWith({displayedRuns: wrapper.state().displayedRuns})).to.be.true;
+        expect(stateSpy.calledWith({displayedRuns: wrapper.state().displayedRuns})).toBe(true);
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.applySorts.restore();
         DataPackPage.prototype.applyFilters.restore();
@@ -198,11 +213,11 @@ describe('DataPackPage component', () => {
         let props = getProps();
         props.getRuns = sinon.spy();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        expect(props.getRuns.calledOnce).to.be.true;
+        expect(props.getRuns.calledOnce).toBe(true);
         let nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
         wrapper.setProps(nextProps);
-        expect(props.getRuns.calledTwice).to.be.true;
+        expect(props.getRuns.calledTwice).toBe(true);
     });
 
     it('should re-sort on handleSortChange', () => {
@@ -242,9 +257,9 @@ describe('DataPackPage component', () => {
         wrapper.setState({dropDownValue: 2, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 1,);
-        expect(stateSpy.calledWith({dropDownValue: 1})).to.be.true;
-        expect(applySpy.calledOnce).to.be.true;
-        expect(stateSpy.calledWith({displayedRuns: runs})).to.be.true;
+        expect(stateSpy.calledWith({dropDownValue: 1})).toBe(true);
+        expect(applySpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({displayedRuns: runs})).toBe(true);
         stateSpy.restore();
         applySpy.restore();
     });
@@ -285,9 +300,9 @@ describe('DataPackPage component', () => {
             {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
         ];
         wrapper.instance().applyAll(runs);
-        expect(searchSpy.calledWith(runs)).to.be.true;
-        expect(filterSpy.calledWith(runs)).to.be.true;
-        expect(sortSpy.calledWith(runs)).to.be.true;
+        expect(searchSpy.calledWith(runs)).toBe(true);
+        expect(filterSpy.calledWith(runs)).toBe(true);
+        expect(sortSpy.calledWith(runs)).toBe(true);
         searchSpy.restore();
         filterSpy.restore();
         sortSpy.restore();
@@ -304,12 +319,30 @@ describe('DataPackPage component', () => {
             {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
         ];
         const returned_runs = wrapper.instance().applySorts(runs);
-        expect(sortSpy.calledWith(runs)).to.be.true;
-        expect(ownerSpy.called).to.be.false;
-        expect(isEqual(returned_runs, runs)).to.be.true;
+        expect(sortSpy.calledWith(runs)).toBe(true);
+        expect(ownerSpy.called).toBe(false);
+        expect(isEqual(returned_runs, runs)).toBe(true);
         sortSpy.restore();
         ownerSpy.restore();
     });
+    
+    it('applySorts should call tableSort', () => {
+        let props = getProps();
+        const sortSpy = new sinon.spy(utils , 'orderOldest');
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-21'},
+            {job: {name: 'two', description: 'test', event: 'test'}, user: 'notadmin', started_at: '2017-03-20'},
+            {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
+        ];
+        wrapper.setState({tableSort: sortSpy, grid: false});
+        const returned_runs = wrapper.instance().applySorts(runs);
+        expect(sortSpy.calledOnce).toBe(true);
+        expect(sortSpy.calledWith(runs)).toBe(true);
+        expect(returned_runs[0].started_at).toEqual('2017-03-19');
+        expect(returned_runs[2].started_at).toEqual('2017-03-21');
+        sortSpy.restore();
+    })
 
     it('applySorts should call sortDropDown and myDataPacksOnly', () => {
         let props = getProps();
@@ -323,9 +356,9 @@ describe('DataPackPage component', () => {
         ];
         wrapper.setState({dropDownValue: 2});
         const returned_runs = wrapper.instance().applySorts(runs);
-        expect(ownerSpy.calledWith(runs, 'admin')).to.be.true;
-        expect(sortSpy.calledWith([runs[0], runs[2]])).to.be.true;
-        expect(isEqual(returned_runs, [runs[0], runs[2]])).to.be.true;
+        expect(ownerSpy.calledWith(runs, 'admin')).toBe(true);
+        expect(sortSpy.calledWith([runs[0], runs[2]])).toBe(true);
+        expect(isEqual(returned_runs, [runs[0], runs[2]])).toBe(true);
         sortSpy.restore();
         ownerSpy.restore();
     });
@@ -340,8 +373,8 @@ describe('DataPackPage component', () => {
             {job: {name: 'three', description: 'test', event: 'test'}, user: 'admin', started_at: '2017-03-19'},
         ];
         const returned_runs = wrapper.instance().applySearch(runs);
-        expect(searchSpy.called).to.be.false;
-        expect(isEqual(returned_runs, runs)).to.be.true;
+        expect(searchSpy.called).toBe(false);
+        expect(isEqual(returned_runs, runs)).toBe(true);
         searchSpy.restore();
     });
 
@@ -356,9 +389,9 @@ describe('DataPackPage component', () => {
         ];
         wrapper.setState({search: {searched: true, searchQuery: 'one'}});
         const returned_runs = wrapper.instance().applySearch(runs);
-        expect(searchSpy.calledWith('one', runs)).to.be.true;
-        expect(returned_runs.length).to.equal(1);
-        expect(returned_runs[0].job.name).to.equal('one');
+        expect(searchSpy.calledWith('one', runs)).toBe(true);
+        expect(returned_runs.length).toEqual(1);
+        expect(returned_runs[0].job.name).toEqual('one');
         searchSpy.restore();
     });
 
@@ -375,11 +408,11 @@ describe('DataPackPage component', () => {
          ];
          wrapper.setState({permissions: 'PRIVATE'});
          const returned_runs = wrapper.instance().applyFilters(runs);
-         expect(permissionsSpy.calledOnce).to.be.true;
-         expect(statusSpy.called).to.be.false;
-         expect(dateSpy.called).to.be.false;
-         expect(returned_runs.length).to.equal(1);
-         expect(returned_runs[0].job.name).to.equal('three');
+         expect(permissionsSpy.calledOnce).toBe(true);
+         expect(statusSpy.called).toBe(false);
+         expect(dateSpy.called).toBe(false);
+         expect(returned_runs.length).toEqual(1);
+         expect(returned_runs[0].job.name).toEqual('three');
          permissionsSpy.restore();
          statusSpy.restore();
          dateSpy.restore();
@@ -398,11 +431,11 @@ describe('DataPackPage component', () => {
          ];
          wrapper.setState({status: {completed: true, incomplete: false, running: false}});
          const returned_runs = wrapper.instance().applyFilters(runs);
-         expect(permissionsSpy.called).to.be.false;
-         expect(statusSpy.calledOnce).to.be.true;
-         expect(dateSpy.called).to.be.false;
-         expect(returned_runs.length).to.equal(1);
-         expect(returned_runs[0].job.name).to.equal('one');
+         expect(permissionsSpy.called).toBe(false);
+         expect(statusSpy.calledOnce).toBe(true);
+         expect(dateSpy.called).toBe(false);
+         expect(returned_runs.length).toEqual(1);
+         expect(returned_runs[0].job.name).toEqual('one');
          permissionsSpy.restore();
          statusSpy.restore();
          dateSpy.restore();
@@ -421,11 +454,11 @@ describe('DataPackPage component', () => {
          ];
          wrapper.setState({minDate: new Date(2017,2,20,23,0)});
          const returned_runs = wrapper.instance().applyFilters(runs);
-         expect(permissionsSpy.called).to.be.false;
-         expect(statusSpy.called).to.be.false;
-         expect(dateSpy.calledOnce).to.be.true;
-         expect(returned_runs.length).to.equal(1);
-         expect(returned_runs[0].job.name).to.equal('one');
+         expect(permissionsSpy.called).toBe(false);
+         expect(statusSpy.called).toBe(false);
+         expect(dateSpy.calledOnce).toBe(true);
+         expect(returned_runs.length).toEqual(1);
+         expect(returned_runs[0].job.name).toEqual('one');
          permissionsSpy.restore();
          statusSpy.restore();
          dateSpy.restore();    
@@ -443,12 +476,30 @@ describe('DataPackPage component', () => {
         wrapper.setState({displayedRuns: runs, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleFilterApply();
-        expect(stateSpy.calledTwice).to.be.true;
-        expect(stateSpy.calledWith({filtersApplied: true})).to.be.true;
-        expect(applySpy.calledWith(runs)).to.be.true;
-        expect(stateSpy.calledWith({displayedRuns: runs})).to.be.true;
+        expect(stateSpy.calledThrice).toBe(true);
+        expect(stateSpy.calledWith({filtersApplied: true})).toBe(true);
+        expect(applySpy.calledWith(runs)).toBe(true);
+        expect(stateSpy.calledWith({displayedRuns: runs})).toBe(true);
         stateSpy.restore();
         applySpy.restore();
+    });
+
+    it('handleTableSort should use the passed in function on displayed runs then update the state', () => {
+        const sortFunc = (runs) => {
+            return runs.reverse();
+        }
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const runs =[
+            {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
+            {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
+            {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
+        ];
+        wrapper.setState({displayedRuns: runs, runs: runs});
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleTableSort(sortFunc);
+        expect(stateSpy.calledWith({displayedRuns: runs.reverse(), tableSort: sortFunc})).toBe(true);
+        stateSpy.restore();
     });
 
     it('handleFilterClear should setState then re-apply search and sort', () => {
@@ -464,7 +515,7 @@ describe('DataPackPage component', () => {
         wrapper.setState({displayedRuns: runs, runs: runs});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleFilterClear();
-        expect(stateSpy.calledTwice).to.be.true;
+        expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({
             permissions: null,
             status: {
@@ -475,9 +526,9 @@ describe('DataPackPage component', () => {
             minDate: null,
             maxDate: null,
             filtersApplied: false,
-        })).to.be.true;
-        expect(searchSpy.calledWith(runs)).to.be.true;
-        expect(sortSpy.calledWith(runs)).to.be.true;
+        })).toBe(true);
+        expect(searchSpy.calledWith(runs)).toBe(true);
+        expect(sortSpy.calledWith(runs)).toBe(true);
         expect(stateSpy.calledWith({displayedRuns: runs}));
         searchSpy.restore();
         sortSpy.restore();
@@ -489,7 +540,7 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handlePermissionsChange(null, 'value');
-        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({permissions: 'value'}));
         stateSpy.restore();
     });
@@ -499,8 +550,8 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleStatusChange({completed: true});
-        expect(stateSpy.calledOnce).to.be.true;
-        expect(stateSpy.calledWith({status: {completed: true, incomplete: false, running: false}})).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({status: {completed: true, incomplete: false, running: false}})).toBe(true);
         stateSpy.restore();
     });
 
@@ -510,7 +561,7 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleMinDate(null, date);
-        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({minDate: date}));
         stateSpy.restore();
     });
@@ -521,7 +572,7 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleMaxDate(null, date);
-        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({maxDate: date}));
         stateSpy.restore();
     });
@@ -531,7 +582,7 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleToggle();
-        expect(stateSpy.calledOnce).to.be.true;
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({open: false}));
         stateSpy.restore();
     });
@@ -541,7 +592,7 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const updateSpy = new sinon.spy(DataPackPage.prototype, 'forceUpdate');
         wrapper.instance().screenSizeUpdate();
-        expect(updateSpy.calledOnce).to.be.true;
+        expect(updateSpy.calledOnce).toBe(true);
         updateSpy.restore();
     });
 });

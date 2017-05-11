@@ -128,8 +128,8 @@ export class ExportAOI extends Component {
         const bbox = serialize(geom.getExtent());
         const geojson = createGeoJSON(geom);
         this.handleZoomToSelection(bbox);
-        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Import');
-
+        this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import');
+        this.props.setNextEnabled();
 
     }
 
@@ -269,7 +269,7 @@ export class ExportAOI extends Component {
                 right: '0px',
         }
 
-        if(this.props.drawerOpen && window.innerWidth > 991) {
+        if(this.props.drawerOpen && window.innerWidth >= 1200) {
             mapStyle.left = '200px';
         }
         else {
@@ -482,29 +482,23 @@ function createGeoJSON(ol3Geometry) {
     const bbox = serialize(ol3Geometry.getExtent());
     const coords = ol3Geometry.getCoordinates();
     // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
-    const polygonGeom = new ol.geom.Polygon(coords)
-    polygonGeom.transform(WEB_MERCATOR, WGS84);
-    const wgs84Coords = polygonGeom.getCoordinates();
+    var geom = null;
+    if (ol3Geometry.getType() == 'Polygon') {
+        geom = new ol.geom.Polygon(coords)
+    }else if(ol3Geometry.getType() == 'MultiPolygon'){
+        geom = new ol.geom.MultiPolygon(coords)
+    }
+    geom.transform(WEB_MERCATOR, WGS84);
+    const wgs84Coords = geom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
                     "features": [
                         {
                             "type": "Feature",
                             "bbox": bbox,
-                            "geometry": {"type": "Polygon", "coordinates": wgs84Coords}
+                            "geometry": {"type": geom.getType(), "coordinates": wgs84Coords}
                         }
                     ]}
     return geojson;
-}
-
-function processGeoJSONFile(file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-        const dataURL = reader.result;
-        const geojsonReader = new ol.format.GeoJSON();
-        const geom = geojsonReader.readFeatures(JSON.parse(dataURL));
-        return geom;
-    }
-    return reader.readAsText(file);
 }
 
 ol.control.ZoomExtent = function(opt_option) {

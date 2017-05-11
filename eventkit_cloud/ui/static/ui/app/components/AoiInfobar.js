@@ -9,6 +9,7 @@ import ActionRoom from 'material-ui/svg-icons/action/room';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 
 export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>;
+export const MULTIPOLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
 
@@ -45,6 +46,9 @@ export class AoiInfobar extends Component {
             else if(aoiInfo.geomType == 'Polygon') {
                 this.setState({geometryIcon: POLYGON_ICON});
             }
+            else if(aoiInfo.geomType == 'MultiPolygon') {
+                this.setState({geometryIcon: MULTIPOLYGON_ICON});
+            }
             this.setState({aoiTitle: aoiInfo.title});
             this.setState({aoiDescription: aoiInfo.description});
             this.setState({showAoiInfobar: true});
@@ -71,8 +75,9 @@ export class AoiInfobar extends Component {
     render() {
         return (
             <div>
+                {this.state.showAoiInfobar ? 
                 <div className={styles.aoiInfoWrapper}>
-                    {this.state.showAoiInfobar ? 
+                    
                     <div className={styles.aoiInfobar}>
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
@@ -97,8 +102,9 @@ export class AoiInfobar extends Component {
                             </div>
                         </div>   
                     </div>
-                    : null}
+                    
                 </div>
+                : null}
                 {/*<PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
                     <p> AOI Geojson </p>
                     <div style={{overflowY: 'scroll', maxHeight: '430px'}}>{JSON.stringify(this.props.aoiInfo.geojson, undefined, 2)}</div>
