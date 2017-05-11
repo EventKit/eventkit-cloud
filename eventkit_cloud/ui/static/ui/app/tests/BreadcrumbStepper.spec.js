@@ -61,7 +61,6 @@ describe('BreadcrumbStepper component', () => {
     });
 
     it('handleSubmit should submit a job with the correct data', () => {
-        const stub = sinon.stub(browserHistory, 'push');
         let props = getProps();
         props.exportInfo.exportName = 'test name';
         props.exportInfo.datapackDescription = 'test description';
@@ -83,7 +82,6 @@ describe('BreadcrumbStepper component', () => {
         expect(handleSpy.calledOnce).toBe(true);
         expect(props.submitJob.calledOnce).toBe(true);
         expect(props.submitJob.calledWith(expectedProps)).toBe(true);
-        expect(stub.calledOnce).toBe(true);
     });
 
     it('handleNext should increment the stepIndex', () => {
