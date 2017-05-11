@@ -62,7 +62,7 @@ export class ExportInfo extends React.Component {
 
             // check if the check box is checked or unchecked
             if (e.target.checked) {
-                // add the numerical value of the checkbox to options array
+                // add the provider to the array
                 providers.push(e.target.name)
             } else {
                 // or remove the value from the unchecked checkbox from the array

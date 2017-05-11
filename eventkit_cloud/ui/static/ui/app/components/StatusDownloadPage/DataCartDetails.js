@@ -146,7 +146,14 @@ class DataCartDetails extends React.Component {
     };
 
     handleClone = () => {
+        let providerArray = [];
+        this.props.cartDetails.provider_tasks.forEach(function(provider) {
+            providerArray.push(provider.name);
+        })
+
+        this.props.onClone(this.props.cartDetails, providerArray);
         this.setState({deleteDialogOpen: false});
+
     };
 
     render() {
@@ -362,6 +369,7 @@ DataCartDetails.propTypes = {
     cartDetails: PropTypes.object,
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun:  PropTypes.func.isRequired,
+    onClone:     PropTypes.func.isRequired,
 }
 DataCartDetails.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,

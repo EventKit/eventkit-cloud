@@ -29,8 +29,11 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentDidMount(){
+        //Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
+        if(this.props.exportInfo.exportName == '') {
+            this.props.setNextDisabled();
+        }
         this.props.getProviders();
-        this.props.setNextDisabled();
     }
 
     componentWillUnmount() {

@@ -45,7 +45,8 @@ export class ExportAOI extends Component {
                 featureProjection: WEB_MERCATOR
             });
             this._drawLayer.getSource().addFeature(feature[0]);
-            this.handleZoomToSelection(bbox);
+            //this.handleZoomToSelection(bbox);
+            this._map.getView().fit(this._drawLayer.getSource().getExtent(), this._map.getSize())
             this.props.setNextEnabled();
         }
     }

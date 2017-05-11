@@ -7,9 +7,9 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import Paper from 'material-ui/Paper'
 import DataCartDetails from './DataCartDetails'
-import DataPackDetails from './DataPackDetails'
 import styles from '../../styles/StatusDownload.css'
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo} from '../../actions/statusDownloadActions'
+import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
 
@@ -84,7 +84,8 @@ class StatusDownload extends React.Component {
                         <DataCartDetails key={cartDetails.uid}
                                          cartDetails={cartDetails}
                                          onRunDelete={this.props.deleteRun}
-                                         onRunRerun={this.props.rerunExport}/>
+                                         onRunRerun={this.props.rerunExport}
+                                         onClone={this.props.cloneExport}/>
                     ))}
                     </div>
 
@@ -118,6 +119,11 @@ function mapDispatchToProps(dispatch) {
         },
         clearReRunInfo: () => {
             dispatch(clearReRunInfo())
+        },
+        cloneExport: (cartDetails, providerArray) => {
+            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
+            dispatch(updateExportInfo(cartDetails.job.name, cartDetails.job.description, cartDetails.job.event, cartDetails.job.published, providerArray, 'Geopackage'))
+            browserHistory.push('/create/')
         }
     }
 }
@@ -127,6 +133,7 @@ StatusDownload.propTypes = {
     getDatacartDetails: PropTypes.func.isRequired,
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
+    cloneExport: PropTypes.func.isRequired,
 };
 
 StatusDownload.childContextTypes = {
