@@ -19,7 +19,7 @@ describe('DataPackList component', () => {
     const getProps = () => {
         return {
             runs: getRuns(),
-            user: {data: {username: 'admin'}},
+            user: {data: {user: {username: 'admin'}}},
             onRunDelete: () => {},
             onSort: () => {},
         }
