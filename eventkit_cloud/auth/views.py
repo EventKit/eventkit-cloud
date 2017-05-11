@@ -42,11 +42,9 @@ def callback(request):
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
     if user:
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
-        return HttpResponse(JSONRenderer().render(UserDataSerializer(user).data),
-                            content_type="application/json",
-                        status=200)
+        return redirect('exports')
     else:
         logger.error('User could not be logged in.')
         return HttpResponse('{"error":"User could not be logged in"}',

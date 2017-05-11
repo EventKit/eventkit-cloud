@@ -49,7 +49,7 @@ describe('userActions actions', () => {
     it('valid credentials should log the user in', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onPost('/auth/').reply(200, {});
+        mock.onPost('/auth').reply(200, {});
 
         const expectedActions = [{type: types.USER_LOGGING_IN},  { payload: {}, type: 'USER_LOGGED_IN' }];
 

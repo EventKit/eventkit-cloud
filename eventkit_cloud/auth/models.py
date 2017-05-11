@@ -7,3 +7,6 @@ class OAuth(models.Model):
     identification = models.CharField(max_length=200, unique=True, blank=False)
     commonname = models.CharField(max_length=100, blank=False)
 
+    class Meta:  # pragma: no cover
+        managed = True
+        db_table = 'auth_oauth'

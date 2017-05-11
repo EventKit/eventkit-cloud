@@ -40,9 +40,8 @@ class TestAuthViews(TestCase):
 
             mock_get_token.return_value = example_token
             mock_get_user.return_value = user
-            response = callback(request)
-            self.assertEqual(response.status_code, 200)
-            mock_login.assert_called_once_with(request, user)
+            callback(request)
+            mock_login.assert_called_once_with(request, user, backend='django.contrib.auth.backends.ModelBackend')
 
     def test_oauth(self):
         # Test GET to ensure a provider name is returned for dynamically naming oauth login.

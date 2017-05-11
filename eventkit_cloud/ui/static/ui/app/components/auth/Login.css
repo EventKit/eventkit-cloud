@@ -30,14 +30,10 @@
     margin: 15px auto 0px auto;
 }
 .enabledButton{
-    margin: 15px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 30px auto 15px auto;
 }
 .disabledButton{
     margin: 30px auto 15px auto;
-    margin-left: auto;
-    margin-right: auto;
 }
 .disabledButton > div > button {
     background-color: #b4b7b8!important;

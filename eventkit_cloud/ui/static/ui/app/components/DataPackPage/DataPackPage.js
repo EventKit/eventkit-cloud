@@ -269,7 +269,7 @@ export class DataPackPage extends React.Component {
                 overflowX: 'hidden'
             },
             backgroundStyle: {
-                backgroundImage: 'url(' + require('../../../images/ek_topo_pattern.png') + ')'
+                backgroundImage: 'url(../../../images/ek_topo_pattern.png)'
             }
         };
 

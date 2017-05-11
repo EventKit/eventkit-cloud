@@ -278,13 +278,29 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.CharField()
     last_login = serializers.DateTimeField(read_only=True)
     date_joined = serializers.DateTimeField(read_only=True)
+    identification = serializers.SerializerMethodField()
+    commonname = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
-            'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined'
+            'username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined', 'identification', 'commonname'
         )
         read_only_fields = ('username', 'first_name', 'last_name', 'email', 'last_login', 'date_joined')
+
+    @staticmethod
+    def get_identification(instance):
+        if hasattr(instance, 'oauth'):
+            return instance.oauth.identification
+        else:
+            return None
+
+    @staticmethod
+    def get_commonname(instance):
+        if hasattr(instance, 'oauth'):
+            return instance.oauth.commonname
+        else:
+            return None
 
 
 class UserDataSerializer(serializers.Serializer):

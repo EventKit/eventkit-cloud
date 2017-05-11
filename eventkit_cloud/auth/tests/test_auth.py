@@ -8,14 +8,12 @@ from mock import patch, Mock
 from django.contrib.auth.models import User
 from django.conf import settings
 from ..auth import (get_user, Unauthorized, InvalidOauthResponse, request_access_token, get_user_data_from_schema,
-                    fetch_user_from_token, OAuthServerUnreachable, OAuthError)
+                    fetch_user_from_token, OAuthServerUnreachable, OAuthError, Error)
 import requests
 import requests_mock
 import json
 
 logger = logging.getLogger(__name__)
-
-
 
 @override_settings(OAUTH_AUTHORIZATION_URL="http://example.url/authorize")
 class TestAuth(TestCase):
@@ -84,9 +82,29 @@ class TestAuth(TestCase):
         expected_response = {"identification": "long_dn", "commonname": "test", "username": "test",
                              "email": "test@email.dev", "first_name": "test", "last_name": "user"}
 
-        with self.settings(OAUTH_PROFILE_SCHEMA=example_schema):
+        with self.settings(OAUTH_PROFILE_SCHEMA=json.dumps(example_schema)):
             response = get_user_data_from_schema(example_data)
             self.assertEqual(response, expected_response)
+
+        with self.assertRaises(Error):
+            with self.settings(OAUTH_PROFILE_SCHEMA=None):
+                get_user_data_from_schema(example_data)
+
+        with self.assertRaises(Error):
+            with self.settings(OAUTH_PROFILE_SCHEMA='{}'):
+                get_user_data_from_schema(example_data)
+
+        with self.assertRaises(AttributeError):
+            with self.settings(OAUTH_PROFILE_SCHEMA='{}'):
+                del settings.OAUTH_PROFILE_SCHEMA
+                get_user_data_from_schema(example_data)
+
+        bad_json = '{"test":"test}'
+        with self.assertRaises(Error):
+            with self.settings(OAUTH_PROFILE_SCHEMA=bad_json):
+                get_user_data_from_schema(example_data)
+
+
 
     @patch('eventkit_cloud.auth.auth.get_user')
     @patch('eventkit_cloud.auth.auth.get_user_data_from_schema')

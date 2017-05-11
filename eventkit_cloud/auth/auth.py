@@ -5,6 +5,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth.models import User
 from .models import OAuth
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,19 @@ def get_user_data_from_schema(data):
     :return: a dict of user_data.
     """
     user_data = dict()
-    for key, value in settings.OAUTH_PROFILE_SCHEMA.iteritems():
+    try:
+        mapping = json.loads(settings.OAUTH_PROFILE_SCHEMA)
+    except AttributeError:
+        logger.error("AN OAUTH_PROFILE_SCHEMA was not added to the environment variables.")
+        raise
+    except ValueError:
+        raise Error("An invalid json string was added to OAUTH_PROFILE_SCHEMA, please ensure names and values are "
+                     "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
+    except TypeError:
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid mapping.")
+    if not mapping:
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a valid mapping.")
+    for key, value in mapping.iteritems():
         user_data[key] = data.get(value)
     return user_data
 
