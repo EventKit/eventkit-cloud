@@ -288,6 +288,19 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
+                            <div className={styles.heading}>Select Projection</div>
+                            <div className={styles.sectionBottom}>
+                                <div className={styles.checkboxLabel}>
+                                    <Checkbox
+                                        label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
+                                        name="EPSG:4326"
+                                        checked={true}
+                                        disabled={true}
+                                        checkedIcon={<ActionCheckCircle />}
+                                    />
+                                </div>
+                            </div>
+
                             <div className={styles.heading}>Select Export File Formats</div>
                             <div className={styles.sectionBottom}>
                                 <div className={styles.checkboxLabel}>
