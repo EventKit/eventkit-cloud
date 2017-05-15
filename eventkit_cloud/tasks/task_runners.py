@@ -14,7 +14,7 @@ from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 from .export_tasks import (osm_conf_task, osm_prep_schema_task,
                            osm_to_pbf_convert_task, overpass_query_task,
                            wfs_export_task, external_raster_service_export_task,
-                           arcgis_feature_service_export_task, osm_create_styles_task)
+                           arcgis_feature_service_export_task, qgis_project_task)
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -244,19 +244,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         thematic_tasks = (thematic_task | format_tasks) if format_tasks else thematic_task
 
-        bbox = run.job.extents
-        style_task = osm_create_styles_task.s(task_uid=create_export_task(task_name=osm_create_styles_task.name,
-                                                                           export_provider_task=export_provider_task,
-                                                                           worker=worker).uid,
-                                               stage_dir=stage_dir,
-                                               job_name=job_name,
-                                               bbox=bbox,
-                                               provider_slug=provider_task.provider.slug,
-                                               provider_name=provider_task.provider.name).set(queue=worker,
-                                                                                              routing_key=worker)
-
-        return export_provider_task.uid, (thematic_tasks | style_task)
-
+        return export_provider_task.uid, (thematic_tasks)
 
 class ExportWFSTaskRunner(TaskRunner):
     """
