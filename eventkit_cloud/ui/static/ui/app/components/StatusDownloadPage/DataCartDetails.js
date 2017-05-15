@@ -332,7 +332,7 @@ class DataCartDetails extends React.Component {
                 <div className={styles.subHeading}>
                         Selected Area of Interest (AOI)
                 </div>
-                <div id="summaryMap" className={styles.map} ></div>
+                <div id="summaryMap" style={{maxHeight: '400px'}}></div>
             </div>
             <div style={{width:'100%', paddingTop:'30px'}}>
                 <div className={styles.subHeading}>

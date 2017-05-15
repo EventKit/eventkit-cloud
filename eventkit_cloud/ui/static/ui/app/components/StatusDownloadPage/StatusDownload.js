@@ -7,11 +7,12 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import Paper from 'material-ui/Paper'
 import DataCartDetails from './DataCartDetails'
-import styles from '../../styles/StatusDownload.css'
+import cssStyles from '../../styles/StatusDownload.css'
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
+import CustomScrollbar from '../../components/CustomScrollbar';
 
 class StatusDownload extends React.Component {
 
@@ -25,9 +26,11 @@ class StatusDownload extends React.Component {
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)};
     }
+
     expandedChange(expanded) {
         this.setState({expanded: expanded});
     }
+    
     componentWillReceiveProps(nextProps) {
         if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
             if(nextProps.runDeletion.deleted) {
@@ -68,29 +71,44 @@ class StatusDownload extends React.Component {
         TimerMixin.clearInterval(this.timer);
     }
 
-    componentDidUpdate(prevProps, prevState) {
-
-    }
-
     render() {
 
-        return (
-            <div className={styles.root} style={{height: window.innerHeight - 110}}>
-                <form className={styles.form} >
-                <Paper className={styles.paper} zDepth={2} >
-                    <div className={styles.wholeDiv}>
-                        <div id='mainHeading' className={styles.heading}>Status & Download</div>
-                    {this.state.datacartDetails.map((cartDetails) => (
-                        <DataCartDetails key={cartDetails.uid}
-                                         cartDetails={cartDetails}
-                                         onRunDelete={this.props.deleteRun}
-                                         onRunRerun={this.props.rerunExport}
-                                         onClone={this.props.cloneExport}/>
-                    ))}
-                    </div>
+        const styles = {
+            root: {
+                height: window.innerHeight - 95,
+                width: '100%',
+                margin: 'auto',
+                overflowY: 'hidden',
+                backgroundImage: 'url("../../images/ek_topo_pattern.png")',
+                backgroundRepeat: 'repeat repeat'
+            },
+            content: {
+                padding: '30px',
+                margin: 'auto',
+                maxWidth: '1100px'
+            }
+        }
 
-                </Paper>
-                </form>
+        return (
+            <div style={styles.root}>
+                <CustomScrollbar style={{height: window.innerHeight - 95, width: '100%'}}>
+                <div style={styles.content}>
+                    <form>
+                        <Paper style={{padding: '20px'}} zDepth={2} >
+                            
+                                <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
+                                    {this.state.datacartDetails.map((cartDetails) => (
+                                        <DataCartDetails key={cartDetails.uid}
+                                                        cartDetails={cartDetails}
+                                                        onRunDelete={this.props.deleteRun}
+                                                        onRunRerun={this.props.rerunExport}
+                                                        onClone={this.props.cloneExport}/>
+                                    ))}
+                                
+                        </Paper>
+                    </form>
+                </div>
+                </CustomScrollbar>
             </div>
 
         )
