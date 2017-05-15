@@ -18,6 +18,7 @@
     max-width: 500px;
 }
 .form {
+    vertical-align: center;
     margin: 0 auto;
     width: 70%
 }
@@ -26,15 +27,13 @@
     font-size: 20px;
     font-weight: bold;
     color: white;
-    transform: translateX(10%);
+    margin: 15px auto 0px auto;
 }
 .enabledButton{
-    margin-top: 30px;
-    margin-left: 40%;
+    margin: 30px auto 15px auto;
 }
 .disabledButton{
-    margin-top: 30px;
-    margin-left: 40%;
+    margin: 30px auto 15px auto;
 }
 .disabledButton > div > button {
     background-color: #b4b7b8!important;
@@ -47,17 +46,9 @@
     font-size: 16px!important;
     width: 100%!important;
     height: 45px!important;
-    margin-top: 15px!important;
     color: #e2e2e2!important;
-    padding-left: 10px;
-}
-.textField >  {
-    font-size: 16px!important;
-    color: #e2e2e2!important;
-}
-.textField > input{
-    font-size: 16px!important;
-    color: #e2e2e2!important;
+    margin: 15px auto 0px auto;
+    padding: 10px;
 }
 
 .fieldWrapper > svg {

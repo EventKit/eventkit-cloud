@@ -31,7 +31,7 @@ class TestJob(TestCase):
         username = 'admin'
         password = '@dm1n'
         self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings,"SITE_NAME", "cloud.eventkit.dev")))
-        self.login_url = self.base_url + '/auth/'
+        self.login_url = self.base_url + '/auth'
         self.create_export_url = self.base_url + '/exports/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')

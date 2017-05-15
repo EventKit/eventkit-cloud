@@ -13,7 +13,11 @@ export default (state = initialState, { type, payload, error }) => {
     case types.USER_LOGGING_IN:
       return { ...state, isLoading: true }
     case types.USER_LOGGED_IN:
-      return { ...state, data: payload, isLoading: false }
+      if(payload){
+        return { ...state, data: payload, isLoading: false }
+      } else {
+        return {...state, data: null, isLoading: false}
+      }
     case types.USER_LOGGED_OUT:
       return { ...state, data: null, isLoading: false}
     case types.PATCHING_USER:

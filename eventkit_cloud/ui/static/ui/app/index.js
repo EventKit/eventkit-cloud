@@ -38,7 +38,7 @@ const UserIsNotAuthenticated = UserAuthWrapper({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
     // Want to redirect the user when they are done loading and authenticated
-    predicate: user => user.data === null && user.isLoading === false,
+    predicate: user => !user.data && user.isLoading === false,
     failureRedirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
     allowRedirectBack: false
 });

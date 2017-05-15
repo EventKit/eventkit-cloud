@@ -267,11 +267,14 @@ export class DataPackPage extends React.Component {
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
                 overflowX: 'hidden'
+            },
+            backgroundStyle: {
+                backgroundImage: 'url(../../../images/ek_topo_pattern.png)'
             }
         };
 
         return (
-            <div style={{backgroundImage: "url('./images/ek_topo_pattern.png')"}}>
+            <div style={styles.backgroundStyle}>
                 <AppBar 
                     className={primaryStyles.sectionTitle} 
                     style={styles.appBar} title={pageTitle}
