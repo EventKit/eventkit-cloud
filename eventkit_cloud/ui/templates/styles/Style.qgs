@@ -163,7 +163,7 @@
   <projectlayers>
     <maplayer minimumScale="0" maximumScale="60000" readOnly="0" geometry="No geometry" type="vector" hasScaleBasedVisibilityFlag="1">
       <extent>
-       <xmin>{{ bbox.0 }}</xmin>
+      <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
@@ -494,10 +494,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_amenities_all_points_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=amenities_all_points</datasource>
@@ -3036,10 +3036,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_amenities_all_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=amenities_all_polygons</datasource>
@@ -3506,10 +3506,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="24000" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=buildings_polygons</datasource>
@@ -3908,10 +3908,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_grassy_fields_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=grassy_fields_polygons</datasource>
@@ -4310,10 +4310,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_landuse_other_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=landuse_other_polygons</datasource>
@@ -5094,10 +5094,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="60000" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_landuse_residential_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=landuse_residential_polygons</datasource>
@@ -5496,10 +5496,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.1278917</xmin>
-        <ymin>51.50232249999999823</ymin>
-        <xmax>-0.06903910000000001</xmax>
-        <ymax>51.51575640000000078</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=natural_polygons|subset="natural" = "water"</datasource>
@@ -5900,10 +5900,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.1006928</xmin>
-        <ymin>51.50792619999999999</ymin>
-        <xmax>-0.09794319999999999</xmax>
-        <ymax>51.50848299999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=natural_polygons|subset="natural" = "wood"</datasource>
@@ -6304,10 +6304,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_roads_paths_lines_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=roads_paths_lines</datasource>
@@ -8284,10 +8284,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="0" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_villages_points_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=villages_points</datasource>
@@ -8850,10 +8850,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689593</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}</id>
       <datasource>{{ gpkg_filename }}|layername=waterways_lines</datasource>
@@ -9331,10 +9331,10 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
     <maplayer simplifyAlgorithm="0" minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" readOnly="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
-        <xmin>-0.12807199999999999</xmin>
-        <ymin>51.50229999999999819</ymin>
-        <xmax>-0.0689588</xmax>
-        <ymax>51.51599999999999824</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>osm_bounds_osm_{{ layer_id_date_time }}</id>
       <datasource>./osm_bounds-osm-{{ layer_id_date_time|slice:":8" }}.gpkg</datasource>
