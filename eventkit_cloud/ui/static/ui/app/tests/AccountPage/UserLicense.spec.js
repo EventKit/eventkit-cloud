@@ -59,7 +59,10 @@ describe('User License component', () => {
         TestUtils.Simulate.touchTap(node);
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(CardText).text()).toEqual('license text');
+        expect(wrapper.find('a')).toHaveLength(1);
+        expect(wrapper.find('a').props().href).toEqual('/api/licenses/test-license/download');
+        expect(wrapper.find('a').text()).toEqual('- Download this license text -');
+        expect(wrapper.find(CardText).text()).toEqual('- Download this license text -license text');
         expect(wrapper.find(HardwareKeyboardArrowUp)).toHaveLength(1);
     });
 
