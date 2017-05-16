@@ -383,8 +383,6 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['description']
 
 
-
-
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint to get detailed information about the data licenses.
