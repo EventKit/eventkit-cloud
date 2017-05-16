@@ -1,8 +1,5 @@
 import React, {PropTypes, Component} from 'react'
-import {connect} from 'react-redux';
 import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
@@ -11,7 +8,7 @@ import FlatButton from 'material-ui/FlatButton';
 import styles from '../../styles/StatusDownload.css'
 import moment from 'moment'
 
-class DataCartDetails extends React.Component {
+export class DataCartDetails extends React.Component {
     constructor(props) {
         super(props)
 
@@ -27,12 +24,6 @@ class DataCartDetails extends React.Component {
 
     }
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
-    expandedChange(expanded) {
-
-    }
     componentWillReceiveProps(nextProps) {
         if(nextProps.cartDetails.status != this.state.status){
             switch(nextProps.cartDetails.status) {
@@ -317,7 +308,14 @@ class DataCartDetails extends React.Component {
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Layer Data</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.provider_tasks.map((provider) => <p key={provider.name}>{provider.name}</p>)}</td>
+                        <td className={styles.tdData}>{
+                            this.props.cartDetails.provider_tasks.map((provider) => {
+                                if (provider.name != 'OpenStreetMap Data (Generic)') { 
+                                    return <p key={provider.name}>{provider.name}</p>
+                                }
+                                else return null;
+                            })}
+                        </td>
                      </tr>
                     <tr>
                         <td className={styles.tdHeading}>File Formats</td>
@@ -371,11 +369,6 @@ DataCartDetails.propTypes = {
     onRunRerun:  PropTypes.func.isRequired,
     onClone:     PropTypes.func.isRequired,
 }
-DataCartDetails.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
-export default connect(
-
-)(DataCartDetails);
+export default DataCartDetails;
 

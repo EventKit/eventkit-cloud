@@ -18,13 +18,10 @@ class StatusDownload extends React.Component {
 
     constructor(props) {
         super(props)
+        this.handleResize = this.handleResize.bind(this);
         this.state = {
             datacartDetails: [],
         }
-    }
-
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
     }
 
     expandedChange(expanded) {
@@ -58,6 +55,7 @@ class StatusDownload extends React.Component {
 
     }
     _startTimer() {
+        this.props.getDatacartDetails(this.props.params.jobuid);
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
@@ -65,10 +63,16 @@ class StatusDownload extends React.Component {
 
     componentDidMount(){
         this._startTimer();
-
+        window.addEventListener('resize', this.handleResize);
     }
+
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
+        window.removeEventListener('resize', this.handleResize);
+    }
+
+    handleResize() {
+        this.forceUpdate();
     }
 
     render() {
@@ -152,10 +156,6 @@ StatusDownload.propTypes = {
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
-};
-
-StatusDownload.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
 };
 
 reactMixin(StatusDownload.prototype, TimerMixin);

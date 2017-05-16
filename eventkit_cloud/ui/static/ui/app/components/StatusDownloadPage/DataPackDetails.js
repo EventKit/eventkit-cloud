@@ -1,8 +1,4 @@
 import React, {PropTypes, Component} from 'react'
-import {connect} from 'react-redux';
-import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
@@ -12,7 +8,7 @@ import ProviderRow from './ProviderRow'
 import RaisedButton from 'material-ui/RaisedButton';
 
 
-class DataPackDetails extends React.Component {
+export class DataPackDetails extends React.Component {
     constructor(props) {
         super(props)
 
@@ -46,27 +42,11 @@ class DataPackDetails extends React.Component {
         this.setState({height: event.target.value});
     };
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
-
-    componentWillReceiveProps(nextProps) {
-
-    }
-
-    componentDidMount(){
-
-    }
-    componentDidUpdate(prevProps, prevState) {
-
-    }
     toggleCheckbox(event, checked) {
-
         this.setState({file: checked})
     }
 
     onSelectionToggle(selectedTasks){
-        console.log(this.state.selectedTasks)
         const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
         this.setState({selectedTasks : tasks})
     }
@@ -106,6 +86,9 @@ class DataPackDetails extends React.Component {
     }
 
     render() {
+        const providers = this.props.providerTasks.filter((provider) => {
+            return provider.name != 'OpenStreetMap Data (Generic)';
+        });
 
         return (
             <div className={styles.downloadDiv}>
@@ -142,7 +125,7 @@ class DataPackDetails extends React.Component {
                     </TableHeader>
                     </Table>
 
-                {this.props.providerTasks.map((provider) => (
+                {providers.map((provider) => (
                     <ProviderRow key={provider.uid} onSelectionToggle={this.onSelectionToggle} updateSelectionNumber={this.updateSelectionNumber} provider={provider}/>
                 ))}
            </div>
@@ -154,11 +137,6 @@ class DataPackDetails extends React.Component {
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
 }
-DataPackDetails.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
-export default connect(
-
-)(DataPackDetails);
+export default DataPackDetails;
 
