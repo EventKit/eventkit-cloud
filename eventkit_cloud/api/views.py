@@ -33,6 +33,7 @@ from .filters import ExportRunFilter, JobFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
+from .renderers import PlainTextRenderer
 from .validators import validate_bbox_params, validate_search_bbox
 from rest_framework.permissions import AllowAny
 from rest_framework.schemas import SchemaGenerator
@@ -46,7 +47,6 @@ logger = logging.getLogger(__name__)
 
 # controls how api responses are rendered
 renderer_classes = (JSONRenderer, HOTExportApiRenderer)
-
 
 class JobViewSet(viewsets.ModelViewSet):
     """
@@ -395,6 +395,25 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
     ordering = ['name']
 
+    @detail_route(methods=['get'], renderer_classes=[PlainTextRenderer])
+    def download(self, request, slug=None, *args, **kwargs):
+        """
+        Responds to a GET request with a text file of the license text
+
+        *request:* the http request
+        *slug:* the license slug
+
+        *Returns:*
+            - a .txt file of the license text.
+        """
+        try:
+            license_text = License.objects.get(slug=slug).text
+            response = Response(license_text, content_type='text/plain')
+            response['Content-Disposition'] = 'attachment; filename="{}.txt"'.format(slug)
+            return response
+        except Exception as e:
+            return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
+
 
 class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -738,3 +757,4 @@ class SwaggerSchemaView(views.APIView):
                 'A schema could not be generated, please ensure that you are logged in.'
             )
         return Response(schema)
+
