@@ -201,7 +201,9 @@ export class ExportInfo extends React.Component {
                 height: window.innerHeight - 180
             }
         }
-        const providers = this.props.providers
+        const providers = this.props.providers.filter((provider) => {
+            return provider.type != 'osm-generic';
+        });
 
         return (
             <div className={styles.root} style={style.window}>
@@ -209,51 +211,51 @@ export class ExportInfo extends React.Component {
                     <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
                         <Paper className={styles.paper} zDepth={2} rounded>
                             <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                                <TextField name="exportName"
-                                    ref="exportName"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    onChange={this.onChange}
-                                    defaultValue={this.props.exportInfo.exportName}
-                                    hintText="Datapack Name"
-                                    style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
-                                    inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                />
-                                <TextField
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="datapackDescription"
-                                    onChange={this.onChange}
-                                    defaultValue={this.props.exportInfo.datapackDescription}
-                                    hintText="Description"
-                                    multiLine={true}
-                                    rows={2}
-                                    style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
-                                    textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                />
-                                <TextField
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="projectName"
-                                    onChange={this.onChange}
-                                    defaultValue={this.props.exportInfo.projectName}
-                                    hintText="Project Name"
-                                    style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
-                                    inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                    hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
-                                />
-                                <div className={styles.checkbox}>
-                                    <Checkbox
-                                        name="makePublic"
-                                        onCheck={this.toggleCheckbox.bind(this)}
-                                        //checked={!!this.state.makePublic}
-                                        defaultChecked={this.props.exportInfo.makePublic}
-                                        className={styles.checkboxColor}
-                                        label="Make Public"
-                                        checkedIcon={<ActionCheckCircle />}
-                                        uncheckedIcon={<UncheckedCircle />}
+                            <TextField name="exportName"
+                                ref="exportName"
+                                underlineStyle={style.underlineStyle}
+                                underlineFocusStyle={style.underlineStyle}
+                                onChange={this.onChange}
+                                defaultValue={this.props.exportInfo.exportName}
+                                hintText="Datapack Name"
+                                style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                                inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                            />
+                            <TextField
+                                underlineStyle={style.underlineStyle}
+                                underlineFocusStyle={style.underlineStyle}
+                                name="datapackDescription"
+                                onChange={this.onChange}
+                                defaultValue={this.props.exportInfo.datapackDescription}
+                                hintText="Description"
+                                multiLine={true}
+                                rows={2}
+                                style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
+                                textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                            />
+                            <TextField
+                                underlineStyle={style.underlineStyle}
+                                underlineFocusStyle={style.underlineStyle}
+                                name="projectName"
+                                onChange={this.onChange}
+                                defaultValue={this.props.exportInfo.projectName}
+                                hintText="Project Name"
+                                style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
+                                inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                            />
+                            <div className={styles.checkbox}>
+                                <Checkbox
+                                    name="makePublic"
+                                    onCheck={this.toggleCheckbox.bind(this)}
+                                    //checked={!!this.state.makePublic}
+                                    defaultChecked={this.props.exportInfo.makePublic}
+                                    style={{left: '0px', paddingLeft: '5px'}}
+                                    label="Make Public"
+                                    checkedIcon={<ActionCheckCircle style={{fill: '#55ba63'}} />}
+                                    uncheckedIcon={<UncheckedCircle style={{fill: '4598bf'}}/>}
                                 />
                             </div>
 
@@ -261,45 +263,55 @@ export class ExportInfo extends React.Component {
                             <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                             <div className={styles.sectionBottom}>
                                 <List className={styles.list}>
-                                    {providers.map((provider) => (
-                                    <ListItem
-                                        key={provider.uid}
-                                        primaryText={provider.name}
-                                        leftCheckbox={<Checkbox
-                                        name={provider.name}
-                                        defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
-                                        onCheck={this.onChangeCheck.bind(this)}
-                                        className={styles.checkboxColor}
-                                        checkedIcon={<ActionCheckCircle />}
-                                        uncheckedIcon={<UncheckedCircle
-                                        className={styles.checkboxColor}/>}
-                                    />}
-                                    initiallyOpen={false}
-                                    primaryTogglesNestedList={false}
-                                    nestedItems={[
-                                            <ListItem
-                                            key={1}
-                                            primaryText={provider.service_description}
-
+                                    {providers.map((provider, ix) => {
+                                        return <ListItem
+                                            key={provider.uid}
+                                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white'}}
+                                            nestedListStyle={{padding: '0px'}}
+                                            primaryText={provider.name}
+                                            leftCheckbox={<Checkbox
+                                                name={provider.name}
+                                                style={{left: '0px', paddingLeft: '5px'}}
+                                                defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
+                                                onCheck={this.onChangeCheck.bind(this)}
+                                                checkedIcon={
+                                                    <ActionCheckCircle
+                                                        style={{fill: '#55ba63', paddingLeft: '5px'}}
+                                                    />
+                                                }
+                                                uncheckedIcon={
+                                                    <UncheckedCircle
+                                                        style={{fill: '#4598bf', paddingLeft: '5px'}}
+                                                    />
+                                                }
+                                            />}
+                                            initiallyOpen={false}
+                                            primaryTogglesNestedList={false}
+                                            nestedItems={[
+                                                    <ListItem
+                                                    key={1}
+                                                    primaryText={provider.service_description}
+                                                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '16px'}}
+                                                    />
+                                                ]}
                                             />
-                                        ]}
-                                    />
-                                    ))}
+                                    })}
                                 </List>
                             </div>
 
-                    <div className={styles.heading}>Select Export File Formats</div>
-                    <div className={styles.sectionBottom}>
-                        <div className={styles.checkboxLabel}>
-                            <Checkbox
-                            label="Geopackage (.gpkg)"
-                            name="Geopackage"
-                            checked={true}
-                            disabled={true}
-                            checkedIcon={<ActionCheckCircle />}
-                        />
-                        </div>
-                     </div>
+                            <div className={styles.heading}>Select Projection</div>
+                            <div className={styles.sectionBottom}>
+                                <div className={styles.checkboxLabel}>
+                                    <Checkbox
+                                        label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
+                                        name="EPSG:4326"
+                                        checked={true}
+                                        disabled={true}
+                                        checkedIcon={<ActionCheckCircle />}
+                                    />
+                                </div>
+                            </div>
+
                             <div className={styles.heading}>Select Export File Formats</div>
                             <div className={styles.sectionBottom}>
                                 <div className={styles.checkboxLabel}>

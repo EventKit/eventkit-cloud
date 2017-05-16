@@ -85,5 +85,10 @@ export default {
         fetched: false,
         data: [],
         error: null,
+    licenses: {
+        fetching: false,
+        fetched: false,
+        licenses: [],
+        error: null
     },
 }

@@ -14,6 +14,9 @@ import requests
 from django.contrib.auth import authenticate, login
 from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
+from logging import getLogger
+
+logger = getLogger(__file__)
 
 
 @require_http_methods(['GET'])
@@ -61,20 +64,31 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def auth(request):
-    if request.method == 'POST':
-        """Logs out user"""
-        auth_logout(request)
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user_data = authenticate(username=username, password=password)
-        if user_data is None:
-            return HttpResponse(status=401)
-        else:
-            login(request, user_data)
-    return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
-                        content_type="application/json",
-                        status=200)
-
+    if getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
+        if request.method == 'POST':
+            """Logs out user"""
+            auth_logout(request)
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user_data = authenticate(username=username, password=password)
+            if user_data is None:
+                return HttpResponse(status=401)
+            else:
+                login(request, user_data)
+                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
+                                    content_type="application/json",
+                                    status=200)
+        if request.method == 'GET':
+            # We want to return a 200 so that the frontend can decide if the auth endpoint is valid for displaying the
+            # the login form.
+            if request.user.is_authenticated():
+                return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+                                    content_type="application/json",
+                                    status=200)
+            else:
+                return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=400)
 
 def logout(request):
     """Logs out user"""
@@ -84,7 +98,7 @@ def logout(request):
 
 def require_email(request):
     """
-    View to handle email collection for new user loging in with OSM account.
+    View to handle email collection for new user log in with OSM account.
     """
     backend = request.session['partial_pipeline']['backend']
     return render_to_response('osm/email.html', {'backend': backend}, RequestContext(request))
@@ -182,7 +196,6 @@ def data_estimator(request):
     return HttpResponse([size], status=200)
 
 
-
 # error views
 
 
@@ -201,3 +214,4 @@ def not_found_error_view(request):
 
 def not_allowed_error_view(request):
     return render_to_response('ui/403.html', {}, RequestContext(request), status=403)
+

@@ -160,7 +160,7 @@ export class DataPackGridItem extends Component {
                                     primaryText="Go to Export Detail"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
-                                {this.props.run.user == this.props.user.data.username ?
+                                {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
                                     style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText={'Delete Export'}
@@ -191,7 +191,7 @@ export class DataPackGridItem extends Component {
                                 :
                                 <NavigationCheck style={styles.completeIcon}/>
                         }
-                        {this.props.run.user == this.props.user.data.username ?
+                        {this.props.run.user == this.props.user.data.user.username ?
                             <p style={styles.ownerLabel}>My DataPack</p>
                             :
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>

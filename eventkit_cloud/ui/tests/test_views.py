@@ -2,21 +2,22 @@
 import logging
 import json
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test import Client
 from mock import Mock, patch
+from django.core.urlresolvers import reverse
 
 logger = logging.getLogger(__name__)
 
 
+@override_settings(DJANGO_MODEL_LOGIN=True)
 class TestUIViews(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
                         username='user', email='user@email.com', password='pass')
         self.client = Client()
-        response = self.client.post('/auth/', {'username': 'user', 'password': 'pass'})
-        self.assertEqual(response.status_code, 200)
+        self.client.login(username='user', password='pass')
 
     @patch('eventkit_cloud.ui.views.get_size_estimate')
     def test_data_estimate_view(self, get_estimate):
