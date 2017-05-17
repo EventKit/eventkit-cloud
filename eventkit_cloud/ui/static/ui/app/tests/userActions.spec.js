@@ -35,7 +35,7 @@ describe('userActions actions', () => {
     it('existing credentials should log the user in', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onGet('/auth/').reply(200, {});
+        mock.onGet('/auth').reply(200, {});
 
         const expectedActions = [{type: types.USER_LOGGING_IN},  { payload: {}, type: 'USER_LOGGED_IN' }];
 
@@ -49,7 +49,7 @@ describe('userActions actions', () => {
     it('valid credentials should log the user in', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onPost('/auth/').reply(200, {});
+        mock.onPost('/auth').reply(200, {});
 
         const expectedActions = [{type: types.USER_LOGGING_IN},  { payload: {}, type: 'USER_LOGGED_IN' }];
 
@@ -63,7 +63,7 @@ describe('userActions actions', () => {
     it('invalid existing credentials should not log the user in', () => {
         const mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onGet('/auth/').reply(401, {});
+        mock.onGet('/auth').reply(401, {});
         mock.onGet('/logout').reply(200, {});
 
         const expectedActions = [{type: types.USER_LOGGING_IN}, {type: types.USER_LOGGED_OUT}];

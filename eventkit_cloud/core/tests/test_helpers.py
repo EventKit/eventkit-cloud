@@ -1,0 +1,29 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
+import logging
+
+from mock import Mock
+from django.test import TestCase
+from ..helpers import get_id
+
+
+logger = logging.getLogger(__name__)
+
+
+class TestCoreHelpers(TestCase):
+
+    def test_get_id(self):
+
+        username = "test"
+
+        # test regular user (no oauth)
+        mock_user = Mock(username=username)
+        del mock_user.oauth
+        user_identification = get_id(mock_user)
+        self.assertEqual(user_identification, username)
+
+        # test oauth user
+        mock_user_oauth = Mock(oauth=Mock(identification=username))
+        user_identification = str(get_id(mock_user_oauth))
+        self.assertEqual(user_identification, username)

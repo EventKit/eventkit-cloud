@@ -5,26 +5,12 @@
     justify-content: space-around;
     display: flex;
     flex-wrap: wrap;
-    overflow-y: scroll;
 }
 .wholeDiv {
     width: 100%;
     display: inline-block
 }
 
-.paper {
-    background-color: white;
-    margin: 0 auto;
-    padding: 20px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    width: 75%;
-    max-width: 1100px;
-}
-.form {
-    margin: 0 auto;
-    width: 100%
-}
 .tdHeading {
     vertical-align: top;
     padding: 10px;
@@ -76,9 +62,7 @@
     color: #4598bf!important;
     fill: #4598bf!important;
 }
-.checkboxColor {
 
-}
 .checkbox > div{
     padding-bottom: 60px;
     margin-top: 15px!important;
@@ -91,10 +75,7 @@
     font-weight:normal!important;
     font-size:16px!important;
 }
-.map {
-    width:75%;
-    padding-top:15px;
-}
+
 .checkboxField > tr > th {
     padding-left: 0px!important;
 }

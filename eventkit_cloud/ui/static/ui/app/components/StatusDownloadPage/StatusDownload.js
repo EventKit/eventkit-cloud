@@ -4,18 +4,24 @@ import {browserHistory} from 'react-router';
 import '../tap_events'
 import Paper from 'material-ui/Paper'
 import DataCartDetails from './DataCartDetails'
-import styles from '../../styles/StatusDownload.css'
+import cssStyles from '../../styles/StatusDownload.css'
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
+import CustomScrollbar from '../../components/CustomScrollbar';
 
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props)
+        this.handleResize = this.handleResize.bind(this);
         this.state = {
             datacartDetails: [],
         }
+    }
+
+    expandedChange(expanded) {
+        this.setState({expanded: expanded});
     }
 
     componentWillReceiveProps(nextProps) {
@@ -52,17 +58,38 @@ export class StatusDownload extends React.Component {
 
     componentDidMount(){
         this.startTimer();
-
+        window.addEventListener('resize', this.handleResize);
     }
+
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
+        window.removeEventListener('resize', this.handleResize);
     }
     handleClone(cartDetails, providerArray)
     {
         this.props.cloneExport(cartDetails, providerArray)
+
+    handleResize() {
+        this.forceUpdate();
     }
 
     render() {
+
+        const styles = {
+            root: {
+                height: window.innerHeight - 95,
+                width: '100%',
+                margin: 'auto',
+                overflowY: 'hidden',
+                backgroundImage: 'url("../../images/ek_topo_pattern.png")',
+                backgroundRepeat: 'repeat repeat'
+            },
+            content: {
+                padding: '30px',
+                margin: 'auto',
+                maxWidth: '1100px'
+            }
+        }
 
         return (
             <div className={styles.root} style={{height: window.innerHeight - 110}}>
@@ -81,6 +108,25 @@ export class StatusDownload extends React.Component {
 
                 </Paper>
                 </form>
+            <div style={styles.root}>
+                <CustomScrollbar style={{height: window.innerHeight - 95, width: '100%'}}>
+                <div style={styles.content}>
+                    <form>
+                        <Paper style={{padding: '20px'}} zDepth={2} >
+
+                                <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
+                                    {this.state.datacartDetails.map((cartDetails) => (
+                                        <DataCartDetails key={cartDetails.uid}
+                                                        cartDetails={cartDetails}
+                                                        onRunDelete={this.props.deleteRun}
+                                                        onRunRerun={this.props.rerunExport}
+                                                        onClone={this.props.cloneExport}/>
+                                    ))}
+
+                        </Paper>
+                    </form>
+                </div>
+                </CustomScrollbar>
             </div>
 
         )

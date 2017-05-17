@@ -10,7 +10,7 @@ import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
 describe('DataPackGrid component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
-    const props = {runs: getRuns(), user: {data: {username: 'admin'}}, onRunDelete: () => {}};
+    const props = {runs: getRuns(), user: {data: {user: {username: 'admin'}}}, onRunDelete: () => {}};
 
     it('should render a DataPackGridItem for each run passed in', () => {
         const getColumnSpy = new sinon.spy(DataPackGrid.prototype, 'getColumns');

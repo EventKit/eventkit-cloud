@@ -24,3 +24,4 @@ router.register(r'maskregions', RegionMaskViewSet, base_name='mask')
 router.register(r'user', UserDataViewSet, base_name='user')
 
 schema_view = SwaggerSchemaView.as_view()
+

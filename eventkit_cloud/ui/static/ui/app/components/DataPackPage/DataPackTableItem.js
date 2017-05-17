@@ -68,7 +68,7 @@ export class DataPackTableItem extends Component {
                     {this.getPermissionsIcon(this.props.run.job.published)}
                 </TableRowColumn>
                 <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>
-                    {this.getOwnerText(this.props.run, this.props.user.data.username)}
+                    {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
                 </TableRowColumn>
                 <TableRowColumn style={{paddingRight: '10px', paddingLeft: '0px', width: '30px'}}>
                     <IconMenu
@@ -86,7 +86,7 @@ export class DataPackTableItem extends Component {
                             primaryText="Go to Export Detail"
                             onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                         
-                        {this.props.run.user == this.props.user.data.username ?
+                        {this.props.run.user == this.props.user.data.user.username ?
                         <MenuItem
                             style={{fontSize: '12px'}}
                             primaryText={'Delete Export'}

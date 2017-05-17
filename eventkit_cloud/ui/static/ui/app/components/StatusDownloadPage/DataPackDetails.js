@@ -42,24 +42,11 @@ class DataPackDetails extends React.Component {
         this.setState({height: event.target.value});
     };
 
-
-    componentWillReceiveProps(nextProps) {
-
-    }
-
-    componentDidMount(){
-
-    }
-    componentDidUpdate(prevProps, prevState) {
-
-    }
     toggleCheckbox(event, checked) {
-
         this.setState({file: checked})
     }
 
     onSelectionToggle(selectedTasks){
-        console.log(this.state.selectedTasks)
         const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
         this.setState({selectedTasks : tasks})
     }
@@ -99,6 +86,9 @@ class DataPackDetails extends React.Component {
     }
 
     render() {
+        const providers = this.props.providerTasks.filter((provider) => {
+            return provider.name != 'OpenStreetMap Data (Generic)';
+        });
 
         return (
             <div className={styles.downloadDiv}>
@@ -135,7 +125,7 @@ class DataPackDetails extends React.Component {
                     </TableHeader>
                     </Table>
 
-                {this.props.providerTasks.map((provider) => (
+                {providers.map((provider) => (
                     <ProviderRow key={provider.uid} onSelectionToggle={this.onSelectionToggle} updateSelectionNumber={this.updateSelectionNumber} provider={provider}/>
                 ))}
            </div>

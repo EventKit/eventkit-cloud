@@ -16,7 +16,7 @@ describe('DataPackGridItem component', () => {
     injectTapEventPlugin();
 
     const muiTheme = getMuiTheme();
-    const user = {data: {username: 'admin'}};
+    const user = {data: {user: {username: 'admin'}}};
 
     it('should display general run information', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};

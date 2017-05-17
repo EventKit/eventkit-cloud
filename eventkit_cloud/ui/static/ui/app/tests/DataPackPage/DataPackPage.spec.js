@@ -33,7 +33,7 @@ describe('DataPackPage component', () => {
                 runs: [],
                 error: null,
             },
-            user: {data: {username: 'admin'}},
+            user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
             deleteRuns: () => {},
             runsDeletion: {

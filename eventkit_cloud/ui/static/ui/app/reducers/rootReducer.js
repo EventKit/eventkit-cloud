@@ -8,6 +8,7 @@ import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeonamesReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
 import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer} from './statusDownloadReducer'
 
@@ -39,6 +40,7 @@ const rootReducer = combineReducers({
     datacartDetailsReceived: setDatacartDetailsReducer,
     runDeletion: deleteRunReducer,
     exportReRun: rerunExportReducer,
+    licenses: licenseReducer,
 });
 
 export default rootReducer;

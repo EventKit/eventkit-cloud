@@ -7,7 +7,7 @@ COPY ./config/setupFile.js /var/lib/eventkit/
 RUN apt-get update && apt-get install -y ruby git
 RUN npm install npm@4.0.2 --quiet
 RUN npm install --quiet
-RUN npm install webpack webpack-dev-server -g --quiet
+#RUN npm install webpack webpack-dev-server -g --quiet
 RUN gem install coveralls-lcov
 
 COPY ./webpack.config.js /var/lib/eventkit/

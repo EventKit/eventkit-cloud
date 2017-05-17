@@ -123,7 +123,7 @@ export class DataPackPage extends React.Component {
         }
         else {
             this.setState({dropDownValue: value});
-            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.username);
+            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.user.username);
             this.setState({displayedRuns: filteredRuns});
         }
     }
@@ -137,7 +137,7 @@ export class DataPackPage extends React.Component {
 
     applySorts(runs) {
         if (this.state.dropDownValue == 2) {
-            runs = utils.myDataPacksOnly(runs, this.props.user.data.username);
+            runs = utils.myDataPacksOnly(runs, this.props.user.data.user.username);
         }
         // should we apply table sorts or card/mobile list sort?
         if(!this.state.grid && window.innerWidth >= 768) {
@@ -267,11 +267,14 @@ export class DataPackPage extends React.Component {
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
                 overflowX: 'hidden'
+            },
+            backgroundStyle: {
+                backgroundImage: 'url(../../../images/ek_topo_pattern.png)'
             }
         };
 
         return (
-            <div style={{backgroundImage: "url('./images/ek_topo_pattern.png')"}}>
+            <div style={styles.backgroundStyle}>
                 <AppBar 
                     className={primaryStyles.sectionTitle} 
                     style={styles.appBar} title={pageTitle}

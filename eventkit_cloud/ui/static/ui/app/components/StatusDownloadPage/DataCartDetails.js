@@ -1,8 +1,5 @@
 import React, {PropTypes, Component} from 'react'
-import {connect} from 'react-redux';
 import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
@@ -306,7 +303,14 @@ export class DataCartDetails extends React.Component {
                     </tr>
                     <tr>
                         <td className={styles.tdHeading}>Layer Data</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.provider_tasks.map((provider) => <p key={provider.name}>{provider.name}</p>)}</td>
+                        <td className={styles.tdData}>{
+                            this.props.cartDetails.provider_tasks.map((provider) => {
+                                if (provider.name != 'OpenStreetMap Data (Generic)') {
+                                    return <p key={provider.name}>{provider.name}</p>
+                                }
+                                else return null;
+                            })}
+                        </td>
                      </tr>
                     <tr>
                         <td className={styles.tdHeading}>File Formats</td>
@@ -321,7 +325,7 @@ export class DataCartDetails extends React.Component {
                 <div className={styles.subHeading}>
                         Selected Area of Interest (AOI)
                 </div>
-                <div id="summaryMap" className={styles.map} ></div>
+                <div id="summaryMap" style={{maxHeight: '400px'}}></div>
             </div>
             <div style={{width:'100%', paddingTop:'30px'}}>
                 <div className={styles.subHeading}>

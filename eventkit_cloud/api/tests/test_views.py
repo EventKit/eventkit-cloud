@@ -11,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
+from django.utils.translation import ugettext as _
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.core.files import File
@@ -18,7 +19,7 @@ from django.core import serializers
 from eventkit_cloud.api.pagination import LinkHeaderPagination
 from eventkit_cloud.api.views import get_models, get_provider_task
 from eventkit_cloud.jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicenses
+    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from mock import patch, Mock
 
@@ -248,7 +249,7 @@ class TestJobViewSet(APITestCase):
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
         self.assertIsNotNone(job.preset.json_tags)
-        self.assertEqual(255, len(job.preset.json_tags))
+        self.assertEqual(256, len(job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -285,7 +286,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
-        self.assertEqual(255, len(self.job.preset.json_tags))
+        self.assertEqual(256, len(self.job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -791,6 +792,63 @@ class TestStaticFunctions(APITestCase):
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)
         assert len(provider_task.formats.all()) == 1
+
+
+class TestLicenseViewSet(APITestCase):
+
+    def setUp(self,):
+        self.user = User.objects.create_user(
+            username='demo', email='demo@demo.com', password='demo'
+        )
+        self.licenses = [License.objects.create(slug='test1', name='name1', text='text1')]
+        self.licenses += [License.objects.create(slug='test0', name='name0', text='text0')]
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json, text/plain; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+    def test_get_licenses_list(self):
+        expected_url = '/api/licenses'
+        expected_data = [
+            {'slug': 'test0', 'name': 'name0', 'text': 'text0'},
+            {'slug': 'test1', 'name': 'name1', 'text': 'text1'}
+        ]
+        url = reverse('api:licenses-list')
+        self.assertEquals(expected_url, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEqual(200, response.status_code)
+        data = json.loads(response.content)
+        self.assertEqual(expected_data, data)
+
+    def test_get_licenses_detail(self):
+        expected_url = '/api/licenses/test1'
+        expected_data = {"slug": "test1", "name": "name1", "text": "text1"}
+        url = reverse('api:licenses-detail', args=['test1'])
+        self.assertEquals(expected_url, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEquals(200, response.status_code)
+        data = json.loads(response.content)
+        self.assertEquals(expected_data, data)
+
+    def test_get_licenses_download(self):
+        expected_url = '/api/licenses/test1/download'
+        url = reverse('api:licenses-download', args=['test1'])
+        self.assertEquals(expected_url, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEquals(200, response.status_code)
+        self.assertEquals(self.licenses[0].text, response.content)
+
+        expected_bad_url = '/api/licenses/test22/download'
+        bad_url = reverse('api:licenses-download', args=['test22'])
+        self.assertEqual(expected_bad_url, bad_url)
+        bad_response = self.client.get(bad_url);
+        self.assertIsNotNone(bad_response)
+        self.assertEquals(400, bad_response.status_code)
+        self.assertEquals(str({'detail': _('Not found')}), bad_response.content)
 
 
 class TestUserDataViewSet(APITestCase):
