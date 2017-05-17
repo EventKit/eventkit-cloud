@@ -50,7 +50,8 @@ export class UserLicense extends Component {
                 />
                 <CardText expandable={true} style={styles.cardText}>
                     <CustomScrollbar style={{height: '200px', width: '100%'}}>
-                        <div style={{padding: '16px'}}>
+                        <div style={{padding: '16px', whiteSpace: 'pre-wrap'}}>
+                            <a href={`/api/licenses/${this.props.license.slug}/download`}>- Download this license text -</a><br/><br/>
                             {this.props.license.text}
                         </div>
                     </CustomScrollbar>
