@@ -1,9 +1,6 @@
 import React, {Component, PropTypes } from 'react';
 import {connect} from 'react-redux';
 import {browserHistory} from 'react-router';
-import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import Paper from 'material-ui/Paper'
 import DataCartDetails from './DataCartDetails'
@@ -13,8 +10,7 @@ import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
 
-class StatusDownload extends React.Component {
-
+export class StatusDownload extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
@@ -22,12 +18,6 @@ class StatusDownload extends React.Component {
         }
     }
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
-    expandedChange(expanded) {
-        this.setState({expanded: expanded});
-    }
     componentWillReceiveProps(nextProps) {
         if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
             if(nextProps.runDeletion.deleted) {
@@ -39,7 +29,7 @@ class StatusDownload extends React.Component {
                 let datacartDetails = [];
                 datacartDetails[0] = nextProps.exportReRun.data;
                 this.setState({datacartDetails: datacartDetails});
-                this._startTimer();
+                this.startTimer();
             }
         }
         if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
@@ -54,22 +44,22 @@ class StatusDownload extends React.Component {
         }
 
     }
-    _startTimer() {
+    startTimer() {
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
     }
 
     componentDidMount(){
-        this._startTimer();
+        this.startTimer();
 
     }
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
     }
-
-    componentDidUpdate(prevProps, prevState) {
-
+    handleClone(cartDetails, providerArray)
+    {
+        this.props.cloneExport(cartDetails, providerArray)
     }
 
     render() {
@@ -85,7 +75,7 @@ class StatusDownload extends React.Component {
                                          cartDetails={cartDetails}
                                          onRunDelete={this.props.deleteRun}
                                          onRunRerun={this.props.rerunExport}
-                                         onClone={this.props.cloneExport}/>
+                                         onClone={this.handleClone.bind(this)}/>
                     ))}
                     </div>
 
@@ -136,14 +126,10 @@ StatusDownload.propTypes = {
     cloneExport: PropTypes.func.isRequired,
 };
 
-StatusDownload.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
-
 reactMixin(StatusDownload.prototype, TimerMixin);
 
-export default connect(
+export default  connect(
     mapStateToProps,
-    mapDispatchToProps,
+    mapDispatchToProps
 )(StatusDownload);
 

@@ -14,11 +14,7 @@ export const getDatacartDetails = (jobuid) => dispatch => {
         method: 'GET',
     }).then((response) => {
         dispatch({
-            type: types.DATACART_DETAILS_RECEIVED,
-            datacartDetails: {
-                data: response.data
-            }
-        });
+            type: types.DATACART_DETAILS_RECEIVED, datacartDetails: {data: response.data}});
 
     }).catch((error) => {console.log(error)
         dispatch({

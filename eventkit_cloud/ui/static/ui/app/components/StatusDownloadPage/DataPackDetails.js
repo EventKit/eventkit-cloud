@@ -1,8 +1,5 @@
 import React, {PropTypes, Component} from 'react'
 import {connect} from 'react-redux';
-import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
 import '../tap_events'
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
@@ -10,7 +7,6 @@ import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
 import ProviderRow from './ProviderRow'
 import RaisedButton from 'material-ui/RaisedButton';
-
 
 class DataPackDetails extends React.Component {
     constructor(props) {
@@ -46,9 +42,6 @@ class DataPackDetails extends React.Component {
         this.setState({height: event.target.value});
     };
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
 
     componentWillReceiveProps(nextProps) {
 
@@ -154,11 +147,7 @@ class DataPackDetails extends React.Component {
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
 }
-DataPackDetails.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
-export default connect(
 
-)(DataPackDetails);
+export default DataPackDetails;
 

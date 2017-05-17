@@ -11,13 +11,10 @@ import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up'
 import UncheckedBox from 'material-ui/svg-icons/toggle/check-box-outline-blank'
 import CheckedBox from 'material-ui/svg-icons/toggle/check-box'
 import IconButton from 'material-ui/IconButton';
-import TaskRow from './TaskRow'
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
-
-
 
 class ProviderRow extends React.Component {
     constructor(props) {
@@ -42,10 +39,6 @@ class ProviderRow extends React.Component {
             taskCount: 0,
 
         }
-    }
-
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
     }
 
     handleToggle = () => {
@@ -248,11 +241,6 @@ ProviderRow.propTypes = {
     onSelectionToggle: PropTypes.func,
 
 }
-ProviderRow.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
-export default connect(
-
-)(ProviderRow);
+export default ProviderRow;
 
