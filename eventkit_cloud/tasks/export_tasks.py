@@ -538,6 +538,47 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
         raise Exception(e)
 
 
+@app.task(name='Zip File', bind=True, base=ExportTask)
+def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
+                        *args, **kwargs):
+    from .models import ExportProviderTask
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+    # deleted during cancellation.
+    logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
+    include_files = []
+    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
+        for export_task in export_provider_task.tasks.all():
+            try:
+                filename = export_task.result.filename
+            except Exception:
+                logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
+                continue
+            full_file_path = os.path.join(stage_dir, filename)
+            if not os.path.isfile(full_file_path):
+                logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                              export_task.name))
+                continue
+            include_files += [full_file_path]
+    # Need to remove duplicates from the list because
+    # some intermediate tasks produce files with the same name.
+    # sorted while adding time allows comparisons in tests.
+    include_files = sorted(list(set(include_files)))
+    zip_file = None
+    if include_files:
+        logger.debug("Zipping files: {0}".format(include_files))
+        zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files, file_name=os.path.join(stage_dir, "{0}.zip".format(job_name))).get('result')
+    else:
+        raise Exception("There are no files in this provider available to zip.")
+    if not zip_file:
+        raise Exception("A zipfile could not be created, please contact an administrator.")
+    result['result'] = zip_file
+    return result
+
+
 @app.task(name='External Raster Service Export', bind=True, base=ExportTask)
 def external_raster_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
@@ -705,7 +746,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
 
 @app.task(name='Zip File Export', base=LockingTask)
-def zip_file_task(result={}, run_uid=None, include_files=None):
+def zip_file_task(result={}, run_uid=None, include_files=None, file_name=None):
     """
     rolls up runs into a zip file
     """
@@ -728,13 +769,16 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
     project = run.job.event
     date = timezone.now().strftime('%Y%m%d')
     # XXX: name-project-eventkit-yyyymmdd.zip
-    zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-        name,
-        project,
-        "eventkit",
-        date,
-        'zip'
-    )
+    if file_name:
+        zip_filename = file_name
+    else:
+        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
+            name,
+            project,
+            "eventkit",
+            date,
+            'zip'
+        )
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
@@ -762,7 +806,8 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
         zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
         os.remove(zip_st_filepath)
     else:
-        shutil.copy(zip_st_filepath, zip_dl_filepath)
+        if zip_st_filepath != zip_dl_filepath:
+            shutil.copy(zip_st_filepath, zip_dl_filepath)
         zipfile_url = os.path.join(run_uid, zip_filename)
 
     run.zipfile_url = zipfile_url
