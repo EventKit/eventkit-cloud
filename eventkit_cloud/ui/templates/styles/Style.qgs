@@ -3,7 +3,7 @@
   <title></title>
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_villages_points_any{ layer_id_date_time }}" name="village">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}" name="village">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_buildings_polygons_any{ layer_id_date_time }}" name="Oxfam and ACRA">
@@ -82,7 +82,7 @@
       <item>{{ layer_id_prefix }}_grassy_fields_polygons_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_waterways_lines_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_amenities_all_polygons_any{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_villages_points_any{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_roads_paths_lines_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_airports_all_polygons_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_natural_polygons_any{ layer_id_date_time }}</item>
@@ -93,7 +93,7 @@
   <legend updateDrawingOrder="true">
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="village" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_villages_points_any{ layer_id_date_time }}" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="Oxfam and ACRA" showFeatureCount="0">
@@ -8388,8 +8388,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ layer_id_prefix }}_villages_points_any{ layer_id_date_time }}</id>
-      <datasource>{{ gpkg_filename }}|layername=villages_points</datasource>
+      <id>{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}</id>
+      <datasource>{{ gpkg_filename }}|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -9696,7 +9696,7 @@ def my_form_open(dialog, layer, feature):
         <value>{{ layer_id_prefix }}_natural_polygons_any{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_natural_polygons_any{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_roads_paths_lines_any{ layer_id_date_time }}</value>
-        <value>{{ layer_id_prefix }}_villages_points_any{ layer_id_date_time }}</value>
+        <value>{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_waterways_lines_any{ layer_id_date_time }}</value>
         <value>osm_bounds_osm_{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_buildings_polygons_any{ layer_id_date_time }}</value>
