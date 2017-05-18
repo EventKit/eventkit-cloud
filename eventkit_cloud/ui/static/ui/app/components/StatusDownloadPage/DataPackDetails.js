@@ -55,12 +55,6 @@ export class DataPackDetails extends React.Component {
         return allChecked;
     }
 
-    handleToggle = (event, toggled) => {
-        this.setState({
-            [event.target.name]: toggled,
-        });
-    };
-
     onSelectionToggle(selectedTasks){
         const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
         this.setState({selectedTasks : tasks})
@@ -79,8 +73,8 @@ export class DataPackDetails extends React.Component {
         let taskArray = [];
         let downloadUrls = [];
 
-        tasks.forEach(function (url) {
-            url.tasks.forEach(function (task) {
+        tasks.forEach((url) => {
+            url.tasks.forEach((task) => {
                 taskArray.push([task]);
                 downloadUids.forEach(function(uid) {
                 if (task.uid === uid) {
@@ -90,12 +84,9 @@ export class DataPackDetails extends React.Component {
             })
         })
 
-        downloadUrls.forEach(function (value, idx) {
-        const response = {
-              file: value,
-        };
+        downloadUrls.forEach((value, idx) => {
             setTimeout(() => {
-                window.location.href = response.file;
+                window.location.href = value;
             }, idx * 100)
         })
     }
