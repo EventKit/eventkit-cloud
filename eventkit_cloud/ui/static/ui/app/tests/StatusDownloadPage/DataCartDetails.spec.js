@@ -33,16 +33,8 @@ describe('DataCartDetails component', () => {
             "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
             "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
         }];
-    const providerArray = ["OpenStreetMap Data (Generic)"]
+
     const exampleRun = {
-            "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
-            "url": "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
-            "started_at": "2017-03-10T15:52:35.637331Z",
-            "finished_at": "2017-03-10T15:52:39.837Z",
-            "duration": "0:00:04.199825",
-            "user": "admin",
-            "status": "COMPLETED",
-            "job": {
                 "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
                 "name": "Test1",
                 "event": "Test1 event",
@@ -84,16 +76,46 @@ describe('DataCartDetails component', () => {
                 },
                 "selection": "",
                 "published": false
-            },
-            "provider_tasks": [{'provider': providers[0]}],
-            "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
-            "expiration": "2017-03-24T15:52:35.637258Z"
         };
 
     const getProps = () => {
         return  {
-            cartDetails: exampleRun, onRunDelete: () => {}, onRunRerun: () => {}, onClone: () => {},
+            cartDetails: {
+                uid: "6870234f-d876-467c-a332-65fdf0399a0d",
+                url: "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
+                started_at: "2017-03-10T15:52:35.637331Z",
+                finished_at: "2017-03-10T15:52:39.837Z",
+                duration: "0:00:04.199825",
+                user: "admin",
+                status: "COMPLETED",
+                job: exampleRun,
+                provider_tasks: [{'provider': providers[0]}],
+                zipfile_url: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
+                expiration: "2017-03-24T15:52:35.637258Z"
+            },
+            onRunDelete: () => {},
+            onRunRerun: () => {},
+            onClone: () => {},
             }
+    };
+    const getNextProps = () => {
+        return  {
+            cartDetails: {
+                data: [{
+                    uid: "6870234f-d876-467c-a332-65fdf0399a0d",
+                    url: "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
+                    started_at: "2017-03-10T15:52:35.637331Z",
+                    finished_at: "2017-03-10T15:52:39.837Z",
+                    duration: "0:00:04.199825",
+                    user: "admin",
+                    status: "COMPLETED",
+                    job: exampleRun,
+                    provider_tasks: [{'provider': providers[0]}],
+                    zipfile_url: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
+                    expiration: "2017-03-24T15:52:35.637258Z"
+                }]
+            },
+        }
     };
 
     const getWrapper = (props) => {
@@ -212,6 +234,7 @@ describe('DataCartDetails component', () => {
         expect(props.onRunRerun.calledWith("7643f806-1484-4446-b498-7ddaa65d011a")).toBe(true);
 
     });
+
     it('handleDelete should delete a job', () => {
         let props = getProps();
         DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
@@ -220,7 +243,50 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleDelete();
         expect(props.onRunDelete.calledOnce).toBe(true);
         expect(props.onRunDelete.calledWith("6870234f-d876-467c-a332-65fdf0399a0d")).toBe(true);
+    });
 
+    it('_setTableColors should set the state for table color ', () =>{
+        let props = getProps();
+        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const setColorSpy = new sinon.spy(DataCartDetails.prototype, '_setTableColors');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setTableColors();
+        expect(setColorSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',})).toBe(true);
+        setColorSpy.restore();
+        stateSpy.restore();
+    })
+
+    it('should handle set of colors when props change', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getProps();
+        nextProps.cartDetails.status = "INCOMPLETE";
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',})).toBe(true);
+        DataCartDetails.prototype.setState.restore();
+        DataCartDetails.prototype.componentWillReceiveProps.restore();
+    });
+    it('should handle setting state of datacartDetails when component updates', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getNextProps();
+        nextProps.cartDetails.fetched = true;
+        nextProps.cartDetails.data = exampleRun;
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps.cartDetails.data);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        DataCartDetails.prototype.setState.restore();
+        DataCartDetails.prototype.componentWillReceiveProps.restore();
     });
 });
 

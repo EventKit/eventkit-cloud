@@ -7,7 +7,8 @@ import Paper from 'material-ui/Paper'
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import '../../components/tap_events'
-import isEqual from 'lodash/isEqual';
+import CustomScrollbar from '../../components/CustomScrollbar';
+
 
 describe('StatusDownload component', () => {
     const muiTheme = getMuiTheme();
@@ -168,7 +169,7 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Paper)).toHaveLength(1);
-
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
     });
 
     it('should call startTimer when mounted', () => {
@@ -179,6 +180,7 @@ describe('StatusDownload component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(startTimerSpy.calledOnce).toBe(true);
         startTimerSpy.restore();
+        mountSpy.restore();
     });
 
     it('should handle fetched datacartDetails', () => {
@@ -195,6 +197,14 @@ describe('StatusDownload component', () => {
         StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
     });
+    it('mount should call getDatacartDetails', () => {
+        let props = getProps();
+        props.getDatacartDetails = new sinon.spy();
+        const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
+        const wrapper = getWrapper(props);
+        expect(props.getDatacartDetails.calledOnce).toBe(true);
+        expect(mountSpy.calledOnce).toBe(true);
+    });
 
     it('should handle reRun of datacartDetails', () => {
         const props = getProps();
@@ -209,6 +219,23 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
+    });
+
+    it('should handle Clone of datacartDetails', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const cloneSpy = new sinon.spy(StatusDownload.prototype, 'handleClone');
+        wrapper.instance().handleClone();
+        expect(cloneSpy.calledOnce).toBe(true);
+    });
+
+    it('screenSizeUpdate should force the component to update', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'forceUpdate');
+        wrapper.instance().handleResize();
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
     });
 
 });

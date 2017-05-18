@@ -20,10 +20,6 @@ export class StatusDownload extends React.Component {
         }
     }
 
-    expandedChange(expanded) {
-        this.setState({expanded: expanded});
-    }
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
             if (nextProps.runDeletion.deleted) {
@@ -48,17 +44,16 @@ export class StatusDownload extends React.Component {
                 }
             }
         }
-
     }
 
     startTimer() {
-        this.props.getDatacartDetails(this.props.params.jobuid);
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
     }
 
     componentDidMount() {
+        this.props.getDatacartDetails(this.props.params.jobuid);
         this.startTimer();
         window.addEventListener('resize', this.handleResize);
     }
@@ -101,7 +96,6 @@ export class StatusDownload extends React.Component {
                     <div style={styles.content}>
                         <form>
                             <Paper style={{padding: '20px'}} zDepth={2} >
-
                                 <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
                                 {this.state.datacartDetails.map((cartDetails) => (
                                     <DataCartDetails key={cartDetails.uid}
