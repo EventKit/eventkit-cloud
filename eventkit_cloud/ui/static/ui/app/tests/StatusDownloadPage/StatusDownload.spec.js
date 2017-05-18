@@ -126,6 +126,9 @@ describe('StatusDownload component', () => {
 
     const getProps = () => {
         return {
+            params: {
+                jobuid: '123456789'
+            },
             jobuid: '123456789',
             datacartDetails: {
                 fetching: false,
@@ -171,9 +174,9 @@ describe('StatusDownload component', () => {
     it('should call startTimer when mounted', () => {
         let props = getProps();
         let startTimerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
-        //const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
-        const wrapper = shallow(<StatusDownload {...props}/>);
-        wrapper.instance().startTimer();
+        const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
+        const wrapper = getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
         expect(startTimerSpy.calledOnce).toBe(true);
         startTimerSpy.restore();
     });

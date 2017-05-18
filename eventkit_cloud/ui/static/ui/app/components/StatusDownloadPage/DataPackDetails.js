@@ -8,7 +8,7 @@ import styles from '../../styles/StatusDownload.css'
 import ProviderRow from './ProviderRow'
 import RaisedButton from 'material-ui/RaisedButton';
 
-class DataPackDetails extends React.Component {
+export class DataPackDetails extends React.Component {
     constructor(props) {
         super(props)
 
