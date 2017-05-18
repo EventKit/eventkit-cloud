@@ -26,7 +26,6 @@ export const getDatacartDetails = (jobuid) => dispatch => {
                 data: [data]
             }
         });
-
     }).catch((error) => {console.log(error)
         dispatch({
             type: types.DATACART_DETAILS_ERROR, error: error

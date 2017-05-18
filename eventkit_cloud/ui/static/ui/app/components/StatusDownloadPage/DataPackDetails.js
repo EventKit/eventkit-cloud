@@ -1,4 +1,5 @@
 import React, {PropTypes, Component} from 'react'
+import {connect} from 'react-redux';
 import '../tap_events'
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
@@ -9,7 +10,6 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Checkbox from 'material-ui/Checkbox';
 import UncheckedBox from 'material-ui/svg-icons/toggle/check-box-outline-blank'
 import CheckedBox from 'material-ui/svg-icons/toggle/check-box'
-
 
 export class DataPackDetails extends React.Component {
     constructor(props) {
@@ -166,6 +166,7 @@ export class DataPackDetails extends React.Component {
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
 }
+
 
 export default DataPackDetails;
 

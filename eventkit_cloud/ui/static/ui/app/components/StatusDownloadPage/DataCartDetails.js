@@ -4,7 +4,6 @@ import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
-import FlatButton from 'material-ui/FlatButton';
 import styles from '../../styles/StatusDownload.css'
 import moment from 'moment'
 
@@ -21,7 +20,6 @@ export class DataCartDetails extends React.Component {
             rerunDialogOpen: false,
             cloneDialogOpen: false,
         };
-
     }
 
     componentWillReceiveProps(nextProps) {
@@ -37,7 +35,6 @@ export class DataCartDetails extends React.Component {
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
             }
         }
-
 
         if (nextProps.cartDetails.fetched != null) {
             if (nextProps.cartDetails.fetched != this.props.cartDetails.fetched) {
@@ -67,7 +64,6 @@ export class DataCartDetails extends React.Component {
         }
     }
     _initializeOpenLayers() {
-
         var osm = new ol.layer.Tile({
             source: new ol.source.OSM()
         });
@@ -141,7 +137,6 @@ export class DataCartDetails extends React.Component {
         this.props.cartDetails.provider_tasks.forEach(function(provider) {
             providerArray.push(provider.name);
         })
-
         this.props.onClone(this.props.cartDetails, providerArray);
         this.setState({deleteDialogOpen: false});
 
@@ -171,7 +166,7 @@ export class DataCartDetails extends React.Component {
                 disableTouchRipple={true}
                 label="Delete"
                 primary={true}
-                onTouchTap={this.handleDeleteOpen.bind(this)}
+                onTouchTap={this.handleDelete.bind(this)}
             />,
         ];
         const rerunExportActions = [

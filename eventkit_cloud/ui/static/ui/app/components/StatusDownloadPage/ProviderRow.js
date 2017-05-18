@@ -12,8 +12,6 @@ import styles from '../../styles/StatusDownload.css'
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
 
-
-
 export class ProviderRow extends React.Component {
     constructor(props) {
         super(props)
@@ -32,11 +30,11 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    handleToggle = () => {
+    handleToggle() {
         this.setState({openTable: !this.state.openTable});
     }
 
-    handleDownload = () => {
+    handleDownload()  {
         let downloadUids = [];
         let selectedTasks = {...this.state.selectedRows};
         Object.keys(selectedTasks).map((keyName, keyIndex) => {
