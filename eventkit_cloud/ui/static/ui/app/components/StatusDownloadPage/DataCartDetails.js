@@ -270,7 +270,7 @@ export class DataCartDetails extends React.Component {
                         style={{margin: '10px'}}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
-                        labelColor={'red'}
+                        labelColor={'#ff0000'}
                         labelStyle={{fontWeight:'bold'}}
                         onTouchTap={this.handleDeleteOpen.bind(this)}
                         label="DELETE"
@@ -310,10 +310,7 @@ export class DataCartDetails extends React.Component {
                         <td className={styles.tdHeading}>Layer Data</td>
                         <td className={styles.tdData}>{
                             this.props.cartDetails.provider_tasks.map((provider) => {
-                                if (provider.name != 'OpenStreetMap Data (Generic)') { 
                                     return <p key={provider.name}>{provider.name}</p>
-                                }
-                                else return null;
                             })}
                         </td>
                      </tr>

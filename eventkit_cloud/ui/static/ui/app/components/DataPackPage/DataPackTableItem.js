@@ -53,7 +53,7 @@ export class DataPackTableItem extends Component {
         return (
             <TableRow>
                 <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: '#4598bf'}}>
-                    <Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link>
+                    <Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link>
                 </TableRowColumn>
                 <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: 'grey'}}>
                     {this.props.run.job.event}

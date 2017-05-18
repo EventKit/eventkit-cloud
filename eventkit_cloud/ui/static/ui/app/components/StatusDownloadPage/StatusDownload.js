@@ -99,7 +99,6 @@ class StatusDownload extends React.Component {
                 <div style={styles.content}>
                     <form>
                         <Paper style={{padding: '20px'}} zDepth={2} >
-                            
                                 <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
                                     {this.state.datacartDetails.map((cartDetails) => (
                                         <DataCartDetails key={cartDetails.uid}
@@ -108,7 +107,6 @@ class StatusDownload extends React.Component {
                                                         onRunRerun={this.props.rerunExport}
                                                         onClone={this.props.cloneExport}/>
                                     ))}
-                                
                         </Paper>
                     </form>
                 </div>

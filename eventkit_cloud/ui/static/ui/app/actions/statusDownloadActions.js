@@ -13,10 +13,17 @@ export const getDatacartDetails = (jobuid) => dispatch => {
         url: '/api/runs?job_uid='+jobuid,
         method: 'GET',
     }).then((response) => {
+        
+        // Remove the OpenStreetMap Generic from the tasks until the backend is updated
+        let data = {...response.data[0]};
+        data.provider_tasks = data.provider_tasks.filter((task) => {
+            return task.name != 'OpenStreetMap Data (Generic)'
+        });
+
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,
             datacartDetails: {
-                data: response.data
+                data: [data]
             }
         });
 

@@ -139,7 +139,7 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <span><Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
+                            <span><Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={

@@ -6,30 +6,53 @@ import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
 import ProviderRow from './ProviderRow'
 import RaisedButton from 'material-ui/RaisedButton';
+import Checkbox from 'material-ui/Checkbox';
+import UncheckedBox from 'material-ui/svg-icons/toggle/check-box-outline-blank'
+import CheckedBox from 'material-ui/svg-icons/toggle/check-box'
 
 
 export class DataPackDetails extends React.Component {
     constructor(props) {
         super(props)
-
+        this.handleDownload = this.handleDownload.bind(this);
         this.onSelectionToggle = this.onSelectionToggle.bind(this);
-
+        this.checkAll = this.checkAll.bind(this);
+        this.allChecked = this.allChecked.bind(this);
         this.state = {
-            providerTasks: [],
-            file: false,
-            fixedHeader: true,
-            fixedFooter: true,
-            stripedRows: false,
-            showRowHover: false,
-            selectable: true,
-            multiSelectable: true,
-            enableSelectAll: true,
-            showCheckboxes: true,
-            height: '300px',
-            downloadUrls: [],
             selectedTasks: {},
-            provider: [],
         }
+    }
+
+    componentDidMount() {
+        let selectedTasks = {}
+        this.props.providerTasks.forEach((provider) => {
+            provider.tasks.forEach((task) => {
+                selectedTasks[task.uid] = false;
+            })
+        });
+        this.setState({selectedTasks: selectedTasks});
+    }
+
+    checkAll(e, checked) {
+        let stateTasks = {...this.state.selectedTasks}
+        let alteredTasks = {}
+        Object.keys(stateTasks).forEach((keyName) => {
+            alteredTasks[keyName] = checked;
+        });
+        this.setState({selectedTasks: alteredTasks});
+    }
+
+    allChecked() {
+        let allChecked = true;
+        const keys = Object.keys(this.state.selectedTasks);
+        if (!keys.length) {return false}
+        for(const key in keys) {
+            if(!this.state.selectedTasks[keys[key]]){
+                allChecked = false
+                break
+            }
+        }
+        return allChecked;
     }
 
     handleToggle = (event, toggled) => {
@@ -37,14 +60,6 @@ export class DataPackDetails extends React.Component {
             [event.target.name]: toggled,
         });
     };
-
-    handleChange = (event) => {
-        this.setState({height: event.target.value});
-    };
-
-    toggleCheckbox(event, checked) {
-        this.setState({file: checked})
-    }
 
     onSelectionToggle(selectedTasks){
         const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
@@ -54,7 +69,7 @@ export class DataPackDetails extends React.Component {
     handleDownload(event){
         let downloadUids = [];
         let selectedTasks = this.state.selectedTasks;
-        Object.keys(selectedTasks).map(function(keyName, keyIndex) {
+        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
             if(selectedTasks[keyName] == true) {
                 downloadUids.push(keyName);
             }
@@ -86,9 +101,7 @@ export class DataPackDetails extends React.Component {
     }
 
     render() {
-        const providers = this.props.providerTasks.filter((provider) => {
-            return provider.name != 'OpenStreetMap Data (Generic)';
-        });
+        const providers = this.props.providerTasks;
 
         return (
             <div className={styles.downloadDiv}>
@@ -96,29 +109,41 @@ export class DataPackDetails extends React.Component {
                    Download Options
                 </div>
                 <Table
-
-                    fixedHeader={this.state.fixedHeader}
-                    fixedFooter={this.state.fixedFooter}
-                    selectable={this.state.selectable}
-                    multiSelectable={this.state.multiSelectable}
+                    selectable={false}
                 >
                     <TableHeader
-                        displaySelectAll={this.state.showCheckboxes}
-                        adjustForCheckbox={this.state.showCheckboxes}
-                        enableSelectAll={this.state.enableSelectAll}
+                        displaySelectAll={false}
+                        adjustForCheckbox={false}
+                        enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'30%', fontSize: '14px'}}>DATA SETS</TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}># OF SELECTIONS</TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}} >STATUS</TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}> <RaisedButton
-                                backgroundColor={'rgba(179,205,224,0.5)'}
-                                disableTouchRipple={true}
-                                labelColor={'#4598bf'}
-                                labelStyle={{fontWeight:'bold'}}
-                                onTouchTap={this.handleDownload.bind(this)}
-                                label="Download All Selected"
-                                icon={<CloudDownload style={{fill:'#4598bf',verticalAlign: 'middle'}}/>} />
+                            <TableHeaderColumn>
+                                <Checkbox 
+                                    checked={this.allChecked()} 
+                                    onCheck={this.checkAll}
+                                    checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
+                                    uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
+                                />
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'30%', fontSize: '14px'}}>
+                                DATA SETS
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}>
+                                # SELECTED
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}>
+                                PROGRESS
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}>
+                                <RaisedButton
+                                    backgroundColor={'rgba(179,205,224,0.5)'}
+                                    disableTouchRipple={true}
+                                    labelColor={'#4598bf'}
+                                    labelStyle={{fontWeight:'bold'}}
+                                    onTouchTap={this.handleDownload}
+                                    label="Download All Selected"
+                                    icon={<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>}
+                                />
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width:'10%', fontSize: '14px'}}></TableHeaderColumn>
                         </TableRow>
@@ -126,10 +151,14 @@ export class DataPackDetails extends React.Component {
                     </Table>
 
                 {providers.map((provider) => (
-                    <ProviderRow key={provider.uid} onSelectionToggle={this.onSelectionToggle} updateSelectionNumber={this.updateSelectionNumber} provider={provider}/>
+                    <ProviderRow 
+                        key={provider.uid} 
+                        onSelectionToggle={this.onSelectionToggle} 
+                        updateSelectionNumber={this.updateSelectionNumber} 
+                        provider={provider} 
+                        selectedTasks={this.state.selectedTasks}/>
                 ))}
            </div>
-
         )
     }
 }

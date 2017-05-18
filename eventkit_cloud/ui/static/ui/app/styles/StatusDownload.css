@@ -79,9 +79,7 @@
 .checkboxField > tr > th {
     padding-left: 0px!important;
 }
-.cloudButton > svg {
-    color: #4598bf!important;
-}
+
 .tableRowHighlight > tr:nth-child(even) {background: #f8f8f8}
 .tableRowHighlight > tr:nth-child(odd) {background: #FFF}
 

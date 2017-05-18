@@ -14,7 +14,7 @@ import Paper from 'material-ui/Paper'
 import Checkbox from 'material-ui/Checkbox'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
-import '../components/tap_events'
+import './tap_events'
 import styles from '../styles/ExportInfo.css'
 import CustomScrollbar from '../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../actions/exportsActions.js'

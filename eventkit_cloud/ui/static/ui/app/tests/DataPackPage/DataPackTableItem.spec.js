@@ -36,7 +36,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn)).toHaveLength(7);
         expect(wrapper.find(Link)).toHaveLength(1);
-        expect(wrapper.find(Link).props().to).toEqual('/exports/' + run.uid);
+        expect(wrapper.find(Link).props().to).toEqual('/status/' + run.job.uid);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);

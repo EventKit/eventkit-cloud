@@ -80,7 +80,7 @@ export class DataPackListItem extends Component {
                     title={
                         <div>
                             <span>
-                                <Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>
+                                <Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>
                                     {this.props.run.job.name}
                                 </Link>
                             </span>
