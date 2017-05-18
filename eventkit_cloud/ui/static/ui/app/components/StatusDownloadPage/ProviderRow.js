@@ -37,7 +37,7 @@ export class ProviderRow extends React.Component {
     handleDownload()  {
         let downloadUids = [];
         let selectedTasks = {...this.state.selectedRows};
-        Object.keys(selectedTasks).map((keyName, keyIndex) => {
+        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
             if (selectedTasks[keyName] == true) {
                 downloadUids.push(keyName);
             }
@@ -49,13 +49,9 @@ export class ProviderRow extends React.Component {
             let a = tasks.find(x => x.uid === uid)
             downloadUrls.push(a.result.url);
         })
-        
         downloadUrls.forEach((value, idx) => {
-            const response = {
-                file: value,
-            };
             setTimeout(() => {
-                window.location.href = response.file;
+                window.location.href = value;
             }, idx * 100)
         })
     }

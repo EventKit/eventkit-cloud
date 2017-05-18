@@ -28,6 +28,7 @@ describe('ProviderRow component', () => {
                 uid: "e261d619-2a02-4ba5-a58c-be0908f97d04",
                 url: "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
             },
+            selectedTasks: selectedTasks,
             onSelectionToggle: () => {},
         }
     };
@@ -74,9 +75,14 @@ describe('ProviderRow component', () => {
         handleSpy.restore();
     });
 
-    it('should package up tasks for download onSelectionToggle', () => {
-
-
+    it('handleDownload should set timeout to open window with download url', () => {
+        jest.useFakeTimers();
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
+        wrapper.instance().handleDownload();
+        expect(setTimeout.mock.calls.length).toBe(1);
+        expect(setTimeout.mock.calls[0][1]).toBe(0);
     });
 
 });
@@ -93,7 +99,9 @@ const tasks = [
         "started_at": "2017-05-15T15:28:49.038510Z",
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
-        "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
+        "result": {
+            "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
+        },
     }
 ];
 
