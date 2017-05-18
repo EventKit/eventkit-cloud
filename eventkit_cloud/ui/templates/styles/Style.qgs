@@ -36,7 +36,7 @@
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_landuse_residential_polygons_any{ layer_id_date_time }}" name="residential">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_airports_all_polygons_any{ layer_id_date_time }}" name="airport">
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_all_polygons_any{ layer_id_date_time }}" name="airport">
       <customproperties/>
     </layer-tree-layer>
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{ layer_id_date_time }}" name="wood">
@@ -84,7 +84,7 @@
       <item>{{ layer_id_prefix }}_amenities_all_polygons_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_places_points_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_roads_paths_lines_any{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_airports_all_polygons_any{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_aviation_all_polygons_any{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_natural_polygons_any{ layer_id_date_time }}</item>
       <item>osm_bounds_osm_{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_buildings_polygons_any{ layer_id_date_time }}</item>
@@ -148,7 +148,7 @@
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport" showFeatureCount="0">
       <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_airports_all_polygons_any{ layer_id_date_time }}" visible="1"/>
+        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_all_polygons_any{ layer_id_date_time }}" visible="1"/>
       </filegroup>
     </legendlayer>
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="wood" showFeatureCount="0">
@@ -170,8 +170,8 @@
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ layer_id_prefix }}_airports_all_polygons_any{ layer_id_date_time }}</id>
-      <datasource>{{ gpkg_filename }}|layername=airports_all_polygons|subset="aeroway" = 'aerodrome' OR "aeroway" = 'taxiway'</datasource>
+      <id>{{ layer_id_prefix }}_aviation_all_polygons_any{ layer_id_date_time }}</id>
+      <datasource>{{ gpkg_filename }}|layername=aviation_all_polygons|subset="aeroway" = 'aerodrome' OR "aeroway" = 'taxiway'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
