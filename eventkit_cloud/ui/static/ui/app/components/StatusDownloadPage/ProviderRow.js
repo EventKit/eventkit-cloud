@@ -30,6 +30,18 @@ export class ProviderRow extends React.Component {
         }
     }
 
+    componentWillMount(){
+        //set state on the tasks
+        let taskCount = 0;
+        let t = {};
+        this.props.provider.tasks.forEach((column) => {
+            let uid = column.uid;
+            t[uid] = false;
+            taskCount++
+        })
+        this.setState({selectedRows:t, taskCount})
+    }
+
     handleToggle() {
         this.setState({openTable: !this.state.openTable});
     }
@@ -56,18 +68,6 @@ export class ProviderRow extends React.Component {
         })
     }
 
-    componentWillMount(){
-        //set state on the tasks
-        let taskCount = 0;
-        let t = {};
-        this.props.provider.tasks.forEach(function(column){
-            let uid = column.uid;
-            t[uid] = false;
-            taskCount++
-        })
-        this.setState({selectedRows:t, taskCount})
-    }
-
     allChecked() {
         let allChecked = true;
         const keys = Object.keys(this.props.selectedTasks);
@@ -87,7 +87,7 @@ export class ProviderRow extends React.Component {
         let t = {};
         if(checked){
             let selectionCount = 0;
-            this.props.provider.tasks.forEach(function(column){
+            this.props.provider.tasks.forEach((column) => {
                 selectionCount++
                 let uid = column.uid;
                 t[uid] = true;

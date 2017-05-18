@@ -5,10 +5,12 @@ import {ProviderRow} from '../../components/StatusDownloadPage/ProviderRow';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up'
+import Checkbox from 'material-ui/Checkbox';
+import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import IconButton from 'material-ui/IconButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
-import '../../components/tap_events'
+import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import LinearProgress from 'material-ui/LinearProgress';
+import '../../components/tap_events';
 
 describe('ProviderRow component', () => {
 
@@ -51,6 +53,51 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(CloudDownload)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
+        expect(wrapper.find(Checkbox)).toHaveLength(1);
+    });
+
+    it('should render the task rows when the table is open', () => {
+        let props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({openTable: true});
+        expect(wrapper.find(Table)).toHaveLength(1);
+        expect(wrapper.find(TableHeader)).toHaveLength(1);
+        expect(wrapper.find(TableRow)).toHaveLength(2);
+        expect(wrapper.find(TableRowColumn)).toHaveLength(6);
+        expect(wrapper.find(Checkbox)).toHaveLength(2);
+        expect(wrapper.find(TableBody)).toHaveLength(1);
+        expect(wrapper.find(LinearProgress)).toHaveLength(1);
+    });
+
+    it('should call componentWillMount and set the row and count state', () => {
+        const props = getProps();
+        const mountSpy = new sinon.spy(ProviderRow.prototype, 'componentWillMount');
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, taskCount: 1})).toBe(true);
+        stateSpy.restore();
+        mountSpy.restore();
+    });
+
+    it('should call onChangeCheck with the task box is checked', () => {
+        const props = getProps();
+        const onChangeSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
+        const wrapper = getWrapper(props);
+        wrapper.setState({openTable: true});
+        wrapper.find(TableBody).find(Checkbox).find('input').simulate('change');
+        expect(onChangeSpy.calledOnce).toBe(true);
+        onChangeSpy.restore();
+    });
+
+    it('should call onAllCheck when the provider box is checked', () => {
+        const props = getProps();
+        const onAllCheckSpy = new sinon.spy(ProviderRow.prototype, 'onAllCheck');
+        const wrapper = getWrapper(props);
+        wrapper.find(TableHeader).find(Checkbox).find('input').simulate('change');
+        expect(onAllCheckSpy.calledOnce).toBe(true);
+        onAllCheckSpy.restore();
     });
 
     it('handleToggle should open/close Table', () => {
@@ -66,15 +113,6 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('should handle download when it is clicked', () => {
-        const props = getProps();
-        let handleSpy = new sinon.spy(ProviderRow.prototype, 'handleDownload');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleDownload();
-        expect(handleSpy.calledOnce).toBe(true);
-        handleSpy.restore();
-    });
-
     it('handleDownload should set timeout to open window with download url', () => {
         jest.useFakeTimers();
         const props = getProps();
@@ -85,6 +123,55 @@ describe('ProviderRow component', () => {
         expect(setTimeout.mock.calls[0][1]).toBe(0);
     });
 
+    it('onChangeCheck should find the selected task uid and set it to checked/unchecked, then update state and call onSelectionToggle', () => {
+        let props = getProps();
+        props.onSelectionToggle = new sinon.spy();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
+        wrapper.instance().onChangeCheck({target: {name: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34'}}, true);
+        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, selectionCount: 1})).toBe(true);
+        expect(props.onSelectionToggle.calledOnce).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true})).toBe(true);
+
+        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true});
+        wrapper.instance().onChangeCheck({target: {name: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34'}}, false);
+        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, selectionCount: 0})).toBe(true);
+        expect(props.onSelectionToggle.calledTwice).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('onAllCheck should set all tasks to checked or unchecked then update state and call onSelectionToggle', () => {
+        let props = getProps();
+        props.onSelectionToggle = new sinon.spy();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
+        wrapper.instance().onAllCheck({}, true);
+        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, selectionCount: 1})).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true})).toBe(true);
+
+        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true});
+        wrapper.instance().onAllCheck({}, false);
+        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, selectionCount: 0})).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('allChecked should determine if all teh tasks in state.selectedRows are checked in the parent component', () => {
+        let props = getProps();
+        props.selectedTasks = {}
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().allChecked()).toBe(false);
+        let nextProps = getProps();
+        wrapper.setProps(nextProps);
+        expect(wrapper.instance().allChecked()).toBe(true);
+        nextProps = getProps();
+        nextProps.selectedTasks['fcfcd526-8949-4c26-a669-a2cf6bae1e34'] = false;
+        wrapper.setProps(nextProps);
+        expect(wrapper.instance().allChecked()).toBe(false);
+    });
 });
 
 const tasks = [
