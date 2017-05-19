@@ -30,6 +30,10 @@ export class DataPackGridItem extends Component {
         };
     }
 
+    componentDidMount() {
+        this.setState({expanded: true});
+    }
+
     componentWillMount() {
         this.screenSizeUpdate();
         window.addEventListener('resize', this.screenSizeUpdate);
@@ -85,7 +89,8 @@ export class DataPackGridItem extends Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-            })
+            }),
+            interactions: ol.interaction.defaults({mouseWheelZoom: false}),
         });
 
         let source = new ol.source.Vector();
