@@ -862,7 +862,7 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
 
     # send notification email to user
     site_url = settings.SITE_URL
-    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
+    url = '{0}/status/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -909,7 +909,7 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
     site_url = settings.SITE_URL
-    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
+    url = '{0}/status/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     subject = "Your Eventkit Data Pack has a failure."
     # email user and administrator
