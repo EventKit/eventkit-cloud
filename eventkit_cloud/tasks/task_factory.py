@@ -18,7 +18,7 @@ from .task_runners import (
 )
 
 from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
-                                  bounds_export_task, output_selection_geojson_task)
+                                  bounds_export_task, output_selection_geojson_task, zip_export_provider)
 from django.conf import settings
 from django.db import DatabaseError
 from django.utils import timezone
@@ -116,6 +116,9 @@ class TaskFactory:
                                 bounds_task = create_task(export_provider_task_uid=export_provider_task_uid,
                                                                  stage_dir=stage_dir, worker=worker, task_type='bounds')
 
+                                if provider_task.provider.zip:
+                                    bounds_task = chain(bounds_task, create_task(export_provider_task_uid=export_provider_task_uid,
+                                                stage_dir=stage_dir, worker=worker, task_type='zip', job_name=job.name))
                                 # Run the task, and when it completes return the status of the task to the model.
                                 # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
                                 # it will call FinalizeTask which will mark the entire job complete/incomplete
@@ -179,17 +182,19 @@ def create_run(job_uid):
         raise e
 
 
-def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task_type=None):
+def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task_type=None,
+                job_name=None):
     """
     Create a new task to export the bounds for an ExportProviderTask
     :param export_provider_task_uid: An export provider task UUID.
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
     """""
-    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task}
+    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task, "zip": zip_export_provider}
 
     task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(task_name=task.name, export_provider_task=export_provider_task, worker=worker)
     return task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
-                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug).set(queue=worker, routing_key=worker)
+                                 stage_dir=stage_dir, provider_slug=export_provider_task.slug,
+                  export_provider_task_uid=export_provider_task_uid, job_name=job_name).set(queue=worker, routing_key=worker)

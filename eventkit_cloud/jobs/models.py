@@ -173,6 +173,7 @@ class ExportProvider(TimeStampedModelMixin):
                               help_text="This is an optional field to put in additional configuration.")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
+    zip = models.BooleanField(default=False)
 
     class Meta:  # pragma: no cover
         managed = True
