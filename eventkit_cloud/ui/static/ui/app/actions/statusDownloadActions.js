@@ -81,7 +81,7 @@ export const rerunExport = jobuid => dispatch => {
                 data: response.data
             }
         });
-        //browserHistory.push('/exports/')
+        //browserHistory.push('/status/')
     }).catch((error) => {console.log(error)
         dispatch({
             type: types.RERUN_EXPORT_ERROR, error: error

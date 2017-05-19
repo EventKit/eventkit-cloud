@@ -23,7 +23,7 @@ export class StatusDownload extends React.Component {
     componentWillReceiveProps(nextProps) {
         if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
             if (nextProps.runDeletion.deleted) {
-                browserHistory.push('/exports/');
+                browserHistory.push('/status/');
             }
         }
         if (nextProps.exportReRun.fetched != this.props.exportReRun.fetched) {
