@@ -42,9 +42,6 @@
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" name="water">
       <customproperties/>
     </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ layer_id_date_time }}" name="bounds">
-      <customproperties/>
-    </layer-tree-layer>
   </layer-tree-group>
   <relations/>
   <mapcanvas>
@@ -74,22 +71,19 @@
   </mapcanvas>
   <layer-tree-canvas>
     <custom-order enabled="0">
-      <item>{{ layer_id_prefix }}_landuse_residential_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_amenities_all_points_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_landuse_other_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_grassy_fields_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_amenities_all_polygons_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_amenities_all_points_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_roads_paths_lines_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_grassy_fields_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_landuse_other_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_amenities_all_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_landuse_residential_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_aviation_all_polygons_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</item>
-      <item>osm_bounds_osm_{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</item>
-      <item>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
@@ -158,14 +152,268 @@
         <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" visible="1"/>
       </filegroup>
     </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="bounds" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
   </legend>
   <projectlayers>
-    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>osm_bounds_osm_{ layer_id_date_time }}</id>
+      <datasource>osm_bounds-osm-{{ layer_id_date_time|slice:":8" }}.gpkg</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>bounds</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes/>
+      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
+            <layer pass="0" class="SimpleFill" locked="0">
+              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="color" v="247,246,241,255"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_style" v="solid"/>
+              <prop k="outline_width" v="0.26"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="style" v="solid"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value="name"/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="false"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="1"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+      </customproperties>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>name</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <SingleCategoryDiagramRenderer diagramType="Pie">
+        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="-4.65661e-10">
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
+        </DiagramCategory>
+      </SingleCategoryDiagramRenderer>
+      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
+      <annotationform>.</annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform>.</editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath>.</editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
@@ -191,7 +439,7 @@
         </spatialrefsys>
       </srs>
       <provider encoding="UTF-8">ogr</provider>
-      <previewExpression></previewExpression>
+      <previewExpression>COALESCE( "name", '&lt;NULL>' )</previewExpression>
       <vectorjoins/>
       <layerDependencies/>
       <expressionfields/>
@@ -268,9 +516,6 @@
         <edittype widgetv2type="TextEdit" name="power">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
@@ -319,91 +564,93 @@
             <rule filter="&quot;amenity&quot; = 'kindergarten'" key="{4e985054-85f9-4fcb-a943-cfda5b81380f}" symbol="17" label="kindergarten"/>
             <rule filter="&quot;amenity&quot; = 'library'" key="{0d80d3f4-5e17-4710-99ff-3587c9d9c060}" symbol="18" label="library"/>
             <rule filter="&quot;amenity&quot; = 'pharmacy'" key="{5cf562f6-de56-4790-a925-26d903cbe172}" symbol="19" label="pharmacy"/>
-            <rule filter="&quot;amenity&quot; = 'place_of_worship'" key="{b8d82144-1f8e-4c00-9e3d-3e2d4f7e47a4}" symbol="20" label="place_of_worship"/>
-            <rule filter="&quot;amenity&quot; = 'post_office'" key="{0923633e-0e84-45fb-95b9-6e8bc00efcf8}" symbol="21" label="post_office"/>
-            <rule filter="&quot;amenity&quot; = 'pub'" key="{23f40ca8-b887-44c8-9f97-56f084faee63}" symbol="22" label="pub"/>
-            <rule filter="&quot;amenity&quot; = 'recycling'" key="{3cd11671-a5f1-4dfe-9419-35f023d465d0}" symbol="23" label="recycling"/>
-            <rule filter="&quot;amenity&quot; = 'restaurant'" key="{bac1e2ab-36da-474c-897b-ef1660eb584e}" symbol="24" label="restaurant"/>
-            <rule filter="&quot;amenity&quot; = 'social_facility'" key="{7bc7f452-feac-4b32-9cd1-007aed8b66f4}" symbol="25" label="social_facility"/>
-            <rule filter="&quot;amenity&quot; = 'telephone'" key="{c4e841f8-2e6b-4c7d-ab57-a86fa7d48811}" symbol="26" label="telephone"/>
-            <rule filter="&quot;amenity&quot; = 'fire_station'" key="{c36cf102-cb32-4fb3-8604-54f87340a4c3}" symbol="27" label="fire_station"/>
-            <rule filter="&quot;amenity&quot; = 'townhall'" key="{903167b9-0b7e-487d-9732-842ae4612234}" symbol="28" label="townhall"/>
-            <rule filter="&quot;amenity&quot; = 'bank'" key="{a3c94872-a61f-4927-a5d0-a0e45e2846b2}" symbol="29" label="bank"/>
-            <rule filter="&quot;amenity&quot; = 'embassy'" key="{cb227f61-3a24-46d3-8474-f053bbdb491e}" symbol="30" label="embassy"/>
-            <rule filter="&quot;amenity&quot; = 'school'" key="{09eaca7c-f42f-4128-807c-1ff1ced1d295}" symbol="31" label="school"/>
-            <rule filter="&quot;amenity&quot; = 'border_control'" key="{cd042c93-dfa3-438c-9075-9cf6a8dd45f2}" symbol="32" label="border_control"/>
-            <rule filter="&quot;amenity&quot; = 'bus_stop'" key="{6e85bbb8-e368-4ddb-9072-ddd56b43a5cb}" symbol="33" label="bus_stop"/>
-            <rule filter="&quot;amenity&quot; = 'government'" key="{43544f9a-75bf-4900-8435-3639fb1a6012}" symbol="34" label="government"/>
-            <rule filter="&quot;amenity&quot; = 'hospital'" key="{03c58cf6-3476-4df3-831f-75b6975e366f}" symbol="35" label="hospital"/>
-            <rule filter="&quot;amenity&quot; = 'police'" key="{8aee1356-a64c-4b34-9f9e-4ac1f34d00b4}" symbol="36" label="police"/>
-            <rule filter="&quot;amenity&quot; = 'taxi'" key="{fd214d89-cd44-4d0c-aa60-d6f1f294b8a5}" symbol="37" label="taxi"/>
-            <rule filter="&quot;amenity&quot; = 'university'" key="{a191d2b3-3262-4d71-9d20-0604b6275e81}" symbol="38" label="university"/>
-            <rule filter="&quot;amenity&quot; = 'theatre'" key="{06f99c13-7c9a-49b8-8b5f-93ae7fd9bb0a}" symbol="39" label="theatre"/>
-            <rule filter="&quot;amenity&quot; = 'toilets'" key="{4d3c8455-5e41-4c7e-b3ee-ee6d9d817dbd}" symbol="40" label="toilets"/>
-            <rule filter="&quot;amenity&quot; = 'arts_centre'" key="{42888ea6-2a7f-4239-88b4-9ae5ea036cd8}" symbol="41" label="arts_centre"/>
-            <rule filter="&quot;amenity&quot; = 'ngo'" key="{c01bce7b-d5c1-499a-b052-b20d699c5a3b}" symbol="42" label="ngo"/>
-            <rule filter="&quot;amenity&quot; = 'grave_yard'" key="{c01bce7b-d5c1-499a-b052-b20d699c5a3b}" symbol="43" label="grave_yard"/>
-            <rule filter="&quot;amenity&quot; = 'shower'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="44" label="shower"/>
-            <rule filter="&quot;amenity&quot; = 'studio'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="45" label="studio"/>
-            <rule filter="&quot;amenity&quot; = 'money_transfer'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="46" label="money_transfer"/>
-            <rule filter="&quot;amenity&quot; = 'bureau_de_change'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="47" label="bureau_de_change"/>
-            <rule filter="&quot;amenity&quot; = 'beverages'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="48" label="beverages"/>
-            <rule filter="&quot;amenity&quot; = 'hairdresser'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="49" label="hairdresser"/>
-            <rule filter="&quot;amenity&quot; = 'supermarket'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="50" label="supermarket"/>
-            <rule filter="&quot;amenity&quot; = 'bakery'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="51" label="bakery"/>
-            <rule filter="&quot;amenity&quot; = 'mobile_phone'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="52" label="mobile_phone"/>
-            <rule filter="&quot;amenity&quot; = 'tailor'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="53" label="tailor"/>
-            <rule filter="&quot;amenity&quot; = 'car_parts'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="54" label="car_parts"/>
-            <rule filter="&quot;amenity&quot; = 'computer'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="55" label="computer"/>
-            <rule filter="&quot;amenity&quot; = 'clothes'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="56" label="clothes"/>
-            <rule filter="&quot;amenity&quot; = 'car_repair'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="57" label="car_repair"/>
-            <rule filter="&quot;amenity&quot; = 'funeral_directors'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="58" label="funeral_directors"/>
-            <rule filter="&quot;amenity&quot; = 'dry_cleaning'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="59" label="dry_cleaning"/>
-            <rule filter="&quot;amenity&quot; = 'butcher'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="60" label="butcher"/>
-            <rule filter="&quot;amenity&quot; = 'seafood'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="61" label="seafood"/>
-            <rule filter="&quot;amenity&quot; = 'hardware'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="62" label="hardware"/>
-            <rule filter="&quot;amenity&quot; = 'bicycle'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="63" label="bicycle"/>
-            <rule filter="&quot;amenity&quot; = 'motorcycle'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="64" label="motorcycle"/>
-            <rule filter="&quot;amenity&quot; = 'tyres'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="65" label="tyres"/>
-            <rule filter="&quot;amenity&quot; = 'photo'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="66" label="photo"/>
-            <rule filter="&quot;amenity&quot; = 'information'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="67" label="information"/>
-            <rule filter="&quot;amenity&quot; = 'camp_site'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="68" label="camp_site"/>
-            <rule filter="&quot;amenity&quot; = 'viewpoint'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="69" label="viewpoint"/>
-            <rule filter="&quot;amenity&quot; = 'hostel'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="70" label="hostel"/>
-            <rule filter="&quot;amenity&quot; = 'hotel'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="71" label="hotel"/>
-            <rule filter="&quot;amenity&quot; = 'museum'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="72" label="museum"/>
-            <rule filter="&quot;amenity&quot; = 'beach_resort'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="73" label="beach_resort"/>
-            <rule filter="&quot;amenity&quot; = 'playground'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="74" label="playground"/>
-            <rule filter="&quot;amenity&quot; = 'motel'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="75" label="motel"/>
-            <rule filter="&quot;amenity&quot; = 'place_of_worship'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="76" label="place_of_worship"/>
-            <rule filter="&quot;amenity&quot; = 'craft'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="77" label="craft"/>
-            <rule filter="&quot;amenity&quot; = 'water_well'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="78" label="water_well"/>
-            <rule filter="&quot;amenity&quot; = 'water_tower'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="79" label="watertower"/>
-            <rule filter="&quot;amenity&quot; = 'tower'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="80" label="tower"/>
-            <rule filter="&quot;amenity&quot; = 'storage_tank'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="81" label="storage_tank"/>
-            <rule filter="&quot;amenity&quot; = 'gambling'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="82" label="gambling"/>
-            <rule filter="&quot;amenity&quot; = 'recycling'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="83" label="recycling"/>
-            <rule filter="&quot;amenity&quot; = 'waste_basket'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="84" label="waste_basket"/>
-            <rule filter="&quot;amenity&quot; = 'street_lamp'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="85" label="street_lamp"/>
-            <rule filter="&quot;amenity&quot; = 'fire_hydrant'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="86" label="fire_hydrant"/>
-            <rule filter="&quot;amenity&quot; = 'waste_disposal'" key="{98451448-f547-4d5f-bffa-d3d28979229e}" symbol="87" label="waste_disposal"/>
+            <rule filter="&quot;amenity&quot; = 'post_office'" key="{0923633e-0e84-45fb-95b9-6e8bc00efcf8}" symbol="20" label="post_office"/>
+            <rule filter="&quot;amenity&quot; = 'pub'" key="{23f40ca8-b887-44c8-9f97-56f084faee63}" symbol="21" label="pub"/>
+            <rule filter="&quot;amenity&quot; = 'recycling'" key="{3cd11671-a5f1-4dfe-9419-35f023d465d0}" symbol="22" label="recycling"/>
+            <rule filter="&quot;amenity&quot; = 'restaurant'" key="{bac1e2ab-36da-474c-897b-ef1660eb584e}" symbol="23" label="restaurant"/>
+            <rule filter="&quot;amenity&quot; = 'social_facility'" key="{7bc7f452-feac-4b32-9cd1-007aed8b66f4}" symbol="24" label="social_facility"/>
+            <rule filter="&quot;amenity&quot; = 'telephone'" key="{c4e841f8-2e6b-4c7d-ab57-a86fa7d48811}" symbol="25" label="telephone"/>
+            <rule filter="&quot;amenity&quot; = 'fire_station'" key="{c36cf102-cb32-4fb3-8604-54f87340a4c3}" symbol="26" label="fire_station"/>
+            <rule filter="&quot;amenity&quot; = 'townhall'" key="{903167b9-0b7e-487d-9732-842ae4612234}" symbol="27" label="townhall"/>
+            <rule filter="&quot;amenity&quot; = 'bank'" key="{a3c94872-a61f-4927-a5d0-a0e45e2846b2}" symbol="28" label="bank"/>
+            <rule filter="&quot;amenity&quot; = 'embassy'" key="{cb227f61-3a24-46d3-8474-f053bbdb491e}" symbol="29" label="embassy"/>
+            <rule filter="&quot;amenity&quot; = 'school'" key="{09eaca7c-f42f-4128-807c-1ff1ced1d295}" symbol="30" label="school"/>
+            <rule filter="&quot;amenity&quot; = 'border_control'" key="{cd042c93-dfa3-438c-9075-9cf6a8dd45f2}" symbol="31" label="border_control"/>
+            <rule filter="&quot;amenity&quot; = 'bus_stop'" key="{6e85bbb8-e368-4ddb-9072-ddd56b43a5cb}" symbol="32" label="bus_stop"/>
+            <rule filter="&quot;amenity&quot; = 'government'" key="{43544f9a-75bf-4900-8435-3639fb1a6012}" symbol="33" label="government"/>
+            <rule filter="&quot;amenity&quot; = 'hospital'" key="{03c58cf6-3476-4df3-831f-75b6975e366f}" symbol="34" label="hospital"/>
+            <rule filter="&quot;amenity&quot; = 'police'" key="{8aee1356-a64c-4b34-9f9e-4ac1f34d00b4}" symbol="35" label="police"/>
+            <rule filter="&quot;amenity&quot; = 'taxi'" key="{fd214d89-cd44-4d0c-aa60-d6f1f294b8a5}" symbol="36" label="taxi"/>
+            <rule filter="&quot;amenity&quot; = 'university'" key="{a191d2b3-3262-4d71-9d20-0604b6275e81}" symbol="37" label="university"/>
+            <rule filter="&quot;amenity&quot; = 'theatre'" key="{06f99c13-7c9a-49b8-8b5f-93ae7fd9bb0a}" symbol="38" label="theatre"/>
+            <rule filter="&quot;amenity&quot; = 'toilets'" key="{4d3c8455-5e41-4c7e-b3ee-ee6d9d817dbd}" symbol="39" label="toilets"/>
+            <rule filter="&quot;amenity&quot; = 'arts_centre'" key="{42888ea6-2a7f-4239-88b4-9ae5ea036cd8}" symbol="40" label="arts_centre"/>
+            <rule filter="&quot;amenity&quot; = 'ngo'" key="{c01bce7b-d5c1-499a-b052-b20d699c5a3b}" symbol="41" label="ngo"/>
+            <rule filter="&quot;amenity&quot; = 'grave_yard'" key="{c01bce7b-d5c1-499a-b052-b20d699c5a3b}" symbol="42" label="grave_yard"/>
+            <rule filter="&quot;amenity&quot; = 'shower'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="43" label="shower"/>
+            <rule filter="&quot;amenity&quot; = 'studio'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="44" label="studio"/>
+            <rule filter="&quot;amenity&quot; = 'money_transfer'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="45" label="money_transfer"/>
+            <rule filter="&quot;amenity&quot; = 'bureau_de_change'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="46" label="bureau_de_change"/>
+            <rule filter="&quot;amenity&quot; = 'beverages'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="47" label="beverages"/>
+            <rule filter="&quot;amenity&quot; = 'hairdresser'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="48" label="hairdresser"/>
+            <rule filter="&quot;amenity&quot; = 'supermarket'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="49" label="supermarket"/>
+            <rule filter="&quot;amenity&quot; = 'bakery'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="50" label="bakery"/>
+            <rule filter="&quot;amenity&quot; = 'mobile_phone'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="51" label="mobile_phone"/>
+            <rule filter="&quot;amenity&quot; = 'tailor'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="52" label="tailor"/>
+            <rule filter="&quot;amenity&quot; = 'car_parts'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="53" label="car_parts"/>
+            <rule filter="&quot;amenity&quot; = 'computer'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="54" label="computer"/>
+            <rule filter="&quot;amenity&quot; = 'clothes'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="55" label="clothes"/>
+            <rule filter="&quot;amenity&quot; = 'car_repair'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="56" label="car_repair"/>
+            <rule filter="&quot;amenity&quot; = 'funeral_directors'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="57" label="funeral_directors"/>
+            <rule filter="&quot;amenity&quot; = 'dry_cleaning'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="58" label="dry_cleaning"/>
+            <rule filter="&quot;amenity&quot; = 'butcher'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="59" label="butcher"/>
+            <rule filter="&quot;amenity&quot; = 'seafood'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="60" label="seafood"/>
+            <rule filter="&quot;amenity&quot; = 'hardware'" key="{9fd6a95a-bfb1-4e7d-8e5a-f1e11e432d51}" symbol="61" label="hardware"/>
+            <rule filter="&quot;amenity&quot; = 'bicycle'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="62" label="bicycle"/>
+            <rule filter="&quot;amenity&quot; = 'motorcycle'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="63" label="motorcycle"/>
+            <rule filter="&quot;amenity&quot; = 'tyres'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="64" label="tyres"/>
+            <rule filter="&quot;amenity&quot; = 'photo'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="65" label="photo"/>
+            <rule filter="&quot;amenity&quot; = 'information'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="66" label="information"/>
+            <rule filter="&quot;amenity&quot; = 'camp_site'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="67" label="camp_site"/>
+            <rule filter="&quot;amenity&quot; = 'viewpoint'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="68" label="viewpoint"/>
+            <rule filter="&quot;amenity&quot; = 'hostel'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="69" label="hostel"/>
+            <rule filter="&quot;amenity&quot; = 'hotel'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="70" label="hotel"/>
+            <rule filter="&quot;amenity&quot; = 'museum'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="71" label="museum"/>
+            <rule filter="&quot;amenity&quot; = 'beach_resort'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="72" label="beach_resort"/>
+            <rule filter="&quot;amenity&quot; = 'playground'" key="{199570dc-27be-4143-a559-fd7783cefc0c}" symbol="73" label="playground"/>
+            <rule filter="&quot;amenity&quot; = 'motel'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="74" label="motel"/>
+            <rule filter="&quot;amenity&quot; = 'craft'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="75" label="craft"/>
+            <rule filter="&quot;amenity&quot; = 'water_well'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="76" label="water_well"/>
+            <rule filter="&quot;amenity&quot; = 'water_tower'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="77" label="watertower"/>
+            <rule filter="&quot;amenity&quot; = 'tower'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="78" label="tower"/>
+            <rule filter="&quot;amenity&quot; = 'storage_tank'" key="{9ae88379-10b2-42c1-bbd7-d1f516190053}" symbol="79" label="storage_tank"/>
+            <rule filter="&quot;amenity&quot; = 'gambling'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="80" label="gambling"/>
+            <rule filter="&quot;amenity&quot; = 'recycling'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="81" label="recycling"/>
+            <rule filter="&quot;amenity&quot; = 'waste_basket'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="82" label="waste_basket"/>
+            <rule filter="&quot;amenity&quot; = 'street_lamp'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="83" label="street_lamp"/>
+            <rule filter="&quot;amenity&quot; = 'fire_hydrant'" key="{21fc4cc1-256c-4e0d-84ab-a94d493539ea}" symbol="84" label="fire_hydrant"/>
+            <rule filter="&quot;religion&quot; = 'christian'" key="{c7034f11-a20b-4669-9282-8b182e0df655}" symbol="85" label="christian"/>
+            <rule filter="&quot;religion&quot; = 'jewish'" key="{c7034f11-a20b-4669-9282-8b182e0df655}" symbol="86" label="jewish"/>
+            <rule filter="&quot;religion&quot; = 'muslim'" key="{77b6ac37-dac9-45ba-b771-4efb7aa56142}" symbol="87" label="muslim"/>
+            <rule filter="&quot;religion&quot; NOT IN ( 'muslim','jewish','christian') AND &quot;religion&quot; IS NOT NULL" key="{6a61320b-7ee5-4e2e-a0bc-08ee753fb5a4}" symbol="88" label="other religion"/>
+            <rule filter="&quot;amenity&quot; = 'waste_disposal'" key="{98451448-f547-4d5f-bffa-d3d28979229e}" symbol="89" label="waste_disposal"/>
           </rule>
           <rule scalemaxdenom="12000" key="{1a222877-0682-48f0-b1ff-c0f30c6ded78}" scalemindenom="5000" label="medium high">
-            <rule filter="&quot;amenity&quot; = 'embassy'" key="{ed9b4bfe-7589-45a1-ade3-7034722e9434}" symbol="88" label="embassy"/>
-            <rule filter="&quot;amenity&quot; = 'school'" key="{f8374bb4-66a1-4b02-87b2-27ce317dbfa8}" symbol="89" label="school"/>
+            <rule filter="&quot;amenity&quot; = 'embassy'" key="{ed9b4bfe-7589-45a1-ade3-7034722e9434}" symbol="90" label="embassy"/>
+            <rule filter="&quot;amenity&quot; = 'school'" key="{f8374bb4-66a1-4b02-87b2-27ce317dbfa8}" symbol="91" label="school"/>
           </rule>
           <rule scalemaxdenom="30000" key="{afe02b07-494c-424c-805b-75aef51b1ae7}" scalemindenom="5000" label="medium">
-            <rule filter="&quot;amenity&quot; = 'bank'" key="{1d055757-530e-464a-8a90-9bda7f8604fc}" symbol="90" label="bank"/>
-            <rule filter="&quot;amenity&quot; = 'border_control'" key="{90bd0f87-2b2a-42ac-bb80-44744575d39b}" symbol="91" label="border_control"/>
-            <rule filter="&quot;amenity&quot; = 'government'" key="{365a639c-0370-4028-bce5-1a78d6a2d904}" symbol="92" label="government"/>
-            <rule filter="&quot;amenity&quot; = 'hospital'" key="{51fe6671-9768-4b0f-bbd8-17860e99b933}" symbol="93" label="hospital"/>
-            <rule filter="&quot;amenity&quot; = 'police'" key="{64972ea3-38a5-499f-936e-1198fb13b425}" symbol="94" label="police"/>
-            <rule filter="&quot;amenity&quot; = 'taxi'" key="{773a5b15-f8ea-4c04-b042-6e4c0e789fe1}" symbol="95" label="taxi"/>
-            <rule filter="&quot;amenity&quot; = 'university'" key="{3edb0ed8-6af1-491c-a84b-347c3e2ca43b}" symbol="96" label="university"/>
+            <rule filter="&quot;amenity&quot; = 'bank'" key="{1d055757-530e-464a-8a90-9bda7f8604fc}" symbol="92" label="bank"/>
+            <rule filter="&quot;amenity&quot; = 'border_control'" key="{90bd0f87-2b2a-42ac-bb80-44744575d39b}" symbol="93" label="border_control"/>
+            <rule filter="&quot;amenity&quot; = 'government'" key="{365a639c-0370-4028-bce5-1a78d6a2d904}" symbol="94" label="government"/>
+            <rule filter="&quot;amenity&quot; = 'hospital'" key="{51fe6671-9768-4b0f-bbd8-17860e99b933}" symbol="95" label="hospital"/>
+            <rule filter="&quot;amenity&quot; = 'police'" key="{64972ea3-38a5-499f-936e-1198fb13b425}" symbol="96" label="police"/>
+            <rule filter="&quot;amenity&quot; = 'taxi'" key="{773a5b15-f8ea-4c04-b042-6e4c0e789fe1}" symbol="97" label="taxi"/>
+            <rule filter="&quot;amenity&quot; = 'university'" key="{3edb0ed8-6af1-491c-a84b-347c3e2ca43b}" symbol="98" label="university"/>
           </rule>
           <rule scalemaxdenom="60000" key="{ad11cc4a-c454-4d90-80c1-ca9db6153979}" scalemindenom="5000" label="low">
-            <rule filter="&quot;amenity&quot; = 'fire_station'" key="{e3e24596-5f90-460e-9a54-ae5131c8ecdd}" symbol="97" label="fire_station"/>
-            <rule filter="&quot;amenity&quot; = 'townhall'" key="{7c7d8eef-b5bd-455e-9828-dc63e71e050d}" symbol="98" label="townhall"/>
+            <rule filter="&quot;amenity&quot; = 'fire_station'" key="{e3e24596-5f90-460e-9a54-ae5131c8ecdd}" symbol="99" label="fire_station"/>
+            <rule filter="&quot;amenity&quot; = 'townhall'" key="{7c7d8eef-b5bd-455e-9828-dc63e71e050d}" symbol="100" label="townhall"/>
           </rule>
           <rule key="{b82e4565-0eaf-463f-90ad-9461fc58d63b}"/>
         </rules>
@@ -463,6 +710,26 @@
               <prop k="outline_width_unit" v="MM"/>
               <prop k="scale_method" v="diameter"/>
               <prop k="size" v="4"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="100">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
+              <prop k="color" v="73,216,234,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="black/Townhall.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_width" v="0"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="3"/>
               <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="size_unit" v="MM"/>
               <prop k="vertical_anchor_point" v="1"/>
@@ -735,7 +1002,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/place of worship.svg"/>
+              <prop k="name" v="gray/post office.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -755,7 +1022,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/post office.svg"/>
+              <prop k="name" v="gray/pub.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -775,7 +1042,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/pub.svg"/>
+              <prop k="name" v="gray/recycling.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -795,26 +1062,6 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/recycling.svg"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_width" v="0"/>
-              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="scale_method" v="diameter"/>
-              <prop k="size" v="4"/>
-              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="size_unit" v="MM"/>
-              <prop k="vertical_anchor_point" v="1"/>
-            </layer>
-          </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="24">
-            <layer pass="0" class="SvgMarker" locked="0">
-              <prop k="angle" v="0"/>
-              <prop k="color" v="43,138,84,255"/>
-              <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="gray/restaurant.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -830,7 +1077,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="25">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="24">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
@@ -850,7 +1097,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="26">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="25">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
@@ -870,7 +1117,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="27">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="26">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="221,169,72,255"/>
@@ -890,7 +1137,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="28">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="27">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="73,216,234,255"/>
@@ -910,7 +1157,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="29">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="28">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="146,95,227,255"/>
@@ -925,6 +1172,26 @@
               <prop k="outline_width_unit" v="MM"/>
               <prop k="scale_method" v="diameter"/>
               <prop k="size" v="3"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="29">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
+              <prop k="color" v="43,138,84,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="gray/embassy.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_width" v="0"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="4"/>
               <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="size_unit" v="MM"/>
               <prop k="vertical_anchor_point" v="1"/>
@@ -955,26 +1222,6 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/embassy.svg"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_width" v="0"/>
-              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="scale_method" v="diameter"/>
-              <prop k="size" v="4"/>
-              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="size_unit" v="MM"/>
-              <prop k="vertical_anchor_point" v="1"/>
-            </layer>
-          </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="31">
-            <layer pass="0" class="SvgMarker" locked="0">
-              <prop k="angle" v="0"/>
-              <prop k="color" v="43,138,84,255"/>
-              <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="gray/school.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -990,7 +1237,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="32">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="31">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="121,25,199,255"/>
@@ -1010,7 +1257,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="33">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="32">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1030,7 +1277,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="34">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="33">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="152,219,150,255"/>
@@ -1050,7 +1297,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="35">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="34">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="211,48,119,255"/>
@@ -1070,7 +1317,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="36">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="35">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="123,240,151,255"/>
@@ -1090,7 +1337,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="37">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="36">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="205,64,139,255"/>
@@ -1110,7 +1357,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="38">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="37">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="231,236,79,255"/>
@@ -1130,7 +1377,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="39">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="38">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="255,255,255,255"/>
@@ -1141,6 +1388,26 @@
               <prop k="offset_unit" v="MM"/>
               <prop k="outline_color" v="0,0,0,255"/>
               <prop k="outline_width" v="0.2"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="4"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="39">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
+              <prop k="color" v="43,138,84,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="gray/toilets.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_width" v="0"/>
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
               <prop k="scale_method" v="diameter"/>
@@ -1173,26 +1440,6 @@
           <symbol alpha="1" clip_to_extent="1" type="marker" name="40">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
-              <prop k="color" v="43,138,84,255"/>
-              <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/toilets.svg"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_width" v="0"/>
-              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="scale_method" v="diameter"/>
-              <prop k="size" v="4"/>
-              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="size_unit" v="MM"/>
-              <prop k="vertical_anchor_point" v="1"/>
-            </layer>
-          </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="41">
-            <layer pass="0" class="SvgMarker" locked="0">
-              <prop k="angle" v="0"/>
               <prop k="color" v="255,255,255,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="gray/arts_centre.svg"/>
@@ -1210,7 +1457,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="42">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="41">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1230,7 +1477,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="43">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="42">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1250,7 +1497,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="44">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="43">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1270,7 +1517,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="45">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="44">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1290,7 +1537,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="46">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="45">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1310,7 +1557,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="47">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="46">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1330,7 +1577,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="48">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="47">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
@@ -1350,12 +1597,32 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="49">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="48">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="gray/hairdresser.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="255,255,255,255"/>
+              <prop k="outline_width" v="0"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="3"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="49">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
+              <prop k="color" v="0,0,0,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="gray/supermarket.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1395,7 +1662,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/supermarket.svg"/>
+              <prop k="name" v="gray/bakery.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1415,7 +1682,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/bakery.svg"/>
+              <prop k="name" v="gray/mobile phone.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1435,7 +1702,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/mobile phone.svg"/>
+              <prop k="name" v="gray/tailor.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1455,7 +1722,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/tailor.svg"/>
+              <prop k="name" v="gray/car parts.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1475,7 +1742,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/car parts.svg"/>
+              <prop k="name" v="gray/computer.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1495,7 +1762,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/computer.svg"/>
+              <prop k="name" v="gray/clothes.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1515,7 +1782,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/clothes.svg"/>
+              <prop k="name" v="gray/car repair.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1535,7 +1802,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/car repair.svg"/>
+              <prop k="name" v="gray/funeral directors.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1555,7 +1822,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/funeral directors.svg"/>
+              <prop k="name" v="gray/dry cleaning.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1575,7 +1842,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/dry cleaning.svg"/>
+              <prop k="name" v="gray/butcher.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1615,7 +1882,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/butcher.svg"/>
+              <prop k="name" v="gray/seafood.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1635,7 +1902,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/seafood.svg"/>
+              <prop k="name" v="gray/hardware.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1655,7 +1922,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/hardware.svg"/>
+              <prop k="name" v=""/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1675,7 +1942,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v=""/>
+              <prop k="name" v="gray/motorcycle.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1695,7 +1962,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/motorcycle.svg"/>
+              <prop k="name" v="gray/tyres.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1715,7 +1982,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/tyres.svg"/>
+              <prop k="name" v="gray/photo.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1735,7 +2002,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/photo.svg"/>
+              <prop k="name" v="gray/information.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1755,7 +2022,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/information.svg"/>
+              <prop k="name" v="gray/campsite.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1775,7 +2042,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/campsite.svg"/>
+              <prop k="name" v="gray/viewpoint.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1795,7 +2062,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/viewpoint.svg"/>
+              <prop k="name" v="gray/hotel.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1855,7 +2122,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/hotel.svg"/>
+              <prop k="name" v="gray/museum.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1875,7 +2142,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/museum.svg"/>
+              <prop k="name" v="gray/beach resort.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1895,7 +2162,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/beach resort.svg"/>
+              <prop k="name" v="gray/playground.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1915,7 +2182,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/playground.svg"/>
+              <prop k="name" v="gray/hotel.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1935,7 +2202,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/hotel.svg"/>
+              <prop k="name" v="gray/craft.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1955,7 +2222,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/place of worship.svg"/>
+              <prop k="name" v="gray/bucket.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1975,7 +2242,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/craft.svg"/>
+              <prop k="name" v="gray/water tower.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -1995,7 +2262,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/bucket.svg"/>
+              <prop k="name" v="gray/communication tower.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2015,7 +2282,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/water tower.svg"/>
+              <prop k="name" v="gray/tank.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2055,7 +2322,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/communication tower.svg"/>
+              <prop k="name" v="gray/gambling.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2075,7 +2342,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/tank.svg"/>
+              <prop k="name" v="gray/recycling.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2095,7 +2362,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/gambling.svg"/>
+              <prop k="name" v="gray/waste basket.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2115,7 +2382,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/recycling.svg"/>
+              <prop k="name" v="gray/street lamp.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2135,7 +2402,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/waste basket.svg"/>
+              <prop k="name" v="gray/fire hydrant.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2155,7 +2422,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/street lamp.svg"/>
+              <prop k="name" v="gray/christian.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2175,7 +2442,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/fire hydrant.svg"/>
+              <prop k="name" v="gray/jewish.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2193,13 +2460,13 @@
           <symbol alpha="1" clip_to_extent="1" type="marker" name="87">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
-              <prop k="color" v="43,138,84,255"/>
+              <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="gray/waste basket.svg"/>
+              <prop k="name" v="gray/muslim.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_color" v="255,255,255,255"/>
               <prop k="outline_width" v="0"/>
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -2213,13 +2480,13 @@
           <symbol alpha="1" clip_to_extent="1" type="marker" name="88">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
-              <prop k="color" v="43,138,84,255"/>
+              <prop k="color" v="0,0,0,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="black/Embassy.svg"/>
+              <prop k="name" v="gray/place of worship.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_color" v="255,255,255,255"/>
               <prop k="outline_width" v="0"/>
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -2235,7 +2502,7 @@
               <prop k="angle" v="0"/>
               <prop k="color" v="43,138,84,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="black/School.svg"/>
+              <prop k="name" v="gray/waste basket.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2244,7 +2511,7 @@
               <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="outline_width_unit" v="MM"/>
               <prop k="scale_method" v="diameter"/>
-              <prop k="size" v="4"/>
+              <prop k="size" v="3"/>
               <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="size_unit" v="MM"/>
               <prop k="vertical_anchor_point" v="1"/>
@@ -2273,6 +2540,46 @@
           <symbol alpha="1" clip_to_extent="1" type="marker" name="90">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
+              <prop k="color" v="43,138,84,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="black/Embassy.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_width" v="0"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="3"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="91">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
+              <prop k="color" v="43,138,84,255"/>
+              <prop k="horizontal_anchor_point" v="1"/>
+              <prop k="name" v="black/School.svg"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_width" v="0"/>
+              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="scale_method" v="diameter"/>
+              <prop k="size" v="4"/>
+              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="size_unit" v="MM"/>
+              <prop k="vertical_anchor_point" v="1"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="92">
+            <layer pass="0" class="SvgMarker" locked="0">
+              <prop k="angle" v="0"/>
               <prop k="color" v="146,95,227,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="black/Bank.svg"/>
@@ -2290,7 +2597,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="91">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="93">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="121,25,199,255"/>
@@ -2310,7 +2617,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="92">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="94">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="152,219,150,255"/>
@@ -2330,7 +2637,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="93">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="95">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="211,48,119,255"/>
@@ -2350,7 +2657,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="94">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="96">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="123,240,151,255"/>
@@ -2370,7 +2677,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="95">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="97">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="205,64,139,255"/>
@@ -2390,7 +2697,7 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="96">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="98">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="231,236,79,255"/>
@@ -2410,32 +2717,12 @@
               <prop k="vertical_anchor_point" v="1"/>
             </layer>
           </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="97">
+          <symbol alpha="1" clip_to_extent="1" type="marker" name="99">
             <layer pass="0" class="SvgMarker" locked="0">
               <prop k="angle" v="0"/>
               <prop k="color" v="221,169,72,255"/>
               <prop k="horizontal_anchor_point" v="1"/>
               <prop k="name" v="black/Fire Station.svg"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_width" v="0"/>
-              <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="scale_method" v="diameter"/>
-              <prop k="size" v="3"/>
-              <prop k="size_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="size_unit" v="MM"/>
-              <prop k="vertical_anchor_point" v="1"/>
-            </layer>
-          </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="marker" name="98">
-            <layer pass="0" class="SvgMarker" locked="0">
-              <prop k="angle" v="0"/>
-              <prop k="color" v="73,216,234,255"/>
-              <prop k="horizontal_anchor_point" v="1"/>
-              <prop k="name" v="black/Townhall.svg"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
@@ -2651,12 +2938,12 @@
         <alias field="osm_id" index="0" name=""/>
         <alias field="place" index="21" name=""/>
         <alias field="power" index="22" name=""/>
-        <alias field="shop" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
-        <alias field="traffic_calming" index="29" name=""/>
-        <alias field="waterway" index="30" name=""/>
+        <alias field="shop" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
+        <alias field="traffic_calming" index="28" name=""/>
+        <alias field="waterway" index="29" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -2788,9 +3075,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -3102,11 +3386,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -3127,6 +3411,370 @@ field.
 An example follows:
 """
 from qgis.PyQt.QtWidgets import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</id>
+      <datasource>./{{ layer_id_prefix }}.gpkg|layername=aviation_all_lines</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>airport lines</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes>
+        <edittype widgetv2type="TextEdit" name="osm_id">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="aeroway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="amenity">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="barrier">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="bicycle_road">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="bridge">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="ford">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="highway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="layer">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="leisure">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="man_made">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="name">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="natural">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="railway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="tourism">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="tunnel">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="waterway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="z_index">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+      </edittypes>
+      <renderer-v2 attr="aeroway" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
+        <categories>
+          <category render="true" symbol="0" value="runway" label="runway"/>
+          <category render="true" symbol="1" value="taxiway" label="taxiway"/>
+        </categories>
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
+            <layer pass="0" class="SimpleLine" locked="0">
+              <prop k="capstyle" v="square"/>
+              <prop k="customdash" v="5;2"/>
+              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="customdash_unit" v="MM"/>
+              <prop k="draw_inside_polygon" v="0"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="line_color" v="221,221,221,255"/>
+              <prop k="line_style" v="solid"/>
+              <prop k="line_width" v="1.5"/>
+              <prop k="line_width_unit" v="MM"/>
+              <prop k="offset" v="0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="use_custom_dash" v="0"/>
+              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="line" name="1">
+            <layer pass="0" class="SimpleLine" locked="0">
+              <prop k="capstyle" v="square"/>
+              <prop k="customdash" v="5;2"/>
+              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="customdash_unit" v="MM"/>
+              <prop k="draw_inside_polygon" v="0"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="line_color" v="221,221,221,255"/>
+              <prop k="line_style" v="solid"/>
+              <prop k="line_width" v="0.5"/>
+              <prop k="line_width_unit" v="MM"/>
+              <prop k="offset" v="0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="use_custom_dash" v="0"/>
+              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <source-symbol>
+          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
+            <layer pass="0" class="SimpleLine" locked="0">
+              <prop k="capstyle" v="square"/>
+              <prop k="customdash" v="5;2"/>
+              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="customdash_unit" v="MM"/>
+              <prop k="draw_inside_polygon" v="0"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="line_color" v="104,160,87,255"/>
+              <prop k="line_style" v="solid"/>
+              <prop k="line_width" v="0.26"/>
+              <prop k="line_width_unit" v="MM"/>
+              <prop k="offset" v="0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="use_custom_dash" v="0"/>
+              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+            </layer>
+          </symbol>
+        </source-symbol>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value=""/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="2"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+        <property key="variableNames"/>
+        <property key="variableValues"/>
+      </customproperties>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>name</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <SingleCategoryDiagramRenderer diagramType="Pie">
+        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
+        </DiagramCategory>
+      </SingleCategoryDiagramRenderer>
+      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
+      <annotationform>.</annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform>.</editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath>.</editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
 
 def my_form_open(dialog, layer, feature):
 	geom = feature.geometry()
@@ -3238,9 +3886,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -3536,11 +4181,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -3672,9 +4317,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -3918,11 +4560,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -4054,9 +4696,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -4300,11 +4939,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -4436,9 +5075,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -5113,11 +5749,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -5249,9 +5885,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -5495,11 +6128,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -5631,9 +6264,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -5877,11 +6507,11 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
         <alias field="power" index="21" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="surface" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
+        <alias field="shop" index="23" name=""/>
+        <alias field="surface" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -6016,9 +6646,6 @@ def my_form_open(dialog, layer, feature):
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="religion">
@@ -6436,12 +7063,12 @@ def my_form_open(dialog, layer, feature):
         <alias field="osm_id" index="0" name=""/>
         <alias field="place" index="21" name=""/>
         <alias field="power" index="22" name=""/>
-        <alias field="shop" index="25" name=""/>
-        <alias field="tank" index="26" name=""/>
-        <alias field="tap" index="27" name=""/>
-        <alias field="tourism" index="28" name=""/>
-        <alias field="traffic_calming" index="29" name=""/>
-        <alias field="waterway" index="30" name=""/>
+        <alias field="shop" index="24" name=""/>
+        <alias field="tank" index="25" name=""/>
+        <alias field="tap" index="26" name=""/>
+        <alias field="tourism" index="27" name=""/>
+        <alias field="traffic_calming" index="28" name=""/>
+        <alias field="waterway" index="29" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -6450,6 +7077,324 @@ def my_form_open(dialog, layer, feature):
       <editforminit/>
       <editforminitcodesource>0</editforminitcodesource>
       <editforminitfilepath>..</editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="100" maximumScale="50000" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</id>
+      <datasource>./{{ layer_id_prefix }}.gpkg|layername=railway_lines</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>railway</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes>
+        <edittype widgetv2type="TextEdit" name="osm_id">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="aeroway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="amenity">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="barrier">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="bicycle_road">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="bridge">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="ford">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="highway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="layer">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="leisure">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="man_made">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="name">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="natural">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="railway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="tourism">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="tunnel">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="waterway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="z_index">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+      </edittypes>
+      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
+            <layer pass="0" class="SimpleLine" locked="0">
+              <prop k="capstyle" v="square"/>
+              <prop k="customdash" v="5;2"/>
+              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="customdash_unit" v="MM"/>
+              <prop k="draw_inside_polygon" v="0"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="line_color" v="153,153,153,255"/>
+              <prop k="line_style" v="solid"/>
+              <prop k="line_width" v="0.26"/>
+              <prop k="line_width_unit" v="MM"/>
+              <prop k="offset" v="0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="use_custom_dash" v="0"/>
+              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value=""/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="2"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+      </customproperties>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>name</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <SingleCategoryDiagramRenderer diagramType="Pie">
+        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
+        </DiagramCategory>
+      </SingleCategoryDiagramRenderer>
+      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
+      <annotationform>.</annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform>.</editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath>.</editforminitfilepath>
       <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
 """
 QGIS forms can have a Python function that is called when the form is
@@ -8888,947 +9833,6 @@ def my_form_open(dialog, layer, feature):
         <fieldstyles/>
       </conditionalstyles>
     </maplayer>
-    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-      <xmin>{{ bbox.0 }}</xmin>
-      <ymin>{{ bbox.1 }}</ymin>
-      <xmax>{{ bbox.2 }}</xmax>
-      <ymax>{{ bbox.3 }}</ymax>
-      </extent>
-      <id>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=aviation_all_lines</datasource>
-      <keywordList>
-        <value></value>
-      </keywordList>
-      <layername>airport lines</layername>
-      <srs>
-        <spatialrefsys>
-          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>3452</srsid>
-          <srid>4326</srid>
-          <authid>EPSG:4326</authid>
-          <description>WGS 84</description>
-          <projectionacronym>longlat</projectionacronym>
-          <ellipsoidacronym>WGS84</ellipsoidacronym>
-          <geographicflag>true</geographicflag>
-        </spatialrefsys>
-      </srs>
-      <provider encoding="UTF-8">ogr</provider>
-      <previewExpression></previewExpression>
-      <vectorjoins/>
-      <layerDependencies/>
-      <expressionfields/>
-      <map-layer-style-manager current="">
-        <map-layer-style name=""/>
-      </map-layer-style-manager>
-      <edittypes>
-        <edittype widgetv2type="TextEdit" name="osm_id">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="name">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tunnel">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-      </edittypes>
-      <renderer-v2 attr="aeroway" forceraster="0" symbollevels="0" type="categorizedSymbol" enableorderby="0">
-        <categories>
-          <category render="true" symbol="0" value="runway" label="runway"/>
-          <category render="true" symbol="1" value="taxiway" label="taxiway"/>
-        </categories>
-        <symbols>
-          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
-            <layer pass="0" class="SimpleLine" locked="0">
-              <prop k="capstyle" v="square"/>
-              <prop k="customdash" v="5;2"/>
-              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="customdash_unit" v="MM"/>
-              <prop k="draw_inside_polygon" v="0"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="line_color" v="221,221,221,255"/>
-              <prop k="line_style" v="solid"/>
-              <prop k="line_width" v="1.5"/>
-              <prop k="line_width_unit" v="MM"/>
-              <prop k="offset" v="0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="use_custom_dash" v="0"/>
-              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
-            </layer>
-          </symbol>
-          <symbol alpha="1" clip_to_extent="1" type="line" name="1">
-            <layer pass="0" class="SimpleLine" locked="0">
-              <prop k="capstyle" v="square"/>
-              <prop k="customdash" v="5;2"/>
-              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="customdash_unit" v="MM"/>
-              <prop k="draw_inside_polygon" v="0"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="line_color" v="221,221,221,255"/>
-              <prop k="line_style" v="solid"/>
-              <prop k="line_width" v="0.5"/>
-              <prop k="line_width_unit" v="MM"/>
-              <prop k="offset" v="0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="use_custom_dash" v="0"/>
-              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
-            </layer>
-          </symbol>
-        </symbols>
-        <source-symbol>
-          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
-            <layer pass="0" class="SimpleLine" locked="0">
-              <prop k="capstyle" v="square"/>
-              <prop k="customdash" v="5;2"/>
-              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="customdash_unit" v="MM"/>
-              <prop k="draw_inside_polygon" v="0"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="line_color" v="104,160,87,255"/>
-              <prop k="line_style" v="solid"/>
-              <prop k="line_width" v="0.26"/>
-              <prop k="line_width_unit" v="MM"/>
-              <prop k="offset" v="0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="use_custom_dash" v="0"/>
-              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
-            </layer>
-          </symbol>
-        </source-symbol>
-        <rotation/>
-        <sizescale scalemethod="diameter"/>
-      </renderer-v2>
-      <labeling type="simple"/>
-      <customproperties>
-        <property key="labeling" value="pal"/>
-        <property key="labeling/addDirectionSymbol" value="false"/>
-        <property key="labeling/angleOffset" value="0"/>
-        <property key="labeling/blendMode" value="0"/>
-        <property key="labeling/bufferBlendMode" value="0"/>
-        <property key="labeling/bufferColorA" value="255"/>
-        <property key="labeling/bufferColorB" value="255"/>
-        <property key="labeling/bufferColorG" value="255"/>
-        <property key="labeling/bufferColorR" value="255"/>
-        <property key="labeling/bufferDraw" value="false"/>
-        <property key="labeling/bufferJoinStyle" value="64"/>
-        <property key="labeling/bufferNoFill" value="false"/>
-        <property key="labeling/bufferSize" value="1"/>
-        <property key="labeling/bufferSizeInMapUnits" value="false"/>
-        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/bufferTransp" value="0"/>
-        <property key="labeling/centroidInside" value="false"/>
-        <property key="labeling/centroidWhole" value="false"/>
-        <property key="labeling/decimals" value="3"/>
-        <property key="labeling/displayAll" value="false"/>
-        <property key="labeling/dist" value="0"/>
-        <property key="labeling/distInMapUnits" value="false"/>
-        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/drawLabels" value="false"/>
-        <property key="labeling/enabled" value="false"/>
-        <property key="labeling/fieldName" value=""/>
-        <property key="labeling/fitInPolygonOnly" value="false"/>
-        <property key="labeling/fontCapitals" value="0"/>
-        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-        <property key="labeling/fontItalic" value="false"/>
-        <property key="labeling/fontLetterSpacing" value="0"/>
-        <property key="labeling/fontLimitPixelSize" value="false"/>
-        <property key="labeling/fontMaxPixelSize" value="10000"/>
-        <property key="labeling/fontMinPixelSize" value="3"/>
-        <property key="labeling/fontSize" value="8.25"/>
-        <property key="labeling/fontSizeInMapUnits" value="false"/>
-        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/fontStrikeout" value="false"/>
-        <property key="labeling/fontUnderline" value="false"/>
-        <property key="labeling/fontWeight" value="50"/>
-        <property key="labeling/fontWordSpacing" value="0"/>
-        <property key="labeling/formatNumbers" value="false"/>
-        <property key="labeling/isExpression" value="true"/>
-        <property key="labeling/labelOffsetInMapUnits" value="true"/>
-        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/labelPerPart" value="false"/>
-        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
-        <property key="labeling/limitNumLabels" value="false"/>
-        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
-        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
-        <property key="labeling/maxNumLabels" value="2000"/>
-        <property key="labeling/mergeLines" value="false"/>
-        <property key="labeling/minFeatureSize" value="0"/>
-        <property key="labeling/multilineAlign" value="0"/>
-        <property key="labeling/multilineHeight" value="1"/>
-        <property key="labeling/namedStyle" value="Normal"/>
-        <property key="labeling/obstacle" value="true"/>
-        <property key="labeling/obstacleFactor" value="1"/>
-        <property key="labeling/obstacleType" value="0"/>
-        <property key="labeling/offsetType" value="0"/>
-        <property key="labeling/placeDirectionSymbol" value="0"/>
-        <property key="labeling/placement" value="2"/>
-        <property key="labeling/placementFlags" value="10"/>
-        <property key="labeling/plussign" value="false"/>
-        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
-        <property key="labeling/preserveRotation" value="true"/>
-        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
-        <property key="labeling/priority" value="5"/>
-        <property key="labeling/quadOffset" value="4"/>
-        <property key="labeling/repeatDistance" value="0"/>
-        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/repeatDistanceUnit" value="1"/>
-        <property key="labeling/reverseDirectionSymbol" value="false"/>
-        <property key="labeling/rightDirectionSymbol" value=">"/>
-        <property key="labeling/scaleMax" value="10000000"/>
-        <property key="labeling/scaleMin" value="1"/>
-        <property key="labeling/scaleVisibility" value="false"/>
-        <property key="labeling/shadowBlendMode" value="6"/>
-        <property key="labeling/shadowColorB" value="0"/>
-        <property key="labeling/shadowColorG" value="0"/>
-        <property key="labeling/shadowColorR" value="0"/>
-        <property key="labeling/shadowDraw" value="false"/>
-        <property key="labeling/shadowOffsetAngle" value="135"/>
-        <property key="labeling/shadowOffsetDist" value="1"/>
-        <property key="labeling/shadowOffsetGlobal" value="true"/>
-        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowOffsetUnits" value="1"/>
-        <property key="labeling/shadowRadius" value="1.5"/>
-        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
-        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowRadiusUnits" value="1"/>
-        <property key="labeling/shadowScale" value="100"/>
-        <property key="labeling/shadowTransparency" value="30"/>
-        <property key="labeling/shadowUnder" value="0"/>
-        <property key="labeling/shapeBlendMode" value="0"/>
-        <property key="labeling/shapeBorderColorA" value="255"/>
-        <property key="labeling/shapeBorderColorB" value="128"/>
-        <property key="labeling/shapeBorderColorG" value="128"/>
-        <property key="labeling/shapeBorderColorR" value="128"/>
-        <property key="labeling/shapeBorderWidth" value="0"/>
-        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeBorderWidthUnits" value="1"/>
-        <property key="labeling/shapeDraw" value="false"/>
-        <property key="labeling/shapeFillColorA" value="255"/>
-        <property key="labeling/shapeFillColorB" value="255"/>
-        <property key="labeling/shapeFillColorG" value="255"/>
-        <property key="labeling/shapeFillColorR" value="255"/>
-        <property key="labeling/shapeJoinStyle" value="64"/>
-        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeOffsetUnits" value="1"/>
-        <property key="labeling/shapeOffsetX" value="0"/>
-        <property key="labeling/shapeOffsetY" value="0"/>
-        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeRadiiUnits" value="1"/>
-        <property key="labeling/shapeRadiiX" value="0"/>
-        <property key="labeling/shapeRadiiY" value="0"/>
-        <property key="labeling/shapeRotation" value="0"/>
-        <property key="labeling/shapeRotationType" value="0"/>
-        <property key="labeling/shapeSVGFile" value=""/>
-        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeSizeType" value="0"/>
-        <property key="labeling/shapeSizeUnits" value="1"/>
-        <property key="labeling/shapeSizeX" value="0"/>
-        <property key="labeling/shapeSizeY" value="0"/>
-        <property key="labeling/shapeTransparency" value="0"/>
-        <property key="labeling/shapeType" value="0"/>
-        <property key="labeling/textColorA" value="255"/>
-        <property key="labeling/textColorB" value="0"/>
-        <property key="labeling/textColorG" value="0"/>
-        <property key="labeling/textColorR" value="0"/>
-        <property key="labeling/textTransp" value="0"/>
-        <property key="labeling/upsidedownLabels" value="0"/>
-        <property key="labeling/wrapChar" value=""/>
-        <property key="labeling/xOffset" value="0"/>
-        <property key="labeling/yOffset" value="0"/>
-        <property key="labeling/zIndex" value="0"/>
-        <property key="variableNames"/>
-        <property key="variableValues"/>
-      </customproperties>
-      <blendMode>0</blendMode>
-      <featureBlendMode>0</featureBlendMode>
-      <layerTransparency>0</layerTransparency>
-      <displayfield>name</displayfield>
-      <label>0</label>
-      <labelattributes>
-        <label fieldname="" text="Label"/>
-        <family fieldname="" name="MS Shell Dlg 2"/>
-        <size fieldname="" units="pt" value="12"/>
-        <bold fieldname="" on="0"/>
-        <italic fieldname="" on="0"/>
-        <underline fieldname="" on="0"/>
-        <strikeout fieldname="" on="0"/>
-        <color fieldname="" red="0" blue="0" green="0"/>
-        <x fieldname=""/>
-        <y fieldname=""/>
-        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
-        <angle fieldname="" value="0" auto="0"/>
-        <alignment fieldname="" value="center"/>
-        <buffercolor fieldname="" red="255" blue="255" green="255"/>
-        <buffersize fieldname="" units="pt" value="1"/>
-        <bufferenabled fieldname="" on=""/>
-        <multilineenabled fieldname="" on=""/>
-        <selectedonly on=""/>
-      </labelattributes>
-      <SingleCategoryDiagramRenderer diagramType="Pie">
-        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
-          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
-          <attribute field="" color="#000000" label=""/>
-        </DiagramCategory>
-      </SingleCategoryDiagramRenderer>
-      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
-      <annotationform>.</annotationform>
-      <excludeAttributesWMS/>
-      <excludeAttributesWFS/>
-      <attributeactions/>
-      <editform>.</editform>
-      <editforminit/>
-      <editforminitcodesource>0</editforminitcodesource>
-      <editforminitfilepath>.</editforminitfilepath>
-      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
-"""
-QGIS forms can have a Python function that is called when the form is
-opened.
-
-Use this function to add extra logic to your forms.
-
-Enter the name of the function in the "Python Init function"
-field.
-An example follows:
-"""
-from PyQt4.QtGui import QWidget
-
-def my_form_open(dialog, layer, feature):
-	geom = feature.geometry()
-	control = dialog.findChild(QWidget, "MyLineEdit")
-]]></editforminitcode>
-      <featformsuppress>0</featformsuppress>
-      <editorlayout>generatedlayout</editorlayout>
-      <widgets/>
-      <conditionalstyles>
-        <rowstyles/>
-        <fieldstyles/>
-      </conditionalstyles>
-    </maplayer>
-    <maplayer minimumScale="100" maximumScale="50000" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="1" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-      <xmin>{{ bbox.0 }}</xmin>
-      <ymin>{{ bbox.1 }}</ymin>
-      <xmax>{{ bbox.2 }}</xmax>
-      <ymax>{{ bbox.3 }}</ymax>
-      </extent>
-      <id>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=railway_lines</datasource>
-      <keywordList>
-        <value></value>
-      </keywordList>
-      <layername>railway</layername>
-      <srs>
-        <spatialrefsys>
-          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>3452</srsid>
-          <srid>4326</srid>
-          <authid>EPSG:4326</authid>
-          <description>WGS 84</description>
-          <projectionacronym>longlat</projectionacronym>
-          <ellipsoidacronym>WGS84</ellipsoidacronym>
-          <geographicflag>true</geographicflag>
-        </spatialrefsys>
-      </srs>
-      <provider encoding="UTF-8">ogr</provider>
-      <previewExpression></previewExpression>
-      <vectorjoins/>
-      <layerDependencies/>
-      <expressionfields/>
-      <map-layer-style-manager current="">
-        <map-layer-style name=""/>
-      </map-layer-style-manager>
-      <edittypes>
-        <edittype widgetv2type="TextEdit" name="osm_id">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="name">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tunnel">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-      </edittypes>
-      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
-        <symbols>
-          <symbol alpha="1" clip_to_extent="1" type="line" name="0">
-            <layer pass="0" class="SimpleLine" locked="0">
-              <prop k="capstyle" v="square"/>
-              <prop k="customdash" v="5;2"/>
-              <prop k="customdash_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="customdash_unit" v="MM"/>
-              <prop k="draw_inside_polygon" v="0"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="line_color" v="153,153,153,255"/>
-              <prop k="line_style" v="solid"/>
-              <prop k="line_width" v="0.26"/>
-              <prop k="line_width_unit" v="MM"/>
-              <prop k="offset" v="0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="use_custom_dash" v="0"/>
-              <prop k="width_map_unit_scale" v="0,0,0,0,0,0"/>
-            </layer>
-          </symbol>
-        </symbols>
-        <rotation/>
-        <sizescale scalemethod="diameter"/>
-      </renderer-v2>
-      <labeling type="simple"/>
-      <customproperties>
-        <property key="labeling" value="pal"/>
-        <property key="labeling/addDirectionSymbol" value="false"/>
-        <property key="labeling/angleOffset" value="0"/>
-        <property key="labeling/blendMode" value="0"/>
-        <property key="labeling/bufferBlendMode" value="0"/>
-        <property key="labeling/bufferColorA" value="255"/>
-        <property key="labeling/bufferColorB" value="255"/>
-        <property key="labeling/bufferColorG" value="255"/>
-        <property key="labeling/bufferColorR" value="255"/>
-        <property key="labeling/bufferDraw" value="false"/>
-        <property key="labeling/bufferJoinStyle" value="64"/>
-        <property key="labeling/bufferNoFill" value="false"/>
-        <property key="labeling/bufferSize" value="1"/>
-        <property key="labeling/bufferSizeInMapUnits" value="false"/>
-        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/bufferTransp" value="0"/>
-        <property key="labeling/centroidInside" value="false"/>
-        <property key="labeling/centroidWhole" value="false"/>
-        <property key="labeling/decimals" value="3"/>
-        <property key="labeling/displayAll" value="false"/>
-        <property key="labeling/dist" value="0"/>
-        <property key="labeling/distInMapUnits" value="false"/>
-        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/drawLabels" value="false"/>
-        <property key="labeling/enabled" value="false"/>
-        <property key="labeling/fieldName" value=""/>
-        <property key="labeling/fitInPolygonOnly" value="false"/>
-        <property key="labeling/fontCapitals" value="0"/>
-        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-        <property key="labeling/fontItalic" value="false"/>
-        <property key="labeling/fontLetterSpacing" value="0"/>
-        <property key="labeling/fontLimitPixelSize" value="false"/>
-        <property key="labeling/fontMaxPixelSize" value="10000"/>
-        <property key="labeling/fontMinPixelSize" value="3"/>
-        <property key="labeling/fontSize" value="8.25"/>
-        <property key="labeling/fontSizeInMapUnits" value="false"/>
-        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/fontStrikeout" value="false"/>
-        <property key="labeling/fontUnderline" value="false"/>
-        <property key="labeling/fontWeight" value="50"/>
-        <property key="labeling/fontWordSpacing" value="0"/>
-        <property key="labeling/formatNumbers" value="false"/>
-        <property key="labeling/isExpression" value="true"/>
-        <property key="labeling/labelOffsetInMapUnits" value="true"/>
-        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/labelPerPart" value="false"/>
-        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
-        <property key="labeling/limitNumLabels" value="false"/>
-        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
-        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
-        <property key="labeling/maxNumLabels" value="2000"/>
-        <property key="labeling/mergeLines" value="false"/>
-        <property key="labeling/minFeatureSize" value="0"/>
-        <property key="labeling/multilineAlign" value="0"/>
-        <property key="labeling/multilineHeight" value="1"/>
-        <property key="labeling/namedStyle" value="Normal"/>
-        <property key="labeling/obstacle" value="true"/>
-        <property key="labeling/obstacleFactor" value="1"/>
-        <property key="labeling/obstacleType" value="0"/>
-        <property key="labeling/offsetType" value="0"/>
-        <property key="labeling/placeDirectionSymbol" value="0"/>
-        <property key="labeling/placement" value="2"/>
-        <property key="labeling/placementFlags" value="10"/>
-        <property key="labeling/plussign" value="false"/>
-        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
-        <property key="labeling/preserveRotation" value="true"/>
-        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
-        <property key="labeling/priority" value="5"/>
-        <property key="labeling/quadOffset" value="4"/>
-        <property key="labeling/repeatDistance" value="0"/>
-        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/repeatDistanceUnit" value="1"/>
-        <property key="labeling/reverseDirectionSymbol" value="false"/>
-        <property key="labeling/rightDirectionSymbol" value=">"/>
-        <property key="labeling/scaleMax" value="10000000"/>
-        <property key="labeling/scaleMin" value="1"/>
-        <property key="labeling/scaleVisibility" value="false"/>
-        <property key="labeling/shadowBlendMode" value="6"/>
-        <property key="labeling/shadowColorB" value="0"/>
-        <property key="labeling/shadowColorG" value="0"/>
-        <property key="labeling/shadowColorR" value="0"/>
-        <property key="labeling/shadowDraw" value="false"/>
-        <property key="labeling/shadowOffsetAngle" value="135"/>
-        <property key="labeling/shadowOffsetDist" value="1"/>
-        <property key="labeling/shadowOffsetGlobal" value="true"/>
-        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowOffsetUnits" value="1"/>
-        <property key="labeling/shadowRadius" value="1.5"/>
-        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
-        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowRadiusUnits" value="1"/>
-        <property key="labeling/shadowScale" value="100"/>
-        <property key="labeling/shadowTransparency" value="30"/>
-        <property key="labeling/shadowUnder" value="0"/>
-        <property key="labeling/shapeBlendMode" value="0"/>
-        <property key="labeling/shapeBorderColorA" value="255"/>
-        <property key="labeling/shapeBorderColorB" value="128"/>
-        <property key="labeling/shapeBorderColorG" value="128"/>
-        <property key="labeling/shapeBorderColorR" value="128"/>
-        <property key="labeling/shapeBorderWidth" value="0"/>
-        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeBorderWidthUnits" value="1"/>
-        <property key="labeling/shapeDraw" value="false"/>
-        <property key="labeling/shapeFillColorA" value="255"/>
-        <property key="labeling/shapeFillColorB" value="255"/>
-        <property key="labeling/shapeFillColorG" value="255"/>
-        <property key="labeling/shapeFillColorR" value="255"/>
-        <property key="labeling/shapeJoinStyle" value="64"/>
-        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeOffsetUnits" value="1"/>
-        <property key="labeling/shapeOffsetX" value="0"/>
-        <property key="labeling/shapeOffsetY" value="0"/>
-        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeRadiiUnits" value="1"/>
-        <property key="labeling/shapeRadiiX" value="0"/>
-        <property key="labeling/shapeRadiiY" value="0"/>
-        <property key="labeling/shapeRotation" value="0"/>
-        <property key="labeling/shapeRotationType" value="0"/>
-        <property key="labeling/shapeSVGFile" value=""/>
-        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeSizeType" value="0"/>
-        <property key="labeling/shapeSizeUnits" value="1"/>
-        <property key="labeling/shapeSizeX" value="0"/>
-        <property key="labeling/shapeSizeY" value="0"/>
-        <property key="labeling/shapeTransparency" value="0"/>
-        <property key="labeling/shapeType" value="0"/>
-        <property key="labeling/textColorA" value="255"/>
-        <property key="labeling/textColorB" value="0"/>
-        <property key="labeling/textColorG" value="0"/>
-        <property key="labeling/textColorR" value="0"/>
-        <property key="labeling/textTransp" value="0"/>
-        <property key="labeling/upsidedownLabels" value="0"/>
-        <property key="labeling/wrapChar" value=""/>
-        <property key="labeling/xOffset" value="0"/>
-        <property key="labeling/yOffset" value="0"/>
-        <property key="labeling/zIndex" value="0"/>
-      </customproperties>
-      <blendMode>0</blendMode>
-      <featureBlendMode>0</featureBlendMode>
-      <layerTransparency>0</layerTransparency>
-      <displayfield>name</displayfield>
-      <label>0</label>
-      <labelattributes>
-        <label fieldname="" text="Label"/>
-        <family fieldname="" name="MS Shell Dlg 2"/>
-        <size fieldname="" units="pt" value="12"/>
-        <bold fieldname="" on="0"/>
-        <italic fieldname="" on="0"/>
-        <underline fieldname="" on="0"/>
-        <strikeout fieldname="" on="0"/>
-        <color fieldname="" red="0" blue="0" green="0"/>
-        <x fieldname=""/>
-        <y fieldname=""/>
-        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
-        <angle fieldname="" value="0" auto="0"/>
-        <alignment fieldname="" value="center"/>
-        <buffercolor fieldname="" red="255" blue="255" green="255"/>
-        <buffersize fieldname="" units="pt" value="1"/>
-        <bufferenabled fieldname="" on=""/>
-        <multilineenabled fieldname="" on=""/>
-        <selectedonly on=""/>
-      </labelattributes>
-      <SingleCategoryDiagramRenderer diagramType="Pie">
-        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
-          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
-          <attribute field="" color="#000000" label=""/>
-        </DiagramCategory>
-      </SingleCategoryDiagramRenderer>
-      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
-      <annotationform>.</annotationform>
-      <excludeAttributesWMS/>
-      <excludeAttributesWFS/>
-      <attributeactions/>
-      <editform>.</editform>
-      <editforminit/>
-      <editforminitcodesource>0</editforminitcodesource>
-      <editforminitfilepath>.</editforminitfilepath>
-      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
-"""
-QGIS forms can have a Python function that is called when the form is
-opened.
-
-Use this function to add extra logic to your forms.
-
-Enter the name of the function in the "Python Init function"
-field.
-An example follows:
-"""
-from PyQt4.QtGui import QWidget
-
-def my_form_open(dialog, layer, feature):
-	geom = feature.geometry()
-	control = dialog.findChild(QWidget, "MyLineEdit")
-]]></editforminitcode>
-      <featformsuppress>0</featformsuppress>
-      <editorlayout>generatedlayout</editorlayout>
-      <widgets/>
-      <conditionalstyles>
-        <rowstyles/>
-        <fieldstyles/>
-      </conditionalstyles>
-    </maplayer>
-    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-      <xmin>{{ bbox.0 }}</xmin>
-      <ymin>{{ bbox.1 }}</ymin>
-      <xmax>{{ bbox.2 }}</xmax>
-      <ymax>{{ bbox.3 }}</ymax>
-      </extent>
-      <id>osm_bounds_osm_{ layer_id_date_time }}</id>
-      <datasource>osm_bounds-osm-{{ layer_id_date_time|slice:":8" }}.gpkg</datasource>
-      <keywordList>
-        <value></value>
-      </keywordList>
-      <layername>bounds</layername>
-      <srs>
-        <spatialrefsys>
-          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>3452</srsid>
-          <srid>4326</srid>
-          <authid>EPSG:4326</authid>
-          <description>WGS 84</description>
-          <projectionacronym>longlat</projectionacronym>
-          <ellipsoidacronym>WGS84</ellipsoidacronym>
-          <geographicflag>true</geographicflag>
-        </spatialrefsys>
-      </srs>
-      <provider encoding="UTF-8">ogr</provider>
-      <previewExpression></previewExpression>
-      <vectorjoins/>
-      <layerDependencies/>
-      <expressionfields/>
-      <map-layer-style-manager current="">
-        <map-layer-style name=""/>
-      </map-layer-style-manager>
-      <edittypes/>
-      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
-        <symbols>
-          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
-            <layer pass="0" class="SimpleFill" locked="0">
-              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="247,246,241,255"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_style" v="solid"/>
-              <prop k="outline_width" v="0.26"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="style" v="solid"/>
-            </layer>
-          </symbol>
-        </symbols>
-        <rotation/>
-        <sizescale scalemethod="diameter"/>
-      </renderer-v2>
-      <labeling type="simple"/>
-      <customproperties>
-        <property key="labeling" value="pal"/>
-        <property key="labeling/addDirectionSymbol" value="false"/>
-        <property key="labeling/angleOffset" value="0"/>
-        <property key="labeling/blendMode" value="0"/>
-        <property key="labeling/bufferBlendMode" value="0"/>
-        <property key="labeling/bufferColorA" value="255"/>
-        <property key="labeling/bufferColorB" value="255"/>
-        <property key="labeling/bufferColorG" value="255"/>
-        <property key="labeling/bufferColorR" value="255"/>
-        <property key="labeling/bufferDraw" value="false"/>
-        <property key="labeling/bufferJoinStyle" value="64"/>
-        <property key="labeling/bufferNoFill" value="false"/>
-        <property key="labeling/bufferSize" value="1"/>
-        <property key="labeling/bufferSizeInMapUnits" value="false"/>
-        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/bufferTransp" value="0"/>
-        <property key="labeling/centroidInside" value="false"/>
-        <property key="labeling/centroidWhole" value="false"/>
-        <property key="labeling/decimals" value="3"/>
-        <property key="labeling/displayAll" value="false"/>
-        <property key="labeling/dist" value="0"/>
-        <property key="labeling/distInMapUnits" value="false"/>
-        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/drawLabels" value="false"/>
-        <property key="labeling/enabled" value="false"/>
-        <property key="labeling/fieldName" value="name"/>
-        <property key="labeling/fitInPolygonOnly" value="false"/>
-        <property key="labeling/fontCapitals" value="0"/>
-        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-        <property key="labeling/fontItalic" value="false"/>
-        <property key="labeling/fontLetterSpacing" value="0"/>
-        <property key="labeling/fontLimitPixelSize" value="false"/>
-        <property key="labeling/fontMaxPixelSize" value="10000"/>
-        <property key="labeling/fontMinPixelSize" value="3"/>
-        <property key="labeling/fontSize" value="8.25"/>
-        <property key="labeling/fontSizeInMapUnits" value="false"/>
-        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/fontStrikeout" value="false"/>
-        <property key="labeling/fontUnderline" value="false"/>
-        <property key="labeling/fontWeight" value="50"/>
-        <property key="labeling/fontWordSpacing" value="0"/>
-        <property key="labeling/formatNumbers" value="false"/>
-        <property key="labeling/isExpression" value="false"/>
-        <property key="labeling/labelOffsetInMapUnits" value="true"/>
-        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/labelPerPart" value="false"/>
-        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
-        <property key="labeling/limitNumLabels" value="false"/>
-        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
-        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
-        <property key="labeling/maxNumLabels" value="2000"/>
-        <property key="labeling/mergeLines" value="false"/>
-        <property key="labeling/minFeatureSize" value="0"/>
-        <property key="labeling/multilineAlign" value="0"/>
-        <property key="labeling/multilineHeight" value="1"/>
-        <property key="labeling/namedStyle" value="Normal"/>
-        <property key="labeling/obstacle" value="true"/>
-        <property key="labeling/obstacleFactor" value="1"/>
-        <property key="labeling/obstacleType" value="0"/>
-        <property key="labeling/offsetType" value="0"/>
-        <property key="labeling/placeDirectionSymbol" value="0"/>
-        <property key="labeling/placement" value="1"/>
-        <property key="labeling/placementFlags" value="10"/>
-        <property key="labeling/plussign" value="false"/>
-        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
-        <property key="labeling/preserveRotation" value="true"/>
-        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
-        <property key="labeling/priority" value="5"/>
-        <property key="labeling/quadOffset" value="4"/>
-        <property key="labeling/repeatDistance" value="0"/>
-        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/repeatDistanceUnit" value="1"/>
-        <property key="labeling/reverseDirectionSymbol" value="false"/>
-        <property key="labeling/rightDirectionSymbol" value=">"/>
-        <property key="labeling/scaleMax" value="10000000"/>
-        <property key="labeling/scaleMin" value="1"/>
-        <property key="labeling/scaleVisibility" value="false"/>
-        <property key="labeling/shadowBlendMode" value="6"/>
-        <property key="labeling/shadowColorB" value="0"/>
-        <property key="labeling/shadowColorG" value="0"/>
-        <property key="labeling/shadowColorR" value="0"/>
-        <property key="labeling/shadowDraw" value="false"/>
-        <property key="labeling/shadowOffsetAngle" value="135"/>
-        <property key="labeling/shadowOffsetDist" value="1"/>
-        <property key="labeling/shadowOffsetGlobal" value="true"/>
-        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowOffsetUnits" value="1"/>
-        <property key="labeling/shadowRadius" value="1.5"/>
-        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
-        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowRadiusUnits" value="1"/>
-        <property key="labeling/shadowScale" value="100"/>
-        <property key="labeling/shadowTransparency" value="30"/>
-        <property key="labeling/shadowUnder" value="0"/>
-        <property key="labeling/shapeBlendMode" value="0"/>
-        <property key="labeling/shapeBorderColorA" value="255"/>
-        <property key="labeling/shapeBorderColorB" value="128"/>
-        <property key="labeling/shapeBorderColorG" value="128"/>
-        <property key="labeling/shapeBorderColorR" value="128"/>
-        <property key="labeling/shapeBorderWidth" value="0"/>
-        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeBorderWidthUnits" value="1"/>
-        <property key="labeling/shapeDraw" value="false"/>
-        <property key="labeling/shapeFillColorA" value="255"/>
-        <property key="labeling/shapeFillColorB" value="255"/>
-        <property key="labeling/shapeFillColorG" value="255"/>
-        <property key="labeling/shapeFillColorR" value="255"/>
-        <property key="labeling/shapeJoinStyle" value="64"/>
-        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeOffsetUnits" value="1"/>
-        <property key="labeling/shapeOffsetX" value="0"/>
-        <property key="labeling/shapeOffsetY" value="0"/>
-        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeRadiiUnits" value="1"/>
-        <property key="labeling/shapeRadiiX" value="0"/>
-        <property key="labeling/shapeRadiiY" value="0"/>
-        <property key="labeling/shapeRotation" value="0"/>
-        <property key="labeling/shapeRotationType" value="0"/>
-        <property key="labeling/shapeSVGFile" value=""/>
-        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeSizeType" value="0"/>
-        <property key="labeling/shapeSizeUnits" value="1"/>
-        <property key="labeling/shapeSizeX" value="0"/>
-        <property key="labeling/shapeSizeY" value="0"/>
-        <property key="labeling/shapeTransparency" value="0"/>
-        <property key="labeling/shapeType" value="0"/>
-        <property key="labeling/textColorA" value="255"/>
-        <property key="labeling/textColorB" value="0"/>
-        <property key="labeling/textColorG" value="0"/>
-        <property key="labeling/textColorR" value="0"/>
-        <property key="labeling/textTransp" value="0"/>
-        <property key="labeling/upsidedownLabels" value="0"/>
-        <property key="labeling/wrapChar" value=""/>
-        <property key="labeling/xOffset" value="0"/>
-        <property key="labeling/yOffset" value="0"/>
-        <property key="labeling/zIndex" value="0"/>
-      </customproperties>
-      <blendMode>0</blendMode>
-      <featureBlendMode>0</featureBlendMode>
-      <layerTransparency>0</layerTransparency>
-      <displayfield>name</displayfield>
-      <label>0</label>
-      <labelattributes>
-        <label fieldname="" text="Label"/>
-        <family fieldname="" name="MS Shell Dlg 2"/>
-        <size fieldname="" units="pt" value="12"/>
-        <bold fieldname="" on="0"/>
-        <italic fieldname="" on="0"/>
-        <underline fieldname="" on="0"/>
-        <strikeout fieldname="" on="0"/>
-        <color fieldname="" red="0" blue="0" green="0"/>
-        <x fieldname=""/>
-        <y fieldname=""/>
-        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
-        <angle fieldname="" value="0" auto="0"/>
-        <alignment fieldname="" value="center"/>
-        <buffercolor fieldname="" red="255" blue="255" green="255"/>
-        <buffersize fieldname="" units="pt" value="1"/>
-        <bufferenabled fieldname="" on=""/>
-        <multilineenabled fieldname="" on=""/>
-        <selectedonly on=""/>
-      </labelattributes>
-      <SingleCategoryDiagramRenderer diagramType="Pie">
-        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="-4.65661e-10">
-          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
-          <attribute field="" color="#000000" label=""/>
-        </DiagramCategory>
-      </SingleCategoryDiagramRenderer>
-      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
-      <annotationform>.</annotationform>
-      <excludeAttributesWMS/>
-      <excludeAttributesWFS/>
-      <attributeactions/>
-      <editform>.</editform>
-      <editforminit/>
-      <editforminitcodesource>0</editforminitcodesource>
-      <editforminitfilepath>.</editforminitfilepath>
-      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
-"""
-QGIS forms can have a Python function that is called when the form is
-opened.
-
-Use this function to add extra logic to your forms.
-
-Enter the name of the function in the "Python Init function"
-field.
-An example follows:
-"""
-from PyQt4.QtGui import QWidget
-
-def my_form_open(dialog, layer, feature):
-	geom = feature.geometry()
-	control = dialog.findChild(QWidget, "MyLineEdit")
-]]></editforminitcode>
-      <featformsuppress>0</featformsuppress>
-      <editorlayout>generatedlayout</editorlayout>
-      <widgets/>
-      <conditionalstyles>
-        <rowstyles/>
-        <fieldstyles/>
-      </conditionalstyles>
-    </maplayer>
   </projectlayers>
   <properties>
     <Variables>
@@ -9884,8 +9888,10 @@ def my_form_open(dialog, layer, feature):
     <Digitizing>
       <DefaultSnapToleranceUnit type="int">2</DefaultSnapToleranceUnit>
       <LayerSnappingList type="QStringList">
+        <value>osm_bounds_osm_{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_amenities_all_points_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_amenities_all_polygons_any{{ layer_id_date_time }}</value>
+        <value>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_aviation_all_polygons_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_grassy_fields_polygons_any{{ layer_id_date_time }}</value>
@@ -9893,11 +9899,9 @@ def my_form_open(dialog, layer, feature):
         <value>{{ layer_id_prefix }}_landuse_residential_polygons_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}</value>
+        <value>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_roads_paths_lines_any{{ layer_id_date_time }}</value>
         <value>{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}</value>
-        <value>{{ layer_id_prefix }}_aviation_all_lines_any{{ layer_id_date_time }}</value>
-        <value>{{ layer_id_prefix }}_railway_lines_any{{ layer_id_date_time }}</value>
-        <value>osm_bounds_osm_{ layer_id_date_time }}</value>
       </LayerSnappingList>
       <LayerSnappingEnabledList type="QStringList">
         <value>disabled</value>
