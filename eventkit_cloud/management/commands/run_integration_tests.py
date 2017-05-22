@@ -11,6 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         print('Loading test providers')
+        delete_providers()
         load_providers()
         if options['tests']:
             suite = unittest.TestLoader().loadTestsFromNames(options['tests'])
