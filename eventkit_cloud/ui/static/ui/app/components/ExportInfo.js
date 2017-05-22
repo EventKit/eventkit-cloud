@@ -289,9 +289,9 @@ export class ExportInfo extends React.Component {
                                             primaryTogglesNestedList={false}
                                             nestedItems={[
                                                     <ListItem
-                                                    key={1}
-                                                    primaryText={provider.service_description}
-                                                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '16px'}}
+                                                        key={1}
+                                                        primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
+                                                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '16px'}}
                                                     />
                                                 ]}
                                             />
