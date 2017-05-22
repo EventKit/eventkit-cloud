@@ -62,10 +62,11 @@ export class ProviderRow extends React.Component {
             downloadUrls.push(a.result.url);
         })
         downloadUrls.forEach((value, idx) => {
-            setTimeout(() => {
-                window.location.href = value;
-            }, idx * 100)
-        })
+            // setTimeout(() => {
+            //     window.location.href = value;
+            // }, idx * 1000);
+            window.open(value, '_blank');
+        });
     }
 
     allChecked() {

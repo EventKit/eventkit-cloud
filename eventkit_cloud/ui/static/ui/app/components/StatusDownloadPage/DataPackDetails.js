@@ -80,15 +80,16 @@ export class DataPackDetails extends React.Component {
                 if (task.uid === uid) {
                     downloadUrls.push(task.result.url);
                 }
-                })
-            })
-        })
+                });
+            });
+        });
 
         downloadUrls.forEach((value, idx) => {
-            setTimeout(() => {
-                window.location.href = value;
-            }, idx * 100)
-        })
+            // setTimeout(() => {
+            //     window.location.href = value;
+            // }, idx * 500);
+            window.open(value, '_blank');
+        });
     }
 
     render() {
