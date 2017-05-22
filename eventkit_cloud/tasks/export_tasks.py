@@ -125,6 +125,9 @@ class ExportTask(LockingTask):
             # update the task
             finished = timezone.now()
             task = ExportTaskModel.objects.get(celery_uid=task_id)
+            if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
+                logging.info('Task reported on success but was previously canceled ',format(task_id))
+                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.finished_at = finished
             task.progress = 100
             # get the output
@@ -864,10 +867,10 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     run.status = TaskStates.COMPLETED.value
     provider_tasks = run.provider_tasks.all()
     # mark run as incomplete if any tasks fail
-    if any(TaskStates[task.status] in TaskStates.get_incomplete_states() for task in provider_tasks):
-        run.status = TaskStates.INCOMPLETE.value
-    if all(TaskStates[task.status] == TaskStates.CANCELED.value for task in provider_tasks):
+    if all(TaskStates[provider_task.status] == TaskStates.CANCELED for provider_task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+    elif any(TaskStates[provider_task.status] in TaskStates.get_incomplete_states() for provider_task in provider_tasks):
+        run.status = TaskStates.INCOMPLETE.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()
