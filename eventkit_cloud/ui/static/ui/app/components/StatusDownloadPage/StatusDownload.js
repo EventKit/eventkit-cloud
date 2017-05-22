@@ -23,7 +23,7 @@ export class StatusDownload extends React.Component {
     componentWillReceiveProps(nextProps) {
         if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
             if (nextProps.runDeletion.deleted) {
-                browserHistory.push('/status/');
+                browserHistory.push('/exports');
             }
         }
         if (nextProps.exportReRun.fetched != this.props.exportReRun.fetched) {
@@ -41,6 +41,10 @@ export class StatusDownload extends React.Component {
 
                 if (datacartDetails[0].status == "COMPLETED") {
                     TimerMixin.clearInterval(this.timer);
+                    
+                    setTimeout(() => {
+                        this.props.getDatacartDetails(this.props.params.jobuid);
+                    }, 270000);
                 }
             }
         }

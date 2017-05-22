@@ -124,7 +124,7 @@ export class DataCartDetails extends React.Component {
 
     handleDelete = () => {
         this.props.onRunDelete(this.props.cartDetails.uid)
-        this.setState({dialogOpen: false});
+        this.setState({deleteDialogOpen: false});
     };
 
     handleRerun = () => {
@@ -138,7 +138,7 @@ export class DataCartDetails extends React.Component {
             providerArray.push(provider.name);
         })
         this.props.onClone(this.props.cartDetails, providerArray);
-        this.setState({deleteDialogOpen: false});
+        this.setState({cloneDialogOpen: false});
 
     };
 
