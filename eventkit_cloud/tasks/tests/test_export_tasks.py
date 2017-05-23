@@ -378,7 +378,7 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-        mock_zip_file.run.assert_called_once_with(run_uid=self.run.uid, include_files=expected_file_names,
+        mock_zip_file.run.assert_called_once_with(adhoc=True, run_uid=self.run.uid, include_files=expected_file_names,
                                            file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)))
 
         # Check that an exception is raised if no zip file is returned.
@@ -673,7 +673,7 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        export_provider_task = ExportProviderTask.objects.create(status=TaskStates.SUCCESS.value, run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
         self.assertEquals('Finalize Export Run', finalize_run_task.name)

@@ -113,6 +113,7 @@ class TestJob(TestCase):
 
         self.wait_for_run(self.orm_job.uid)
         self.orm_run = self.orm_job.runs.last()
+        self.orm_run.refresh_from_db()
         self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
 
         # update provider to original setting.
@@ -470,113 +471,93 @@ class TestJob(TestCase):
 
 def get_providers_list():
     return [{
-        "model": "jobs.exportprovider",
-        "fields": {
-            "created_at": "2016-10-06T17:44:54.837Z",
-            "updated_at": "2016-10-06T17:44:54.837Z",
-            "name": "eventkit-integration-test-wms",
-            "slug": "eventkit-integration-test-wms",
-            "url": "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
-            "layer": "0",
-            "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wms'),
-            "level_from": 0,
-            "level_to": 2,
-            "config": ""
-        }
+        "created_at": "2016-10-06T17:44:54.837Z",
+        "updated_at": "2016-10-06T17:44:54.837Z",
+        "name": "eventkit-integration-test-wms",
+        "slug": "eventkit-integration-test-wms",
+        "url": "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
+        "layer": "0",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wms'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": ""
+
     }, {
-        "model": "jobs.exportprovider",
-        "fields": {
-            "created_at": "2016-10-06T17:45:46.213Z",
-            "updated_at": "2016-10-06T17:45:46.213Z",
-            "name": "eventkit-integration-test-wmts",
-            "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
-            "layer": "imagery",
-            "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wmts'),
-            "level_from": 0,
-            "level_to": 2,
-            "config": "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\n"
-                      "sources:\r\n"
-                      "  imagery_wmts:\r\n"
-                      "    type: tile\r\n"
-                      "    grid: webmercator\r\n"
-                      "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
-                      "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        }
+        "created_at": "2016-10-06T17:45:46.213Z",
+        "updated_at": "2016-10-06T17:45:46.213Z",
+        "name": "eventkit-integration-test-wmts",
+        "slug": "eventkit-integration-test-wmts",
+        "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
+        "layer": "imagery",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wmts'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\n"
+                  "sources:\r\n"
+                  "  imagery_wmts:\r\n"
+                  "    type: tile\r\n"
+                  "    grid: webmercator\r\n"
+                  "    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\n"
+                  "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+
     }, {
-        "model": "jobs.exportprovider",
-        "fields": {
-            "created_at": "2016-10-06T19:17:28.770Z",
-            "updated_at": "2016-10-06T19:17:28.770Z",
-            "name": "eventkit-integration-test-arc-raster",
-            "slug": "eventkit-integration-test-arc-raster",
-            "url": "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
-            "layer": "imagery",
-            "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-raster'),
-            "level_from": 0,
-            "level_to": 2,
-            "config": "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\n"
-                      "sources:\r\n"
-                      "  imagery_arcgis-raster:\r\n"
-                      "    type: arcgis\r\n"
-                      "    grid: webmercator\r\n"
-                      "    req:\r\n"
-                      "      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n"
-                      "      layers: \r\n"
-                      "        show: 0\r\n\r\n"
-                      "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        }
+        "created_at": "2016-10-06T19:17:28.770Z",
+        "updated_at": "2016-10-06T19:17:28.770Z",
+        "name": "eventkit-integration-test-arc-raster",
+        "slug": "eventkit-integration-test-arc-raster",
+        "url": "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
+        "layer": "imagery",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-raster'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\n"
+                  "sources:\r\n"
+                  "  imagery_arcgis-raster:\r\n"
+                  "    type: arcgis\r\n"
+                  "    grid: webmercator\r\n"
+                  "    req:\r\n"
+                  "      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n"
+                  "      layers: \r\n"
+                  "        show: 0\r\n\r\n"
+                  "grids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+
     }, {
-        "model": "jobs.exportprovider",
-        "fields": {
-            "created_at": "2016-10-13T17:23:26.890Z",
-            "updated_at": "2016-10-13T17:23:26.890Z",
-            "name": "eventkit-integration-test-wfs",
-            "slug": "eventkit-integration-test-wfs",
-            "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:EurasiaOceania_LSIB_Polygons_Simplified_2015&SRSNAME=EPSG:4326",
-            "layer": "geonode:EurasiaOceania_LSIB_Polygons_Simplified_2015",
-            "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wfs'),
-            "level_from": 0,
-            "level_to": 2,
-            "config": ""
-        }
+        "created_at": "2016-10-13T17:23:26.890Z",
+        "updated_at": "2016-10-13T17:23:26.890Z",
+        "name": "eventkit-integration-test-wfs",
+        "slug": "eventkit-integration-test-wfs",
+        "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
+        "layer": "geonode:Eurasia_Oceania_LSIB7a_gen_polygons",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wfs'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": ""
+
     }, {
-        "model": "jobs.exportprovider",
-        "fields": {
-            "created_at": "2016-10-21T14:30:27.066Z",
-            "updated_at": "2016-10-21T14:30:27.066Z",
-            "name": "eventkit-integration-test-arc-fs",
-            "slug": "eventkit-integration-test-arc-fs",
-            "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
-            "layer": "0",
-            "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
-            "level_from": 0,
-            "level_to": 2,
-            "config": ""
-        }
+        "created_at": "2016-10-21T14:30:27.066Z",
+        "updated_at": "2016-10-21T14:30:27.066Z",
+        "name": "eventkit-integration-test-arc-fs",
+        "slug": "eventkit-integration-test-arc-fs",
+        "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
+        "layer": "0",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": ""
     }]
 
 
 def load_providers():
     export_providers = get_providers_list()
-    for export_provider in export_providers:
-        try:
-            provider = ExportProvider.objects.using('default').create(
-                name=export_provider.get('fields').get('name'),
-                slug=export_provider.get('fields').get('slug'), url=export_provider.get('fields').get('url'),
-                layer=export_provider.get('fields').get('layer'),
-                export_provider_type=export_provider.get('fields').get('export_provider_type'),
-                level_from=export_provider.get('fields').get('level_from'),
-                level_to=export_provider.get('fields').get('level_to'),
-                config=export_provider.get('fields').get('config'))
-            provider.save(using='default')
-        except IntegrityError:
-            continue
+    providers = [ExportProvider(**export_provider) for export_provider in export_providers]
+    ExportProvider.objects.bulk_create(providers)
 
 
 def delete_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
-        provider = ExportProvider.objects.using('default').get(
-            name=export_provider.get('fields').get('name')
-        )
-        provider.delete(using='default')
+        provider = ExportProvider.objects.using('default').filter(
+            name=export_provider.get('name')
+        ).first()
+        if provider:
+            provider.delete(using='default')
