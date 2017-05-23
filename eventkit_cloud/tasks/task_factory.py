@@ -223,8 +223,9 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
 
 def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None):
-    """ Returns a celery chain of lenth 2 made up of a chord which executes post export provider tasks
-            & the finalize_run_task
+    """ Returns a celery chain of tasks that need to be executed after all of the export providers in a run
+        have finished.  Add any additional tasks you want in hook_tasks.
+        @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
     finalize_task_settings = {
         'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
@@ -232,7 +233,14 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
 
     # These should be subclassed from FinalizeRunHookTask
     hook_tasks = [qgis_task]
-    hook_task_sigs = [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks]
+    hook_task_sigs = []
+    if len(hook_tasks) > 0:
+        # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
+        #    link getting passed to the first hook task
+        hook_task_sigs.append(hook_tasks[0].si([], run_uid=run_uid).set(**finalize_task_settings))
+        hook_task_sigs.extend(
+            [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks[1:]]
+        )
 
     prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
 
