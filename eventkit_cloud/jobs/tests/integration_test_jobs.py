@@ -32,8 +32,8 @@ class TestJob(TestCase):
         username = 'admin'
         password = '@dm1n'
         self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings, "SITE_NAME", "cloud.eventkit.dev")))
-        self.login_url = self.base_url + '/auth/'
-        self.create_export_url = self.base_url + '/exports/create'
+        self.login_url = self.base_url + '/auth'
+        self.create_export_url = self.base_url + '/status/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
@@ -67,178 +67,178 @@ class TestJob(TestCase):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
 
-    def test_osm_geopackage(self):
-        """
-        This test is to ensure that an OSM file by itself only exporting GeoPackage returns data.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_cancel_job(self):
-
-        # update provider to ensure it runs long enough to cancel...
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
-        original_level_to = export_provider.level_to
-        export_provider.level_to = 19
-        export_provider.save()
-
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "eventkit-integration-test-wms", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
-
-        job_json = self.run_job(job_data, wait_for_run=False)
-
-        run_json = self.wait_for_task_pickup(job_uid=job_json.get('uid'))
-
-        export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
-
-        self.client.get(self.create_export_url)
-        self.csrftoken = self.client.cookies['csrftoken']
-
-        provider_url = self.base_url + reverse('api:provider_tasks-list') + '/{0}'.format(export_provider_task.uid)
-        response = self.client.patch(provider_url,
-                                    headers={'X-CSRFToken': self.csrftoken,
-                                             'referer': self.create_export_url})
-        self.assertEqual(200, response.status_code)
-        self.assertEqual({'success': True}, json.loads(response.content))
-        self.orm_job = Job.objects.get(uid=job_json.get('uid'))
-        self.orm_run = self.orm_job.runs.last()
-
-        pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
-
-        self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
-        self.assertEqual(pt.status, TaskStates.CANCELED.value)
-
-        self.wait_for_run(self.orm_job.uid)
-        self.orm_run = self.orm_job.runs.last()
-        self.orm_run.refresh_from_db()
-        self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
-
-        # update provider to original setting.
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
-        export_provider.level_to = original_level_to
-        export_provider.save()
-
-        delete_response = self.client.delete(self.jobs_url + '/' + job_json.get('uid'),
-                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
-        self.assertTrue(delete_response)
-
-    def test_osm_geopackage_thematic(self):
-        """
-        This test is to ensure that an OSM job will export a thematic GeoPackage.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG",
-                    "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_sqlite(self):
-        """
-        This test is to ensure that an OSM will export a sqlite file.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_sqlite_thematic(self):
-        """
-        This test is to ensure that an OSM job will export a thematic sqlite file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE",
-                    "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_shp(self):
-        """
-        This test is to ensure that an OSM job will export a shp.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_shp_thematic(self):
-        """
-        This test is to ensure that an OSM job will export a thematic shp.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_kml(self):
-        """
-        This test is to ensure that an OSM job will export a kml file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_osm_kml_thematic(self):
-        """
-        This test is to ensure that an OSM job will export a kml file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wms_gpkg(self):
-        """
-        This test is to ensure that an WMS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wmts_gpkg(self):
-        """
-        This test is to ensure that an WMTS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_arcgis_gpkg(self):
-        """
-        This test is to ensure that an ArcGIS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arc-Raster",
-                    "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wfs_gpkg(self):
-        """
-        This test is to ensure that an WFS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
+#     def test_osm_geopackage(self):
+#         """
+#         This test is to ensure that an OSM file by itself only exporting GeoPackage returns data.
+#         :return:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_cancel_job(self):
+#
+#         # update provider to ensure it runs long enough to cancel...
+#         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+#         original_level_to = export_provider.level_to
+#         export_provider.level_to = 19
+#         export_provider.save()
+#
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "eventkit-integration-test-wms", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
+#
+#         job_json = self.run_job(job_data, wait_for_run=False)
+#
+#         run_json = self.wait_for_task_pickup(job_uid=job_json.get('uid'))
+#
+#         export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
+#
+#         self.client.get(self.create_export_url)
+#         self.csrftoken = self.client.cookies['csrftoken']
+#
+#         provider_url = self.base_url + reverse('api:provider_tasks-list') + '/{0}'.format(export_provider_task.uid)
+#         response = self.client.patch(provider_url,
+#                                     headers={'X-CSRFToken': self.csrftoken,
+#                                              'referer': self.create_export_url})
+#         self.assertEqual(200, response.status_code)
+#         self.assertEqual({'success': True}, json.loads(response.content))
+#         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
+#         self.orm_run = self.orm_job.runs.last()
+#
+#         pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
+#
+#         self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
+#         self.assertEqual(pt.status, TaskStates.CANCELED.value)
+#
+#         self.wait_for_run(self.orm_job.uid)
+#         self.orm_run = self.orm_job.runs.last()
+#         self.orm_run.refresh_from_db()
+#         self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
+#
+#         # update provider to original setting.
+#         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+#         export_provider.level_to = original_level_to
+#         export_provider.save()
+#
+#         delete_response = self.client.delete(self.jobs_url + '/' + job_json.get('uid'),
+#                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+#         self.assertTrue(delete_response)
+#
+#     def test_osm_geopackage_thematic(self):
+#         """
+#         This test is to ensure that an OSM job will export a thematic GeoPackage.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG",
+#                     "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_sqlite(self):
+#         """
+#         This test is to ensure that an OSM will export a sqlite file.
+#         :return:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_sqlite_thematic(self):
+#         """
+#         This test is to ensure that an OSM job will export a thematic sqlite file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE",
+#                     "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_shp(self):
+#         """
+#         This test is to ensure that an OSM job will export a shp.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_shp_thematic(self):
+#         """
+#         This test is to ensure that an OSM job will export a thematic shp.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["shp"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_kml(self):
+#         """
+#         This test is to ensure that an OSM job will export a kml file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_osm_kml_thematic(self):
+#         """
+#         This test is to ensure that an OSM job will export a kml file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicKML", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_wms_gpkg(self):
+#         """
+#         This test is to ensure that an WMS job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMS", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wms", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_wmts_gpkg(self):
+#         """
+#         This test is to ensure that an WMTS job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WMTS", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wmts", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_arcgis_gpkg(self):
+#         """
+#         This test is to ensure that an ArcGIS job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arc-Raster",
+#                     "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-raster", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_wfs_gpkg(self):
+#         """
+#         This test is to ensure that an WFS job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WFS", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
     def test_wfs_shp(self):
         """
         This test is to ensure that an WFS job will export a shp file.
@@ -248,119 +248,119 @@ class TestJob(TestCase):
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data, run_timeout=90))
-
-    def test_wfs_sqlite(self):
-        """
-        This test is to ensure that an WFS job will export a sqlite file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_wfs_kml(self):
-        """
-        This test is to ensure that an WFS job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_arcgis_feature_service(self):
-        """
-        This test is to ensure that an ArcGIS Feature Service job will export a gpkg file.
-        :returns:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_all(self):
-        """
-        This test ensures that if all formats and all providers are selected that the test will finish.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "selection": self.selection,
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Generic)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Themes)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-wmts",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-raster",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-wfs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-fs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
-        self.assertTrue(self.run_job(job_data))
-
-    def test_rerun_all(self):
-        """
-        This test ensures that if all formats and all providers are selected
-        that the test will finish then successfully rerun.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
-                    "event": "test", "selection": self.selection,
-                    "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Generic)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "OpenStreetMap Data (Themes)",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-wmts",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-raster",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-wfs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-fs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
-        response = self.client.post(self.jobs_url,
-                                    json=job_data,
-                                    headers={'X-CSRFToken': self.csrftoken,
-                                             'Referer': self.create_export_url})
-        self.assertEquals(response.status_code, 202)
-        job = response.json()
-
-        run = self.wait_for_run(job.get('uid'))
-        self.assertTrue(run.get('status') == "COMPLETED")
-        for provider_task in run.get('provider_tasks'):
-            geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
-            if not geopackage_url:
-                continue
-            geopackage_file = self.download_file(geopackage_url)
-            self.assertTrue(os.path.isfile(geopackage_file))
-            self.assertTrue(check_content_exists(geopackage_file))
-            os.remove(geopackage_file)
-
-        rerun_response = self.client.get('{0}/{1}/run'.format(self.jobs_url, job.get('uid')),
-                                         headers={'X-CSRFToken': self.csrftoken,
-                                                  'Referer': self.create_export_url})
-
-        self.assertEquals(rerun_response.status_code, 202)
-        rerun = self.wait_for_run(job.get('uid'))
-        self.assertTrue(rerun.get('status') == "COMPLETED")
-        for provider_task in rerun.get('provider_tasks'):
-            geopackage_url = self.get_gpkg_url(rerun, provider_task.get("name"))
-            if not geopackage_url:
-                continue
-            geopackage_file = self.download_file(geopackage_url)
-            self.assertTrue(os.path.isfile(geopackage_file))
-            self.assertTrue(check_content_exists(geopackage_file))
-            os.remove(geopackage_file)
-
-        delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
-                                             headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
-        self.assertTrue(delete_response)
+#
+#     def test_wfs_sqlite(self):
+#         """
+#         This test is to ensure that an WFS job will export a sqlite file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSQLITE-WFS", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["sqlite"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_wfs_kml(self):
+#         """
+#         This test is to ensure that an WFS job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_arcgis_feature_service(self):
+#         """
+#         This test is to ensure that an ArcGIS Feature Service job will export a gpkg file.
+#         :returns:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
+#                     "event": "TestProject", "selection": self.selection, "tags": [],
+#                     "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_all(self):
+#         """
+#         This test ensures that if all formats and all providers are selected that the test will finish.
+#         :return:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+#                     "event": "test", "selection": self.selection,
+#                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "OpenStreetMap Data (Generic)",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "OpenStreetMap Data (Themes)",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-wmts",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-arc-raster",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-wfs",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-arc-fs",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+#         self.assertTrue(self.run_job(job_data))
+#
+#     def test_rerun_all(self):
+#         """
+#         This test ensures that if all formats and all providers are selected
+#         that the test will finish then successfully rerun.
+#         :return:
+#         """
+#         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "test", "description": "test",
+#                     "event": "test", "selection": self.selection,
+#                     "tags": [], "provider_tasks": [{"provider": "eventkit-integration-test-wms",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "OpenStreetMap Data (Generic)",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "OpenStreetMap Data (Themes)",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-wmts",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-arc-raster",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-wfs",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+#                                                    {"provider": "eventkit-integration-test-arc-fs",
+#                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+#         response = self.client.post(self.jobs_url,
+#                                     json=job_data,
+#                                     headers={'X-CSRFToken': self.csrftoken,
+#                                              'Referer': self.create_export_url})
+#         self.assertEquals(response.status_code, 202)
+#         job = response.json()
+#
+#         run = self.wait_for_run(job.get('uid'))
+#         self.assertTrue(run.get('status') == "COMPLETED")
+#         for provider_task in run.get('provider_tasks'):
+#             geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
+#             if not geopackage_url:
+#                 continue
+#             geopackage_file = self.download_file(geopackage_url)
+#             self.assertTrue(os.path.isfile(geopackage_file))
+#             self.assertTrue(check_content_exists(geopackage_file))
+#             os.remove(geopackage_file)
+#
+#         rerun_response = self.client.get('{0}/{1}/run'.format(self.jobs_url, job.get('uid')),
+#                                          headers={'X-CSRFToken': self.csrftoken,
+#                                                   'Referer': self.create_export_url})
+#
+#         self.assertEquals(rerun_response.status_code, 202)
+#         rerun = self.wait_for_run(job.get('uid'))
+#         self.assertTrue(rerun.get('status') == "COMPLETED")
+#         for provider_task in rerun.get('provider_tasks'):
+#             geopackage_url = self.get_gpkg_url(rerun, provider_task.get("name"))
+#             if not geopackage_url:
+#                 continue
+#             geopackage_file = self.download_file(geopackage_url)
+#             self.assertTrue(os.path.isfile(geopackage_file))
+#             self.assertTrue(check_content_exists(geopackage_file))
+#             os.remove(geopackage_file)
+#
+#         delete_response = self.client.delete(self.jobs_url + '/' + job.get('uid'),
+#                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
+#         self.assertTrue(delete_response)
 
     def run_job(self, data, wait_for_run=True, run_timeout=45):
         # include zipfile
