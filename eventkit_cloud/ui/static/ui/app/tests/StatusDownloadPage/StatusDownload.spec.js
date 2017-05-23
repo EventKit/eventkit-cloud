@@ -9,9 +9,71 @@ import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetail
 import '../../components/tap_events'
 import CustomScrollbar from '../../components/CustomScrollbar';
 
-
 describe('StatusDownload component', () => {
+    beforeAll(() => {
+        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
+    });
+
+    afterAll(() => {
+        DataCartDetails.prototype._initializeOpenLayers.restore();
+    });
     const muiTheme = getMuiTheme();
+    const exampleRunObject =
+        {
+            "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
+            "url": "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
+            "started_at": "2017-03-10T15:52:35.637331Z",
+            "finished_at": "2017-03-10T15:52:39.837Z",
+            "duration": "0:00:04.199825",
+            "user": "admin",
+            "status": "COMPLETED",
+            "job": {
+                "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
+                "name": "Test1",
+                "event": "Test1 event",
+                "description": "Test1 description",
+                "url": "http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
+                "extent": {
+                    "type": "Feature",
+                    "properties": {
+                        "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
+                        "name": "Test1"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [
+                                [
+                                    -0.077419,
+                                    50.778155
+                                ],
+                                [
+                                    -0.077419,
+                                    50.818517
+                                ],
+                                [
+                                    -0.037251,
+                                    50.818517
+                                ],
+                                [
+                                    -0.037251,
+                                    50.778155
+                                ],
+                                [
+                                    -0.077419,
+                                    50.778155
+                                ]
+                            ]
+                        ]
+                    }
+                },
+                "selection": "",
+                "published": false
+            },
+            "provider_tasks": [],
+            "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
+            "expiration": "2017-03-24T15:52:35.637258Z"
+        };
     const exampleRun = [
         {
             "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
@@ -69,62 +131,6 @@ describe('StatusDownload component', () => {
             "expiration": "2017-03-24T15:52:35.637258Z"
         }];
 
-    const exampleRunObject = {
-            "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
-            "url": "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
-            "started_at": "2017-03-10T15:52:35.637331Z",
-            "finished_at": "2017-03-10T15:52:39.837Z",
-            "duration": "0:00:04.199825",
-            "user": "admin",
-            "status": "COMPLETED",
-            "job": {
-                "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-                "name": "Test1",
-                "event": "Test1 event",
-                "description": "Test1 description",
-                "url": "http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
-                "extent": {
-                    "type": "Feature",
-                    "properties": {
-                        "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-                        "name": "Test1"
-                    },
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [
-                                    -0.077419,
-                                    50.778155
-                                ],
-                                [
-                                    -0.077419,
-                                    50.818517
-                                ],
-                                [
-                                    -0.037251,
-                                    50.818517
-                                ],
-                                [
-                                    -0.037251,
-                                    50.778155
-                                ],
-                                [
-                                    -0.077419,
-                                    50.778155
-                                ]
-                            ]
-                        ]
-                    }
-                },
-                "selection": "",
-                "published": false
-            },
-            "provider_tasks": [],
-            "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
-            "expiration": "2017-03-24T15:52:35.637258Z"
-        };
-
     const getProps = () => {
         return {
             params: {
@@ -170,6 +176,7 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        //expect(wrapper.find(DataCartDetails)).toHaveLength(1);
     });
 
     it('should call startTimer when mounted', () => {
@@ -185,12 +192,12 @@ describe('StatusDownload component', () => {
 
     it('should handle fetched datacartDetails', () => {
         const props = getProps();
-        const wrapper = shallow(<StatusDownload {...props}/>);
         let nextProps = getProps();
         nextProps.datacartDetails.fetched = true;
         nextProps.datacartDetails.data = exampleRun;
         const propsSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
         const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
@@ -208,12 +215,12 @@ describe('StatusDownload component', () => {
 
     it('should handle reRun of datacartDetails', () => {
         const props = getProps();
-        const wrapper = shallow(<StatusDownload {...props}/>);
         let nextProps = getProps();
         nextProps.exportReRun.fetched = true;
-        nextProps.exportReRun.data = exampleRun;
+        nextProps.exportReRun.data = exampleRunObject;
         const propsSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
         const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
@@ -222,11 +229,14 @@ describe('StatusDownload component', () => {
     });
 
     it('should handle Clone of datacartDetails', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
+        let props = getProps();
+        props.cloneExport = new sinon.spy();
         const cloneSpy = new sinon.spy(StatusDownload.prototype, 'handleClone');
+        const wrapper = getWrapper(props);
         wrapper.instance().handleClone();
         expect(cloneSpy.calledOnce).toBe(true);
+        expect(props.cloneExport.calledOnce).toBe(true);
+        cloneSpy.restore();
     });
 
     it('screenSizeUpdate should force the component to update', () => {
