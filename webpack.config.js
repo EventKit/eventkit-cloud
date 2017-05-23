@@ -72,7 +72,7 @@ if (PROD) {
     // config.plugins.push(new webpack.DefinePlugin({'process.env': {'NODE_ENV': JSON.stringify('production')}}));
     config.plugins.push(new webpack.optimize.UglifyJsPlugin({compressor: {warnings: false}}));
 } else {
-    config.entry.app.push('webpack-dev-server/client')
+    config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080')
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';
 }

@@ -42,7 +42,7 @@ def expire_runs():
         if not email:
             break
         uid = run.job.uid
-        url = '{0}/exports/{1}'.format(site_url.rstrip('/'), uid)
+        url = '{0}/status/{1}'.format(site_url.rstrip('/'), uid)
         notified = run.notified
         now = timezone.now()
         # if expired delete the run:

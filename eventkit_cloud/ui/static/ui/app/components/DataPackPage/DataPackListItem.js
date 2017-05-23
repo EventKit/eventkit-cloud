@@ -1,4 +1,5 @@
 import React, {PropTypes, Component} from 'react'
+import {browserHistory} from 'react-router';
 import {Link} from 'react-router';
 import {Card, CardTitle} from 'material-ui/Card'
 import IconButton from 'material-ui/IconButton';
@@ -79,7 +80,7 @@ export class DataPackListItem extends Component {
                     title={
                         <div>
                             <span>
-                                <Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>
+                                <Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>
                                     {this.props.run.job.name}
                                 </Link>
                             </span>
@@ -97,7 +98,7 @@ export class DataPackListItem extends Component {
                                 <MenuItem 
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText="Go to Export Detail"
-                                    onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
+                                    onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem

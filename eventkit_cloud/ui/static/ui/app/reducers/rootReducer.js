@@ -10,6 +10,7 @@ import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
+import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer} from './statusDownloadReducer'
 
 
 const rootReducer = combineReducers({
@@ -35,6 +36,10 @@ const rootReducer = combineReducers({
     submitJob: submitJobReducer,
     setExportPackageFlag: startExportPackageReducer,
     runsDeletion: DeleteRunsReducer,
+    datacartDetails: getDatacartDetailsReducer,
+    datacartDetailsReceived: setDatacartDetailsReducer,
+    runDeletion: deleteRunReducer,
+    exportReRun: rerunExportReducer,
     licenses: licenseReducer,
 });
 

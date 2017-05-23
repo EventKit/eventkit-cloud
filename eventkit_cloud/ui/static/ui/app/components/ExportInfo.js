@@ -14,7 +14,7 @@ import Paper from 'material-ui/Paper'
 import Checkbox from 'material-ui/Checkbox'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme'
-import '../components/tap_events'
+import './tap_events'
 import styles from '../styles/ExportInfo.css'
 import CustomScrollbar from '../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../actions/exportsActions.js'
@@ -63,7 +63,7 @@ export class ExportInfo extends React.Component {
 
             // check if the check box is checked or unchecked
             if (e.target.checked) {
-                // add the numerical value of the checkbox to options array
+                // add the provider to the array
                 providers.push(e.target.name)
             } else {
                 // or remove the value from the unchecked checkbox from the array

@@ -143,7 +143,7 @@ export class Application extends Component {
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/create" >
                                 <ContentAddBox style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;Create Datapack
+                                &nbsp;&nbsp;&nbsp;Create DataPack
                             </Link>
                         </MenuItem>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>

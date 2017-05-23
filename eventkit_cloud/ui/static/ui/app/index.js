@@ -3,23 +3,25 @@ import React from 'react';
 import { render } from 'react-dom';
 import configureStore from './store/configureStore';
 import { Provider } from 'react-redux';
-import { browserHistory, Router, Route, IndexRoute, Redirect } from 'react-router';
-import { syncHistoryWithStore, routerActions, routerMiddleware } from 'react-router-redux';
-import Application from './components/Application';
-import LoginPage from './components/auth/LoginPage';
-import Loading from './components/auth/Loading';
-import Logout from './containers/logoutContainer';
-import About from './components/About';
-import Account from './components/AccountPage/Account';
-import DataPackPage from './components/DataPackPage/DataPackPage';
-import Export from './components/Export';
-import CreateExport from './components/CreateExport';
-import ExportAOI from './components/ExportAOI';
-import ExportInfo from './components/ExportInfo';
-import { UserAuthWrapper } from 'redux-auth-wrapper';
-import { applyMiddleware } from 'redux';
-import { login } from './actions/userActions';
-import { setCSRF } from './actions/authActions';
+import { browserHistory, Router, Route, IndexRoute, Redirect } from 'react-router'
+import { syncHistoryWithStore, routerActions, routerMiddleware } from 'react-router-redux'
+import Application from './components/Application'
+import LoginPage from './components/auth/LoginPage'
+import Loading from './components/auth/Loading'
+import Logout from './containers/logoutContainer'
+import About from './components/About'
+import Account from './components/AccountPage/Account'
+import DataPackPage from './components/DataPackPage/DataPackPage'
+import Export from './components/Export'
+import CreateExport from './components/CreateExport'
+import ExportAOI from './components/ExportAOI'
+import ExportInfo from './components/ExportInfo'
+import ExportSummary from './components/ExportSummary'
+import StatusDownload from './components/StatusDownloadPage/StatusDownload'
+import { UserAuthWrapper } from 'redux-auth-wrapper'
+import { applyMiddleware } from 'redux'
+import { login } from './actions/userActions'
+import { setCSRF } from './actions/authActions'
 
 
 const store = configureStore();
@@ -80,10 +82,12 @@ render(
                 <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}>
                     <Route path="/export/:uid" component={UserIsAuthenticated(UserHasAgreed(Export))}/>
                 </Route>
-                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}>
-                    <Route path="/exportAOI" component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}/>
-                    <Route path="/exportInfo" component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}/>
+                <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
+                    <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
+                    <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
+                    <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
                 </Route>
+                <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
                 <Route path="/about" component={About}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
                 

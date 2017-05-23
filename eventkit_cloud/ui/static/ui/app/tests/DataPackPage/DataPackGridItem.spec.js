@@ -12,6 +12,14 @@ import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 
+beforeAll(() => {
+    DataPackGridItem.prototype.initMap = new sinon.spy();
+});
+
+afterAll(() => {
+    DataPackGridItem.prototype.initMap.restore();
+});
+
 describe('DataPackGridItem component', () => {
     injectTapEventPlugin();
 
@@ -37,8 +45,21 @@ describe('DataPackGridItem component', () => {
         expect(subtitle.find('span').last().text()).toEqual('Added: 2017-03-10');
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
-        expect(wrapper.find(CardMedia)).toHaveLength(0);
+        expect(wrapper.find(CardMedia)).toHaveLength(1);
         expect(wrapper.find(CardActions)).toHaveLength(1);
+    });
+
+    it('should set the card to expanded when component has mounted', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const mountSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidMount');
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        const wrapper = mount(<DataPackGridItem {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(stateSpy.called).toBe(true);
+        expect(stateSpy.calledWith({expanded: true})).toBe(true);
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -71,7 +92,7 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(CardActions).find('p').text()).toEqual('notAdmin');
     });
 
-    it('should display a map when the card is expanded', () => {
+    it('should not display a map when the card is not expanded', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const uid = props.run.uid;
         const wrapper = mount(<DataPackGridItem {...props}/>, {
@@ -80,12 +101,12 @@ describe('DataPackGridItem component', () => {
         });
         const updateSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
-        expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
-        wrapper.setState({expanded: true});
-        expect(wrapper.find(CardMedia)).toHaveLength(1);        
-        expect(updateSpy.called).toBe(true);
-        expect(wrapper.instance().initMap.called).toBe(true);
         expect(wrapper.find('#' + uid + '_map')).toHaveLength(1);
+        wrapper.setState({expanded: false});
+        expect(wrapper.find(CardMedia)).toHaveLength(0);        
+        expect(updateSpy.called).toBe(true);
+        expect(wrapper.instance().initMap.called).toBe(false);
+        expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
     });
 });
 

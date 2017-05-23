@@ -7,6 +7,15 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {GridList, GridTile} from 'material-ui/GridList'
 import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
 
+
+beforeAll(() => {
+    DataPackGridItem.prototype.initMap = new sinon.spy();
+});
+
+afterAll(() => {
+    DataPackGridItem.prototype.initMap.restore();
+});
+
 describe('DataPackGrid component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();

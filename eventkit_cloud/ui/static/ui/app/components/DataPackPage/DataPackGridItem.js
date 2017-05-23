@@ -14,6 +14,7 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import {browserHistory} from 'react-router';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -27,6 +28,10 @@ export class DataPackGridItem extends Component {
             titleFontSize: '24px',
             cardTextFontSize: '14px',
         };
+    }
+
+    componentDidMount() {
+        this.setState({expanded: true});
     }
 
     componentWillMount() {
@@ -84,7 +89,8 @@ export class DataPackGridItem extends Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-            })
+            }),
+            interactions: ol.interaction.defaults({mouseWheelZoom: false}),
         });
 
         let source = new ol.source.Vector();
@@ -138,7 +144,7 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <span><Link to={'/exports/' + this.props.run.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
+                            <span><Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
                             <IconMenu
                                 style={{float: 'right'}}
                                 iconButtonElement={
@@ -157,7 +163,7 @@ export class DataPackGridItem extends Component {
                                 <MenuItem 
                                     style={{fontSize: this.state.cardTextFontSize}}
                                     primaryText="Go to Export Detail"
-                                    onClick={() => {window.location.href='/exports/' + this.props.run.uid}}/>
+                                    onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
