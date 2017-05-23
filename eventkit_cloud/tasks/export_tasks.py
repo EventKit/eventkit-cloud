@@ -890,7 +890,8 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     return result
 
 
-def zip_file_task(include_files, run_uid=None):
+@app.task(name='Zip File Task', bind=False)
+def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
     """
     rolls up runs into a zip file
     """
