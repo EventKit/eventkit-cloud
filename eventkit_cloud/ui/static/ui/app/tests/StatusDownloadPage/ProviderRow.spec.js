@@ -114,13 +114,13 @@ describe('ProviderRow component', () => {
     });
 
     it('handleDownload should set timeout to open window with download url', () => {
-        jest.useFakeTimers();
+        const openSpy = new sinon.spy();
+        window.open = openSpy;
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
         wrapper.instance().handleDownload();
-        expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(0);
+        expect(openSpy.calledOnce).toBe(true);
     });
 
     it('onChangeCheck should find the selected task uid and set it to checked/unchecked, then update state and call onSelectionToggle', () => {

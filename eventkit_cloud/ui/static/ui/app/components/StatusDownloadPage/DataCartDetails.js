@@ -23,25 +23,16 @@ export class DataCartDetails extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.cartDetails.status != this.state.status){
+        if(nextProps.cartDetails.status != this.state.status) {
             switch(nextProps.cartDetails.status) {
                 case 'COMPLETED':
-                    return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
+                    return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)', statusFontColor: '#55ba63'});
                 case 'SUBMITTED':
-                    return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
+                    return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225'});
                 case 'INCOMPLETE':
-                    return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
+                    return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427'});
                 default:
-                    return this.setState({status: '', statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
-            }
-        }
-
-        if (nextProps.cartDetails.fetched != null) {
-            if (nextProps.cartDetails.fetched != this.props.cartDetails.fetched) {
-                if (nextProps.cartDetails.fetched == true) {
-                    let cartDetails = nextProps.cartDetails.data;
-                    this.setState({cartDetails: cartDetails, status:cartDetails.status});
-                }
+                    return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
         }
     }
@@ -54,13 +45,13 @@ export class DataCartDetails extends React.Component {
     _setTableColors() {
         switch(this.props.cartDetails.status) {
             case 'COMPLETED':
-                return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',});
+                return this.setState({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)', statusFontColor: '#55ba63'});
             case 'SUBMITTED':
-                return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)',statusFontColor: '#f4d225',});
+                return this.setState({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225'});
             case 'INCOMPLETE':
-                return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',});
+                return this.setState({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427'});
             default:
-                return this.setState({status: '', statusBackgroundColor: '#f8f8f8',statusFontColor: '#8b9396',});
+                return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
         }
     }
     _initializeOpenLayers() {
@@ -134,7 +125,7 @@ export class DataCartDetails extends React.Component {
 
     handleClone = () => {
         let providerArray = [];
-        this.props.cartDetails.provider_tasks.forEach(function(provider) {
+        this.props.cartDetails.provider_tasks.forEach((provider) => {
             providerArray.push(provider.name);
         })
         this.props.onClone(this.props.cartDetails, providerArray);
@@ -211,7 +202,7 @@ export class DataCartDetails extends React.Component {
                 </tr>
                 <tr>
                     <td className={styles.tdHeadingStatus} style={{width:'15%', backgroundColor: this.state.statusBackgroundColor}}>Status</td>
-                    <td className={localStyles.tdData} style={{fontWeight: 'bold', padding: '10px', width:'85%', backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor,}}>{this.props.cartDetails.status}</td>
+                    <td className={localStyles.tdData} style={{fontWeight: 'bold', padding: '10px', width:'85%', backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor}}>{this.props.cartDetails.status}</td>
                 </tr>
                 </tbody>
                 </table>
@@ -294,7 +285,7 @@ export class DataCartDetails extends React.Component {
                         <td className={styles.tdData}  style={{width:'70%'}}>{this.props.cartDetails.job.description}</td>
                     </tr>
                     <tr>
-                        <td className={styles.tdHeading}>Project/Catagory</td>
+                        <td className={styles.tdHeading}>Project/Category</td>
                         <td className={styles.tdData}>{this.props.cartDetails.job.event}</td>
                     </tr>
                     <tr>

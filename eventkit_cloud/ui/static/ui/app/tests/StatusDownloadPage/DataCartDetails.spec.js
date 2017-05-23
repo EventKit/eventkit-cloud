@@ -2,6 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {DataCartDetails} from '../../components/StatusDownloadPage/DataCartDetails';
+import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -10,111 +11,21 @@ import '../../components/tap_events'
 
 describe('DataCartDetails component', () => {
 
-    const muiTheme = getMuiTheme();
-    const providers = [
-        {
-            "name": "OpenStreetMap Data (Generic)",
-            "status": "COMPLETED",
-            "tasks": [
-                {
-                    "duration": "0:00:15.317672",
-                    "errors": [],
-                    "estimated_finish": "",
-                    "finished_at": "2017-05-15T15:29:04.356182Z",
-                    "name": "OverpassQuery",
-                    "progress": 100,
-                    "result": {},
-                    "started_at": "2017-05-15T15:28:49.038510Z",
-                    "status": "SUCCESS",
-                    "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
-                    "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
-                }
-            ],
-            "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-            "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
-        }];
+    beforeAll(() => {
+        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
+    });
 
-    const exampleRun = {
-                "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-                "name": "Test1",
-                "event": "Test1 event",
-                "description": "Test1 description",
-                "url": "http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
-                "extent": {
-                    "type": "Feature",
-                    "properties": {
-                        "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-                        "name": "Test1"
-                    },
-                    "geometry": {
-                        "type": "Polygon",
-                        "coordinates": [
-                            [
-                                [
-                                    -0.077419,
-                                    50.778155
-                                ],
-                                [
-                                    -0.077419,
-                                    50.818517
-                                ],
-                                [
-                                    -0.037251,
-                                    50.818517
-                                ],
-                                [
-                                    -0.037251,
-                                    50.778155
-                                ],
-                                [
-                                    -0.077419,
-                                    50.778155
-                                ]
-                            ]
-                        ]
-                    }
-                },
-                "selection": "",
-                "published": false
-        };
+    afterAll(() => {
+        DataCartDetails.prototype._initializeOpenLayers.restore();
+    });
+    const muiTheme = getMuiTheme();
 
     const getProps = () => {
         return  {
-            cartDetails: {
-                uid: "6870234f-d876-467c-a332-65fdf0399a0d",
-                url: "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
-                started_at: "2017-03-10T15:52:35.637331Z",
-                finished_at: "2017-03-10T15:52:39.837Z",
-                duration: "0:00:04.199825",
-                user: "admin",
-                status: "COMPLETED",
-                job: exampleRun,
-                provider_tasks: [{'provider': providers[0]}],
-                zipfile_url: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
-                expiration: "2017-03-24T15:52:35.637258Z"
-            },
+            cartDetails: {...run},
             onRunDelete: () => {},
             onRunRerun: () => {},
             onClone: () => {},
-            }
-    };
-    const getNextProps = () => {
-        return  {
-            cartDetails: {
-                data: [{
-                    uid: "6870234f-d876-467c-a332-65fdf0399a0d",
-                    url: "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
-                    started_at: "2017-03-10T15:52:35.637331Z",
-                    finished_at: "2017-03-10T15:52:39.837Z",
-                    duration: "0:00:04.199825",
-                    user: "admin",
-                    status: "COMPLETED",
-                    job: exampleRun,
-                    provider_tasks: [{'provider': providers[0]}],
-                    zipfile_url: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
-                    expiration: "2017-03-24T15:52:35.637258Z"
-                }]
-            },
         }
     };
 
@@ -126,19 +37,131 @@ describe('DataCartDetails component', () => {
             }
         });
     }
+    
     it('should render elements', () => {
         let props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
-        const wrapper = shallow(<DataCartDetails {...props}/>);
-        expect(wrapper.find(RaisedButton)).toHaveLength(3);
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(RaisedButton)).toHaveLength(4);
         expect(wrapper.find(Dialog)).toHaveLength(3);
-        expect(wrapper.find('.subHeading')).toHaveLength(4);
-        mapSpy.restore();
+        expect(wrapper.find('.subHeading')).toHaveLength(5);
+        let table = wrapper.find('table').at(0);
+        expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
+        expect(table.find('tr').first().find('td').last().text()).toEqual('test');
+        expect(table.find('tr').last().find('td').first().text()).toEqual('Status');
+        expect(table.find('tr').last().find('td').last().text()).toEqual('COMPLETED');
+        expect(wrapper.find(DataPackDetails)).toHaveLength(1);
+        expect(wrapper.find('.subHeading').at(1).text()).toEqual('Other Options');
+        expect(wrapper.find(RaisedButton).at(1).text()).toEqual('RUN EXPORT AGAIN');
+        expect(wrapper.find(RaisedButton).at(2).text()).toEqual('CLONE');
+        expect(wrapper.find(RaisedButton).at(3).text()).toEqual('DELETE');
+        expect(wrapper.find('.subHeading').at(2).text()).toEqual('General Information');
+        table = wrapper.find('table').at(5);
+        expect(table.find('tr').at(0).find('td').first().text()).toEqual('Description');
+        expect(table.find('tr').at(0).find('td').last().text()).toEqual('test');
+        expect(table.find('tr').at(1).find('td').first().text()).toEqual('Project/Category');
+        expect(table.find('tr').at(1).find('td').last().text()).toEqual('test');
+        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Published');
+        expect(table.find('tr').at(2).find('td').last().text()).toEqual('true');
+        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Layer Data');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
+        expect(table.find('tr').at(4).find('td').first().text()).toEqual('File Formats');
+        expect(table.find('tr').at(4).find('td').last().text()).toEqual('.gpkg');
+        expect(wrapper.find('.subHeading').at(3).text()).toEqual('Selected Area of Interest (AOI)');
+        expect(wrapper.find('#summaryMap')).toHaveLength(1);
+        expect(wrapper.find('.subHeading').at(4).text()).toEqual('Export Information');
+        table = wrapper.find('table').at(6);
+        expect(table.find('tr').at(0).find('td').first().text()).toEqual('Run By');
+        expect(table.find('tr').at(0).find('td').last().text()).toEqual('admin');
+        expect(table.find('tr').at(1).find('td').first().text()).toEqual('Run Id');
+        expect(table.find('tr').at(1).find('td').last().text()).toEqual('29f5cbab-09d8-4d6c-9505-438967062964');
+        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Started');
+        expect(table.find('tr').at(2).find('td').last().text()).toEqual('6:35:01 pm, May 22nd 2017');
+        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Finished');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
     });
 
-    it('should display a dialog when the ReRun button is clicked', () => {
+    it('should handle setting state of datacartDetails when component updates', () => {
+        let props = getProps();
+        props.cartDetails.status = 'SUBMITTED';
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getProps();
+        nextProps.cartDetails.status = "COMPLETED";
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)', statusFontColor: '#55ba63'})).toBe(true);
+
+        nextProps = getProps();
+        nextProps.cartDetails.status = 'INCOMPLETE';
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427'})).toBe(true);
+
+        nextProps = getProps();
+        nextProps.cartDetails.status = 'SUBMITTED';
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledThrice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
+        expect(stateSpy.calledWith({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225'})).toBe(true);
+        
+        nextProps = getProps();
+        nextProps.cartDetails.status = 'INVALID';
+        wrapper.setProps(nextProps);
+        expect(propsSpy.callCount).toEqual(4);
+        expect(stateSpy.callCount).toEqual(4);
+        expect(stateSpy.calledWith({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'})).toBe(true);
+
+        stateSpy.restore();
+        propsSpy.restore();
+    });
+
+    it('should call initializeOpenLayers and _setTableColors on mount', () => {
         const props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
+        const mountSpy = new sinon.spy(DataCartDetails.prototype, 'componentDidMount');
+        const colorsSpy = new sinon.spy(DataCartDetails.prototype, '_setTableColors');
+        const wrapper = getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(colorsSpy.calledOnce).toBe(true);
+        expect(DataCartDetails.prototype._initializeOpenLayers.called).toBe(true);
+        mountSpy.restore();
+        colorsSpy.restore();
+    });
+
+    it('_setTableColors should set the state for table color ', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setTableColors();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63'})).toBe(true);
+
+        let nextProps = getProps();
+        nextProps.cartDetails.status = 'SUBMITTED';
+        wrapper.setProps(nextProps);
+        wrapper.instance()._setTableColors();
+        expect(stateSpy.calledWith({status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225'})).toBe(true);
+
+        nextProps = getProps();
+        nextProps.cartDetails.status = 'INCOMPLETE';
+        wrapper.setProps(nextProps);
+        wrapper.instance()._setTableColors();
+        expect(stateSpy.calledWith({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427'}));
+
+        nextProps = getProps();
+        nextProps.cartDetails.status = 'INVALID';
+        wrapper.setProps(nextProps);
+        wrapper.instance()._setTableColors();
+        expect(stateSpy.calledWith({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'})).toBe(true);
+
+        stateSpy.restore();
+    });
+
+    it('handleRerunOpen should set rerun dialog to open', () => {
+        const props = getProps();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -146,12 +169,10 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({rerunDialogOpen: true})).toBe(true);
         stateSpy.restore();
-        mapSpy.restore();
     });
 
-    it('should display a dialog when the Clone button is clicked', () => {
+    it('handleCloneOpen should set clone dialog to open', () => {
         const props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -159,12 +180,10 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({cloneDialogOpen: true})).toBe(true);
         stateSpy.restore();
-        mapSpy.restore();
     });
 
-    it('should display a dialog when the Delete button is clicked', () => {
+    it('handleDeleteOpen should set the delete dialog to open', () => {
         const props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -172,12 +191,10 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({deleteDialogOpen: true})).toBe(true);
         stateSpy.restore();
-        mapSpy.restore();
     });
 
-    it('should hide the ReRun dialog when the cancel button is clicked', () => {
+    it('handleRerunClose should set the rerun dialog to closed', () => {
         const props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -185,12 +202,10 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({rerunDialogOpen: false})).toBe(true);
         stateSpy.restore();
-        mapSpy.restore();
     });
 
-    it('should hide the Clone dialog when the cancel button is clicked', () => {
+    it('handleCloneClose should set the clone dialog to closed', () => {
         const props = getProps();
-        let mapSpy = new sinon.spy(DataCartDetails.prototype, '_initializeOpenLayers');
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -198,12 +213,10 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({cloneDialogOpen: false})).toBe(true);
         stateSpy.restore();
-        mapSpy.restore();
     });
 
-    it('should hide the Delete dialog when the cancel button is clicked', () => {
+    it('handleDeleteClose should set the delete dialog to closed', () => {
         const props = getProps();
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = shallow(<DataCartDetails {...props}/>);
         expect(stateSpy.called).toBe(false);
@@ -214,79 +227,176 @@ describe('DataCartDetails component', () => {
     });
 
     it('handleClone should clone a job with the correct data', () => {
+        const providerArray = ["OpenStreetMap Data (Themes)"];
         let props = getProps();
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
         props.onClone = new sinon.spy();
         const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         wrapper.instance().handleClone();
         expect(props.onClone.calledOnce).toBe(true);
-        //expect(props.onClone.calledWith(props.cartDetails, providerArray)).toBe(true);
-
+        expect(props.onClone.calledWith(props.cartDetails, providerArray)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({cloneDialogOpen: false})).toBe(true);
+        stateSpy.restore();
     });
 
-    it('handleReRun should reRun a job with the correct data', () => {
+    it('handleReRun should reRun a run with the correct data', () => {
         let props = getProps();
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
         props.onRunRerun = new sinon.spy();
         const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         wrapper.instance().handleRerun();
         expect(props.onRunRerun.calledOnce).toBe(true);
-        expect(props.onRunRerun.calledWith("7643f806-1484-4446-b498-7ddaa65d011a")).toBe(true);
-
+        expect(props.onRunRerun.calledWith("7838d3b3-160a-4e7d-89cb-91fdcd6eab43")).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({rerunDialogOpen: false})).toBe(true);
+        stateSpy.restore();
     });
 
     it('handleDelete should delete a job', () => {
         let props = getProps();
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
         props.onRunDelete = new sinon.spy();
         const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         wrapper.instance().handleDelete();
         expect(props.onRunDelete.calledOnce).toBe(true);
-        expect(props.onRunDelete.calledWith("6870234f-d876-467c-a332-65fdf0399a0d")).toBe(true);
-    });
-
-    it('_setTableColors should set the state for table color ', () =>{
-        let props = getProps();
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
-        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
-        const wrapper = shallow(<DataCartDetails {...props}/>);
-        const setColorSpy = new sinon.spy(DataCartDetails.prototype, '_setTableColors');
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance()._setTableColors();
-        expect(setColorSpy.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledWith("29f5cbab-09d8-4d6c-9505-438967062964")).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)',statusFontColor: '#55ba63',})).toBe(true);
-        setColorSpy.restore();
+        expect(stateSpy.calledWith({deleteDialogOpen: false})).toBe(true);
         stateSpy.restore();
-    })
-
-    it('should handle set of colors when props change', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataCartDetails {...props}/>);
-        let nextProps = getProps();
-        nextProps.cartDetails.status = "INCOMPLETE";
-        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
-        wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)',statusFontColor: '#ce4427',})).toBe(true);
-        DataCartDetails.prototype.setState.restore();
-        DataCartDetails.prototype.componentWillReceiveProps.restore();
-    });
-    it('should handle setting state of datacartDetails when component updates', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataCartDetails {...props}/>);
-        let nextProps = getNextProps();
-        nextProps.cartDetails.fetched = true;
-        nextProps.cartDetails.data = exampleRun;
-        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
-        wrapper.setProps(nextProps.cartDetails.data);
-        expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        DataCartDetails.prototype.setState.restore();
-        DataCartDetails.prototype.componentWillReceiveProps.restore();
     });
 });
 
+const run = {
+    "uid": "29f5cbab-09d8-4d6c-9505-438967062964",
+    "url": "http://cloud.eventkit.dev/api/runs/29f5cbab-09d8-4d6c-9505-438967062964",
+    "started_at": "2017-05-22T18:35:01.400756Z",
+    "finished_at": "2017-05-22T18:35:22.292006Z",
+    "duration": "0:00:20.891250",
+    "user": "admin",
+    "status": "COMPLETED",
+    "job": {
+        "uid": "7838d3b3-160a-4e7d-89cb-91fdcd6eab43",
+        "name": "test",
+        "event": "test",
+        "description": "test",
+        "url": "http://cloud.eventkit.dev/api/jobs/7838d3b3-160a-4e7d-89cb-91fdcd6eab43",
+        "extent": {
+            "type": "Feature",
+            "properties": {
+                "uid": "7838d3b3-160a-4e7d-89cb-91fdcd6eab43",
+                "name": "test"
+            },
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [
+                        [
+                            [
+                                -64.18223844746079,
+                                10.45503426983764
+                            ],
+                            [
+                                -64.1676421508845,
+                                10.45503426983764
+                            ],
+                            [
+                                -64.1676421508845,
+                                10.464494014225664
+                            ],
+                            [
+                                -64.18223844746079,
+                                10.464494014225664
+                            ],
+                            [
+                                -64.18223844746079,
+                                10.45503426983764
+                            ]
+                        ]
+                    ]
+                ]
+            }
+        },
+        "published": true
+    },
+    "provider_tasks": [
+        {
+            "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
+            "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
+            "name": "OpenStreetMap Data (Themes)",
+            "tasks": [
+                {
+                    "uid": "ad70aa01-a3da-451d-bd6f-0038409d5fd8",
+                    "url": "http://cloud.eventkit.dev/api/tasks/ad70aa01-a3da-451d-bd6f-0038409d5fd8",
+                    "name": "Geopackage Format (OSM)",
+                    "status": "SUCCESS",
+                    "progress": 100,
+                    "estimated_finish": null,
+                    "started_at": "2017-05-22T18:35:14.358028Z",
+                    "finished_at": "2017-05-22T18:35:17.998336Z",
+                    "duration": "0:00:03.640308",
+                    "result": {
+                        "filename": "test.gpkg",
+                        "size": "0.218 MB",
+                        "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522.gpkg"
+                    },
+                    "errors": []
+                },
+                {
+                    "uid": "00cef7ac-e999-4ea1-a28c-2ddeb669808e",
+                    "url": "http://cloud.eventkit.dev/api/tasks/00cef7ac-e999-4ea1-a28c-2ddeb669808e",
+                    "name": "Create Styles",
+                    "status": "SUCCESS",
+                    "progress": 100,
+                    "estimated_finish": null,
+                    "started_at": "2017-05-22T18:35:19.175764Z",
+                    "finished_at": "2017-05-22T18:35:19.297181Z",
+                    "duration": "0:00:00.121417",
+                    "result": {
+                        "filename": "test-osm-20170522.qgs",
+                        "size": "0.557 MB",
+                        "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522-osm-20170522.qgs"
+                    },
+                    "errors": []
+                },
+                {
+                    "uid": "0beddde8-6f3b-4137-a673-1ea759c63f0f",
+                    "url": "http://cloud.eventkit.dev/api/tasks/0beddde8-6f3b-4137-a673-1ea759c63f0f",
+                    "name": "Create Selection GeoJSON",
+                    "status": "SUCCESS",
+                    "progress": 100,
+                    "estimated_finish": null,
+                    "started_at": "2017-05-22T18:35:13.675901Z",
+                    "finished_at": "2017-05-22T18:35:13.713273Z",
+                    "duration": "0:00:00.037372",
+                    "result": {
+                        "filename": "osm_selection.geojson",
+                        "size": "0.000 MB",
+                        "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_selection-osm-20170522.geojson"
+                    },
+                    "errors": []
+                },
+                {
+                    "uid": "8adbb9e4-f66a-4bec-8377-259097440c1b",
+                    "url": "http://cloud.eventkit.dev/api/tasks/8adbb9e4-f66a-4bec-8377-259097440c1b",
+                    "name": "Bounds Export",
+                    "status": "SUCCESS",
+                    "progress": 100,
+                    "estimated_finish": null,
+                    "started_at": "2017-05-22T18:35:21.041452Z",
+                    "finished_at": "2017-05-22T18:35:21.207650Z",
+                    "duration": "0:00:00.166198",
+                    "result": {
+                        "filename": "osm_bounds.gpkg",
+                        "size": "0.042 MB",
+                        "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_bounds-osm-20170522.gpkg"
+                    },
+                    "errors": []
+                }
+            ],
+            "status": "COMPLETED"
+        }
+    ],
+    "zipfile_url": null,
+    "expiration": "2017-06-05T18:35:01.400407Z"
+}

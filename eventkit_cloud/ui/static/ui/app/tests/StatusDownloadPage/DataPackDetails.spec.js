@@ -121,15 +121,14 @@ describe('DataPackDetails component', () => {
     });
 
     it('handDownload should setTimeout for each file to be downloaded', () => {
-        jest.useFakeTimers();
+        const openSpy = new sinon.spy();
+        window.open = openSpy;
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true, '123456': true}});
         wrapper.instance().handleDownload();
-        expect(setTimeout.mock.calls.length).toBe(1);
-        expect(setTimeout.mock.calls[0][1]).toBe(0);
+        expect(openSpy.calledOnce).toBe(true);
     });
-
 });
 
 const providerTasks = [
