@@ -40,7 +40,7 @@ class GPKGToShp(object):
         self.zip_cmd = Template("zip -j -r $zipfile $shp_dir")
         self.task_uid = task_uid
 
-    def convert(self, ):
+    def convert(self,):
         """
         Convert the sqlite to shape.
         """
@@ -62,7 +62,7 @@ class GPKGToShp(object):
         else:
             return self.shapefile
 
-    def _zip_shape_dir(self, ):
+    def _zip_shape_dir(self,):
         """
         Zip the shapefile output.
         """
@@ -71,12 +71,16 @@ class GPKGToShp(object):
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(zip_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if task_process.exitcode != 0:
+        if task_process.exitcode == 12:
+            logger.warn('No shapefile files to zip')
+        elif task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(task_process.exitcode)
+
         if task_process.exitcode == 0:
             # remove the shapefile directory
             shutil.rmtree(self.shapefile)
+
         if self.debug:
             print 'Zipped shapefiles: {0}'.format(self.shapefile)
         return zipfile

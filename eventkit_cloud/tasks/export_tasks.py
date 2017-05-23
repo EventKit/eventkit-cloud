@@ -8,6 +8,7 @@ import os
 import shutil
 import socket
 from zipfile import ZipFile
+from collections import Sequence
 
 from django.conf import settings
 from django.core.cache import caches
@@ -240,8 +241,7 @@ class ExportTask(LockingTask):
             return {'state': TaskStates.CANCELED.value}
         super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
-
-    def update_task_state(self, result={}, task_uid=None):
+    def update_task_state(self, result={}, task_status=TaskStates.RUNNING.value, task_uid=None):
         """
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
@@ -258,7 +258,7 @@ class ExportTask(LockingTask):
                 logging.info('canceling before run %s', celery_uid)
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.pid = os.getpid()
-            task.status = TaskStates.RUNNING.value
+            task.status = task_status
             task.export_provider_task.status = TaskStates.RUNNING.value
             task.started_at = started
             task.save()
@@ -412,7 +412,6 @@ def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
     """
     Class defining SHP export function.
     """
-
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
@@ -424,8 +423,8 @@ def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
         result['geopackage'] = gpkg
         return result
     except Exception as e:
-        logger.error('Raised exception in shapefile export, %s', str(e))
-        raise Exception(e)
+        logger.error('Exception while converting {} -> {}: {}'.format(gpkg, shapefile, str(e)))
+        raise
 
 
 @app.task(name='KML Format', bind=True, base=FormatTask)
@@ -773,12 +772,17 @@ class FinalizeRunHookTask(LockingTask):
         """ Override execution so tasks derived from this aren't responsible for concatenating files
             from previous tasks to their return value.
         """
+        if not isinstance(new_zip_filepaths, Sequence):
+            msg = 'new_zip_filepaths is not a sequence, got: {}'.format(new_zip_filepaths)
+            logger.error(msg)
+            raise Exception(msg)
+
         self.run_uid = run_uid
         if run_uid is None:
             raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
 
         self.record_task_state()
-        res = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths=[], run_uid=run_uid)
+        res = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
         res = res or []
         new_zip_filepaths.extend(res)
         return new_zip_filepaths
@@ -834,17 +838,17 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
         # deleted during cancellation.
         include_files = list(extra_files)
 
-        provider_tasks = export_provider_task.run.provider_tasks.all()
+        provider_tasks = run.provider_tasks.all()
 
-        for export_provider_task in provider_tasks:
-            if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in export_provider_task.tasks.all():
+        for provider_task in provider_tasks:
+            if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+                for export_task in provider_task.tasks.all():
                     try:
                         filename = export_task.result.filename
                     except Exception:
                         continue
                     full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  export_provider_task.slug, filename)
+                                                  provider_task.slug, filename)
                     if not os.path.isfile(full_file_path):
                         logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                                       export_task.name))
@@ -899,7 +903,7 @@ def zip_file_task(include_files, run_uid=None):
 
     files = []
     if not include_files:
-        logger.error("zip_file_task called with no include_files.")
+        logger.warn("zip_file_task called with no include_files.")
         return {'result': None}
     files += [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
@@ -1027,66 +1031,8 @@ class FinalizeRunTask(LockingTask):
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
-<<<<<<< HEAD
-@app.task(name='Finalize Export Run', base=FinalizeRunTaskClass)
-def finalize_run_task(result={}, run_uid=None, stage_dir=None):
-    """
-     Finalizes export run.
-
-    Cleans up staging directory.
-    Updates run with finish time.
-    Emails user notification.
-    """
-
-    from eventkit_cloud.tasks.models import ExportRun
-
-    run = ExportRun.objects.get(uid=run_uid)
-    if run.job.include_zipfile and not run.zipfile_url:
-        logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
-    run.status = TaskStates.COMPLETED.value
-    provider_tasks = run.provider_tasks.all()
-    # mark run as incomplete if any tasks fail
-    if all(TaskStates[provider_task.status] == TaskStates.CANCELED for provider_task in provider_tasks):
-        run.status = TaskStates.CANCELED.value
-    elif any(TaskStates[provider_task.status] in TaskStates.get_incomplete_states() for provider_task in provider_tasks):
-        run.status = TaskStates.INCOMPLETE.value
-    finished = timezone.now()
-    run.finished_at = finished
-    run.save()
-
-    # send notification email to user
-    site_url = settings.SITE_URL
-    url = '{0}/status/{1}'.format(site_url.rstrip('/'), run.job.uid)
-    addr = run.user.email
-    if run.status == TaskStates.CANCELED.value:
-        subject = "Your Eventkit Data Pack was CANCELED."
-    else:
-        subject = "Your Eventkit Data Pack is ready."
-    to = [addr]
-    from_email = getattr(
-        settings,
-        'DEFAULT_FROM_EMAIL',
-        'Eventkit Team <eventkit.team@gmail.com>'
-    )
-    ctx = {'url': url, 'status': run.status, 'job_name': run.job.name}
-
-    text = get_template('email/email.txt').render(ctx)
-    html = get_template('email/email.html').render(ctx)
-
-    if not run.deleted:
-        try:
-            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-            msg.attach_alternative(html, "text/html")
-            msg.send()
-        except Exception as e:
-            logger.error("Encountered an error when sending status email: {}".format(e))
-
-    result['stage_dir'] = stage_dir
-    return result
-=======
 finalize_run_task = FinalizeRunTask()
->>>>>>> f22aada... Update finalize_export_provider_task to perform run_finished tasks via new task
-
+app.tasks.register(finalize_run_task)
 
 @app.task(name='Export Task Error Handler', bind=True, base=LockingTask)
 def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage_dir=None):
