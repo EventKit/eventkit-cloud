@@ -6,6 +6,7 @@ import requests
 import shutil
 import sqlite3
 from time import sleep
+from datetime import timedelta, datetime
 
 from ...tasks.models import ExportTask, ExportProviderTask
 from ...tasks.export_tasks import TaskStates
@@ -30,9 +31,9 @@ class TestJob(TestCase):
     def setUp(self):
         username = 'admin'
         password = '@dm1n'
-        self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings,"SITE_NAME", "cloud.eventkit.dev")))
-        self.login_url = self.base_url + '/auth'
-        self.create_export_url = self.base_url + '/status/create'
+        self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings, "SITE_NAME", "cloud.eventkit.dev")))
+        self.login_url = self.base_url + '/auth/'
+        self.create_export_url = self.base_url + '/exports/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
@@ -78,7 +79,7 @@ class TestJob(TestCase):
 
     def test_cancel_job(self):
 
-        #update provider to ensure it runs long enough to cancel...
+        # update provider to ensure it runs long enough to cancel...
         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
         original_level_to = export_provider.level_to
         export_provider.level_to = 19
@@ -94,7 +95,7 @@ class TestJob(TestCase):
 
         export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
 
-        self.client.get(self.create_export_url) 
+        self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
 
         provider_url = self.base_url + reverse('api:provider_tasks-list') + '/{0}'.format(export_provider_task.uid)
@@ -246,7 +247,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data))
+        self.assertTrue(self.run_job(job_data, run_timeout=90))
 
     def test_wfs_sqlite(self):
         """
@@ -361,7 +362,7 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def run_job(self, data, wait_for_run=True):
+    def run_job(self, data, wait_for_run=True, run_timeout=45):
         # include zipfile
         data['include_zipfile'] = True
 
@@ -375,7 +376,7 @@ class TestJob(TestCase):
         if not wait_for_run:
             return job
 
-        run = self.wait_for_run(job.get('uid'))
+        run = self.wait_for_run(job.get('uid'), run_timeout=run_timeout)
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
         self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
@@ -431,9 +432,11 @@ class TestJob(TestCase):
                 picked_up = True
         return response[0]
 
-    def wait_for_run(self, job_uid):
+    def wait_for_run(self, job_uid, run_timeout=45):
         finished = False
         response = None
+        first_check = datetime.now()
+        last_check = datetime.now()
         while not finished:
             sleep(1)
             response = self.client.get(
@@ -444,6 +447,20 @@ class TestJob(TestCase):
             status = response[0].get('status')
             if status in [TaskStates.COMPLETED.value, TaskStates.INCOMPLETE.value, TaskStates.CANCELED.value]:
                 finished = True
+            last_check = datetime.now()
+            for run_details in response:
+                for provider_task in run_details['provider_tasks']:
+                    for task in provider_task['tasks']:
+                        if task['status'] == 'FAILED':
+                            errors_as_list = [
+                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in error_dict.items()
+                            ]
+                            errors_text = ', '.join(errors_as_list)
+                            msg = 'Task "{}" failed: {}'.format(task['name'], errors_text)
+                            raise Exception(msg)
+            if last_check - first_check > timedelta(seconds=run_timeout):
+                raise Exception('Run timeout ({}s) exceeded'.format(run_timeout))
+
         return response[0]
 
     def download_file(self, url, download_dir=None):
