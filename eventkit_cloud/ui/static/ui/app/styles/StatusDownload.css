@@ -1,0 +1,100 @@
+.root {
+    width:100%;
+    background-image: url('../../images/ek_topo_pattern.png');
+    background-repeat: repeat repeat;
+    justify-content: space-around;
+    display: flex;
+    flex-wrap: wrap;
+}
+.wholeDiv {
+    width: 100%;
+    display: inline-block
+}
+
+.tdHeading {
+    vertical-align: top;
+    padding: 10px;
+    height:35px;
+    font-size: 14px;
+    width: 33%;
+    background-color: #f8f8f8;
+    font-weight: bold;
+    color: black;
+}
+.tdHeadingStatus {
+    vertical-align: top;
+    padding: 10px;
+    height:35px;
+    font-size: 14px;
+    width: 33%;
+    font-weight: bold;
+    color: black;
+}
+.tdData {
+    padding: 10px;
+    height: 35px;
+    font-size: 14px;
+    width: 40%;
+    background-color: #f8f8f8;
+    font-weight: normal;
+    color: #8b9396
+}
+
+.downloadDiv {
+    padding-top: 20px;
+}
+.heading {
+    font-size: 18px;
+    font-weight: bold;
+    color: black;
+    align-content: flex-start;
+    padding-bottom: 5px;
+}
+.subHeading {
+    font-size: 16px;
+    align-content: flex-start;
+    color: black;
+    padding-bottom: 10px;
+    padding-top:30px;
+    font-weight: bold;
+}
+.checkboxColor > div >  div > div > svg {
+    color: #4598bf!important;
+    fill: #4598bf!important;
+}
+
+.checkbox > div{
+    padding-bottom: 60px;
+    margin-top: 15px!important;
+}
+.checkbox > div > div > label {
+    font-weight: normal!important;
+    font-size:16px!important;
+}
+.checkboxLabel > div > div > label {
+    font-weight:normal!important;
+    font-size:16px!important;
+}
+
+.checkboxField > tr > th {
+    padding-left: 0px!important;
+}
+
+.tableRowHighlight > tr:nth-child(even) {background: #f8f8f8}
+.tableRowHighlight > tr:nth-child(odd) {background: #FFF}
+
+
+.cancelButton > button {
+    background-color: rgba(226,226,226,0.5)!important;
+}
+.cancelButton > button > div > span {
+    color: #4598bf!important;
+    font-weight: bold!important;
+}
+.deleteButton > button {
+    background-color: rgba(226,226,226,0.5)!important;
+}
+.deleteButton > button > div > span {
+    color: red!important;
+    font-weight: bold!important;
+}

@@ -35,7 +35,7 @@ describe('DataPackListItem component', () => {
         });
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(Link)).toHaveLength(1);
-        expect(wrapper.find(Link).props().to).toEqual('/exports/' + props.run.uid);
+        expect(wrapper.find(Link).props().to).toEqual('/status/' + props.run.job.uid);
         expect(wrapper.find(CardTitle)).toHaveLength(1);
         const cardText = wrapper.find(CardTitle).text();
         expect(cardText).toContain('Test1');

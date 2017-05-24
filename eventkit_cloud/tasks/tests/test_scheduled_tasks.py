@@ -67,7 +67,7 @@ class TestExpireRunsTask(TestCase):
             self.assertEquals('Expire Runs', expire_runs.name)
             expire_runs.run()
             site_url = getattr(settings, "SITE_URL", "cloud.eventkit.dev")
-            expected_url = '{0}/exports/{1}'.format(site_url.rstrip('/'), job.uid)
+            expected_url = '{0}/status/{1}'.format(site_url.rstrip('/'), job.uid)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=1), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=6), url=expected_url,
@@ -81,7 +81,7 @@ class TestEmailNotifications(TestCase):
     def test_send_warning_email(self, alternatives):
         now = timezone.now()
         site_url = getattr(settings, "SITE_URL", "http://cloud.eventkit.dev")
-        url = '{0}/exports/1234'.format(site_url.rstrip('/'))
+        url = '{0}/status/1234'.format(site_url.rstrip('/'))
         addr = 'test@test.com'
         job_name = "job"
 

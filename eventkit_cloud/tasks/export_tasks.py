@@ -120,74 +120,83 @@ class ExportTask(LockingTask):
         if not retval:
             return
 
-        from ..tasks.models import (ExportTaskResult, ExportTask as ExportTaskModel)
-        # update the task
-        finished = timezone.now()
-        task = ExportTaskModel.objects.get(celery_uid=task_id)
-        task.finished_at = finished
-        task.progress = 100
-        # get the output
-        output_url = retval['result']
-        stat = os.stat(output_url)
-        size = stat.st_size / 1024 / 1024.00
-        # construct the download_path
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-        parts = output_url.split('/')
-        filename = parts[-1]
-        provider_slug = parts[-2]
-        run_uid = parts[-3]
-        run_dir = os.path.join(download_root, run_uid)
-        name, ext = os.path.splitext(filename)
-        download_file = '{0}-{1}-{2}{3}'.format(
-            name,
-            provider_slug,
-            finished.strftime('%Y%m%d'),
-            ext
-        )
-        download_path = os.path.join(run_dir, download_file)
-
-        # construct the download url
         try:
-            if getattr(settings, "USE_S3", False):
-                download_url = s3.upload_to_s3(
-                    run_uid,
-                    os.path.join(provider_slug, filename),
-                    download_file
+            from ..tasks.models import (ExportTaskResult, ExportTask as ExportTaskModel)
+            # update the task
+            finished = timezone.now()
+            task = ExportTaskModel.objects.get(celery_uid=task_id)
+            if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
+                logging.info('Task reported on success but was previously canceled ',format(task_id))
+                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+            task.finished_at = finished
+            task.progress = 100
+            # get the output
+            output_url = retval['result']
+            stat = os.stat(output_url)
+            size = stat.st_size / 1024 / 1024.00
+            # construct the download_path
+            download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
+            parts = output_url.split('/')
+            filename = parts[-1]
+            provider_slug = parts[-2]
+            run_uid = parts[-3]
+            run_dir = os.path.join(download_root, run_uid)
+            name, ext = os.path.splitext(filename)
+            download_file = '{0}-{1}-{2}{3}'.format(
+                name,
+                provider_slug,
+                finished.strftime('%Y%m%d'),
+                ext
+            )
+            download_path = os.path.join(run_dir, download_file)
+
+            # construct the download url
+            try:
+                if getattr(settings, "USE_S3", False):
+                    download_url = s3.upload_to_s3(
+                        run_uid,
+                        os.path.join(provider_slug, filename),
+                        download_file
+                    )
+                else:
+                    try:
+                        if not os.path.isdir(run_dir):
+                            os.makedirs(run_dir)
+                    except OSError as e:
+                        logger.info(e)
+                    try:
+                        # don't copy raw run_dir data
+                        if task.name != 'OverpassQuery':
+                            shutil.copy(output_url, download_path)
+                    except IOError:
+                        logger.error('Error copying output file to: {0}'.format(download_path))
+
+                    download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
+                    download_url = '/'.join([download_media_root, run_uid, download_file])
+
+                # save the task and task result
+                result = ExportTaskResult(
+                    task=task,
+                    filename=filename,
+                    size=size,
+                    download_url=download_url
                 )
-            else:
-                try:
-                    if not os.path.isdir(run_dir):
-                        os.makedirs(run_dir)
-                except OSError as e:
-                    logger.info(e)
-                try:
-                    # don't copy raw run_dir data
-                    if task.name != 'OverpassQuery':
-                        shutil.copy(output_url, download_path)
-                except IOError:
-                    logger.error('Error copying output file to: {0}'.format(download_path))
+                result.save()
+            except IOError:
+                logger.warning(
+                    'output file %s was not able to be found (run_uid: %s)',
+                    filename,
+                    run_uid
+                )
 
-                download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-                download_url = '/'.join([download_media_root, run_uid, download_file])
-
-            # save the task and task result
-            result = ExportTaskResult(
-                task=task,
-                filename=filename,
-                size=size,
-                download_url=download_url
-            )
-            result.save()
-        except IOError:
-            logger.warning(
-                'output file %s was not able to be found (run_uid: %s)',
-                filename,
-                run_uid
-            )
-
-        task.status = TaskStates.SUCCESS.value
-        task.save()
-        super(ExportTask, self).on_success(retval, task_id, args, kwargs)
+            task.status = TaskStates.SUCCESS.value
+            task.save()
+            super(ExportTask, self).on_success(retval, task_id, args, kwargs)
+        except Exception as e:
+            from billiard.einfo import ExceptionInfo
+            einfo = ExceptionInfo()
+            einfo.exception = e
+            self.on_failure(e, task_id, args, kwargs, einfo)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
@@ -210,6 +219,7 @@ class ExportTask(LockingTask):
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
+            task.save()
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
@@ -538,6 +548,47 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
         raise Exception(e)
 
 
+@app.task(name='Zip File', bind=True, base=ExportTask)
+def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
+                        *args, **kwargs):
+    from .models import ExportProviderTask
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+    # deleted during cancellation.
+    logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
+    include_files = []
+    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
+        for export_task in export_provider_task.tasks.all():
+            try:
+                filename = export_task.result.filename
+            except Exception:
+                logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
+                continue
+            full_file_path = os.path.join(stage_dir, filename)
+            if not os.path.isfile(full_file_path):
+                logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                              export_task.name))
+                continue
+            include_files += [full_file_path]
+    # Need to remove duplicates from the list because
+    # some intermediate tasks produce files with the same name.
+    # sorted while adding time allows comparisons in tests.
+    include_files = sorted(list(set(include_files)))
+    if include_files:
+        logger.debug("Zipping files: {0}".format(include_files))
+        zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)), adhoc=True).get('result')
+    else:
+        raise Exception("There are no files in this provider available to zip.")
+    if not zip_file:
+        raise Exception("A zipfile could not be created, please contact an administrator.")
+    result['result'] = zip_file
+    return result
+
+
 @app.task(name='External Raster Service Export', bind=True, base=ExportTask)
 def external_raster_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
@@ -705,7 +756,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
 
 @app.task(name='Zip File Export', base=LockingTask)
-def zip_file_task(result={}, run_uid=None, include_files=None):
+def zip_file_task(result={}, run_uid=None, include_files=None, file_name=None, adhoc=False):
     """
     rolls up runs into a zip file
     """
@@ -728,13 +779,16 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
     project = run.job.event
     date = timezone.now().strftime('%Y%m%d')
     # XXX: name-project-eventkit-yyyymmdd.zip
-    zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-        name,
-        project,
-        "eventkit",
-        date,
-        'zip'
-    )
+    if file_name:
+        zip_filename = file_name
+    else:
+        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
+            name,
+            project,
+            "eventkit",
+            date,
+            'zip'
+        )
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
@@ -755,18 +809,24 @@ def zip_file_task(result={}, run_uid=None, include_files=None):
                 arcname=filename
             )
 
-    run_uid = str(run_uid)
-    if getattr(settings, "USE_S3", False):
-        # TODO open up a stream directly to the s3 file so no local
-        #      persistence is required
-        zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
-        os.remove(zip_st_filepath)
-    else:
-        shutil.copy(zip_st_filepath, zip_dl_filepath)
-        zipfile_url = os.path.join(run_uid, zip_filename)
+    # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
+    # be handled as an ExportTask.
 
-    run.zipfile_url = zipfile_url
-    run.save()
+    if not adhoc:
+        run_uid = str(run_uid)
+        if getattr(settings, "USE_S3", False):
+
+            # TODO open up a stream directly to the s3 file so no local
+            #      persistence is required
+            zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
+            os.remove(zip_st_filepath)
+        else:
+            if zip_st_filepath != zip_dl_filepath:
+                shutil.copy(zip_st_filepath, zip_dl_filepath)
+            zipfile_url = os.path.join(run_uid, zip_filename)
+
+        run.zipfile_url = zipfile_url
+        run.save()
 
     result['result'] = zip_st_filepath
     return result
@@ -807,17 +867,17 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     run.status = TaskStates.COMPLETED.value
     provider_tasks = run.provider_tasks.all()
     # mark run as incomplete if any tasks fail
-    if any(task.status in TaskStates.get_incomplete_states() for task in provider_tasks):
-        run.status = TaskStates.INCOMPLETE.value
-    if all(task.status == TaskStates.CANCELED.value for task in provider_tasks):
+    if all(TaskStates[provider_task.status] == TaskStates.CANCELED for provider_task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+    elif any(TaskStates[provider_task.status] in TaskStates.get_incomplete_states() for provider_task in provider_tasks):
+        run.status = TaskStates.INCOMPLETE.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()
 
     # send notification email to user
     site_url = settings.SITE_URL
-    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
+    url = '{0}/status/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -864,7 +924,7 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
     site_url = settings.SITE_URL
-    url = '{0}/exports/{1}'.format(site_url.rstrip('/'), run.job.uid)
+    url = '{0}/status/{1}'.format(site_url.rstrip('/'), run.job.uid)
     addr = run.user.email
     subject = "Your Eventkit Data Pack has a failure."
     # email user and administrator

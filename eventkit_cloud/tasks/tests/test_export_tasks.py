@@ -25,7 +25,7 @@ from ..export_tasks import (
     external_raster_service_export_task, geopackage_export_task,
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
-    zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
+    zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
     parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
 )
 from ...celery import TaskPriority, app
@@ -340,6 +340,92 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.export_tasks.logger')
+    @patch('os.path.isfile')
+    @patch('eventkit_cloud.tasks.models.ExportProviderTask')
+    @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
+    @patch('celery.app.task.Task.request')
+    def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_export_provider_task, mock_isfile, mock_logger):
+        file_names = ('file1', 'file2', 'file3')
+        tasks = (Mock(result=Mock(filename=file_names[0])),
+                 Mock(result=Mock(filename=file_names[1])),
+                 Mock(result=Mock(filename=file_names[2])))
+        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid), "slug")
+
+        expected_file_names = [os.path.join(stage_dir, file_name) for file_name in file_names]
+        mock_all = Mock()
+        mock_all.return_value = tasks
+        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value, tasks=Mock(all=mock_all))
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+
+        job_name = self.job.name.lower()
+
+        expected_output_path = os.path.join(stage_dir,
+                                            '{}.zip'.format(job_name))
+        mock_zip_file.run.return_value = {'result': expected_output_path}
+        mock_isfile.return_value = True
+
+
+        export_provider_task = ExportProviderTask.objects.create(run=self.run)
+        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=zip_export_provider.name)
+        result = zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                                        job_name=job_name, run_uid=self.run.uid)
+        self.assertEquals(expected_output_path, result['result'])
+        # test the tasks update_task_state method
+        run_task = ExportTask.objects.get(celery_uid=celery_uid)
+        self.assertIsNotNone(run_task)
+        self.assertEquals(TaskStates.RUNNING.value, run_task.status)
+        mock_zip_file.run.assert_called_once_with(adhoc=True, run_uid=self.run.uid, include_files=expected_file_names,
+                                           file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)))
+
+        # Check that an exception is raised if no zip file is returned.
+        mock_zip_file.run.return_value = None
+        with self.assertRaises(Exception):
+            zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                             job_name=job_name, run_uid=self.run.uid)
+
+        # Check that an exception is raised if no files can be zipped.
+        mock_zip_file.run.return_value = {'result': expected_output_path}
+        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.FAILED.value,
+                                                                  tasks=Mock(all=mock_all))
+        with self.assertRaises(Exception):
+            zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                             job_name=job_name, run_uid=self.run.uid)
+
+        # Check that errors are logged for missing files.
+        mock_logger.reset_mock()
+        tasks = (Mock(result=Mock(filename=file_names[0])),
+                 Mock(result=None),
+                 Mock(result=Mock(filename=file_names[2])))
+        mock_all = Mock()
+        mock_all.return_value = tasks
+        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value,
+                                                                  tasks=Mock(all=mock_all))
+
+        zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                job_name=job_name, run_uid=self.run.uid)
+        mock_logger.error.assert_called_once()
+
+        mock_logger.reset_mock()
+        tasks = (Mock(result=Mock(filename=file_names[0])),
+                 Mock(result=Mock(filename=file_names[1])),
+                 Mock(result=Mock(filename=file_names[2])))
+        mock_all = Mock()
+        mock_all.return_value = tasks
+        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value,
+                                                                  tasks=Mock(all=mock_all))
+
+        mock_isfile.side_effect = [True, True, False]
+        zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+                                job_name=job_name, run_uid=self.run.uid)
+
+        mock_logger.error.assert_called_once()
+
+
+
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
     def test_run_external_raster_service_export_task(self, mock_service, mock_request):
@@ -587,7 +673,7 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
+        export_provider_task = ExportProviderTask.objects.create(status=TaskStates.SUCCESS.value, run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
         self.assertEquals('Finalize Export Run', finalize_run_task.name)

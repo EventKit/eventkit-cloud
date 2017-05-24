@@ -1,4 +1,6 @@
 import React from 'react';
+import {browserHistory} from 'react-router';
+import { Link, IndexLink } from 'react-router'
 import {connect} from 'react-redux'
 import FloatingActionButton from 'material-ui/FloatingActionButton'
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
@@ -8,9 +10,10 @@ import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
 import ExportInfo from './ExportInfo'
 import ExportSummary from './ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo} from '../actions/exportsActions'
-import  isEqual from 'lodash/isEqual';
-import {browserHistory} from 'react-router';
+    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
+
+const isEqual = require('lodash/isEqual');
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -26,14 +29,32 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentDidMount(){
+        //Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
+        if(this.props.exportInfo.exportName == '') {
+            this.props.setNextDisabled();
+        }
         this.props.getProviders();
-        this.props.setNextDisabled();
     }
 
     componentWillUnmount() {
         this.props.clearAoiInfo();
         this.props.clearExportInfo();
+        this.props.clearJobInfo();
     }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.datacartDetailsReceived){
+            browserHistory.push('/status/'+nextProps.jobuid);
+        }
+        if (this.props.jobFetched != nextProps.jobFetched) {
+            if (nextProps.jobFetched) {
+                this.props.setDatacartDetailsReceived();
+                //this.props.getDatacartDetails(nextProps.jobuid);
+
+            }
+        }
+    }
+
 
     handleSubmit() {
         let provider_tasks = [];
@@ -55,7 +76,7 @@ export class BreadcrumbStepper extends React.Component {
             tags : [],
         };
         this.props.submitJob(data);
-        browserHistory.push('/');
+        //browserHistory.push('/');
     }
 
     handleNext() {
@@ -82,26 +103,26 @@ export class BreadcrumbStepper extends React.Component {
 
     getStepLabel(stepIndex) {
         const labelStyle = {
-            color: 'white', 
-            height: '50px', 
-            minWidth: '200px', 
-            display: 'inline-block', 
-            lineHeight: '50px', 
+            color: 'white',
+            height: '50px',
+            minWidth: '200px',
+            display: 'inline-block',
+            lineHeight: '50px',
             marginLeft: '24px'
         };
 
         switch(stepIndex) {
             case 0:
                 return  <div style={labelStyle}>
-                            STEP 1 OF 3:  Define Area of Interest 
+                            STEP 1 OF 3:  Define Area of Interest
                         </div>;
             case 1:
                 return  <div style={labelStyle}>
-                            STEP 2 OF 3:  Select Data & Formats 
+                            STEP 2 OF 3:  Select Data & Formats
                         </div>;
-            case 2: 
+            case 2:
                 return  <div style={labelStyle}>
-                            STEP 3 OF 3:  Review & Submit 
+                            STEP 3 OF 3:  Review & Submit
                         </div>;
             default:
                 return  <div style={labelStyle}>
@@ -123,14 +144,14 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
         }
     }
-    
+
     getButtonContent(stepIndex) {
         const btnStyles = {
             submit: {
-                color: 'black', 
-                marginRight: '12px', 
-                verticalAlign: 'middle', 
-                boxShadow: 'none', 
+                color: 'black',
+                marginRight: '12px',
+                verticalAlign: 'middle',
+                boxShadow: 'none',
                 transition: 'none'
             },
             forward: {
@@ -194,7 +215,7 @@ export class BreadcrumbStepper extends React.Component {
                 marginRight: '10px',
             },
         };
-        
+
         return (
             <div style={{backgroundColor: '#161e2e'}}>
                 <div style={{width: '100%', height: '50px'}}>
@@ -223,9 +244,13 @@ BreadcrumbStepper.propTypes = {
     getProviders: React.PropTypes.func,
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
+    setDatacartDetailsReceived: React.PropTypes.func,
     setExportInfoDone: React.PropTypes.func,
     clearAoiInfo: React.PropTypes.func,
     clearExportInfo: React.PropTypes.func,
+    clearJobInfo: React.PropTypes.func,
+    jobFetched: React.PropTypes.bool,
+    jobuid: React.PropTypes.string,
 };
 
 function mapStateToProps(state) {
@@ -233,7 +258,10 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         providers: state.providers,
         stepperNextEnabled: state.stepperNextEnabled,
+        datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
+        jobFetched: state.submitJob.fetched,
+        jobuid: state.submitJob.jobuid
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -261,11 +289,20 @@ function mapDispatchToProps(dispatch) {
         },
         clearExportInfo: () => {
             dispatch(clearExportInfo());
-        }
+        },
+        clearJobInfo: () => {
+            dispatch(clearJobInfo());
+        },
+        setDatacartDetailsReceived: () => {
+            dispatch(setDatacartDetailsReceived());
+        },
+        getDatacartDetails: (jobuid) => {
+            dispatch(getDatacartDetails(jobuid))
+        },
     }
 }
 
-export default connect(
+export default  connect(
     mapStateToProps,
     mapDispatchToProps
 )(BreadcrumbStepper);
