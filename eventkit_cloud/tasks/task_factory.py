@@ -10,7 +10,7 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from celery import chain, group
+from celery import chain, group, chord
 from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
@@ -136,15 +136,25 @@ class TaskFactory:
                                     )
                                     bounds_task = chain(bounds_task, zip_task)
                                 # Run the task, and when it completes return the status of the task to the model.
-                                # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
-                                # it will call FinalizeTask which will mark the entire job complete/incomplete
-                                finalize_chain_task_runner_tasks = chain(selection_task, chain_task_runner_tasks,
-                                                                         bounds_task, finalize_export_provider_task.s(
-                                        run_uid=run_uid,
-                                        run_dir=run_dir,
-                                        export_provider_task_uid=export_provider_task_uid,
-                                        worker=worker
-                                    ).set(queue=worker, routing_key=worker))
+                                # The finalize_export_provider_task will check all of the export tasks
+                                # for this provider and save the export provider's status.
+                                clean_up_task_sig = clean_up_failure_task.si(
+                                    run_uid=run_uid, run_dir=run_dir,
+                                    export_provider_task_uids=export_provider_task_uids, worker=worker, queue=worker,
+                                    routing_key=worker
+                                )
+                                finalize_export_provider_sig = finalize_export_provider_task.s(
+                                    run_uid=run_uid,
+                                    run_dir=run_dir,
+                                    export_provider_task_uid=export_provider_task_uid,
+                                    worker=worker,
+                                    link_error=clean_up_task_sig,
+                                    queue=worker,
+                                    routing_key=worker
+                                )
+                                finalize_chain_task_runner_tasks = chain(
+                                    selection_task, chain_task_runner_tasks, bounds_task, finalize_export_provider_sig
+                                )
                                 provider_subtask_chains.append(finalize_chain_task_runner_tasks)
 
                     if not provider_subtask_chains:
@@ -155,31 +165,12 @@ class TaskFactory:
                     grouped_provider_subtask_chain = chain(provider_subtask_chains)
                     grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
 
-                all_export_provider_task_group = group([
-                    gpsc
-#                     gpsc.s(
-#                         interval=1,
-#                         max_retries=10,
-#                         expires=datetime.now() + timedelta(days=2),
-#                         priority=TaskPriority.TASK_RUNNER.value,
-#                         routing_key=worker,
-#                         queue=worker,
-#                         link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
-#                                                             export_provider_task_uids=export_provider_task_uids,
-#                                                             worker=worker).set(queue=worker, routing_key=worker)
-#                     )
-                    for gpsc in grouped_provider_subtask_chains
-                ])
+                all_export_provider_task_group = group([gpsc for gpsc in grouped_provider_subtask_chains])
 
-                finalize_tasks = create_finalize_run_task_collection(run_uid, run_dir, worker)
+                finalize_run_tasks = create_finalize_run_task_collection(run_uid, run_dir, worker)
+                tasks_results = chord(all_export_provider_task_group)(finalize_run_tasks)
 
-                export_run_tasks_chain = chain(all_export_provider_task_group, finalize_tasks)
-                export_run_tasks_chain.apply_async()
-
-#                 tasks_results = all_export_provider_task_group.apply_async()
-#
-#                 return tasks_results
-                return []
+                return tasks_results
 
             return False
 
