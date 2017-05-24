@@ -824,13 +824,13 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
             zip_file_task.run(run_uid=run_uid, include_files=include_files)
 
 
-@app.task(name='Finalize Export Provider Run', base=LockingTask)
+@app.task(name='Finalize Export Provider Task', base=LockingTask)
 def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Finalizes provider task.
 
     Cleans up staging directory.
-    Updates run with finish time.
+    Updates export provider status.
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
 
@@ -941,7 +941,6 @@ class FinalizeRunTask(LockingTask):
         Updates run with finish time.
         Emails user notification.
         """
-
         from eventkit_cloud.tasks.models import ExportRun
 
         run = ExportRun.objects.get(uid=run_uid)
@@ -1041,8 +1040,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
 def cancel_export_provider_task(result={}, export_provider_task_uid=None, canceling_user=None):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
+    Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
-
     from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
@@ -1104,7 +1103,8 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
         expires=datetime.now() + timedelta(days=2),
         priority=TaskPriority.FINALIZE_PROVIDER.value,
         routing_key=worker,
-        queue=worker
+        queue=worker,
+        link=finalize_run_task.si(result={}, run_uid=run_uid, stage_dir=stage_dir)
     )
     return result
 
