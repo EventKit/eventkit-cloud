@@ -129,7 +129,7 @@ export class DataPackDetails extends React.Component {
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'30%', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width:'35%', fontSize: '14px'}}>
                                 DATA SETS
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}>
