@@ -55,8 +55,9 @@ class TestExportTaskFactory(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_task')
     @patch('eventkit_cloud.tasks.task_factory.group')
+    @patch('eventkit_cloud.tasks.task_factory.chord')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, task_factory_group, create_task, finalize_task):
+    def test_task_factory(self, task_factory_chain, task_factory_chord, task_factory_group, create_task, finalize_task):
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
@@ -71,6 +72,7 @@ class TestExportTaskFactory(TestCase):
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
         task_factory_group.assert_called()
+        task_factory_chord.assert_called_once()
         create_task.assert_called()
         finalize_task.s.assert_called()
 
@@ -103,15 +105,15 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # The result of setting the args & settings for each task,
         # which unmocked would be a task signature, should be passed to celery.chain
         expected_chain_inputs = (
-            qgis_task.s.return_value.set.return_value,
+            qgis_task.si.return_value.set.return_value,
             prepare_for_export_zip_task.s.return_value.set.return_value,
             zip_file_task.s.return_value.set.return_value,
             finalize_run_task.si.return_value.set.return_value,
         )
         self.assertEqual(chain_inputs, expected_chain_inputs)
 
-        qgis_task.s.assert_called_once_with(run_uid=run_uid)
-        qgis_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+        qgis_task.si.assert_called_once_with([], run_uid=run_uid)
+        qgis_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
 
         prepare_for_export_zip_task.s.assert_called_once_with(run_uid=run_uid)
         prepare_for_export_zip_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
