@@ -151,7 +151,7 @@ export class ProviderRow extends React.Component {
                     <TableRowColumn style={{width: '30%', textAlign: 'center', fontSize: '14px'}} ></TableRowColumn>
                     <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px', fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
-                    <TableRowColumn style={{width: '10%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
+                    <TableRowColumn style={{width: '12%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
                     </TableRow>
 
                 ))}
