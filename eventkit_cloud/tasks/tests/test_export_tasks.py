@@ -96,7 +96,7 @@ class ExportTaskBase(TestCase):
         )
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
-        self.assertEquals(256, len(tags))
+        self.assertEquals(259, len(tags))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(
             name='TestJob',
