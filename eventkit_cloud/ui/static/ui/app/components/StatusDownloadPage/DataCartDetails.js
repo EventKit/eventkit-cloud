@@ -218,7 +218,7 @@ export class DataCartDetails extends React.Component {
                 <div>
                     <RaisedButton
                         style={{margin: '10px'}}
-                        disabled={this.state.status != "COMPLETED"}
+                        disabled={this.state.status == "SUBMITTED"}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'#4598bf'}
@@ -237,7 +237,7 @@ export class DataCartDetails extends React.Component {
                     </Dialog>
                     <RaisedButton
                         style={{margin: '10px'}}
-                        disabled={this.state.status != "COMPLETED"}
+                        disabled={this.state.status == "SUBMITTED"}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'#4598bf'}
@@ -256,7 +256,7 @@ export class DataCartDetails extends React.Component {
                     </Dialog>
                     <RaisedButton
                         style={{margin: '10px'}}
-                        disabled={this.state.status != "COMPLETED"}
+                        disabled={this.state.status == "SUBMITTED"}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'#ff0000'}
