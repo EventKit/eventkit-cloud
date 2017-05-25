@@ -720,12 +720,10 @@ def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None,
     return result
 
 
-def qgis_project(run_uid=None):
-    any_new_files_that_should_be_part_of_zip = []
-    return {'extra_files': any_new_files_that_should_be_part_of_zip}
-
-
 def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
+    """ Collects all export provider result files, combines them with @extra_files,
+        and runs a zip_file_task with the resulting set of files.
+    """
     from eventkit_cloud.tasks.models import ExportRun
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -750,10 +748,12 @@ def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
                     include_files += [full_file_path]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
-        include_files = list(set(include_files))
         include_files.extend(extra_files)
+        include_files = list(set(include_files))
         if include_files:
             zip_file_task.run(run_uid=run_uid, include_files=include_files)
+        else:
+            logger.warn('No files to zip for run_uid/provider_tasks: {}/{}'.format(run_uid, provider_tasks))
 
 
 class FinalizeRunHookTask(LockingTask):
@@ -856,9 +856,11 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
                     include_files += [full_file_path]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
-        include_files = list(set(include_files))
+        include_files = set(include_files)
         if include_files:
             zip_file_task.run(run_uid=run_uid, include_files=include_files)
+        else:
+            logger.warn('No files to zip for run_uid: {}'.format(run_uid))
 
 
 @app.task(name='Finalize Export Provider Task', base=LockingTask)
