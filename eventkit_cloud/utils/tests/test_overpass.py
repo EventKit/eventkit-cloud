@@ -32,7 +32,7 @@ class TestOverpass(TestCase):
 
         preset = DatamodelPreset.objects.get(name='hdm')
         tags = preset.json_tags
-        self.assertEquals(256, len(tags))
+        self.assertEquals(259, len(tags))
 
         self.job = Job.objects.create(name='TestJob', description='Test description',
                                       event='Nepal activation', user=self.user, the_geom=the_geom,
@@ -53,7 +53,7 @@ class TestOverpass(TestCase):
 #         for tag_dict in tags:
 #             tag = Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
 #                                      data_model='osm', geom_types=tag_dict['geom_types'])
-#         self.assertEquals(256, self.job.tags.all().count())
+#         self.assertEquals(259, self.job.tags.all().count())
 
     def test_get_query(self,):
         overpass = Overpass(

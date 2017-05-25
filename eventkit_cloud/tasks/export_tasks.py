@@ -326,7 +326,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     return result
 
 
-@app.task(name="Create Styles", bind=True, base=ExportTask, abort_on_error=False)
+@app.task(name="QGIS Project file (.qgs)", bind=True, base=ExportTask, abort_on_error=False)
 def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
     """
     Task to create styles for osm.
@@ -355,7 +355,7 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     return result
 
 
-@app.task(name="Geopackage Format (OSM)", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="OSM Data (.gpkg)", bind=True, base=ExportTask, abort_on_error=True)
 def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Task to export thematic gpkg.
@@ -442,7 +442,7 @@ def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
         raise Exception(e)
 
 
-@app.task(name='Bounds Export', bind=True, base=ExportTask)
+@app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
 def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
     """
     Class defining geopackage export function.
@@ -463,7 +463,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Create Selection GeoJSON', bind=True, base=ExportTask)
+@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
 def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
     """
     Class defining geopackage export function.
@@ -548,7 +548,7 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
         raise Exception(e)
 
 
-@app.task(name='Zip File', bind=True, base=ExportTask)
+@app.task(name='Project file (.zip)', bind=True, base=ExportTask)
 def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
                         *args, **kwargs):
     from .models import ExportProviderTask
@@ -589,7 +589,7 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
     return result
 
 
-@app.task(name='External Raster Service Export', bind=True, base=ExportTask)
+@app.task(name='Raster export (.gpkg)', bind=True, base=ExportTask)
 def external_raster_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
                                         level_to=None, name=None, service_type=None, *args, **kwargs):
