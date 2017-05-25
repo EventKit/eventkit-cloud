@@ -20,6 +20,7 @@ export class DataPackDetails extends React.Component {
         this.allChecked = this.allChecked.bind(this);
         this.state = {
             selectedTasks: {},
+            taskCount: 0,
         }
     }
 
@@ -34,12 +35,16 @@ export class DataPackDetails extends React.Component {
     }
 
     checkAll(e, checked) {
+        let taskCount = 0;
         let stateTasks = {...this.state.selectedTasks}
         let alteredTasks = {}
         Object.keys(stateTasks).forEach((keyName) => {
             alteredTasks[keyName] = checked;
+            if(checked == true){
+                taskCount++;
+            }
         });
-        this.setState({selectedTasks: alteredTasks});
+        this.setState({selectedTasks: alteredTasks, taskCount: taskCount});
     }
 
     allChecked() {
@@ -57,7 +62,14 @@ export class DataPackDetails extends React.Component {
 
     onSelectionToggle(selectedTasks){
         const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
-        this.setState({selectedTasks : tasks})
+        let taskCount = 0;
+        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
+            if(selectedTasks[keyName] == true) {
+                taskCount++;
+            }
+        });
+
+        this.setState({selectedTasks : tasks, taskCount: taskCount})
     }
 
     handleDownload(event){
@@ -117,7 +129,7 @@ export class DataPackDetails extends React.Component {
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'30%', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width:'35%', fontSize: '14px'}}>
                                 DATA SETS
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}>
@@ -129,6 +141,7 @@ export class DataPackDetails extends React.Component {
                             <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}>
                                 <RaisedButton
                                     backgroundColor={'rgba(179,205,224,0.5)'}
+                                    disabled={this.state.taskCount == 0}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
                                     labelStyle={{fontWeight:'bold'}}

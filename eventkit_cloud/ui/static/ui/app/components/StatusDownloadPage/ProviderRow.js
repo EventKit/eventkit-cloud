@@ -147,11 +147,11 @@ export class ProviderRow extends React.Component {
                         style={{marginLeft: '2em'}}
                         onCheck={this.onChangeCheck}
                         /></TableRowColumn>
-                    <TableRowColumn style={{width: '20%', fontSize: '14px'}}>{task.name}</TableRowColumn>
-                    <TableRowColumn style={{width: '25%', textAlign: 'center', fontSize: '14px'}} ></TableRowColumn>
+                    <TableRowColumn style={{width: '25%', fontSize: '14px'}}>{task.name}</TableRowColumn>
+                    <TableRowColumn style={{width: '30%', textAlign: 'center', fontSize: '14px'}} ></TableRowColumn>
                     <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px', fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
-                    <TableRowColumn style={{width: '10%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
+                    <TableRowColumn style={{width: '12%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
                     </TableRow>
 
                 ))}
@@ -187,11 +187,11 @@ export class ProviderRow extends React.Component {
                         <TableHeaderColumn style={{width:'30%', color: 'black', fontWeight: 'bold', fontSize: '14px'}}>
                             {this.props.provider.name}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'20%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}>
+                        <TableHeaderColumn style={{width:'30%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}>
                             {this.state.selectionCount}/{this.state.taskCount}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'15%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}/>
-                        <TableHeaderColumn style={{width:'15%',textAlign: 'right'}}>
+                        <TableHeaderColumn style={{width:'12%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}/>
+                        <TableHeaderColumn style={{width:'13%',textAlign: 'right'}}>
                             <IconButton 
                                 disableTouchRipple={true} 
                                 onTouchTap={this.handleDownload} 

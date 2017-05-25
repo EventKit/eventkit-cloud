@@ -63,13 +63,16 @@ describe('DataPackDetails component', () => {
         checkAllSpy.restore();
     });
 
-    it('should call handleDownload when the download button is clicked', () => {
+    it('should call handleDownload when the download button is clicked.  Button should not be enabled until taskCount is greater than zero', () => {
         const props = getProps();
         const downloadSpy = new sinon.spy(DataPackDetails.prototype, 'handleDownload');
         const wrapper = getWrapper(props);
         expect(downloadSpy.notCalled).toBe(true);
         const button = TestUtils.scryRenderedDOMComponentsWithTag(wrapper.instance(), 'button')[0];
         const node = ReactDOM.findDOMNode(button);
+        expect(node.disabled).toBe(true);
+        wrapper.setState({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, taskCount: 1});
+        expect(node.disabled).toBe(false);
         TestUtils.Simulate.touchTap(node);
         expect(downloadSpy.calledOnce).toBe(true);
         downloadSpy.restore();
@@ -82,25 +85,25 @@ describe('DataPackDetails component', () => {
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}}));
+        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, taskCount: 0}));
         stateSpy.restore();
         mountSpy.restore();
     });
 
-    it('checkAll should set all task in selectedTasks state to checked/unchecked', () => {
+    it('checkAll should set all task in selectedTasks state to checked/unchecked and update state of taskCount', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(wrapper.state().selectedTasks).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
         wrapper.instance().checkAll({}, true);
-        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}})).toBe(true);
+        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, taskCount: 1})).toBe(true);
         expect(wrapper.state().selectedTasks).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true});
         wrapper.instance().checkAll({}, false);
-        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}})).toBe(true);
+        expect(stateSpy.calledWith({selectedTasks: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, taskCount: 0})).toBe(true);
         stateSpy.restore();
     });
 
-    it('allChecked should return true if all tasks in selectedTasks state are true, else it resturns false', () => {
+    it('allChecked should return true if all tasks in selectedTasks state are true, else it returns false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.instance().allChecked()).toBe(false);
@@ -110,13 +113,13 @@ describe('DataPackDetails component', () => {
         expect(wrapper.instance().allChecked()).toBe(false);
     });
 
-    it('onSelectionToggle should update the selectedTasks state', () => {
+    it('onSelectionToggle should update the selectedTasks and taskCount state', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(wrapper.state().selectedTasks).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
         wrapper.instance().onSelectionToggle({'123-456-789': true, 'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true})
-        expect(stateSpy.calledWith({selectedTasks: {'123-456-789': true, 'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}})).toBe(true);
+        expect(stateSpy.calledWith({selectedTasks: {'123-456-789': true, 'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, taskCount: 2})).toBe(true);
         stateSpy.restore();
     });
 
