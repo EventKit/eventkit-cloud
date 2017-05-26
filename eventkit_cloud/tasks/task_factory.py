@@ -11,7 +11,8 @@ from django.db import DatabaseError
 from django.utils import timezone
 
 from celery import chain, group, chord
-from eventkit_cloud.tasks.export_tasks import finalize_run_task, qgis_task, prepare_for_export_zip_task, zip_file_task
+from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, qgis_task, \
+    prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
 from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
@@ -201,7 +202,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
     """
-    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task}
+    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task, "zip": zip_export_provider}
 
     task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
