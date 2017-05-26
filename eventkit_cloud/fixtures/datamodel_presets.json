@@ -1030,6 +1030,18 @@
                 "geom": ["point"],
                 "value": "yes",
                 "key": "traffic_calming"
+            }, {
+                "geom": ["point"],
+                "value": "*",
+                "key": "capital"
+            }, {
+                "geom": ["point", "polygon"],
+                "value": "*",
+                "key": "religion"
+            }, {
+                "geom": ["line"],
+                "value": "*",
+                "key": "railway"
             }]
         }
     },
