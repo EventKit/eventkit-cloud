@@ -20,10 +20,10 @@ export class DataPackGrid extends Component {
     }
 
     getColumns(screenWidth) {
-        if(screenWidth <= 800) {
+        if(screenWidth < 768) {
             return 2;
         }
-        else if(screenWidth > 1200) {
+        else if(screenWidth >= 1200) {
             return 4;
         }
         else {
@@ -56,7 +56,7 @@ export class DataPackGrid extends Component {
                     cellHeight={'auto'}
                     style={styles.gridList}
                     cols={this.state.cols}
-                    padding={1}
+                    padding={window.innerWidth >= 768 ? 7: 2}
                 >
                     {this.props.runs.map((run) => (
                         <DataPackGridItem 

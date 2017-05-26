@@ -41,8 +41,8 @@ describe('DataPackGrid component', () => {
         expect(window.innerWidth).toEqual(1024);
         expect(wrapper.state().cols).toEqual(3);
         const updateSpy = new sinon.spy(DataPackGrid.prototype, 'componentWillUpdate');
-        window.resizeTo(775, 800);
-        expect(window.innerWidth).toEqual(775);
+        window.resizeTo(725, 800);
+        expect(window.innerWidth).toEqual(725);
         wrapper.update();
         expect(updateSpy.calledThrice).toBe(true);
         expect(wrapper.state().cols).toEqual(2);
