@@ -20,7 +20,12 @@ from django.test import TestCase
 from django.utils import timezone
 from django.core.cache import cache
 
+
 logger = logging.getLogger(__name__)
+
+
+# Default length of time to let a single test case run.
+DEFAULT_TIMEOUT = 90
 
 
 class TestJob(TestCase):
@@ -361,7 +366,7 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def run_job(self, data, wait_for_run=True, run_timeout=45):
+    def run_job(self, data, wait_for_run=True, run_timeout=DEFAULT_TIMEOUT):
         # include zipfile
         data['include_zipfile'] = True
 
@@ -431,7 +436,7 @@ class TestJob(TestCase):
                 picked_up = True
         return response[0]
 
-    def wait_for_run(self, job_uid, run_timeout=45):
+    def wait_for_run(self, job_uid, run_timeout=DEFAULT_TIMEOUT):
         finished = False
         response = None
         first_check = datetime.now()
