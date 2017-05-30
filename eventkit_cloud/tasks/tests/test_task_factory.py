@@ -10,8 +10,8 @@ from django.test import TestCase
 
 from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
-from eventkit_cloud.tasks.task_factory import TaskFactory, create_run, create_finalize_run_task_collection,
-    get_invalid_licenses
+from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
+    get_invalid_licenses)
 from mock import patch, Mock, MagicMock
 
 
@@ -65,12 +65,12 @@ class TestExportTaskFactory(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.chain')
     def test_task_factory(self, task_factory_chain, task_factory_chord, task_factory_group, create_task,
             finalize_task, mock_invalid_licenses):
+        mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
         worker = "some_worker"
         provider_uuid = uuid.uuid4()
-        mock_invalid_licenses.return_value = []
         task_runner = MagicMock()
         task = Mock()
         task_runner().run_task.return_value = (provider_uuid, task)
@@ -108,13 +108,13 @@ class TestExportTaskFactory(TestCase):
 
 class CreateFinalizeRunTaskCollectionTests(TestCase):
 
-    @patch('eventkit_cloud.tasks.task_factory.qgis_task')
+    @patch('eventkit_cloud.tasks.task_factory.example_finalize_run_hook_task')
     @patch('eventkit_cloud.tasks.task_factory.prepare_for_export_zip_task')
     @patch('eventkit_cloud.tasks.task_factory.zip_file_task')
     @patch('eventkit_cloud.tasks.task_factory.finalize_run_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
     def test_create_finalize_run_task_collection(
-            self, chain, finalize_run_task, zip_file_task, prepare_for_export_zip_task, qgis_task):
+            self, chain, finalize_run_task, zip_file_task, prepare_for_export_zip_task, example_finalize_run_hook_task):
         """ Checks that all of the expected tasks were prepared and combined in a chain for return.
         """
         chain.return_value = 'When not mocked, this would be a celery chain'
@@ -134,15 +134,15 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         # The result of setting the args & settings for each task,
         # which unmocked would be a task signature, should be passed to celery.chain
         expected_chain_inputs = (
-            qgis_task.si.return_value.set.return_value,
+            example_finalize_run_hook_task.si.return_value.set.return_value,
             prepare_for_export_zip_task.s.return_value.set.return_value,
             zip_file_task.s.return_value.set.return_value,
             finalize_run_task.si.return_value.set.return_value,
         )
         self.assertEqual(chain_inputs, expected_chain_inputs)
 
-        qgis_task.si.assert_called_once_with([], run_uid=run_uid)
-        qgis_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
+        example_finalize_run_hook_task.si.assert_called_once_with([], run_uid=run_uid)
+        example_finalize_run_hook_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
 
         prepare_for_export_zip_task.s.assert_called_once_with(run_uid=run_uid)
         prepare_for_export_zip_task.s.return_value.set.assert_called_once_with(**expected_task_settings)

@@ -820,12 +820,12 @@ class FinalizeRunHookTask(LockingTask):
 
 
 @app.task(name='Do Some QGIS Thing', base=FinalizeRunHookTask, bind=True)
-def qgis_task(self, new_zip_filepaths=[], run_uid=None):
+def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
     """ Just a placeholder hook task that doesn't do anything.
         If this was a real task that created new files that should e included in the run's zip,
         the paths of the new files should be returned as a list.
     """
-    logger.debug('qgis_task; new_zip_filepaths: {}, run_uid: {}'.format(new_zip_filepaths, run_uid))
+    logger.debug('example_finalize_run_hook_task; new_zip_filepaths: {}, run_uid: {}'.format(new_zip_filepaths, run_uid))
 
 
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
