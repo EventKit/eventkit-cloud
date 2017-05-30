@@ -11,35 +11,6 @@
     display: inline-block
 }
 
-.tdHeading {
-    vertical-align: top;
-    padding: 10px;
-    height:35px;
-    font-size: 14px;
-    width: 33%;
-    background-color: #f8f8f8;
-    font-weight: bold;
-    color: black;
-}
-.tdHeadingStatus {
-    vertical-align: top;
-    padding: 10px;
-    height:35px;
-    font-size: 14px;
-    width: 33%;
-    font-weight: bold;
-    color: black;
-}
-.tdData {
-    padding: 10px;
-    height: 35px;
-    font-size: 14px;
-    width: 40%;
-    background-color: #f8f8f8;
-    font-weight: normal;
-    color: #8b9396
-}
-
 .downloadDiv {
     padding-top: 20px;
 }
@@ -83,18 +54,3 @@
 .tableRowHighlight > tr:nth-child(even) {background: #f8f8f8}
 .tableRowHighlight > tr:nth-child(odd) {background: #FFF}
 
-
-.cancelButton > button {
-    background-color: rgba(226,226,226,0.5)!important;
-}
-.cancelButton > button > div > span {
-    color: #4598bf!important;
-    font-weight: bold!important;
-}
-.deleteButton > button {
-    background-color: rgba(226,226,226,0.5)!important;
-}
-.deleteButton > button > div > span {
-    color: red!important;
-    font-weight: bold!important;
-}

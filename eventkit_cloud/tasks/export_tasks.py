@@ -556,6 +556,7 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
 def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
                         *args, **kwargs):
     from .models import ExportProviderTask
+    from .task_runners import normalize_job_name
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -584,7 +585,7 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
     if include_files:
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)), adhoc=True).get('result')
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))), adhoc=True).get('result')
     else:
         raise Exception("There are no files in this provider available to zip.")
     if not zip_file:
