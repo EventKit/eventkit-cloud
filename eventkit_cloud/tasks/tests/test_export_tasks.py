@@ -20,7 +20,7 @@ from billiard.einfo import ExceptionInfo
 from celery import chain
 import celery
 from eventkit_cloud.jobs.models import DatamodelPreset
-from eventkit_cloud.tasks.export_tasks import include_zipfile, prepare_for_export_zip_task, qgis_task
+from eventkit_cloud.tasks.export_tasks import include_zipfile, prepare_for_export_zip_task, example_finalize_run_hook_task
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
@@ -1063,19 +1063,19 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.export_tasks.logger.debug')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_qgis_task(self, ExportRun, debug, record_task_state):
+    def test_example_finalize_run_hook_task(self, ExportRun, debug, record_task_state):
         mock_run_uid = 1
-        qgis_task(run_uid=mock_run_uid)
-        debug.called_once_with('qgis_task; new_zip_filepaths: [], run_uid: None')
+        example_finalize_run_hook_task(run_uid=mock_run_uid)
+        debug.called_once_with('example_finalize_run_hook_task; new_zip_filepaths: [], run_uid: None')
 
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_finalize_run_hook_task_call_nonsequence_arg(self, ExportRun, record_task_state):
         mock_run_uid = 1
         non_sequence_arg = {}
-        self.assertRaises(Exception, qgis_task, non_sequence_arg, run_uid=mock_run_uid)
+        self.assertRaises(Exception, example_finalize_run_hook_task, non_sequence_arg, run_uid=mock_run_uid)
 
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_finalize_run_hook_task_record_task_state_no_run_uid(self, ExportRun, record_task_state):
-        self.assertRaises(ValueError, qgis_task)
+        self.assertRaises(ValueError, example_finalize_run_hook_task)

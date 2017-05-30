@@ -11,7 +11,7 @@ from django.db import DatabaseError
 from django.utils import timezone
 
 from celery import chain, group, chord
-from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, qgis_task, \
+from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, example_finalize_run_hook_task, \
     prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
@@ -224,7 +224,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
         'priority': TaskPriority.FINALIZE_RUN.value}
 
     # These should be subclassed from FinalizeRunHookTask
-    hook_tasks = [qgis_task]
+    hook_tasks = [example_finalize_run_hook_task]
     hook_task_sigs = []
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
