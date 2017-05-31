@@ -199,6 +199,39 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getButtonContent(3));
         expect(content.find('div')).toHaveLength(1);
     })
+
+    it('getPreviousButtonContent should return the correct content for each stepIndex', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        let content = mount(wrapper.instance().getPreviousButtonContent(0),{
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object
+            }
+        });
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(1),{
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object
+            }
+        });
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(2),{
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object
+            }
+        });
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(3));
+        expect(content.find('div')).toHaveLength(1);
+    })
 });
 
 const providers = [
