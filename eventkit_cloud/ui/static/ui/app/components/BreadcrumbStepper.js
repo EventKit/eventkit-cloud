@@ -145,6 +145,41 @@ export class BreadcrumbStepper extends React.Component {
         }
     }
 
+    getPreviousButtonContent(stepIndex) {
+        const styles = {
+            arrowBack: {
+                fill: stepIndex == 0 ? '#e2e2e2' : '#4598bf',
+                opacity: stepIndex == 0 ? '0.3' : '1',
+                cursor: stepIndex == 0 ? 'default' : 'pointer',
+                verticalAlign: 'middle',
+                marginRight: '10px',
+            },
+        };
+
+        switch (stepIndex) {
+            case 0:
+                return <NavigationArrowBack
+                    style={styles.arrowBack}
+                    onClick={this.handlePrev}
+                />
+            case 1:
+                return <NavigationArrowBack
+                    style={styles.arrowBack}
+                    onClick={this.handlePrev}
+                />
+            case 2:
+                return <FloatingActionButton mini={true}
+                                             onClick={this.handlePrev}
+                                             style={styles.arrowBack}
+                                             backgroundColor={'#4598bf'}>
+                        <NavigationArrowBack/>
+                    </FloatingActionButton>
+
+            default:
+                return <div/>;
+        }
+    }
+
     getButtonContent(stepIndex) {
         const btnStyles = {
             submit: {
@@ -221,10 +256,7 @@ export class BreadcrumbStepper extends React.Component {
                 <div style={{width: '100%', height: '50px'}}>
                     {this.getStepLabel(this.state.stepIndex)}
                     <div style={{float: 'right', padding: '5px'}}>
-                        <NavigationArrowBack
-                            style={styles.arrowBack}
-                            onClick={this.handlePrev}
-                        />
+                        {this.getPreviousButtonContent(this.state.stepIndex)}
                         {this.getButtonContent(this.state.stepIndex)}
                     </div>
                 </div>
