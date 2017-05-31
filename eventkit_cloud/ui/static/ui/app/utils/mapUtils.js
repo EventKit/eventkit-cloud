@@ -1,6 +1,8 @@
 import ol from 'openlayers';
-import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
+import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
+import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 
 /**
  * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
@@ -14,7 +16,7 @@ export function bufferGeometry(jstsGeometry) {
     const bufferSize = 1000;
     if (!(jstsGeometry.getGeometryType() === "Polygon" || jstsGeometry.getGeometryType() === "MultiPolygon" )) {
         var temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
-        return transformJSTSGeometry(temp_geom.buffer(bufferSize), 'EPSG:3857', 'EPSG:4326')
+        return transformJSTSGeometry(BufferOp.bufferOp(temp_geom, bufferSize), 'EPSG:3857', 'EPSG:4326')
     }
     return jstsGeometry;
 }
@@ -30,7 +32,7 @@ export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
     //This all seems excessive, however jsts ol3Parser wasn't working with versions
     // "jsts": "~1.4.0" and "openlayers": "~3.19.1", worth revisting in the future.
     const writer = new GeoJSONWriter();
-    const geojsonReader = new GeoJSONReader();
+    const geojsonReader = new reader();
     const ol3GeoJSON = new ol.format.GeoJSON();
     const geom = (new ol.format.GeoJSON()).readGeometry(writer.write(jstsGeometry)).transform(from_srs, to_srs);
     return geojsonReader.read(ol3GeoJSON.writeGeometry(geom));
@@ -42,20 +44,20 @@ export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
  * @return {geometry} A JSTS Polygon or MultiPolygon
  */
 export function convertGeoJSONtoJSTS(geojson) {
-    const geojsonReader = new GeoJSONReader();
+    const geojsonReader = new reader();
 
     var jstsGeoJSON = geojsonReader.read(geojson);
     if (jstsGeoJSON.features) {
         var features = jstsGeoJSON.features;
         var geometry = bufferGeometry(features[0].geometry);
         for (var i = 1; i < features.length; i++) {
-            geometry = geometry.union(bufferGeometry(features[i].geometry));
+            geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry));
         }
     } else if (jstsGeoJSON.geometries) {
         var geometries = jstsGeoJSON.geometries;
         var geometry = bufferGeometry(geometries[0]);
         for (var i = 1; i < geometries.length; i++) {
-            geometry = geometry.union(bufferGeometry(geometries[i]));
+            geometry = UnionOp.union(geometry, bufferGeometry(geometries[i]));
         }
     } else {
         var geometry = bufferGeometry(jstsGeoJSON);
