@@ -1,5 +1,6 @@
 import ol from 'openlayers';
-import * as jsts from 'jsts';
+import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 
 /**
  * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
@@ -28,8 +29,8 @@ export function bufferGeometry(jstsGeometry) {
 export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
     //This all seems excessive, however jsts ol3Parser wasn't working with versions
     // "jsts": "~1.4.0" and "openlayers": "~3.19.1", worth revisting in the future.
-    const writer = new jsts.io.GeoJSONWriter();
-    const geojsonReader = new jsts.io.GeoJSONReader();
+    const writer = new GeoJSONWriter();
+    const geojsonReader = new GeoJSONReader();
     const ol3GeoJSON = new ol.format.GeoJSON();
     const geom = (new ol.format.GeoJSON()).readGeometry(writer.write(jstsGeometry)).transform(from_srs, to_srs);
     return geojsonReader.read(ol3GeoJSON.writeGeometry(geom));
@@ -41,7 +42,7 @@ export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
  * @return {geometry} A JSTS Polygon or MultiPolygon
  */
 export function convertGeoJSONtoJSTS(geojson) {
-    const geojsonReader = new jsts.io.GeoJSONReader();
+    const geojsonReader = new GeoJSONReader();
 
     var jstsGeoJSON = geojsonReader.read(geojson);
     if (jstsGeoJSON.features) {
