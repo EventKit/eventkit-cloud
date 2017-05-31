@@ -170,7 +170,8 @@ export class BreadcrumbStepper extends React.Component {
             case 2:
                 return <FloatingActionButton mini={true}
                                              onClick={this.handlePrev}
-                                             style={styles.arrowBack}>
+                                             style={styles.arrowBack}
+                                             backgroundColor={'#4598bf'}>
                         <NavigationArrowBack/>
                     </FloatingActionButton>
 
