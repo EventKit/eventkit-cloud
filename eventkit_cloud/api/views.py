@@ -264,6 +264,7 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
+        from ..tasks.task_factory import InvalidLicense, Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -289,7 +290,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         job = serializer.save()
                         provider_serializer = ProviderTaskSerializer(
                             data=provider_tasks,
-                            many=True
+                            many=True,
+                            context = {'request': request}
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
@@ -332,7 +334,14 @@ class JobViewSet(viewsets.ModelViewSet):
             # run the tasks
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
-            run_uid = create_run(job_uid=job_uid)
+            try:
+                # run needs to be created so that the UI can be updated with the task list.
+                run_uid = create_run(job_uid=job_uid, user=request.user)
+            except InvalidLicense as il:
+                return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+                # Run is passed to celery to start the tasks.
+            except Unauthorized as ua:
+                return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
 
             running = JobSerializer(job, context={'request': request})
             # Run is passed to celery to start the tasks.
@@ -356,12 +365,17 @@ class JobViewSet(viewsets.ModelViewSet):
         *Returns:*
             - the serialized run data.
         """
-        # run needs to be created so that the UI can be updated with the task list.
-        run_uid = create_run(job_uid=uid)
+        from ..tasks.task_factory import InvalidLicense, Unauthorized
+
+        try:
+            # run needs to be created so that the UI can be updated with the task list.
+            run_uid = create_run(job_uid=uid, user=request.user)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
+        except Unauthorized as ua:
+            return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
-        if run.user != request.user and not request.user.is_superuser:
-            return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
         if run:
             pick_up_run_task.delay(run_uid=run_uid)
             running = ExportRunSerializer(run, context={'request': request})
