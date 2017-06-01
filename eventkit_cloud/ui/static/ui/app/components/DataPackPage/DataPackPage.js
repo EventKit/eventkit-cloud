@@ -2,6 +2,7 @@ import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar';
+import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
 import Drawer from 'material-ui/Drawer';
 import PermissionFilter from './PermissionsFilter';
@@ -61,6 +62,7 @@ export class DataPackPage extends React.Component {
             filtersApplied: false,
             grid: true,
             tableSort: utils.orderNewest,
+            showLoading: true,
         }
     }
 
@@ -71,6 +73,9 @@ export class DataPackPage extends React.Component {
                 this.setState({runs: runs});
                 runs = this.applyAll(runs);
                 this.setState({displayedRuns:runs});
+                if (this.state.showLoading) {
+                    this.setState({showLoading: false});
+                }
                 
             }
         }
@@ -333,23 +338,32 @@ export class DataPackPage extends React.Component {
                             />
                         </CustomScrollbar>
                     </Drawer>
-                    <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
-                        {this.state.grid ? 
-                            <DataPackGrid 
-                                runs={this.state.displayedRuns} 
-                                user={this.props.user} 
-                                onRunDelete={this.props.deleteRuns}
+                    {this.state.showLoading ? 
+                        <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
+                            <CircularProgress 
+                                style={{margin: 'auto', display: 'block'}} 
+                                color={'#4598bf'}
+                                size={50}
                             />
-                        : 
-                            <DataPackList
-                                runs={this.state.displayedRuns}
-                                user={this.props.user}
-                                onRunDelete={this.props.deleteRuns}
-                                onSort={this.handleTableSort}
-                            />
-                        }
-                    </CustomScrollbar>
-                    
+                        </div>
+                        :
+                        <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
+                            {this.state.grid ? 
+                                <DataPackGrid 
+                                    runs={this.state.displayedRuns} 
+                                    user={this.props.user} 
+                                    onRunDelete={this.props.deleteRuns}
+                                />
+                            : 
+                                <DataPackList
+                                    runs={this.state.displayedRuns}
+                                    user={this.props.user}
+                                    onRunDelete={this.props.deleteRuns}
+                                    onSort={this.handleTableSort}
+                                />
+                            }
+                        </CustomScrollbar>
+                    }
                 </div>
                 
             </div>

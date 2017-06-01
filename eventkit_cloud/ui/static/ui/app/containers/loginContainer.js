@@ -6,7 +6,6 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import {
     TextField,
 } from 'redux-form-material-ui'
-import styles from '../components/auth/Login.css'
 import {login} from '../actions/userActions'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -21,15 +20,14 @@ export class Form extends React.Component {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.state = {
+            username: '',
+            password: '',
+            button: DISABLED_BUTTON,
+            login_form: false,
+            oauth_name: ""
+        };
     }
-
-    state = {
-        username: '',
-        password: '',
-        button: DISABLED_BUTTON,
-        login_form: false,
-        oauth_name: ""
-    };
 
     onChange(event) {
         this.setState({[event.target.name]: event.target.value}, function () {
@@ -76,27 +74,49 @@ export class Form extends React.Component {
     }
 
     render() {
+        const styles = {
+            form: {
+                verticalAlign: 'center',
+                margin: '0 auto',
+                width: '70%',
+            },
+            heading: {
+                width: '100%',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: 'white',
+                margin: '15px auto 0px auto',
+            },
+            input: {
+                backgroundColor: 'rgba(179,205,224,.2)',
+                fontSize: '16px',
+                width: '100%',
+                height: '45px',
+                color: '#e2e2e2',
+                margin: '15px auto 0px auto',
+                padding: '10px'
+            }
+        }
         let login_form = ''
         let oauth_button = ''
         if (this.state.login_form) {
-            login_form = <form onSubmit={this.handleSubmit} onChange={this.onChange} className={styles.form}>
-                <div className={styles.heading}>Enter Login Information</div>
-                <div className={styles.fieldWrapper}>
-                    <input id="username"
-                           name="username"
-                           placeholder="Username"
-                           style={{fontSize: '16px', color: '#e2e2e2'}}
-                           type="text"/>
-                </div>
-                <div className={styles.fieldWrapper}>
-                    <input id="password"
-                           name="password"
-                           placeholder="Password"
-                           onChange={this.onChange}
-                           style={{fontSize: '16px', color: '#e2e2e2'}}
-                           type="password"
-                    />
-                </div>
+            login_form = <form onSubmit={this.handleSubmit} onChange={this.onChange} style={styles.form}>
+                <div style={styles.heading}>Enter Login Information</div>
+                <input 
+                    id="username"
+                    name="username"
+                    placeholder="Username"
+                    style={styles.input}
+                    type="text"
+                />
+                <input 
+                    id="password"
+                    name="password"
+                    placeholder="Password"
+                    onChange={this.onChange}
+                    style={styles.input}
+                    type="password"
+                />
                 {this.state.button}
             </form>
         }
@@ -120,24 +140,24 @@ export class Form extends React.Component {
     }
 }
 
-const DISABLED_BUTTON = <div className={styles.disabledButton}>
-    <FloatingActionButton name="submit"
-                          mini={false}
-                          type="submit"
-                          disabled={true}
-                          style={{marginLeft: 'auto', marginRight: 'auto'}}>
-        <NavigationArrowForward />
-    </FloatingActionButton>
-</div>
+const DISABLED_BUTTON = <FloatingActionButton 
+                            name="submit"
+                            mini={false}
+                            type="submit"
+                            disabled={true}
+                            disabledColor={'#b4b7b8'}
+                            style={{margin: '30px auto 15px auto'}}
+                        >
+                            <NavigationArrowForward />
+                        </FloatingActionButton>
 
-const ENABLED_BUTTON = <div className={styles.enabledButton}>
-    <FloatingActionButton name="submit"
+const ENABLED_BUTTON = <FloatingActionButton name="submit"
                           mini={false}
                           type="submit"
-                          style={{marginLeft: 'auto', marginRight: 'auto'}}>
+                          backgroundColor={'#55ba63'}
+                          style={{margin: '30px auto 15px auto'}}>
         <NavigationArrowForward />
     </FloatingActionButton>
-</div>
 
 function mapDispatchToProps(dispatch) {
     return {
