@@ -11,14 +11,15 @@ import InvalidDrawWarning from './InvalidDrawWarning.js';
 import DropZone from './DropZone.js';
 import {updateMode, updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled} from '../actions/exportsActions.js';
 import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../actions/drawToolBarActions.js';
+import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
+import isEqual from 'lodash/isEqual';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
 export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
-const jsts = require('jsts');
-import isEqual from 'lodash/isEqual';
 
 export class ExportAOI extends Component {
 
@@ -472,10 +473,12 @@ function serialize(extent) {
 }
 
 function isGeoJSONValid(geojson) {
-    const parser = new jsts.io.GeoJSONReader();
-    const jstsGeom = parser.read(geojson);
-    const valid = jstsGeom.features[0].geometry.isValid();
-    return valid;
+    // creates a jsts GeoJSONReader
+    const parser = new GeoJSONReader();
+    // reads in geojson geometry and returns a jsts geometry
+    const geom = parser.read(geojson.features[0].geometry);
+    // return whether the geom is valid
+    return isValidOp.isValid(geom);
 }
 
 function createGeoJSON(ol3Geometry) {

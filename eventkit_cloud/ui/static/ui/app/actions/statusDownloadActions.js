@@ -10,7 +10,7 @@ export const getDatacartDetails = (jobuid) => dispatch => {
     });
 
     return axios({
-        url: '/api/runs?job_uid='+jobuid,
+        url: '/api/runs?job_uid='+ jobuid,
         method: 'GET',
     }).then((response) => {
         

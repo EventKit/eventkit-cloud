@@ -78,34 +78,6 @@ describe('DataPackListItem component', () => {
         wrapper.setProps(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
     });
-
-    it('should change font sizes depending on the screensize', () => {
-        let props = getProps();
-        const wrapper = mount(<DataPackListItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        // default window width is 1024
-        expect(wrapper.state().deviceSize).toEqual('s');
-        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
-        window.resizeTo(500,800);
-        expect(window.innerWidth).toEqual(500);
-        const updateSpy = new sinon.spy(DataPackListItem.prototype, 'componentWillUpdate');
-        wrapper.update();
-        expect(updateSpy.called).toBe(true);
-        expect(updateSpy.calledThrice).toBe(true);
-        expect(stateSpy.calledWith({deviceSize: 'xs'})).toBe(true);
-        expect(wrapper.state().deviceSize).toEqual('xs');
-        window.resizeTo(1200, 800);
-        expect(window.innerWidth).toEqual(1200);
-        wrapper.update();
-        expect(updateSpy.callCount).toEqual(6);
-        expect(stateSpy.calledWith({deviceSize: 's'})).toBe(true);
-        expect(wrapper.state().deviceSize).toEqual('s');
-        stateSpy.restore();
-        updateSpy.restore();
-    });
-    
 });
 
 const run = {

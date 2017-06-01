@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount} from 'enzyme';
+import {shallow, mount} from 'enzyme';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
@@ -107,6 +107,56 @@ describe('DataPackGridItem component', () => {
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
         expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
+    });
+
+    it('getTitleFontSize should return the font string for title based on window width', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getTitleFontSize()).toEqual('20px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getTitleFontSize()).toEqual('21px');
+        
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getTitleFontSize()).toEqual('22px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getTitleFontSize()).toEqual('23px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getTitleFontSize()).toEqual('24px');
+    });
+
+    it('getCardTextFontSize should return the font string for cardText based on window width', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getCardTextFontSize()).toEqual('10px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getCardTextFontSize()).toEqual('11px');
+        
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getCardTextFontSize()).toEqual('12px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getCardTextFontSize()).toEqual('13px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getCardTextFontSize()).toEqual('14px');
     });
 });
 
