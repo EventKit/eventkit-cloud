@@ -14,7 +14,7 @@ from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
-from eventkit_cloud.tasks.task_factory import create_run
+from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.parsers import JSONParser
@@ -498,7 +498,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         *Returns:
             the serialized run data.
         """
+        from ..tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -518,6 +523,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
         else:
             queryset = self.get_queryset().order_by('-started_at')
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -534,6 +543,16 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         else:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
+    @staticmethod
+    def validate_licenses(queryset):
+        for run in queryset.all():
+            invalid_licenses = get_invalid_licenses(run.job)
+            if invalid_licenses:
+                raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
+                                     "Please use the user account page, or the user api to agree to the " \
+                                     "licenses prior to viewing run data.".format(run.job.user.username,
+                                                                                  invalid_licenses))
+        return True
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
