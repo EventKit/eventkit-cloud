@@ -7,43 +7,31 @@ export class DataPackViewButtons extends React.Component {
 
     constructor(props) {
         super(props);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
-        this.state = {
-            dimension: '24px'
-        }
     }
 
-    componentWillMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
+    getDimension() {
         if(window.innerWidth <= 575) {
-            this.setState({dimension: '21px'});
+            return '21px';
         }
         else if (window.innerWidth <= 767) {
-            this.setState({dimension: '22px'});
+            return '22px';
         }
         else if (window.innerWidth <= 991) {
-            this.setState({dimension: '23px'});
+            return '23px';
         }
         else if(window.innerWidth <= 1199) {
-            this.setState({dimension: '24px'});
+            return '24px';
         }
         else {
-            this.setState({dimension: '25px'});
+            return '25px';
         }
     }
 
     render() {
+        const dimension = this.getDimension();
         const styles = {
-            button: {height: '35px', width: this.state.dimension, padding: '0px', float: 'right'},
-            icon: {color: '#4498c0', height: this.state.dimension, width: this.state.dimension}
+            button: {height: '35px', width: dimension, padding: '0px', float: 'right'},
+            icon: {color: '#4498c0', height: dimension, width: dimension}
         }
 
         return (

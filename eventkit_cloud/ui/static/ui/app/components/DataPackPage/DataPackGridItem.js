@@ -22,11 +22,8 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = { 
             expanded: false,
-            titleFontSize: '24px',
-            cardTextFontSize: '14px',
         };
     }
 
@@ -34,36 +31,39 @@ export class DataPackGridItem extends Component {
         this.setState({expanded: true});
     }
 
-    componentWillMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
+    getTitleFontSize() {
         if(window.innerWidth <= 575) {
-            this.setState({titleFontSize: '20px'});
-            this.setState({cardTextFontSize: '10px'});
-            
+            return '20px';
         }
         else if (window.innerWidth <= 767) {
-            this.setState({titleFontSize: '21px'});
-            this.setState({cardTextFontSize: '11px'});
+            return '21px';
         }
         else if (window.innerWidth <= 991) {
-            this.setState({titleFontSize: '22px'});
-            this.setState({cardTextFontSize: '12px'});
+            return '22px';
         }
         else if(window.innerWidth <= 1199) {
-            this.setState({titleFontSize: '23px'});
-            this.setState({cardTextFontSize: '13px'});
+            return '23px';
         }
         else {
-            this.setState({titleFontSize: '24px'});
-            this.setState({cardTextFontSize: '14px'});
+            return '24px';
+        }
+    }
+
+    getCardTextFontSize() {
+        if(window.innerWidth <= 575) {
+            return '10px';
+        }
+        else if (window.innerWidth <= 767) {
+            return '11px';
+        }
+        else if (window.innerWidth <= 991) {
+            return '12px';
+        }
+        else if(window.innerWidth <= 1199) {
+            return '13px';
+        }
+        else {
+            return '14px';
         }
     }
 
@@ -118,6 +118,8 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
+        const cardTextFontSize = this.getCardTextFontSize();
+        const titleFontSize = this.getTitleFontSize();
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
@@ -125,14 +127,14 @@ export class DataPackGridItem extends Component {
             cardTitle:{
                 wordWrap: 'break-word',
             },
-            cardTitle2: {fontSize: this.state.titleFontSize},
-            cardSubtitle: {fontSize: this.state.cardTextFontSize},
+            cardTitle2: {fontSize: titleFontSize},
+            cardSubtitle: {fontSize: cardTextFontSize},
             completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
             errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
             runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
             unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
             publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: this.state.cardTextFontSize},
+            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
         };
 
         return (
@@ -157,17 +159,17 @@ export class DataPackGridItem extends Component {
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
                                 <MenuItem 
-                                    style={{fontSize: this.state.cardTextFontSize}}
+                                    style={{fontSize: cardTextFontSize}}
                                     primaryText={this.state.expanded ? "Hide Map" : "Show Map"}
                                     onClick={this.toggleExpanded}/>
                                 <MenuItem 
-                                    style={{fontSize: this.state.cardTextFontSize}}
+                                    style={{fontSize: cardTextFontSize}}
                                     primaryText="Go to Export Detail"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
-                                    style={{fontSize: this.state.cardTextFontSize}}
+                                    style={{fontSize: cardTextFontSize}}
                                     primaryText={'Delete Export'}
                                     onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
@@ -180,7 +182,7 @@ export class DataPackGridItem extends Component {
                         <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
-                <CardText style={{fontSize: this.state.cardTextFontSize}}>
+                <CardText style={{fontSize: cardTextFontSize}}>
                     <span>{this.props.run.job.description}</span>
                 </CardText>
                 <CardMedia expandable={true}>
