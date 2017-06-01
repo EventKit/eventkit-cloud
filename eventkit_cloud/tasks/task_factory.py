@@ -150,7 +150,7 @@ class TaskFactory:
             return False
 
 
-def create_run(job_uid):
+def create_run(job_uid, user=None):
     """
     This will create a new Run based on the provided job uid.
     :param job_uid: The UID to reference the Job model.
@@ -163,6 +163,17 @@ def create_run(job_uid):
         max_runs = settings.EXPORT_MAX_RUNS
         # get the number of existing runs for this job
         job = Job.objects.get(uid=job_uid)
+        invalid_licenses = get_invalid_licenses(job)
+        if invalid_licenses:
+            raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
+                        "Please use the user account page, or the user api to agree to the " \
+                        "licenses prior to exporting the data.".format(job.user.username, invalid_licenses))
+        if not user:
+            user=job.user
+        if job.user != user and not user.is_superuser:
+            raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
+                job.user.username, job.name
+            ))
         run_count = job.runs.count()
         if run_count > 0:
             while run_count > max_runs - 1:
@@ -170,7 +181,7 @@ def create_run(job_uid):
                 job.runs.earliest(field_name='started_at').delete()  # delete earliest
                 run_count -= 1
         # add the export run to the database
-        run = ExportRun.objects.create(job=job, user=job.user, status='SUBMITTED',
+        run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                        expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
         run.save()
         run_uid = run.uid
@@ -197,3 +208,32 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     return task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
                                  stage_dir=stage_dir, provider_slug=export_provider_task.slug,
                   export_provider_task_uid=export_provider_task_uid, job_name=job_name).set(queue=worker, routing_key=worker)
+
+
+def get_invalid_licenses(job):
+    """
+    :param user: A user to verify licenses against. 
+    :param job: The job containing the licensed datasets.
+    :return: A list of invalid licenses.
+    """
+    from ..api.serializers import UserDataSerializer
+    licenses = UserDataSerializer.get_accepted_licenses(job.user)
+    invalid_licenses = []
+    for provider_tasks in job.provider_tasks.all():
+        license = provider_tasks.provider.license
+        if license and not licenses.get(license.slug):
+            invalid_licenses += [license.name]
+    return invalid_licenses
+
+
+class Error(Exception):
+    def __init__(self, message):
+        super(Exception, self).__init__(message)
+
+class Unauthorized(Error):
+    def __init__(self, message):
+        super(Error, self).__init__('Unauthorized: {0}'.format(message))
+
+class InvalidLicense(Error):
+    def __init__(self, message):
+        super(Error, self).__init__('InvalidLicense: {0}'.format(message))

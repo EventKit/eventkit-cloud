@@ -514,14 +514,14 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         """
         raise NotImplementedError
 
-    @staticmethod
-    def validate(data, **kwargs):
+    def validate(self, data, **kwargs):
         """
         Validates the data submitted during ProviderTask creation.
 
         See api/validators.py for validation code.
         :param **kwargs:
         """
+        # selection = validators.validate_licenses(self.context['request'].data, user=self.context['request'].user)
         return data
 
 
