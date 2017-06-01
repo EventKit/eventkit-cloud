@@ -1,14 +1,16 @@
 import ol from 'openlayers';
-import * as jsts from 'jsts';
+import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
+import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../utils/mapUtils'
 
 describe('mapUtils', () => {
 
     it('convertJSTSGeometry should covert a JSTS from one SRS to another', () => {
-        const writer = new jsts.io.GeoJSONWriter();
-        const geojsonReader = new jsts.io.GeoJSONReader();
+        const writer = new GeoJSONWriter();
+        const geojsonReader = new GeoJSONReader();
         const ol3GeoJSON = new ol.format.GeoJSON();
-        var reader = new jsts.io.WKTReader();
+        var reader = new WKTReader();
         var jstsGeom = reader.read('POINT (-20 0)');
         expect(jstsGeom.getCoordinate()).toEqual({x: -20, y: 0, z: undefined});
         var newGeom = utils.transformJSTSGeometry(jstsGeom, 'EPSG:4326', 'EPSG:3857')
@@ -23,7 +25,7 @@ describe('mapUtils', () => {
     });
 
     it('bufferGeometry should covert a point to a polygon', () => {
-        const reader = new jsts.io.WKTReader();
+        const reader = new WKTReader();
         var jstsGeom = reader.read('POINT (-20 0)');
         expect(jstsGeom.getGeometryType()).toEqual("Point");
         var returnedGeom = utils.bufferGeometry(jstsGeom)
@@ -31,7 +33,7 @@ describe('mapUtils', () => {
     });
 
     it('bufferGeometry should not change a polygon', () => {
-        const reader = new jsts.io.WKTReader();
+        const reader = new WKTReader();
         var jstsGeom = reader.read('POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))');
         expect(jstsGeom.getGeometryType()).toEqual("Polygon");
         var returnedGeom = utils.bufferGeometry(jstsGeom)
