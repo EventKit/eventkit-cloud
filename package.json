@@ -90,7 +90,8 @@
       "\\.(css|less)$": "identity-obj-proxy"
     },
     "modulePathIgnorePatterns": ["staticfiles/"],
-    "setupFiles": ["./setupFile.js"]
+    "setupFiles": ["./setupFile.js"],
+    "transformIgnorePatterns": ["/node_modules/(?!jsts)"]
   },
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",
