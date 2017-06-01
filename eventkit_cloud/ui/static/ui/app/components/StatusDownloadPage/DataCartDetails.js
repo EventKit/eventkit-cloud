@@ -4,7 +4,6 @@ import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
-import styles from '../../styles/StatusDownload.css'
 import moment from 'moment'
 
 export class DataCartDetails extends React.Component {
@@ -134,26 +133,25 @@ export class DataCartDetails extends React.Component {
     };
 
     render() {
-    let localStyles = {
-    tdData: {
-            padding: '10px',
-            height: '35px',
-            fontSize: '16px',
-            backgroundColor: this.state.statusBackgroundColor,
-            color: this.state.statusFontColor,
-        },
-    }
+        const styles = {
+            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold'},
+            tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396'},
+            subHeading: {fontSize: '16px', alignContent: 'flex-start', color: 'black', paddingBottom: '10px', paddingTop: '30px', fontWeight: 'bold'}
+        }
+
         const deleteActions = [
             <RaisedButton
                 style={{margin: '10px'}}
-                className={styles.cancelButton}
+                labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
                 label="Cancel"
                 primary={false}
                 onTouchTap={this.handleDeleteClose.bind(this)}
             />,<RaisedButton
                 style={{margin: '10px'}}
-                className={styles.deleteButton}
+                labelStyle={{color: 'red', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: 'whitesmoke'}}                
                 disableTouchRipple={true}
                 label="Delete"
                 primary={true}
@@ -163,7 +161,8 @@ export class DataCartDetails extends React.Component {
         const rerunExportActions = [
             <RaisedButton
                 style={{margin: '10px'}}
-                className={styles.cancelButton}
+                labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
                 label="Cancel"
                 primary={false}
@@ -171,6 +170,7 @@ export class DataCartDetails extends React.Component {
             />,
             <RaisedButton
                 style={{margin: '10px'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Rerun"
                 primary={true}
                 onTouchTap={this.handleRerun.bind(this)}
@@ -179,7 +179,8 @@ export class DataCartDetails extends React.Component {
         const cloneExportActions = [
             <RaisedButton
                 style={{margin: '10px'}}
-                className={styles.cancelButton}
+                labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
                 label="Cancel"
                 primary={false}
@@ -187,6 +188,7 @@ export class DataCartDetails extends React.Component {
             />,
             <RaisedButton
                 style={{margin: '10px'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Clone"
                 primary={true}
                 onTouchTap={this.handleClone.bind(this)}
@@ -195,24 +197,27 @@ export class DataCartDetails extends React.Component {
         return (
         <div>
             <div>
-                <table><tbody>
-                <tr>
-                    <td className={styles.tdHeading} style={{width:'15%'}}>Name</td>
-                    <td className={styles.tdData} style={{width:'85%'}}>{this.props.cartDetails.job.name}</td>
-                </tr>
-                <tr>
-                    <td className={styles.tdHeadingStatus} style={{width:'15%', backgroundColor: this.state.statusBackgroundColor}}>Status</td>
-                    <td className={localStyles.tdData} style={{fontWeight: 'bold', padding: '10px', width:'85%', backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor}}>{this.props.cartDetails.status}</td>
-                </tr>
-                </tbody>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style={{...styles.tdHeader, width: '15%'}}>Name</td>
+                            <td style={styles.tdData}>{this.props.cartDetails.job.name}</td>
+                        </tr>
+                        <tr>
+                            <td style={{...styles.tdHeader, backgroundColor: this.state.statusBackgroundColor, width: '15%'}}>Status</td>
+                            <td style={{...styles.tdData, backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor}}>
+                                {this.props.cartDetails.status}
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
             <div style={{paddingBottom:'10px'}}>
-            <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks} />
+                <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks} />
             </div>
             <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
-                <div className={styles.subHeading}>
+                <div style={styles.subHeading}>
                     Other Options
                 </div>
                 <div>
@@ -279,67 +284,73 @@ export class DataCartDetails extends React.Component {
             </div>
             <div style={{width:'100%', paddingTop:'10px',paddingBottom:'20px'}}>
 
-                    <div className={styles.subHeading}>
+                    <div style={styles.subHeading}>
                         General Information
                     </div>
-                    <table><tbody>
-                    <tr>
-                        <td className={styles.tdHeading} style={{width:'30%'}}>Description</td>
-                        <td className={styles.tdData}  style={{width:'70%'}}>{this.props.cartDetails.job.description}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Project/Category</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.job.event}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Published</td>
-                        <td className={styles.tdData}>{this.props.cartDetails.job.published.toString()}</td>
-                    </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>Layer Data</td>
-                        <td className={styles.tdData}>{
-                            this.props.cartDetails.provider_tasks.map((provider) => {
-                                    return <p key={provider.name}>{provider.name}</p>
-                            })}
-                        </td>
-                     </tr>
-                    <tr>
-                        <td className={styles.tdHeading}>File Formats</td>
-                        <td className={styles.tdData}>.gpkg</td>
-                    </tr>
-                    </tbody>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td style={styles.tdHeader}>Description</td>
+                                <td style={styles.tdData}>{this.props.cartDetails.job.description}</td>
+                            </tr>
+                            <tr>
+                                <td style={styles.tdHeader}>Project/Category</td>
+                                <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
+                            </tr>
+                            <tr>
+                                <td style={styles.tdHeader}>Published</td>
+                                <td style={styles.tdData}>{this.props.cartDetails.job.published.toString()}</td>
+                            </tr>
+                            <tr>
+                                <td style={styles.tdHeader}>Layer Data</td>
+                                <td style={styles.tdData}>{
+                                    this.props.cartDetails.provider_tasks.map((provider) => {
+                                            return <p key={provider.name}>{provider.name}</p>
+                                    })}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={styles.tdHeader}>File Formats</td>
+                                <td style={styles.tdData}>.gpkg</td>
+                            </tr>
+                            <tr>
+                                <td style={styles.tdHeader}>Projection</td>
+                                <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
 
 
             <div style={{width:'100%', float:'left', paddingBottom:'30px'}}>
-                <div className={styles.subHeading}>
+                <div style={styles.subHeading}>
                         Selected Area of Interest (AOI)
                 </div>
                 <div id="summaryMap" style={{maxHeight: '400px'}}></div>
             </div>
             <div style={{width:'100%', paddingTop:'30px'}}>
-                <div className={styles.subHeading}>
+                <div style={styles.subHeading}>
                     Export Information
                 </div>
-                <table><tbody>
-                <tr>
-                    <td className={styles.tdHeading} style={{width:'30%'}}>Run By</td>
-                    <td className={styles.tdData} style={{width:'70%'}}>{this.props.cartDetails.user}</td>
-                </tr>
-                <tr>
-                    <td className={styles.tdHeading}>Run Id</td>
-                    <td className={styles.tdData}>{this.props.cartDetails.uid}</td>
-                </tr>
-                <tr>
-                    <td className={styles.tdHeading}>Started</td>
-                    <td className={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                </tr>
-                <tr>
-                    <td className={styles.tdHeading}>Finished</td>
-                    <td className={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                </tr>
-                </tbody>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td style={styles.tdHeader}>Run By</td>
+                            <td style={styles.tdData}>{this.props.cartDetails.user}</td>
+                        </tr>
+                        <tr>
+                            <td style={styles.tdHeader}>Run Id</td>
+                            <td style={styles.tdData}>{this.props.cartDetails.uid}</td>
+                        </tr>
+                        <tr>
+                            <td style={styles.tdHeader}>Started</td>
+                            <td style={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                        </tr>
+                        <tr>
+                            <td style={styles.tdHeader}>Finished</td>
+                            <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
