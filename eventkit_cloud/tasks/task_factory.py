@@ -168,6 +168,8 @@ def create_run(job_uid, user=None):
             raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
                         "Please use the user account page, or the user api to agree to the " \
                         "licenses prior to exporting the data.".format(job.user.username, invalid_licenses))
+        if not user:
+            user=job.user
         if job.user != user and not user.is_superuser:
             raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                 job.user.username, job.name
@@ -179,8 +181,6 @@ def create_run(job_uid, user=None):
                 job.runs.earliest(field_name='started_at').delete()  # delete earliest
                 run_count -= 1
         # add the export run to the database
-        if not user:
-            user = job.user
         run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                        expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
         run.save()
@@ -221,7 +221,7 @@ def get_invalid_licenses(job):
     invalid_licenses = []
     for provider_tasks in job.provider_tasks.all():
         license = provider_tasks.provider.license
-        if not licenses.get(license.slug):
+        if license and not licenses.get(license.slug):
             invalid_licenses += [license.name]
     return invalid_licenses
 

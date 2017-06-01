@@ -36,6 +36,7 @@ class TestExportTaskFactory(TestCase):
         self.license = License.objects.create(slug='odbl-test', name='test_osm_license')
         provider.license = self.license
         provider.save()
+        UserLicense.objects.create(license=self.license, user=self.user)
         provider_task = ProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
         self.region = Region.objects.get(name='Africa')
@@ -85,14 +86,16 @@ class TestExportTaskFactory(TestCase):
             self.assertIsNone(run)
 
     def test_get_invalid_licenses(self):
+        # The license should not be returned if the user has agreed to it.
+        expected_invalid_licenses = []
+        invalid_licenses = get_invalid_licenses(self.job)
+        self.assertEquals(invalid_licenses, expected_invalid_licenses)
+
         # A license should be returned if the user has not agreed to it.
+        UserLicense.objects.get(license=self.license, user=self.user).delete()
         expected_invalid_licenses = [self.license.name]
         invalid_licenses = get_invalid_licenses(self.job)
         self.assertEquals(invalid_licenses, expected_invalid_licenses)
 
-        # The license should not be returned if the user has not agreed to it.
-        expected_invalid_licenses = []
-        user_license = UserLicense.objects.create(license=self.license, user=self.user)
-        invalid_licenses = get_invalid_licenses(self.job)
-        self.assertEquals(invalid_licenses, expected_invalid_licenses)
-        user_license.delete()
+        UserLicense.objects.create(license=self.license, user=self.user)
+

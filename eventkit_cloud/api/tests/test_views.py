@@ -229,7 +229,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -270,7 +270,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
@@ -309,7 +309,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
