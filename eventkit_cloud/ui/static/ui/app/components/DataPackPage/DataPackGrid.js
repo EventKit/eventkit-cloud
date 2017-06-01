@@ -7,30 +7,19 @@ import DataPackGridItem from './DataPackGridItem';
 export class DataPackGrid extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            cols: this.getColumns(window.innerWidth)
-        }
     }
 
-    componentWillUpdate() {
-        const cols = this.getColumns(window.innerWidth);
-        if(cols != this.state.cols) {
-            this.setState({cols: cols});
-        }
-    }
-
-    getColumns(screenWidth) {
-        if(screenWidth < 768) {
+    getColumns() {
+        if(window.innerWidth <= 800) {
             return 2;
         }
-        else if(screenWidth >= 1200) {
+        else if(window.innerWidth > 1200) {
             return 4;
         }
         else {
             return 3;
         }
     }
-
 
     render() {
         const styles = {
@@ -55,8 +44,8 @@ export class DataPackGrid extends Component {
                 <GridList
                     cellHeight={'auto'}
                     style={styles.gridList}
-                    cols={this.state.cols}
                     padding={window.innerWidth >= 768 ? 7: 2}
+                    cols={this.getColumns()}
                 >
                     {this.props.runs.map((run) => (
                         <DataPackGridItem 

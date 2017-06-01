@@ -16,40 +16,13 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
-        this.state = { 
-            deviceSize: window.innerWidth < 576 ? 'xs' : 's',
-        };
-    }
-
-    componentWillUpdate() {
-        if(window.innerWidth < 576) {
-            if(this.state.deviceSize != 'xs') {
-                this.setState({
-                    deviceSize: 'xs',
-                });
-            }            
-        }
-        else {
-            if(this.state.deviceSize != 's') {
-                this.setState({
-                    deviceSize: 's',
-                });
-            }
-        }
     }
 
     render() {
-        let titleFontSize, subtitleFontSize, subtitleHeight;
-        if(this.state.deviceSize == 'xs') {
-            titleFontSize = '19px';
-            subtitleFontSize ='10px';
-            subtitleHeight = '16px';
-        }
-        else if(this.state.deviceSize == 's') {
-            titleFontSize = '23px';
-            subtitleFontSize = '14px';
-            subtitleHeight = '20px';
-        }
+        const width = window.innerWidth;
+        const titleFontSize = width < 576 ? '19px' : '23px';
+        const subtitleFontSize = width < 576 ? '10px': '14px';
+        const subtitleHeight = width < 576 ? '16px': '20px';
 
         const styles = {
             card: {

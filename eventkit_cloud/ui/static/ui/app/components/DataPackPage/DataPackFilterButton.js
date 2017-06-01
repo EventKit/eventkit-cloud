@@ -7,29 +7,19 @@ export class DataPackFilterButton extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            labelFontSize: this.getLabelFontSize(window.innerWidth)
-        }
-    }
-    
-    componentWillUpdate() {
-        const fontSize = this.getLabelFontSize(window.innerWidth);
-        if(fontSize !== this.state.labelFontSize) {
-            this.setState({labelFontSize: fontSize});
-        }
     }
 
-    getLabelFontSize(screenSize) {
-        if(screenSize <= 575) {
+    getLabelFontSize() {
+        if(window.innerWidth <= 575) {
             return '12px';
         }
-        else if (screenSize <= 767) {
+        else if (window.innerWidth <= 767) {
             return '13px';
         }
-        else if (screenSize <= 991) {
+        else if (window.innerWidth <= 991) {
             return '14px';
         }
-        else if(screenSize <= 1199) {
+        else if(window.innerWidth <= 1199) {
             return '15px';
         }
         else {
@@ -50,7 +40,7 @@ export class DataPackFilterButton extends React.Component {
                 color: '#4498c0', 
                 textTransform: 'none', 
                 padding: '0px',
-                fontSize: this.state.labelFontSize,
+                fontSize: this.getLabelFontSize(),
             },
             icon: {
                 fill: '#4498c0',
