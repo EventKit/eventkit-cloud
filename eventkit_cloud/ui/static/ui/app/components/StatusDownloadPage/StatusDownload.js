@@ -3,6 +3,7 @@ import {connect} from 'react-redux';
 import {browserHistory} from 'react-router';
 import '../tap_events'
 import Paper from 'material-ui/Paper'
+import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails'
 import cssStyles from '../../styles/StatusDownload.css'
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo} from '../../actions/statusDownloadActions'
@@ -17,6 +18,7 @@ export class StatusDownload extends React.Component {
         this.handleResize = this.handleResize.bind(this);
         this.state = {
             datacartDetails: [],
+            isLoading: true,
         }
     }
 
@@ -45,6 +47,10 @@ export class StatusDownload extends React.Component {
                     setTimeout(() => {
                         this.props.getDatacartDetails(this.props.params.jobuid);
                     }, 270000);
+                }
+
+                if(this.state.isLoading) {
+                    this.setState({isLoading: false});
                 }
             }
         }
@@ -96,11 +102,29 @@ export class StatusDownload extends React.Component {
         return (
 
             <div style={styles.root}>
+                {this.props.runDeletion.deleting ? 
+                    <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%', display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
+                        <CircularProgress 
+                            style={{margin: 'auto', display: 'block'}} 
+                            color={'#4598bf'}
+                            size={50}
+                        />
+                    </div>
+                : 
+                    null 
+                }
                 <CustomScrollbar style={{height: window.innerHeight - 95, width: '100%'}}>
                     <div style={styles.content}>
                         <form>
                             <Paper style={{padding: '20px'}} zDepth={2} >
                                 <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
+                                {this.state.isLoading ? 
+                                    <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
+                                    <CircularProgress color={'#4598bf'} size={50} style={{margin: '30px auto', display: 'block'}}/>
+                                    </div>
+                                :
+                                null
+                                }
                                 {this.state.datacartDetails.map((cartDetails) => (
                                     <DataCartDetails key={cartDetails.uid}
                                                      cartDetails={cartDetails}

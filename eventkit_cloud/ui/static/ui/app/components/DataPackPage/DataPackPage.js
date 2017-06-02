@@ -338,6 +338,19 @@ export class DataPackPage extends React.Component {
                             />
                         </CustomScrollbar>
                     </Drawer>
+
+                    {this.props.runsDeletion.deleting ? 
+                        <div style={{zIndex: 10, position: 'absolute', width: '100%', height: window.innerHeight - 236, display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
+                            <CircularProgress 
+                                style={{margin: 'auto', display: 'block'}} 
+                                color={'#4598bf'}
+                                size={50}
+                            />
+                        </div>
+                    : 
+                        null 
+                    }
+
                     {this.state.showLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                             <CircularProgress 
@@ -348,13 +361,13 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
-                            {this.state.grid ? 
+                            {this.state.grid ?
                                 <DataPackGrid 
                                     runs={this.state.displayedRuns} 
                                     user={this.props.user} 
                                     onRunDelete={this.props.deleteRuns}
                                 />
-                            : 
+                            :
                                 <DataPackList
                                     runs={this.state.displayedRuns}
                                     user={this.props.user}

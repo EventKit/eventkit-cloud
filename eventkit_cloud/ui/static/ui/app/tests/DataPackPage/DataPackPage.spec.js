@@ -87,11 +87,31 @@ describe('DataPackPage component', () => {
             }
         });
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
+        expect(stateSpy.calledWith({showLoading: false})).toBe(true);
         expect(wrapper.find(DataPackGrid)).toHaveLength(1);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        stateSpy.restore();
+    });
+
+    it('should show a progress circle when deleting a datapack', () => {
+        const props = getProps();
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            }
+        });
+        let nextProps = getProps();
+        nextProps.runsList.fetched = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        nextProps.runsDeletion.deleting = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
     it('should call getRuns when mounting', () => {
