@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import json
 import logging
 import os
@@ -14,14 +15,15 @@ from rest_framework.test import APITestCase
 from django.utils.translation import ugettext as _
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.core.files import File
 from django.core import serializers
-from eventkit_cloud.api.pagination import LinkHeaderPagination
-from eventkit_cloud.api.views import get_models, get_provider_task
-from eventkit_cloud.jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License, UserLicense
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from ..pagination import LinkHeaderPagination
+from ..views import get_models, get_provider_task, ExportRunViewSet
+from ...tasks.task_factory import InvalidLicense
+from ...jobs.models import ExportFormat, Job, ExportProvider, \
+    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License
+from ...tasks.models import ExportRun, ExportTask, ExportProviderTask
 from mock import patch, Mock
+
 
 
 logger = logging.getLogger(__name__)
@@ -229,7 +231,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -249,7 +251,7 @@ class TestJobViewSet(APITestCase):
         # check we have the correct tags
         job = Job.objects.get(uid=job_uid)
         self.assertIsNotNone(job.preset.json_tags)
-        self.assertEqual(256, len(job.preset.json_tags))
+        self.assertEqual(259, len(job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -270,7 +272,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
@@ -286,7 +288,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
-        self.assertEqual(256, len(self.job.preset.json_tags))
+        self.assertEqual(259, len(self.job.preset.json_tags))
 
     @patch('eventkit_cloud.api.views.pick_up_run_task')
     @patch('eventkit_cloud.api.views.create_run')
@@ -309,7 +311,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
         # test that the mock methods get called.
-        create_run_mock.assert_called_once_with(job_uid=job_uid)
+        create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
 
         # test the response headers
@@ -594,6 +596,32 @@ class TestExportRunViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(self.run_uid, result[0].get('uid'))
 
+    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
+    def test_retrieve_run_invalid_license(self, mock_validate_licenses):
+        expected = '/api/runs/{0}'.format(self.run_uid)
+        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        result = response.data
+        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertEquals(response.status_code, 400)
+
+    @patch('eventkit_cloud.api.views.get_invalid_licenses')
+    def test_validate_licenses(self, mock_invalid_licenses):
+        queryset = Mock()
+        run = Mock(job=Mock(user=Mock(username='username')))
+        queryset.all.return_value = [run]
+        mock_invalid_licenses.return_value = ['license']
+        with self.assertRaises(InvalidLicense):
+            ExportRunViewSet.validate_licenses(queryset)
+
+        mock_invalid_licenses.return_value = []
+        self.assertTrue(ExportRunViewSet.validate_licenses(queryset))
+
+
+
     def test_retrieve_run_no_permissions(self,):
         user = User.objects.create_user(
             username='other_user', email='other_user@demo.com', password='demo'
@@ -629,6 +657,19 @@ class TestExportRunViewSet(APITestCase):
         # make sure we get the correct uid back out
         self.assertEquals(1, len(result))
         self.assertEquals(self.run_uid, result[0].get('uid'))
+
+    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
+    def test_list_runs_invalid_license(self, mock_validate_licenses):
+        from ...tasks.task_factory import InvalidLicense
+        expected = '/api/runs'
+        url = reverse('api:runs-list')
+        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        result = response.data
+        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertEquals(response.status_code, 400)
 
     def test_list_runs_no_permissions(self,):
         user = User.objects.create_user(
