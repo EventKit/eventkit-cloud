@@ -75,6 +75,8 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
+
+    'audit_logging',
 )
 
 DATABASES = {}
@@ -144,6 +146,11 @@ AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 
+AUDIT_MODELS = [
+    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
+    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+]
 
 
 LOGGING = {
@@ -165,6 +172,11 @@ LOGGING = {
             'propagate': True,
             'level': os.getenv('LOG_LEVEL', 'INFO'),
         },
+        'audit_logging': {
+            'handlers': ['console', ],
+            'propagate': True,
+            'level': os.getenv('LOG_LEVEL', 'INFO'),
+        }
     },
 }
 
