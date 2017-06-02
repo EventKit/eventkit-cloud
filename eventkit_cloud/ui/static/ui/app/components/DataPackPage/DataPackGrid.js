@@ -44,8 +44,8 @@ export class DataPackGrid extends Component {
                 <GridList
                     cellHeight={'auto'}
                     style={styles.gridList}
+                    padding={window.innerWidth >= 768 ? 7: 2}
                     cols={this.getColumns()}
-                    padding={1}
                 >
                     {this.props.runs.map((run) => (
                         <DataPackGridItem 
