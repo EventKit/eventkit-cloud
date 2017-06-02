@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
+from os.path import exists
 import os
 import sqlite3
 import subprocess
@@ -29,7 +30,7 @@ class OSMParser(object):
         """
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.osm = osm
-        if not os.path.exists(self.osm):
+        if not exists(self.osm):
             raise IOError('Cannot find PBF data for this task.')
         self.gpkg = gpkg
         self.debug = debug
@@ -56,7 +57,7 @@ class OSMParser(object):
         self.srs = osr.SpatialReference()
         self.srs.ImportFromEPSG(4326)  # configurable
 
-    def create_geopackage(self, ):
+    def create_geopackage(self,):
         """
         Create the spatialite file from the osm data.
         """
@@ -73,12 +74,12 @@ class OSMParser(object):
         if (self.debug):
             print 'ogr2ogr returned: %s' % task_process.exitcode
 
-    def create_default_schema_gpkg(self, ):
+    def create_default_schema_gpkg(self,):
         """
         Create the default osm gpkg schema
         Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
         """
-        assert os.path.exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
+        assert exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
         try:
             conn = sqlite3.connect(self.gpkg)
             cur = conn.cursor()
@@ -86,7 +87,7 @@ class OSMParser(object):
             cur.executescript(sql)
             conn.commit()
         except Exception as e:
-            print(e)
+            logger.error('Problem creating default schema: {}'.format(e))
             raise
         finally:
             cur.close()
@@ -108,11 +109,11 @@ class OSMParser(object):
         if self.debug:
             print 'spatialite returned: %s' % task_process.exitcode
 
-    def update_zindexes(self, ):
+    def update_zindexes(self,):
         """
         Update the zindexes on sqlite layers.
         """
-        assert os.path.exists(self.gpkg), "No geopackage file. Run 'create_geopackage()' method first."
+        assert exists(self.gpkg), "No geopackage file. Run 'create_geopackage()' method first."
         ds = ogr.Open(self.gpkg, update=True)
         zindexes = {
             3: ('path', 'track', 'footway', 'minor', 'road', 'service', 'unclassified', 'residential'),
