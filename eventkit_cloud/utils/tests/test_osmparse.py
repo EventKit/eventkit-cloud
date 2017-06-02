@@ -19,7 +19,7 @@ class TestOSMParser(TestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('os.path.exists')
+    @patch('eventkit_cloud.utils.osmparse.exists')
     def test_create_spatialite(self, exists):
         ogr_cmd = """
             ogr2ogr -f GPKG /path/to/query.gpkg /path/to/query.pbf \
@@ -40,7 +40,7 @@ class TestOSMParser(TestCase):
             parser.create_geopackage()
 
     @patch('eventkit_cloud.utils.osmparse.sqlite3')
-    @patch('os.path.exists')
+    @patch('eventkit_cloud.utils.osmparse.exists')
     def test_create_default_schema(self, exists, sqlite):
         sql_cmd = "spatialite /path/to/query.gpkg < {0}".format(self.path + '/sql/spatial_index.sql')
         sqlite.connect.return_value = Mock()
@@ -54,7 +54,7 @@ class TestOSMParser(TestCase):
                                 stdout=-1, stderr=-1)
 
     @patch('eventkit_cloud.utils.osmparse.ogr.Open')
-    @patch('os.path.exists')
+    @patch('eventkit_cloud.utils.osmparse.exists')
     def test_update_zindexes(self, exists, ogr_open):
         exists.return_value = True
         ogr_ds = MagicMock()
