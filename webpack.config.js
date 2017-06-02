@@ -45,9 +45,13 @@ var config = {
                 loader: 'css-loader?modules=true,localIdentName=[name]__[local]___[hash:base64:5]',
             },
             {
-                test: /\.(woff2?|ttf|eot|svg|png|jpg|gif)$/,
+                test: /\.(woff2?|ttf|eot)$/,
                 loader: 'url-loader?limit=100000,name=fonts/[hash].[ext]',
             },
+            {
+                test: /\.(svg|png|jpg|gif)$/,
+                loader: 'url-loader?limit=100000,name=images/[hash].[ext]',
+            }
         ],
     },
     plugins: plugins,
