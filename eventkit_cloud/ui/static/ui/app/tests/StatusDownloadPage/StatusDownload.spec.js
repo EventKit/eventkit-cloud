@@ -356,12 +356,13 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(3);
-        expect(setTimeout.mock.calls[0][1]).toBe(0);
+        expect(setTimeout.mock.calls.length).toBe(6);
+        console.log(setTimeout.mock.calls);
+        expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
         clearSpy.restore();
