@@ -41,46 +41,35 @@ describe('DataPackFilterButton component', () => {
         expect(props.handleToggle.calledOnce).toBe(true);
     });
 
-    it('it should change fontSize when screensize updates', () => {
-        let props = getProps();
-        const wrapper = mount(<DataPackFilterButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        expect(window.innerWidth).toEqual(1024);
-        const updateSpy = new sinon.spy(DataPackFilterButton.prototype, 'componentWillUpdate');
-        const stateSpy = new sinon.spy(DataPackFilterButton.prototype, 'setState');
-        window.resizeTo(922, 800);
-        expect(window.innerWidth).toEqual(922);
-        wrapper.update();
-        expect(updateSpy.calledThrice).toBe(true);
-        expect(stateSpy.calledWith({labelFontSize: '14px'}));
-        expect(wrapper.state().labelFontSize).toEqual('14px');
-        window.resizeTo(430, 600);
-        expect(window.innerWidth).toEqual(430);
-        wrapper.update();
-        expect(updateSpy.callCount).toEqual(6);
-        expect(stateSpy.calledWith({labelFontSize: '12px'}));
-        expect(wrapper.state().labelFontSize).toEqual('12px');
-        updateSpy.restore();
-        stateSpy.restore();
-    });
-
     it('getLableFontSize should return font sizes from 12 to 16 depending on screenSize', () => {
         let props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        let size = wrapper.instance().getLabelFontSize(400);
+        window.resizeTo(400, 500);
+        expect(window.innerWidth).toEqual(400);
+        let size = wrapper.instance().getLabelFontSize();
         expect(size).toEqual('12px');
-        size = wrapper.instance().getLabelFontSize(700);
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        size = wrapper.instance().getLabelFontSize();
         expect(size).toEqual('13px');
-        size = wrapper.instance().getLabelFontSize(900);
+
+        window.resizeTo(900, 1000);
+        expect(window.innerWidth).toEqual(900);
+        size = wrapper.instance().getLabelFontSize();
         expect(size).toEqual('14px');
-        size = wrapper.instance().getLabelFontSize(1100);
+
+        window.resizeTo(1100, 1200);
+        expect(window.innerWidth).toEqual(1100);
+        size = wrapper.instance().getLabelFontSize();
         expect(size).toEqual('15px');
-        size = wrapper.instance().getLabelFontSize(1300);
+
+        window.resizeTo(1300, 1400);
+        expect(window.innerWidth).toEqual(1300);
+        size = wrapper.instance().getLabelFontSize();
         expect(size).toEqual('16px');
     });
 });

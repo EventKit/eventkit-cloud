@@ -92,5 +92,55 @@ describe('DataPackOwnerSort component', () => {
         );
         expect(menu.state().open).toEqual(false);
         expect(props.handleChange.calledWith(event, 2, 'My DataPacks')).toEqual(true);
-    })
+    });
+
+    it('getLabelFontSize should return the font string based on window width', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackOwnerSort {...props}/>);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getLabelFontSize()).toEqual('12px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getLabelFontSize()).toEqual('13px');
+
+        window.resizeTo(900, 1000);
+        expect(window.innerWidth).toEqual(900);
+        expect(wrapper.instance().getLabelFontSize()).toEqual('14px');
+
+        window.resizeTo(1000, 1100);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getLabelFontSize()).toEqual('15px');
+
+        window.resizeTo(1200, 1300);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getLabelFontSize()).toEqual('16px');
+    });
+
+    it('getItemFontSize should return the font string based on window width', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackOwnerSort {...props}/>);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getItemFontSize()).toEqual('10px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getItemFontSize()).toEqual('11px');
+
+        window.resizeTo(900, 1000);
+        expect(window.innerWidth).toEqual(900);
+        expect(wrapper.instance().getItemFontSize()).toEqual('12px');
+
+        window.resizeTo(1000, 1100);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getItemFontSize()).toEqual('13px');
+
+        window.resizeTo(1200, 1300);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getItemFontSize()).toEqual('14px');
+    });
 });

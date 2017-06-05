@@ -41,12 +41,26 @@ export class StatusDownload extends React.Component {
                 let datacartDetails = nextProps.datacartDetails.data;
                 this.setState({datacartDetails: datacartDetails});
 
+                //If the status of the job is completed, check the provider tasks to ensure they are all completed as well
+                //If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+                // means that at least one task is not completed, so do not stop the timer
                 if (datacartDetails[0].status == "COMPLETED") {
-                    TimerMixin.clearInterval(this.timer);
-                    
-                    setTimeout(() => {
-                        this.props.getDatacartDetails(this.props.params.jobuid);
-                    }, 270000);
+                    let providerTasks = datacartDetails[0].provider_tasks;
+                    let clearTimer = 0;
+                     providerTasks.forEach((tasks) => {
+                        tasks.tasks.forEach((task) => {
+                            if((task.status != 'SUCCESS') && (task.status != 'CANCELED') && (task.status != 'FAILED')){
+                                clearTimer++
+                            }
+                        });
+                    });
+
+                    if (clearTimer == 0 ){
+                        TimerMixin.clearInterval(this.timer);
+                        setTimeout(() => {
+                            this.props.getDatacartDetails(this.props.params.jobuid);
+                        }, 270000);
+                    }
                 }
 
                 if(this.state.isLoading) {

@@ -14,7 +14,7 @@ from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
-from eventkit_cloud.tasks.task_factory import create_run
+from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route
 from rest_framework.parsers import JSONParser
@@ -264,6 +264,7 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
+        from ..tasks.task_factory import InvalidLicense, Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -289,7 +290,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         job = serializer.save()
                         provider_serializer = ProviderTaskSerializer(
                             data=provider_tasks,
-                            many=True
+                            many=True,
+                            context = {'request': request}
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
@@ -332,7 +334,14 @@ class JobViewSet(viewsets.ModelViewSet):
             # run the tasks
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
-            run_uid = create_run(job_uid=job_uid)
+            try:
+                # run needs to be created so that the UI can be updated with the task list.
+                run_uid = create_run(job_uid=job_uid, user=request.user)
+            except InvalidLicense as il:
+                return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+                # Run is passed to celery to start the tasks.
+            except Unauthorized as ua:
+                return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
 
             running = JobSerializer(job, context={'request': request})
             # Run is passed to celery to start the tasks.
@@ -356,12 +365,17 @@ class JobViewSet(viewsets.ModelViewSet):
         *Returns:*
             - the serialized run data.
         """
-        # run needs to be created so that the UI can be updated with the task list.
-        run_uid = create_run(job_uid=uid)
+        from ..tasks.task_factory import InvalidLicense, Unauthorized
+
+        try:
+            # run needs to be created so that the UI can be updated with the task list.
+            run_uid = create_run(job_uid=uid, user=request.user)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
+        except Unauthorized as ua:
+            return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
-        if run.user != request.user and not request.user.is_superuser:
-            return Response([{'detail': _('Unauthorized.')}], status.HTTP_403_FORBIDDEN)
         if run:
             pick_up_run_task.delay(run_uid=run_uid)
             running = ExportRunSerializer(run, context={'request': request})
@@ -484,7 +498,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         *Returns:
             the serialized run data.
         """
+        from ..tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -504,6 +523,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
         else:
             queryset = self.get_queryset().order_by('-started_at')
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -520,6 +543,16 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         else:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
+    @staticmethod
+    def validate_licenses(queryset):
+        for run in queryset.all():
+            invalid_licenses = get_invalid_licenses(run.job)
+            if invalid_licenses:
+                raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
+                                     "Please use the user account page, or the user api to agree to the " \
+                                     "licenses prior to viewing run data.".format(run.job.user.username,
+                                                                                  invalid_licenses))
+        return True
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """

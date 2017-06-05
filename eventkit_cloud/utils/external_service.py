@@ -274,4 +274,4 @@ def check_zoom_levels(gpkg, mapproxy_configuration):
 INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, matrix_height, tile_width, tile_height, pixel_x_size, pixel_y_size) 
 VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (table_name, actual_zoom_level, grid_sizes[0], grid_sizes[1], tile_size[0], tile_size[1], res, res))
     except Exception as e:
-        print(e)
+        logger.error('Problem in check_zoom_levels: {}'.format(e))
