@@ -25,7 +25,8 @@ export class Form extends React.Component {
             password: '',
             button: DISABLED_BUTTON,
             login_form: false,
-            oauth_name: ""
+            oauth_name: "",
+            disclaimer: "",
         };
     }
 
@@ -78,7 +79,7 @@ export class Form extends React.Component {
             form: {
                 verticalAlign: 'center',
                 margin: '0 auto',
-                width: '70%',
+                maxWidth: 300,
             },
             heading: {
                 width: '100%',
@@ -94,7 +95,7 @@ export class Form extends React.Component {
                 height: '45px',
                 color: '#e2e2e2',
                 margin: '15px auto 0px auto',
-                padding: '10px'
+                padding: '10px',
             }
         }
         let login_form = ''
