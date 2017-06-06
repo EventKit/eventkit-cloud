@@ -242,7 +242,6 @@ export class DataCartDetails extends React.Component {
                     </Dialog>
                     <RaisedButton
                         style={{margin: '10px'}}
-                        disabled={this.state.status == "SUBMITTED"}
                         backgroundColor={'rgba(226,226,226,0.5)'}
                         disableTouchRipple={true}
                         labelColor={'#4598bf'}
