@@ -75,8 +75,8 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
-
-    'audit_logging',
+    #disabled
+    #'audit_logging',
 )
 
 DATABASES = {}
