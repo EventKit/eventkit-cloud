@@ -97,7 +97,7 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
-                backgroundImage: 'url("../../images/ek_topo_pattern.png")',
+                backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')',
                 backgroundRepeat: 'repeat repeat'
             },
             content: {
