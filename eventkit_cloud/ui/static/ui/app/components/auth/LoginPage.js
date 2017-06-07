@@ -1,6 +1,5 @@
 import React from 'react'
 import LoginForm from '../../containers/loginContainer'
-import styles from './Login.css'
 import Paper from 'material-ui/Paper'
 
 class LoginPage extends React.Component {
@@ -22,10 +21,33 @@ class LoginPage extends React.Component {
     }
 
     render() {
+        const styles = {
+            wholeDiv: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'black',
+                marginBottom: '0px',
+            },
+            root: {
+                justifyContent: 'space-around',
+                display: 'flex',
+                flexWrap: 'wrap',
+                height: window.innerHeight - 95,
+            },
+            paper: {
+                backgroundImage: "url('../../../images/topoBackground.jpg')",
+                backgroundRepeat: 'repeat repeat',
+                margin:  'auto',
+                padding: '60px',
+                width: '100%',
+                maxWidth: '500px',
+            }
+        }
+
         return (
-               <div className={styles.wholeDiv}>
-                <div className={styles.root} style={{height: window.innerHeight - 95}}>
-                    <Paper className={styles.paper} zDepth={2} rounded>
+               <div style={styles.wholeDiv}>
+                <div style={styles.root}>
+                    <Paper style={styles.paper} zDepth={2}>
                         <LoginForm/>
                     </Paper>
                 </div>

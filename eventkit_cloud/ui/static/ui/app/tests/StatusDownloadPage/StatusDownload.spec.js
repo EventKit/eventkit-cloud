@@ -4,6 +4,7 @@ import {mount, shallow} from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Paper from 'material-ui/Paper'
+import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import '../../components/tap_events'
@@ -236,6 +237,13 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
     });
 
+    it('should render a loading icon if data has not been received yet', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.state().isLoading).toBe(true);
+    });
+
     it('should call browserHistory push if a run has been deleted', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -249,6 +257,20 @@ describe('StatusDownload component', () => {
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith('/exports')).toBe(true);
         updateSpy.restore();
+    });
+
+    it('should display the circular progress if deleting', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        let nextProps = getProps();
+        nextProps.datacartDetails.fetched = true;
+        nextProps.datacartDetails.data = exampleRun;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        nextProps = getProps();
+        nextProps.runDeletion.deleting = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
     it('should call getDatacartDetails, startTimer, and addEventListener when mounted', () => {
@@ -295,7 +317,7 @@ describe('StatusDownload component', () => {
         intervalSpy.restore();
     });
 
-    it('should handle fetched datacartDetails', () => {
+    it('should handle fetched datacartDetails and remove loading icon', () => {
         jest.useFakeTimers();
         const props = getProps();
         let nextProps = getProps();
@@ -305,16 +327,19 @@ describe('StatusDownload component', () => {
         const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
         const clearSpy = new sinon.spy(TimerMixin, 'clearInterval');
         const wrapper = getWrapper(props);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
         wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
+        expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(4);
-        expect(setTimeout.mock.calls[0][1]).toBe(270000);
-        StatusDownload.prototype.setState.restore();
-        StatusDownload.prototype.componentWillReceiveProps.restore();
+        expect(setTimeout.mock.calls.length).toBe(7);
+        expect(setTimeout.mock.calls[3][1]).toBe(270000);
+        stateSpy.restore();
+        propsSpy.restore();
         clearSpy.restore();
         propsSpy.restore();
     });
@@ -331,12 +356,13 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(3);
-        expect(setTimeout.mock.calls[0][1]).toBe(0);
+        expect(setTimeout.mock.calls.length).toBe(6);
+        console.log(setTimeout.mock.calls);
+        expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
         clearSpy.restore();

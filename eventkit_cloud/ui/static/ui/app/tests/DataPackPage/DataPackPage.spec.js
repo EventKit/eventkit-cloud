@@ -6,12 +6,14 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {DataPackPage} from '../../components/DataPackPage/DataPackPage';
 import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
+import CircularProgress from 'material-ui/CircularProgress';
 import Drawer from 'material-ui/Drawer';
 import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
+import DataPackList from '../../components/DataPackPage/DataPackList';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
@@ -69,8 +71,47 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(PermissionFilter)).toHaveLength(1);
         expect(wrapper.find(StatusFilter)).toHaveLength(1);
         expect(wrapper.find(DateFilter)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
+
+        // Should show loading before datapacks have been fetched
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(DataPackGrid)).toHaveLength(0);
+        expect(wrapper.find(DataPackList)).toHaveLength(0);
+    });
+
+    it('should show DataPackGrid instead of progress circle when runs are received', () => {
+        const props = getProps();
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            }
+        });
+        expect(wrapper.find(DataPackGrid)).toHaveLength(0);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        let nextProps = getProps();
+        nextProps.runsList.fetched = true;
+        wrapper.setProps(nextProps);
+        expect(stateSpy.calledWith({showLoading: false})).toBe(true);
         expect(wrapper.find(DataPackGrid)).toHaveLength(1);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        stateSpy.restore();
+    });
+
+    it('should show a progress circle when deleting a datapack', () => {
+        const props = getProps();
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            }
+        });
+        let nextProps = getProps();
+        nextProps.runsList.fetched = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        nextProps.runsDeletion.deleting = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
     it('should call getRuns when mounting', () => {
@@ -117,7 +158,10 @@ describe('DataPackPage component', () => {
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
+        expect(stateSpy.calledWith({runs: nextProps.runsList.runs}));
+        expect(stateSpy.calledWith({displayedRuns: nextProps.runsList.runs}));
+        expect(stateSpy.calledWith({showLoading: false}));
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.componentWillReceiveProps.restore();
     });
