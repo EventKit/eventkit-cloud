@@ -168,7 +168,7 @@ export class ProviderRow extends React.Component {
                         onCheck={this.onChangeCheck}
                         /></TableRowColumn>
                     <TableRowColumn style={{ fontSize: textFontSize}}>{task.name}</TableRowColumn>
-                    <TableRowColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}} ></TableRowColumn>
+
                     <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '124px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{width: '110px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
