@@ -69,6 +69,31 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(LinearProgress)).toHaveLength(1);
     });
 
+    it('getTextFontSize should return the font string for table text based on window width', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getTextFontSize()).toEqual('10px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getTextFontSize()).toEqual('11px');
+
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getTextFontSize()).toEqual('12px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getTextFontSize()).toEqual('13px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getTextFontSize()).toEqual('14px');
+    });
+
     it('should call componentWillMount and set the row and count state', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(ProviderRow.prototype, 'componentWillMount');
