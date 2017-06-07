@@ -44,7 +44,7 @@ describe('DataPackDetails component', () => {
         const table = wrapper.find(Table).first();
         expect(table.find(TableHeader)).toHaveLength(1);
         expect(table.find(TableRow)).toHaveLength(1);
-        expect(table.find(TableHeaderColumn)).toHaveLength(6);
+        expect(table.find(TableHeaderColumn)).toHaveLength(5);
         expect(table.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(1).text()).toEqual('DATA SETS');
         expect(table.find(TableHeaderColumn).at(2).text()).toEqual('# SELECTED');

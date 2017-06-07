@@ -63,7 +63,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(Table)).toHaveLength(1);
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(2);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(6);
+        expect(wrapper.find(TableRowColumn)).toHaveLength(5);
         expect(wrapper.find(Checkbox)).toHaveLength(2);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LinearProgress)).toHaveLength(1);
