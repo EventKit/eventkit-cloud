@@ -49,7 +49,7 @@ export class DataPackLinkButton extends React.Component {
                     primary={true}
                     labelStyle={styles.label}
                     style={styles.button}
-                    buttonStyle={{borderRadius: '0px'}}
+                    buttonStyle={{borderRadius: '0px', backgroundColor: '#4598bf'}}
                     overlayStyle={{borderRadius: '0px'}}
                 />
             </Link>

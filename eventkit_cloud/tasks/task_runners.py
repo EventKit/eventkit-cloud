@@ -70,7 +70,7 @@ class ExportGenericOSMTaskRunner(TaskRunner):
             try:
                 export_tasks[format] = {'obj': create_format_task(format), 'task_uid': None}
             except KeyError as e:
-                logger.debug(e)
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(format, e))
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
@@ -201,7 +201,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
             try:
                 export_tasks[format] = {'obj': create_format_task(format), 'task_uid': None}
             except KeyError as e:
-                logger.debug(e)
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(format, e))
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
@@ -290,7 +290,7 @@ class ExportWFSTaskRunner(TaskRunner):
                 # instantiate the required class.
                 export_tasks[_format] = {'obj': create_format_task(_format), 'task_uid': None}
             except KeyError as e:
-                logger.debug(e)
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(_format, e))
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
@@ -384,7 +384,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                 # instantiate the required class.
                 export_tasks[format] = {'obj': create_format_task(format), 'task_uid': None}
             except KeyError as e:
-                logger.debug(e)
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(format, e))
             except ImportError as e:
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
@@ -476,7 +476,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             # instantiate the required class.
             export_tasks['gpkg'] = {'obj': create_format_task('gpkg'), 'task_uid': None}
         except KeyError as e:
-            logger.debug(e)
+            logger.debug('KeyError: {}'.format(e))
         except ImportError as e:
             msg = 'Error importing export task: {0}'.format(e)
             logger.debug(msg)

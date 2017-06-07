@@ -1,6 +1,6 @@
 import types from './mapToolActionTypes'
 import ol from 'openlayers';
-import * as jsts from 'jsts';
+import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import { convertGeoJSONtoJSTS } from '../utils/mapUtils'
 
 export function setBoxButtonSelected() {
@@ -71,7 +71,7 @@ export const processGeoJSONFile = file => dispatch => {
             //Because the UI doesn't support multiple features combine all polygons into one feature.
             var multipolygon = convertGeoJSONtoJSTS(geojson);
 
-            const writer = new jsts.io.GeoJSONWriter();
+            const writer = new GeoJSONWriter();
             const geom = (new ol.format.GeoJSON()).readGeometry(writer.write(multipolygon)).transform('EPSG:4326', 'EPSG:3857');
             if (geom.getType() == 'Polygon' || geom.getType() == 'MultiPolygon') {
                 dispatch({type: types.FILE_PROCESSED, geom: geom});
