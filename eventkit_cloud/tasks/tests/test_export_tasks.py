@@ -880,3 +880,32 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals('Kill Task', kill_task.name)
         kill_task.run(task_pid=task_pid)
         kill.assert_called_once_with(task_pid, signal.SIGTERM)
+
+
+class TestFormatTasks(ExportTaskBase):
+
+    @patch('celery.app.task.Task.request')
+    @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
+    def setUp(self, mock_service, mock_request):
+        # These tests cases use a FormatTask as their base test case which is slightly redundant to the ExportTasks above,
+        # but is intended to test the specific functions for the FormatTask.
+        super(TestFormatTasks, self).setUp()
+        celery_uid = str(uuid.uuid4())
+        type(mock_request).id = PropertyMock(return_value=celery_uid)
+        service_to_gpkg = mock_service.return_value
+        job_name = self.job.name.lower()
+        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
+                                            '{}.gpkg'.format(job_name))
+        service_to_gpkg.convert.return_value = expected_output_path
+        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
+        export_provider_task = ExportProviderTask.objects.create(run=self.run)
+        self.task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=external_raster_service_export_task.name)
+        external_raster_service_export_task.run(task_uid=str(self.task.uid), stage_dir=stage_dir,
+                                                         job_name=job_name)
+
+
+    def test_update_task_state(self):
+        self.task.refresh_from_db()
+        self.assertTrue(self.task.display)

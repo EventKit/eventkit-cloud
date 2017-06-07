@@ -103,7 +103,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
         model = ExportTask
         fields = (
             'uid', 'url', 'name', 'status', 'progress', 'estimated_finish', 'started_at', 'finished_at', 'duration',
-            'result', 'errors',)
+            'result', 'errors', 'display')
 
     def get_result(self, obj):
         """Serialize the ExportTaskResult for this ExportTask."""
@@ -157,7 +157,7 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProviderTask
-        fields = ('uid', 'url', 'name', 'tasks', 'status')
+        fields = ('uid', 'url', 'name', 'tasks', 'status', 'display')
 
 
 class SimpleJobSerializer(serializers.Serializer):
