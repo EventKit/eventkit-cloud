@@ -130,12 +130,37 @@ export class Form extends React.Component {
             </form>
         }
         if (this.state.oauth_name) {
-            oauth_button = <a style={{color: '#4598bf', margin: '15px auto'}} onClick={this.handleOAuth}><strong>Or, login with {this.state.oauth_name}</strong></a>
+            if (!this.state.login_form) {
+                
+                oauth_button = <div>
+                    <div style={{margin: '40px auto', fontSize: '24px', color: '#fff'}}>
+                        <strong>Welcome to EventKit</strong>
+                    </div>
+                    <RaisedButton 
+                        style={{margin: '40px auto', minWidth: '150px'}}
+                        labelStyle={{textTransform: 'none'}}
+                        backgroundColor={'#4598bf'}
+                        label={`Login with ${this.state.oauth_name}`}
+                        labelColor={'#fff'}
+                        onClick={this.handleOAuth}
+                    />
+                </div>
+            }
+            else {
+                oauth_button = <a style={{color: '#4598bf', margin: '15px auto'}} onClick={this.handleOAuth}><strong>Or, login with {this.state.oauth_name}</strong></a>
+            }
         }
-        return <div style={{verticalAlign: 'middle', textAlign: 'center', marginTop: '30px'}}>
-            {login_form}
-            {oauth_button}
-        </div>
+        return (
+            <div style={{verticalAlign: 'middle', textAlign: 'center', marginTop: '30px'}}>
+                {login_form}
+                {oauth_button}
+                {!login_form && !oauth_button ? 
+                    <div style={{color: '#fff', marginTop: '150px'}}>
+                        No login methods available, please contact an administrator
+                    </div>
+                : null}
+            </div>
+        );
     }
 }
 

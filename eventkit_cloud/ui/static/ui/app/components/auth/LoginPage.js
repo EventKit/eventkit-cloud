@@ -60,7 +60,7 @@ class LoginPage extends React.Component {
                 backgroundImage: "url('../../../images/topoBackground.jpg')",
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
-                height: mobile ? 'initial' : '390px',
+                height: '390px',
                 width: '100%',
             },
             container: {
