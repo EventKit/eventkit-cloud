@@ -142,7 +142,7 @@ export class DataPackDetails extends React.Component {
                         enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'5%', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width:'88px', fontSize: '14px'}}>
                                 <Checkbox 
                                     checked={this.allChecked()} 
                                     onCheck={this.checkAll}
@@ -150,16 +150,16 @@ export class DataPackDetails extends React.Component {
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'35%', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={{fontSize: textFontSize}}>
                                 DATA SETS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
                                 # SELECTED
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={{width:'100px',textAlign: 'center', fontSize: textFontSize}}>
                                 PROGRESS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px', width: '25%'}}>
+                            <TableHeaderColumn style={{width: '234px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
                                 <RaisedButton
                                     style={{width:'100%'}}
                                     backgroundColor={'rgba(179,205,224,0.5)'}
