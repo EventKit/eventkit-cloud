@@ -41,13 +41,13 @@ class LoginPage extends React.Component {
     }
 
     render() {
-        const paperWidth = window.innerWidth / 2 - 20 < 600 ? window.innerWidth / 2 - 20 : 600;
+        const mobile = window.innerWidth < 768;
 
         const styles = {
             wholeDiv: {
                 width: '100%',
                 height: window.innerHeight - 95,
-                backgroundColor: 'black',
+                backgroundColor: '#111823',
             },
             root: {
                 justifyContent: 'space-around',
@@ -60,30 +60,52 @@ class LoginPage extends React.Component {
                 backgroundImage: "url('../../../images/topoBackground.jpg')",
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
-                maxHeight: 400,
+                height: mobile ? 'initial' : '390px',
                 width: '100%',
-                overflow: 'hidden'
             },
-            container: {width: '50%', margin: '0px auto', maxWidth: '600px', display: 'inline-block', padding: '15px', minWidth: '350px'}
+            container: {
+                margin: mobile && this.state.disclaimer ? '0px auto' : `${(window.innerHeight - 95 - 420)/2}px auto`,
+                maxWidth: 1200
+            },
+            paperContainer: {
+                width: '50%', 
+                margin: '0px auto', 
+                maxWidth: '600px', 
+                verticalAlign: 'middle', 
+                display: mobile || !this.state.disclaimer ? 'block' : 'inline-block', 
+                padding: '15px', 
+                minWidth: '384px'
+            },
+            disclaimerHeading: {
+                color: '#fff', 
+                fontSize: '16px',
+                marginBottom: '5px', 
+                textAlign: 'center'
+            }
         }
 
         return (
                <div style={styles.wholeDiv}>
-                <div style={{margin: '0px auto', maxWidth: 1200, height: window.innerHeight - 95}}>
-                
+                <CustomScrollbar style={{height: window.innerHeight - 95}}>
                 <div style={styles.container}>
-                    <Paper style={styles.paper} zDepth={2}>
-                        <LoginForm/>
-                    </Paper>
-                </div>
+                    <div style={styles.paperContainer}>
+                        <Paper style={styles.paper} zDepth={2}>
+                            <LoginForm/>
+                        </Paper>
+                    </div>
 
-                <div style={styles.container}>
-                    <Paper style={styles.paper} zDepth={2}>
-                        {this.state.disclaimer ? <div dangerouslySetInnerHTML={{__html: this.state.disclaimer}}/>: null}
-                    </Paper>
+                    {this.state.disclaimer ? 
+                    <div style={styles.paperContainer}>
+                        <Paper style={{...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: ''}} zDepth={2}>
+                            <CustomScrollbar style={{height: 330}}>
+                                <div style={styles.disclaimerHeading}><strong>ATTENTION</strong></div>
+                                {this.state.disclaimer ? <div style={{color: '#fff', paddingRight: '10px'}} dangerouslySetInnerHTML={{__html: this.state.disclaimer}}/>: null}
+                            </CustomScrollbar>
+                        </Paper>
+                    </div>
+                    : null}
                 </div>
-
-                </div>
+                </CustomScrollbar>
             </div>
         )
     }

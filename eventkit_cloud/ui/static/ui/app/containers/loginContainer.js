@@ -1,16 +1,9 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
-import {reduxForm, Field} from 'redux-form'
-import {Menu, MenuItem} from 'material-ui/Menu'
-import FloatingActionButton from 'material-ui/FloatingActionButton'
-import {
-    TextField,
-} from 'redux-form-material-ui'
 import {login} from '../actions/userActions'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import '../components/tap_events';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import axios from 'axios';
 import RaisedButton from 'material-ui/RaisedButton';
 
@@ -23,7 +16,7 @@ export class Form extends React.Component {
         this.state = {
             username: '',
             password: '',
-            button: DISABLED_BUTTON,
+            buttonDisabled: true,
             login_form: false,
             oauth_name: "",
             disclaimer: "",
@@ -33,10 +26,14 @@ export class Form extends React.Component {
     onChange(event) {
         this.setState({[event.target.name]: event.target.value}, function () {
             if (!this.state.username || !this.state.password) {
-                this.setState({button: DISABLED_BUTTON})
+                if(!this.state.buttonDisabled) {
+                    this.setState({buttonDisabled: true});
+                }
             }
             else {
-                this.setState({button: ENABLED_BUTTON})
+                if(this.state.buttonDisabled) {
+                    this.setState({buttonDisabled: false});
+                }
             }
         });
     }
@@ -77,9 +74,9 @@ export class Form extends React.Component {
     render() {
         const styles = {
             form: {
-                verticalAlign: 'center',
+                verticalAlign: 'middle',
                 margin: '0 auto',
-                maxWidth: 300,
+                width: 300,
             },
             heading: {
                 width: '100%',
@@ -89,6 +86,9 @@ export class Form extends React.Component {
                 margin: '15px auto 0px auto',
             },
             input: {
+                borderRadius: '0px',
+                outline: 'none',
+                border: 'none',
                 backgroundColor: 'rgba(179,205,224,.2)',
                 fontSize: '16px',
                 width: '100%',
@@ -118,47 +118,26 @@ export class Form extends React.Component {
                     style={styles.input}
                     type="password"
                 />
-                {this.state.button}
+                <RaisedButton 
+                    style={{margin: '30px auto', width: '150px'}}
+                    backgroundColor={'#4598bf'}
+                    label={'Login'}
+                    labelColor={'#fff'}
+                    type={'submit'}
+                    name={'submit'}
+                    disabled={this.state.buttonDisabled}
+                />
             </form>
         }
         if (this.state.oauth_name) {
-            oauth_button = <RaisedButton className={'OAuthButton'}
-                style={{
-                    minWidth: 'none',
-                    borderRadius: 'px',
-                    margin: '15px auto 15px auto',
-                }}
-                buttonStyle={{borderRadius: '0px'}}
-                backgroundColor={'#4598bf'}
-                label={"Log in with " + this.state.oauth_name}
-                labelStyle={{color: '#fff', textTransform: 'none'}}
-                onClick={this.handleOAuth}/>
+            oauth_button = <a style={{color: '#4598bf', margin: '15px auto'}} onClick={this.handleOAuth}><strong>Or, login with {this.state.oauth_name}</strong></a>
         }
-        return <div style={{verticalAlign: 'center', textAlign: 'center'}}>
+        return <div style={{verticalAlign: 'middle', textAlign: 'center', marginTop: '30px'}}>
             {login_form}
             {oauth_button}
         </div>
     }
 }
-
-const DISABLED_BUTTON = <FloatingActionButton 
-                            name="submit"
-                            mini={false}
-                            type="submit"
-                            disabled={true}
-                            disabledColor={'#b4b7b8'}
-                            style={{margin: '30px auto 15px auto'}}
-                        >
-                            <NavigationArrowForward />
-                        </FloatingActionButton>
-
-const ENABLED_BUTTON = <FloatingActionButton name="submit"
-                          mini={false}
-                          type="submit"
-                          backgroundColor={'#55ba63'}
-                          style={{margin: '30px auto 15px auto'}}>
-        <NavigationArrowForward />
-    </FloatingActionButton>
 
 function mapDispatchToProps(dispatch) {
     return {
@@ -167,7 +146,6 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
-
 
 Form.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
