@@ -19,7 +19,6 @@ export class Form extends React.Component {
             buttonDisabled: true,
             login_form: false,
             oauth_name: "",
-            disclaimer: "",
         };
     }
 
@@ -38,14 +37,14 @@ export class Form extends React.Component {
         });
     }
 
-    checkAuthEndpoint = () => {
+    checkAuthEndpoint() {
         return axios.get('/auth').then(function (response) {
             this.setState({login_form: true});
         }.bind(this)).catch(function (response) {
         });
     }
 
-    checkOAuthEndpoint = () => {
+    checkOAuthEndpoint() {
         return axios.get('/oauth', {params: {query: "name"}}).then(function (response) {
             this.setState({oauth_name: response.data.name});
         }.bind(this)).catch(function (response) {
@@ -64,7 +63,7 @@ export class Form extends React.Component {
 
     handleOAuth(event) {
         event.preventDefault();
-        window.location.href = "/oauth";
+        window.location.assign('/oauth');
     }
 
     getChildContext() {
@@ -76,7 +75,7 @@ export class Form extends React.Component {
             form: {
                 verticalAlign: 'middle',
                 margin: '0 auto',
-                width: 300,
+                maxWidth: 300,
             },
             heading: {
                 width: '100%',

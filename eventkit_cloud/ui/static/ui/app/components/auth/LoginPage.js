@@ -4,7 +4,7 @@ import LoginForm from '../../containers/loginContainer';
 import Paper from 'material-ui/Paper';
 import CustomScrollbar from '../CustomScrollbar';
 
-class LoginPage extends React.Component {
+export class LoginPage extends React.Component {
     constructor(props) {
         super(props);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -16,9 +16,6 @@ class LoginPage extends React.Component {
 
     componentDidMount() {
         this.getDisclaimer();
-    }
-
-    componentWillMount() {
         window.addEventListener('resize', this.screenSizeUpdate);
     }
 
@@ -74,7 +71,7 @@ class LoginPage extends React.Component {
                 verticalAlign: 'middle', 
                 display: mobile || !this.state.disclaimer ? 'block' : 'inline-block', 
                 padding: '15px', 
-                minWidth: '384px'
+                minWidth: '360px'
             },
             disclaimerHeading: {
                 color: '#fff', 
@@ -87,27 +84,28 @@ class LoginPage extends React.Component {
         return (
                <div style={styles.wholeDiv}>
                 <CustomScrollbar style={{height: window.innerHeight - 95}}>
-                <div style={styles.container}>
-                    <div style={styles.paperContainer}>
-                        <Paper style={styles.paper} zDepth={2}>
-                            <LoginForm/>
-                        </Paper>
-                    </div>
+                    <div style={styles.container}>
+                        <div style={styles.paperContainer}>
+                            <Paper style={styles.paper} zDepth={2}>
+                                <LoginForm/>
+                            </Paper>
+                        </div>
 
-                    {this.state.disclaimer ? 
-                    <div style={styles.paperContainer}>
-                        <Paper style={{...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: ''}} zDepth={2}>
-                            <CustomScrollbar style={{height: 330}}>
-                                <div style={styles.disclaimerHeading}><strong>ATTENTION</strong></div>
-                                {this.state.disclaimer ? <div style={{color: '#fff', paddingRight: '10px'}} dangerouslySetInnerHTML={{__html: this.state.disclaimer}}/>: null}
-                            </CustomScrollbar>
-                        </Paper>
+                        {this.state.disclaimer ? 
+                            <div style={styles.paperContainer}>
+                                <Paper style={{...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: ''}} zDepth={2}>
+                                    <CustomScrollbar style={{height: 330}}>
+                                        <div style={styles.disclaimerHeading}><strong>ATTENTION</strong></div>
+                                        <div style={{color: '#fff', paddingRight: '10px'}} dangerouslySetInnerHTML={{__html: this.state.disclaimer}}/>
+                                    </CustomScrollbar>
+                                </Paper>
+                            </div>
+                        : null}
                     </div>
-                    : null}
-                </div>
                 </CustomScrollbar>
             </div>
         )
     }
 }
+
 export default LoginPage;
