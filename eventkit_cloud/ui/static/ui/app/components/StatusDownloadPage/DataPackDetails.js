@@ -104,7 +104,27 @@ export class DataPackDetails extends React.Component {
         });
     }
 
+    getTextFontSize() {
+        if(window.innerWidth <= 575) {
+            return '10px';
+        }
+        else if (window.innerWidth <= 767) {
+            return '11px';
+        }
+        else if (window.innerWidth <= 991) {
+            return '12px';
+        }
+        else if(window.innerWidth <= 1199) {
+            return '13px';
+        }
+        else {
+            return '14px';
+        }
+    }
+
+
     render() {
+        const textFontSize = this.getTextFontSize();
         const providers = this.props.providerTasks;
 
         return (
@@ -113,6 +133,7 @@ export class DataPackDetails extends React.Component {
                    Download Options
                 </div>
                 <Table
+                    style={{width:'100%', tableLayout: 'auto'}}
                     selectable={false}
                 >
                     <TableHeader
@@ -121,7 +142,7 @@ export class DataPackDetails extends React.Component {
                         enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'88px', fontSize: '14px'}}>
                                 <Checkbox 
                                     checked={this.allChecked()} 
                                     onCheck={this.checkAll}
@@ -129,28 +150,29 @@ export class DataPackDetails extends React.Component {
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'35%', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{fontSize: textFontSize}}>
                                 DATA SETS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'20%',textAlign: 'center', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
                                 # SELECTED
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width:'100px',textAlign: 'center', fontSize: textFontSize}}>
                                 PROGRESS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'15%',textAlign: 'center', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{width: '234px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
                                 <RaisedButton
+                                    style={{width:'100%'}}
                                     backgroundColor={'rgba(179,205,224,0.5)'}
                                     disabled={this.state.taskCount == 0}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
-                                    labelStyle={{fontWeight:'bold'}}
+                                    labelStyle={{fontWeight:'bold', fontSize:textFontSize}}
                                     onTouchTap={this.handleDownload}
                                     label="Download All Selected"
                                     icon={<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'10%', fontSize: '14px'}}></TableHeaderColumn>
+
                         </TableRow>
                     </TableHeader>
                     </Table>

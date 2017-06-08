@@ -46,12 +46,6 @@ export class LoginPage extends React.Component {
                 height: window.innerHeight - 95,
                 backgroundColor: '#111823',
             },
-            root: {
-                justifyContent: 'space-around',
-                display: 'flex',
-                flexWrap: 'wrap',
-                
-            },
             paper: {
                 display: 'inline-block',
                 backgroundImage: "url('../../../images/topoBackground.jpg')",
@@ -78,6 +72,7 @@ export class LoginPage extends React.Component {
                 fontSize: '16px',
                 marginBottom: '5px', 
                 textAlign: 'center'
+
             }
         }
 
