@@ -9,7 +9,8 @@
 			"level_from" : 0,
 			"level_to" : 10,
 			"config" : "",
-			"service_description" : "OpenStreetMap vector data provided in the 'planet' tables. \n\nAll points, lines, and polygons are three separate tables."
+			"service_description" : "OpenStreetMap vector data provided in the 'planet' tables. \n\nAll points, lines, and polygons are three separate tables.",
+			"display": false
 		}
 	},{
 		"model" : "jobs.exportprovider",
@@ -22,7 +23,8 @@
 			"level_from" : 0,
 			"level_to" : 10,
 			"config" : "",
-  			"service_description" : "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...)."
+  			"service_description" : "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+			"display": true
 		}
 	}
 ]
