@@ -195,6 +195,15 @@ def data_estimator(request):
         size += estimates[1]
     return HttpResponse([size], status=200)
 
+@require_http_methods(['GET'])
+def get_login_disclaimer(request):
+    """
+    :param request: a GET request
+    :return: Disclaimer string from the env or an empty string
+    """
+    disclaimer = getattr(settings, "LOGIN_DISCLAIMER", None)
+    return HttpResponse(disclaimer or '', status=200)
+
 
 # error views
 
