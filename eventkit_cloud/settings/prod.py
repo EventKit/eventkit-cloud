@@ -135,6 +135,8 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+LOGIN_DISCLAIMER = os.environ.get('LOGIN_DISCLAIMER', None)
+
 if os.environ.get('USE_S3'):
     USE_S3 = True
 else:
