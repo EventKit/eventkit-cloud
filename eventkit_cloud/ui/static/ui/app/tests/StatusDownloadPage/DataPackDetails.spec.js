@@ -47,7 +47,7 @@ describe('DataPackDetails component', () => {
         expect(table.find(TableHeaderColumn)).toHaveLength(5);
         expect(table.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(1).text()).toEqual('DATA SETS');
-        expect(table.find(TableHeaderColumn).at(2).text()).toEqual('# SELECTED');
+        expect(table.find(TableHeaderColumn).at(2).text()).toEqual('FILE SIZE');
         expect(table.find(TableHeaderColumn).at(3).text()).toEqual('PROGRESS');
         expect(table.find(TableHeaderColumn).at(4).find(RaisedButton)).toHaveLength(1);
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
@@ -174,7 +174,8 @@ const providerTasks = [
                 "started_at": "2017-05-15T15:28:49.038510Z",
                 "status": "SUCCESS",
                 "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
-                "result": { 
+                "result": {
+                    "size": "1.234 MB",
                     "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
                 },
             }

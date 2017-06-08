@@ -26,6 +26,7 @@ export class ProviderRow extends React.Component {
             selectedRows: { },
             selectionCount: 0,
             taskCount: 0,
+            fileSize: 0,
 
         }
     }
@@ -40,6 +41,18 @@ export class ProviderRow extends React.Component {
             taskCount++
         })
         this.setState({selectedRows:t, taskCount})
+    }
+
+    componentWillReceiveProps(nextProps) {
+        let fileSize = 0.000;
+        nextProps.provider.tasks.forEach((task) => {
+            if (task.result != null){
+                let textReplace = task.result.size.replace(' MB','');
+                let number = textReplace
+                fileSize = Number(fileSize) + Number(number);
+                this.setState({fileSize})
+            }
+        })
     }
 
     handleToggle() {
@@ -168,7 +181,7 @@ export class ProviderRow extends React.Component {
                         onCheck={this.onChangeCheck}
                         /></TableRowColumn>
                     <TableRowColumn style={{ fontSize: textFontSize}}>{task.name}</TableRowColumn>
-
+                    <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
                     <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '124px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{width: '110px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
@@ -209,7 +222,7 @@ export class ProviderRow extends React.Component {
                             {this.props.provider.name}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
-                            {this.state.selectionCount}/{this.state.taskCount}
+                            {this.state.fileSize + " MB"}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}/>
                         <TableHeaderColumn style={{width: '124px',textAlign: 'right'}}>
