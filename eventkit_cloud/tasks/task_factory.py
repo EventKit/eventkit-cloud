@@ -204,7 +204,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
     task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-    export_task = create_export_task(task_name=task.name, export_provider_task=export_provider_task, worker=worker)
+    export_task = create_export_task(task_name=task.name, export_provider_task=export_provider_task, worker=worker, display=getattr(task, "display", False))
     return task.s(run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection,
                                  stage_dir=stage_dir, provider_slug=export_provider_task.slug,
                   export_provider_task_uid=export_provider_task_uid, job_name=job_name).set(queue=worker, routing_key=worker)

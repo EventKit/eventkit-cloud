@@ -26,7 +26,8 @@ from ..export_tasks import (
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
+    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task,
+    FormatTask
 )
 from ...celery import TaskPriority, app
 from eventkit_cloud.tasks.models import (
@@ -880,3 +881,9 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals('Kill Task', kill_task.name)
         kill_task.run(task_pid=task_pid)
         kill.assert_called_once_with(task_pid, signal.SIGTERM)
+
+
+class TestFormatTasks(ExportTaskBase):
+
+    def test_ensure_display(self):
+        self.assertTrue(FormatTask.display)

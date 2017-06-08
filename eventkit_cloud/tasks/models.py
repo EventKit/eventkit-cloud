@@ -82,6 +82,7 @@ class ExportProviderTask(models.Model):
     slug = LowerCaseCharField(max_length=40, default='')
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
+    display = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['name']
@@ -110,6 +111,7 @@ class ExportTask(models.Model):
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+    display = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['created_at']

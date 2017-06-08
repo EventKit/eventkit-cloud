@@ -174,6 +174,7 @@ class ExportProvider(TimeStampedModelMixin):
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)
+    display = models.BooleanField(default=False)
 
     class Meta:  # pragma: no cover
         managed = True
