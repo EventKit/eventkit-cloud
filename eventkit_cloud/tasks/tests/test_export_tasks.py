@@ -26,7 +26,8 @@ from ..export_tasks import (
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
+    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task,
+    FormatTask
 )
 from ...celery import TaskPriority, app
 from eventkit_cloud.tasks.models import (
@@ -884,28 +885,5 @@ class TestExportTasks(ExportTaskBase):
 
 class TestFormatTasks(ExportTaskBase):
 
-    @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
-    def setUp(self, mock_service, mock_request):
-        # These tests cases use a FormatTask as their base test case which is slightly redundant to the ExportTasks above,
-        # but is intended to test the specific functions for the FormatTask.
-        super(TestFormatTasks, self).setUp()
-        celery_uid = str(uuid.uuid4())
-        type(mock_request).id = PropertyMock(return_value=celery_uid)
-        service_to_gpkg = mock_service.return_value
-        job_name = self.job.name.lower()
-        expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
-                                            '{}.gpkg'.format(job_name))
-        service_to_gpkg.convert.return_value = expected_output_path
-        stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
-        export_provider_task = ExportProviderTask.objects.create(run=self.run)
-        self.task = ExportTask.objects.create(export_provider_task=export_provider_task,
-                                                      status=TaskStates.PENDING.value,
-                                                      name=external_raster_service_export_task.name)
-        external_raster_service_export_task.run(task_uid=str(self.task.uid), stage_dir=stage_dir,
-                                                         job_name=job_name)
-
-
-    def test_update_task_state(self):
-        self.task.refresh_from_db()
-        self.assertTrue(self.task.display)
+    def test_ensure_display(self):
+        self.assertTrue(FormatTask.display)

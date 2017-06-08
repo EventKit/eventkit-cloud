@@ -103,12 +103,12 @@ class ExportGenericOSMTaskRunner(TaskRunner):
             # save initial tasks to the db with 'PENDING' state, store task_uid for updating the task later.
             for task_type, task in osm_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker)
+                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
                 osm_tasks[task_type]['task_uid'] = export_task.uid
             # save export(format) tasks to the db with 'PENDING' state, store task_uid for updating the task later.
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker)
+                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             """
@@ -215,7 +215,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         for task_type, task in export_tasks.iteritems():
             export_task = create_export_task(task_name=task.get('obj').name,
-                                             export_provider_task=export_provider_task, worker=worker)
+                                             export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
             export_tasks[task_type]['task_uid'] = export_task.uid
 
         """
@@ -225,7 +225,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         thematic_gpkg_task = create_format_task('gpkg-thematic')
         thematic_gpkg = {'obj': thematic_gpkg_task,
                          'task_uid': create_export_task(task_name=thematic_gpkg_task.name,
-                                                        export_provider_task=export_provider_task, worker=worker).uid}
+                                                        export_provider_task=export_provider_task, worker=worker, display=getattr(thematic_gpkg_task, "display", False)).uid}
 
         # Note this needs to be mutable (s instead of si) so that it can take the result of the generic osm tasks.
         thematic_task = thematic_gpkg.get('obj').s(run_uid=run.uid,
@@ -248,7 +248,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         bbox = run.job.extents
         style_task = osm_create_styles_task.s(task_uid=create_export_task(task_name=osm_create_styles_task.name,
                                                                            export_provider_task=export_provider_task,
-                                                                           worker=worker).uid,
+                                                                           worker=worker, display=getattr(osm_create_styles_task, "display", False)).uid,
                                                stage_dir=stage_dir,
                                                job_name=job_name,
                                                bbox=bbox,
@@ -309,12 +309,12 @@ class ExportWFSTaskRunner(TaskRunner):
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker)
+                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = wfs_export_task
             export_task = create_export_task(task_name=service_task.name,
-                                             export_provider_task=export_provider_task, worker=worker)
+                                             export_provider_task=export_provider_task, worker=worker, display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
                                             job_name=job_name,
@@ -403,12 +403,12 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker)
+                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = arcgis_feature_service_export_task
             export_task = create_export_task(task_name=service_task.name,
-                                             export_provider_task=export_provider_task, worker=worker)
+                                             export_provider_task=export_provider_task, worker=worker, display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
                                             job_name=job_name,
@@ -495,7 +495,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
 
             export_task = create_export_task(task_name=external_raster_service_export_task.name,
-                                             export_provider_task=export_provider_task, worker=worker)
+                                             export_provider_task=export_provider_task, worker=worker, display=getattr(external_raster_service_export_task, "display", False))
 
             service_task = external_raster_service_export_task.s(stage_dir=stage_dir,
                                                                   run_uid=run.uid,
@@ -534,10 +534,13 @@ def normalize_job_name(name):
     return s.lower()
 
 
-def create_export_task(task_name=None, export_provider_task=None, worker=None):
+def create_export_task(task_name=None, export_provider_task=None, worker=None, display=None):
     try:
         export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
                                                 name=task_name, worker=worker)
+        if display:
+            export_task.display = True
+            export_task.save()
         logger.debug('Saved task: {0}'.format(task_name))
     except DatabaseError as e:
         logger.error('Saving task {0} threw: {1}'.format(task_name, e))

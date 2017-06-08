@@ -267,13 +267,7 @@ class FormatTask(ExportTask):
     """
     A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
     """
-
-    def update_task_state(self, result={}, task_uid=None):
-        super(FormatTask, self).update_task_state(result=result, task_uid=task_uid)
-        from ..tasks.models import ExportTask as ExportTaskModel
-        task = ExportTaskModel.objects.get(uid=task_uid)
-        task.display = True
-        task.save()
+    display = True
 
 
 @app.task(name="OSMConf", bind=True, base=ExportTask, abort_on_error=True)
