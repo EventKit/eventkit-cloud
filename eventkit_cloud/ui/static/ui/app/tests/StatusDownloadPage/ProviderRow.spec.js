@@ -74,11 +74,12 @@ describe('ProviderRow component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         let nextProps = getProps();
+        let fileSize = 1.234;
         const propsSpy = new sinon.spy(ProviderRow.prototype, 'componentWillReceiveProps');
         const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({fileSize: 1.234})).toBe(true);
+        expect(stateSpy.calledWith({fileSize: fileSize.toFixed(3)})).toBe(true);
         stateSpy.restore();
         propsSpy.restore();
     });
