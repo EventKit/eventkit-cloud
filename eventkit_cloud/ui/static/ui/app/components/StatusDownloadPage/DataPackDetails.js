@@ -154,7 +154,7 @@ export class DataPackDetails extends React.Component {
                                 DATA SETS
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
-                                # SELECTED
+                                FILE SIZE
                             </TableHeaderColumn>
                             <TableHeaderColumn style={{width:'100px',textAlign: 'center', fontSize: textFontSize}}>
                                 PROGRESS
