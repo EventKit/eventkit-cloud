@@ -202,7 +202,7 @@ export class ExportInfo extends React.Component {
             }
         }
         const providers = this.props.providers.filter((provider) => {
-            return provider.type != 'osm-generic';
+            return provider.display != false;
         });
 
         return (
