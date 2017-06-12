@@ -35,6 +35,7 @@ describe('StatusDownload component', () => {
             "status": "SUCCESS",
             "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             "result": {
+                "size": "1.234 MB",
                 "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             },
         }
@@ -52,6 +53,7 @@ describe('StatusDownload component', () => {
             "status": "PENDING",
             "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             "result": {
+                "size" : "1.234 MB",
                 "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             },
         }
