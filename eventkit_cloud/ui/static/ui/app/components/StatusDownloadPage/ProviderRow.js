@@ -48,9 +48,11 @@ export class ProviderRow extends React.Component {
         nextProps.provider.tasks.forEach((task) => {
             if (task.result != null){
                 let textReplace = task.result.size.replace(' MB','');
-                let number = textReplace
+                let number = textReplace;
                 fileSize = Number(fileSize) + Number(number);
-                this.setState({fileSize})
+                if (fileSize > 0.000){
+                    this.setState({fileSize: fileSize.toFixed(3)});
+                }
             }
         })
     }
@@ -222,7 +224,7 @@ export class ProviderRow extends React.Component {
                             {this.props.provider.name}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
-                            {this.state.fileSize + " MB"}
+                            {this.state.fileSize == 0 ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}/>
                         <TableHeaderColumn style={{width: '124px',textAlign: 'right'}}>
