@@ -38,6 +38,7 @@ describe('StatusDownload component', () => {
                 "size": "1.234 MB",
                 "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             },
+            "display": true,
         }
     ];
     const tasksRunning = [
@@ -56,6 +57,7 @@ describe('StatusDownload component', () => {
                 "size" : "1.234 MB",
                 "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
             },
+            "display": true,
         }
     ];
     const providerTasks = [{

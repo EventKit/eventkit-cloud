@@ -337,6 +337,7 @@ const run = {
                         "size": "0.218 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522.gpkg"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -354,6 +355,7 @@ const run = {
                         "size": "0.557 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522-osm-20170522.qgs"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -371,6 +373,7 @@ const run = {
                         "size": "0.000 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_selection-osm-20170522.geojson"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -388,6 +391,7 @@ const run = {
                         "size": "0.042 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_bounds-osm-20170522.gpkg"
                     },
+                    "display": true,
                     "errors": []
                 }
             ],
