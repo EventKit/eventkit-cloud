@@ -83,7 +83,8 @@ class OSMParser(object):
         try:
             conn = sqlite3.connect(self.gpkg)
             cur = conn.cursor()
-            sql = open(os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r').read()
+            from audit_logging.file_logging import logging_open
+            sql = logging_open(os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r').read()
             cur.executescript(sql)
             conn.commit()
         except Exception as e:

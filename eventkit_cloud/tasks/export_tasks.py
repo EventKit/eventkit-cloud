@@ -27,7 +27,6 @@ from ..utils import (
 )
 import json
 from functools import wraps
-
 from .exceptions import CancelException
 
 
@@ -127,7 +126,7 @@ class ExportTask(LockingTask):
             finished = timezone.now()
             task = ExportTaskModel.objects.get(celery_uid=task_id)
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
-                logging.info('Task reported on success but was previously canceled ',format(task_id))
+                logging.info('Task reported on success but was previously canceled ', format(task_id))
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.finished_at = finished
             task.progress = 100
@@ -348,7 +347,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
-    with open(style_file, 'w') as open_file:
+    from audit_logging.file_logging import logging_open
+    with logging_open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
                                                                                                               timezone.now().strftime(
@@ -485,7 +485,8 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
     if selection and not os.path.isfile(geojson_file):
         # Test if json.
         json.loads(selection)
-        with open(geojson_file, 'w') as open_file:
+        from audit_logging.file_logging import logging_open
+        with logging_open(geojson_file, 'w') as open_file:
             open_file.write(selection)
         result['selection'] = geojson_file
         result['result'] = geojson_file

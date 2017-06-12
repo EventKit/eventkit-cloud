@@ -482,8 +482,8 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.timezone')
     @patch('celery.app.task.Task.request')
-    @patch('__builtin__.open')
-    def test_run_osm_create_styles_task(self, mock_open, mock_request, mock_timezone):
+    @patch('audit_logging.file_logging.logging_open')
+    def test_run_osm_create_styles_task(self, mock_logging_open, mock_request, mock_timezone):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -504,7 +504,7 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-        mock_open.assert_called_once_with(style_file, 'w')
+        mock_logging_open.assert_called_once_with(style_file, 'w')
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')

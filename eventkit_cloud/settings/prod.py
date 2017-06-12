@@ -78,6 +78,12 @@ INSTALLED_APPS += (
     'audit_logging',
 )
 
+AUDIT_MODELS = [
+    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
+    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+]
+
 DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
@@ -146,13 +152,6 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
-
-AUDIT_MODELS = [
-    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
-    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
-]
-
 
 LOGGING = {
     'version': 1,
