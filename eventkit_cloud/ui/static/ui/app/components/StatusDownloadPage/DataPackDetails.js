@@ -125,7 +125,11 @@ export class DataPackDetails extends React.Component {
 
     render() {
         const textFontSize = this.getTextFontSize();
-        const providers = this.props.providerTasks;
+
+        const providers = this.props.providerTasks.filter((provider) => {
+            return provider.display != false;
+        });
+        //const providers = this.props.providerTasks;
 
         return (
             <div className={styles.downloadDiv}>
