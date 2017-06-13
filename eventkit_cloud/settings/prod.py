@@ -134,7 +134,12 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-LOGIN_DISCLAIMER = os.environ.get('LOGIN_DISCLAIMER', None)
+UI_CONFIG = {
+    'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
+    'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
+    'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
+    'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
+}
 
 if os.environ.get('USE_S3'):
     USE_S3 = True
