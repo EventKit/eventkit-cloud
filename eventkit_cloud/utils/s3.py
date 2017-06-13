@@ -25,7 +25,8 @@ def upload_to_s3(run_uuid, source_filename, destination_filename, client=None):
         source_filename
     )
     asset_remote_path = os.path.join(run_uuid, destination_filename)
-    with open(asset_path, 'rb') as asset_file:
+    from audit_logging.file_logging import logging_open
+    with logging_open(asset_path, 'rb') as asset_file:
         asset_file.seek(0)
         client.put_object(
             Bucket=settings.AWS_BUCKET_NAME,
