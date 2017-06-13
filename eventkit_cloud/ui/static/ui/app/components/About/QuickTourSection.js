@@ -7,11 +7,31 @@ export class QuickTourSection extends Component {
 
     constructor(props) {
         super(props);
+        this.nextStep = this.nextStep.bind(this);
+        this.goToStep = this.goToStep.bind(this);
         this.state = {
             step: 0
         }
     };
 
+    nextStep() {
+        if(this.state.step + 1 < this.props.steps.length) {
+            this.setState({step: this.state.step + 1});
+        }
+        else {
+            this.setState({step: 0});
+        }
+    }
+
+    goToStep(step) {
+        if(step < this.props.steps.length && step >= 0) {
+            this.setState({step: step});
+        }
+    }
+
+    mouseOver() {
+
+    }
 
     render() {
         const styles = {
@@ -28,12 +48,22 @@ export class QuickTourSection extends Component {
                 color: '#4598bf'
             },
             nextImgArrow: {
-                position: 'absolute', 
                 width: '48px', 
                 height: '48px', 
                 minWidth: 'none', 
+                color: '#4598bf',
+                textAlign: 'center', 
+            },
+            nextImgDiv: {
+                position: 'absolute', 
+                width: '48px', 
+                height: '48px', 
+                minWidth: 'none',
+                borderRadius: '50%',
                 color: '#4598bf', 
-                top: 'calc(50% - 24px)'}
+                top: 'calc(50% - 32px)',
+                backgroundColor: 'rgba(69, 152, 191, 0.3)'
+            }
         };
         const stepTotal = this.props.steps.length;
 
@@ -47,8 +77,12 @@ export class QuickTourSection extends Component {
                     <CardMedia expandable={true} style={{padding: '0px 10px 10px 10px'}}>
                         <div>
                             <img src={this.props.steps[this.state.step].img} style={{width: '100%'}}/>
-                            <ChevronLeft style={{...styles.nextImgArrow, left: '20px'}}/>
-                            <ChevronRight style={{...styles.nextImgArrow, right: '20px'}}/>
+                            <div style={{...styles.nextImgDiv, left: '20px'}}>
+                                <ChevronLeft style={styles.nextImgArrow} onClick={this.nextStep}/>
+                            </div>
+                            <div style={{...styles.nextImgDiv, right: '20px'}}>
+                                <ChevronRight style={styles.nextImgArrow} onClick={this.nextStep}/>
+                            </div>
                         </div>
                         <div style={{width: '100%', backgroundColor: '#4598bf', color: '#fff', padding: '7px 10px'}}>
                             <div style={{display: 'inline-block', width: `calc(100% - ${stepTotal * 30}px)`, lineHeight: '22px'}}>{this.props.steps[this.state.step].caption}</div>
@@ -59,7 +93,7 @@ export class QuickTourSection extends Component {
                                         backgroundColor: this.state.step == ix ? '#fff': 'inherit', 
                                         color: this.state.step == ix ? '#4598bf': 'inherit'
                                     } 
-                                    return <div key={ix} style={style}>{ix + 1}</div>
+                                    return <div key={ix} style={style} onClick={() => {this.goToStep(ix)}}>{ix + 1}</div>
                                 })}
                             </div>
                         </div>

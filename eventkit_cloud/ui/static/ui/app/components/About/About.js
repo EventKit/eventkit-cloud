@@ -113,7 +113,7 @@ export class About extends Component {
                             <QuickTourSection 
                                 steps={[
                                     {img: test, caption: 'Here you can create or search, sort, and filter all private an public datapacks'}, 
-                                    {img: test2, caption: 'Check the status of previously created datapacks'}
+                                    {img: test, caption: 'Check the status of previously created datapacks'}
                                 ]}
                                 sectionTitle={'DataPack Library'}
                             />
