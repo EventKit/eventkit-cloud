@@ -8,14 +8,9 @@ export class LoginPage extends React.Component {
     constructor(props) {
         super(props);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
-        this.getDisclaimer = this.getDisclaimer.bind(this);
-        this.state = {
-            disclaimer: "",
-        }
     }
 
     componentDidMount() {
-        this.getDisclaimer();
         window.addEventListener('resize', this.screenSizeUpdate);
     }
 
@@ -25,16 +20,6 @@ export class LoginPage extends React.Component {
 
     screenSizeUpdate() {
         this.forceUpdate();
-    }
-
-    getDisclaimer() {
-        return axios.get('/disclaimer')
-        .then((response) => {
-            if(response.data) {
-                this.setState({disclaimer: response.data});
-            }
-        }).catch((error) => {
-        });
     }
 
     render() {
@@ -55,7 +40,7 @@ export class LoginPage extends React.Component {
                 width: '100%',
             },
             container: {
-                margin: mobile && this.state.disclaimer ? '0px auto' : `${(window.innerHeight - 95 - 420)/2}px auto`,
+                margin: mobile && this.context.config.LOGIN_DISCLAIMER ? '0px auto' : `${(window.innerHeight - 95 - 420)/2}px auto`,
                 maxWidth: 1200
             },
             paperContainer: {
@@ -63,7 +48,7 @@ export class LoginPage extends React.Component {
                 margin: '0px auto', 
                 maxWidth: '600px', 
                 verticalAlign: 'middle', 
-                display: mobile || !this.state.disclaimer ? 'block' : 'inline-block', 
+                display: mobile || !this.context.config.LOGIN_DISCLAIMER ? 'block' : 'inline-block', 
                 padding: '15px', 
                 minWidth: '360px'
             },
@@ -86,12 +71,12 @@ export class LoginPage extends React.Component {
                             </Paper>
                         </div>
 
-                        {this.state.disclaimer ? 
+                        {this.context.config.LOGIN_DISCLAIMER ? 
                             <div style={styles.paperContainer}>
                                 <Paper style={{...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: ''}} zDepth={2}>
                                     <CustomScrollbar style={{height: 330}}>
                                         <div style={styles.disclaimerHeading}><strong>ATTENTION</strong></div>
-                                        <div style={{color: '#fff', paddingRight: '10px'}} dangerouslySetInnerHTML={{__html: this.state.disclaimer}}/>
+                                        <div style={{color: '#fff', paddingRight: '10px'}} dangerouslySetInnerHTML={{__html: this.context.config.LOGIN_DISCLAIMER}}/>
                                     </CustomScrollbar>
                                 </Paper>
                             </div>
@@ -101,6 +86,10 @@ export class LoginPage extends React.Component {
             </div>
         )
     }
+}
+
+LoginPage.contextTypes = {
+    config: React.PropTypes.object
 }
 
 export default LoginPage;

@@ -4,7 +4,7 @@ from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .views import logout, data_estimator, auth, request_geonames, get_login_disclaimer
+from .views import logout, data_estimator, auth, request_geonames, get_config
 from django.conf import settings
 
 urlpatterns = [
@@ -17,7 +17,7 @@ urlpatterns = [
     url(r'^logout', login_required(logout), name="logout"),
     url(r'^estimator$', login_required(data_estimator)),
     url(r'^request_geonames$', login_required(request_geonames)),
-    url(r'^disclaimer$', get_login_disclaimer),
+    url(r'^configuration$', get_config),
 ]
 
 urlpatterns += [
