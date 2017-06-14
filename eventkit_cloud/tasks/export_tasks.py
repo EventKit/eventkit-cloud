@@ -270,19 +270,24 @@ class FormatTask(ExportTask):
 
 
 @app.task(name="OSMConf", bind=True, base=ExportTask, abort_on_error=True)
-def osm_conf_task(self, result={}, categories=None, stage_dir=None, job_name=None, task_uid=None):
+def osm_conf_task(self, result={}, categories=None, stage_dir=None, job_name=None, task_uid=None, user_details=None):
     """
     Task to create the ogr2ogr conf file.
     """
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-osm_conf_task'}
+
     self.update_task_state(result=result, task_uid=task_uid)
     conf = osmconf.OSMConfig(categories, job_name=job_name)
-    configfile = conf.create_osm_conf(stage_dir=stage_dir)
+    configfile = conf.create_osm_conf(stage_dir=stage_dir, user_details=user_details)
     result['result'] = configfile
     return result
 
 
 @app.task(name="OverpassQuery", bind=True, base=ExportTask, abort_on_error=True)
-def overpass_query_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, filters=None, bbox=None):
+def overpass_query_task(
+        self, result={}, task_uid=None, stage_dir=None, job_name=None, filters=None, bbox=None, user_details=None):
     """
     Runs the query and returns the path to the filtered osm file.
     """
@@ -292,8 +297,8 @@ def overpass_query_task(self, result={}, task_uid=None, stage_dir=None, job_name
         bbox=bbox, stage_dir=stage_dir,
         job_name=job_name, filters=filters, task_uid=task_uid
     )
-    op.run_query()  # run the query
-    filtered_osm = op.filter()  # filter the results
+    op.run_query(user_details=user_details)  # run the query
+    filtered_osm = op.filter(user_details=user_details)  # filter the results
     result['result'] = filtered_osm
     return result
 
@@ -315,7 +320,7 @@ def osm_to_pbf_convert_task(self, result={}, task_uid=None, stage_dir=None, job_
 
 
 @app.task(name="OSMSchema", bind=True, base=ExportTask, abort_on_error=True)
-def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_name=None):
+def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Task to create the default sqlite schema.
     """
@@ -326,7 +331,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     osmconf_ini = os.path.join(stage_dir, '{0}.ini'.format(job_name))
     osmparser = osmparse.OSMParser(osm=osm, gpkg=gpkg, osmconf=osmconf_ini, task_uid=task_uid)
     osmparser.create_geopackage()
-    osmparser.create_default_schema_gpkg()
+    osmparser.create_default_schema_gpkg(user_details=user_details)
     osmparser.update_zindexes()
     result['result'] = gpkg
     result['geopackage'] = gpkg
@@ -334,7 +339,9 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
 
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
-def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
+def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
+        provider_name=None, bbox=None, user_details=None
+        ):
     """
     Task to create styles for osm.
     """
@@ -348,7 +355,7 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
                                                                   timezone.now().strftime("%Y%m%d")))
 
     from audit_logging.file_logging import logging_open
-    with logging_open(style_file, 'w') as open_file:
+    with logging_open(style_file, 'w', user_details=user_details) as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
                                                                                                               timezone.now().strftime(
@@ -364,10 +371,14 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
 
 
 @app.task(name="OSM Data (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
-def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def osm_thematic_gpkg_export_task(
+        self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Task to export thematic gpkg.
     """
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-osm_thematic_gpkg_export_task'}
 
     from eventkit_cloud.tasks.models import ExportRun
     self.update_task_state(result=result, task_uid=task_uid)
@@ -381,7 +392,7 @@ def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, 
     try:
         t2s = thematic_gpkg.ThematicGPKG(gpkg=input_gpkg, stage_dir=stage_dir, tags=tags, job_name=job_name,
                                          task_uid=task_uid)
-        out = t2s.convert()
+        out = t2s.convert(user_details=user_details)
         result['result'] = out
         return result
     except Exception as e:
@@ -390,7 +401,7 @@ def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, 
 
 
 @app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
-def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Class defining SHP export function.
     """
@@ -411,7 +422,7 @@ def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
 
 
 @app.task(name='KML Format', bind=True, base=FormatTask)
-def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Class defining KML export function.
     """
@@ -431,7 +442,7 @@ def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
 
 
 @app.task(name='SQLITE Format', bind=True, base=FormatTask)
-def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Class defining SQLITE export function.
     """
@@ -455,6 +466,11 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     """
     Class defining geopackage export function.
     """
+    user_details = kwargs.get('user_details')
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-bounds_export_task'}
+
     from .models import ExportRun
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -464,7 +480,9 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     bounds = run.job.the_geom.geojson or run.job.bounds_geojson
 
     gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
-    gpkg = geopackage.add_geojson_to_geopackage(geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid)
+    gpkg = geopackage.add_geojson_to_geopackage(
+        geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid, user_details=user_details
+    )
 
     result['result'] = gpkg
     result['geopackage'] = result_gpkg
@@ -472,7 +490,8 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
 
 @app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
-def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
+                                  *args, **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -486,7 +505,8 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
         # Test if json.
         json.loads(selection)
         from audit_logging.file_logging import logging_open
-        with logging_open(geojson_file, 'w') as open_file:
+        user_details = kwargs.get('user_details')
+        with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
             open_file.write(selection)
         result['selection'] = geojson_file
         result['result'] = geojson_file
@@ -497,7 +517,8 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
-def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
+def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+        user_details=None):
     """
     Class defining geopackage export function.
     """
@@ -515,7 +536,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_d
 
 @app.task(name='WFSExport', bind=True, base=FormatTask)
 def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
-                    job_name=None, bbox=None, service_url=None, name=None, service_type=None):
+                    job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
     """
     Class defining geopackage export for WFS service.
     """
@@ -537,7 +558,7 @@ def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                        stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
-                                       service_type=None):
+                                       service_type=None, user_details=None):
     """
     Class defining sqlite export for ArcFeatureService service.
     """
@@ -629,10 +650,13 @@ def external_raster_service_export_task(self, result={}, layer=None, config=None
 
 
 @app.task(name='Pickup Run', bind=True)
-def pick_up_run_task(self, result={}, run_uid=None):
+def pick_up_run_task(self, result={}, run_uid=None, user_details=None):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-pick_up_run_task'}
 
     from .models import ExportRun
     from .task_factory import TaskFactory
@@ -641,7 +665,7 @@ def pick_up_run_task(self, result={}, run_uid=None):
     run = ExportRun.objects.get(uid=run_uid)
     run.worker = worker
     run.save()
-    TaskFactory().parse_tasks(worker=worker, run_uid=run_uid)
+    TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
 
 
 @app.task(name='Clean Up Failure Task', base=Task)
