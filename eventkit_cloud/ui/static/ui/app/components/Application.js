@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
+import axios from 'axios';
 import logo from '../../images/eventkit-logo.1.png'
 import AppBar from 'material-ui/AppBar'
 import Drawer from 'material-ui/Drawer'
@@ -9,7 +10,7 @@ import { Link, IndexLink } from 'react-router';
 import css from '../styles/TitleBar.css'
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
-import ClassificationBanner from './ClassificationBanner'
+import Banner from './Banner'
 import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
@@ -37,7 +38,10 @@ export class Application extends Component {
         this.handleToggle = this.handleToggle.bind(this)
         this.handleClose = this.handleClose.bind(this)
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
-        this.onLogoutClick = this.onLogoutClick.bind(this);
+        this.getConfig = this.getConfig.bind(this);
+        this.state = {
+            config: {}
+        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -47,7 +51,11 @@ export class Application extends Component {
                  this.props.openDrawer();
              }
          }
-    } 
+    }
+
+    componentDidMount() {
+        this.getConfig()
+    }
 
     handleToggle() {
         if(this.props.drawerOpen) {
@@ -68,18 +76,29 @@ export class Application extends Component {
         }
     }
 
-    onLogoutClick() {
-        this.props.closeDrawer();
+    getChildContext() {
+        return {
+            config: this.state.config
+        }
+        
+    }
+
+    getConfig() {
+        return axios.get('/configuration')
+        .then((response) => {
+            if(response.data) {
+                this.setState({config: response.data});
+            }
+        }).catch((error) => {
+        
+        });
     }
 
     render() {
-
         const contentStyle = {transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)'};
-
         if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
         }
-
         const styles = {
             appBar: {
                 backgroundColor: 'black',
@@ -111,10 +130,16 @@ export class Application extends Component {
 
         const img = <img style={styles.img} src={logo}/>
 
+        const childrenWithContext = React.Children.map(this.props.children, (child) => {
+            return React.cloneElement(child, {
+                context: {config: this.state.config}
+            });
+        });
+
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{backgroundColor: '#000'}}>
-                    <ClassificationBanner />
+                    <Banner />
                     <header className="header" style={{height: '95px'}}>
                         <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
                     </header>
@@ -136,37 +161,37 @@ export class Application extends Component {
                         </Subheader>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
-                                <AVLibraryBooks style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;DataPack Library
+                                <AVLibraryBooks style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                                DataPack Library
                             </IndexLink>
                         </MenuItem>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/create" >
-                                <ContentAddBox style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;Create DataPack
+                                <ContentAddBox style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                                Create DataPack
                             </Link>
                         </MenuItem>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/about" >
-                                <ActionInfoOutline style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;About EventKit
+                                <ActionInfoOutline style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                                About EventKit
                             </Link>
                         </MenuItem>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/account" >
-                                <SocialPerson style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;Account Settings
+                                <SocialPerson style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                                Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onLogoutClick}>
+                        <MenuItem className={css.menuItem} onClick={this.handleClose}>
                             <Link className={css.link} activeClassName={css.active} to="/logout" >
-                                <ActionExitToApp style={{height: '22px', width: '22px'}}/>
-                                &nbsp;&nbsp;&nbsp;Log Out
+                                <ActionExitToApp style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                                Log Out
                             </Link>
                         </MenuItem>
                     </Drawer>
                     <div style={contentStyle} className={css.contentStyle}>
-                        {this.props.children}
+                        <div>{childrenWithContext}</div>
                     </div>
                 </div>
             </MuiThemeProvider>
@@ -180,6 +205,10 @@ Application.propTypes = {
     userDate: PropTypes.object,
     drawerOpen: PropTypes.bool,
 };
+
+Application.childContextTypes = {
+    config: PropTypes.object,
+}
 
 function mapStateToProps(state) {
     return {

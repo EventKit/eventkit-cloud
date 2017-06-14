@@ -3,16 +3,17 @@ import logging
 import os
 import uuid
 
-from mock import Mock, PropertyMock, patch
+from mock import Mock, PropertyMock, patch, MagicMock
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
-from django.db import IntegrityError
+from django.db.utils import DatabaseError
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider, ExportProviderType
+from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
 
-from ..task_runners import ExportGenericOSMTaskRunner, ExportThematicOSMTaskRunner, ExportExternalRasterServiceTaskRunner
+from ..task_runners import (ExportGenericOSMTaskRunner, ExportThematicOSMTaskRunner,
+                            ExportExternalRasterServiceTaskRunner, create_export_task)
 from ..task_factory import create_run
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ class TestExportTaskRunner(TestCase):
         self.job.region = self.region
         self.job.save()
         create_run(job_uid=self.job.uid)
-
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
@@ -120,3 +120,26 @@ class TestExportTaskRunner(TestCase):
         self.assertIsNotNone(tasks)
         self.assertEquals(1, len(tasks))
         self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
+
+    @patch('eventkit_cloud.tasks.task_runners.ExportTask')
+    def test_create_export_task(self, mock_export_task):
+        task_name = "TaskName"
+        export_provider_task_name = "ExportProviderTaskName"
+        worker = "Worker"
+        expected_result = MagicMock(display=False)
+        mock_export_task.objects.create.return_value = expected_result
+
+        task_result = create_export_task(task_name=task_name, export_provider_task=export_provider_task_name,
+                                         worker=worker, display=None)
+        self.assertEquals(task_result, expected_result)
+        self.assertFalse(expected_result.display)
+
+        task_result = create_export_task(task_name=task_name, export_provider_task=export_provider_task_name,
+                                         worker=worker, display=True)
+        self.assertEquals(task_result, expected_result)
+        self.assertTrue(expected_result.display)
+
+        mock_export_task.objects.create.side_effect = DatabaseError("SomeError")
+        with self.assertRaises(DatabaseError):
+            create_export_task(task_name=task_name, export_provider_task=export_provider_task_name,
+                               worker=worker, display=True)

@@ -44,13 +44,37 @@ describe('DataPackDetails component', () => {
         const table = wrapper.find(Table).first();
         expect(table.find(TableHeader)).toHaveLength(1);
         expect(table.find(TableRow)).toHaveLength(1);
-        expect(table.find(TableHeaderColumn)).toHaveLength(6);
+        expect(table.find(TableHeaderColumn)).toHaveLength(5);
         expect(table.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(1).text()).toEqual('DATA SETS');
-        expect(table.find(TableHeaderColumn).at(2).text()).toEqual('# SELECTED');
+        expect(table.find(TableHeaderColumn).at(2).text()).toEqual('FILE SIZE');
         expect(table.find(TableHeaderColumn).at(3).text()).toEqual('PROGRESS');
         expect(table.find(TableHeaderColumn).at(4).find(RaisedButton)).toHaveLength(1);
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
+    });
+    it('getTextFontSize should return the font string for table text based on window width', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getTextFontSize()).toEqual('10px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getTextFontSize()).toEqual('11px');
+
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getTextFontSize()).toEqual('12px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getTextFontSize()).toEqual('13px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getTextFontSize()).toEqual('14px');
     });
 
     it('should call checkAll when the checkbox is checked/unchecked', () => {
@@ -150,7 +174,8 @@ const providerTasks = [
                 "started_at": "2017-05-15T15:28:49.038510Z",
                 "status": "SUCCESS",
                 "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
-                "result": { 
+                "result": {
+                    "size": "1.234 MB",
                     "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
                 },
             }

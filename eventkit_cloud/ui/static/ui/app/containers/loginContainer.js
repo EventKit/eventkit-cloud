@@ -1,17 +1,9 @@
 import React, {PropTypes} from 'react'
 import {connect} from 'react-redux'
-import {reduxForm, Field} from 'redux-form'
-import {Menu, MenuItem} from 'material-ui/Menu'
-import FloatingActionButton from 'material-ui/FloatingActionButton'
-import {
-    TextField,
-} from 'redux-form-material-ui'
-import styles from '../components/auth/Login.css'
 import {login} from '../actions/userActions'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import '../components/tap_events';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import axios from 'axios';
 import RaisedButton from 'material-ui/RaisedButton';
 
@@ -21,35 +13,38 @@ export class Form extends React.Component {
         super(props);
         this.onChange = this.onChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.state = {
+            username: '',
+            password: '',
+            buttonDisabled: true,
+            login_form: false,
+            oauth_name: "",
+        };
     }
-
-    state = {
-        username: '',
-        password: '',
-        button: DISABLED_BUTTON,
-        login_form: false,
-        oauth_name: ""
-    };
 
     onChange(event) {
         this.setState({[event.target.name]: event.target.value}, function () {
             if (!this.state.username || !this.state.password) {
-                this.setState({button: DISABLED_BUTTON})
+                if(!this.state.buttonDisabled) {
+                    this.setState({buttonDisabled: true});
+                }
             }
             else {
-                this.setState({button: ENABLED_BUTTON})
+                if(this.state.buttonDisabled) {
+                    this.setState({buttonDisabled: false});
+                }
             }
         });
     }
 
-    checkAuthEndpoint = () => {
+    checkAuthEndpoint() {
         return axios.get('/auth').then(function (response) {
             this.setState({login_form: true});
         }.bind(this)).catch(function (response) {
         });
     }
 
-    checkOAuthEndpoint = () => {
+    checkOAuthEndpoint() {
         return axios.get('/oauth', {params: {query: "name"}}).then(function (response) {
             this.setState({oauth_name: response.data.name});
         }.bind(this)).catch(function (response) {
@@ -68,7 +63,7 @@ export class Form extends React.Component {
 
     handleOAuth(event) {
         event.preventDefault();
-        window.location.href = "/oauth";
+        window.location.assign('/oauth');
     }
 
     getChildContext() {
@@ -76,68 +71,97 @@ export class Form extends React.Component {
     }
 
     render() {
+        const styles = {
+            form: {
+                verticalAlign: 'middle',
+                margin: '0 auto',
+                maxWidth: 300,
+            },
+            heading: {
+                width: '100%',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: 'white',
+                margin: '15px auto 0px auto',
+            },
+            input: {
+                borderRadius: '0px',
+                outline: 'none',
+                border: 'none',
+                backgroundColor: 'rgba(179,205,224,.2)',
+                fontSize: '16px',
+                width: '100%',
+                height: '45px',
+                color: '#e2e2e2',
+                margin: '15px auto 0px auto',
+                padding: '10px',
+            }
+        }
         let login_form = ''
         let oauth_button = ''
         if (this.state.login_form) {
-            login_form = <form onSubmit={this.handleSubmit} onChange={this.onChange} className={styles.form}>
-                <div className={styles.heading}>Enter Login Information</div>
-                <div className={styles.fieldWrapper}>
-                    <input id="username"
-                           name="username"
-                           placeholder="Username"
-                           style={{fontSize: '16px', color: '#e2e2e2'}}
-                           type="text"/>
-                </div>
-                <div className={styles.fieldWrapper}>
-                    <input id="password"
-                           name="password"
-                           placeholder="Password"
-                           onChange={this.onChange}
-                           style={{fontSize: '16px', color: '#e2e2e2'}}
-                           type="password"
-                    />
-                </div>
-                {this.state.button}
+            login_form = <form onSubmit={this.handleSubmit} onChange={this.onChange} style={styles.form}>
+                <div style={styles.heading}>Enter Login Information</div>
+                <input 
+                    id="username"
+                    name="username"
+                    placeholder="Username"
+                    style={styles.input}
+                    type="text"
+                />
+                <input 
+                    id="password"
+                    name="password"
+                    placeholder="Password"
+                    onChange={this.onChange}
+                    style={styles.input}
+                    type="password"
+                />
+                <RaisedButton 
+                    style={{margin: '30px auto', width: '150px'}}
+                    backgroundColor={'#4598bf'}
+                    label={'Login'}
+                    labelColor={'#fff'}
+                    type={'submit'}
+                    name={'submit'}
+                    disabled={this.state.buttonDisabled}
+                />
             </form>
         }
         if (this.state.oauth_name) {
-            oauth_button = <RaisedButton className={'OAuthButton'}
-                style={{
-                    minWidth: 'none',
-                    borderRadius: 'px',
-                    margin: '15px auto 15px auto',
-                }}
-                buttonStyle={{borderRadius: '0px'}}
-                backgroundColor={'#4598bf'}
-                label={"Log in with " + this.state.oauth_name}
-                labelStyle={{color: '#fff', textTransform: 'none'}}
-                onClick={this.handleOAuth}/>
+            if (!this.state.login_form) {
+                
+                oauth_button = <div>
+                    <div style={{margin: '40px auto', fontSize: '24px', color: '#fff'}}>
+                        <strong>Welcome to EventKit</strong>
+                    </div>
+                    <RaisedButton 
+                        style={{margin: '40px auto', minWidth: '150px'}}
+                        labelStyle={{textTransform: 'none'}}
+                        backgroundColor={'#4598bf'}
+                        label={`Login with ${this.state.oauth_name}`}
+                        labelColor={'#fff'}
+                        onClick={this.handleOAuth}
+                    />
+                </div>
+            }
+            else {
+                oauth_button = <a style={{color: '#4598bf', margin: '15px auto'}} onClick={this.handleOAuth}><strong>Or, login with {this.state.oauth_name}</strong></a>
+            }
         }
-        return <div style={{verticalAlign: 'center', textAlign: 'center'}}>
-            {login_form}
-            {oauth_button}
-        </div>
+        return (
+            <div style={{verticalAlign: 'middle', textAlign: 'center', marginTop: '30px'}}>
+                {login_form}
+                {oauth_button}
+                {!login_form && !oauth_button ? 
+                    <div style={{color: '#fff', marginTop: '150px'}}>
+                        No login methods available, please contact an administrator
+                    </div>
+                : null}
+            </div>
+        );
     }
 }
-
-const DISABLED_BUTTON = <div className={styles.disabledButton}>
-    <FloatingActionButton name="submit"
-                          mini={false}
-                          type="submit"
-                          disabled={true}
-                          style={{marginLeft: 'auto', marginRight: 'auto'}}>
-        <NavigationArrowForward />
-    </FloatingActionButton>
-</div>
-
-const ENABLED_BUTTON = <div className={styles.enabledButton}>
-    <FloatingActionButton name="submit"
-                          mini={false}
-                          type="submit"
-                          style={{marginLeft: 'auto', marginRight: 'auto'}}>
-        <NavigationArrowForward />
-    </FloatingActionButton>
-</div>
 
 function mapDispatchToProps(dispatch) {
     return {
@@ -146,7 +170,6 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
-
 
 Form.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,

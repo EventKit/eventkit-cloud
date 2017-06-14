@@ -19,6 +19,30 @@ class TestUIViews(TestCase):
         self.client = Client()
         self.client.login(username='user', password='pass')
 
+    def test_get_config(self):
+        with self.settings(UI_CONFIG={}):
+            response = self.client.get('/configuration')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.content), {})
+
+        with self.settings(
+            UI_CONFIG={
+                'LOGIN_DISCLAIMER': '<div>This is a disclaimer</div>',
+                'BANNER_BACKGROUND_COLOR': 'red',
+                'BANNER_TEXT_COLOR': 'green',
+                'BANNER_TEXT': 'This is banner text',
+            }
+        ):
+            response = self.client.get('/configuration')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(json.loads(response.content), {
+                'LOGIN_DISCLAIMER': '<div>This is a disclaimer</div>',
+                'BANNER_BACKGROUND_COLOR': 'red',
+                'BANNER_TEXT_COLOR': 'green',
+                'BANNER_TEXT': 'This is banner text',
+            })
+
+
     @patch('eventkit_cloud.ui.views.get_size_estimate')
     def test_data_estimate_view(self, get_estimate):
 

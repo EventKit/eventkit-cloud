@@ -75,8 +75,14 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
-    # 'audit_logging',
+    'audit_logging',
 )
+
+AUDIT_MODELS = [
+    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
+    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+]
 
 DATABASES = {}
 
@@ -148,6 +154,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
+UI_CONFIG = {
+    'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
+    'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
+    'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
+    'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
+}
+
 if os.environ.get('USE_S3'):
     USE_S3 = True
 else:
@@ -158,13 +171,6 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
-
-AUDIT_MODELS = [
-    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
-    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
-]
-
 
 LOGGING = {
     'version': 1,

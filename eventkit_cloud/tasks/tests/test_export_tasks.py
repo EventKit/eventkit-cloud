@@ -26,7 +26,8 @@ from ..export_tasks import (
     osm_prep_schema_task, osm_to_pbf_convert_task, overpass_query_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress, output_selection_geojson_task,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task
+    parse_result, finalize_export_provider_task, clean_up_failure_task, bounds_export_task, osm_create_styles_task,
+    FormatTask
 )
 from ...celery import TaskPriority, app
 from eventkit_cloud.tasks.models import (
@@ -481,8 +482,8 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.timezone')
     @patch('celery.app.task.Task.request')
-    @patch('__builtin__.open')
-    def test_run_osm_create_styles_task(self, mock_open, mock_request, mock_timezone):
+    @patch('audit_logging.file_logging.logging_open')
+    def test_run_osm_create_styles_task(self, mock_logging_open, mock_request, mock_timezone):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -503,7 +504,7 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-        mock_open.assert_called_once_with(style_file, 'w')
+        mock_logging_open.assert_called_once_with(style_file, 'w')
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')
@@ -880,3 +881,9 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals('Kill Task', kill_task.name)
         kill_task.run(task_pid=task_pid)
         kill.assert_called_once_with(task_pid, signal.SIGTERM)
+
+
+class TestFormatTasks(ExportTaskBase):
+
+    def test_ensure_display(self):
+        self.assertTrue(FormatTask.display)

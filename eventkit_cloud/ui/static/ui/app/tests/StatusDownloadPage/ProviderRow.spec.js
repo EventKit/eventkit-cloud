@@ -42,7 +42,8 @@ describe('ProviderRow component', () => {
                 muiTheme: React.PropTypes.object
             }
         });
-    }
+    };
+
     it('should render elements', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
@@ -67,6 +68,45 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(Checkbox)).toHaveLength(2);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LinearProgress)).toHaveLength(1);
+    });
+
+    it('should handle summing up the file sizes', () => {
+        let props = getProps();
+        const wrapper = getWrapper(props);
+        let nextProps = getProps();
+        let fileSize = 1.234;
+        const propsSpy = new sinon.spy(ProviderRow.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({fileSize: fileSize.toFixed(3)})).toBe(true);
+        stateSpy.restore();
+        propsSpy.restore();
+    });
+
+    it('getTextFontSize should return the font string for table text based on window width', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        window.resizeTo(500, 600);
+        expect(window.innerWidth).toEqual(500);
+        expect(wrapper.instance().getTextFontSize()).toEqual('10px');
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getTextFontSize()).toEqual('11px');
+
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getTextFontSize()).toEqual('12px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getTextFontSize()).toEqual('13px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getTextFontSize()).toEqual('14px');
     });
 
     it('should call componentWillMount and set the row and count state', () => {
@@ -187,6 +227,7 @@ const tasks = [
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         "result": {
+            "size": "1.234 MB",
             "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         },
     }

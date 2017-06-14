@@ -38,6 +38,10 @@ services:
 #        - 'OAUTH_PROFILE_SCHEMA={"identification": "DN", "username": "username", "email": "email", "first_name": "firstname", "last_name": "lastname}'
 #        - OAUTH_PROFILE_URL=http://remote.dev/o/profile
         - DJANGO_MODEL_LOGIN=True
+        - LOGIN_DISCLAIMER
+        - BANNER_TEXT
+        - BANNER_TEXT_COLOR
+        - BANNER_BACKGROUND_COLOR
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'

@@ -26,7 +26,7 @@ export class ProviderRow extends React.Component {
             selectedRows: { },
             selectionCount: 0,
             taskCount: 0,
-
+            fileSize: null,
         }
     }
 
@@ -40,6 +40,18 @@ export class ProviderRow extends React.Component {
             taskCount++
         })
         this.setState({selectedRows:t, taskCount})
+    }
+
+    componentWillReceiveProps(nextProps) {
+        let fileSize = 0.000;
+        nextProps.provider.tasks.forEach((task) => {
+            if (task.result != null){
+                let textReplace = task.result.size.replace(' MB','');
+                let number = textReplace;
+                fileSize = Number(fileSize) + Number(number);
+                this.setState({fileSize: fileSize.toFixed(3)});
+            }
+        })
     }
 
     handleToggle() {
@@ -123,8 +135,28 @@ export class ProviderRow extends React.Component {
         this.props.onSelectionToggle(selectedRows);
     }
 
+    getTextFontSize() {
+        if(window.innerWidth <= 575) {
+            return '10px';
+        }
+        else if (window.innerWidth <= 767) {
+            return '11px';
+        }
+        else if (window.innerWidth <= 991) {
+            return '12px';
+        }
+        else if(window.innerWidth <= 1199) {
+            return '13px';
+        }
+        else {
+            return '14px';
+        }
+    }
+
+
 
     render() {
+        const textFontSize = this.getTextFontSize();
         const {provider, ...rowProps} = this.props;
 
         let tableData;
@@ -137,7 +169,7 @@ export class ProviderRow extends React.Component {
             >
                 {provider.tasks.map((task) => (
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
-                    <TableRowColumn style={{width: '10%'}}>
+                    <TableRowColumn style={{width: '88px'}}>
                     <Checkbox
                         disabled={task.result == null ? true : false}
                         name={task.uid}
@@ -147,11 +179,11 @@ export class ProviderRow extends React.Component {
                         style={{marginLeft: '2em'}}
                         onCheck={this.onChangeCheck}
                         /></TableRowColumn>
-                    <TableRowColumn style={{width: '25%', fontSize: '14px'}}>{task.name}</TableRowColumn>
-                    <TableRowColumn style={{width: '30%', textAlign: 'center', fontSize: '14px'}} ></TableRowColumn>
-                    <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px', fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
-                    <TableRowColumn style={{width: '15%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
-                    <TableRowColumn style={{width: '12%', textAlign: 'center', fontSize: '14px'}}></TableRowColumn>
+                    <TableRowColumn style={{ fontSize: textFontSize}}>{task.name}</TableRowColumn>
+                    <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
+                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
+                    <TableRowColumn style={{width: '124px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
+                    <TableRowColumn style={{width: '110px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
 
                 ))}
@@ -166,6 +198,7 @@ export class ProviderRow extends React.Component {
         return (
 
             <Table key={this.props.provider.uid}
+                   style={{width:'100%'}}
                    selectable={false}
                    multiSelectable={false}
                    >
@@ -176,7 +209,7 @@ export class ProviderRow extends React.Component {
                     enableSelectAll={false}
                     >
                     <TableRow displayBorder={true}>
-                        <TableHeaderColumn>
+                        <TableHeaderColumn style={{width:'88px'}}>
                             <Checkbox 
                                 checked={this.allChecked()} 
                                 onCheck={this.onAllCheck}
@@ -184,14 +217,14 @@ export class ProviderRow extends React.Component {
                                 uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                             />
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'30%', color: 'black', fontWeight: 'bold', fontSize: '14px'}}>
+                        <TableHeaderColumn style={{whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
                             {this.props.provider.name}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'30%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}>
-                            {this.state.selectionCount}/{this.state.taskCount}
+                        <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                            {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'12%',textAlign: 'center', color: 'black!important', fontSize: '14px'}}/>
-                        <TableHeaderColumn style={{width:'13%',textAlign: 'right'}}>
+                        <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}/>
+                        <TableHeaderColumn style={{width: '124px',textAlign: 'right'}}>
                             <IconButton 
                                 disableTouchRipple={true} 
                                 onTouchTap={this.handleDownload} 
@@ -201,7 +234,7 @@ export class ProviderRow extends React.Component {
                                 <CloudDownload/>
                             </IconButton>
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'10%',textAlign: 'left'}}> 
+                        <TableHeaderColumn style={{width: '110px', textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>

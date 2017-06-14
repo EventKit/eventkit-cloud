@@ -26,7 +26,7 @@ from ..utils import (
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
 )
 import json
-
+from functools import wraps
 from .exceptions import CancelException
 
 
@@ -126,7 +126,7 @@ class ExportTask(LockingTask):
             finished = timezone.now()
             task = ExportTaskModel.objects.get(celery_uid=task_id)
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
-                logging.info('Task reported on success but was previously canceled ',format(task_id))
+                logging.info('Task reported on success but was previously canceled ', format(task_id))
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.finished_at = finished
             task.progress = 100
@@ -262,6 +262,13 @@ class ExportTask(LockingTask):
             raise e
 
 
+class FormatTask(ExportTask):
+    """
+    A class to manage tasks which are desired output from the user, and not merely associated files or metadata.
+    """
+    display = True
+
+
 @app.task(name="OSMConf", bind=True, base=ExportTask, abort_on_error=True)
 def osm_conf_task(self, result={}, categories=None, stage_dir=None, job_name=None, task_uid=None):
     """
@@ -326,7 +333,7 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     return result
 
 
-@app.task(name="QGIS Project file (.qgs)", bind=True, base=ExportTask, abort_on_error=False)
+@app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
 def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None, provider_name=None, bbox=None):
     """
     Task to create styles for osm.
@@ -340,7 +347,8 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
-    with open(style_file, 'w') as open_file:
+    from audit_logging.file_logging import logging_open
+    with logging_open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
                                                                                                               timezone.now().strftime(
@@ -355,7 +363,7 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     return result
 
 
-@app.task(name="OSM Data (.gpkg)", bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name="OSM Data (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Task to export thematic gpkg.
@@ -381,7 +389,7 @@ def osm_thematic_gpkg_export_task(self, result={}, run_uid=None, task_uid=None, 
         raise Exception(e)  # hand off to celery..
 
 
-@app.task(name='ESRI Shapefile Format', bind=True, base=ExportTask)
+@app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
 def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining SHP export function.
@@ -402,7 +410,7 @@ def shp_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
         raise Exception(e)
 
 
-@app.task(name='KML Format', bind=True, base=ExportTask)
+@app.task(name='KML Format', bind=True, base=FormatTask)
 def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining KML export function.
@@ -422,7 +430,7 @@ def kml_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None
         raise Exception(e)
 
 
-@app.task(name='SQLITE Format', bind=True, base=ExportTask)
+@app.task(name='SQLITE Format', bind=True, base=FormatTask)
 def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining SQLITE export function.
@@ -477,7 +485,8 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
     if selection and not os.path.isfile(geojson_file):
         # Test if json.
         json.loads(selection)
-        with open(geojson_file, 'w') as open_file:
+        from audit_logging.file_logging import logging_open
+        with logging_open(geojson_file, 'w') as open_file:
             open_file.write(selection)
         result['selection'] = geojson_file
         result['result'] = geojson_file
@@ -487,7 +496,7 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
     return result
 
 
-@app.task(name='Geopackage Format', bind=True, base=ExportTask)
+@app.task(name='Geopackage Format', bind=True, base=FormatTask)
 def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None):
     """
     Class defining geopackage export function.
@@ -504,7 +513,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_d
     return result
 
 
-@app.task(name='WFSExport', bind=True, base=ExportTask)
+@app.task(name='WFSExport', bind=True, base=FormatTask)
 def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None):
     """
@@ -525,7 +534,7 @@ def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task
         raise Exception(e)
 
 
-@app.task(name='ArcFeatureServiceExport', bind=True, base=ExportTask)
+@app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                        stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
                                        service_type=None):
@@ -548,7 +557,7 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
         raise Exception(e)
 
 
-@app.task(name='Project file (.zip)', bind=True, base=ExportTask)
+@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
 def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
                         *args, **kwargs):
     from .models import ExportProviderTask
@@ -590,7 +599,7 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
     return result
 
 
-@app.task(name='Raster export (.gpkg)', bind=True, base=ExportTask)
+@app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask)
 def external_raster_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
                                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
                                         level_to=None, name=None, service_type=None, *args, **kwargs):

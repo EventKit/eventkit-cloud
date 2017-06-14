@@ -54,7 +54,7 @@ class ThematicGPKG(object):
                                     'select_clause': 'aeroway is not null'},
             'aviation_all_polygons': {'key': 'aeroway', 'table': 'planet_osm_polygon',
                                       'select_clause': 'aeroway is not null'},
-            'aviation_all_lines': {'key': 'aeroway', 'table': 'planet_osm_line', 
+            'aviation_all_lines': {'key': 'aeroway', 'table': 'planet_osm_line',
                                       'select_clause': 'aeroway is not null'},
             'places_points': {'key': 'place', 'table': 'planet_osm_point', 'select_clause': 'place is not null'},
             'buildings_polygons': {'key': 'building', 'table': 'planet_osm_polygon',
@@ -77,7 +77,7 @@ class ThematicGPKG(object):
             'bridges_lines': {'key': 'bridge', 'table': 'planet_osm_line', 'select_clause': 'bridge is not null'},
         }
 
-    def convert(self, ):
+    def convert(self,):
         """
         Generate the thematic schema.
 
@@ -178,7 +178,8 @@ class ThematicGPKG(object):
 
         thematic_spatial_index_file = os.path.join(self.stage_dir, 'thematic_spatial_index.sql')
 
-        with open(thematic_spatial_index_file, 'w+') as sql_file:
+        from audit_logging.file_logging import logging_open
+        with logging_open(thematic_spatial_index_file, 'w+') as sql_file:
             convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
             index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
             convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")

@@ -195,10 +195,16 @@ def data_estimator(request):
         size += estimates[1]
     return HttpResponse([size], status=200)
 
+@require_http_methods(['GET'])
+def get_config(request):
+    """
+    :param request: a GET request
+    :return: a dict of available configurations
+    """
+    config = getattr(settings, 'UI_CONFIG', {})
+    return HttpResponse(json.dumps(config), status=200)
 
 # error views
-
-
 @require_http_methods(['GET'])
 def create_error_view(request):
     return render_to_response('ui/error.html', {}, RequestContext(request), status=500)

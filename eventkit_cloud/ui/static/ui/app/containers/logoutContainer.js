@@ -1,7 +1,6 @@
 import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import { logout } from '../actions/userActions';
-import styles from '../components/auth/Login.css'
 
 
 let createHandlers = function(dispatch) {
@@ -26,9 +25,23 @@ class Logout extends React.Component {
     }
 
     render() {
+        const styles = {
+            wholeDiv: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'black',
+                marginBottom: '0px',
+            },
+            root: {
+                justifyContent: 'space-around',
+                display: 'flex',
+                flexWrap: 'wrap',
+                height: window.innerHeight - 95,
+            },
+        }
         return (
-            <div className={styles.wholeDiv}>
-                <div className={styles.root}>
+            <div style={styles.wholeDiv}>
+                <div style={styles.root}>
                 </div>
             </div>
         )
