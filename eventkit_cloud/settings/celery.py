@@ -36,12 +36,23 @@ CELERYBEAT_SCHEDULE = {
     }
 }
 
+CELERYD_USER = CELERYD_GROUP = 'eventkit'
+if os.getenv("VCAP_SERVICES"):
+    CELERYD_USER = CELERYD_GROUP = "vcap"
+CELERYD_USER = os.getenv("CELERYD_USER", CELERYD_USER)
+CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
-if os.environ.get('VCAP_SERVICES'):
-    services = json.loads(os.environ.get('VCAP_SERVICES'))
-    try:
-        BROKER_URL = services['cloudamqp'][0]['credentials']['uri']
-    except KeyError:
-        BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@localhost:5672//')
-else:
+BROKER_URL=None
+if os.getenv("VCAP_SERVICES"):
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+        try:
+            if 'rabbitmq' in service:
+                BROKER_URL = listings[0]['credentials']['protocols']['amqp']['uri']
+            if 'cloudamqp' in service:
+                BROKER_URL = listings[0]['credentials']['uri']
+        except KeyError, TypeError:
+            continue
+        if BROKER_URL:
+            break
+if not BROKER_URL:
     BROKER_URL = os.environ.get('BROKER_URL', 'amqp://guest:guest@localhost:5672//')

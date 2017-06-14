@@ -34,27 +34,28 @@ class TestThematicGPKG(TestCase):
                                       event='Nepal activation', user=self.user, the_geom=the_geom,
                                       json_tags=preset.json_tags)
 
+    @patch('eventkit_cloud.utils.thematic_gpkg.create_table_from_existing')
+    @patch('eventkit_cloud.utils.thematic_gpkg.execute_spatialite_script')
+    @patch('eventkit_cloud.utils.thematic_gpkg.enable_spatialite')
     @patch('os.remove')
     @patch('__builtin__.open')
     @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
     @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')
-    @patch('eventkit_cloud.utils.thematic_gpkg.TaskProcess')
-    @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3.connect')
-    def test_convert(self, connect, task_process, exists, copy, mock_open, remove):
+    @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3')
+    def test_convert(self, mock_sqlite, exists, copy, mock_open, remove, mock_enable_spatialite,
+                     mock_execute_spatialite_script, mock_create_table):
         gpkg = self.path + '/files/test.gpkg'
         stage_dir = '/test/path'
         job_name = 'test_thematic_gpkg'
         sql_file_name = 'thematic_spatial_index.sql'
         expected_out = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-        expected_call = 'spatialite {0} < {1}'.format(expected_out, os.path.join(stage_dir, sql_file_name))
+        expected_sql_file_name = os.path.join(stage_dir, sql_file_name)
         exists.return_value = True
         conn = MagicMock()
-        connect.return_value = conn
-        conn.execute = MagicMock()
+        mock_sqlite.connect.return_value = conn
         tags = self.job.categorised_tags
         generated_task_uid = uuid.uuid4()
 
-        task_process.return_value = Mock(exitcode=0)
         t2s = ThematicGPKG(
             gpkg=gpkg,
             tags=tags,
@@ -64,11 +65,10 @@ class TestThematicGPKG(TestCase):
             task_uid=generated_task_uid
         )
         out = t2s.convert()
+        mock_enable_spatialite.assert_called_once_with(conn)
+        mock_execute_spatialite_script.assert_called_once_with(expected_out, expected_sql_file_name)
         copy.assert_called_once_with(gpkg, expected_out)
         exists.assert_has_calls([call(gpkg), call(os.path.join(stage_dir, '{0}.gpkg'.format(job_name)))])
-        task_process.assert_called_with(task_uid=generated_task_uid)
-        task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
-        conn.enable_load_extension.assert_called_once_with(True)
         mock_open.assert_called_once_with(os.path.join(stage_dir, sql_file_name), 'w+')
         remove.assert_called_once_with(os.path.join(stage_dir, sql_file_name))
         self.assertEqual(out, expected_out)
