@@ -45,11 +45,13 @@ export class ProviderRow extends React.Component {
     componentWillReceiveProps(nextProps) {
         let fileSize = 0.000;
         nextProps.provider.tasks.forEach((task) => {
-            if (task.result != null){
-                let textReplace = task.result.size.replace(' MB','');
-                let number = textReplace;
-                fileSize = Number(fileSize) + Number(number);
-                this.setState({fileSize: fileSize.toFixed(3)});
+            if (task.result != null ){
+                if (task.display != false) {
+                    let textReplace = task.result.size.replace(' MB', '');
+                    let number = textReplace;
+                    fileSize = Number(fileSize) + Number(number);
+                    this.setState({fileSize: fileSize.toFixed(3)});
+                }
             }
         })
     }
@@ -159,6 +161,10 @@ export class ProviderRow extends React.Component {
         const textFontSize = this.getTextFontSize();
         const {provider, ...rowProps} = this.props;
 
+        const tasks = provider.tasks.filter((task) => {
+            return task.display != false;
+        });
+
         let tableData;
         if(this.state.openTable == true){
             tableData = <TableBody
@@ -167,7 +173,8 @@ export class ProviderRow extends React.Component {
                 showRowHover={false}
                 className={styles.tableRowHighlight}
             >
-                {provider.tasks.map((task) => (
+                {tasks.map((task) => (
+
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
                     <TableRowColumn style={{width: '88px'}}>
                     <Checkbox

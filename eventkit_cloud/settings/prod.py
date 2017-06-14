@@ -75,14 +75,33 @@ LOGGING_LOG_SQL = DEBUG
 
 INSTALLED_APPS += (
     'django_extensions',
-    #disabled
-    #'audit_logging',
+    'audit_logging',
 )
+
+AUDIT_MODELS = [
+    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
+    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+]
 
 DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
-    DATABASES = {'default': dj_database_url.config()}
+    if os.environ.get('DATABASE_URL'):
+        DATABASES = {'default': dj_database_url.config()}
+    if not DATABASES:
+        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
+            try:
+                if 'pg_95' in service:
+                    DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
+                    DATABASES['default']['CONN_MAX_AGE'] = 500
+            except (KeyError, TypeError) as e:
+                print("Could not configure information for service: {0}".format(service))
+                print(e)
+                sys.stdout.flush()
+                continue
+            if DATABASES:
+                break
 else:
     DATABASES['default'] = dj_database_url.config(default='postgres://eventkit:eventkit_exports@localhost:5432/eventkit_exports')
 
@@ -135,7 +154,12 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-LOGIN_DISCLAIMER = os.environ.get('LOGIN_DISCLAIMER', None)
+UI_CONFIG = {
+    'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
+    'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
+    'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
+    'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
+}
 
 if os.environ.get('USE_S3'):
     USE_S3 = True
@@ -147,13 +171,6 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
-
-AUDIT_MODELS = [
-    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
-    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
-]
-
 
 LOGGING = {
     'version': 1,

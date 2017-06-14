@@ -56,7 +56,6 @@ const UserHasAgreed = UserAuthWrapper({
 function checkAuth(store) {
   return (nextState, replace) => {
     let { user } = store.getState();
-    console.log(user)
     if (!user.data){
         store.dispatch(login())
     }
@@ -76,7 +75,6 @@ render(
         <Router history={history}>
             <Redirect from="/" to="/exports"/>
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
-                
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
                 <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}>
@@ -90,7 +88,6 @@ render(
                 <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
                 <Route path="/about" component={About}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
-                
             </Route>
         </Router>
     </Provider>,

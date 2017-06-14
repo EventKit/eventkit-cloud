@@ -3,10 +3,10 @@ import argparse
 import logging
 from os.path import exists
 import os
-import sqlite3
 import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
+from sqlite import execute_spatialite_script
 
 from osgeo import gdal, ogr, osr
 
@@ -80,34 +80,9 @@ class OSMParser(object):
         Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
         """
         assert exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
-        try:
-            conn = sqlite3.connect(self.gpkg)
-            cur = conn.cursor()
-            sql = open(os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r').read()
-            cur.executescript(sql)
-            conn.commit()
-        except Exception as e:
-            logger.error('Problem creating default schema: {}'.format(e))
-            raise
-        finally:
-            cur.close()
-            conn.close()
 
-        self.update_sql = Template("spatialite $gpkg < $update_sql")
-        sql_cmd = self.update_sql.safe_substitute({'gpkg': self.gpkg,
-                                                   'update_sql': os.path.join(os.path.join(self.path, 'sql'),
-                                                                              'spatial_index.sql')})
-        if (self.debug):
-            print 'Running: %s' % sql_cmd
-
-        task_process = TaskProcess(task_uid=self.task_uid)
-        task_process.start_process(sql_cmd, shell=True, executable='/bin/bash',
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if task_process.exitcode != 0:
-            logger.error('%s', task_process.stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode)
-        if self.debug:
-            print 'spatialite returned: %s' % task_process.exitcode
+        execute_spatialite_script(self.gpkg, os.path.join(self.path, 'sql', 'planet_osm_schema.sql'))
+        execute_spatialite_script(self.gpkg, os.path.join(self.path, 'sql', 'spatial_index.sql'))
 
     def update_zindexes(self,):
         """

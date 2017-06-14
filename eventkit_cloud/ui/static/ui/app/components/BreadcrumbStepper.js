@@ -49,8 +49,6 @@ export class BreadcrumbStepper extends React.Component {
         if (this.props.jobFetched != nextProps.jobFetched) {
             if (nextProps.jobFetched) {
                 this.props.setDatacartDetailsReceived();
-                //this.props.getDatacartDetails(nextProps.jobuid);
-
             }
         }
     }
@@ -61,9 +59,10 @@ export class BreadcrumbStepper extends React.Component {
         const providers = this.props.exportInfo.providers;
 
         //TODO: Set formats up as an array for future need of other formats other than geopackage!
-        for(let provider in providers){
-            provider_tasks.push({'provider': providers[provider], 'formats': ['gpkg']});
-        }
+
+        providers.forEach((provider) => {
+            provider_tasks.push({'provider': provider.name, 'formats': ['gpkg']});
+        });
 
         const data = {
             name: this.props.exportInfo.exportName,
@@ -76,7 +75,6 @@ export class BreadcrumbStepper extends React.Component {
             tags : [],
         };
         this.props.submitJob(data);
-        //browserHistory.push('/');
     }
 
     handleNext() {

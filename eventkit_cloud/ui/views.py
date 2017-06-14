@@ -196,18 +196,15 @@ def data_estimator(request):
     return HttpResponse([size], status=200)
 
 @require_http_methods(['GET'])
-def get_login_disclaimer(request):
+def get_config(request):
     """
     :param request: a GET request
-    :return: Disclaimer string from the env or an empty string
+    :return: a dict of available configurations
     """
-    disclaimer = getattr(settings, "LOGIN_DISCLAIMER", None)
-    return HttpResponse(disclaimer or '', status=200)
-
+    config = getattr(settings, 'UI_CONFIG', {})
+    return HttpResponse(json.dumps(config), status=200)
 
 # error views
-
-
 @require_http_methods(['GET'])
 def create_error_view(request):
     return render_to_response('ui/error.html', {}, RequestContext(request), status=500)
