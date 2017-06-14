@@ -377,8 +377,11 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
+            logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
             pick_up_run_task.delay(run_uid=run_uid)
+            logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
+            logger.debug("Returning Run Data.".format(run.uid))
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)

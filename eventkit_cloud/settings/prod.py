@@ -87,7 +87,21 @@ AUDIT_MODELS = [
 DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
-    DATABASES = {'default': dj_database_url.config()}
+    if os.environ.get('DATABASE_URL'):
+        DATABASES = {'default': dj_database_url.config()}
+    if not DATABASES:
+        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
+            try:
+                if 'pg_95' in service:
+                    DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
+                    DATABASES['default']['CONN_MAX_AGE'] = 500
+            except (KeyError, TypeError) as e:
+                print("Could not configure information for service: {0}".format(service))
+                print(e)
+                sys.stdout.flush()
+                continue
+            if DATABASES:
+                break
 else:
     DATABASES['default'] = dj_database_url.config(default='postgres://eventkit:eventkit_exports@localhost:5432/eventkit_exports')
 
