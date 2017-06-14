@@ -7,7 +7,7 @@ import os
 import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
-import sqlite3
+from pysqlite2 import dbapi2 as sqlite3
 import json
 
 logger = logging.getLogger(__name__)

@@ -42,7 +42,19 @@ CLASSIFICATION_BACKGROUND_COLOR = os.getenv('CLASSIFICATION_BACKGROUND_COLOR', '
 # CLASSIFICATION_LINK = os.getenv('CLASSIFICATION_LINK', '/security')
 
 # where exports are staged for processing
-EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
+EXPORT_STAGING_ROOT = None
+if os.getenv("VCAP_SERVICES"):
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+        if 'nfs' in service:
+            try:
+                EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
+            except (KeyError, TypeError) as e:
+                import sys
+                print(e)
+                sys.stdout.flush()
+                continue
+if not EXPORT_STAGING_ROOT:
+    EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
 
 # where exports are stored for public download
 EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/exports_download/')
@@ -73,7 +85,10 @@ if os.environ.get('VCAP_APPLICATION'):
 SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
 if SITE_NAME == '':
     SITE_NAME = 'localhost'
-SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
+if os.environ.get('VCAP_APPLICATION'):
+    SITE_URL = os.getenv('SITE_URL', 'https://{0}'.format(SITE_NAME))
+else:
+    SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
 SITE_ID = 1
 
 """
