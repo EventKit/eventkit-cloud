@@ -51,14 +51,22 @@ export class QuickTourSection extends Component {
     }
 
     render() {
+        const largeScreen = window.innerWidth > 991;
+        const stepTotal = this.props.steps.length;
+        const arrowOpacity = this.state.arrowsVisible ? 1 : 0;
+        const captionFontSize = largeScreen ? 16 : 14;
+        const numberFontSize = largeScreen ? 14 : 10;
+        const numberDiameter = largeScreen ? 25 : 20;
+        const numberWidth = numberDiameter + 10;
+
         const styles = {
             numberStyle: {
                 border: '2px solid #fff', 
                 borderRadius: '50%', 
-                width: '20px', 
-                height: '20px', 
+                width: numberDiameter, 
+                height: numberDiameter, 
                 textAlign: 'center', 
-                fontSize: '10px', 
+                fontSize: numberFontSize, 
                 display: 'inline-block', 
                 marginLeft: '10px', 
                 backgroundColor: '#fff', 
@@ -83,9 +91,7 @@ export class QuickTourSection extends Component {
                 backgroundColor: 'rgba(69, 152, 191, 0.2)'
             }
         };
-        const stepTotal = this.props.steps.length;
-        const arrowOpacity = this.state.arrowsVisible ? 1: 0;
-
+        
         return (
             <div style={{margin: '10px 0px'}}>
                 <Card initiallyExpanded={true} style={{backgroundColor: '#dcdcdc'}}>
@@ -98,10 +104,7 @@ export class QuickTourSection extends Component {
                     <CardMedia expandable={true} style={{padding: '0px 10px 10px 10px'}}>
                         <div style={{width: '100%', height: '100%', position: 'relative'}}
                             onMouseEnter={() => {this.setArrowVisibility(true)}}
-                            onTouchStart={() => {this.setArrowVisibility(true)}}
                             onMouseLeave={() => {this.setArrowVisibility(false)}}
-                            onTouchMove={() => {this.setArrowVisibility(false)}}
-                            onClick={() => {this.setArrowVisibility(false)}}
                         >
                             <Swipeable
                                 onSwipedLeft={this.nextStep}
@@ -109,22 +112,18 @@ export class QuickTourSection extends Component {
                             >
                                 <img src={this.props.steps[this.state.step].img} style={{width: '100%'}}/>
                             </Swipeable>
-                            <div 
-                                style={{...styles.nextImgDiv, left: '20px', opacity: arrowOpacity}}
-                            >
-                                <ChevronLeft style={styles.nextImgArrow} onClick={this.nextStep}/>
+                            <div style={{...styles.nextImgDiv, left: '20px', opacity: arrowOpacity}}>
+                                <ChevronLeft style={styles.nextImgArrow} onClick={this.previousStep}/>
                             </div>
-                            <div 
-                                style={{...styles.nextImgDiv, right: '20px', opacity: arrowOpacity}}
-                            >
+                            <div style={{...styles.nextImgDiv, right: '20px', opacity: arrowOpacity}}>
                                 <ChevronRight style={styles.nextImgArrow} onClick={this.nextStep}/>
                             </div>
                         </div>
                         <div style={{width: '100%', backgroundColor: '#4598bf', color: '#fff', padding: '7px 10px'}}>
-                            <div style={{display: 'inline-block', width: `calc(100% - ${stepTotal * 30}px)`, lineHeight: '22px'}}>
+                            <div style={{display: 'inline-block', width: `calc(100% - ${stepTotal * numberWidth}px)`, fontSize: captionFontSize}}>
                                 {this.props.steps[this.state.step].caption}
                             </div>
-                            <div style={{display: 'inline-block', width: `${stepTotal * 30}px`, verticalAlign: 'top'}}>
+                            <div style={{display: 'inline-block', width: `${stepTotal * numberWidth}px`, verticalAlign: 'top'}}>
                                 {this.props.steps.map((item, ix) => {
                                     const style = {
                                         ...styles.numberStyle, 

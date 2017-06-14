@@ -107,7 +107,7 @@ export class About extends Component {
                                 non scelerisque nulla tempus eu. Aliquam consectetur pellentesque nibh. Aenean lobortis aliquet lacus, 
                                 at convallis urna tempor scelerisque. Nullam eleifend vulputate felis sit amet feugiat. Donec at dignissim purus, sed tempus augue.
                             </div>
-                            <table style={{borderCollapse: 'collapse', marginTop: '30px'}}>
+                            <table style={{borderCollapse: 'collapse', marginTop: '30px', fontSize: window.innerWidth > 991 ? '16px': '14px'}}>
                                 <tbody>
                                     <tr>
                                         <td style={{verticalAlign: 'top'}}>
@@ -182,9 +182,5 @@ export class About extends Component {
         )
     };
 };
-
-About.PropTypes = {
-
-}
 
 export default About;
