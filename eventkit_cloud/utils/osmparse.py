@@ -74,17 +74,23 @@ class OSMParser(object):
         if (self.debug):
             print 'ogr2ogr returned: %s' % task_process.exitcode
 
-    def create_default_schema_gpkg(self,):
+    def create_default_schema_gpkg(self, user_details=None):
         """
         Create the default osm gpkg schema
         Creates planet_osm_point, planet_osm_line, planed_osm_polygon tables
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        if user_details is None:
+            user_details = {'username': 'unknown-create_default_schema_gpkg'}
+
         assert exists(self.gpkg), "No geopackage file. Run 'create_gpkg()' method first."
         try:
             conn = sqlite3.connect(self.gpkg)
             cur = conn.cursor()
             from audit_logging.file_logging import logging_open
-            sql = logging_open(os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r').read()
+            sql = logging_open(
+                os.path.join(os.path.join(self.path, 'sql'), 'planet_osm_schema.sql'), 'r', user_details=user_details
+            ).read()
             cur.executescript(sql)
             conn.commit()
         except Exception as e:
@@ -191,5 +197,6 @@ if __name__ == '__main__':
         debug = True
     parser = OSMParser(osm=osm, gpkg=gpkg, debug=debug)
     parser.create_geopackage()
+    user_details = {'username': 'unknown-osmparse__main__'}
     parser.create_default_schema_gpkg()
     parser.update_zindexes()
