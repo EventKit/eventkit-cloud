@@ -92,7 +92,7 @@ export class About extends Component {
                     <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
                         <div style={styles.bodyContent}>
                             <h4><strong>Overview</strong></h4>
-                            <div>
+                            <div id='aboutEventkitText'>
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum varius, mauris id accumsan lobortis, augue ex elementum ante, 
                                 sit amet luctus odio felis sit amet ex. Nunc congue porttitor libero eu semper. Nunc mauris ipsum, laoreet sit amet ullamcorper at, 
                                 feugiat sit amet nisi. Nulla a leo nulla. Ut lacinia nulla quis luctus bibendum. Cras pellentesque dolor risus, 
@@ -100,7 +100,7 @@ export class About extends Component {
                                 at convallis urna tempor scelerisque. Nullam eleifend vulputate felis sit amet feugiat. Donec at dignissim purus, sed tempus augue.
                             </div>
                             <h4 style={{marginTop: '30px'}}><strong>What is a DataPack?</strong></h4>
-                            <div>
+                            <div id='aboutDataPackText'>
                                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum varius, mauris id accumsan lobortis, augue ex elementum ante, 
                                 sit amet luctus odio felis sit amet ex. Nunc congue porttitor libero eu semper. Nunc mauris ipsum, laoreet sit amet ullamcorper at, 
                                 feugiat sit amet nisi. Nulla a leo nulla. Ut lacinia nulla quis luctus bibendum. Cras pellentesque dolor risus, 
