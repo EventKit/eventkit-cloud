@@ -87,7 +87,9 @@ class ExportSummary extends React.Component {
 
 
     render() {
-
+        const providers = this.props.providers.filter((provider) => {
+            return provider.display != false;
+        });
         return (
             <div className={styles.root} style={{height: window.innerHeight - 191}}>
                 <CustomScrollbar>
@@ -135,9 +137,9 @@ class ExportSummary extends React.Component {
                                 <td className={styles.tdData}>{this.props.layers}</td>
                             </tr>
                             <tr >
-                                <td className={styles.tdHeading} rowSpan={this.props.providers.length}>File Formats</td>
+                                <td className={styles.tdHeading} rowSpan={providers.length}>File Formats</td>
 
-                                <td className={styles.tdData}>{this.props.providers.map((provider) => <p key={provider}>{provider}</p>)}</td>
+                                <td className={styles.tdData}>{providers.map((provider) => <p key={provider.uid}>{provider.name}</p>)}</td>
 
                             </tr>
                             </tbody>

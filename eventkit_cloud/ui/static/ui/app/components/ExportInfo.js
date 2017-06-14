@@ -58,19 +58,33 @@ export class ExportInfo extends React.Component {
 
     onChangeCheck(e){
             // current array of providers
-            const providers = this.state.providers;
+            let providers = this.state.providers;
+            const propsProviders = this.props.providers;
             let index;
 
             // check if the check box is checked or unchecked
             if (e.target.checked) {
                 // add the provider to the array
-                providers.push(e.target.name)
+                //providers.push(e.target.name)
+                for (let i=0; i <propsProviders.length; i++) {
+                    if (propsProviders[i].name === e.target.name) {
+                        providers.push(propsProviders[i]);
+                    }
+                }
+
             } else {
                 // or remove the value from the unchecked checkbox from the array
-                index = providers.indexOf(e.target.name)
-                providers.splice(index, 1)
+                //index = providers.indexOf(e.target.name)
+                index = providers.map(x => x.name).indexOf(e.target.name);
+
+                for (let i=0; i <propsProviders.length; i++) {
+                    if (propsProviders[i].name === e.target.name) {
+                        providers.splice(index,1);
+                    }
+                }
             }
             // update the state with the new array of options
+
             this.setState({ providers: providers } ,function (){
             if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
                 this.props.setNextDisabled()
@@ -272,7 +286,8 @@ export class ExportInfo extends React.Component {
                                             leftCheckbox={<Checkbox
                                                 name={provider.name}
                                                 style={{left: '0px', paddingLeft: '5px'}}
-                                                defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) == -1 ? false : true}
+                                                //defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
                                                 onCheck={this.onChangeCheck.bind(this)}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -350,6 +365,7 @@ function mapStateToProps(state) {
         geojson: state.aoiInfo.geojson,
         setExportPackageFlag: state.setExportPackageFlag,
         exportInfo: state.exportInfo,
+        providers: state.providers,
     }
 }
 

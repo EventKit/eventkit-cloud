@@ -129,7 +129,6 @@ export class DataPackDetails extends React.Component {
         const providers = this.props.providerTasks.filter((provider) => {
             return provider.display != false;
         });
-        //const providers = this.props.providerTasks;
 
         return (
             <div className={styles.downloadDiv}>
