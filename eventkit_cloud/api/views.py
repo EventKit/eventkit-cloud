@@ -291,7 +291,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         provider_serializer = ProviderTaskSerializer(
                             data=provider_tasks,
                             many=True,
-                            context = {'request': request}
+                            context={'request': request}
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
@@ -345,7 +345,13 @@ class JobViewSet(viewsets.ModelViewSet):
 
             running = JobSerializer(job, context={'request': request})
             # Run is passed to celery to start the tasks.
-            pick_up_run_task.delay(run_uid=run_uid)
+            logged_in_user = request.user
+            user_details = {
+                'username': logged_in_user.username,
+                'is_superuser': logged_in_user.is_superuser,
+                'is_staff': logged_in_user.is_staff
+            }
+            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
             return Response(serializer.errors,
@@ -365,6 +371,11 @@ class JobViewSet(viewsets.ModelViewSet):
         *Returns:*
             - the serialized run data.
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-JobViewSet.run'}
+
         from ..tasks.task_factory import InvalidLicense, Unauthorized
 
         try:
@@ -378,7 +389,7 @@ class JobViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=run_uid)
         if run:
             logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
-            pick_up_run_task.delay(run_uid=run_uid)
+            pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
             logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
             logger.debug("Returning Run Data.".format(run.uid))
@@ -762,7 +773,7 @@ class SwaggerSchemaView(views.APIView):
         generator.get_schema(request=request)
         links = generator.get_links(request=request)
         # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('user',{}).get('partial_update')
+        partial_update_link = links.get('user', {}).get('partial_update')
         if partial_update_link:
             links['user']['partial_update'] = coreapi.Link(
                 url=partial_update_link.url,
@@ -783,7 +794,7 @@ class SwaggerSchemaView(views.APIView):
         schema = coreapi.Document(
             title='EventKit API',
             url='/api/docs',
-            content = links
+            content=links
         )
 
         if not schema:

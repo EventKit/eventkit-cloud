@@ -15,7 +15,11 @@ def get_s3_client():
     )
 
 
-def upload_to_s3(run_uuid, source_filename, destination_filename, client=None):
+def upload_to_s3(run_uuid, source_filename, destination_filename, client=None, user_details=None):
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-upload_to_s3'}
+
     if not client:
         client = get_s3_client()
 
@@ -26,7 +30,7 @@ def upload_to_s3(run_uuid, source_filename, destination_filename, client=None):
     )
     asset_remote_path = os.path.join(run_uuid, destination_filename)
     from audit_logging.file_logging import logging_open
-    with logging_open(asset_path, 'rb') as asset_file:
+    with logging_open(asset_path, 'rb', user_details=user_details) as asset_file:
         asset_file.seek(0)
         client.put_object(
             Bucket=settings.AWS_BUCKET_NAME,
