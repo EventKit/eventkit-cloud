@@ -53,7 +53,7 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
-            os.makedirs(run_dir, 755)
+            os.makedirs(run_dir, 0750)
             grouped_provider_tasks = []
             # Add providers to list.
             # Note that if a provider depends on a different provider they should be grouped in a list,
