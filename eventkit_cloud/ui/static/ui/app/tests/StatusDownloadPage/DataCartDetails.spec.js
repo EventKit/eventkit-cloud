@@ -224,7 +224,6 @@ describe('DataCartDetails component', () => {
     });
 
     it('handleClone should clone a job with the correct data', () => {
-        const providerArray = ["OpenStreetMap Data (Themes)"];
         let props = getProps();
         props.onClone = new sinon.spy();
         const wrapper = shallow(<DataCartDetails {...props}/>);
@@ -263,6 +262,90 @@ describe('DataCartDetails component', () => {
         stateSpy.restore();
     });
 });
+
+const providerArray = [
+    {
+        "display": true,
+        "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
+        "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
+        "name": "OpenStreetMap Data (Themes)",
+        "tasks": [
+            {
+                "uid": "ad70aa01-a3da-451d-bd6f-0038409d5fd8",
+                "url": "http://cloud.eventkit.dev/api/tasks/ad70aa01-a3da-451d-bd6f-0038409d5fd8",
+                "name": "Geopackage Format (OSM)",
+                "status": "SUCCESS",
+                "progress": 100,
+                "estimated_finish": null,
+                "started_at": "2017-05-22T18:35:14.358028Z",
+                "finished_at": "2017-05-22T18:35:17.998336Z",
+                "duration": "0:00:03.640308",
+                "result": {
+                    "filename": "test.gpkg",
+                    "size": "0.218 MB",
+                    "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522.gpkg"
+                },
+                "display": true,
+                "errors": []
+            },
+            {
+                "uid": "00cef7ac-e999-4ea1-a28c-2ddeb669808e",
+                "url": "http://cloud.eventkit.dev/api/tasks/00cef7ac-e999-4ea1-a28c-2ddeb669808e",
+                "name": "Create Styles",
+                "status": "SUCCESS",
+                "progress": 100,
+                "estimated_finish": null,
+                "started_at": "2017-05-22T18:35:19.175764Z",
+                "finished_at": "2017-05-22T18:35:19.297181Z",
+                "duration": "0:00:00.121417",
+                "result": {
+                    "filename": "test-osm-20170522.qgs",
+                    "size": "0.557 MB",
+                    "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522-osm-20170522.qgs"
+                },
+                "display": true,
+                "errors": []
+            },
+            {
+                "uid": "0beddde8-6f3b-4137-a673-1ea759c63f0f",
+                "url": "http://cloud.eventkit.dev/api/tasks/0beddde8-6f3b-4137-a673-1ea759c63f0f",
+                "name": "Create Selection GeoJSON",
+                "status": "SUCCESS",
+                "progress": 100,
+                "estimated_finish": null,
+                "started_at": "2017-05-22T18:35:13.675901Z",
+                "finished_at": "2017-05-22T18:35:13.713273Z",
+                "duration": "0:00:00.037372",
+                "result": {
+                    "filename": "osm_selection.geojson",
+                    "size": "0.000 MB",
+                    "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_selection-osm-20170522.geojson"
+                },
+                "display": true,
+                "errors": []
+            },
+            {
+                "uid": "8adbb9e4-f66a-4bec-8377-259097440c1b",
+                "url": "http://cloud.eventkit.dev/api/tasks/8adbb9e4-f66a-4bec-8377-259097440c1b",
+                "name": "Bounds Export",
+                "status": "SUCCESS",
+                "progress": 100,
+                "estimated_finish": null,
+                "started_at": "2017-05-22T18:35:21.041452Z",
+                "finished_at": "2017-05-22T18:35:21.207650Z",
+                "duration": "0:00:00.166198",
+                "result": {
+                    "filename": "osm_bounds.gpkg",
+                    "size": "0.042 MB",
+                    "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_bounds-osm-20170522.gpkg"
+                },
+                "display": true,
+                "errors": []
+            }
+        ],
+        "status": "COMPLETED"
+    }
+]
 
 const run = {
     "uid": "29f5cbab-09d8-4d6c-9505-438967062964",
@@ -318,6 +401,7 @@ const run = {
     },
     "provider_tasks": [
         {
+            "display": true,
             "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "name": "OpenStreetMap Data (Themes)",
@@ -337,6 +421,7 @@ const run = {
                         "size": "0.218 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522.gpkg"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -354,6 +439,7 @@ const run = {
                         "size": "0.557 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/test-osm-20170522-osm-20170522.qgs"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -371,6 +457,7 @@ const run = {
                         "size": "0.000 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_selection-osm-20170522.geojson"
                     },
+                    "display": true,
                     "errors": []
                 },
                 {
@@ -388,6 +475,7 @@ const run = {
                         "size": "0.042 MB",
                         "url": "https://cloud.eventkit.dev/29f5cbab-09d8-4d6c-9505-438967062964/osm_bounds-osm-20170522.gpkg"
                     },
+                    "display": true,
                     "errors": []
                 }
             ],

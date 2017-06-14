@@ -26,7 +26,7 @@ export class ProviderRow extends React.Component {
             selectedRows: { },
             selectionCount: 0,
             taskCount: 0,
-
+            fileSize: null,
         }
     }
 
@@ -40,6 +40,20 @@ export class ProviderRow extends React.Component {
             taskCount++
         })
         this.setState({selectedRows:t, taskCount})
+    }
+
+    componentWillReceiveProps(nextProps) {
+        let fileSize = 0.000;
+        nextProps.provider.tasks.forEach((task) => {
+            if (task.result != null ){
+                if (task.display != false) {
+                    let textReplace = task.result.size.replace(' MB', '');
+                    let number = textReplace;
+                    fileSize = Number(fileSize) + Number(number);
+                    this.setState({fileSize: fileSize.toFixed(3)});
+                }
+            }
+        })
     }
 
     handleToggle() {
@@ -147,6 +161,10 @@ export class ProviderRow extends React.Component {
         const textFontSize = this.getTextFontSize();
         const {provider, ...rowProps} = this.props;
 
+        const tasks = provider.tasks.filter((task) => {
+            return task.display != false;
+        });
+
         let tableData;
         if(this.state.openTable == true){
             tableData = <TableBody
@@ -155,7 +173,8 @@ export class ProviderRow extends React.Component {
                 showRowHover={false}
                 className={styles.tableRowHighlight}
             >
-                {provider.tasks.map((task) => (
+                {tasks.map((task) => (
+
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
                     <TableRowColumn style={{width: '88px'}}>
                     <Checkbox
@@ -168,7 +187,7 @@ export class ProviderRow extends React.Component {
                         onCheck={this.onChangeCheck}
                         /></TableRowColumn>
                     <TableRowColumn style={{ fontSize: textFontSize}}>{task.name}</TableRowColumn>
-
+                    <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
                     <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
                     <TableRowColumn style={{width: '124px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{width: '110px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
@@ -209,7 +228,7 @@ export class ProviderRow extends React.Component {
                             {this.props.provider.name}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
-                            {this.state.selectionCount}/{this.state.taskCount}
+                            {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}/>
                         <TableHeaderColumn style={{width: '124px',textAlign: 'right'}}>

@@ -64,7 +64,8 @@ class OSMConfig(object):
             os.makedirs(stage_dir, 6600)
 
         try:
-            with open(config_file, 'wb') as configfile:
+            from audit_logging.file_logging import logging_open
+            with logging_open(config_file, 'wb') as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
         except IOError as e:
             logger.error(e)

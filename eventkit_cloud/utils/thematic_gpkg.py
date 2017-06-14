@@ -4,12 +4,11 @@ from __future__ import with_statement
 import logging
 import os
 import shutil
-import sqlite3
-import subprocess
-from ..tasks.task_process import TaskProcess
+from pysqlite2 import dbapi2 as sqlite3
+from sqlite import execute_spatialite_script
 from .geopackage import create_table_from_existing
+from .sqlite import enable_spatialite
 from string import Template
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ class ThematicGPKG(object):
                                     'select_clause': 'aeroway is not null'},
             'aviation_all_polygons': {'key': 'aeroway', 'table': 'planet_osm_polygon',
                                       'select_clause': 'aeroway is not null'},
-            'aviation_all_lines': {'key': 'aeroway', 'table': 'planet_osm_line', 
+            'aviation_all_lines': {'key': 'aeroway', 'table': 'planet_osm_line',
                                       'select_clause': 'aeroway is not null'},
             'places_points': {'key': 'place', 'table': 'planet_osm_point', 'select_clause': 'place is not null'},
             'buildings_polygons': {'key': 'building', 'table': 'planet_osm_polygon',
@@ -78,7 +77,7 @@ class ThematicGPKG(object):
             'bridges_lines': {'key': 'bridge', 'table': 'planet_osm_line', 'select_clause': 'bridge is not null'},
         }
 
-    def convert(self, ):
+    def convert(self,):
         """
         Generate the thematic schema.
 
@@ -92,15 +91,7 @@ class ThematicGPKG(object):
         assert os.path.exists(self.thematic_gpkg), 'Thematic gpkg file not found.'
         conn = sqlite3.connect(self.thematic_gpkg)
         # load spatialite extension
-        conn.enable_load_extension(True)
-        try:
-            cmd = "SELECT load_extension('mod_spatialite')"
-            with conn:
-                conn.execute(cmd)
-        except sqlite3.OperationalError:
-            cmd = "SELECT load_extension('libspatialite')"
-            with conn:
-                conn.execute(cmd)
+        enable_spatialite(conn)
         # get info for gpkg_contents
         try:
             cmd = "SELECT * FROM gpkg_contents LIMIT 1;"
@@ -187,7 +178,8 @@ class ThematicGPKG(object):
 
         thematic_spatial_index_file = os.path.join(self.stage_dir, 'thematic_spatial_index.sql')
 
-        with open(thematic_spatial_index_file, 'w+') as sql_file:
+        from audit_logging.file_logging import logging_open
+        with logging_open(thematic_spatial_index_file, 'w+') as sql_file:
             convert_to_cmd_temp = Template("UPDATE '$layer' SET geom=GeomFromGPB(geom);\n")
             index_cmd_temp = Template("SELECT gpkgAddSpatialIndex('$layer', 'geom');\n")
             convert_from_cmd_temp = Template("UPDATE '$layer' SET geom=AsGPB(geom);\n")
@@ -199,19 +191,18 @@ class ThematicGPKG(object):
                 sql_file.write(index_cmd)
                 sql_file.write(convert_from_cmd)
 
-        self.update_index = Template("spatialite $gpkg < $update_sql")
-        index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
-                                                       'update_sql': thematic_spatial_index_file})
+        # self.update_index = Template("spatialite $gpkg < $update_sql")
+        # index_cmd = self.update_index.safe_substitute({'gpkg': self.thematic_gpkg,
+        #                                                'update_sql': thematic_spatial_index_file})
+        execute_spatialite_script(self.thematic_gpkg, thematic_spatial_index_file)
         if self.debug:
-            print 'Running: %s' % index_cmd
-        task_process = TaskProcess(task_uid=self.task_uid)
-        task_process.start_process(index_cmd, shell=True, executable='/bin/bash',
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if task_process.exitcode != 0:
-            logger.error('%s', task_process.stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(index_cmd, task_process.exitcode)
-        if self.debug:
-            print 'spatialite returned: %s' % task_process.exitcode
+            print 'Running: %s' % sql
+        # task_process = TaskProcess(task_uid=self.task_uid)
+        # task_process.start_process(index_cmd, shell=True, executable='/bin/bash',
+        #                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # if task_process.exitcode != 0:
+        # if self.debug:
+        #     print 'spatialite returned: %s' % task_process.exitcode
         os.remove(thematic_spatial_index_file)
 
         return self.thematic_gpkg

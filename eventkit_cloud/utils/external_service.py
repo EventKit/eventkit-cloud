@@ -17,7 +17,7 @@ from django.core.files.temp import NamedTemporaryFile
 import logging
 from django.db import connections
 import requests
-import sqlite3
+from pysqlite2 import dbapi2 as sqlite3
 from .geopackage import (get_tile_table_names, get_zoom_levels_table, get_table_tile_matrix_information)
 
 logger = logging.getLogger(__name__)

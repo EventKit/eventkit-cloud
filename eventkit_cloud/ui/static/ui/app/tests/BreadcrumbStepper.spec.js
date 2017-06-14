@@ -72,7 +72,8 @@ describe('BreadcrumbStepper component', () => {
             event: 'test event',
             include_zipfile: false,
             published: false,
-            provider_tasks: [{'provider': providers[0], 'formats': ['gpkg']}],
+            provider_tasks: [{ "provider" : "OpenStreetMap Data (Themes)",
+                "formats" : ["gpkg"]}],
             selection: {},
             tags: [],
         }
@@ -236,13 +237,14 @@ describe('BreadcrumbStepper component', () => {
 
 const providers = [
     {
+        "display":true,
         "id": 1,
         "model_url": "http://cloud.eventkit.dev/api/providers/1",
         "type": "osm-generic",
         "created_at": "2017-03-24T17:44:22.940611Z",
         "updated_at": "2017-03-24T17:44:22.940629Z",
         "uid": "be401b02-63d3-4080-943a-0093c1b5a914",
-        "name": "OpenStreetMap Data (Generic)",
+        "name": "OpenStreetMap Data (Themes)",
         "slug": "osm-generic",
         "preview_url": "",
         "service_copyright": "",
