@@ -8,17 +8,17 @@ from pysqlite2 import dbapi2 as sqlite3
 
 class TestSQLite(TestCase):
 
-    @patch("__builtin__.open")
+    @patch("audit_logging.file_logging.logging_open")
     @patch("eventkit_cloud.utils.sqlite.enable_spatialite")
     @patch("eventkit_cloud.utils.sqlite.sqlite3")
-    def test_execute_spatialite_script(self, mock_sqlite3, mock_enable, mock_open):
+    def test_execute_spatialite_script(self, mock_sqlite3, mock_enable, mock_logging_open):
         test_db = "test.gpkg"
         test_script = "test.sql"
         test_command = "select * from table;"
 
         mock_connection = MagicMock()
         mock_sqlite3.connect.return_value = mock_connection
-        mock_open().__enter__().read.return_value = test_command
+        mock_logging_open().__enter__().read.return_value = test_command
         execute_spatialite_script(test_db, test_script)
 
         # test success

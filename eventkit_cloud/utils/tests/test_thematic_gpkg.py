@@ -64,7 +64,9 @@ class TestThematicGPKG(TestCase):
             debug=False,
             task_uid=generated_task_uid
         )
-        out = t2s.convert()
+        # Just to make it clear where audit logging entries came from
+        user_details = {'username': 'TestThematicGPKG.test_convert'}
+        out = t2s.convert(user_details=user_details)
         mock_enable_spatialite.assert_called_once_with(conn)
         mock_execute_spatialite_script.assert_called_once_with(expected_out, expected_sql_file_name)
         copy.assert_called_once_with(gpkg, expected_out)
@@ -72,4 +74,3 @@ class TestThematicGPKG(TestCase):
         mock_open.assert_called_once_with(os.path.join(stage_dir, sql_file_name), 'w+')
         remove.assert_called_once_with(os.path.join(stage_dir, sql_file_name))
         self.assertEqual(out, expected_out)
-
