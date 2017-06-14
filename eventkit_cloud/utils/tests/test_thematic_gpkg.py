@@ -63,7 +63,9 @@ class TestThematicGPKG(TestCase):
             debug=False,
             task_uid=generated_task_uid
         )
-        out = t2s.convert()
+        # Just to make it clear where audit logging entries came from
+        user_details = {'username': 'TestThematicGPKG.test_convert'}
+        out = t2s.convert(user_details=user_details)
         copy.assert_called_once_with(gpkg, expected_out)
         exists.assert_has_calls([call(gpkg), call(os.path.join(stage_dir, '{0}.gpkg'.format(job_name)))])
         task_process.assert_called_with(task_uid=generated_task_uid)

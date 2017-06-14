@@ -232,7 +232,8 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
+        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEquals(response['Content-Type'], 'application/json')
@@ -273,7 +274,8 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
+        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -312,7 +314,8 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid")
+        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
 
         # test the response headers
         self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
@@ -900,7 +903,7 @@ class TestUserDataViewSet(APITestCase):
         self.user = User.objects.create_user(
             username='demo', email='demo@demo.com', password='demo'
         )
-        self.licenses  = [License.objects.create(slug='test1', name='Test1', text='text')]
+        self.licenses = [License.objects.create(slug='test1', name='Test1', text='text')]
         self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -934,7 +937,7 @@ class TestUserDataViewSet(APITestCase):
         url = reverse('api:user-detail', args=[self.user])
         response = self.client.get(url)
         data = json.loads(response.content)
-        #check both licenses are NOT accepted.
+        # check both licenses are NOT accepted.
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), False)
         # update single license.
@@ -943,7 +946,7 @@ class TestUserDataViewSet(APITestCase):
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         response = self.client.get(url)
         data = json.loads(response.content)
-        #check that the response body matches a new request
+        # check that the response body matches a new request
         self.assertEqual(patch_response.data, response.data)
         # check single licenses is accepted.
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
