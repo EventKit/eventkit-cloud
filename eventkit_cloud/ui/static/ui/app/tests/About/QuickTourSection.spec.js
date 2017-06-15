@@ -99,6 +99,23 @@ describe('QuickTour component', () => {
         spy.restore();
     });
 
+    it('should update captionFontSize, numberFontSize, and numberDiameter', () => {
+        const props = getProps();
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        const wrapper = getWrapper(props);
+        expect(wrapper.find('#captionText').props().style.fontSize).toEqual(14);
+        expect(wrapper.find('#stepNumber').first().props().style.fontSize).toEqual(10);
+        expect(wrapper.find('#stepNumber').first().props().style.width).toEqual(20);
+        expect(wrapper.find('#stepNumber').first().props().style.height).toEqual(20);
+        window.resizeTo(1200, 1000);
+        wrapper.update();
+        expect(wrapper.find('#captionText').props().style.fontSize).toEqual(16);
+        expect(wrapper.find('#stepNumber').first().props().style.fontSize).toEqual(14);
+        expect(wrapper.find('#stepNumber').first().props().style.width).toEqual(25);
+        expect(wrapper.find('#stepNumber').first().props().style.height).toEqual(25);
+    });
+
     it('nextStep should increment or return to 0', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(QuickTourSection.prototype, 'setState');

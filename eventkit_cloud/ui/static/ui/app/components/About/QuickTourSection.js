@@ -141,7 +141,7 @@ export class QuickTourSection extends Component {
     };
 };
 
-QuickTourSection.PropTypes = {
+QuickTourSection.propTypes = {
     steps: React.PropTypes.arrayOf(React.PropTypes.shape({
         img: React.PropTypes.obj,
         caption: React.PropTypes.string,
