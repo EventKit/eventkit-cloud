@@ -77,6 +77,20 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
     });
 
+    it('should only render "Finished" table data if run has finished', () => {
+        let props = getProps();
+        props.cartDetails.finished_at = "";
+        const wrapper = getWrapper(props);
+        let table = wrapper.find('table').at(6);
+        expect(table.find('tr')).toHaveLength(3);
+        const nextProps = getProps();
+        wrapper.setProps(nextProps);
+        table = wrapper.find('table').at(6);
+        expect(table.find('tr')).toHaveLength(4);
+        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Finished');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
+    });
+
     it('should handle setting state of datacartDetails when component updates', () => {
         let props = getProps();
         props.cartDetails.status = 'SUBMITTED';
