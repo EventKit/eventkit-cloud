@@ -1024,6 +1024,27 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
     return result
 
 
+@app.task(name='Cancel Run', base=LockingTask)
+def cancel_run(result={}, export_run_uid=None, canceling_user=None):
+    from ..tasks.models import ExportRun
+
+    export_run = ExportRun.objects.filter(uid=export_run_uid).first()
+
+    if not export_run:
+        result['result'] = False
+        return result
+
+    for export_provider_task in export_run.provider_tasks.all():
+        # A gueue isn't defined here so it will show up with priority on the default queue, it will be placed on the
+        # correct queue by the subtask.
+        cancel_export_provider_task.apply_async(kwargs={"result": result,
+                                                        "export_provider_task_uid": export_provider_task.uid,
+                                                        "canceling_user": canceling_user},
+                                                priority=TaskPriority.CANCEL.value)
+    result['result'] = True
+    return result
+
+
 @app.task(name='Kill Task', base=LockingTask)
 def kill_task(result={}, task_pid=None, celery_uid=None):
     """
