@@ -39,7 +39,7 @@ class SQliteToGeopackage(object):
         self.cmd = Template("ogr2ogr -f 'GPKG' $gpkgfile $sqlite")
         self.task_uid = task_uid
 
-    def convert(self, ):
+    def convert(self,):
         """
         Convert sqlite to gpkg.
         """
@@ -58,7 +58,7 @@ class SQliteToGeopackage(object):
         return self.gpkgfile
 
 
-def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid=None):
+def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid=None, user_details=None):
     """Uses an ogr2ogr script to upload a geojson file.
         Args:
             geojson: A geojson string.
@@ -68,6 +68,9 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         Returns:
             True if the file is succesfully uploaded.
         """
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-add_geojson_to_geopackage'}
 
     if not geojson or not gpkg:
         raise Exception(
@@ -76,7 +79,8 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
     geojson_file = os.path.join(os.path.dirname(gpkg),
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0]))
 
-    with open(geojson_file, 'w') as open_file:
+    from audit_logging.file_logging import logging_open
+    with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
         open_file.write(geojson)
 
     cmd = Template("ogr2ogr -f 'GPKG' $gpkg $geojson_file -nln $layer_name")

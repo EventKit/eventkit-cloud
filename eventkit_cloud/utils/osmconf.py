@@ -42,7 +42,7 @@ class OSMConfig(object):
         self.config = ConfigParser.SafeConfigParser()
         self.job_name = job_name
 
-    def create_osm_conf(self, stage_dir=None):
+    def create_osm_conf(self, stage_dir=None, user_details=None):
         """
         Create the osm configuration file.
 
@@ -52,6 +52,10 @@ class OSMConfig(object):
         Return:
             the path to the export configuration file.
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        if user_details is None:
+            user_details = {'username': 'unknown-create_osm_conf'}
+
         self.config.read(self.tmpl)  # read in the template
         self.config.set('points', 'attributes', ','.join(self.categories['points']))
         self.config.set('lines', 'attributes', ','.join(self.categories['lines']))
@@ -65,7 +69,7 @@ class OSMConfig(object):
 
         try:
             from audit_logging.file_logging import logging_open
-            with logging_open(config_file, 'wb') as configfile:
+            with logging_open(config_file, 'wb', user_details=user_details) as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
         except IOError as e:
             logger.error(e)
