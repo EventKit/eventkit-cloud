@@ -1,13 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import IconButton from 'material-ui/IconButton';
 import {ProviderRow} from '../../components/StatusDownloadPage/ProviderRow';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
 import Checkbox from 'material-ui/Checkbox';
+import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import IconButton from 'material-ui/IconButton';
+import Warning from 'material-ui/svg-icons/alert/warning'
+import Check from 'material-ui/svg-icons/navigation/check'
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
@@ -32,6 +37,7 @@ describe('ProviderRow component', () => {
             },
             selectedTasks: selectedTasks,
             onSelectionToggle: () => {},
+            onProviderCancel: () => {},
         }
     };
 
@@ -51,10 +57,13 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(6);
-        expect(wrapper.find(CloudDownload)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconButton)).toHaveLength(2);
+        expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
+        expect(wrapper.find(MenuItem)).toHaveLength(0);
     });
 
     it('should render the task rows when the table is open', () => {
@@ -65,9 +74,8 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(2);
         expect(wrapper.find(TableRowColumn)).toHaveLength(6);
-        expect(wrapper.find(Checkbox)).toHaveLength(2);
+        expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(TableBody)).toHaveLength(1);
-        expect(wrapper.find(LinearProgress)).toHaveLength(1);
     });
 
     it('should handle summing up the file sizes', () => {
@@ -121,15 +129,15 @@ describe('ProviderRow component', () => {
         mountSpy.restore();
     });
 
-    it('should call onChangeCheck with the task box is checked', () => {
-        const props = getProps();
-        const onChangeSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
-        const wrapper = getWrapper(props);
-        wrapper.setState({openTable: true});
-        wrapper.find(TableBody).find(Checkbox).find('input').simulate('change');
-        expect(onChangeSpy.calledOnce).toBe(true);
-        onChangeSpy.restore();
-    });
+    // it('should call onChangeCheck with the task box is checked', () => {
+    //     const props = getProps();
+    //     const onChangeSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
+    //     const wrapper = getWrapper(props);
+    //     wrapper.setState({openTable: true});
+    //     wrapper.find(TableBody).find(Checkbox).find('input').simulate('change');
+    //     expect(onChangeSpy.calledOnce).toBe(true);
+    //     onChangeSpy.restore();
+    // });
 
     it('should call onAllCheck when the provider box is checked', () => {
         const props = getProps();
@@ -161,6 +169,68 @@ describe('ProviderRow component', () => {
         wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
         wrapper.instance().handleDownload();
         expect(openSpy.calledOnce).toBe(true);
+
+    });
+
+    it('handleCloudDownload should open a url in a different window', () => {
+        const openSpy = new sinon.spy();
+        window.open = openSpy;
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleCloudDownload();
+        expect(openSpy.calledOnce).toBe(true);
+    });
+
+    it('getTaskStatus should be called with the correct status from a given task', () => {
+        const props = getProps();
+        const getTaskStatusSpy = new sinon.spy(ProviderRow.prototype, 'getTaskStatus');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getTaskStatus(tasks);
+        expect(getTaskStatusSpy.calledOnce).toBe(true);
+        expect(getTaskStatusSpy.calledWith(tasks)).toBe(true);
+    });
+
+    it('getTaskStatusIcon should be called with the correct icon from a given task', () => {
+        const props = getProps();
+        const getTaskStatusSpy = new sinon.spy(ProviderRow.prototype, 'getTaskStatusIcon');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getTaskStatusIcon(tasks);
+        expect(getTaskStatusSpy.calledOnce).toBe(true);
+        expect(getTaskStatusSpy.calledWith(tasks)).toBe(true);
+    });
+
+    it('getProviderStatusIcon should be called with the icon from a given provider status', () => {
+        const props = getProps();
+        const getProviderStatusSpy = new sinon.spy(ProviderRow.prototype, 'getProviderStatusIcon');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getProviderStatusIcon();
+        expect(getProviderStatusSpy.calledWith("COMPLETED")).toBe(true);
+    });
+
+    it('getProviderStatus should be called with the correct icon from a given provider status', () => {
+        const props = getProps();
+        const getProviderStatusSpy = new sinon.spy(ProviderRow.prototype, 'getProviderStatus');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getProviderStatus();
+        expect(getProviderStatusSpy.calledWith("COMPLETED")).toBe(true);
+    });
+
+    it('getTaskLink should get called with correct data', () => {
+        const props = getProps();
+        const getTaskLink = new sinon.spy(ProviderRow.prototype, 'getTaskLink');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getTaskLink(tasks);
+        expect(getTaskLink.calledOnce).toBe(true);
+        expect(getTaskLink.calledWith(tasks)).toBe(true);
+    });
+
+    it('getTaskDownloadIcon should be called with correct data', () => {
+        const props = getProps();
+        const getTaskIcon = new sinon.spy(ProviderRow.prototype, 'getTaskDownloadIcon');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getTaskDownloadIcon(tasks);
+        expect(getTaskIcon.calledOnce).toBe(true);
+        expect(getTaskIcon.calledWith(tasks)).toBe(true);
     });
 
     it('onChangeCheck should find the selected task uid and set it to checked/unchecked, then update state and call onSelectionToggle', () => {
@@ -199,9 +269,9 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('allChecked should determine if all teh tasks in state.selectedRows are checked in the parent component', () => {
+    it('allChecked should determine if all the tasks in state.selectedRows are checked in the parent component', () => {
         let props = getProps();
-        props.selectedTasks = {}
+        props.selectedTasks = {};
         const wrapper = getWrapper(props);
         expect(wrapper.instance().allChecked()).toBe(false);
         let nextProps = getProps();
@@ -222,7 +292,6 @@ const tasks = [
         "finished_at": "2017-05-15T15:29:04.356182Z",
         "name": "OverpassQuery",
         "progress": 100,
-        "result": {},
         "started_at": "2017-05-15T15:28:49.038510Z",
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",

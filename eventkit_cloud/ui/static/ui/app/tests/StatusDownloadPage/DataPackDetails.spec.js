@@ -46,10 +46,10 @@ describe('DataPackDetails component', () => {
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableHeaderColumn)).toHaveLength(5);
         expect(table.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
-        expect(table.find(TableHeaderColumn).at(1).text()).toEqual('DATA SETS');
+        expect(table.find(TableHeaderColumn).at(1).text()).toEqual('DOWNLOAD SELECTED DATA SETS');
+        expect(table.find(TableHeaderColumn).at(1).find(RaisedButton)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(2).text()).toEqual('FILE SIZE');
         expect(table.find(TableHeaderColumn).at(3).text()).toEqual('PROGRESS');
-        expect(table.find(TableHeaderColumn).at(4).find(RaisedButton)).toHaveLength(1);
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
     it('getTextFontSize should return the font string for table text based on window width', () => {

@@ -221,7 +221,8 @@ export class DataCartDetails extends React.Component {
             </div>
 
             <div style={{paddingBottom:'10px'}}>
-                <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks} />
+                <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
+                                 onProviderCancel={this.props.onProviderCancel}/>
             </div>
             <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                 <div style={styles.subHeading}>
@@ -371,6 +372,7 @@ DataCartDetails.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun:  PropTypes.func.isRequired,
     onClone:     PropTypes.func.isRequired,
+    onProviderCancel: PropTypes.func.isRequired,
 }
 
 export default DataCartDetails;

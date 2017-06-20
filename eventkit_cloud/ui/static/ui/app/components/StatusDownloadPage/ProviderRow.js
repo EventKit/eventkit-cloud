@@ -1,14 +1,21 @@
 import React, {PropTypes, Component} from 'react'
 import '../tap_events'
+import moment from 'moment'
 import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
+import IconMenu from 'material-ui/IconMenu';
+import MenuItem from 'material-ui/MenuItem';
+import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down'
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up'
 import UncheckedBox from 'material-ui/svg-icons/toggle/check-box-outline-blank'
 import CheckedBox from 'material-ui/svg-icons/toggle/check-box'
+import Warning from 'material-ui/svg-icons/alert/warning'
+import Check from 'material-ui/svg-icons/navigation/check'
 import IconButton from 'material-ui/IconButton';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
 import styles from '../../styles/StatusDownload.css'
+import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
 
@@ -103,11 +110,14 @@ export class ProviderRow extends React.Component {
         if(checked){
             let selectionCount = 0;
             this.props.provider.tasks.forEach((column) => {
-                selectionCount++
-                let uid = column.uid;
-                t[uid] = true;
+                if(column.display == true) {
+                    selectionCount++
+                    let uid = column.uid;
+                    t[uid] = true;
+                }
             })
             this.setState({selectedRows:t, selectionCount: selectionCount})
+
         }
         else{
             this.props.provider.tasks.forEach(function(column){
@@ -156,8 +166,124 @@ export class ProviderRow extends React.Component {
     }
 
 
+    handleCloudDownload(url) {
+        window.open(url, '_blank');
+    }
+
+    // getTimeRemaining(task){
+    //     let date = moment(task.estimated_finish);
+    //     let now = moment();
+    //     let timeRemaining = date - now;
+    //     timeRemaining = timeRemaining/1000;
+    //     return timeRemaining;
+    //     //task.progress == 100 ? '' : task.progress + ' %'
+    // }
+
+    getTaskStatus(task) {
+        switch (task.status) {
+            case "SUCCESS":
+                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
+            case "INCOMPLETE":
+                return <span style={{
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#ce4427'
+                }}>ERROR</span>
+            case "PENDING":
+                return "WAITING";
+            case "RUNNING":
+                return <span><LinearProgress mode="determinate" value={task.progress}/>{task.progress == 100 ? '' : task.progress + ' %'}</span>;
+            case "CANCELED":
+                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
+            default:
+                return "";
+        }
+    }
+
+    getTaskStatusIcon(taskStatus) {
+        switch(taskStatus) {
+            case "SUCCESS":
+                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
+            case "PENDING":
+                return "WAITING";
+            case "CANCELED":
+                return "CANCELED";
+            case "FAILED":
+                return <span style={{color:'red'}}>Error</span>;
+            default:
+                return "";
+        }
+    }
+    getProviderStatusIcon(providerStatus) {
+        switch(providerStatus) {
+            case "COMPLETED":
+                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
+            case "INCOMPLETE":
+                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>;
+            case "SUBMITTED":
+                return ;
+            case "CANCELED":
+                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
+            default:
+                return ;
+        }
+    }
+
+    getProviderStatus(providerStatus) {
+        switch (providerStatus) {
+            case "COMPLETED":
+                return;
+            case "INCOMPLETE":
+                return <span style={{
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#ce4427'
+                }}>ERROR</span>
+            case "PENDING":
+                return "WAITING";
+            case "RUNNING":
+                return "IN PROGRESS";
+            case "CANCELED":
+                return <span style={{
+                    fontWeight: 'bold',
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#f4d225'
+                }}>CANCELED</span>
+            default:
+                return "";
+        }
+    }
+
+
+    getTaskLink(task) {
+        if(task.result == null){
+            return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{task.name}</span>
+        }
+        else {
+            return <a href={task.result.url} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{task.name}</a>
+        }
+    }
+
+    getTaskDownloadIcon(task) {
+        if(task.result == null){
+            return <CloudDownload key={task.result == null ? '' : task.result.url} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
+        }
+        else {
+            return <CloudDownload  onClick={() => {this.handleCloudDownload(task.result.url)}} key={task.result.url} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+        }
+    }
 
     render() {
+        const style = {
+              textDecoration: 'underline'
+             }
         const textFontSize = this.getTextFontSize();
         const {provider, ...rowProps} = this.props;
 
@@ -176,21 +302,17 @@ export class ProviderRow extends React.Component {
                 {tasks.map((task) => (
 
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
-                    <TableRowColumn style={{width: '88px'}}>
-                    <Checkbox
-                        disabled={task.result == null ? true : false}
-                        name={task.uid}
-                        checked={this.props.selectedTasks[task.uid] ? true : false}
-                        checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
-                        uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
-                        style={{marginLeft: '2em'}}
-                        onCheck={this.onChangeCheck}
-                        /></TableRowColumn>
-                    <TableRowColumn style={{ fontSize: textFontSize}}>{task.name}</TableRowColumn>
+                    <TableRowColumn style={{width: '44px'}}>
+
+                    </TableRowColumn>
+                        <TableRowColumn style={{fontSize: textFontSize}}>
+                            {this.getTaskLink(task)}
+                            {this.getTaskDownloadIcon(task)}
+                        </TableRowColumn>
                     <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} ><LinearProgress mode="determinate" value={task.progress} />{task.progress}%</TableRowColumn>
-                    <TableRowColumn style={{width: '124px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
-                    <TableRowColumn style={{width: '110px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
+                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} >{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn style={{width: '30px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
+                    <TableRowColumn style={{width: '75px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
 
                 ))}
@@ -216,8 +338,9 @@ export class ProviderRow extends React.Component {
                     enableSelectAll={false}
                     >
                     <TableRow displayBorder={true}>
-                        <TableHeaderColumn style={{width:'88px'}}>
-                            <Checkbox 
+                        <TableHeaderColumn style={{width:'44px'}}>
+                            <Checkbox
+                                disabled={this.props.provider.status != "COMPLETED"}
                                 checked={this.allChecked()} 
                                 onCheck={this.onAllCheck}
                                 checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
@@ -230,18 +353,29 @@ export class ProviderRow extends React.Component {
                         <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}/>
-                        <TableHeaderColumn style={{width: '124px',textAlign: 'right'}}>
-                            <IconButton 
-                                disableTouchRipple={true} 
-                                onTouchTap={this.handleDownload} 
-                                disabled={this.state.selectionCount == 0}
-                                iconStyle={{align: 'right', fill: '#4598bf'}}
-                            >
-                                <CloudDownload/>
-                            </IconButton>
+                        <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                            {this.getProviderStatus(this.props.provider.status)}
+                            {this.getProviderStatusIcon((this.props.provider.status))}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width: '110px', textAlign: 'left'}}>
+                        <TableHeaderColumn style={{width: '30px',textAlign: 'right'}}>
+                            <IconMenu
+                                iconButtonElement={
+                                    <IconButton
+                                        style={{padding: '0px', width: '20px', verticalAlign: 'middle'}}
+                                        iconStyle={{color: '#4598bf'}}>
+                                        <NavigationMoreVert />
+                                    </IconButton>}
+                                anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                targetOrigin={{horizontal: 'right', vertical: 'top'}}
+                            >
+                                <MenuItem
+                                    style={{fontSize: '12px'}}
+                                    primaryText="Cancel"
+                                    onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}/>
+
+                            </IconMenu>
+                        </TableHeaderColumn>
+                        <TableHeaderColumn style={{width: '75px', textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>
@@ -259,6 +393,7 @@ ProviderRow.propTypes = {
     provider: PropTypes.object.isRequired,
     onSelectionToggle: PropTypes.func,
     selectedTasks: PropTypes.object,
+    onProviderCancel: PropTypes.func.isRequired,
 }
 
 export default ProviderRow;

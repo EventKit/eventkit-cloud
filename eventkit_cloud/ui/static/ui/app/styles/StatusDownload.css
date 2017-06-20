@@ -54,3 +54,11 @@
 .tableRowHighlight > tr:nth-child(even) {background: #f8f8f8}
 .tableRowHighlight > tr:nth-child(odd) {background: #FFF}
 
+a:hover {
+    text-decoration: underline!important;
+}
+disabled:hover {
+    pointer-events: none!important;
+    cursor: default!important;
+}
+

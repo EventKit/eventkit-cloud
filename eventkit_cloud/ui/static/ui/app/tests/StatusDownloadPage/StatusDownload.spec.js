@@ -215,6 +215,7 @@ describe('StatusDownload component', () => {
             rerunExport: (jobuid) => {},
             clearReRunInfo: () => {},
             cloneExport: (cartDetails, providerArray) => {},
+            cancelProviderTask: (providerUid) => {},
         }
     };
 

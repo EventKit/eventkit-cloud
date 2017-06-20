@@ -36,8 +36,8 @@ export class DataPackDetails extends React.Component {
 
     checkAll(e, checked) {
         let taskCount = 0;
-        let stateTasks = {...this.state.selectedTasks}
-        let alteredTasks = {}
+        let stateTasks = {...this.state.selectedTasks};
+        let alteredTasks = {};
         Object.keys(stateTasks).forEach((keyName) => {
             alteredTasks[keyName] = checked;
             if(checked == true){
@@ -122,6 +122,19 @@ export class DataPackDetails extends React.Component {
         }
     }
 
+    getCheckboxStatus() {
+        let disableCheckbox = true;
+        this.props.providerTasks.forEach((provider) => {
+            if(provider.status != "COMPLETED"){
+                disableCheckbox = true;
+            }
+            else {
+                disableCheckbox = false;
+            }
+        });
+        return disableCheckbox;
+    }
+
 
     render() {
         const textFontSize = this.getTextFontSize();
@@ -136,7 +149,7 @@ export class DataPackDetails extends React.Component {
                    Download Options
                 </div>
                 <Table
-                    style={{width:'100%', tableLayout: 'auto'}}
+                    style={{width:'100%', tableLayout: 'fixed'}}
                     selectable={false}
                 >
                     <TableHeader
@@ -145,35 +158,36 @@ export class DataPackDetails extends React.Component {
                         enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'88px', fontSize: '14px'}}>
-                                <Checkbox 
+                            <TableHeaderColumn style={{width:'44px', fontSize: '14px'}}>
+                                <Checkbox
+                                    disabled={this.getCheckboxStatus()}
                                     checked={this.allChecked()} 
                                     onCheck={this.checkAll}
                                     checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{fontSize: textFontSize}}>
-                                DATA SETS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
-                                FILE SIZE
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'100px',textAlign: 'center', fontSize: textFontSize}}>
-                                PROGRESS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '234px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+                            <TableHeaderColumn style={{fontSize: textFontSize, whiteSpace: 'normal',}}>
                                 <RaisedButton
-                                    style={{width:'100%'}}
                                     backgroundColor={'rgba(179,205,224,0.5)'}
                                     disabled={this.state.taskCount == 0}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
                                     labelStyle={{fontWeight:'bold', fontSize:textFontSize}}
                                     onTouchTap={this.handleDownload}
-                                    label="Download All Selected"
+                                    label="DOWNLOAD SELECTED DATA SETS"
                                     icon={<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>}
                                 />
+                            </TableHeaderColumn>
+
+                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
+                                FILE SIZE
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width:'123px',textAlign: 'center', fontSize: textFontSize}}>
+                                PROGRESS
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+
                             </TableHeaderColumn>
 
                         </TableRow>
@@ -183,7 +197,8 @@ export class DataPackDetails extends React.Component {
                 {providers.map((provider) => (
                     <ProviderRow 
                         key={provider.uid} 
-                        onSelectionToggle={this.onSelectionToggle} 
+                        onSelectionToggle={this.onSelectionToggle}
+                        onProviderCancel={this.props.onProviderCancel}
                         updateSelectionNumber={this.updateSelectionNumber} 
                         provider={provider} 
                         selectedTasks={this.state.selectedTasks}/>
@@ -195,6 +210,7 @@ export class DataPackDetails extends React.Component {
 
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
+    onProviderCancel: PropTypes.func.isRequired,
 }
 
 

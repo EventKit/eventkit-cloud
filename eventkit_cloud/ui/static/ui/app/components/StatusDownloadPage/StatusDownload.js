@@ -6,7 +6,7 @@ import Paper from 'material-ui/Paper'
 import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails'
 import cssStyles from '../../styles/StatusDownload.css'
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo} from '../../actions/statusDownloadActions'
+import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
@@ -44,7 +44,7 @@ export class StatusDownload extends React.Component {
                 //If the status of the job is completed, check the provider tasks to ensure they are all completed as well
                 //If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
                 // means that at least one task is not completed, so do not stop the timer
-                if (datacartDetails[0].status == "COMPLETED") {
+                if (datacartDetails[0].status == "COMPLETED" || datacartDetails[0].status == "INCOMPLETE") {
                     let providerTasks = datacartDetails[0].provider_tasks;
                     let clearTimer = 0;
                      providerTasks.forEach((tasks) => {
@@ -144,7 +144,8 @@ export class StatusDownload extends React.Component {
                                                      cartDetails={cartDetails}
                                                      onRunDelete={this.props.deleteRun}
                                                      onRunRerun={this.props.rerunExport}
-                                                     onClone={this.props.cloneExport}/>
+                                                     onClone={this.props.cloneExport}
+                                                     onProviderCancel={this.props.cancelProviderTask}/>
                                 ))}
 
                             </Paper>
@@ -164,6 +165,7 @@ function mapStateToProps(state) {
         datacartDetails: state.datacartDetails,
         runDeletion: state.runDeletion,
         exportReRun: state.exportReRun,
+        cancelProviderTask: state.cancelProviderTask,
     }
 }
 
@@ -185,6 +187,9 @@ function mapDispatchToProps(dispatch) {
             dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
             dispatch(updateExportInfo(cartDetails.job.name, cartDetails.job.description, cartDetails.job.event, cartDetails.job.published, providerArray, 'Geopackage'))
             browserHistory.push('/create/')
+        },
+        cancelProviderTask:(providerUid) => {
+            dispatch(cancelProviderTask(providerUid))
         }
     }
 }
@@ -195,6 +200,7 @@ StatusDownload.propTypes = {
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
+    cancelProviderTask: PropTypes.func.isRequired,
 };
 
 reactMixin(StatusDownload.prototype, TimerMixin);
