@@ -78,10 +78,30 @@ INSTALLED_APPS += (
     'audit_logging',
 )
 
+AUDIT_MODELS = [
+    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
+    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+]
+
 DATABASES = {}
 
 if os.environ.get('VCAP_SERVICES'):
-    DATABASES = {'default': dj_database_url.config()}
+    if os.environ.get('DATABASE_URL'):
+        DATABASES = {'default': dj_database_url.config()}
+    if not DATABASES:
+        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
+            try:
+                if 'pg_95' in service:
+                    DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
+                    DATABASES['default']['CONN_MAX_AGE'] = 500
+            except (KeyError, TypeError) as e:
+                print("Could not configure information for service: {0}".format(service))
+                print(e)
+                sys.stdout.flush()
+                continue
+            if DATABASES:
+                break
 else:
     DATABASES['default'] = dj_database_url.config(default='postgres://eventkit:eventkit_exports@localhost:5432/eventkit_exports')
 
@@ -151,13 +171,6 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
-
-AUDIT_MODELS = [
-    ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
-    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
-]
-
 
 LOGGING = {
     'version': 1,

@@ -125,7 +125,9 @@ export class DataCartDetails extends React.Component {
     handleClone = () => {
         let providerArray = [];
         this.props.cartDetails.provider_tasks.forEach((provider) => {
-            providerArray.push(provider.name);
+            if(provider.display == true) {
+                providerArray.push(provider);
+            };
         })
         this.props.onClone(this.props.cartDetails, providerArray);
         this.setState({cloneDialogOpen: false});
@@ -133,6 +135,11 @@ export class DataCartDetails extends React.Component {
     };
 
     render() {
+
+        const providers = this.props.cartDetails.provider_tasks.filter((provider) => {
+            return provider.display != false;
+        });
+
         const styles = {
             tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold'},
             tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396'},
@@ -302,8 +309,8 @@ export class DataCartDetails extends React.Component {
                             </tr>
                             <tr>
                                 <td style={styles.tdHeader}>Layer Data</td>
-                                <td style={styles.tdData}>{
-                                    this.props.cartDetails.provider_tasks.map((provider) => {
+                                <td style={styles.tdData} >{
+                                    providers.map((provider) => {
                                             return <p key={provider.name}>{provider.name}</p>
                                     })}
                                 </td>
@@ -345,10 +352,14 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Started</td>
                             <td style={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                         </tr>
-                        <tr>
-                            <td style={styles.tdHeader}>Finished</td>
-                            <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                        </tr>
+                        {this.props.cartDetails.finished_at ? 
+                            <tr>
+                                <td style={styles.tdHeader}>Finished</td>
+                                <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                            </tr>
+                        :
+                            null
+                        }
                     </tbody>
                 </table>
             </div>

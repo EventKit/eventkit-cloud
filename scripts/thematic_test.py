@@ -9,7 +9,7 @@
 import logging
 import os
 import shutil
-import sqlite3
+from pysqlite2 import dbapi2 as sqlite3
 from string import Template
 
 from eventkit_cloud.jobs.models import Job

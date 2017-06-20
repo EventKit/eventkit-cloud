@@ -7,6 +7,7 @@ import os
 import subprocess
 from ..tasks.task_process import TaskProcess
 from string import Template
+from pysqlite2 import dbapi2 as sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class GPKGToSQLite(object):
         self.cmd = Template("ogr2ogr -f 'SQLite' $sqlitefile $gpkg")
         self.task_uid = task_uid
 
-    def convert(self, ):
+    def convert(self,):
         """
         Convert sqlite to gpkg.
         """
@@ -54,6 +55,47 @@ class GPKGToSQLite(object):
         if (self.debug):
             print 'ogr2ogr returned: %s' % task_process.exitcode
         return self.sqlitefile
+
+
+def execute_spatialite_script(db, sql_script, user_details=None):
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-execute_spatialite_script'}
+
+    conn = sqlite3.connect(db)
+    # load spatialite extension
+    enable_spatialite(conn)
+    try:
+        cur = conn.cursor()
+        from audit_logging.file_logging import logging_open
+        with logging_open(sql_script, 'r', user_details=user_details) as sql_file:
+            sql = sql_file.read()
+            cur.executescript(sql)
+        conn.commit()
+    except Exception as e:
+        logger.error('Problem running spatialite script: {}'.format(e))
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
+def enable_spatialite(connection):
+    """
+    Take a connection and enables spatialite.
+    :param connection: An sqlite3 connection object.
+    :returns: The connection.
+    """
+    connection.enable_load_extension(True)
+    try:
+        cmd = "SELECT load_extension('mod_spatialite')"
+        with connection:
+            connection.execute(cmd)
+    except sqlite3.OperationalError:
+        cmd = "SELECT load_extension('libspatialite')"
+        with connection:
+            connection.execute(cmd)
+    return connection
 
 
 if __name__ == '__main__':

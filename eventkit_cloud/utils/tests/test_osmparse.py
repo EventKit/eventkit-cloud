@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import os
-from mock import MagicMock, Mock, patch
+from mock import MagicMock, Mock, patch, call
 
-from django.conf import settings
 from django.test import TestCase
 
 from ..osmparse import OSMParser
@@ -39,19 +38,23 @@ class TestOSMParser(TestCase):
         with self.assertRaises(Exception):
             parser.create_geopackage()
 
-    @patch('eventkit_cloud.utils.osmparse.sqlite3')
+    @patch('eventkit_cloud.utils.osmparse.execute_spatialite_script')
     @patch('eventkit_cloud.utils.osmparse.exists')
-    def test_create_default_schema(self, exists, sqlite):
-        sql_cmd = "spatialite /path/to/query.gpkg < {0}".format(self.path + '/sql/spatial_index.sql')
-        sqlite.connect.return_value = Mock()
-        self.task_process.return_value = Mock(exitcode=0)
+    def test_create_default_schema(self, exists, mock_spatialite):
+        example_gpkg = os.path.join("path", "to", "query.gpkg")
+        path = os.path.join("path", "to")
+        expected_paths = [os.path.join(path, 'sql', 'planet_osm_schema.sql'), os.path.join(path, 'sql', 'spatial_index.sql')]
         exists.return_value = True
-        parser = OSMParser(osm='/path/to/query.pbf', gpkg='/path/to/query.gpkg', task_uid=self.task_uid)
-        parser.create_default_schema_gpkg()
-        exists.assert_called_with('/path/to/query.gpkg')
-        self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(sql_cmd, shell=True, executable='/bin/bash',
-                                stdout=-1, stderr=-1)
+        parser = OSMParser(osm='/path/to/query.pbf', gpkg=example_gpkg, task_uid=self.task_uid)
+        parser.path = path
+        user_details = {'username': 'test_create_default_schema'}
+        parser.create_default_schema_gpkg(user_details=user_details)
+        exists.assert_called_with(example_gpkg)
+        mock_spatialite.assert_has_calls([
+            call(example_gpkg, expected_paths[0], user_details=user_details),
+            call(example_gpkg, expected_paths[1], user_details=user_details)
+        ])
+
 
     @patch('eventkit_cloud.utils.osmparse.ogr.Open')
     @patch('eventkit_cloud.utils.osmparse.exists')

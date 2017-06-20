@@ -4,7 +4,7 @@ import logging
 import os
 import requests
 import shutil
-import sqlite3
+from pysqlite2 import dbapi2 as sqlite3
 from time import sleep
 
 from ...tasks.models import ExportTask, ExportProviderTask

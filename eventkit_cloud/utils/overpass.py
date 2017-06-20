@@ -70,17 +70,21 @@ class Overpass(object):
         self.raw_osm = os.path.join(self.stage_dir, 'query.osm')
         self.filtered_osm = os.path.join(self.stage_dir, '{0}.osm'.format(job_name))
 
-    def get_query(self, ):
+    def get_query(self,):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self, ):
+    def run_query(self, user_details=None):
         """
         Run the overpass query.
 
         Return:
             the path to the overpass extract
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        if user_details is None:
+            user_details = {'username': 'unknown-run_query'}
+
         from ..tasks.export_tasks import update_progress
 
         q = self.get_query()
@@ -99,7 +103,8 @@ class Overpass(object):
                     raise Exception("Overpass Query failed to return any data")
             inflated_size = size * 2
             CHUNK = 1024 * 1024 * 2  # 2MB chunks
-            with open(self.raw_osm, 'wb') as fd:
+            from audit_logging.file_logging import logging_open
+            with logging_open(self.raw_osm, 'wb', user_details=user_details) as fd:
                 for chunk in req.iter_content(CHUNK):
                     fd.write(chunk)
                     size += CHUNK
@@ -113,16 +118,21 @@ class Overpass(object):
             logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
 
-    def filter(self, ):
+    def filter(self, user_details=None):
         """
         Filter the overpass extract using the export tags.
 
         See jobs.models.Job.filters
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        if user_details is None:
+            user_details = {'username': 'unknown-Overpass.filter'}
+
         if self.filters and len(self.filters) > 0:
             self.filter_params = os.path.join(self.stage_dir, 'filters.txt')
             try:
-                with open(self.filter_params, 'w') as f:
+                from audit_logging.file_logging import logging_open
+                with logging_open(self.filter_params, 'w', user_details=user_details) as f:
                     f.write(self.filter_template)
             except IOError as e:
                 logger.error('Error saving filter params file', e)
@@ -153,7 +163,7 @@ class Overpass(object):
             shutil.copy(self.raw_osm, self.filtered_osm)
             return self.filtered_osm
 
-    def _convert_om5(self, ):
+    def _convert_om5(self,):
         """
         Convert to om5 for faster filter processing.
         """
@@ -169,7 +179,7 @@ class Overpass(object):
                                                                                          task_process.stderr)
         return om5
 
-    def _build_overpass_query(self, ):  # pragma: no cover
+    def _build_overpass_query(self,):  # pragma: no cover
         """
         Overpass  imposes a limit of 1023 statements per query.
         This is no good for us when querying with the OSM Data Model
