@@ -11,6 +11,8 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import ReactDOM from 'react-dom';
+import TestUtils from 'react-dom/test-utils';
 import Warning from 'material-ui/svg-icons/alert/warning'
 import Check from 'material-ui/svg-icons/navigation/check'
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
@@ -21,7 +23,7 @@ describe('ProviderRow component', () => {
 
     const muiTheme = getMuiTheme();
 
-    const selectedTasks = {
+    const selectedProviders = {
         'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true,
         '81909b77-a6cd-403f-9e62-9662c9e2cdf3': false,
     }
@@ -33,9 +35,10 @@ describe('ProviderRow component', () => {
                 status: "COMPLETED",
                 tasks: tasks,
                 uid: "e261d619-2a02-4ba5-a58c-be0908f97d04",
-                url: "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+                url: "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+                display: true,
             },
-            selectedTasks: selectedTasks,
+            selectedProviders: selectedProviders,
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
         }
@@ -124,7 +127,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, taskCount: 1})).toBe(true);
+        expect(stateSpy.calledWith({selectedRows: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
         stateSpy.restore();
         mountSpy.restore();
     });
@@ -141,11 +144,11 @@ describe('ProviderRow component', () => {
 
     it('should call onAllCheck when the provider box is checked', () => {
         const props = getProps();
-        const onAllCheckSpy = new sinon.spy(ProviderRow.prototype, 'onAllCheck');
+        const onChangeCheckSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
         const wrapper = getWrapper(props);
         wrapper.find(TableHeader).find(Checkbox).find('input').simulate('change');
-        expect(onAllCheckSpy.calledOnce).toBe(true);
-        onAllCheckSpy.restore();
+        expect(onChangeCheckSpy.calledOnce).toBe(true);
+        onChangeCheckSpy.restore();
     });
 
     it('handleToggle should open/close Table', () => {
@@ -233,55 +236,51 @@ describe('ProviderRow component', () => {
         expect(getTaskIcon.calledWith(tasks)).toBe(true);
     });
 
+    it('getProviderLink should be called with the icon from a given provider', () => {
+        const props = getProps();
+        const getProviderLinkSpy = new sinon.spy(ProviderRow.prototype, 'getProviderLink');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getProviderLink(provider);
+        expect(getProviderLinkSpy.calledWith(provider)).toBe(true);
+    });
+
+    it('getProviderDownloadIcon should be called with the correct icon from a given provider', () => {
+        const props = getProps();
+        const getProviderDownloadIconSpy = new sinon.spy(ProviderRow.prototype, 'getProviderDownloadIcon');
+        const wrapper = getWrapper(props);
+        wrapper.instance().getProviderDownloadIcon(provider);
+        expect(getProviderDownloadIconSpy.calledWith(provider)).toBe(true);
+    });
+
     it('onChangeCheck should find the selected task uid and set it to checked/unchecked, then update state and call onSelectionToggle', () => {
         let props = getProps();
         props.onSelectionToggle = new sinon.spy();
         const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
-        wrapper.instance().onChangeCheck({target: {name: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34'}}, true);
-        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, selectionCount: 1})).toBe(true);
+        expect(wrapper.state().selectedRows).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': false});
+        wrapper.instance().onChangeCheck({target: {name: 'e261d619-2a02-4ba5-a58c-be0908f97d04'}}, true);
+        expect(stateSpy.calledWith({selectedRows: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}})).toBe(true);
         expect(props.onSelectionToggle.calledOnce).toBe(true);
-        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true})).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'e261d619-2a02-4ba5-a58c-be0908f97d04': true})).toBe(true);
 
-        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true});
-        wrapper.instance().onChangeCheck({target: {name: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34'}}, false);
-        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, selectionCount: 0})).toBe(true);
+        expect(wrapper.state().selectedRows).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': true});
+        wrapper.instance().onChangeCheck({target: {name: 'e261d619-2a02-4ba5-a58c-be0908f97d04'}}, false);
+        expect(stateSpy.calledWith({selectedRows: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
         expect(props.onSelectionToggle.calledTwice).toBe(true);
-        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false})).toBe(true);
+        expect(props.onSelectionToggle.calledWith({'e261d619-2a02-4ba5-a58c-be0908f97d04': false})).toBe(true);
         stateSpy.restore();
     });
 
-    it('onAllCheck should set all tasks to checked or unchecked then update state and call onSelectionToggle', () => {
-        let props = getProps();
-        props.onSelectionToggle = new sinon.spy();
-        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+    it('should call handleProviderCloudDownload when the download link is clicked. ', () => {
+        const props = getProps();
+        const downloadSpy = new sinon.spy(ProviderRow.prototype, 'handleProviderCloudDownload');
         const wrapper = getWrapper(props);
-        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false});
-        wrapper.instance().onAllCheck({}, true);
-        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}, selectionCount: 1})).toBe(true);
-        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true})).toBe(true);
-
-        expect(wrapper.state().selectedRows).toEqual({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true});
-        wrapper.instance().onAllCheck({}, false);
-        expect(stateSpy.calledWith({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false}, selectionCount: 0})).toBe(true);
-        expect(props.onSelectionToggle.calledWith({'fcfcd526-8949-4c26-a669-a2cf6bae1e34': false})).toBe(true);
-        stateSpy.restore();
+        expect(downloadSpy.notCalled).toBe(true);
+        wrapper.find('a').simulate('click');
+        expect(downloadSpy.calledOnce).toBe(true);
+        downloadSpy.restore();
     });
 
-    it('allChecked should determine if all the tasks in state.selectedRows are checked in the parent component', () => {
-        let props = getProps();
-        props.selectedTasks = {};
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().allChecked()).toBe(false);
-        let nextProps = getProps();
-        wrapper.setProps(nextProps);
-        expect(wrapper.instance().allChecked()).toBe(true);
-        nextProps = getProps();
-        nextProps.selectedTasks['fcfcd526-8949-4c26-a669-a2cf6bae1e34'] = false;
-        wrapper.setProps(nextProps);
-        expect(wrapper.instance().allChecked()).toBe(false);
-    });
 });
 
 const tasks = [
@@ -303,3 +302,11 @@ const tasks = [
     }
 ];
 
+const provider = {
+    "name": "OpenStreetMap Data (Themes)",
+    "status": "COMPLETED",
+    "tasks": tasks,
+    "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
+    "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+    "display":true,
+}

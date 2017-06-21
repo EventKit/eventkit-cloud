@@ -24,29 +24,21 @@ export class ProviderRow extends React.Component {
         super(props)
         this.handleDownload = this.handleDownload.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
-        this.allChecked = this.allChecked.bind(this);
-        this.onAllCheck = this.onAllCheck.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.state = {
             providerTasks: [],
             openTable: false,
             selectedRows: { },
-            selectionCount: 0,
-            taskCount: 0,
             fileSize: null,
         }
     }
 
     componentWillMount(){
-        //set state on the tasks
-        let taskCount = 0;
+        //set state on the provider
         let t = {};
-        this.props.provider.tasks.forEach((column) => {
-            let uid = column.uid;
-            t[uid] = false;
-            taskCount++
-        })
-        this.setState({selectedRows:t, taskCount})
+        let uid = this.props.provider.uid;
+        t[uid] = false;
+        this.setState({selectedRows:t})
     }
 
     componentWillReceiveProps(nextProps) {
@@ -61,6 +53,10 @@ export class ProviderRow extends React.Component {
                 }
             }
         })
+
+        if(nextProps.selectedProviders != this.state.selectedRows) {
+            this.setState({selectedRows : nextProps.selectedProviders})
+        }
     }
 
     handleToggle() {
@@ -90,59 +86,16 @@ export class ProviderRow extends React.Component {
         });
     }
 
-    allChecked() {
-        let allChecked = true;
-        const keys = Object.keys(this.props.selectedTasks);
-        if (!keys.length) {return false}
-        for(const key in keys) {
-            if(this.state.selectedRows.hasOwnProperty(keys[key])) {
-                if(!this.props.selectedTasks[keys[key]]){
-                    allChecked = false
-                    break
-                }
-            }
-        }
-        return allChecked;
-    }
 
-    onAllCheck(e, checked) {
-        let t = {};
-        if(checked){
-            let selectionCount = 0;
-            this.props.provider.tasks.forEach((column) => {
-                if(column.display == true) {
-                    selectionCount++
-                    let uid = column.uid;
-                    t[uid] = true;
-                }
-            })
-            this.setState({selectedRows:t, selectionCount: selectionCount})
 
-        }
-        else{
-            this.props.provider.tasks.forEach(function(column){
-                    let uid = column.uid;
-                t[uid] = false;
-            })
-            this.setState({selectedRows:t, selectionCount: 0})
-        }
-        this.props.onSelectionToggle(t);
-    }
 
     onChangeCheck(e, checked){
-        let selectionCount = this.state.selectionCount;
         const selectedRows = {...this.state.selectedRows};
         selectedRows[e.target.name] = checked;
-        if(checked == false ){
-            selectionCount--;
-        }
-        else {
-            selectionCount++;
-        }
 
         // update state
         this.setState({
-            selectedRows, selectionCount
+            selectedRows
         });
         this.props.onSelectionToggle(selectedRows);
     }
@@ -170,7 +123,20 @@ export class ProviderRow extends React.Component {
         window.open(url, '_blank');
     }
 
-    // getTimeRemaining(task){
+    handleProviderCloudDownload(providerUid) {
+        let downloadUrls = [];
+        this.props.provider.tasks.forEach((column) => {
+            if(column.display == true) {
+                let url = column.result.url;
+                downloadUrls.push(url);
+            }
+        })
+        downloadUrls.forEach((value, idx) => {
+            window.open(value, '_blank');
+        });
+    }
+
+        // getTimeRemaining(task){
     //     let date = moment(task.estimated_finish);
     //     let now = moment();
     //     let timeRemaining = date - now;
@@ -280,6 +246,24 @@ export class ProviderRow extends React.Component {
         }
     }
 
+    getProviderLink(provider) {
+        if(provider.status != "COMPLETED") {
+            return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{provider.name}</span>
+        }
+        else {
+            return <a onClick={() => {this.handleProviderCloudDownload(provider.uid)}} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{provider.name}</a>
+        }
+    }
+
+    getProviderDownloadIcon(provider) {
+        if(provider.status != "COMPLETED"){
+            return <CloudDownload key={provider.uid} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
+        }
+        else {
+            return <CloudDownload  onClick={() => {this.handleProviderCloudDownload(provider.uid)}} key={provider.uid} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+        }
+    }
+
     render() {
         const style = {
               textDecoration: 'underline'
@@ -341,14 +325,16 @@ export class ProviderRow extends React.Component {
                         <TableHeaderColumn style={{width:'44px'}}>
                             <Checkbox
                                 disabled={this.props.provider.status != "COMPLETED"}
-                                checked={this.allChecked()} 
-                                onCheck={this.onAllCheck}
+                                checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}
+                                name={this.props.provider.uid}
+                                onCheck={this.onChangeCheck}
                                 checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
                                 uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                             />
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
-                            {this.props.provider.name}
+                            {this.getProviderLink(this.props.provider)}
+                            {this.getProviderDownloadIcon(this.props.provider)}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
@@ -392,7 +378,7 @@ export class ProviderRow extends React.Component {
 ProviderRow.propTypes = {
     provider: PropTypes.object.isRequired,
     onSelectionToggle: PropTypes.func,
-    selectedTasks: PropTypes.object,
+    selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
 }
 

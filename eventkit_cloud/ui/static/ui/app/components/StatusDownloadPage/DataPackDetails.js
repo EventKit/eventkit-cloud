@@ -19,84 +19,84 @@ export class DataPackDetails extends React.Component {
         this.checkAll = this.checkAll.bind(this);
         this.allChecked = this.allChecked.bind(this);
         this.state = {
-            selectedTasks: {},
+            selectedProviders: {},
             taskCount: 0,
         }
     }
 
     componentDidMount() {
-        let selectedTasks = {}
+        let selectedProviders = {};
         this.props.providerTasks.forEach((provider) => {
-            provider.tasks.forEach((task) => {
-                selectedTasks[task.uid] = false;
-            })
+            if (provider.display == true) {
+                selectedProviders[provider.uid] = false;
+            }
         });
-        this.setState({selectedTasks: selectedTasks});
+        this.setState({selectedProviders: selectedProviders});
     }
 
     checkAll(e, checked) {
         let taskCount = 0;
-        let stateTasks = {...this.state.selectedTasks};
+        let stateProviders = {...this.state.selectedProviders};
         let alteredTasks = {};
-        Object.keys(stateTasks).forEach((keyName) => {
+        this.props.providerTasks.forEach((column) => {
+            if(column.display == true) {
+                let uid = column.uid;
+                alteredTasks[uid] = checked;
+            }
+        })
+        Object.keys(stateProviders).forEach((keyName) => {
             alteredTasks[keyName] = checked;
             if(checked == true){
                 taskCount++;
             }
         });
-        this.setState({selectedTasks: alteredTasks, taskCount: taskCount});
+        this.setState({selectedProviders: alteredTasks, taskCount: taskCount});
     }
 
     allChecked() {
         let allChecked = true;
-        const keys = Object.keys(this.state.selectedTasks);
+        const keys = Object.keys(this.state.selectedProviders);
         if (!keys.length) {return false}
         for(const key in keys) {
-            if(!this.state.selectedTasks[keys[key]]){
-                allChecked = false
+            if(!this.state.selectedProviders[keys[key]]){
+                allChecked = false;
                 break
             }
         }
         return allChecked;
     }
 
-    onSelectionToggle(selectedTasks){
-        const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
-        let taskCount = 0;
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if(selectedTasks[keyName] == true) {
-                taskCount++;
-            }
-        });
-
-        this.setState({selectedTasks : tasks, taskCount: taskCount})
+    onSelectionToggle(selectedProviders){
+        const providers = Object.assign({}, this.state.selectedProviders, selectedProviders);
+        this.setState({selectedProviders : providers})
     }
 
     handleDownload(event){
-        let downloadUids = [];
-        let selectedTasks = this.state.selectedTasks;
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if(selectedTasks[keyName] == true) {
-                downloadUids.push(keyName);
+        let providerUids = [];
+        let selectedProviders = this.state.selectedProviders;
+        Object.keys(selectedProviders).forEach((keyName, keyIndex) => {
+            if(selectedProviders[keyName] == true) {
+                providerUids.push(keyName);
             }
         });
 
-        let tasks = this.props.providerTasks;
+        let providers = this.props.providerTasks;
         let taskArray = [];
         let downloadUrls = [];
 
-        tasks.forEach((url) => {
-            url.tasks.forEach((task) => {
-                taskArray.push([task]);
-                downloadUids.forEach(function(uid) {
-                if (task.uid === uid) {
-                    downloadUrls.push(task.result.url);
+        providers.forEach((provider) => {
+            providerUids.forEach(function(uid) {
+                if (provider.uid === uid) {
+                    provider.tasks.forEach((task) => {
+                        if (task.display == true) {
+                            taskArray.push([task.result.url]);
+                        }
+                    });
                 }
-                });
             });
         });
 
-        downloadUrls.forEach((value, idx) => {
+        taskArray.forEach((value, idx) => {
             // setTimeout(() => {
             //     window.location.href = value;
             // }, idx * 500);
@@ -201,7 +201,7 @@ export class DataPackDetails extends React.Component {
                         onProviderCancel={this.props.onProviderCancel}
                         updateSelectionNumber={this.updateSelectionNumber} 
                         provider={provider} 
-                        selectedTasks={this.state.selectedTasks}/>
+                        selectedProviders={this.state.selectedProviders}/>
                 ))}
            </div>
         )
