@@ -60,7 +60,7 @@ sudo -u postgres psql -d eventkit_exports -c "CREATE SCHEMA exports AUTHORIZATIO
 
 mkdir /var/lib/eventkit/tmp
 cd /var/lib/eventkit/tmp
-sudo git clone https://github.com/terranodo/eventkit-cloud.git
+sudo git clone https://github.com/venicegeo/eventkit-cloud.git
 cd eventkit-cloud
 sudo git fetch origin
 cp -R * /var/lib/eventkit

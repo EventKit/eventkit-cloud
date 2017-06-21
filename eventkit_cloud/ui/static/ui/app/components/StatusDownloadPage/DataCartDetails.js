@@ -353,10 +353,14 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Started</td>
                             <td style={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                         </tr>
-                        <tr>
-                            <td style={styles.tdHeader}>Finished</td>
-                            <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
-                        </tr>
+                        {this.props.cartDetails.finished_at ? 
+                            <tr>
+                                <td style={styles.tdHeader}>Finished</td>
+                                <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
+                            </tr>
+                        :
+                            null
+                        }
                     </tbody>
                 </table>
             </div>

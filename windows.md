@@ -24,7 +24,7 @@ This guide will specifically help users who want to test the application on Wind
    -Uncheck View Release Notes, click *Finish*
 4. Open Git Bash *as an Administrator*.
 5. Change to a directory where you would like to store eventkit-cloud source and configuration. (if change a drive use `cd <letter>:`)
-6. run: `git clone https://github.com/terranodo/eventkit-cloud`
+6. run: `git clone https://github.com/venicegeo/eventkit-cloud`
 7. `cd eventkit-cloud`
 8. `vagrant plugin install vagrant-hostsupdater`
 9. `vagrant plugin install vagrant-reload`

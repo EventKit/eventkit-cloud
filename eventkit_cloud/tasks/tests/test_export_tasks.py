@@ -131,8 +131,12 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=osm_conf_task.name)
-        result = osm_conf_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
-        osm_conf.create_osm_conf.assert_called_with(stage_dir=stage_dir)
+        # This makes it easy to see where the audit logging entries came from.
+        user_details = {'username': 'test_run_osmconf_task'}
+        result = osm_conf_task.run(
+            task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name, user_details=user_details)
+        expected_user_details = {'username': 'test_run_osmconf_task'}
+        osm_conf.create_osm_conf.assert_called_with(stage_dir=stage_dir, user_details=expected_user_details)
         self.assertEquals(expected_output_path, result['result'])
         # test tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
@@ -504,7 +508,7 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-        mock_logging_open.assert_called_once_with(style_file, 'w')
+        mock_logging_open.assert_called_once_with(style_file, 'w', user_details=None)
 
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
     @patch('os.makedirs')
@@ -642,9 +646,12 @@ class TestExportTasks(ExportTaskBase):
         run_uid = self.run.uid
         socket.gethostname.return_value = "test"
         self.assertEquals('Pickup Run', pick_up_run_task.name)
-        pick_up_run_task.run(run_uid=run_uid)
+        pick_up_run_task.run(run_uid=run_uid, user_details={'username': 'test_pickup_run_task'})
         task_factory.assert_called_once()
-        task_factory.return_value.parse_tasks.assert_called_once_with(run_uid=run_uid, worker="test")
+        expected_user_details = {'username': 'test_pickup_run_task'}
+        task_factory.return_value.parse_tasks.assert_called_once_with(
+            run_uid=run_uid, user_details=expected_user_details, worker="test"
+        )
 
     @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('shutil.rmtree')
