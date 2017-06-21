@@ -16,7 +16,7 @@ from .export_tasks import (osm_conf_task, osm_prep_schema_task,
                            wfs_export_task, external_raster_service_export_task,
                            arcgis_feature_service_export_task, osm_create_styles_task)
 
-# Get an instance of a logger
+
 logger = logging.getLogger(__name__)
 
 export_task_registry = {
@@ -90,11 +90,17 @@ class ExportGenericOSMTaskRunner(TaskRunner):
                 4. Create the default sqlite schema file using ogr2ogr config file created at step 1.
             Store in osm_tasks to hold the task_uid.
             """
-
-            osm_tasks = {'conf': {'obj': osm_conf_task, 'task_uid': None},
-                         'query': {'obj': overpass_query_task, 'task_uid': None},
-                         'pbfconvert': {'obj': osm_to_pbf_convert_task, 'task_uid': None},
-                         'prep_schema': {'obj': osm_prep_schema_task, 'task_uid': None}}
+            user_details = {
+                'username': user.username if user else 'unknown-ExportGenericOSMTaskRunner.run_task',
+                'is_superuser': user.is_superuser if user else None,
+                'is_staff': user.is_staff if user else None
+            }
+            osm_tasks = {
+                'conf': {'obj': osm_conf_task, 'task_uid': None},
+                'query': {'obj': overpass_query_task, 'task_uid': None},
+                'pbfconvert': {'obj': osm_to_pbf_convert_task, 'task_uid': None},
+                'prep_schema': {'obj': osm_prep_schema_task, 'task_uid': None}
+            }
 
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
@@ -117,28 +123,49 @@ class ExportGenericOSMTaskRunner(TaskRunner):
             The export format tasks (format_tasks) are then run in parallel, followed
             by the finalize_task at the end to clean up staging dirs, update run status, email user etc..
             """
-            initial_tasks = (
-                osm_tasks.get('conf').get('obj').s(categories=categories,
-                                                    task_uid=osm_tasks.get('conf').get('task_uid'),
-                                                    job_name=job_name,
-                                                    stage_dir=stage_dir).set(queue=worker, routing_key=worker) |
-                osm_tasks.get('query').get('obj').s(stage_dir=stage_dir,
-                                                     task_uid=osm_tasks.get('query').get('task_uid'),
-                                                     job_name=job_name,
-                                                     bbox=bbox,
-                                                     filters=job.filters).set(queue=worker, routing_key=worker)
-            )
+            conf_task_sig = osm_tasks.get('conf').get('obj').s(
+                categories=categories, task_uid=osm_tasks.get('conf').get('task_uid'), job_name=job_name,
+                stage_dir=stage_dir, user_details=user_details
+            ).set(queue=worker, routing_key=worker)
 
-            schema_tasks = (
-                osm_tasks.get('pbfconvert').get('obj').s(stage_dir=stage_dir,
-                                                          job_name=job_name,
-                                                          task_uid=osm_tasks.get('pbfconvert').get('task_uid')).set(
-                    queue=worker, routing_key=worker) |
-                osm_tasks.get('prep_schema').get('obj').s(stage_dir=stage_dir,
-                                                           job_name=job_name,
-                                                           task_uid=osm_tasks.get('prep_schema').get('task_uid')).set(
-                    queue=worker, routing_key=worker)
-            )
+            query_task_sig = osm_tasks.get('query').get('obj').s(
+                stage_dir=stage_dir, task_uid=osm_tasks.get('query').get('task_uid'), job_name=job_name,
+                bbox=bbox, filters=job.filters, user_details=user_details
+            ).set(queue=worker, routing_key=worker)
+
+            initial_tasks = (conf_task_sig | query_task_sig)
+#             initial_tasks = (
+#                 osm_tasks.get('conf').get('obj').s(categories=categories,
+#                                                     task_uid=osm_tasks.get('conf').get('task_uid'),
+#                                                     job_name=job_name,
+#                                                     stage_dir=stage_dir).set(queue=worker, routing_key=worker) |
+#                 osm_tasks.get('query').get('obj').s(stage_dir=stage_dir,
+#                                                      task_uid=osm_tasks.get('query').get('task_uid'),
+#                                                      job_name=job_name,
+#                                                      bbox=bbox,
+#                                                      filters=job.filters).set(queue=worker, routing_key=worker)
+#             )
+
+            pbconvert_task_sig = osm_tasks.get('pbfconvert').get('obj').s(
+                stage_dir=stage_dir, job_name=job_name, task_uid=osm_tasks.get('pbfconvert').get('task_uid')
+            ).set(queue=worker, routing_key=worker)
+
+            prep_schema_task_sig = osm_tasks.get('prep_schema').get('obj').s(
+                stage_dir=stage_dir, job_name=job_name, task_uid=osm_tasks.get('prep_schema').get('task_uid'),
+                user_details=user_details
+            ).set(queue=worker, routing_key=worker)
+
+            schema_tasks = (pbconvert_task_sig | prep_schema_task_sig)
+#             schema_tasks = (
+#                 osm_tasks.get('pbfconvert').get('obj').s(stage_dir=stage_dir,
+#                                                           job_name=job_name,
+#                                                           task_uid=osm_tasks.get('pbfconvert').get('task_uid')).set(
+#                     queue=worker, routing_key=worker) |
+#                 osm_tasks.get('prep_schema').get('obj').s(stage_dir=stage_dir,
+#                                                            job_name=job_name,
+#                                                            task_uid=osm_tasks.get('prep_schema').get('task_uid')).set(
+#                     queue=worker, routing_key=worker)
+#             )
 
             task_chain = (initial_tasks | schema_tasks)
 
@@ -147,7 +174,8 @@ class ExportGenericOSMTaskRunner(TaskRunner):
                 task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
                                                         stage_dir=stage_dir,
                                                         job_name=job_name,
-                                                        task_uid=gpkg_export_task.get('task_uid')).set(queue=worker, routing_key=worker))
+                                                        task_uid=gpkg_export_task.get('task_uid'),
+                                                        ).set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
                 format_tasks = chain(task.get('obj').s(run_uid=run.uid,
@@ -184,6 +212,11 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         :param osm_gpkg: A OSM geopackage with the planet osm schema.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-ExportThematicOSMTaskRunner.run_task'}
+
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
 
         # pull the provider_task from the database
@@ -228,18 +261,19 @@ class ExportThematicOSMTaskRunner(TaskRunner):
                                                         export_provider_task=export_provider_task, worker=worker, display=getattr(thematic_gpkg_task, "display", False)).uid}
 
         # Note this needs to be mutable (s instead of si) so that it can take the result of the generic osm tasks.
-        thematic_task = thematic_gpkg.get('obj').s(run_uid=run.uid,
-                                                      stage_dir=stage_dir,
-                                                      job_name=job_name,
-                                                      task_uid=thematic_gpkg.get('task_uid')).set(
-            queue=worker, routing_key=worker)
+        thematic_task = thematic_gpkg.get('obj').s(
+            run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=thematic_gpkg.get('task_uid'),
+            user_details=user_details
+        ).set(queue=worker, routing_key=worker)
+
         if export_tasks:
-            format_tasks = chain(task.get('obj').s(run_uid=run.uid,
-                                                       stage_dir=stage_dir,
-                                                       job_name=job_name,
-                                                       task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for
-                                    task_name, task in
-                                    export_tasks.iteritems())
+            format_tasks = chain(
+                task.get('obj').s(
+                    run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
+                    user_details=user_details
+                ).set(queue=worker, routing_key=worker)
+                for task_name, task in export_tasks.iteritems()
+            )
         else:
             format_tasks = None
 
@@ -249,12 +283,12 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         style_task = osm_create_styles_task.s(task_uid=create_export_task(task_name=osm_create_styles_task.name,
                                                                            export_provider_task=export_provider_task,
                                                                            worker=worker, display=getattr(osm_create_styles_task, "display", False)).uid,
-                                               stage_dir=stage_dir,
-                                               job_name=job_name,
-                                               bbox=bbox,
-                                               provider_slug=provider_task.provider.slug,
-                                               provider_name=provider_task.provider.name).set(queue=worker,
-                                                                                              routing_key=worker)
+                                              stage_dir=stage_dir,
+                                              job_name=job_name,
+                                              bbox=bbox,
+                                              provider_slug=provider_task.provider.slug,
+                                              provider_name=provider_task.provider.name,
+                                              user_details=user_details).set(queue=worker, routing_key=worker)
 
         return export_provider_task.uid, (thematic_tasks | style_task)
 
@@ -276,6 +310,11 @@ class ExportWFSTaskRunner(TaskRunner):
         :param worker: The celery worker assigned this task.
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-ExportWFSTaskRunner.run_task'}
+
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
@@ -317,26 +356,29 @@ class ExportWFSTaskRunner(TaskRunner):
                                              export_provider_task=export_provider_task, worker=worker, display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
-                                            job_name=job_name,
-                                            task_uid=export_task.uid,
-                                            name=provider_task.provider.slug,
-                                            layer=provider_task.provider.layer,
-                                            bbox=bbox,
-                                            service_url=provider_task.provider.url).set(queue=worker, routing_key=worker))
+                                         job_name=job_name,
+                                         task_uid=export_task.uid,
+                                         name=provider_task.provider.slug,
+                                         layer=provider_task.provider.layer,
+                                         bbox=bbox,
+                                         service_url=provider_task.provider.url,
+                                         user_details=user_details).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('gpkg'):
                 gpkg_export_task = export_tasks.pop('gpkg')
                 task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
                                                                          stage_dir=stage_dir,
                                                                          job_name=job_name,
-                                                                         task_uid=gpkg_export_task.get('task_uid')).set(
-                    queue=worker, routing_key=worker))
+                                                                         task_uid=gpkg_export_task.get('task_uid'),
+                                                                         user_details=user_details)\
+                                                                            .set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
                 format_tasks = chain(task.get('obj').s(run_uid=run.uid,
                                                         stage_dir=stage_dir,
                                                         job_name=job_name,
-                                                        task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for task_name, task
+                                                        task_uid=task.get('task_uid'),
+                                                        user_details=user_details).set(queue=worker, routing_key=worker) for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
 
@@ -370,6 +412,11 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         Return:
             the ExportRun instance.
         """
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-ExportArcGISFeatureServiceTaskRunner.run_task'}
+
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
@@ -416,21 +463,24 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                             name=provider_task.provider.slug,
                                             layer=provider_task.provider.layer,
                                             bbox=bbox,
-                                            service_url=provider_task.provider.url).set(queue=worker, routing_key=worker))
+                                            service_url=provider_task.provider.url,
+                                            user_details=user_details).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('gpkg'):
                 gpkg_export_task = export_tasks.pop('gpkg')
                 task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
                                                                            stage_dir=stage_dir,
                                                                            job_name=job_name,
-                                                                           task_uid=gpkg_export_task.get('task_uid')).set(
+                                                                           task_uid=gpkg_export_task.get('task_uid'),
+                                                                           user_details=user_details).set(
                     queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
                 format_tasks = chain(task.get('obj').s(run_uid=run.uid,
                                                         stage_dir=stage_dir,
                                                         job_name=job_name,
-                                                        task_uid=task.get('task_uid')).set(queue=worker, routing_key=worker) for task_name, task
+                                                        task_uid=task.get('task_uid'),
+                                                        user_details=user_details).set(queue=worker, routing_key=worker) for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
 
@@ -464,6 +514,10 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         Return:
             the ExportRun instance.
         """
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-ExportExternalRasterServiceTaskRunner.run_task'}
+
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
@@ -498,19 +552,20 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                              export_provider_task=export_provider_task, worker=worker, display=getattr(external_raster_service_export_task, "display", False))
 
             service_task = external_raster_service_export_task.s(stage_dir=stage_dir,
-                                                                  run_uid=run.uid,
-                                                                  job_name=job_name,
-                                                                  task_uid=export_task.uid,
-                                                                  name=provider_task.provider.slug,
-                                                                  layer=provider_task.provider.layer,
-                                                                  config=provider_task.provider.config,
-                                                                  bbox=bbox,
-                                                                  selection=job.the_geom.geojson,
-                                                                  service_url=provider_task.provider.url,
-                                                                  level_from=provider_task.provider.level_from,
-                                                                  level_to=provider_task.provider.level_to,
-                                                                  service_type=service_type).set(queue=worker,
-                                                                                                 routing_key=worker)
+                                                                 run_uid=run.uid,
+                                                                 job_name=job_name,
+                                                                 task_uid=export_task.uid,
+                                                                 name=provider_task.provider.slug,
+                                                                 layer=provider_task.provider.layer,
+                                                                 config=provider_task.provider.config,
+                                                                 bbox=bbox,
+                                                                 selection=job.the_geom.geojson,
+                                                                 service_url=provider_task.provider.url,
+                                                                 level_from=provider_task.provider.level_from,
+                                                                 level_to=provider_task.provider.level_to,
+                                                                 service_type=service_type,
+                                                                 user_details=user_details).set(queue=worker,
+                                                                                                routing_key=worker)
             return export_provider_task.uid, service_task
         else:
             return None, None

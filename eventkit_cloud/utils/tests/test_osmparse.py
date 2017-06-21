@@ -41,15 +41,19 @@ class TestOSMParser(TestCase):
     @patch('eventkit_cloud.utils.osmparse.execute_spatialite_script')
     @patch('eventkit_cloud.utils.osmparse.exists')
     def test_create_default_schema(self, exists, mock_spatialite):
-        example_gpkg = os.path.join("path","to","query.gpkg")
-        path = os.path.join("path","to")
+        example_gpkg = os.path.join("path", "to", "query.gpkg")
+        path = os.path.join("path", "to")
         expected_paths = [os.path.join(path, 'sql', 'planet_osm_schema.sql'), os.path.join(path, 'sql', 'spatial_index.sql')]
         exists.return_value = True
         parser = OSMParser(osm='/path/to/query.pbf', gpkg=example_gpkg, task_uid=self.task_uid)
         parser.path = path
-        parser.create_default_schema_gpkg()
+        user_details = {'username': 'test_create_default_schema'}
+        parser.create_default_schema_gpkg(user_details=user_details)
         exists.assert_called_with(example_gpkg)
-        mock_spatialite.assert_has_calls([call(example_gpkg, expected_paths[0]),call(example_gpkg, expected_paths[1])])
+        mock_spatialite.assert_has_calls([
+            call(example_gpkg, expected_paths[0], user_details=user_details),
+            call(example_gpkg, expected_paths[1], user_details=user_details)
+        ])
 
 
     @patch('eventkit_cloud.utils.osmparse.ogr.Open')
