@@ -60,13 +60,22 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(6);
-        expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(2);
-        expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(0);
+        expect(wrapper.find(IconButton)).toHaveLength(1);
+        expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
+    });
+
+    it('should render the cancel menu item if the task is pending/running and the cancel menu item should call onProviderCancel', () => {
+        let props = {...getProps()};
+        props.provider.status = 'PENDING';
+        props.onProviderCancel = new sinon.spy();
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconMenu).find(IconButton)).toHaveLength(1);
+        expect(wrapper.find(IconMenu).find(NavigationMoreVert)).toHaveLength(1);
     });
 
     it('should render the task rows when the table is open', () => {
@@ -186,36 +195,87 @@ describe('ProviderRow component', () => {
 
     it('getTaskStatus should be called with the correct status from a given task', () => {
         const props = getProps();
-        const getTaskStatusSpy = new sinon.spy(ProviderRow.prototype, 'getTaskStatus');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskStatus(tasks);
-        expect(getTaskStatusSpy.calledOnce).toBe(true);
-        expect(getTaskStatusSpy.calledWith(tasks)).toBe(true);
+        expect(wrapper.instance().getTaskStatus({status: 'SUCCESS'})).toEqual(
+            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+        );
+        expect(wrapper.instance().getTaskStatus({status: 'INCOMPLETE'})).toEqual(
+            <span style={{
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#ce4427'}}
+            >
+                ERROR
+            </span>
+        )
+        expect(wrapper.instance().getTaskStatus({status: 'PENDING'})).toEqual('WAITING');
+        expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
+            <span><LinearProgress mode="determinate" value={100}/>{''}</span>
+        );
+        expect(wrapper.instance().getTaskStatus({status: 'CANCELED'})).toEqual(
+            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
+        );
+        expect(wrapper.instance().getTaskStatus({status: ''})).toEqual('');
     });
 
     it('getTaskStatusIcon should be called with the correct icon from a given task', () => {
         const props = getProps();
-        const getTaskStatusSpy = new sinon.spy(ProviderRow.prototype, 'getTaskStatusIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskStatusIcon(tasks);
-        expect(getTaskStatusSpy.calledOnce).toBe(true);
-        expect(getTaskStatusSpy.calledWith(tasks)).toBe(true);
+        expect(wrapper.instance().getTaskStatusIcon('SUCCESS')).toEqual(
+            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+        );
+        expect(wrapper.instance().getTaskStatusIcon('PENDING')).toEqual('WAITING');
+        expect(wrapper.instance().getTaskStatusIcon('CANCELED')).toEqual('CANCELED');
+        expect(wrapper.instance().getTaskStatusIcon('FAILED')).toEqual(
+            <span style={{color: 'red'}}>Error</span>
+        );
+        expect(wrapper.instance().getTaskStatusIcon('')).toEqual('');
     });
 
     it('getProviderStatusIcon should be called with the icon from a given provider status', () => {
         const props = getProps();
-        const getProviderStatusSpy = new sinon.spy(ProviderRow.prototype, 'getProviderStatusIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getProviderStatusIcon();
-        expect(getProviderStatusSpy.calledWith("COMPLETED")).toBe(true);
+        expect(wrapper.instance().getProviderStatusIcon('COMPLETED')).toEqual(
+            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+        );
+        expect(wrapper.instance().getProviderStatusIcon('INCOMPLETE')).toEqual(
+            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
+        );
+        expect(wrapper.instance().getProviderStatusIcon('SUBMITTED')).toEqual(null);
+        expect(wrapper.instance().getProviderStatusIcon('CANCELED')).toEqual(
+            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
+        );
+        expect(wrapper.instance().getProviderStatusIcon('')).toEqual(null);
     });
 
     it('getProviderStatus should be called with the correct icon from a given provider status', () => {
         const props = getProps();
-        const getProviderStatusSpy = new sinon.spy(ProviderRow.prototype, 'getProviderStatus');
         const wrapper = getWrapper(props);
-        wrapper.instance().getProviderStatus();
-        expect(getProviderStatusSpy.calledWith("COMPLETED")).toBe(true);
+        expect(wrapper.instance().getProviderStatus('COMPLETED')).toEqual(null);
+        expect(wrapper.instance().getProviderStatus('INCOMPLETE')).toEqual(
+            <span style={{
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#ce4427'
+                }}>ERROR</span>
+        );
+        expect(wrapper.instance().getProviderStatus('PENDING')).toEqual('WAITING');
+        expect(wrapper.instance().getProviderStatus('RUNNING')).toEqual('IN PROGRESS');
+        expect(wrapper.instance().getProviderStatus('CANCELED')).toEqual(
+            <span style={{
+                    fontWeight: 'bold',
+                    display: 'inlineBlock',
+                    borderTopWidth: '10px',
+                    borderBottomWidth: '10px',
+                    borderLeftWidth: '10px',
+                    color: '#f4d225'
+                }}>CANCELED</span>
+        );
+        expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });
 
     it('getTaskLink should get called with correct data', () => {

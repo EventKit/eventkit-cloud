@@ -88,7 +88,7 @@ describe('DataPackDetails component', () => {
         checkAllSpy.restore();
     });
 
-    it('should call handleDownload when the download button is clicked.  Button should not be enabled until taskCount is greater than zero', () => {
+    it('should call handleDownload when the download button is clicked', () => {
         const props = getProps();
         const downloadSpy = new sinon.spy(DataPackDetails.prototype, 'handleDownload');
         const wrapper = getWrapper(props);
@@ -96,39 +96,47 @@ describe('DataPackDetails component', () => {
         const button = TestUtils.scryRenderedDOMComponentsWithTag(wrapper.instance(), 'button')[0];
         const node = ReactDOM.findDOMNode(button);
         expect(node.disabled).toBe(true);
-        wrapper.setState({selectedTasks: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}, taskCount: 1});
+        wrapper.setState({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}});
         expect(node.disabled).toBe(false);
         TestUtils.Simulate.touchTap(node);
         expect(downloadSpy.calledOnce).toBe(true);
         downloadSpy.restore();
     });
 
-    it('should call componentDidMount and update the state with selectedTasks', () => {
+    it('should call componentDidMount and update the state with selectedProviders', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
         const mountSpy = new sinon.spy(DataPackDetails.prototype, 'componentDidMount');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({selectedTasks: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}, taskCount: 0}));
+        expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
         stateSpy.restore();
         mountSpy.restore();
     });
 
-    it('checkAll should set all task in selectedTasks state to checked/unchecked and update state of taskCount', () => {
+    it('checkAll should set all task in selectedProviders state to checked/unchecked and update state of taskCount', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(wrapper.state().selectedProviders).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': false});
         wrapper.instance().checkAll({}, true);
-        expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}, taskCount: 1})).toBe(true);
+        expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}})).toBe(true);
         expect(wrapper.state().selectedProviders).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': true});
         wrapper.instance().checkAll({}, false);
-        expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}, taskCount: 0})).toBe(true);
+        expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
+        let nextProps = {onProviderCancel: () => {}, providerTasks: [{...providerTasks[0]}]};
+        // stateSpy.reset();
+        nextProps.providerTasks[0].display =  false;
+        nextProps.providerTasks[0].uid = 'not-called';
+        wrapper.setProps(nextProps);
+        wrapper.instance().checkAll({}, true);
+        // expect(stateSpy.called).toBe(false);
+        expect(stateSpy.calledWith({selectedProviders: {'not-called': true}})).toBe(false);
         stateSpy.restore();
     });
 
-    it('allChecked should return true if all tasks in selectedTasks state are true, else it returns false', () => {
+    it('allChecked should return true if all tasks in selectedProviders state are true, else it returns false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.instance().allChecked()).toBe(false);
@@ -138,7 +146,7 @@ describe('DataPackDetails component', () => {
         expect(wrapper.instance().allChecked()).toBe(false);
     });
 
-    it('onSelectionToggle should update the selectedTasks and taskCount state', () => {
+    it('onSelectionToggle should update the selectedProviders and taskCount state', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
@@ -148,15 +156,41 @@ describe('DataPackDetails component', () => {
         stateSpy.restore();
     });
 
-    // it('handDownload should setTimeout for each file to be downloaded', () => {
-    //     const openSpy = new sinon.spy();
-    //     window.open = openSpy;
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({selectedProvders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true, '123456': true}});
-    //     wrapper.instance().handleDownload();
-    //     expect(openSpy.calledOnce).toBe(true);
-    // });
+    it('isDownloadAllDisabled should return true or false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({selectedProviders: {}});
+        expect(wrapper.instance().isDownloadAllDisabled()).toEqual(true);
+        wrapper.setState({selectedProviders: {one: true, two: false}});
+        expect(wrapper.instance().isDownloadAllDisabled()).toEqual(false);
+        wrapper.setState({selectedProviders: {one: false, two: false}});
+        expect(wrapper.instance().isDownloadAllDisabled()).toEqual(true);
+    });
+
+    it('getCheckboxStatus should return true or false depending on providerTask prop', () => {
+        let props = {...getProps()};
+        props.providerTasks[0].status = 'PENDING';
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getCheckboxStatus()).toBe(true);
+        let nextProps = {...props};
+        nextProps.providerTasks[0].status = 'COMPLETED';
+        wrapper.setProps(nextProps);
+        expect(wrapper.instance().getCheckboxStatus()).toBe(false);
+    });
+
+    it('handDownload should open a tab for each file to be downloaded', () => {
+        const openSpy = new sinon.spy(window, 'open');
+        let props = getProps();
+        let otherTask = JSON.parse(JSON.stringify(providerTasks[0]));
+        otherTask.tasks[0].display = false;
+        otherTask.uid = '12345';
+        props.providerTasks.push(otherTask);
+        const wrapper = getWrapper(props);
+        wrapper.setState({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true, '12345': true, '3': false}});
+        wrapper.instance().handleDownload();
+        console.log(openSpy.callCount);
+        expect(openSpy.calledOnce).toBe(true);
+    });
 });
 
 const providerTasks = [

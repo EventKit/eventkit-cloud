@@ -18,9 +18,9 @@ export class DataPackDetails extends React.Component {
         this.onSelectionToggle = this.onSelectionToggle.bind(this);
         this.checkAll = this.checkAll.bind(this);
         this.allChecked = this.allChecked.bind(this);
+        this.isDownloadAllDisabled = this.isDownloadAllDisabled.bind(this);
         this.state = {
             selectedProviders: {},
-            taskCount: 0,
         }
     }
 
@@ -35,7 +35,6 @@ export class DataPackDetails extends React.Component {
     }
 
     checkAll(e, checked) {
-        let taskCount = 0;
         let stateProviders = {...this.state.selectedProviders};
         let alteredTasks = {};
         this.props.providerTasks.forEach((column) => {
@@ -44,13 +43,7 @@ export class DataPackDetails extends React.Component {
                 alteredTasks[uid] = checked;
             }
         })
-        Object.keys(stateProviders).forEach((keyName) => {
-            alteredTasks[keyName] = checked;
-            if(checked == true){
-                taskCount++;
-            }
-        });
-        this.setState({selectedProviders: alteredTasks, taskCount: taskCount});
+        this.setState({selectedProviders: alteredTasks});
     }
 
     allChecked() {
@@ -64,6 +57,17 @@ export class DataPackDetails extends React.Component {
             }
         }
         return allChecked;
+    }
+
+    isDownloadAllDisabled() {
+        const keys = Object.keys(this.state.selectedProviders);
+        if(!keys.length) {return true}
+        for(const key in keys) {
+            if(this.state.selectedProviders[keys[key]]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     onSelectionToggle(selectedProviders){
@@ -170,7 +174,7 @@ export class DataPackDetails extends React.Component {
                             <TableHeaderColumn style={{fontSize: textFontSize, whiteSpace: 'normal',}}>
                                 <RaisedButton
                                     backgroundColor={'rgba(179,205,224,0.5)'}
-                                    disabled={this.state.taskCount == 0}
+                                    disabled={this.isDownloadAllDisabled()}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
                                     labelStyle={{fontWeight:'bold', fontSize:textFontSize}}
