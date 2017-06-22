@@ -24,7 +24,7 @@ from eventkit_cloud.tasks.export_tasks import include_zipfile, prepare_for_expor
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
-    ExportTaskResult,
+    FileProducingTaskResult,
     ExportProviderTask
 )
 
@@ -565,7 +565,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(TaskStates.SUCCESS.value, task.status)
         self.assertEquals('ESRI Shapefile Format', task.name)
         # pull out the result and test
-        result = ExportTaskResult.objects.get(task__celery_uid=celery_uid)
+        result = FileProducingTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
         if getattr(settings, "USE_S3", False):
             self.assertEqual(s3_url, str(result.download_url))
@@ -860,7 +860,7 @@ class TestExportTasks(ExportTaskBase):
             pid=task_pid,
             worker=worker_name
         )
-        ExportTaskResult.objects.create(task=task, filename=filename, size=10)
+        FileProducingTaskResult.objects.create(task=task, filename=filename, size=10)
 
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))

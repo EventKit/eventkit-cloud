@@ -127,7 +127,7 @@ class ExportTask(LockingTask):
             return
 
         try:
-            from ..tasks.models import (ExportTaskResult, ExportTask as ExportTaskModel)
+            from ..tasks.models import (FileProducingTaskResult, ExportTask as ExportTaskModel)
             # update the task
             finished = timezone.now()
             task = ExportTaskModel.objects.get(celery_uid=task_id)
@@ -182,7 +182,7 @@ class ExportTask(LockingTask):
                     download_url = '/'.join([download_media_root, run_uid, download_file])
 
                 # save the task and task result
-                result = ExportTaskResult(
+                result = FileProducingTaskResult(
                     task=task,
                     filename=filename,
                     size=size,
@@ -1081,7 +1081,7 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
     Cancels an ExportProviderTask and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
-    from ..tasks.models import ExportProviderTask, ExportTaskException, ExportTaskResult
+    from ..tasks.models import ExportProviderTask, ExportTaskException, FileProducingTaskResult
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from datetime import datetime, timedelta
@@ -1114,7 +1114,7 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
             ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
-        task_result = ExportTaskResult.objects.filter(task=export_task).first()
+        task_result = FileProducingTaskResult.objects.filter(task=export_task).first()
         if task_result:
             task_result.soft_delete()
 

@@ -156,9 +156,9 @@ class FinalizeRunHookTaskRecord(models.Model):
         return 'RunFinishedTaskRecord ({}): {}'.format(self.celery_uid, self.status)
 
 
-class ExportTaskResult(models.Model):
+class FileProducingTaskResult(models.Model):
     """
-         An ExportTaskResult holds the information from the task, i.e. the reason for executing the task.
+         A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
     task = models.OneToOneField(ExportTask, primary_key=True, related_name='result')
     filename = models.CharField(max_length=100, blank=True, editable=False)
@@ -181,7 +181,7 @@ class ExportTaskResult(models.Model):
         db_table = 'export_task_results'
 
     def __str__(self):
-        return 'ExportTaskResult uid: {0}'.format(self.task.uid)
+        return 'FileProducingTaskResult uid: {0}'.format(self.task.uid)
 
 
 class ExportTaskException(models.Model):
@@ -213,10 +213,10 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
         logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
 
 
-@receiver(pre_delete, sender=ExportTaskResult)
+@receiver(pre_delete, sender=FileProducingTaskResult)
 def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     """
-    Delete associated files when deleting the ExportTaskResult.
+    Delete associated files when deleting the FileProducingTaskResult.
     """
     # The url should be constructed as [download context, run_uid, filename]
     if getattr(settings, 'USE_S3', False):

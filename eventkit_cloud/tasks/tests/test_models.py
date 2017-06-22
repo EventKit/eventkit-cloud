@@ -9,9 +9,9 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from mock import patch
 
-from ...jobs.models import ExportFormat, Job, ProviderTask, ExportProvider
-from ..models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
 from ..export_tasks import TaskStates
+from ...jobs.models import ExportFormat, Job, ProviderTask, ExportProvider
+from ..models import ExportRun, ExportTask, FileProducingTaskResult, ExportProviderTask
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class TestExportRun(TestCase):
         job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
         job.provider_tasks.add(provider_task)
 
-    def test_export_run(self, ):
+    def test_export_run(self,):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, status='SUBMITTED', user=job.user)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
@@ -46,7 +46,7 @@ class TestExportRun(TestCase):
         self.assertIsNotNone(run.expiration)
         self.assertIsNone(saved_run.zipfile_url)
 
-    def test_get_tasks_for_run(self, ):
+    def test_get_tasks_for_run(self,):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         saved_run = ExportRun.objects.get(uid=str(run.uid))
@@ -59,7 +59,7 @@ class TestExportRun(TestCase):
         tasks = run.provider_tasks.all()[0].tasks.all()
         self.assertEqual(tasks[0], saved_task)
 
-    def test_get_runs_for_job(self, ):
+    def test_get_runs_for_job(self,):
         job = Job.objects.first()
         for x in range(5):
             run = ExportRun.objects.create(job=job, user=job.user)
@@ -71,7 +71,7 @@ class TestExportRun(TestCase):
         self.assertEquals(5, len(runs))
         self.assertEquals(1, len(tasks))
 
-    def test_delete_export_run(self, ):
+    def test_delete_export_run(self,):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
@@ -133,12 +133,12 @@ class TestExportTask(TestCase):
     @patch('eventkit_cloud.tasks.models.exporttaskresult_delete_exports')
     def test_export_task_result(self, mock_etr_delete_exports):
         """
-        Test ExportTaskResult.
+        Test FileProducingTaskResult.
         """
         task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(task, self.task)
         self.assertFalse(hasattr(task, 'result'))
-        result = ExportTaskResult.objects.create(task=task,
+        result = FileProducingTaskResult.objects.create(task=task,
                                                  download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid))
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(task, 'result'))
@@ -168,7 +168,7 @@ class TestExportTask(TestCase):
     @patch('eventkit_cloud.tasks.models.delete_from_s3')
     def test_exporttaskresult_delete_exports(self, delete_from_s3, remove, export_provider):
 
-        #setup
+        # setup
         download_dir = "/test_download_dir"
         file_name = "file.txt"
         full_download_path = os.path.join(download_dir, str(self.run.uid), file_name)
@@ -176,7 +176,7 @@ class TestExportTask(TestCase):
         task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(task, self.task)
         self.assertFalse(hasattr(task, 'result'))
-        result = ExportTaskResult.objects.create(task=task,
+        result = FileProducingTaskResult.objects.create(task=task,
                                                  download_url=download_url)
         self.assertIsNotNone(result)
         self.assertTrue(hasattr(task, 'result'))
@@ -185,7 +185,7 @@ class TestExportTask(TestCase):
         self.assertIsNotNone(saved_result)
         self.assertEqual(result, saved_result)
 
-        #Test
+        # Test
         with self.settings(USE_S3=True, EXPORT_DOWNLOAD_ROOT=download_dir):
             result.delete()
         delete_from_s3.assert_called_once_with(download_url=download_url)
