@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class TestExportTaskRunner(TestCase):
     fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
 
-    def setUp(self, ):
+    def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         Group.objects.create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -62,7 +62,7 @@ class TestExportTaskRunner(TestCase):
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(5, len(tasks))  # 4 initial tasks + 1 shape export task
-        self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
+        self.assertIsNone(tasks[0].result)  # no result yet..
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
@@ -90,7 +90,7 @@ class TestExportTaskRunner(TestCase):
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(3, len(tasks))
-        self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
+        self.assertIsNone(tasks[0].result)  # no result yet..
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
@@ -119,7 +119,7 @@ class TestExportTaskRunner(TestCase):
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(1, len(tasks))
-        self.assertFalse(hasattr(tasks[0], 'result'))  # no result yet..
+        self.assertIsNone(tasks[0].result)  # no result yet..
 
     @patch('eventkit_cloud.tasks.task_runners.ExportTask')
     def test_create_export_task(self, mock_export_task):

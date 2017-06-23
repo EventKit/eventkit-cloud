@@ -182,13 +182,12 @@ class ExportTask(LockingTask):
                     download_url = '/'.join([download_media_root, run_uid, download_file])
 
                 # save the task and task result
-                result = FileProducingTaskResult(
-                    task=task,
+                result = FileProducingTaskResult.objects.create(
                     filename=filename,
                     size=size,
                     download_url=download_url
                 )
-                result.save()
+                task.result = result
             except IOError:
                 logger.warning(
                     'output file %s was not able to be found (run_uid: %s)',
@@ -1114,7 +1113,7 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
             ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
-        task_result = FileProducingTaskResult.objects.filter(task=export_task).first()
+        task_result = export_task.result
         if task_result:
             task_result.soft_delete()
 

@@ -182,7 +182,7 @@ class FileProducingTaskResult(models.Model):
         db_table = 'export_task_results'
 
     def __str__(self):
-        return 'FileProducingTaskResult uid: {0}'.format(self.task.uid)
+        return 'FileProducingTaskResult ({}), {}'.format(self.id, self.filename)
 
 
 class ExportTaskException(models.Model):

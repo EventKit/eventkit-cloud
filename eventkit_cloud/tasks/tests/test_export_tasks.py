@@ -561,11 +561,9 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(task)
         result = task.result
         self.assertIsNotNone(result)
-        self.assertEqual(task, result.task)
         self.assertEquals(TaskStates.SUCCESS.value, task.status)
         self.assertEquals('ESRI Shapefile Format', task.name)
         # pull out the result and test
-        result = FileProducingTaskResult.objects.get(task__celery_uid=celery_uid)
         self.assertIsNotNone(result)
         if getattr(settings, "USE_S3", False):
             self.assertEqual(s3_url, str(result.download_url))
@@ -852,15 +850,16 @@ class TestExportTasks(ExportTaskBase):
             status=TaskStates.COMPLETED.value,
             slug='test_provider_task_slug'
         )
+        result = FileProducingTaskResult.objects.create(filename=filename, size=10)
         task = ExportTask.objects.create(
             export_provider_task=export_provider_task,
             status=TaskStates.COMPLETED.value,
             name="test_task",
             celery_uid=celery_uid,
             pid=task_pid,
-            worker=worker_name
+            worker=worker_name,
+            result=result,
         )
-        FileProducingTaskResult.objects.create(task=task, filename=filename, size=10)
 
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))

@@ -137,15 +137,13 @@ class TestExportTask(TestCase):
         """
         task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(task, self.task)
-        self.assertFalse(hasattr(task, 'result'))
-        result = FileProducingTaskResult.objects.create(task=task,
-                                                 download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid))
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(task, 'result'))
-        self.assertEquals('http://testserver/media/{0}/file.txt'.format(self.run.uid), result.download_url)
-        saved_result = task.result
-        self.assertIsNotNone(saved_result)
-        self.assertEqual(result, saved_result)
+
+        self.assertIsNone(task.result)
+        result = FileProducingTaskResult.objects.create(
+             download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
+        )
+        task.result = result
+        self.assertEquals('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
         task.result.soft_delete()
         task.result.refresh_from_db()
         self.assertTrue(task.result.deleted)
@@ -175,15 +173,10 @@ class TestExportTask(TestCase):
         download_url = 'http://testserver/media/{0}/{1}'.format(str(self.run.uid), file_name)
         task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(task, self.task)
-        self.assertFalse(hasattr(task, 'result'))
-        result = FileProducingTaskResult.objects.create(task=task,
-                                                 download_url=download_url)
-        self.assertIsNotNone(result)
-        self.assertTrue(hasattr(task, 'result'))
-        self.assertEquals(download_url, result.download_url)
-        saved_result = task.result
-        self.assertIsNotNone(saved_result)
-        self.assertEqual(result, saved_result)
+        self.assertIsNone(task.result)
+        result = FileProducingTaskResult.objects.create(download_url=download_url)
+        task.result = result
+        self.assertEquals(download_url, task.result.download_url)
 
         # Test
         with self.settings(USE_S3=True, EXPORT_DOWNLOAD_ROOT=download_dir):
