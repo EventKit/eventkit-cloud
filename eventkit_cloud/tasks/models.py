@@ -124,6 +124,7 @@ class ExportTask(models.Model):
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
     display = models.BooleanField(default=False)
+    new_result = models.OneToOneField('FileProducingTaskResult', null=True, related_name='new_task')
 
     class Meta:
         ordering = ['created_at']
@@ -160,6 +161,7 @@ class FileProducingTaskResult(models.Model):
     """
          A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
+    id = models.IntegerField(null=True)
     task = models.OneToOneField(ExportTask, primary_key=True, related_name='result')
     filename = models.CharField(max_length=100, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
