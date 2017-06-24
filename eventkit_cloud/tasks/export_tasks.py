@@ -2,17 +2,16 @@
 from __future__ import absolute_import
 
 import cPickle
+from collections import Sequence
 import json
 import logging
 import os
 import shutil
 import socket
 from zipfile import ZipFile
-from collections import Sequence
 
 from django.conf import settings
 from django.core.cache import caches
-from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
@@ -29,7 +28,6 @@ from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
 )
-import json
 from .exceptions import CancelException, DeleteException
 
 
@@ -97,9 +95,44 @@ class LockingTask(Task):
         logger.info('Task {0} skipped due to lock'.format(self.request.id))
 
 
+def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None):
+    """ Construct the filesystem location and url needed to download the file at filepath.
+        Copy filepath to the filesystem location required for download.
+        @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
+        @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
+            generally can be ignored
+        @return A url to reach filepath.
+    """
+    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT
+    download_url_root = settings.EXPORT_MEDIA_ROOT
+    run_dir = os.path.join(download_filesystem_root, run_uid)
+    filename = os.path.split(filepath)[-1]
+    if download_filename is None:
+        download_filename = filename
+
+    if getattr(settings, "USE_S3", False):
+        download_url = s3.upload_to_s3(
+            run_uid,
+            os.path.join(provider_slug, download_filename),
+            filepath
+        )
+    else:
+        try:
+            if not os.path.isdir(run_dir):
+                os.makedirs(run_dir)
+        except OSError as e:
+            logger.info(e)
+
+        download_url = os.path.join(download_url_root, run_uid, download_filename)
+
+    download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+    if not skip_copy:
+        shutil.copy(filepath, download_filepath)
+
+    return download_url
+
+
 # ExportTask abstract base class and subclasses.
-
-
 class ExportTask(LockingTask):
     """
     Abstract base class for export tasks.
@@ -149,52 +182,28 @@ class ExportTask(LockingTask):
             run_uid = parts[-3]
             run_dir = os.path.join(download_root, run_uid)
             name, ext = os.path.splitext(filename)
-            download_file = '{0}-{1}-{2}{3}'.format(
+            download_filename = '{0}-{1}-{2}{3}'.format(
                 name,
                 provider_slug,
                 finished.strftime('%Y%m%d'),
                 ext
             )
-            download_path = os.path.join(run_dir, download_file)
 
             # construct the download url
-            try:
-                if getattr(settings, "USE_S3", False):
-                    download_url = s3.upload_to_s3(
-                        run_uid,
-                        os.path.join(provider_slug, filename),
-                        download_file
-                    )
-                else:
-                    try:
-                        if not os.path.isdir(run_dir):
-                            os.makedirs(run_dir)
-                    except OSError as e:
-                        logger.info(e)
-                    try:
-                        # don't copy raw run_dir data
-                        if task.name != 'OverpassQuery':
-                            shutil.copy(output_url, download_path)
-                    except IOError:
-                        logger.error('Error copying output file to: {0}'.format(download_path))
+            skip_copy = (task.name == 'OverpassQuery')
+            download_url = make_file_downloadable(
+                output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy,
+                download_filename=download_filename
+            )
 
-                    download_media_root = settings.EXPORT_MEDIA_ROOT.rstrip('\/')
-                    download_url = '/'.join([download_media_root, run_uid, download_file])
+            # save the task and task result
+            result = FileProducingTaskResult.objects.create(
+                filename=filename,
+                size=size,
+                download_url=download_url
+            )
 
-                # save the task and task result
-                result = FileProducingTaskResult.objects.create(
-                    filename=filename,
-                    size=size,
-                    download_url=download_url
-                )
-                task.result = result
-            except IOError:
-                logger.warning(
-                    'output file %s was not able to be found (run_uid: %s)',
-                    filename,
-                    run_uid
-                )
-
+            task.result = result
             task.status = TaskStates.SUCCESS.value
             task.save()
             super(ExportTask, self).on_success(retval, task_id, args, kwargs)
@@ -761,16 +770,21 @@ class FinalizeRunHookTask(LockingTask):
         - Combines new_zip_filepaths list from the previous FinalizeRunHookTask in a chain with the new
           filepaths returned from this task so they can all be passed to prepare_for_export_zip_task later in the chain.
         @params:
-          new_zip_filepaths is a list of new files the previous FinalizeRunHookTask created
+          new_zip_filepaths is a list of new files the previous FinalizeRunHookTask created in the export directory.
           kwarg 'run_uid' is the value of ExportRun.uid for the ExportRun which is being finalized.
         @see create_finalize_run_task_collection
-        @returns: list of any new files created that should be included in the ExportRun's zip.
+        @returns: list of any new files created that should be included in the ExportRun's zip & available for
+            download.  These should be located in the download directory; see example_finalize_run_hook_task
+            for details.
     """
 
-    def __call__(self, new_zip_filepaths=[], run_uid=None):
+    def __call__(self, new_zip_filepaths=None, run_uid=None):
         """ Override execution so tasks derived from this aren't responsible for concatenating files
             from previous tasks to their return value.
         """
+        if new_zip_filepaths is None:
+            new_zip_filepaths = []
+
         if not isinstance(new_zip_filepaths, Sequence):
             msg = 'new_zip_filepaths is not a sequence, got: {}'.format(new_zip_filepaths)
             logger.error(msg)
@@ -781,10 +795,39 @@ class FinalizeRunHookTask(LockingTask):
             raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
 
         self.record_task_state()
-        res = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
-        res = res or []
-        new_zip_filepaths.extend(res)
+
+        # Ensure that the staging and download directories for the run this task is associated with exist
+        try:
+            os.makedirs(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), run_uid))
+        except OSError:
+            pass  # Already exists
+
+        try:
+            os.makedirs(os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), run_uid))
+        except OSError:
+            pass  # Already exists
+
+        task_files = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
+        # task_files could be None
+        task_files = task_files or []
+
+        self.save_files_produced(task_files, run_uid)
+        new_zip_filepaths.extend(task_files)
         return new_zip_filepaths
+
+    def save_files_produced(self, new_files, run_uid):
+        if len(new_files) > 0:
+            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord
+
+            for file_path in new_files:
+                filename = os.path.split(file_path)[-1]
+                size = os.path.getsize(file_path)
+                url = make_file_downloadable(file_path, run_uid)
+
+                fptr = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
+                task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
+                task_record.result = fptr
+                task_record.save()
 
     def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
         """ When testing-only param testing_run_uid is set, this value will be used if self.run_uid is not set
@@ -818,13 +861,31 @@ class FinalizeRunHookTask(LockingTask):
         super(FinalizeRunHookTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
 
 
-@app.task(name='Do Some QGIS Thing', base=FinalizeRunHookTask, bind=True)
+@app.task(name='Do Some Example Thing', base=FinalizeRunHookTask, bind=True)
 def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
-    """ Just a placeholder hook task that doesn't do anything.
-        If this was a real task that created new files that should e included in the run's zip,
-        the paths of the new files should be returned as a list.
+    """ Just a placeholder hook task that doesn't do anything except create a new file to collect from the chain
+        It's included in.
     """
-    logger.debug('example_finalize_run_hook_task; new_zip_filepaths: {}, run_uid: {}'.format(new_zip_filepaths, run_uid))
+    staging_root = settings.EXPORT_STAGING_ROOT
+
+    f1_name = 'non_downloadable_file_not_included_in_zip'
+    f1_path = os.path.join(staging_root, str(run_uid), f1_name)
+    # If this were a real task, you'd do something with a file at f1_path now.
+    # It won't be saved to the database for display to user or included in the zip file.
+
+    # The path to this file is returned, so it will be duplicated to the download directory, it's location
+    #    stored in the database, and passed along the finalize run task chain for inclusion in the run's zip.
+    f2_name = 'downloadable_file_to_be_included_in_zip'
+    f2_stage_path = os.path.join(staging_root, str(run_uid), f2_name)
+    with open(f2_stage_path, 'w+') as f2:
+        f2.write('hi')
+
+    created_files = [f2_stage_path]
+
+    logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}'\
+                 .format(created_files, new_zip_filepaths, run_uid))
+
+    return created_files
 
 
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)

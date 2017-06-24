@@ -124,7 +124,7 @@ class ExportTask(models.Model):
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
     display = models.BooleanField(default=False)
-    result = models.OneToOneField('FileProducingTaskResult', null=True, related_name='new_task')
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='new_task')
 
     class Meta:
         ordering = ['created_at']
@@ -147,6 +147,7 @@ class FinalizeRunHookTaskRecord(models.Model):
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='task')
 
     class Meta:
         ordering = ['created_at']
