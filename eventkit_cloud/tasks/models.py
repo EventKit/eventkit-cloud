@@ -9,12 +9,13 @@ import os
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.db.models.signals import pre_delete
+from django.db.models.signals import pre_delete, post_delete
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
 from ..jobs.models import Job, ExportProvider, LowerCaseCharField
 from ..utils.s3 import delete_from_s3
+from ..tasks.export_tasks import TaskStates
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,8 @@ class ExportRun(RunModelMixin):
     )
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
+    deleted = models.BooleanField(default=False)
+    delete_user = models.ForeignKey(User, null=True, blank=True, editable=False)
 
     class Meta:
         managed = True
@@ -70,6 +73,15 @@ class ExportRun(RunModelMixin):
 
     def __str__(self):
         return '{0}'.format(self.uid)
+
+    def soft_delete(self, user=None, *args, **kwargs):
+        from .export_tasks import cancel_run
+        exportrun_delete_exports(self.__class__, self)
+        self.delete_user = user
+        self.deleted = True
+        logger.info("Deleting run {0} by user {1}".format(self.uid, user))
+        cancel_run.run(export_run_uid=self.uid, canceling_user=user, delete=True)
+        self.save()
 
 
 class ExportProviderTask(models.Model):
@@ -133,6 +145,14 @@ class ExportTaskResult(models.Model):
         verbose_name='URL to export task result output.',
         max_length=254
     )
+    deleted = models.BooleanField(default=False)
+
+    def soft_delete(self, *args, **kwargs):
+        exporttaskresult_delete_exports(self.__class__, self)
+        self.deleted = True
+        self.save()
+        self.task.display = False
+        self.task.save()
 
     class Meta:
         managed = True
