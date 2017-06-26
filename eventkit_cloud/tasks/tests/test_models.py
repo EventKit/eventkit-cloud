@@ -11,6 +11,7 @@ from mock import patch
 
 from ...jobs.models import ExportFormat, Job, ProviderTask, ExportProvider
 from ..models import ExportRun, ExportTask, ExportTaskResult, ExportProviderTask
+from ..export_tasks import TaskStates
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,26 @@ class TestExportRun(TestCase):
         runs = job.runs.all()
         self.assertEquals(1, runs.count())
         run.delete()
+        job.refresh_from_db()
+        runs = job.runs.all()
+        self.assertEquals(0, runs.count())
+
+    @patch('eventkit_cloud.tasks.models.exportrun_delete_exports')
+    def test_soft_delete_export_run(self, mock_run_delete_exports):
+        job = Job.objects.first()
+        run = ExportRun.objects.create(job=job, user=job.user)
+        task_uid = str(uuid.uuid4())  # from celery
+        export_provider_task = ExportProviderTask.objects.create(run=run, status=TaskStates.PENDING.value)
+        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value)
+        runs = job.runs.all()
+        self.assertEquals(1, runs.count())
+        run.soft_delete()
+        job.refresh_from_db()
+        runs = job.runs.all()
+        self.assertEquals(1, runs.count())
+        run.refresh_from_db()
+        self.assertTrue(run.deleted)
+        mock_run_delete_exports.assert_called_once()
 
 
 class TestExportTask(TestCase):
@@ -109,7 +130,8 @@ class TestExportTask(TestCase):
         saved_task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(saved_task, self.task)
 
-    def test_export_task_result(self, ):
+    @patch('eventkit_cloud.tasks.models.exporttaskresult_delete_exports')
+    def test_export_task_result(self, mock_etr_delete_exports):
         """
         Test ExportTaskResult.
         """
@@ -124,6 +146,10 @@ class TestExportTask(TestCase):
         saved_result = task.result
         self.assertIsNotNone(saved_result)
         self.assertEqual(result, saved_result)
+        task.result.soft_delete()
+        task.result.refresh_from_db()
+        self.assertTrue(task.result.deleted)
+        mock_etr_delete_exports.assert_called_once()
 
     @patch('eventkit_cloud.tasks.models.delete_from_s3')
     def test_exportrun_delete_exports(self, delete_from_s3):

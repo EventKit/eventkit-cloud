@@ -108,7 +108,6 @@ class TestJob(TestCase):
 
         pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
 
-        self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
         self.wait_for_run(self.orm_job.uid)
