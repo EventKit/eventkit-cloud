@@ -83,7 +83,7 @@ class JobViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
-    search_fields = ('name', 'description', 'event', 'user__username', 'region__name')
+    search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -488,13 +488,18 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     """
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (filters.DjangoFilterBackend,)
+    pagination_class = LinkHeaderPagination
+    filter_backends = (filters.DjangoFilterBackend, filters.OrderingFilter)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
-    search_fields = ('job__uid',)
+    search_fields = ('user__username', 'status', 'job__uid', 'min_date',
+                     'max_date', 'started_at', 'job__published', 'job__name',
+                     'description, event')
+    ordering_fields = ('job__name', 'started_at')
+    ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True)).order_by('-started_at')
+        return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -521,6 +526,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
     def list(self, request, *args, **kwargs):
         """
         List the ExportRuns for a single Job.
@@ -532,17 +538,18 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         * Returns: the serialized run data.
         """
-        job_uid = self.request.query_params.get('job_uid', None)
-        if job_uid:
-            queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
-        else:
-            queryset = self.get_queryset().order_by('-started_at')
+        queryset = self.filter_queryset(self.get_queryset())
         try:
             self.validate_licenses(queryset)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, uid=None, *args, **kwargs):
         field = self.request.query_params.get('field', None)

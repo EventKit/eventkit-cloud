@@ -49,11 +49,19 @@ class JobFilter(django_filters.FilterSet):
 
 class ExportRunFilter(django_filters.FilterSet):
     """Filter export runs by status."""
+    user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
     status = django_filters.CharFilter(name="status", lookup_expr="icontains")
     job_uid = django_filters.CharFilter(name="job__uid", lookup_expr="exact")
+    min_date = django_filters.DateTimeFilter(name="started_at", lookup_expr="gte")
+    max_date = django_filters.DateTimeFilter(name="started_at", lookup_expr="lte")
+    started_at = django_filters.DateTimeFilter(name="started_at", lookup_expr="exact")
+    published = django_filters.BooleanFilter(name="job__published", lookup_expr="exact")
+    name = django_filters.CharFilter(name="job__name", lookup_expr="icontains")
+    description = django_filters.CharFilter(name="job__description", lookup_expr="icontains")
+    event = django_filters.CharFilter(name="job__event", lookup_expr="icontains")
 
     class Meta:
         model = ExportRun
-        fields = ('status',)
-        order_by = ('-started_at',)
+        fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
+                  'started_at', 'published', 'name', 'description', 'event')
 

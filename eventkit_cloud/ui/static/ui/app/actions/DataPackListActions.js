@@ -2,12 +2,12 @@ import types from './actionTypes';
 import axios from 'axios';
 import cookie from 'react-cookie';
 
-export function getRuns() {
+export function getRuns(params) {
     return (dispatch) => {
         dispatch({type: types.FETCHING_RUNS});
-
+        const url = params ? `/api/runs?${params}` : '/api/runs'
         return axios ({
-            url: '/api/runs',
+            url: url,
             method: 'GET',
         }).then((response) => {
             dispatch({type: types.RECEIVED_RUNS, runs: response.data});

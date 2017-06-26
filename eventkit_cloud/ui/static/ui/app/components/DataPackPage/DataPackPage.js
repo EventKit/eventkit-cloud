@@ -40,11 +40,11 @@ export class DataPackPage extends React.Component {
         this.applyAll = this.applyAll.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.handleTableSort = this.handleTableSort.bind(this);
+        this.makeRunRequest = this.makeRunRequest.bind(this);
         this.state = {
             open: window.innerWidth >= 1200 ? true : false,
             runs: [],
-            displayedRuns: [],
-            dropDownValue: 1,
+            dropDownValue: '',
             sortDropDown: utils.orderNewest,
             search: {
                 searched: false,
@@ -63,6 +63,8 @@ export class DataPackPage extends React.Component {
             grid: true,
             tableSort: utils.orderNewest,
             showLoading: true,
+            order: '-started_at',
+            page: 1,
         }
     }
 
@@ -71,8 +73,8 @@ export class DataPackPage extends React.Component {
             if (nextProps.runsList.fetched == true) {
                 let runs = nextProps.runsList.runs;
                 this.setState({runs: runs});
-                runs = this.applyAll(runs);
-                this.setState({displayedRuns:runs});
+                // runs = this.applyAll(runs);
+                // this.setState({displayedRuns:runs});
                 if (this.state.showLoading) {
                     this.setState({showLoading: false});
                 }
@@ -81,56 +83,68 @@ export class DataPackPage extends React.Component {
         }
         if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
             if(nextProps.runsDeletion.deleted) {
-                this.props.getRuns();
+                this.makeRunRequest();
             }
         }
     }
 
     componentWillMount() {
-        this.props.getRuns();
+        // this.props.getRuns('page=1');
+        this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
-        this.fetch = setInterval(this.props.getRuns, 10000);
+        // this.fetch = setInterval(() => {this.props.getRuns('page=1')}, 10000);
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.screenSizeUpdate);
-        clearInterval(this.fetch);
+        // clearInterval(this.fetch);
     }
 
     onSearch(searchText, ix) { 
-        this.setState({search: {searched: true, searchQuery: searchText}});
-        const searched = utils.search(searchText, this.state.displayedRuns);
-        this.setState({displayedRuns: searched});
+        // this.setState({search: {searched: true, searchQuery: searchText}});
+        // const searched = utils.search(searchText, this.state.displayedRuns);
+        // this.setState({displayedRuns: searched});
     }
 
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
-            this.setState({search: {searched: false, searchQuery: ''}}, () => {
-                let runs = this.applySorts(this.state.runs);
-                runs = this.applyFilters(runs);
-                this.setState({displayedRuns: runs});
-            });
+            // this.setState({search: {searched: false, searchQuery: ''}}, () => {
+            //     let runs = this.applySorts(this.state.runs);
+            //     runs = this.applyFilters(runs);
+            //     this.setState({displayedRuns: runs});
+            // });
         }
     }
 
     handleSortChange = (event, index, value) => {
-        this.setState({sortDropDown: value});
-        const runs = value(this.state.displayedRuns);
-        this.setState({displayedRuns: runs});
+        // this.setState({sortDropDown: value});
+        // const runs = value(this.state.displayedRuns);
+        // this.setState({displayedRuns: runs});
+    }
+
+    makeRunRequest() {
+        let params = `
+            page=${this.state.page}
+            &order=${this.state.order}
+            &user=${this.state.dropDownValue}`
+        this.props.getRuns(params);
     }
 
     handleOwnerFilter = (event, index, value) => {
-        if(value == 1) {
-            this.setState({dropDownValue: value}, () => {
-                let runs = this.applyAll(this.state.runs);
-                this.setState({displayedRuns: runs});
-            }); 
-        }
-        else {
-            this.setState({dropDownValue: value});
-            const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.user.username);
-            this.setState({displayedRuns: filteredRuns});
-        }
+        // if(value == 1) {
+        //     this.setState({dropDownValue: value}, () => {
+        //         let runs = this.applyAll(this.state.runs);
+        //         this.setState({displayedRuns: runs});
+        //     }); 
+        // }
+        // else {
+        //     this.setState({dropDownValue: value});
+        //     const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.user.username);
+        //     this.setState({displayedRuns: filteredRuns});
+        // }
+        this.setState({dropDownValue: value}, () => {
+            this.makeRunRequest();
+        });
     }
 
     applyAll(runs) {
@@ -178,44 +192,44 @@ export class DataPackPage extends React.Component {
         if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
-        this.setState({filtersApplied: true});
-        let runs = this.applyAll(this.state.runs);
-        this.setState({displayedRuns: runs});
+        // this.setState({filtersApplied: true});
+        // let runs = this.applyAll(this.state.runs);
+        // this.setState({displayedRuns: runs});
     }
 
     handleTableSort(sortFunction) {
-        const sorted_runs = sortFunction(this.state.displayedRuns);
-        this.setState({displayedRuns: sorted_runs, tableSort: sortFunction});
+        // const sorted_runs = sortFunction(this.state.displayedRuns);
+        // this.setState({displayedRuns: sorted_runs, tableSort: sortFunction});
     }
 
     handleFilterClear = () => {
-        this.setState({
-            permissions: null,
-            status: {
-                completed: false,
-                incomplete: false,
-                running: false,
-            },
-            minDate: null,
-            maxDate: null,
-            filtersApplied: false,
-        });
-        if(window.innerWidth < 1200) {
-            this.setState({open: false});
-        }
-        let runs = this.applySearch(this.state.runs);
-        runs = this.applySorts(runs);
-        this.setState({displayedRuns: runs});
+        // this.setState({
+        //     permissions: null,
+        //     status: {
+        //         completed: false,
+        //         incomplete: false,
+        //         running: false,
+        //     },
+        //     minDate: null,
+        //     maxDate: null,
+        //     filtersApplied: false,
+        // });
+        // if(window.innerWidth < 1200) {
+        //     this.setState({open: false});
+        // }
+        // let runs = this.applySearch(this.state.runs);
+        // runs = this.applySorts(runs);
+        // this.setState({displayedRuns: runs});
     }
 
     handlePermissionsChange = (event, value) => {
-        this.setState({permissions: value});
+        // this.setState({permissions: value});
     }
 
     handleStatusChange = (stateChange) => {
-        let status = this.state.status;
-        status = Object.assign(status, stateChange)
-        this.setState({status: status});
+        // let status = this.state.status;
+        // status = Object.assign(status, stateChange)
+        // this.setState({status: status});
     }
 
     handleMinDate = (e, date) => {
@@ -235,11 +249,11 @@ export class DataPackPage extends React.Component {
     }
 
     toggleView() {
-        if(!this.state.grid) {
-            let runs = this.state.sortDropDown(this.state.displayedRuns);
-            this.setState({displayedRuns: runs});
-        }
-        this.setState({grid: !this.state.grid});
+        // if(!this.state.grid) {
+        //     let runs = this.state.sortDropDown(this.state.displayedRuns);
+        //     this.setState({displayedRuns: runs});
+        // }
+        // this.setState({grid: !this.state.grid});
     }
 
     render() { 
@@ -298,7 +312,7 @@ export class DataPackPage extends React.Component {
                 </Toolbar>
 
                 <Toolbar style={styles.toolbarSort}>
-                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} />
+                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} owner={this.props.user.data.user.username} />
                         <DataPackFilterButton open={this.state.open} handleToggle={this.handleToggle} />
                         {(!this.state.grid) && window.innerWidth >= 768 ? 
                             null
@@ -363,13 +377,13 @@ export class DataPackPage extends React.Component {
                         <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
                             {this.state.grid ?
                                 <DataPackGrid 
-                                    runs={this.state.displayedRuns} 
+                                    runs={this.state.runs} 
                                     user={this.props.user} 
                                     onRunDelete={this.props.deleteRuns}
                                 />
                             :
                                 <DataPackList
-                                    runs={this.state.displayedRuns}
+                                    runs={this.state.runs}
                                     user={this.props.user}
                                     onRunDelete={this.props.deleteRuns}
                                     onSort={this.handleTableSort}
@@ -404,8 +418,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: () => {
-            dispatch(getRuns());
+        getRuns: (params) => {
+            dispatch(getRuns(params));
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
