@@ -8,7 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0012_merge_20170622_2110'),
+        ('tasks', '0013_finalizerunhooktaskrecord'),
     ]
 
     operations = [

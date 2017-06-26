@@ -124,7 +124,7 @@ class ExportTask(models.Model):
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
     display = models.BooleanField(default=False)
-    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='new_task')
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='export_task')
 
     class Meta:
         ordering = ['created_at']
@@ -147,7 +147,7 @@ class FinalizeRunHookTaskRecord(models.Model):
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
-    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='task')
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='finalize_task')
 
     class Meta:
         ordering = ['created_at']
@@ -171,12 +171,25 @@ class FileProducingTaskResult(models.Model):
     )
     deleted = models.BooleanField(default=False)
 
+    @property
+    def task(self):
+        if hasattr(self, 'finalize_task') and hasattr(self.export_task):
+            raise Exception('Both an ExportTask and a FinalizeRunHookTaskRecord are linked to FileProducingTaskResult')
+        elif hasattr(self, 'finalize_task'):
+            ret = self.finalize_task
+        elif hasattr(self, 'export_task'):
+            ret = self.export_task
+        else:
+            ret = None
+        return ret
+
     def soft_delete(self, *args, **kwargs):
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
         self.save()
-        self.task.display = False
-        self.task.save()
+        if hasattr(self.task, 'display'):
+            self.task.display = False
+            self.task.save()
 
     class Meta:
         managed = True
