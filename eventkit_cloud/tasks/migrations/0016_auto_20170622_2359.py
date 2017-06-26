@@ -20,7 +20,7 @@ def populate_new_fields(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0014_auto_20170622_2358'),
+        ('tasks', '0015_auto_20170622_2358'),
     ]
 
     operations = [
