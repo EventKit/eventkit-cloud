@@ -334,6 +334,7 @@ class JobViewSet(viewsets.ModelViewSet):
             # run the tasks
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
+            user_details = get_user_details(request)
             try:
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
@@ -344,13 +345,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
 
             running = JobSerializer(job, context={'request': request})
+
             # Run is passed to celery to start the tasks.
-            logged_in_user = request.user
-            user_details = {
-                'username': logged_in_user.username,
-                'is_superuser': logged_in_user.is_superuser,
-                'is_staff': logged_in_user.is_staff
-            }
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
         else:
@@ -372,7 +368,7 @@ class JobViewSet(viewsets.ModelViewSet):
             - the serialized run data.
         """
         # This is just to make it easier to trace when user_details haven't been sent
-        user_details = kwargs.get('user_details')
+        user_details = get_user_details(request)
         if user_details is None:
             user_details = {'username': 'unknown-JobViewSet.run'}
 
@@ -437,7 +433,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             response = Response(license_text, content_type='text/plain')
             response['Content-Disposition'] = 'attachment; filename="{}.txt"'.format(slug)
             return response
-        except Exception as e:
+        except Exception:
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -499,7 +495,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter(Q(user=self.request.user) | Q(job__published=True))
+        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -526,6 +522,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
+    def destroy(self, request, *args, **kwargs):
+        """
+            Destroy a model instance.
+            """
+        instance = self.get_object()
+        instance.soft_delete(user=request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         """
@@ -763,6 +767,20 @@ def get_provider_task(export_provider, export_formats):
             provider_task.formats.add(export_format)
     provider_task.save()
     return provider_task
+
+
+def get_user_details(request):
+    """
+    Gets user data from a request.
+    :param request: View request.
+    :return: A dict with user data.
+    """
+    logged_in_user = request.user
+    return {
+        'username': logged_in_user.username,
+        'is_superuser': logged_in_user.is_superuser,
+        'is_staff': logged_in_user.is_staff
+    }
 
 
 class SwaggerSchemaView(views.APIView):
