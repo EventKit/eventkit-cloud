@@ -18,6 +18,7 @@ INSTALLED_APPS += (
     'eventkit_cloud.utils',
     'eventkit_cloud',
     'django_classification_banner',
+    # 'reversion'
 )
 
 INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
