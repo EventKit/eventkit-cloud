@@ -189,18 +189,18 @@ export class ProviderRow extends React.Component {
             case "INCOMPLETE":
                 return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>;
             case "SUBMITTED":
-                return ;
+                return null;
             case "CANCELED":
                 return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
             default:
-                return ;
+                return null;
         }
     }
 
     getProviderStatus(providerStatus) {
         switch (providerStatus) {
             case "COMPLETED":
-                return;
+                return null;
             case "INCOMPLETE":
                 return <span style={{
                     display: 'inlineBlock',
@@ -233,7 +233,7 @@ export class ProviderRow extends React.Component {
             return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{task.name}</span>
         }
         else {
-            return <a href={task.result.url} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{task.name}</a>
+            return <a className={styles.taskLink} href={task.result.url} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{task.name}</a>
         }
     }
 
@@ -251,7 +251,7 @@ export class ProviderRow extends React.Component {
             return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{provider.name}</span>
         }
         else {
-            return <a onClick={() => {this.handleProviderCloudDownload(provider.uid)}} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{provider.name}</a>
+            return <a onClick={() => {this.handleProviderCloudDownload(provider.uid)}} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf', cursor: 'pointer'}}>{provider.name}</a>
         }
     }
 
@@ -294,7 +294,7 @@ export class ProviderRow extends React.Component {
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
                     <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}} >{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
                     <TableRowColumn style={{width: '30px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{width: '75px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
@@ -308,14 +308,22 @@ export class ProviderRow extends React.Component {
             tableData = <TableBody/>
         }
 
+        let menuItems = [];
+        if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
+            menuItems.push(<MenuItem
+                key={'cancel'}
+                style={{fontSize: '12px'}}
+                primaryText="Cancel"
+                onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
+            />);
+        }
+        
         return (
-
             <Table key={this.props.provider.uid}
                    style={{width:'100%'}}
                    selectable={false}
                    multiSelectable={false}
-                   >
-
+            >
                 <TableHeader
                     displaySelectAll={false}
                     adjustForCheckbox={false}
@@ -344,22 +352,22 @@ export class ProviderRow extends React.Component {
                             {this.getProviderStatusIcon((this.props.provider.status))}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width: '30px',textAlign: 'right'}}>
-                            <IconMenu
-                                iconButtonElement={
-                                    <IconButton
-                                        style={{padding: '0px', width: '20px', verticalAlign: 'middle'}}
-                                        iconStyle={{color: '#4598bf'}}>
-                                        <NavigationMoreVert />
-                                    </IconButton>}
-                                anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
-                                targetOrigin={{horizontal: 'right', vertical: 'top'}}
-                            >
-                                <MenuItem
-                                    style={{fontSize: '12px'}}
-                                    primaryText="Cancel"
-                                    onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}/>
-
-                            </IconMenu>
+                            {menuItems.length > 0 ? 
+                                <IconMenu
+                                    iconButtonElement={
+                                        <IconButton
+                                            style={{padding: '0px', width: '20px', verticalAlign: 'middle'}}
+                                            iconStyle={{color: '#4598bf'}}>
+                                            <NavigationMoreVert />
+                                        </IconButton>}
+                                    anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                    targetOrigin={{horizontal: 'right', vertical: 'top'}}
+                                >
+                                    {menuItems}
+                                </IconMenu>
+                            :
+                                null
+                            }
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width: '75px', textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
@@ -370,7 +378,6 @@ export class ProviderRow extends React.Component {
                 </TableHeader>
                             {tableData}
             </Table>
-
         )
     }
 }
