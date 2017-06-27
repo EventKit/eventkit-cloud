@@ -17,11 +17,11 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-
 from celery import Task
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+from audit_logging.celery_support import UserDetailsBase
 
 from ..celery import app, TaskPriority
 from ..utils import (
@@ -61,7 +61,7 @@ class TaskStates(Enum):
 # https://github.com/celery/celery/issues/3270
 
 
-class LockingTask(Task):
+class LockingTask(UserDetailsBase):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
     It's happens with multiple workers for tasks with any delay (countdown, ETA).
@@ -682,7 +682,7 @@ def pick_up_run_task(self, result={}, run_uid=None, user_details=None):
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
 
 
-@app.task(name='Clean Up Failure Task', base=Task)
+@app.task(name='Clean Up Failure Task', base=UserDetailsBase)
 def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Used to close tasks in a failed chain.
@@ -952,7 +952,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     return result
 
 
-@app.task(name='Zip File Task', bind=False)
+@app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
 def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
     """
     rolls up runs into a zip file
@@ -1282,7 +1282,6 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
     if estimated_finish:
         export_task.estimated_finish = estimated_finish
     export_task.save()
-
 
 
 def parse_result(task_result, key=''):
