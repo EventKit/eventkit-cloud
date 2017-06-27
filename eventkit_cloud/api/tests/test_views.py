@@ -19,6 +19,7 @@ from django.core import serializers
 from ..pagination import LinkHeaderPagination
 from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
+from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, ExportProvider, \
     ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTask, ExportProviderTask
@@ -330,7 +331,6 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
 
-
     def test_invalid_selection(self,):
         url = reverse('api:jobs-list')
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -561,6 +561,14 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.patch(bad_patch_url)
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
+    def test_delete_run(self,):
+        url = reverse('api:runs-detail', args=[self.export_run.uid])
+        response = self.client.delete(url)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEquals(response['Content-Length'], '0')
+        self.assertEquals(response['Content-Language'], 'en')
+
     @patch('eventkit_cloud.api.serializers.get_presigned_url')
     def test_zipfile_url_s3(self, get_url):
         self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
@@ -733,7 +741,8 @@ class TestExportTaskViewSet(APITestCase):
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.celery_uid = str(uuid.uuid4())
         self.export_provider_task = ExportProviderTask.objects.create(run=self.export_run,
-                                                                      name='Shapefile Export')
+                                                                      name='Shapefile Export',
+                                                                      status=TaskStates.PENDING.value)
         self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
                                               celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
@@ -776,8 +785,8 @@ class TestExportTaskViewSet(APITestCase):
         pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
         et = pt.tasks.last()
 
-        self.assertEqual(pt.status, 'CANCELED')
-        self.assertEqual(et.status, 'CANCELED')
+        self.assertEqual(pt.status, TaskStates.CANCELED.value)
+        self.assertEqual(et.status, TaskStates.SUCCESS.value)
 
     def test_patch_cancel_task_no_permissions(self,):
         user = User.objects.create_user(

@@ -52,6 +52,7 @@ class TaskProcess(object):
             if not self.task_uid:
                 return
             from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.get(uid=self.task_uid)
-            export_task.pid = pid
-            export_task.save()
+            export_task = ExportTask.objects.filter(uid=self.task_uid).first()
+            if export_task:
+                export_task.pid = pid
+                export_task.save()

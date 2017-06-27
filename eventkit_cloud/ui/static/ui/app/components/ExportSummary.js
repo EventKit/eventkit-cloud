@@ -57,7 +57,8 @@ class ExportSummary extends React.Component {
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
-                pinchRotate: false
+                pinchRotate: false,
+                mouseWheelZoom: false
             }),
             layers: [osm],
             target: 'summaryMap',

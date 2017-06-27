@@ -20,7 +20,7 @@ from .task_runners import (
 from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
                                   bounds_export_task, output_selection_geojson_task, zip_export_provider)
 from django.conf import settings
-from django.db import DatabaseError
+from django.db import DatabaseError, transaction
 from django.utils import timezone
 from ..tasks.task_runners import create_export_task
 
@@ -114,20 +114,20 @@ class TaskFactory:
                                 # Create a geojson for clipping this provider if needed
                                 selection_task = create_task(
                                     export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                    worker=worker, task_type='selection', selection=job.the_geom.geojson,
+                                    worker=worker, task=output_selection_geojson_task, selection=job.the_geom.geojson,
                                     user_details=user_details
                                 )
 
                                 # Export the bounds for this provider
                                 bounds_task = create_task(
                                     export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                    worker=worker, task_type='bounds', user_details=user_details
+                                    worker=worker, task=bounds_export_task, user_details=user_details
                                 )
 
                                 if provider_task.provider.zip:
                                     zip_task = create_task(
                                         export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                        worker=worker, task_type='zip', job_name=job.name, user_details=user_details
+                                        worker=worker, task=zip_export_provider, job_name=job.name, user_details=user_details
                                     )
                                     bounds_task = chain(bounds_task, zip_task)
                                 # Run the task, and when it completes return the status of the task to the model.
@@ -163,6 +163,7 @@ class TaskFactory:
             return False
 
 
+@transaction.atomic
 def create_run(job_uid, user=None):
     """
     This will create a new Run based on the provided job uid.
@@ -172,40 +173,41 @@ def create_run(job_uid, user=None):
 
     # start the run
     try:
+        # https://docs.djangoproject.com/en/1.10/topics/db/transactions/#django.db.transaction.atomic
         # enforce max runs
-        max_runs = settings.EXPORT_MAX_RUNS
-        # get the number of existing runs for this job
-        job = Job.objects.get(uid=job_uid)
-        invalid_licenses = get_invalid_licenses(job)
-        if invalid_licenses:
-            raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
-                        "Please use the user account page, or the user api to agree to the " \
-                        "licenses prior to exporting the data.".format(job.user.username, invalid_licenses))
-        if not user:
-            user = job.user
-        if job.user != user and not user.is_superuser:
-            raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
-                job.user.username, job.name
-            ))
-        run_count = job.runs.count()
-        if run_count > 0:
-            while run_count > max_runs - 1:
-                # delete the earliest runs
-                job.runs.earliest(field_name='started_at').delete()  # delete earliest
-                run_count -= 1
-        # add the export run to the database
-        run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
-                                       expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
-        run.save()
-        run_uid = run.uid
-        logger.debug('Saved run with id: {0}'.format(str(run_uid)))
-        return run_uid
+        with transaction.atomic():
+            max_runs = settings.EXPORT_MAX_RUNS
+            # get the number of existing runs for this job
+            job = Job.objects.get(uid=job_uid)
+            invalid_licenses = get_invalid_licenses(job)
+            if invalid_licenses:
+                raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
+                            "Please use the user account page, or the user api to agree to the " \
+                            "licenses prior to exporting the data.".format(job.user.username, invalid_licenses))
+            if not user:
+                user = job.user
+            if job.user != user and not user.is_superuser:
+                raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
+                    job.user.username, job.name
+                ))
+            run_count = job.runs.count()
+            if run_count > 0:
+                while run_count > max_runs - 1:
+                    # delete the earliest runs
+                    job.runs.earliest(field_name='started_at').soft_delete(user=user)  # delete earliest
+                    run_count -= 1
+            # add the export run to the database
+            run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
+                                           expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
+            run_uid = run.uid
+            logger.debug('Saved run with id: {0}'.format(str(run_uid)))
+            return run_uid
     except DatabaseError as e:
         logger.error('Error saving export run: {0}'.format(e))
         raise e
 
 
-def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task_type=None,
+def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task=None,
                 job_name=None, user_details=None):
     """
     Create a new task to export the bounds for an ExportProviderTask
@@ -217,9 +219,6 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     if user_details is None:
         user_details = {'username': 'unknown-create_task'}
 
-    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task, "zip": zip_export_provider}
-
-    task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(
         task_name=task.name, export_provider_task=export_provider_task, worker=worker,
