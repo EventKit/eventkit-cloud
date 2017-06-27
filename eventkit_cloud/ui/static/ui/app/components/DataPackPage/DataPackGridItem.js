@@ -180,6 +180,7 @@ export class DataPackGridItem extends Component {
                         <div>
                         <span>{'Event: ' + this.props.run.job.event}</span><br/>
                         <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
+                        <span>{'Expires: ' + moment(this.props.run.expiration).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
                 <CardText style={{fontSize: cardTextFontSize}}>

@@ -42,7 +42,8 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(MenuItem)).toHaveLength(0);
         const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
         expect(subtitle.find('span').first().text()).toEqual('Event: Test1 event');
-        expect(subtitle.find('span').last().text()).toEqual('Added: 2017-03-10');
+        expect(subtitle.find('span').at(1).text()).toEqual('Added: 2017-03-10');
+        expect(subtitle.find('span').at(2).text()).toEqual('Expires: 2017-03-24');
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
         expect(wrapper.find(CardMedia)).toHaveLength(1);
