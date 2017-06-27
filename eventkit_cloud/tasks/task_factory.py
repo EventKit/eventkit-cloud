@@ -232,9 +232,6 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     if user_details is None:
         user_details = {'username': 'unknown-create_task'}
 
-    task_map = {"bounds": bounds_export_task, "selection": output_selection_geojson_task, "zip": zip_export_provider}
-
-    task = task_map.get(task_type)
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task(
         task_name=task.name, export_provider_task=export_provider_task, worker=worker,

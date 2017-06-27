@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 # Default length of time to let a single test case run.
-DEFAULT_TIMEOUT = 90
+DEFAULT_TIMEOUT = 120
 
 
 class TestJob(TestCase):
@@ -113,7 +113,6 @@ class TestJob(TestCase):
 
         pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
 
-        self.assertTrue(all(_.status == TaskStates.CANCELED.value for _ in pt.tasks.all()))
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
         self.wait_for_run(self.orm_job.uid)
