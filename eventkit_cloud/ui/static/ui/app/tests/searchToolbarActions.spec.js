@@ -9,12 +9,12 @@ const mockStore = configureMockStore(middlewares)
 
 describe('async searchToolbar actions', () => {
 
-    const geonames = {geonames: [
+    const geonames = {geocode: [
         {name: 'Hanoi', bbox: {east: 105.731049, south: 20.935789, west: 105.933609, north: 21.092829}},
         {name: 'No Bbox', bbox: {}}
     ]}
 
-    const expectedGeonames = [geonames.geonames[0]]
+    const expectedGeonames = [geonames.geocode[0]]
 
     it('getGeonames should create RECEIVED_GEONAMES after fetching', () => {
 
@@ -24,12 +24,12 @@ describe('async searchToolbar actions', () => {
 
         const expectedActions = [
             {type: 'FETCHING_GEONAMES'},
-            {type: 'RECEIVED_GEONAMES', geonames: expectedGeonames}
+            {type: 'RECEIVED_GEONAMES', geocode: expectedGeonames}
         ]
 
-        const store = mockStore({ geonames: [] })
+        const store = mockStore({ geocode: [] })
 
-        return store.dispatch(actions.getGeonames('Hanoi'))
+        return store.dispatch(actions.getGeocode('Hanoi'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions)
             })

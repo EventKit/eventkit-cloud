@@ -1,27 +1,31 @@
 import axios from 'axios'
-import isEqual from 'lodash/isEqual';
 
-
-export function getGeonames(query) {
+export function getGeocode(query) {
     return (dispatch) => {
-        dispatch({type: "FETCHING_GEONAMES"});
-        return axios.get('/request_geonames', {
+        dispatch({type: "FETCHING_GEOCODE"});
+        return axios.get('/geocode', {
             params: {
-                q: query
+                search: query
             }
         }).then(response => {
             return response.data;
         }).then(responseData => {
-            let data = responseData.geonames;
-            let geonames = []
-            for (var i = 0; i < data.length; i++) {
-                if ((data[i].bbox && !isEqual(data[i].bbox, {})) || (data.lat && data.lng)) {
-                    geonames.push(data[i]);
+            let features = responseData.features || [];
+            let data = []
+            features.forEach(function (feature) {
+                    if (feature.bbox || (feature.properties.lat && feature.properties.lng)) {
+                        data.push(feature);
+                    }
                 }
-            }
-            dispatch({type: "RECEIVED_GEONAMES", geonames: geonames});
+            )
+            // for (var i = 0; i < features.length; i++) {
+            //     if ((features[i].bbox && !isEqual(features[i].bbox, {})) || (features[i].properties.lat && features[i].properties.lng)) {
+            //         data.push(features[i]);
+            //     }
+            // }
+            dispatch({type: "RECEIVED_GEOCODE", data: data});
         }).catch(error => {
-            dispatch({type: "GEONAMES_ERROR", error: error});
+            dispatch({type: "GEOCODE_ERROR", error: error});
         });
     }
 }

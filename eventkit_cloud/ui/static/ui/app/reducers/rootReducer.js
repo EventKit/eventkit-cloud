@@ -5,7 +5,7 @@ import { routerReducer } from 'react-router-redux'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
 import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
-import {getGeonamesReducer} from './searchToolbarReducer.js';
+import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 import {licenseReducer} from './licenseReducer';
@@ -21,7 +21,7 @@ const rootReducer = combineReducers({
     exportInfo: exportInfoReducer,
     zoomToSelection: zoomToSelectionReducer,
     resetMap: resetMapReducer,
-    geonames: getGeonamesReducer,
+    geocode: getGeocodeReducer,
     showInvalidDrawWarning: invalidDrawWarningReducer,
     toolbarIcons: toolbarIconsReducer,
     showImportModal: showImportModalReducer,
