@@ -43,7 +43,7 @@ jsonfield==2.0.1
 kombu==4.0.2
 librabbitmq==1.6.1
 lxml==3.7.3
-git+git://github.com/mapproxy/mapproxy.git@b883029506bb30c20537bce5130c3e94890a060d#egg=MapProxy
+MapProxy==1.10.2
 Markdown==2.6.8
 MarkupSafe==1.0
 mccabe==0.6.1
