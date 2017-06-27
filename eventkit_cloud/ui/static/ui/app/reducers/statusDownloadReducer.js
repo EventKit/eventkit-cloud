@@ -50,3 +50,15 @@ export function rerunExportReducer(state = initialState.exportReRun, action) {
             return state;
     }
 }
+export function cancelProviderTask(state = initialState.cancelProviderTask, action) {
+    switch(action.type) {
+        case types.CANCELING_PROVIDER_TASK:
+            return {canceling: true, canceled: false, error: null}
+        case types.CANCELED_PROVIDER_TASK:
+            return {canceling: false, canceled: true, error: null}
+        case types.CANCEL_PROVIDER_TASK_ERROR:
+            return {canceling: false, canceled: false, error: action.error}
+        default:
+            return state;
+    }
+}
