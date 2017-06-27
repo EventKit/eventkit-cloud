@@ -126,6 +126,24 @@ export class DataPackDetails extends React.Component {
         }
     }
 
+    getTableCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '80px';
+        }
+        else {
+            return '128px';
+        }
+    }
+
+    getToggleCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '50px';
+        }
+        else {
+            return '70px';
+        }
+    }
+
     getCheckboxStatus() {
         let disableCheckbox = true;
         this.props.providerTasks.forEach((provider) => {
@@ -141,6 +159,8 @@ export class DataPackDetails extends React.Component {
 
 
     render() {
+        const tableCellWidth = this.getTableCellWidth();
+        const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
 
         const providers = this.props.providerTasks.filter((provider) => {
@@ -162,7 +182,7 @@ export class DataPackDetails extends React.Component {
                         enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'44px', fontSize: '14px'}}>
+                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px', fontSize: '14px'}}>
                                 <Checkbox
                                     disabled={this.getCheckboxStatus()}
                                     checked={this.allChecked()} 
@@ -171,7 +191,7 @@ export class DataPackDetails extends React.Component {
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{fontSize: textFontSize, whiteSpace: 'normal',}}>
+                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', fontSize: textFontSize, whiteSpace: 'normal',}}>
                                 <RaisedButton
                                     backgroundColor={'rgba(179,205,224,0.5)'}
                                     disabled={this.isDownloadAllDisabled()}
@@ -184,13 +204,13 @@ export class DataPackDetails extends React.Component {
                                 />
                             </TableHeaderColumn>
 
-                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth, textAlign: 'center', fontSize: textFontSize}}>
                                 FILE SIZE
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'123px',textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth,textAlign: 'center', fontSize: textFontSize}}>
                                 PROGRESS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
 
                             </TableHeaderColumn>
 

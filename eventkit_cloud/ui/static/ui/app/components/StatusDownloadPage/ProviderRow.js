@@ -118,7 +118,6 @@ export class ProviderRow extends React.Component {
         }
     }
 
-
     handleCloudDownload(url) {
         window.open(url, '_blank');
     }
@@ -264,12 +263,43 @@ export class ProviderRow extends React.Component {
         }
     }
 
+    getTableCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '80px';
+        }
+        else {
+            return '128px';
+        }
+    }
+
+    getToggleCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '30px';
+        }
+        else {
+            return '50px';
+        }
+    }
+
+
     render() {
         const style = {
               textDecoration: 'underline'
              }
         const textFontSize = this.getTextFontSize();
+        const tableCellWidth = this.getTableCellWidth();
+        const toggleCellWidth = this.getToggleCellWidth();
         const {provider, ...rowProps} = this.props;
+
+        let menuItems = [];
+        if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
+            menuItems.push(<MenuItem
+                key={'cancel'}
+                style={{fontSize: '12px'}}
+                primaryText="Cancel"
+                onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
+            />);
+        }
 
         const tasks = provider.tasks.filter((task) => {
             return task.display != false;
@@ -286,17 +316,17 @@ export class ProviderRow extends React.Component {
                 {tasks.map((task) => (
 
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
-                    <TableRowColumn style={{width: '44px'}}>
+                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
 
                     </TableRowColumn>
-                        <TableRowColumn style={{fontSize: textFontSize}}>
+                        <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', fontSize: textFontSize}}>
                             {this.getTaskLink(task)}
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
-                    <TableRowColumn style={{width: '128px',textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: '120px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
-                    <TableRowColumn style={{width: '30px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
-                    <TableRowColumn style={{width: '75px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
+                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
+                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
+                    <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
 
                 ))}
@@ -308,15 +338,7 @@ export class ProviderRow extends React.Component {
             tableData = <TableBody/>
         }
 
-        let menuItems = [];
-        if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
-            menuItems.push(<MenuItem
-                key={'cancel'}
-                style={{fontSize: '12px'}}
-                primaryText="Cancel"
-                onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
-            />);
-        }
+
         
         return (
             <Table key={this.props.provider.uid}
@@ -330,7 +352,7 @@ export class ProviderRow extends React.Component {
                     enableSelectAll={false}
                     >
                     <TableRow displayBorder={true}>
-                        <TableHeaderColumn style={{width:'44px'}}>
+                        <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px'}}>
                             <Checkbox
                                 disabled={this.props.provider.status != "COMPLETED"}
                                 checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}
@@ -340,18 +362,18 @@ export class ProviderRow extends React.Component {
                                 uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                             />
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
+                        <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
                             {this.getProviderLink(this.props.provider)}
                             {this.getProviderDownloadIcon(this.props.provider)}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'128px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                        <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width:'120px',textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                        <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.getProviderStatus(this.props.provider.status)}
                             {this.getProviderStatusIcon((this.props.provider.status))}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width: '30px',textAlign: 'right'}}>
+                        <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'right'}}>
                             {menuItems.length > 0 ? 
                                 <IconMenu
                                     iconButtonElement={
@@ -369,7 +391,7 @@ export class ProviderRow extends React.Component {
                                 null
                             }
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width: '75px', textAlign: 'left'}}>
+                        <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>

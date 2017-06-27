@@ -95,7 +95,17 @@ export class StatusDownload extends React.Component {
         this.forceUpdate();
     }
 
+    getMarginPadding() {
+        if(window.innerWidth <= 767) {
+            return '0px';
+        }
+        else {
+            return '30px';
+        }
+    }
+
     render() {
+        const marginPadding = this.getMarginPadding();
 
         const styles = {
             root: {
@@ -107,7 +117,10 @@ export class StatusDownload extends React.Component {
                 backgroundRepeat: 'repeat repeat'
             },
             content: {
-                padding: '30px',
+                paddingTop:'30px',
+                paddingBottom: '30px',
+                paddingLeft: marginPadding,
+                paddingRight: marginPadding,
                 margin: 'auto',
                 maxWidth: '1100px'
             }
