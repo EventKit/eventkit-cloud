@@ -489,9 +489,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     filter_class = ExportRunFilter
     lookup_field = 'uid'
     search_fields = ('user__username', 'status', 'job__uid', 'min_date',
-                     'max_date', 'started_at', 'job__published', 'job__name',
-                     'description, event')
-    ordering_fields = ('job__name', 'started_at')
+                     'max_date', 'started_at', 'job__published')
+    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event')
     ordering = ('-started_at',)
 
     def get_queryset(self):
@@ -543,6 +542,17 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         * Returns: the serialized run data.
         """
         queryset = self.filter_queryset(self.get_queryset())
+
+        search_term = self.request.query_params.get('search_term', None)
+        if search_term is not None:
+            queryset = queryset.filter(
+                (
+                    Q(job__name__icontains=search_term) |
+                    Q(job__description__icontains=search_term) |
+                    Q(job__event__icontains=search_term)
+                )
+        )
+
         try:
             self.validate_licenses(queryset)
         except InvalidLicense as il:

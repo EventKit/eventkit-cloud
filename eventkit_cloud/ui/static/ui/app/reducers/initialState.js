@@ -44,6 +44,7 @@ export default {
         fetched: false,
         runs: [],
         error: null,
+        nextPage: false,
     },
     runsDeletion: {
         deleting: false,

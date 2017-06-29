@@ -5,138 +5,38 @@ import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
-import * as sorts from '../../utils/sortUtils';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackList extends Component {
     constructor(props) {
         super(props);
-        this.handleNameSort = this.handleNameSort.bind(this);
-        this.handleEventSort = this.handleEventSort.bind(this);
-        this.handleDateSort = this.handleDateSort.bind(this);
-        this.handleStatusSort = this.handleStatusSort.bind(this);
-        this.handlePermissionsSort = this.handlePermissionsSort.bind(this);
-        this.handleOwnerSort = this.handleOwnerSort.bind(this);
-        this.isNameActive = this.isNameActive.bind(this);
-        this.isEventActive = this.isEventActive.bind(this);
-        this.isDateActive = this.isDateActive.bind(this);
-        this.isStatusActive = this.isStatusActive.bind(this);
-        this.isPermissionsActive = this.isPermissionsActive.bind(this);
-        this.isOwnerActive = this.isOwnerActive.bind(this);
+        this.handleOrder = this.handleOrder.bind(this);
         this.getIcon = this.getIcon.bind(this);
         this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.state = {
-            activeSort: sorts.orderNewest,
+            order: '-started_at',
         }
     }
 
-    handleNameSort() {
-        let sort;
-        if(!this.isNameActive()) {
-            sort = sorts.orderAZ;
+    handleOrder(order) {
+        let newOrder = '';
+        if (this.isSameOrderType(this.props.order, order)) {
+            newOrder = this.props.order.charAt(0) == '-' ? this.props.order.substring(1) : '-' + this.props.order;
         }
         else {
-            sort = this.state.activeSort == sorts.orderAZ ? sorts.orderZA : sorts.orderAZ;
+            newOrder = order;
         }
-        this.props.onSort(sort)
-        this.setState({
-            activeSort: sort
-        });
+        this.props.onSort(newOrder);
     }
 
-    handleEventSort() {
-        let sort;
-        if(!this.isEventActive()){
-            sort = sorts.orderEventAZ;
-        }
-        else {
-            sort = this.state.activeSort == sorts.orderEventAZ ? sorts.orderEventZA : sorts.orderEventAZ;
-        }
-        this.props.onSort(sort);
-        this.setState({
-            activeSort: sort
-        });
+    isSameOrderType(unknown, known) {
+        return unknown.charAt(0) == '-' ? unknown.substring(1) == known : unknown == known;
     }
 
-    handleDateSort() {
-        let sort;
-        if(!this.isDateActive()) {
-            sort = sorts.orderNewest;
-        }
-        else{ 
-            sort = this.state.activeSort == sorts.orderNewest ? sorts.orderOldest : sorts.orderNewest;
-        }
-        this.props.onSort(sort);
-        this.setState({
-            activeSort: sort
-        });
-    }
-
-    handleStatusSort() {
-        let sort;
-        if(!this.isStatusActive()) {
-            sort = sorts.orderComplete;
-        }
-        else {
-            sort = this.state.activeSort == sorts.orderComplete ? sorts.orderIncomplete : sorts.orderComplete;
-        }
-        this.props.onSort(sort);
-        this.setState({
-            activeSort: sort
-        });
-    }
-
-    handlePermissionsSort() {
-        let sort;
-        if(!this.isPermissionsActive()) {
-            sort = sorts.orderPrivate;
-        }
-        else {
-            sort = this.state.activeSort == sorts.orderPrivate ? sorts.orderPublic : sorts.orderPrivate;
-        }
-        this.props.onSort(sort);
-        this.setState({
-            activeSort: sort
-        });
-    }
-
-    handleOwnerSort() {
-        let sort;
-        if(!this.isOwnerActive()) {
-            sort = sorts.orderOwnerAZ;
-        }
-        else {
-            sort = this.state.activeSort == sorts.orderOwnerAZ ? sorts.orderOwnerZA : sorts.orderOwnerAZ
-        }
-        this.props.onSort(sort);
-        this.setState({
-            activeSort: sort
-        });
-    }
-
-    isNameActive() {
-        return this.state.activeSort == sorts.orderAZ || this.state.activeSort == sorts.orderZA;
-    }
-    isEventActive() {
-        return this.state.activeSort == sorts.orderEventAZ || this.state.activeSort == sorts.orderEventZA;
-    }
-    isDateActive() {
-        return this.state.activeSort == sorts.orderNewest || this.state.activeSort == sorts.orderOldest;
-    }
-    isStatusActive() {
-        return this.state.activeSort == sorts.orderComplete || this.state.activeSort == sorts.orderIncomplete;
-    }
-    isPermissionsActive() {
-        return this.state.activeSort == sorts.orderPrivate || this.state.activeSort == sorts.orderPublic;
-    }
-    isOwnerActive() {
-        return this.state.activeSort == sorts.orderOwnerAZ || this.state.activeSort == sorts.orderOwnerZA;
-    }
-
-    //If it is a 'reversed' sort the arrow should be up, otherwise it should be down
-    getIcon(sortFunction) {
+    //If it is a 'reversed' order the arrow should be up, otherwise it should be down
+    getIcon(order) {
         const style = {verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'};
-        const icon = this.state.activeSort == sortFunction ?
+        const icon = this.props.order == order ?
             <NavigationArrowDropUp style={style}/>
             :
             <NavigationArrowDropDown style={style}/>
@@ -194,46 +94,46 @@ export class DataPackList extends Component {
                             <TableRow style={styles.tableRow}>
                                 <TableHeaderColumn 
                                     style={styles.nameColumn}>
-                                    <div onClick={this.handleNameSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isNameActive())}>Name</span>
-                                        {this.getIcon(sorts.orderZA)}
+                                    <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
+                                        {this.getIcon('-job__name')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={styles.eventColumn}>
-                                    <div onClick={this.handleEventSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isEventActive())}>Event</span>
-                                        {this.getIcon(sorts.orderEventZA)}
+                                    <div onClick={() => {this.handleOrder('job__event')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
+                                        {this.getIcon('-job__event')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={styles.dateColumn}>
-                                    <div onClick={this.handleDateSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isDateActive())}>Date Added</span>
-                                        {this.getIcon(sorts.orderOldest)}
+                                    <div onClick={() => {this.handleOrder('started_at')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
+                                        {this.getIcon('started_at')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={styles.statusColumn}>
-                                    <div onClick={this.handleStatusSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isStatusActive())}>Status</span>
-                                        {this.getIcon(sorts.orderIncomplete)}
+                                    <div onClick={() => {this.handleOrder('status')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'status'))}>Status</span>
+                                        {this.getIcon('-status')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={styles.permissionsColumn}>
-                                    <div onClick={this.handlePermissionsSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isPermissionsActive())}>Permissions</span>
-                                        {this.getIcon(sorts.orderPublic)}
+                                    <div onClick={() => {this.handleOrder('job__published')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__published'))}>Permissions</span>
+                                        {this.getIcon('-job__published')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={styles.ownerColumn}>
-                                    <div onClick={this.handleOwnerSort} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isOwnerActive())}>Owner</span>
-                                        {this.getIcon(sorts.orderOwnerZA)}
+                                    <div onClick={() => {this.handleOrder('user__username')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'user__username'))}>Owner</span>
+                                        {this.getIcon('-user__username')}
                                     </div>
                                 </TableHeaderColumn>
                                 <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
                             </TableRow>
                         </TableHeader>
                     </Table>
-                    <CustomScrollbar style={{height: window.innerHeight - 297}}>
+                    <CustomScrollbar style={{height: window.innerHeight - 343}}>
                         <Table>
                             <TableBody displayRowCheckbox={false}>
                                 
@@ -261,6 +161,7 @@ DataPackList.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
+    order: PropTypes.string.isRequired,
 };
 
 export default DataPackList;

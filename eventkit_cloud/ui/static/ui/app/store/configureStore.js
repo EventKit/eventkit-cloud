@@ -4,6 +4,7 @@ import createLogger from 'redux-logger'
 import rootReducer from '../reducers/rootReducer'
 import { browserHistory } from 'react-router'
 import { routerMiddleware } from 'react-router-redux'
+import createDebounce from 'redux-debounced';
 
 const logger = createLogger();
 
@@ -24,7 +25,7 @@ const crashReporter = store => next => action => {
 export default () => {
     return createStore(
         rootReducer,
-        applyMiddleware(thunkMiddleware, logger, crashReporter, routingMiddleware)
+        applyMiddleware(createDebounce(), thunkMiddleware, logger, crashReporter, routingMiddleware)
    );
 }
 

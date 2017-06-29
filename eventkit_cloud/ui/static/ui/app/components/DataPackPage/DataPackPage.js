@@ -4,11 +4,8 @@ import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
+import RaisedButton from 'material-ui/RaisedButton';
 import Drawer from 'material-ui/Drawer';
-import PermissionFilter from './PermissionsFilter';
-import StatusFilter from './StatusFilter';
-import DateFilter from './DateFilter';
-import FilterHeader from './FilterHeader';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import primaryStyles from '../../styles/constants.css'
@@ -18,67 +15,55 @@ import DataPackSortDropDown from './DataPackSortDropDown';
 import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
-import * as utils from '../../utils/sortUtils';
-import {Scrollbars } from 'react-custom-scrollbars';
+import FilterDrawer from './FilterDrawer';
 import CustomScrollbar from '../CustomScrollbar';
+import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
+import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 
 export class DataPackPage extends React.Component {
 
     constructor(props) {
         super(props);
+        this.handleToggle = this.handleToggle.bind(this);
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleOwnerFilter = this.handleOwnerFilter.bind(this);
-        this.applySorts = this.applySorts.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
-        this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
-        this.handleStatusChange = this.handleStatusChange.bind(this);
-        this.handleMinDate = this.handleMinDate.bind(this);
-        this.handleMaxDate = this.handleMaxDate.bind(this);
-        this.applyAll = this.applyAll.bind(this);
         this.toggleView = this.toggleView.bind(this);
-        this.handleTableSort = this.handleTableSort.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
+        this.loadMore = this.loadMore.bind(this);
+        this.loadLess = this.loadLess.bind(this);
         this.state = {
-            open: window.innerWidth >= 1200 ? true : false,
-            runs: [],
-            dropDownValue: '',
-            sortDropDown: utils.orderNewest,
-            search: {
-                searched: false,
-                searchQuery: ''
-            },
-            ordered: utils.orderNewest,
-            permissions: null,
+            open: window.innerWidth < 1200 ? false: true,
+            search: '',
+            published: null,
             minDate: null,
             maxDate: null,
             status: {
                 completed: false,
+                submitted: false,
                 incomplete: false,
-                running: false,
             },
-            filtersApplied: false,
             grid: true,
-            tableSort: utils.orderNewest,
-            showLoading: true,
+            pageLoading: true,
             order: '-started_at',
-            page: 1,
+            ownerFilter: '',
+            pageSize: 12,
+            loading: false,
         }
     }
 
     componentWillReceiveProps(nextProps) { 
         if(nextProps.runsList.fetched != this.props.runsList.fetched) { 
             if (nextProps.runsList.fetched == true) {
-                let runs = nextProps.runsList.runs;
-                this.setState({runs: runs});
-                // runs = this.applyAll(runs);
-                // this.setState({displayedRuns:runs});
-                if (this.state.showLoading) {
-                    this.setState({showLoading: false});
+                if (this.state.pageLoading) {
+                    this.setState({pageLoading: false});
                 }
-                
+                if (this.state.loading) {
+                    this.setState({loading: false});
+                }
             }
         }
         if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
@@ -89,159 +74,94 @@ export class DataPackPage extends React.Component {
     }
 
     componentWillMount() {
-        // this.props.getRuns('page=1');
         this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
-        // this.fetch = setInterval(() => {this.props.getRuns('page=1')}, 10000);
+        this.fetch = setInterval(this.makeRunRequest, 10000);
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.screenSizeUpdate);
-        // clearInterval(this.fetch);
+        clearInterval(this.fetch);
     }
 
     onSearch(searchText, ix) { 
-        // this.setState({search: {searched: true, searchQuery: searchText}});
-        // const searched = utils.search(searchText, this.state.displayedRuns);
-        // this.setState({displayedRuns: searched});
-    }
-
-    checkForEmptySearch(searchText, dataSource, params) {
-        if(searchText == '') {
-            // this.setState({search: {searched: false, searchQuery: ''}}, () => {
-            //     let runs = this.applySorts(this.state.runs);
-            //     runs = this.applyFilters(runs);
-            //     this.setState({displayedRuns: runs});
-            // });
-        }
-    }
-
-    handleSortChange = (event, index, value) => {
-        // this.setState({sortDropDown: value});
-        // const runs = value(this.state.displayedRuns);
-        // this.setState({displayedRuns: runs});
-    }
-
-    makeRunRequest() {
-        let params = `
-            page=${this.state.page}
-            &order=${this.state.order}
-            &user=${this.state.dropDownValue}`
-        this.props.getRuns(params);
-    }
-
-    handleOwnerFilter = (event, index, value) => {
-        // if(value == 1) {
-        //     this.setState({dropDownValue: value}, () => {
-        //         let runs = this.applyAll(this.state.runs);
-        //         this.setState({displayedRuns: runs});
-        //     }); 
-        // }
-        // else {
-        //     this.setState({dropDownValue: value});
-        //     const filteredRuns = utils.myDataPacksOnly(this.state.displayedRuns, this.props.user.data.user.username);
-        //     this.setState({displayedRuns: filteredRuns});
-        // }
-        this.setState({dropDownValue: value}, () => {
+        this.setState({search: searchText, loading: true}, () => {
             this.makeRunRequest();
         });
     }
 
-    applyAll(runs) {
-        runs = this.applySearch(runs);
-        runs = this.applyFilters(runs);
-        runs = this.applySorts(runs);
-        return runs;
+    checkForEmptySearch(searchText, dataSource, params) {
+        if(searchText == '') {
+            this.setState({search: '', loading: true}, () => {
+                this.makeRunRequest();
+            });
+        }
     }
 
-    applySorts(runs) {
-        if (this.state.dropDownValue == 2) {
-            runs = utils.myDataPacksOnly(runs, this.props.user.data.user.username);
-        }
-        // should we apply table sorts or card/mobile list sort?
-        if(!this.state.grid && window.innerWidth >= 768) {
-            runs = this.state.tableSort(runs);
-        }
-        else {
-            runs = this.state.sortDropDown(runs);
-        }
-        return runs;
+    handleSortChange = (value) => {
+        this.setState({order: value, loading: true}, () => {
+            this.makeRunRequest();
+        })
     }
 
-    applySearch(runs) {
-        if(this.state.search.searched) {
-            return utils.search(this.state.search.searchQuery, runs);
+    makeRunRequest() {
+        let status = []
+        Object.keys(this.state.status).forEach((key, ix) => {
+            if(this.state.status[key]) {status.push(key.toUpperCase())};
+        });
+
+        const minDate = this.state.minDate ? `&min_date=${this.state.minDate.toISOString().substring(0, 10)}` : '';
+        let maxDate = ''
+        if(this.state.maxDate) {
+            maxDate = this.state.maxDate;
+            maxDate.setDate(maxDate.getDate() + 1);
+            maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
         }
-        else return runs;
+
+        let params = '';
+        params += `page_size=${this.state.pageSize}`;
+        params += this.state.order ? `&ordering=${this.state.order}`: '';
+        params += this.state.ownerFilter ? `&user=${this.state.ownerFilter}`: '';
+        params += this.state.published ? `&published=${this.state.published}` : '';
+        params += status.length ? `&status=${status.join(',')}` : '';
+        params += minDate;
+        params += maxDate;
+        params += this.state.search ? `&search_term=${this.state.search}` : '';
+        return this.props.getRuns(params);
     }
 
-    applyFilters(runs) {
-        if(this.state.permissions) {
-            runs = utils.filterPermissions(this.state.permissions, runs);
-        }
-        if(this.state.status.completed || this.state.status.incomplete || this.state.status.running)  {
-            runs = utils.filterStatus(this.state.status, runs);
-        }
-        if(this.state.minDate || this.state.maxDate) {
-            runs = utils.filterDate(this.state.minDate, this.state.maxDate, runs);
-        }
-        return runs
+    handleOwnerFilter = (event, index, value) => {
+        this.setState({ownerFilter: value, loading: true}, () => {
+            this.makeRunRequest();
+        });
     }
 
-    handleFilterApply = () => {
-        if(window.innerWidth < 1200) {
-            this.setState({open: false});
-        }
-        // this.setState({filtersApplied: true});
-        // let runs = this.applyAll(this.state.runs);
-        // this.setState({displayedRuns: runs});
-    }
-
-    handleTableSort(sortFunction) {
-        // const sorted_runs = sortFunction(this.state.displayedRuns);
-        // this.setState({displayedRuns: sorted_runs, tableSort: sortFunction});
+    handleFilterApply = (state) => {
+        this.setState({...this.state, ...state, loading: true}, () => {
+            this.makeRunRequest();
+            if(window.innerWidth < 1200) {
+                this.setState({open: false});
+            }
+        });
     }
 
     handleFilterClear = () => {
-        // this.setState({
-        //     permissions: null,
-        //     status: {
-        //         completed: false,
-        //         incomplete: false,
-        //         running: false,
-        //     },
-        //     minDate: null,
-        //     maxDate: null,
-        //     filtersApplied: false,
-        // });
-        // if(window.innerWidth < 1200) {
-        //     this.setState({open: false});
-        // }
-        // let runs = this.applySearch(this.state.runs);
-        // runs = this.applySorts(runs);
-        // this.setState({displayedRuns: runs});
-    }
-
-    handlePermissionsChange = (event, value) => {
-        // this.setState({permissions: value});
-    }
-
-    handleStatusChange = (stateChange) => {
-        // let status = this.state.status;
-        // status = Object.assign(status, stateChange)
-        // this.setState({status: status});
-    }
-
-    handleMinDate = (e, date) => {
-         this.setState({minDate: date});
-    }
-
-    handleMaxDate = (e, date) => {
-        this.setState({maxDate: date});
-    }
-
-    handleToggle = () => {
-        this.setState({open: !this.state.open});
+        this.setState({
+            published: null,
+            minDate: null,
+            maxDate: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                submitted: false,
+            },
+            loading: true
+        }, () => {
+            this.makeRunRequest();
+        });
+        if(window.innerWidth < 1200) {
+            this.setState({open: false});
+        }
     }
 
     screenSizeUpdate() {
@@ -249,11 +169,35 @@ export class DataPackPage extends React.Component {
     }
 
     toggleView() {
-        // if(!this.state.grid) {
-        //     let runs = this.state.sortDropDown(this.state.displayedRuns);
-        //     this.setState({displayedRuns: runs});
-        // }
-        // this.setState({grid: !this.state.grid});
+        if (['started_at', '-started_at', 'job__name', '-job__name'].indexOf(this.state.order) < 0) {
+            this.setState({order: '-started_at', loading: true}, () => {
+                let promise = this.makeRunRequest();
+                promise.then(() => this.setState({grid: !this.state.grid}));
+            });
+        }
+        else {
+            this.setState({grid: !this.state.grid,});
+        }
+    }
+
+    handleToggle = () => {
+        this.setState({open: !this.state.open});
+    }
+
+    loadMore() {
+        if (this.props.runsList.nextPage) {
+            this.setState({pageSize: this.state.pageSize + 12, loading: true}, () => {
+                this.makeRunRequest();
+            });
+        }
+    }
+
+    loadLess() {
+        if (this.state.pageSize > 12) {
+            this.setState({pageSize: this.state.pageSize - 12, loading: true}, () => {
+                this.makeRunRequest();
+            });
+        }
     }
 
     render() { 
@@ -289,6 +233,14 @@ export class DataPackPage extends React.Component {
             },
             backgroundStyle: {
                 backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')'
+            },
+            loadMore: {
+                color: this.props.runsList.nextPage ? '#4598bf': 'grey', 
+                cursor: this.props.runsList.nextPage ? 'pointer' : 'initial'
+            },
+            loadLess: {
+                color: this.props.runsList.runs.length > 12 ? '#4598bf': 'grey',
+                cursor: this.props.runsList.runs.length > 12 ? 'pointer': 'initial'
             }
         };
 
@@ -312,48 +264,23 @@ export class DataPackPage extends React.Component {
                 </Toolbar>
 
                 <Toolbar style={styles.toolbarSort}>
-                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.dropDownValue} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton open={this.state.open} handleToggle={this.handleToggle} />
+                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
+                        <DataPackFilterButton handleToggle={this.handleToggle} />
                         {(!this.state.grid) && window.innerWidth >= 768 ? 
                             null
                             : 
-                            <DataPackSortDropDown handleChange={this.handleSortChange} value={this.state.sortDropDown} />
+                            <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
                         }
                         <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>
-                    <Drawer 
-                        width={200} 
-                        openSecondary={true} 
-                        open={this.state.open}
-                        containerStyle={styles.containerStyle}
-                    >
-                        <CustomScrollbar>
-                            <FilterHeader
-                                onApply={this.handleFilterApply}
-                                onClear={this.handleFilterClear}
-                            />
-                            <PermissionFilter
-                                onChange={this.handlePermissionsChange}
-                                valueSelected={this.state.permissions}
-                            />
-                            <StatusFilter
-                                onChange={this.handleStatusChange}
-                                completed={this.state.status.completed}
-                                incomplete={this.state.status.incomplete}
-                                running={this.state.status.running}
-                            />
-                            <DateFilter
-                                onMinChange={this.handleMinDate}
-                                onMaxChange={this.handleMaxDate}
-                                minDate={this.state.minDate}
-                                maxDate={this.state.maxDate}
-                            />
-                        </CustomScrollbar>
-                    </Drawer>
+                    <FilterDrawer 
+                        onFilterApply={this.handleFilterApply} 
+                        onFilterClear={this.handleFilterClear}
+                        open={this.state.open}/>
 
-                    {this.props.runsDeletion.deleting ? 
+                    {/*{this.props.runsDeletion.deleting ? 
                         <div style={{zIndex: 10, position: 'absolute', width: '100%', height: window.innerHeight - 236, display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
                             <CircularProgress 
                                 style={{margin: 'auto', display: 'block'}} 
@@ -363,9 +290,9 @@ export class DataPackPage extends React.Component {
                         </div>
                     : 
                         null 
-                    }
+                    }*/}
 
-                    {this.state.showLoading ? 
+                    {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                             <CircularProgress 
                                 style={{margin: 'auto', display: 'block'}} 
@@ -374,22 +301,57 @@ export class DataPackPage extends React.Component {
                             />
                         </div>
                         :
+                        <div style={{position: 'relative'}}>
+                            {this.state.loading ? 
+                            <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
+                                <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
+                                    <CircularProgress 
+                                        style={{margin: 'auto', display: 'block'}} 
+                                        color={'#4598bf'}
+                                        size={50}
+                                    />
+                                </div>
+                            </div>
+                            : null}
                         <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
+                            
                             {this.state.grid ?
                                 <DataPackGrid 
-                                    runs={this.state.runs} 
+                                    runs={this.props.runsList.runs} 
                                     user={this.props.user} 
                                     onRunDelete={this.props.deleteRuns}
                                 />
                             :
                                 <DataPackList
-                                    runs={this.state.runs}
+                                    runs={this.props.runsList.runs}
                                     user={this.props.user}
                                     onRunDelete={this.props.deleteRuns}
-                                    onSort={this.handleTableSort}
+                                    onSort={this.handleSortChange}
+                                    order={this.state.order}
                                 />
                             }
+                            <div style={{textAlign: 'center', paddingBottom: '10px', fontSize: '16px'}}>
+                                <RaisedButton 
+                                    backgroundColor={'#e5e5e5'}
+                                    labelColor={'#4498c0'}
+                                    label={'Show More'}
+                                    disabled={!this.props.runsList.nextPage}
+                                    onClick={this.loadMore}
+                                    icon={<KeyboardArrowDown/>}
+                                    style={{minWidth: '60px', marginRight: '5px'}}
+                                />
+                                <RaisedButton 
+                                    backgroundColor={'#e5e5e5'}
+                                    labelColor={'#4498c0'}
+                                    label={'Show Less'}
+                                    disabled={this.props.runsList.runs.length <= 12}
+                                    onClick={this.loadLess}
+                                    icon={<KeyboardArrowUp/>}
+                                    style={{minWidth: '60px'}}
+                                />
+                            </div>
                         </CustomScrollbar>
+                        </div>
                     }
                 </div>
                 
@@ -419,7 +381,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         getRuns: (params) => {
-            dispatch(getRuns(params));
+            return dispatch(getRuns(params));
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));

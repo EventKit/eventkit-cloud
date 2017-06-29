@@ -3,19 +3,37 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 
 export function getRuns(params) {
-    return (dispatch) => {
+    let thunk = dispatch => {
         dispatch({type: types.FETCHING_RUNS});
         const url = params ? `/api/runs?${params}` : '/api/runs'
         return axios ({
             url: url,
             method: 'GET',
         }).then((response) => {
-            dispatch({type: types.RECEIVED_RUNS, runs: response.data});
+            let nextPage = false;
+            let links = [];
+            if (response.headers.link) {
+                links = response.headers.link.split(',');
+            }
+            for(const i in links) {
+                if (links[i].includes('rel="next"')) {
+                    nextPage = true;
+                }
+                
+            }
+            dispatch({type: types.RECEIVED_RUNS, runs: response.data, nextPage: nextPage});
         }).catch(error => {
             dispatch({type: types.FETCH_RUNS_ERROR, error: error});
         });
-
+        
     }
+    thunk.meta = {
+        debounce: {
+            time: 1000,
+            key: 'FETCH_RUNS'
+        }
+    }
+    return thunk;
 }
 
 export function deleteRuns(uid) {
