@@ -1,6 +1,8 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
+import moment from 'moment';
+import mockdate from 'mockdate';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
@@ -139,15 +141,15 @@ describe('ProviderRow component', () => {
 
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1000, 600);
         expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1200, 600);
         expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
     it('getToggleCellWidth should return the pixel string for table width based on window width', () => {
@@ -235,6 +237,12 @@ describe('ProviderRow component', () => {
         expect(openSpy.calledOnce).toBe(true);
     });
 
+    it('getTimeRemaining should return 0 when estimated_finish is null', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getTimeRemaining(tasks)).toEqual('0');
+    });
+
     it('getTaskStatus should be called with the correct status from a given task', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -254,7 +262,7 @@ describe('ProviderRow component', () => {
         )
         expect(wrapper.instance().getTaskStatus({status: 'PENDING'})).toEqual('WAITING');
         expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
-            <span><LinearProgress mode="determinate" value={100}/>{''}</span>
+            <span><LinearProgress mode="determinate" value={100}/>{'0 left'}</span>
         );
         expect(wrapper.instance().getTaskStatus({status: 'CANCELED'})).toEqual(
             <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
@@ -389,7 +397,7 @@ const tasks = [
     {
         "duration": "0:00:15.317672",
         "errors": [],
-        "estimated_finish": "",
+        "estimated_finish": "2017-05-15T15:29:04.356182Z",
         "finished_at": "2017-05-15T15:29:04.356182Z",
         "name": "OverpassQuery",
         "progress": 100,
