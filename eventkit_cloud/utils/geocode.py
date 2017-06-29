@@ -7,26 +7,6 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-class Geocode(object):
-
-    def __init__(self):
-        url = getattr(settings, 'GEOCODING_API_URL')
-        type = getattr(settings, 'GEOCODING_API_TYPE')
-        if not (url and type):
-            logger.error("Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings.")
-            raise Exception('A geocoder configuration was not provided, contact an administrator.')
-        self.geocoder = self.get_geocoder(type, url)
-
-    @property
-    def map(self):
-        return {'geonames': GeoNames}
-
-    def get_geocoder(self, name, url):
-        return self.map.get(name.lower())(url)
-
-    def search(self, query):
-        return self.geocoder.get_data(query)
-
 class GeocodeAdapter:
     """
     An abstract class to implement a new geocoding service.  Note that the UI will expect,
@@ -35,8 +15,11 @@ class GeocodeAdapter:
 
     __metaclass__ = ABCMeta
 
+    _properties = ['name', 'province', 'region', 'country']
+
     def __init__(self, url):
         self.url = url
+
 
     @abstractmethod
     def get_data(self, url):
@@ -52,9 +35,6 @@ class GeocodeAdapter:
             {"AdminName2": "Fairfax"}
           Output:
              {"AdminName2": "Fairfax", "province": "Fairfax"}
-
-        The following properties should be mapped:
-            name, province (aka county), region (aka state), country
         """
         pass
 
@@ -70,16 +50,14 @@ class GeocodeAdapter:
             feature['geometry'] = self.bbox2polygon(bbox)
         return feature
 
-    def get_feature_collection(self, features=None):
+    @staticmethod
+    def get_feature_collection(features=None):
         assert (isinstance(features, list))
-        max_bbox = [180, 90, -90, -90]
+        max_bbox=None
         for feature in features:
             bbox = feature.get('bbox')
             if bbox:
-                temp_max = max_bbox
-                for coord, val in enumerate(max_bbox):
-                    temp_max[coord] = max(val, bbox[coord])
-                max_bbox = temp_max
+                max_bbox = expand_bbox(max_bbox, bbox)
         feature_collection = {
             "type": "FeatureCollection",
             "features": features
@@ -118,7 +96,7 @@ class GeoNames(GeocodeAdapter):
         features = []
         for result in response.get('geonames'):
             feature = self.get_feature(bbox=self.get_bbox(result.pop('bbox', None)))
-            feature['properties'] = result
+            feature['properties'] = self.property_map(result)
             features += [feature]
         return self.get_feature_collection(features=features)
 
@@ -129,7 +107,7 @@ class GeoNames(GeocodeAdapter):
         if not bbox:
             return
         try:
-            return (bbox['west'], bbox['south'], bbox['east'], bbox['north'])
+            return [bbox['west'], bbox['south'], bbox['east'], bbox['north']]
         except KeyError:
             return None
 
@@ -140,8 +118,50 @@ class GeoNames(GeocodeAdapter):
         return props
 
 
+class Geocode(object):
+
+    _supported_geocoders = {'geonames': GeoNames}
+
+    def __init__(self):
+        url = getattr(settings, 'GEOCODING_API_URL')
+        type = getattr(settings, 'GEOCODING_API_TYPE')
+        if not (url and type):
+            logger.error("Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings.")
+            raise Exception('A geocoder configuration was not provided, contact an administrator.')
+        self.geocoder = self.get_geocoder(type, url)
+
+    @property
+    def map(self):
+        return self._supported_geocoders
+
+    def get_geocoder(self, name, url):
+        return self.map.get(name.lower())(url)
+
+    def search(self, query):
+        return self.geocoder.get_data(query)
+
+
 def is_valid_bbox(bbox):
-    if bbox[0] < bbox[2] and bbox[1] < bbox[4]:
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        return False
+    if bbox[0] < bbox[2] and bbox[1] < bbox[3]:
         return True
     else:
         return False
+
+
+def expand_bbox(original_bbox, new_bbox):
+    """
+    Takes two bboxes and returns a new bbox containing the original two.
+    :param bbox: A list representing [west, south, east, north]
+    :param new_bbox: A list representing [west, south, east, north]
+    :return: A list containing the two original lists.
+    """
+    if not original_bbox:
+        original_bbox = new_bbox
+        return original_bbox
+    original_bbox[0] = min(new_bbox[0], original_bbox[0])
+    original_bbox[1] = min(new_bbox[1], original_bbox[1])
+    original_bbox[2] = max(new_bbox[2], original_bbox[2])
+    original_bbox[3] = max(new_bbox[3], original_bbox[3])
+    return original_bbox

@@ -14,9 +14,9 @@ export class TypeaheadMenuItem extends Component {
 
     createDescription(result) {
         let description = [];
-        result.properties.region ? description.push(result.properties.region): null;
-        result.properties.province ? description.push(result.properties.province): null;
-        result.properties.description ? description.push(result.properties.description): null;
+        result.region ? description.push(result.region): null;
+        result.province ? description.push(result.province): null;
+        result.description ? description.push(result.description): null;
 
         return description.join(', ');
     }
@@ -26,14 +26,14 @@ export class TypeaheadMenuItem extends Component {
         return (
             <MenuItem option={this.props.result} position={this.props.index} className={styles.menuItem}>
                 <div className={styles.menuItemIconDiv}>
-                    {this.props.result.bbox && !isEqual(this.props.result.bbox, {})
+                    {this.props.result.bbox && !isEqual(this.props.result.bbox, [])
                     ?
                     <ImageCropDin className={styles.menuItemIcon}/>
                     : 
                     <ActionRoom className={styles.menuItemIcon}/>
                     }
                 </div>
-                <div className={styles.menuItemText}><strong>{this.props.result.properties.name}</strong></div>
+                <div className={styles.menuItemText}><strong>{this.props.result.name}</strong></div>
                 <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>
             </MenuItem>
         )

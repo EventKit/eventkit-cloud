@@ -111,8 +111,7 @@ def geocode(request):
     if result:
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
-        return HttpResponse(content=json.dumps({'info': 'The response returned no content.'}),
-                            status=204, content_type="application/json")
+        return HttpResponse(status=204, content_type="application/json")
 
 
 @require_http_methods(['GET'])

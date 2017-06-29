@@ -1,7 +1,7 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
-export function getGeocodeReducer(state = initialState, action) {
+export function getGeocodeReducer(state = initialState.geocode, action) {
     switch(action.type) {
         case types.FETCHING_GEOCODE:
             return {fetching: true, fetched: false, data: [], error: null};

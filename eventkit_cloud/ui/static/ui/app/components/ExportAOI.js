@@ -96,8 +96,8 @@ export class ExportAOI extends Component {
     }
 
     handleSearch(result) {
-        const unformatted_bbox = result.bbox;
-        const formatted_bbox = [unformatted_bbox.west, unformatted_bbox.south, unformatted_bbox.east, unformatted_bbox.north]
+        // const unformatted_bbox = result.bbox;
+        const formatted_bbox = result.bbox;
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
         const bbox = formatted_bbox.map(truncate);
