@@ -23,14 +23,18 @@ describe('DataPackList component', () => {
             onSort: () => {},
             order: '-started_at'
         }
+    };
+
+    const getWrapper = (props) => {
+        return mount(<DataPackList {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
     }
 
     it('should render list items as part of the mobile view', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         // ensure the screen is small
         window.resizeTo(556, 600);
         expect(window.innerWidth).toEqual(556);
@@ -43,10 +47,7 @@ describe('DataPackList component', () => {
 
     it('should render table items as part of the desktop view', () => {
         const props = getProps();
-        const  wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const  wrapper = getWrapper(props);
         //ensure the screen is large
         window.resizeTo(1250, 800);
         expect(window.innerWidth).toEqual(1250);
@@ -75,38 +76,101 @@ describe('DataPackList component', () => {
         expect(wrapper.find(DataPackTableItem)).toHaveLength(3);
     });
 
-    it('should have order newest date active by default in the table', () => {
+    it('name column header should call handleOrder onclick', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        //ensure the screen is large
-        window.resizeTo(1250, 800);
-        expect(window.innerWidth).toEqual(1250);
-        wrapper.update();
-        expect(wrapper.find(TableHeaderColumn).at(2).find('span').props().style).toEqual({color: '#000', fontWeight: 'bold'});
-        expect(wrapper.state().order).toEqual('-started_at');
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(0).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__name'));
+        orderSpy.restore();
+    });
+
+    it('event column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(1).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__event'));
+        orderSpy.restore();
+    });
+
+    it('date column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(2).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('started_at')).toBe(true);
+        orderSpy.restore();
+    });
+
+    it('status column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(3).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('status'));
+        orderSpy.restore();
+    });
+
+    it('permissions column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(4).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__published'));
+        orderSpy.restore();
+    });
+
+    it('owner column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(5).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('user__username'));
+        orderSpy.restore();
     });
 
     it('handleOrder should call isSameOrderType and props.onSort', () => {
         let props = getProps();
         props.onSort = new sinon.spy();
         const isSameSpy = new sinon.spy(DataPackList.prototype, 'isSameOrderType');
+        const wrapper = getWrapper(props);
+
         let newOrder = 'job__name';
-        const wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
         wrapper.instance().handleOrder(newOrder);
         expect(isSameSpy.calledWith('-started_at', 'job__name')).toBe(true);
         expect(props.onSort.calledOnce).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
+
         newOrder = 'started_at';
         wrapper.instance().handleOrder(newOrder);
         expect(isSameSpy.calledWith('-started_at', 'started_at')).toBe(true);
         expect(props.onSort.calledTwice).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
+
+        let nextProps = getProps();
+        nextProps.order = 'started_at';
+        nextProps.onSort = props.onSort;
+        wrapper.setProps(nextProps);
+        newOrder = '-started_at';
+        wrapper.instance().handleOrder(newOrder);
+        expect(isSameSpy.calledWith('started_at', '-started_at')).toBe(true);
+        expect(props.onSort.calledThrice).toBe(true);
+        expect(props.onSort.calledWith(newOrder)).toBe(true);
+
+        isSameSpy.restore();
     });
 
     it('isSameOrderType should return true or false', () => {

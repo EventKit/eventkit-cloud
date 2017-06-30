@@ -14,9 +14,6 @@ export class DataPackList extends Component {
         this.getIcon = this.getIcon.bind(this);
         this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.isSameOrderType = this.isSameOrderType.bind(this);
-        this.state = {
-            order: '-started_at',
-        }
     }
 
     handleOrder(order) {
