@@ -7,7 +7,8 @@ describe('DataPackList reducer', () => {
                 fetching: false,
                 fetched: false,
                 runs: [],
-                error: null
+                error: null,
+                nextPage: false
             }
         );
     });
@@ -18,7 +19,8 @@ describe('DataPackList reducer', () => {
                 fetching: false,
                 fetched: false,
                 runs: [],
-                error: null
+                error: null,
+                nextPage: false
             },
             {
                 type: 'FETCHING_RUNS'
@@ -28,7 +30,8 @@ describe('DataPackList reducer', () => {
                 fetching: true,
                 fetched: false,
                 runs: [],
-                error: null
+                error: null,
+                nextPage: false
             }
         );
     });
@@ -39,17 +42,19 @@ describe('DataPackList reducer', () => {
                 fetching: true,
                 fetched: false,
                 runs: [],
-                error: null
+                error: null,
+                nextPage: false
             },
             {
-                type: 'RECEIVED_RUNS', runs: [{thisIs: 'a fake run'}]
+                type: 'RECEIVED_RUNS', runs: [{thisIs: 'a fake run'}], nextPage: true
             }
         )).toEqual(
             {
                 fetching: false,
                 fetched: true,
                 runs: [{thisIs: 'a fake run'}],
-                error: null
+                error: null,
+                nextPage: true
             }
         );
     });
@@ -59,7 +64,8 @@ describe('DataPackList reducer', () => {
                 fetching: true,
                 fetched: false,
                 runs: [],
-                error: null
+                error: null,
+                nextPage: false
             },
             {
                 type: 'FETCH_RUNS_ERROR', error: 'This is an error message'
@@ -69,7 +75,8 @@ describe('DataPackList reducer', () => {
                 fetching: false,
                 fetched: false,
                 runs: [],
-                error: 'This is an error message'
+                error: 'This is an error message',
+                nextPage: false
             }
         );
     })

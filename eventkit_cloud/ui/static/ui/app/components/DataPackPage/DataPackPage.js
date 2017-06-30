@@ -85,23 +85,17 @@ export class DataPackPage extends React.Component {
     }
 
     onSearch(searchText, ix) { 
-        this.setState({search: searchText, loading: true}, () => {
-            this.makeRunRequest();
-        });
+        this.setState({search: searchText, loading: true}, this.makeRunRequest);
     }
 
     checkForEmptySearch(searchText, dataSource, params) {
         if(searchText == '') {
-            this.setState({search: '', loading: true}, () => {
-                this.makeRunRequest();
-            });
+            this.setState({search: '', loading: true}, this.makeRunRequest);
         }
     }
 
     handleSortChange = (value) => {
-        this.setState({order: value, loading: true}, () => {
-            this.makeRunRequest();
-        })
+        this.setState({order: value, loading: true}, this.makeRunRequest);
     }
 
     makeRunRequest() {
@@ -131,18 +125,14 @@ export class DataPackPage extends React.Component {
     }
 
     handleOwnerFilter = (event, index, value) => {
-        this.setState({ownerFilter: value, loading: true}, () => {
-            this.makeRunRequest();
-        });
+        this.setState({ownerFilter: value, loading: true}, this.makeRunRequest);
     }
 
     handleFilterApply = (state) => {
-        this.setState({...this.state, ...state, loading: true}, () => {
-            this.makeRunRequest();
-            if(window.innerWidth < 1200) {
-                this.setState({open: false});
-            }
-        });
+        this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
+        if(window.innerWidth < 1200) {
+            this.setState({open: false});
+        }
     }
 
     handleFilterClear = () => {
@@ -156,9 +146,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
             },
             loading: true
-        }, () => {
-            this.makeRunRequest();
-        });
+        }, this.makeRunRequest);
         if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
@@ -186,17 +174,19 @@ export class DataPackPage extends React.Component {
 
     loadMore() {
         if (this.props.runsList.nextPage) {
-            this.setState({pageSize: this.state.pageSize + 12, loading: true}, () => {
-                this.makeRunRequest();
-            });
+            this.setState(
+                {pageSize: this.state.pageSize + 12, loading: true}, 
+                this.makeRunRequest
+            );
         }
     }
 
     loadLess() {
         if (this.state.pageSize > 12) {
-            this.setState({pageSize: this.state.pageSize - 12, loading: true}, () => {
-                this.makeRunRequest();
-            });
+            this.setState(
+                {pageSize: this.state.pageSize - 12, loading: true},
+                this.makeRunRequest
+            );
         }
     }
 
@@ -302,7 +292,7 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <div style={{position: 'relative'}}>
-                            {this.state.loading ? 
+                            {this.state.loading || this.props.runsDeletion.deleting ? 
                             <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
                                 <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                                     <CircularProgress 

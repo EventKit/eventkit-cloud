@@ -476,11 +476,33 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportRunViewSet(viewsets.ModelViewSet):
     """
-    Provides an endpoint for querying export runs.
+    **Provides an endpoint for querying export runs**.
 
-    Export runs for a particular job can be filtered by status by appending one of
-    `COMPLETED`, `SUBMITTED`, `INCOMPLETE` or `FAILED` as the value of the `STATUS` parameter:
-    `/api/runs?job_uid=a_job_uid&status=STATUS`
+    **Export runs can be filtered and ordered by adding optional parameters to the url**:
+    
+    * `user`: The user who created the job.
+    
+    * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or FAILED).
+        * Example = `/api/runs?status=SUBMITTED,INCOMPLETE,FAILED`
+        
+    * `job_uid`: The uid of a particular job.
+    
+    * `min_date`: Minimum date (YYYY-MM-DD) for the `started_at` field.
+    
+    * `max_date`: Maximum date (YYYY-MM-DD) for the `started_at` field.
+    
+    * `started_at`: The DateTime a run was started at in ISO date-time format.
+    
+    * `published`: True or False for whether the owning job is published or not.
+    
+    * `search_term`: A value to search the job name, description and event text for.
+    
+    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
+        * Order can be reversed by adding `-` to the front of the order parameter.
+        
+    **Putting it all together: An example request using some of the parameters**.
+    
+    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&search_term=test&ordering=-job__name`
     """
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
