@@ -66,6 +66,23 @@ describe('statusDownload actions', () => {
             type: 'CLEAR_RERUN_INFO',
         });
     });
+
+    it('cancelProviderTask should dispatch canceling and canceled actions', () => {
+        var mock = new MockAdapter(axios, {delayResponse: 1000});
+
+        mock.onPatch('/api/provider_tasks/123456789').reply(204);
+        const expectedActions = [
+            {type: types.CANCELING_PROVIDER_TASK},
+            {type: types.CANCELED_PROVIDER_TASK},
+        ];
+
+        const store = mockStore({cancelProviderTask: {}});
+
+        return store.dispatch(actions.cancelProviderTask('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
 });
 
 const expectedRuns = [

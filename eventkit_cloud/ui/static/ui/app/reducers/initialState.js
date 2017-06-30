@@ -93,4 +93,9 @@ export default {
         licenses: [],
         error: null
     },
+    cancelProviderTask: {
+        canceling: false,
+        canceled: false,
+        error: null,
+    },
 }
