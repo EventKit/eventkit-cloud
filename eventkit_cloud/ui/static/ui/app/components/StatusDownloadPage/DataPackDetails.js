@@ -18,85 +18,89 @@ export class DataPackDetails extends React.Component {
         this.onSelectionToggle = this.onSelectionToggle.bind(this);
         this.checkAll = this.checkAll.bind(this);
         this.allChecked = this.allChecked.bind(this);
+        this.isDownloadAllDisabled = this.isDownloadAllDisabled.bind(this);
         this.state = {
-            selectedTasks: {},
-            taskCount: 0,
+            selectedProviders: {},
         }
     }
 
     componentDidMount() {
-        let selectedTasks = {}
+        let selectedProviders = {};
         this.props.providerTasks.forEach((provider) => {
-            provider.tasks.forEach((task) => {
-                selectedTasks[task.uid] = false;
-            })
+            if (provider.display == true) {
+                selectedProviders[provider.uid] = false;
+            }
         });
-        this.setState({selectedTasks: selectedTasks});
+        this.setState({selectedProviders: selectedProviders});
     }
 
     checkAll(e, checked) {
-        let taskCount = 0;
-        let stateTasks = {...this.state.selectedTasks}
-        let alteredTasks = {}
-        Object.keys(stateTasks).forEach((keyName) => {
-            alteredTasks[keyName] = checked;
-            if(checked == true){
-                taskCount++;
+        let stateProviders = {...this.state.selectedProviders};
+        let alteredTasks = {};
+        this.props.providerTasks.forEach((column) => {
+            if(column.display == true) {
+                let uid = column.uid;
+                alteredTasks[uid] = checked;
             }
-        });
-        this.setState({selectedTasks: alteredTasks, taskCount: taskCount});
+        })
+        this.setState({selectedProviders: alteredTasks});
     }
 
     allChecked() {
         let allChecked = true;
-        const keys = Object.keys(this.state.selectedTasks);
+        const keys = Object.keys(this.state.selectedProviders);
         if (!keys.length) {return false}
         for(const key in keys) {
-            if(!this.state.selectedTasks[keys[key]]){
-                allChecked = false
+            if(!this.state.selectedProviders[keys[key]]){
+                allChecked = false;
                 break
             }
         }
         return allChecked;
     }
 
-    onSelectionToggle(selectedTasks){
-        const tasks = Object.assign({}, this.state.selectedTasks, selectedTasks)
-        let taskCount = 0;
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if(selectedTasks[keyName] == true) {
-                taskCount++;
+    isDownloadAllDisabled() {
+        const keys = Object.keys(this.state.selectedProviders);
+        if(!keys.length) {return true}
+        for(const key in keys) {
+            if(this.state.selectedProviders[keys[key]]) {
+                return false;
             }
-        });
+        }
+        return true;
+    }
 
-        this.setState({selectedTasks : tasks, taskCount: taskCount})
+    onSelectionToggle(selectedProviders){
+        const providers = Object.assign({}, this.state.selectedProviders, selectedProviders);
+        this.setState({selectedProviders : providers})
     }
 
     handleDownload(event){
-        let downloadUids = [];
-        let selectedTasks = this.state.selectedTasks;
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if(selectedTasks[keyName] == true) {
-                downloadUids.push(keyName);
+        let providerUids = [];
+        let selectedProviders = this.state.selectedProviders;
+        Object.keys(selectedProviders).forEach((keyName, keyIndex) => {
+            if(selectedProviders[keyName] == true) {
+                providerUids.push(keyName);
             }
         });
 
-        let tasks = this.props.providerTasks;
+        let providers = this.props.providerTasks;
         let taskArray = [];
         let downloadUrls = [];
 
-        tasks.forEach((url) => {
-            url.tasks.forEach((task) => {
-                taskArray.push([task]);
-                downloadUids.forEach(function(uid) {
-                if (task.uid === uid) {
-                    downloadUrls.push(task.result.url);
+        providers.forEach((provider) => {
+            providerUids.forEach(function(uid) {
+                if (provider.uid === uid) {
+                    provider.tasks.forEach((task) => {
+                        if (task.display == true) {
+                            taskArray.push([task.result.url]);
+                        }
+                    });
                 }
-                });
             });
         });
 
-        downloadUrls.forEach((value, idx) => {
+        taskArray.forEach((value, idx) => {
             // setTimeout(() => {
             //     window.location.href = value;
             // }, idx * 500);
@@ -122,8 +126,41 @@ export class DataPackDetails extends React.Component {
         }
     }
 
+    getTableCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '80px';
+        }
+        else {
+            return '128px';
+        }
+    }
+
+    getToggleCellWidth() {
+        if(window.innerWidth <= 767) {
+            return '50px';
+        }
+        else {
+            return '70px';
+        }
+    }
+
+    getCheckboxStatus() {
+        let disableCheckbox = true;
+        this.props.providerTasks.forEach((provider) => {
+            if(provider.status != "COMPLETED"){
+                disableCheckbox = true;
+            }
+            else {
+                disableCheckbox = false;
+            }
+        });
+        return disableCheckbox;
+    }
+
 
     render() {
+        const tableCellWidth = this.getTableCellWidth();
+        const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
 
         const providers = this.props.providerTasks.filter((provider) => {
@@ -136,7 +173,7 @@ export class DataPackDetails extends React.Component {
                    Download Options
                 </div>
                 <Table
-                    style={{width:'100%', tableLayout: 'auto'}}
+                    style={{width:'100%', tableLayout: 'fixed'}}
                     selectable={false}
                 >
                     <TableHeader
@@ -145,35 +182,36 @@ export class DataPackDetails extends React.Component {
                         enableSelectAll={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn style={{width:'88px', fontSize: '14px'}}>
-                                <Checkbox 
+                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px', fontSize: '14px'}}>
+                                <Checkbox
+                                    disabled={this.getCheckboxStatus()}
                                     checked={this.allChecked()} 
                                     onCheck={this.checkAll}
                                     checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
                                     uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
                                 />
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{fontSize: textFontSize}}>
-                                DATA SETS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '128px', textAlign: 'center', fontSize: textFontSize}}>
-                                FILE SIZE
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width:'100px',textAlign: 'center', fontSize: textFontSize}}>
-                                PROGRESS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{width: '234px', textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', fontSize: textFontSize, whiteSpace: 'normal',}}>
                                 <RaisedButton
-                                    style={{width:'100%'}}
                                     backgroundColor={'rgba(179,205,224,0.5)'}
-                                    disabled={this.state.taskCount == 0}
+                                    disabled={this.isDownloadAllDisabled()}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
                                     labelStyle={{fontWeight:'bold', fontSize:textFontSize}}
                                     onTouchTap={this.handleDownload}
-                                    label="Download All Selected"
+                                    label="DOWNLOAD SELECTED DATA SETS"
                                     icon={<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>}
                                 />
+                            </TableHeaderColumn>
+
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth, textAlign: 'center', fontSize: textFontSize}}>
+                                FILE SIZE
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth,textAlign: 'center', fontSize: textFontSize}}>
+                                PROGRESS
+                            </TableHeaderColumn>
+                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+
                             </TableHeaderColumn>
 
                         </TableRow>
@@ -183,10 +221,11 @@ export class DataPackDetails extends React.Component {
                 {providers.map((provider) => (
                     <ProviderRow 
                         key={provider.uid} 
-                        onSelectionToggle={this.onSelectionToggle} 
+                        onSelectionToggle={this.onSelectionToggle}
+                        onProviderCancel={this.props.onProviderCancel}
                         updateSelectionNumber={this.updateSelectionNumber} 
                         provider={provider} 
-                        selectedTasks={this.state.selectedTasks}/>
+                        selectedProviders={this.state.selectedProviders}/>
                 ))}
            </div>
         )
@@ -195,6 +234,7 @@ export class DataPackDetails extends React.Component {
 
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
+    onProviderCancel: PropTypes.func.isRequired,
 }
 
 
