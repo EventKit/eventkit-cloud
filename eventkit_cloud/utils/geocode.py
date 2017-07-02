@@ -114,7 +114,7 @@ class GeoNames(GeocodeAdapter):
     def property_map(self, props):
         prop_map = {"name": "name", "province": "adminName2", "region": "adminName1", "country": "countryName"}
         for key, value in prop_map.iteritems():
-            props[key] = props[value]
+            props[key] = props.get(value)
         return props
 
 
@@ -158,7 +158,7 @@ def expand_bbox(original_bbox, new_bbox):
     :return: A list containing the two original lists.
     """
     if not original_bbox:
-        original_bbox = new_bbox
+        original_bbox = list(new_bbox)
         return original_bbox
     original_bbox[0] = min(new_bbox[0], original_bbox[0])
     original_bbox[1] = min(new_bbox[1], original_bbox[1])

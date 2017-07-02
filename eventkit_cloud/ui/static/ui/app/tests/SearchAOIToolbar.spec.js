@@ -50,13 +50,13 @@ describe('SearchAOIToolbar button', () => {
         expect(wrapper.instance().debouncer).toBeInstanceOf(Function);
     });
 
-    it('should handle geonames passed in', () => {
+    it('should handle geocode passed in', () => {
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         const spy = sinon.spy(wrapper.instance(), 'setState');
         let nextProps = getProps();
         nextProps.geocode.fetched = true;
-        nextProps.geocode.geocode = ['one', 'two', 'three'];
+        nextProps.geocode.data = ['one', 'two', 'three'];
         wrapper.setProps(nextProps);
         expect(spy.calledWith({suggestions: ['one', 'two', 'three']})).toBe(true);
     });
@@ -83,7 +83,7 @@ describe('SearchAOIToolbar button', () => {
 
     });
 
-    it('handleChange should call getGeonames', () => {
+    it('handleChange should call getGeocode', () => {
         let props = getProps();
         props.getGeocode = sinon.spy();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);

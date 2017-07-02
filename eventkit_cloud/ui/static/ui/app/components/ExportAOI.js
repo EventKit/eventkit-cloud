@@ -96,7 +96,6 @@ export class ExportAOI extends Component {
     }
 
     handleSearch(result) {
-        // const unformatted_bbox = result.bbox;
         const formatted_bbox = result.bbox;
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
@@ -109,10 +108,10 @@ export class ExportAOI extends Component {
         });
         this._drawLayer.getSource().addFeature(bboxFeature);
         let description = '';
-        description = description + (result.countryName ? result.countryName : '');
-        description = description + (result.adminName1 ? ', ' + result.adminName1 : '');
-        description = description + (result.adminName2 ? ', ' + result.adminName2 : '');
-        
+        description = description + (result.country ? result.country : '');
+        description = description + (result.province ? ', ' + result.province : '');
+        description = description + (result.region ? ', ' + result.region : '');
+
 
         this.props.updateAoiInfo(geojson, 'Polygon', result.name, description);
         this.props.setNextEnabled();
@@ -283,7 +282,7 @@ export class ExportAOI extends Component {
             <div>
                 <div id="map" className={styles.map}  style={mapStyle} ref="olmap">
                     <AoiInfobar />
-                    <SearchAOIToolbar 
+                    <SearchAOIToolbar
                         handleSearch={(result) => this.handleSearch(result)}
                         handleCancel={(sender) => this.handleCancel(sender)}/>
                     <DrawAOIToolbar handleCancel={(sender) => this.handleCancel(sender)}

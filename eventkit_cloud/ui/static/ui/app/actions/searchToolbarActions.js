@@ -13,7 +13,7 @@ export function getGeocode(query) {
             let features = responseData.features || [];
             let data = []
             features.forEach(function (feature) {
-                    if (feature.geometry || (feature.properties.lat && feature.properties.lng)) {
+                    if (feature.geometry) {
                       //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
                       for(const k in feature.properties) feature[k]=feature.properties[k];
                       data.push(feature)
