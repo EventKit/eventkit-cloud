@@ -13,7 +13,7 @@ def populate_new_fields(apps, schema_editor):
 
         et.result.id = i
         et.result.save()
-        et.new_result = i
+        et.new_result = et.result
         et.save()
 
 
