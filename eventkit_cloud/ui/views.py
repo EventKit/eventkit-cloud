@@ -10,11 +10,11 @@ from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
 from .data_estimator import get_size_estimate
-import requests
 from django.contrib.auth import authenticate, login
 from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
 from logging import getLogger
+from ..utils.geocode import Geocode
 
 logger = getLogger(__file__)
 
@@ -105,16 +105,13 @@ def require_email(request):
 
 
 @require_http_methods(['GET'])
-def request_geonames(request):
-    payload = {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': request.GET.get('q')}
-    geonames_url = getattr(settings, 'GEONAMES_API_URL')
-    if geonames_url:
-        response = requests.get(geonames_url, params=payload).json()
-        assert(isinstance(response, dict))
-        return HttpResponse(content=json.dumps(response), status=200, content_type="application/json")
+def geocode(request):
+    geocode = Geocode()
+    result = geocode.search(request.GET.get('search'))
+    if result:
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
-        return HttpResponse(content=json.dumps({'error': 'A url was not provided for geonames'}),
-                            status=500, content_type="application/json")
+        return HttpResponse(status=204, content_type="application/json")
 
 
 @require_http_methods(['GET'])

@@ -1,69 +1,69 @@
 import * as reducers from '../reducers/searchToolbarReducer'
 
-describe('getGeonames reducer', () => {
+describe('getGeocode reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.getGeonamesReducer(undefined, {})).toEqual(
+        expect(reducers.getGeocodeReducer(undefined, {})).toEqual(
             {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: null,
             }
         );
     });
 
-    it('should handle FETCHING_GEONAMES', () => {
-        expect(reducers.getGeonamesReducer( 
+    it('should handle FETCHING_GEOCODE', () => {
+        expect(reducers.getGeocodeReducer(
             {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: null,
             },
-            {type: 'FETCHING_GEONAMES'}
+            {type: 'FETCHING_GEOCODE'}
         )).toEqual(
             {
                 fetching: true,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: null,
             }
         );
     });
 
-    it('should handle RECEIVED_GEONAMES', () => {
-        expect(reducers.getGeonamesReducer(
+    it('should handle RECEIVED_GEOCODE', () => {
+        expect(reducers.getGeocodeReducer(
             {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: null,
             },
-            {type: 'RECEIVED_GEONAMES', geonames: ['name1', 'name2']}
+            {type: 'RECEIVED_GEOCODE', data: ['name1', 'name2']}
         )).toEqual(
             {
                 fetching: false,
                 fetched: true,
-                geonames: ['name1', 'name2'],
+                data: ['name1', 'name2'],
                 error: null,
             }
         );
     });
 
-    it('should handle FETCH_GEONAMES_ERROR', () => {
-        expect(reducers.getGeonamesReducer(
+    it('should handle FETCH_GEOCODE_ERROR', () => {
+        expect(reducers.getGeocodeReducer(
             {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: null,
             },
-            {type: 'FETCH_GEONAMES_ERROR', error: 'Oh no I had an error'}
+            {type: 'FETCH_GEOCODE_ERROR', error: 'Oh no I had an error'}
         )).toEqual(
             {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                data: [],
                 error: 'Oh no I had an error',
             }
         );
