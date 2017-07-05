@@ -215,6 +215,7 @@ describe('StatusDownload component', () => {
             rerunExport: (jobuid) => {},
             clearReRunInfo: () => {},
             cloneExport: (cartDetails, providerArray) => {},
+            cancelProviderTask: (providerUid) => {},
         }
     };
 
@@ -239,6 +240,27 @@ describe('StatusDownload component', () => {
         nextProps.datacartDetails.data = exampleRun;
         wrapper.setProps(nextProps);
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
+    });
+
+    it('getMarginPadding should return the pixel string for div padding based on window width', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getMarginPadding()).toEqual('0px');
+
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
     });
 
     it('should render a loading icon if data has not been received yet', () => {
