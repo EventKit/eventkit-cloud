@@ -45,6 +45,7 @@ export default {
         runs: [],
         error: null,
         nextPage: false,
+        range: '',
     },
     runsDeletion: {
         deleting: false,

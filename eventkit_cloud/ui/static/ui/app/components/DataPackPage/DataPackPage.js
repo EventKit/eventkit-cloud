@@ -192,6 +192,7 @@ export class DataPackPage extends React.Component {
 
     render() { 
         const pageTitle = "DataPack Library"
+        const range = this.props.runsList.range ? this.props.runsList.range.split('/') : null;
         const styles = {
             wholeDiv: {
                 height: window.innerHeight - 236,
@@ -231,7 +232,11 @@ export class DataPackPage extends React.Component {
             loadLess: {
                 color: this.props.runsList.runs.length > 12 ? '#4598bf': 'grey',
                 cursor: this.props.runsList.runs.length > 12 ? 'pointer': 'initial'
-            }
+            },
+            range: window.innerWidth < 768 ?
+                {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
+                :
+                {display: 'inline-block', position: 'absolute', color: '#a59c9c', lineHeight: '36px', right: '10px', fontSize: '12px'}
         };
 
         return (
@@ -320,25 +325,31 @@ export class DataPackPage extends React.Component {
                                     order={this.state.order}
                                 />
                             }
-                            <div style={{textAlign: 'center', paddingBottom: '10px', fontSize: '16px'}}>
-                                <RaisedButton 
-                                    backgroundColor={'#e5e5e5'}
-                                    labelColor={'#4498c0'}
-                                    label={'Show More'}
-                                    disabled={!this.props.runsList.nextPage}
-                                    onClick={this.loadMore}
-                                    icon={<KeyboardArrowDown/>}
-                                    style={{minWidth: '60px', marginRight: '5px'}}
-                                />
-                                <RaisedButton 
-                                    backgroundColor={'#e5e5e5'}
-                                    labelColor={'#4498c0'}
-                                    label={'Show Less'}
-                                    disabled={this.props.runsList.runs.length <= 12}
-                                    onClick={this.loadLess}
-                                    icon={<KeyboardArrowUp/>}
-                                    style={{minWidth: '60px'}}
-                                />
+                            <div style={{textAlign: 'center', paddingBottom: '10px', margin: '0px 10px', position: 'relative', height: '46px'}}>
+                                <div style={{display: 'inline-block'}}>
+                                    <RaisedButton 
+                                        backgroundColor={'#e5e5e5'}
+                                        labelColor={'#4498c0'}
+                                        label={'Show Less'}
+                                        disabled={this.props.runsList.runs.length <= 12}
+                                        onClick={this.loadLess}
+                                        icon={<KeyboardArrowUp/>}
+                                        style={{minWidth: '145px', marginRight: '2.5px'}}
+                                    />
+                                    
+                                    <RaisedButton 
+                                        backgroundColor={'#e5e5e5'}
+                                        labelColor={'#4498c0'}
+                                        label={'Show More'}
+                                        disabled={!this.props.runsList.nextPage}
+                                        onClick={this.loadMore}
+                                        icon={<KeyboardArrowDown/>}
+                                        style={{minWidth: '145px', marginLeft: '2.5px'}}
+                                    />
+                                </div>
+                                <div id='range' style={styles.range}>
+                                    {range ? `${range[0]} of ${range[1]}` : ''}
+                                </div>
                             </div>
                         </CustomScrollbar>
                         </div>

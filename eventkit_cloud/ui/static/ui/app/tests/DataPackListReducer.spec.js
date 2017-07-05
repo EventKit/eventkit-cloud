@@ -8,7 +8,8 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: ''
             }
         );
     });
@@ -20,7 +21,8 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: '',
             },
             {
                 type: 'FETCHING_RUNS'
@@ -31,7 +33,8 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: ''
             }
         );
     });
@@ -43,10 +46,11 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: ''
             },
             {
-                type: 'RECEIVED_RUNS', runs: [{thisIs: 'a fake run'}], nextPage: true
+                type: 'RECEIVED_RUNS', runs: [{thisIs: 'a fake run'}], nextPage: true, range: '12/24'
             }
         )).toEqual(
             {
@@ -54,7 +58,8 @@ describe('DataPackList reducer', () => {
                 fetched: true,
                 runs: [{thisIs: 'a fake run'}],
                 error: null,
-                nextPage: true
+                nextPage: true,
+                range: '12/24'
             }
         );
     });
@@ -65,7 +70,8 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: ''
             },
             {
                 type: 'FETCH_RUNS_ERROR', error: 'This is an error message'
@@ -76,7 +82,8 @@ describe('DataPackList reducer', () => {
                 fetched: false,
                 runs: [],
                 error: 'This is an error message',
-                nextPage: false
+                nextPage: false,
+                range: ''
             }
         );
     })

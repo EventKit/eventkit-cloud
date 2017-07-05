@@ -87,7 +87,7 @@ export class SearchAOIToolbar extends Component {
                             return(
                                 <Menu {...menuProps}>
                                     {results.map((result, index) => (
-                                        <TypeaheadMenuItem result={result} index={index}/>
+                                        <TypeaheadMenuItem result={result} index={index} key={index}/>
                                     ))
                                     }
                                 </Menu>        

@@ -33,7 +33,8 @@ describe('DataPackPage component', () => {
                 fetched: false,
                 runs: [],
                 error: null,
-                nextPage: false
+                nextPage: false,
+                range: '12/24'
             },
             user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
@@ -95,6 +96,8 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
         expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
         expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
+        expect(wrapper.find('#range')).toHaveLength(1);
+        expect(wrapper.find('#range').text()).toEqual('12 of 24')
         stateSpy.restore();
     });
 

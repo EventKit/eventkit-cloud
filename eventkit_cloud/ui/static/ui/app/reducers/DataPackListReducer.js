@@ -6,7 +6,7 @@ export function DataPackListReducer(state = initialState.runsList, action) {
         case types.FETCHING_RUNS:
             return {...state, fetching: true, fetched: false, error: null}
         case types.RECEIVED_RUNS:
-            return {...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage}
+            return {...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage, range: action.range}
         case types.FETCH_RUNS_ERROR:
             return {...state, fetching: false, fetched: false, runs: [], error: action.error};
         default:

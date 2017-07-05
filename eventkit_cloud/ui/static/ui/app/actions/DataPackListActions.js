@@ -12,6 +12,7 @@ export function getRuns(params) {
         }).then((response) => {
             let nextPage = false;
             let links = [];
+
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
@@ -21,7 +22,12 @@ export function getRuns(params) {
                 }
                 
             }
-            dispatch({type: types.RECEIVED_RUNS, runs: response.data, nextPage: nextPage});
+
+            let range = '';
+            if(response.headers['content-range']) {
+                range = response.headers['content-range'].split('-')[1]; 
+            }
+            dispatch({type: types.RECEIVED_RUNS, runs: response.data, nextPage: nextPage, range: range});
         }).catch(error => {
             dispatch({type: types.FETCH_RUNS_ERROR, error: error});
         });
