@@ -59,7 +59,7 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportTaskResult
-        fields = ('filename', 'size', 'url',)
+        fields = ('filename', 'size', 'url', 'deleted')
 
     def get_url(self, obj):
         request = self.context['request']
@@ -224,7 +224,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         model = ExportRun
         fields = (
             'uid', 'url', 'started_at', 'finished_at', 'duration', 'user',
-            'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration'
+            'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration', 'deleted'
         )
 
     @staticmethod

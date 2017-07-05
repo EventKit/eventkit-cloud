@@ -34,13 +34,11 @@ class CustomLogger(ProgressLog):
 
     def log_step(self, progress):
         from ..tasks.export_tasks import update_progress
-        if progress.eta.eta():
-            if self.task_uid:
-                if self.log_step_counter == 0:
-                    update_progress(self.task_uid, progress=progress.progress * 100,
-                                    estimated_finish=datetime.utcfromtimestamp(float(progress.eta.eta())))
-                    self.log_step_counter = self.log_step_step
-                self.log_step_counter -= 1
+        if self.task_uid:
+            if self.log_step_counter == 0:
+                update_progress(self.task_uid, progress=progress.progress * 100)
+                self.log_step_counter = self.log_step_step
+            self.log_step_counter -= 1
         super(CustomLogger, self).log_step(progress)
 
 
@@ -131,7 +129,6 @@ class ExternalRasterServiceToGeopackage(object):
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
-        logger.error(mapproxy_config)
         try:
             check_service(conf_dict)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
@@ -142,7 +139,9 @@ class ExternalRasterServiceToGeopackage(object):
                                                "progress_logger": progress_logger})
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
-        except Exception as e:
+            if task_process.exitcode != 0:
+                raise Exception("The Raster Service failed to complete, please contact an administrator.")
+        except Exception:
             logger.error("Export failed for url {}.".format(self.service_url))
             errors, informal_only = validate_options(mapproxy_config)
             if not informal_only:
@@ -155,7 +154,7 @@ class ExternalRasterServiceToGeopackage(object):
                 logger.error("Using Seed Configuration:")
                 logger.error(seed_dict)
                 raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
-            raise e
+            raise
         finally:
             connections.close_all()
         return self.gpkgfile

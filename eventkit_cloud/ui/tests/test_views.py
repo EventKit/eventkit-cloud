@@ -59,24 +59,20 @@ class TestUIViews(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, 'Providers or BBOX were not supplied in the request')
 
-    @patch('eventkit_cloud.ui.views.requests')
-    def test_request_geonames_view(self, requests):
-        expected_return = {"some": "json"}
-        response = Mock()
-        response.json.return_value = expected_return
-        requests.get.return_value = response
+    @patch('eventkit_cloud.ui.views.Geocode')
+    def test_geocode_view(self, mock_geocode):
+        expected_result = {"something": "value"}
+        # test result
+        geocode = Mock()
+        geocode.search.return_value = expected_result
+        mock_geocode.return_value = geocode
+        response = self.client.get('/geocode',{'search': 'some_search'})
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.content), expected_result)
 
-        with self.settings(GEONAMES_API_URL='http://api.geonames.org/something'):
-            response = self.client.get('/request_geonames',
-                              data={'q': 'test'},
-                              content_type='application/json')
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(json.loads(response.content), expected_return)
-
-        with self.settings(GEONAMES_API_URL=None):
-            expected_return = {'error': 'A url was not provided for geonames'}
-            response = self.client.get('/request_geonames',
-                             data={'q': 'test'},
-                             content_type='application/json')
-            self.assertEqual(response.status_code, 500)
-            self.assertEqual(json.loads(response.content), expected_return)
+        expected_result = None
+        # test result
+        geocode.search.return_value = expected_result
+        mock_geocode.return_value = geocode
+        response = self.client.get('/geocode', {'search': 'some_search'})
+        self.assertEquals(response.status_code, 204)

@@ -10,7 +10,6 @@ import socket
 
 from django.core.cache import caches
 from django.conf import settings
-from django.core.files.base import ContentFile
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
@@ -26,8 +25,7 @@ from ..utils import (
     external_service, wfs, arcgis_feature_service, sqlite, geopackage
 )
 import json
-from functools import wraps
-from .exceptions import CancelException
+from .exceptions import CancelException, DeleteException
 
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
@@ -45,7 +43,6 @@ class TaskStates(Enum):
     CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
-
     # or a non-zero exit code was returned.)
 
     @staticmethod
@@ -130,6 +127,7 @@ class ExportTask(LockingTask):
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.finished_at = finished
             task.progress = 100
+            task.pid = -1
             # get the output
             output_url = retval['result']
             stat = os.stat(output_url)
@@ -233,6 +231,7 @@ class ExportTask(LockingTask):
                 ).delay()
             return {'state': TaskStates.CANCELED.value}
         super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
+
 
     def update_task_state(self, result={}, task_uid=None):
         """
@@ -927,12 +926,14 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
 
     text = get_template('email/email.txt').render(ctx)
     html = get_template('email/email.html').render(ctx)
-    try:
-        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
-        msg.attach_alternative(html, "text/html")
-        msg.send()
-    except Exception as e:
-        logger.error("Encountered an error when sending status email: {}".format(e))
+
+    if not run.deleted:
+        try:
+            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+            msg.attach_alternative(html, "text/html")
+            msg.send()
+        except Exception as e:
+            logger.error("Encountered an error when sending status email: {}".format(e))
 
     result['stage_dir'] = stage_dir
     return result
@@ -978,7 +979,7 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
 
 
 @app.task(name='Cancel Export Provider Task', base=LockingTask)
-def cancel_export_provider_task(result={}, export_provider_task_uid=None, canceling_user=None):
+def cancel_export_provider_task(result={}, export_provider_task_uid=None, canceling_user=None, delete=False):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
     """
@@ -998,14 +999,19 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
 
     # Loop through both the tasks in the ExportProviderTask model, as well as the Task Chain in celery
     for export_task in export_tasks.filter(~Q(status=TaskStates.CANCELED.value)):
-        export_task.status = TaskStates.CANCELED.value
-        export_task.cancel_user = canceling_user
-        export_task.save()
+        if delete:
+            exception_class = DeleteException
+        else:
+            exception_class = CancelException
+        if TaskStates[export_task.status] not in TaskStates.get_finished_states():
+            export_task.status = TaskStates.CANCELED.value
+            export_task.cancel_user = canceling_user
+            export_task.save()
         # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
         # to pass task information to the users, then it may make sense to replace this.
         try:
-            raise CancelException(task_name=export_provider_task.name, user_name=canceling_user)
-        except CancelException as ce:
+            raise exception_class(task_name=export_provider_task.name, user_name=canceling_user)
+        except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
             ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
@@ -1013,15 +1019,17 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = ExportTaskResult.objects.filter(task=export_task).first()
         if task_result:
-            task_result.delete()
+            task_result.soft_delete()
 
-        if export_task.pid and export_task.worker:
-            kill_task.apply_async(kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
-                                  queue="{0}.cancel".format(export_task.worker),
-                                  priority=TaskPriority.CANCEL.value,
-                                  routing_key="{0}.cancel".format(export_task.worker))
+        if export_task.pid > 0 and export_task.worker:
+            kill_task.apply_async(
+                kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
+                queue="{0}.cancel".format(export_task.worker),
+                priority=TaskPriority.CANCEL.value,
+                routing_key="{0}.cancel".format(export_task.worker))
 
-    export_provider_task.status = TaskStates.CANCELED.value
+    if TaskStates[export_provider_task.status] not in TaskStates.get_finished_states():
+        export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
 
     # Because the task is revoked the follow on is never run... if using revoke this is required, if using kill,
@@ -1049,13 +1057,31 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
     return result
 
 
+@app.task(name='Cancel Run', base=LockingTask)
+def cancel_run(result={}, export_run_uid=None, canceling_user=None, revoke=None, delete=False):
+    from ..tasks.models import ExportRun
+
+    export_run = ExportRun.objects.filter(uid=export_run_uid).first()
+
+    if not export_run:
+        result['result'] = False
+        return result
+
+    for export_provider_task in export_run.provider_tasks.all():
+        # Note that a user object `canceling_user` can't be serialized if using apply_async or delay query user after call.
+        cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid,
+                                        canceling_user=canceling_user,
+                                        delete=delete)
+    result['result'] = True
+    return result
+
+
 @app.task(name='Kill Task', base=LockingTask)
 def kill_task(result={}, task_pid=None, celery_uid=None):
     """
     Asks a worker to kill a task.
     """
 
-    # This all works but isn't helpful until priority queues are supported.
     import os, signal
     import celery
 
@@ -1087,18 +1113,18 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
         return
     if progress > 100:
         progress = 100
-    try:
-        # We need to close the existing connection because the logger could be using a forked process which,
-        # will be invalid and throw an error.
-        connection.close()
-        export_task = ExportTask.objects.get(uid=task_uid)
-    except ExportTask.DoesNotExist:
-        return
+
+    # We need to close the existing connection because the logger could be using a forked process which,
+    # will be invalid and throw an error.
+    connection.close()
+
+    export_task = ExportTask.objects.get(uid=task_uid)
     if progress:
         export_task.progress = progress
     if estimated_finish:
         export_task.estimated_finish = estimated_finish
     export_task.save()
+
 
 
 def parse_result(task_result, key=''):
@@ -1116,4 +1142,3 @@ def parse_result(task_result, key=''):
                 return result.get(key)
     elif isinstance(task_result, dict):
         return task_result.get(key)
-

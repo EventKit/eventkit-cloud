@@ -51,7 +51,7 @@ describe('TypeaheadMenuItem component', () => {
     });
 
     it('createDescription should return the proper description', () => {
-        const result = {name: 'test name', adminName1: 'admin name1', adminName2: 'admin name2', countryName: 'country name'}
+        const result = {name: 'test name', province: 'admin name1', region: 'admin name2', countryName: 'country name'}
         let props = getProps();
         let context = getContext();
         const wrapper = mount(
@@ -75,8 +75,8 @@ describe('TypeaheadMenuItem component', () => {
         let context = getContext();
         props.result.bbox = {'east': '180'};
         props.result.name = 'test name';
-        props.result.adminName1 = 'admin name1';
-        props.result.adminName2 = 'admin name2';
+        props.result.province = 'admin name1';
+        props.result.region = 'admin name2';
         props.result.countryName = 'country name';
         const wrapper = mount(
             <TypeaheadMenuItem {...props}/>, {

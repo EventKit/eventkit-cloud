@@ -1,27 +1,29 @@
 import axios from 'axios'
-import isEqual from 'lodash/isEqual';
 
-
-export function getGeonames(query) {
+export function getGeocode(query) {
     return (dispatch) => {
-        dispatch({type: "FETCHING_GEONAMES"});
-        return axios.get('/request_geonames', {
+        dispatch({type: "FETCHING_GEOCODE"});
+        return axios.get('/geocode', {
             params: {
-                q: query
+                search: query
             }
         }).then(response => {
             return response.data;
         }).then(responseData => {
-            let data = responseData.geonames;
-            let geonames = []
-            for (var i = 0; i < data.length; i++) {
-                if ((data[i].bbox && !isEqual(data[i].bbox, {})) || (data.lat && data.lng)) {
-                    geonames.push(data[i]);
+            let features = responseData.features || [];
+            let data = []
+            features.forEach(function (feature) {
+                    if (feature.geometry) {
+                      //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
+                      for(const k in feature.properties) feature[k]=feature.properties[k];
+                      data.push(feature)
+                    }
                 }
-            }
-            dispatch({type: "RECEIVED_GEONAMES", geonames: geonames});
+            )
+
+            dispatch({type: "RECEIVED_GEOCODE", data: data});
         }).catch(error => {
-            dispatch({type: "GEONAMES_ERROR", error: error});
+            dispatch({type: "GEOCODE_ERROR", error: error});
         });
     }
 }
