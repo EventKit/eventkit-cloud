@@ -22,7 +22,6 @@ export class TypeaheadMenuItem extends Component {
     }
 
     render() {
-        console.log(this.props.result);
         return (
             <MenuItem option={this.props.result} position={this.props.index} className={styles.menuItem}>
                 <div className={styles.menuItemIconDiv}>
