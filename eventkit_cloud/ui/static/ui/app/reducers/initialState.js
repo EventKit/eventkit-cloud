@@ -18,10 +18,10 @@ export default {
     resetMap: {
         click: false
     },
-    geonames: {
+    geocode: {
         fetching: false,
         fetched: false,
-        geonames: [],
+        data: [],
         error: null,
     },
     user: userInitialState,
