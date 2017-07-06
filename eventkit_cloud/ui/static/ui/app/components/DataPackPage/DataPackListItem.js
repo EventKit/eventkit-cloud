@@ -48,17 +48,19 @@ export class DataPackListItem extends Component {
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
-                    titleStyle={{fontSize: titleFontSize}}
+                    titleStyle={{fontSize: titleFontSize, height: '36px'}}
                     subtitleStyle={{fontSize: subtitleFontSize}}
                     title={
                         <div>
-                            <span>
-                                <Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>
+                            <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
+                                <Link 
+                                    to={'/status/' + this.props.run.job.uid} 
+                                    style={{color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                                     {this.props.run.job.name}
                                 </Link>
-                            </span>
+                            </div>
                             <IconMenu
-                                style={{float: 'right'}}
+                                style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
                                     <IconButton 
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}

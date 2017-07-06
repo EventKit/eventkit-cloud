@@ -32,39 +32,41 @@ export class DataPackGridItem extends Component {
     }
 
     getTitleFontSize() {
-        if(window.innerWidth <= 575) {
-            return '20px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '21px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '22px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '23px';
-        }
-        else {
-            return '24px';
-        }
+        return 22;
+        // if(window.innerWidth <= 575) {
+        //     return '20px';
+        // }
+        // else if (window.innerWidth <= 767) {
+        //     return '21px';
+        // }
+        // else if (window.innerWidth <= 991) {
+        //     return '22px';
+        // }
+        // else if(window.innerWidth <= 1199) {
+        //     return '23px';
+        // }
+        // else {
+        //     return '24px';
+        // }
     }
 
     getCardTextFontSize() {
-        if(window.innerWidth <= 575) {
-            return '10px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '11px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '12px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '13px';
-        }
-        else {
-            return '14px';
-        }
+        return 12;
+        // if(window.innerWidth <= 575) {
+        //     return 10;
+        // }
+        // else if (window.innerWidth <= 767) {
+        //     return 11;
+        // }
+        // else if (window.innerWidth <= 991) {
+        //     return 12;
+        // }
+        // else if(window.innerWidth <= 1199) {
+        //     return 13;
+        // }
+        // else {
+        //     return 14;
+        // }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -126,14 +128,15 @@ export class DataPackGridItem extends Component {
             },
             cardTitle:{
                 wordWrap: 'break-word',
+                padding: '10px'
             },
-            cardTitle2: {fontSize: titleFontSize},
+            cardTitle2: {fontSize: titleFontSize, height: '36px'},
             cardSubtitle: {fontSize: cardTextFontSize},
             completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
             errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
             runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
             unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
+            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
             ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
         };
 
@@ -146,9 +149,14 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <span><Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
+                            <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
+                                <Link 
+                                    to={'/status/' + this.props.run.job.uid} 
+                                    style={{color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0px'}}
+                                >{this.props.run.job.name}</Link>
+                            </div>
                             <IconMenu
-                                style={{float: 'right'}}
+                                style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
                                     <IconButton 
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
@@ -178,16 +186,16 @@ export class DataPackGridItem extends Component {
                     } 
                     subtitle={
                         <div>
-                        <span>{'Event: ' + this.props.run.job.event}</span><br/>
+                        <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{'Event: ' + this.props.run.job.event}</div>
                         <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
                         <span>{'Expires: ' + moment(this.props.run.expiration).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
-                <CardText style={{fontSize: cardTextFontSize}}>
-                    <span>{this.props.run.job.description}</span>
+                <CardText style={{fontSize: cardTextFontSize, padding: '0px 10px', marginBottom: '10px', height: '51px', overflow: 'hidden', wordWrap: 'break-word'}}>
+                    {this.props.run.job.description}
                 </CardText>
                 <CardMedia expandable={true}>
-                    <div id={this.props.run.uid + '_map'} className={style.map} />
+                    <div id={this.props.run.uid + '_map'} className={style.map}/>
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>
