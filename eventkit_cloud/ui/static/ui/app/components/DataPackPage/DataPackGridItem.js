@@ -129,6 +129,16 @@ export class DataPackGridItem extends Component {
                 height: window.innerWidth < 768 ? '42px' : '51px', 
                 overflow: this.state.overflow ? 'visible' : 'hidden', 
                 position: 'relative'
+            },
+            titleLink: {
+                color: 'inherit', 
+                display: 'block', 
+                width: '100%', 
+                height: '36px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                margin: '0px'
             }
         };
 
@@ -144,7 +154,7 @@ export class DataPackGridItem extends Component {
                             <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
                                 <Link 
                                     to={'/status/' + this.props.run.job.uid} 
-                                    style={{color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0px'}}
+                                    style={styles.titleLink}
                                 >{this.props.run.job.name}</Link>
                             </div>
                             <IconMenu

@@ -41,6 +41,8 @@ export class DataPackListItem extends Component {
             unpublishedIcon: {height: subtitleHeight, float: 'right', color: 'grey', marginRight: '5px'},
             publishedIcon : {height: subtitleHeight, float: 'right', color: '#bcdfbb', marginRight: '5px'},
             ownerLabel: {float: 'right', color: 'grey'},
+            eventText: {height: subtitleHeight, lineHeight: subtitleHeight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'},
+            titleLink: {color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}
         };
 
         return (
@@ -55,7 +57,7 @@ export class DataPackListItem extends Component {
                             <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
                                 <Link 
                                     to={'/status/' + this.props.run.job.uid} 
-                                    style={{color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                                    style={styles.titleLink}>
                                     {this.props.run.job.name}
                                 </Link>
                             </div>
@@ -86,7 +88,7 @@ export class DataPackListItem extends Component {
                     } 
                     subtitle={
                         <div>
-                            <div style={{height: subtitleHeight, lineHeight: subtitleHeight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                            <div style={styles.eventText}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
                             <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
