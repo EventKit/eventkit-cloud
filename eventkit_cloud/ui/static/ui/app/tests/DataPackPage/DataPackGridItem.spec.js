@@ -61,6 +61,8 @@ describe('DataPackGridItem component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        mountSpy.restore();
+        stateSpy.restore();
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -108,6 +110,7 @@ describe('DataPackGridItem component', () => {
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
         expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
+        updateSpy.restore();
     });
 
     it('getTitleFontSize should return the font string for title based on window width', () => {
@@ -159,6 +162,27 @@ describe('DataPackGridItem component', () => {
         expect(window.innerWidth).toEqual(1200);
         expect(wrapper.instance().getCardTextFontSize()).toEqual('14px');
     });
+
+    it('handleExpandChange should set expanded to the passed in state', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().handleExpandChange(false);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('toggleExpanded should set expanded state to its negatation', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        expect(wrapper.state().expanded).toBe(false);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().toggleExpanded();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        stateSpy.restore();
+    })
 });
 
 function getRuns() {

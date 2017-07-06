@@ -106,7 +106,6 @@ export class DataPackGridItem extends Component {
         });
         map.addLayer(layer);
         map.getView().fit(source.getExtent(), map.getSize());
-
     }
 
     handleExpandChange = (expanded) => {
