@@ -218,14 +218,17 @@ describe('DataPackPage component', () => {
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
         const props = getProps();
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const makeRequestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = shallow(<DataPackPage {...props}/>);
         expect(makeRequestSpy.calledOnce).toBe(true);
         let nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
         wrapper.setProps(nextProps);
+        expect(stateSpy.calledWith({loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
         expect(makeRequestSpy.calledTwice).toBe(true);
         makeRequestSpy.restore();
+        stateSpy.restore();
     });
 
     it('handleSortChange should set state and call makeRunRequest', () => {

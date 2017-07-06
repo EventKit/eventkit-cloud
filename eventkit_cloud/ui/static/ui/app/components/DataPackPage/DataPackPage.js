@@ -68,7 +68,7 @@ export class DataPackPage extends React.Component {
         }
         if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
             if(nextProps.runsDeletion.deleted) {
-                this.makeRunRequest();
+                this.setState({loading: true}, this.makeRunRequest);
             }
         }
     }
@@ -107,7 +107,7 @@ export class DataPackPage extends React.Component {
         const minDate = this.state.minDate ? `&min_date=${this.state.minDate.toISOString().substring(0, 10)}` : '';
         let maxDate = ''
         if(this.state.maxDate) {
-            maxDate = this.state.maxDate;
+            maxDate = new Date(this.state.maxDate.getTime());
             maxDate.setDate(maxDate.getDate() + 1);
             maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
         }
@@ -274,18 +274,6 @@ export class DataPackPage extends React.Component {
                         onFilterApply={this.handleFilterApply} 
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}/>
-
-                    {/*{this.props.runsDeletion.deleting ? 
-                        <div style={{zIndex: 10, position: 'absolute', width: '100%', height: window.innerHeight - 236, display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
-                            <CircularProgress 
-                                style={{margin: 'auto', display: 'block'}} 
-                                color={'#4598bf'}
-                                size={50}
-                            />
-                        </div>
-                    : 
-                        null 
-                    }*/}
 
                     {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
