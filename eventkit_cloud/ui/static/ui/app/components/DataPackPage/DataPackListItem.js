@@ -86,7 +86,7 @@ export class DataPackListItem extends Component {
                     } 
                     subtitle={
                         <div>
-                            <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
+                            <div style={{height: subtitleHeight, lineHeight: subtitleHeight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
                             <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
