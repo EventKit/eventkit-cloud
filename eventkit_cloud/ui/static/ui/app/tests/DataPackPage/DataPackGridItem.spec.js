@@ -130,14 +130,34 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapper(props);
         const expectedBool = !wrapper.state().overflow;
         const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
-        // const div = TestUtils.findRenderedDOMComponentWithTag(wrapper.instance())
         const div = TestUtils.findRenderedComponentWithType(wrapper.instance(), CardText);
         const node = ReactDOM.findDOMNode(div);
         TestUtils.Simulate.touchTap(node);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({overflow: expectedBool})).toBe(true);
+        stateSpy.restore();
     });
-    
+
+    it('handleExpandChange should set expanded to the passed in state', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().handleExpandChange(false);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('toggleExpanded should set expanded state to its negatation', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        expect(wrapper.state().expanded).toBe(false);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().toggleExpanded();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        stateSpy.restore();
+    })
 });
 
 function getRuns() {

@@ -39,7 +39,7 @@ export class DataPackGrid extends Component {
             },
         };
 
-        return (
+        return ( 
             <div style={styles.root}>
                 <GridList
                     cellHeight={'auto'}
