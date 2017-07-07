@@ -135,14 +135,22 @@ export class ProviderRow extends React.Component {
         });
     }
 
-        // getTimeRemaining(task){
-    //     let date = moment(task.estimated_finish);
-    //     let now = moment();
-    //     let timeRemaining = date - now;
-    //     timeRemaining = timeRemaining/1000;
-    //     return timeRemaining;
-    //     //task.progress == 100 ? '' : task.progress + ' %'
-    // }
+    getTimeRemaining(task) {
+        if (task.estimated_finish != null) {
+            var now = moment().format('YYYY-MM-DD HH:mm:ss')
+            var then = moment(task.estimated_finish).format('YYYY-MM-DD HH:mm:ss');
+
+            var ms = moment(then, "YYYY-MM-DD HH:mm:ss").diff(moment(now, "YYYY-MM-DD HH:mm:ss"));
+            var d = moment.duration(ms).humanize();
+            //var s = Math.floor(d.asHours()) + moment.utc(ms).format(":mm:ss");
+            return d;
+        }
+        else {
+            return '0';
+        }
+
+    }
+
 
     getTaskStatus(task) {
         switch (task.status) {
@@ -159,7 +167,7 @@ export class ProviderRow extends React.Component {
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
-                return <span><LinearProgress mode="determinate" value={task.progress}/>{task.progress == 100 ? '' : task.progress + ' %'}</span>;
+                return <span><LinearProgress mode="determinate" value={task.progress}/>{this.getTimeRemaining(task) + ' left'}</span>;
             case "CANCELED":
                 return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
             default:
@@ -268,7 +276,7 @@ export class ProviderRow extends React.Component {
             return '80px';
         }
         else {
-            return '128px';
+            return '120px';
         }
     }
 
@@ -324,7 +332,7 @@ export class ProviderRow extends React.Component {
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
                     <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '10px', paddingLeft: '10px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
