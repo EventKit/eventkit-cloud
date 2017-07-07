@@ -24,14 +24,14 @@ export class PermissionsFilter extends Component {
                             style={{width:'100px', float: 'left'}}
                             iconStyle={{fill: 'grey', marginRight: '5px'}}
                             labelStyle={{color: 'grey'}}
-                            value={"Private"}
+                            value={'False'}
                             label={"Private"}
                         />
                         <RadioButton
                             style={{width:'100px', float: 'left'}}
                             iconStyle={{fill: 'grey', marginRight: '5px'}}
                             labelStyle={{color: 'grey'}}
-                            value={"Public"}
+                            value={"True"}
                             label={"Public"}
                         />
                     </RadioButtonGroup>

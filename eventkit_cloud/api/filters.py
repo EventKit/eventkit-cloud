@@ -13,6 +13,10 @@ from rest_framework.filters import BaseFilterBackend
 
 logger = logging.getLogger(__name__)
 
+class ListFilter(django_filters.Filter):
+    def filter(self, qs, value):
+        value_list = value.split(u',')
+        return super(ListFilter, self).filter(qs, django_filters.fields.Lookup(value_list, 'in'))
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""
@@ -49,11 +53,16 @@ class JobFilter(django_filters.FilterSet):
 
 class ExportRunFilter(django_filters.FilterSet):
     """Filter export runs by status."""
-    status = django_filters.CharFilter(name="status", lookup_expr="icontains")
+    user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
+    status = ListFilter(name="status")
     job_uid = django_filters.CharFilter(name="job__uid", lookup_expr="exact")
+    min_date = django_filters.DateFilter(name="started_at", lookup_expr="gte")
+    max_date = django_filters.DateFilter(name="started_at", lookup_expr="lte")
+    started_at = django_filters.DateTimeFilter(name="started_at", lookup_expr="exact")
+    published = django_filters.BooleanFilter(name="job__published", lookup_expr="exact")
 
     class Meta:
         model = ExportRun
-        fields = ('status',)
-        order_by = ('-started_at',)
+        fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
+                  'started_at', 'published')
 

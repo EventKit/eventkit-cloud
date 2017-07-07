@@ -33,8 +33,8 @@ export class StatusFilter extends Component {
                         style={{width: '100px', float: 'left'}}
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
                         labelStyle={{color: 'grey'}}
-                        onCheck={(e, v)=> {this.props.onChange({running: v})}}
-                        checked={this.props.running}
+                        onCheck={(e, v)=> {this.props.onChange({submitted: v})}}
+                        checked={this.props.submitted}
                     />
                     <NotificationSync style={{float: 'right', marginLeft: '20px', fill: '#f4D225', height: '26px', marginBottom: '2px'}}/>
 
@@ -57,7 +57,7 @@ StatusFilter.propTypes = {
    onChange: React.PropTypes.func.isRequired,
    completed: React.PropTypes.bool.isRequired,
    incomplete: React.PropTypes.bool.isRequired,
-   running: React.PropTypes.bool.isRequired
+   submitted: React.PropTypes.bool.isRequired
 }
 
 export default StatusFilter;
