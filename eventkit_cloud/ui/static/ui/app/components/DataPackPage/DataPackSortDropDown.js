@@ -1,7 +1,6 @@
 import React, {PropTypes} from 'react';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
-import * as utils from '../../utils/sortUtils';
 
 export class DataPackSortDropDown extends React.Component {
 
@@ -80,10 +79,10 @@ export class DataPackSortDropDown extends React.Component {
                 underlineStyle={styles.underline}
                 selectedMenuItemStyle={styles.selectedItem}
             >
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={utils.orderNewest} primaryText={"Newest"}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={utils.orderOldest} primaryText={"Oldest "}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={utils.orderAZ} primaryText={"Name (A-Z)"}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={utils.orderZA} primaryText={"Name (Z-A)"}/>
+                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-started_at'} primaryText={"Newest"}/>
+                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'started_at'} primaryText={"Oldest "}/>
+                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'job__name'} primaryText={"Name (A-Z)"}/>
+                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__name'} primaryText={"Name (Z-A)"}/>
             </DropDownMenu>
         );
     }
@@ -92,7 +91,7 @@ export class DataPackSortDropDown extends React.Component {
 
 DataPackSortDropDown.propTypes = {
     handleChange: PropTypes.func.isRequired,
-    value: PropTypes.func.isRequired
+    value: PropTypes.string.isRequired
 };
 
 export default DataPackSortDropDown;

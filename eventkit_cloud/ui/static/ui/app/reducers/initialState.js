@@ -18,10 +18,10 @@ export default {
     resetMap: {
         click: false
     },
-    geonames: {
+    geocode: {
         fetching: false,
         fetched: false,
-        geonames: [],
+        data: [],
         error: null,
     },
     user: userInitialState,
@@ -44,6 +44,8 @@ export default {
         fetched: false,
         runs: [],
         error: null,
+        nextPage: false,
+        range: '',
     },
     runsDeletion: {
         deleting: false,
@@ -91,5 +93,10 @@ export default {
         fetched: false,
         licenses: [],
         error: null
+    },
+    cancelProviderTask: {
+        canceling: false,
+        canceled: false,
+        error: null,
     },
 }

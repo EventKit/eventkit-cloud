@@ -4,7 +4,6 @@ import {mount, shallow} from 'enzyme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Menu from 'material-ui/Menu';
-import * as utils from '../../utils/sortUtils';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
@@ -13,7 +12,7 @@ describe('DataPackSortDropDown component', () => {
     const getProps = () => {
         return {
             handleChange: () => {},
-            value: utils.orderNewest
+            value: '-started_at'
         }
     }
     injectTapEventPlugin();
@@ -39,7 +38,7 @@ describe('DataPackSortDropDown component', () => {
 
     it('should render with text "Oldest"', () => {
         let props = getProps();
-        props.value = utils.orderOldest;
+        props.value = 'started_at';
         const wrapper = mount(<DataPackSortDropDown {...props}/> , {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -49,7 +48,7 @@ describe('DataPackSortDropDown component', () => {
 
     it('should render with text "Name (A-Z)"', () => {
         let props = getProps();
-        props.value = utils.orderAZ;
+        props.value = 'job__name';
         const wrapper = mount(<DataPackSortDropDown {...props}/> , {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -59,7 +58,7 @@ describe('DataPackSortDropDown component', () => {
 
     it('should render with text "Name (Z-A)"', () => {
         let props = getProps();
-        props.value = utils.orderZA;
+        props.value = '-job__name';
         const wrapper = mount(<DataPackSortDropDown {...props}/> , {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
@@ -96,13 +95,13 @@ describe('DataPackSortDropDown component', () => {
             event,
             {
                 props: {
-                    value: utils.orderOldest,
+                    value: 'started_at',
                 },
             },
             2
         );
         expect(menu.state().open).toEqual(false);
-        expect(props.handleChange.calledWith(event, 2, utils.orderOldest)).toEqual(true);
+        expect(props.handleChange.calledWith(event, 2, 'started_at')).toEqual(true);
     });
 
     it('getPx should return the size string for the specified item based on window width', () => {

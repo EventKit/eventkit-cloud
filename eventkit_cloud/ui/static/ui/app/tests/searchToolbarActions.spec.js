@@ -9,27 +9,33 @@ const mockStore = configureMockStore(middlewares)
 
 describe('async searchToolbar actions', () => {
 
-    const geonames = {geonames: [
-        {name: 'Hanoi', bbox: {east: 105.731049, south: 20.935789, west: 105.933609, north: 21.092829}},
-        {name: 'No Bbox', bbox: {}}
-    ]}
+    const geocode = {features: [
+        {bbox: [105.731049, 20.935789, 105.933609, 21.092829], geometry: "some_geom",
+            properties: {name: "Hanoi"}},
+        {bbox: null, properties: {name: "Hanoi"}},
+    ]
+    }
 
-    const expectedGeonames = [geonames.geonames[0]]
+    const expectedGeocode = [{bbox: [105.731049, 20.935789, 105.933609, 21.092829],
+                                name: "Hanoi",
+                                geometry: "some_geom",
+                                properties: {name: "Hanoi"}
+                            }]
 
     it('getGeonames should create RECEIVED_GEONAMES after fetching', () => {
 
         var mock = new MockAdapter(axios, {delayResponse: 1000});
 
-        mock.onGet('/request_geonames').reply(200, geonames);
+        mock.onGet('/geocode').reply(200, geocode);
 
         const expectedActions = [
-            {type: 'FETCHING_GEONAMES'},
-            {type: 'RECEIVED_GEONAMES', geonames: expectedGeonames}
+            {type: 'FETCHING_GEOCODE'},
+            {type: 'RECEIVED_GEOCODE', data: expectedGeocode}
         ]
 
-        const store = mockStore({ geonames: [] })
+        const store = mockStore({ geocode: [] })
 
-        return store.dispatch(actions.getGeonames('Hanoi'))
+        return store.dispatch(actions.getGeocode('Hanoi'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions)
             })

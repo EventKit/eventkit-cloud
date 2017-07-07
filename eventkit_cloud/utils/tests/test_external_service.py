@@ -193,4 +193,4 @@ class TestLogger(TransactionTestCase):
         mock_progress.progress = test_progress
         mock_progress.eta.eta.return_value = test_timestamp
         custom_logger.log_step(mock_progress)
-        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100, estimated_finish=datetime.utcfromtimestamp(float(test_timestamp)))
+        mock_update_progress.assert_called_once_with(test_task_uid, progress=test_progress*100)

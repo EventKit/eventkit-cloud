@@ -33,7 +33,7 @@ export class LoginPage extends React.Component {
             },
             paper: {
                 display: 'inline-block',
-                backgroundImage: "url('../../../images/topoBackground.jpg')",
+                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
                 height: '390px',

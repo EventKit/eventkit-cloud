@@ -88,4 +88,26 @@ export function clearReRunInfo() {
     return {
         type: types.CLEAR_RERUN_INFO,
     }
-}
+};
+export function cancelProviderTask(uid) {
+    return (dispatch) => {
+
+        dispatch({type: types.CANCELING_PROVIDER_TASK});
+
+        const csrftoken = cookie.load('csrftoken');
+
+        const form_data = new FormData();
+        form_data.append('csrfmiddlewaretoken', csrftoken);
+
+        return axios({
+            url: '/api/provider_tasks/' + uid,
+            method: 'PATCH',
+            data: form_data,
+            headers: {"X-CSRFToken": csrftoken}
+        }).then((response) => {
+            dispatch({type: types.CANCELED_PROVIDER_TASK});
+        }).catch(error => {
+            dispatch({type: types.CANCEL_PROVIDER_TASK_ERROR, error: error});
+        });
+    }
+};

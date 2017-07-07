@@ -14,13 +14,13 @@ describe('SearchAOIToolbar button', () => {
     const getProps = () => {
         return {
             toolbarIcons: {search: 'DEFAULT'},
-            geonames: {
+            geocode: {
                 fetching: false,
                 fetched: false,
-                geonames: [],
+                geocode: [],
                 error: null,
             },
-            getGeonames: () => {},
+            getGeocode: () => {},
             handleSearch: () => {},
             handleCancel: () => {},
             setAllButtonsDefault: () => {},
@@ -50,13 +50,13 @@ describe('SearchAOIToolbar button', () => {
         expect(wrapper.instance().debouncer).toBeInstanceOf(Function);
     });
 
-    it('should handle geonames passed in', () => {
+    it('should handle geocode passed in', () => {
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         const spy = sinon.spy(wrapper.instance(), 'setState');
         let nextProps = getProps();
-        nextProps.geonames.fetched = true;
-        nextProps.geonames.geonames = ['one', 'two', 'three'];
+        nextProps.geocode.fetched = true;
+        nextProps.geocode.data = ['one', 'two', 'three'];
         wrapper.setProps(nextProps);
         expect(spy.calledWith({suggestions: ['one', 'two', 'three']})).toBe(true);
     });
@@ -66,7 +66,7 @@ describe('SearchAOIToolbar button', () => {
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         const spy = sinon.spy(wrapper.instance(), 'setState');
         let nextProps = getProps();
-        nextProps.geonames.error = 'Fake error';
+        nextProps.geocode.error = 'Fake error';
         wrapper.setState({suggestions: ['one', 'two', 'three']})
         wrapper.setProps(nextProps);
         expect(spy.calledWith({suggestions: []})).toBe(true);
@@ -83,12 +83,12 @@ describe('SearchAOIToolbar button', () => {
 
     });
 
-    it('handleChange should call getGeonames', () => {
+    it('handleChange should call getGeocode', () => {
         let props = getProps();
-        props.getGeonames = sinon.spy();
+        props.getGeocode = sinon.spy();
         const wrapper = shallow(<SearchAOIToolbar {...props}/>);
         wrapper.instance().handleChange('rio');
-        expect(props.getGeonames.calledWith('rio')).toEqual(true);
+        expect(props.getGeocode.calledWith('rio')).toEqual(true);
     });
 
     it('handleEnter should only clear the suggestions', () => {

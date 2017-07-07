@@ -42,7 +42,8 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(MenuItem)).toHaveLength(0);
         const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
         expect(subtitle.find('span').first().text()).toEqual('Event: Test1 event');
-        expect(subtitle.find('span').last().text()).toEqual('Added: 2017-03-10');
+        expect(subtitle.find('span').at(1).text()).toEqual('Added: 2017-03-10');
+        expect(subtitle.find('span').at(2).text()).toEqual('Expires: 2017-03-24');
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
         expect(wrapper.find(CardMedia)).toHaveLength(1);
@@ -60,6 +61,8 @@ describe('DataPackGridItem component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        mountSpy.restore();
+        stateSpy.restore();
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -107,6 +110,7 @@ describe('DataPackGridItem component', () => {
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
         expect(wrapper.find('#' + uid + '_map')).toHaveLength(0);
+        updateSpy.restore();
     });
 
     it('getTitleFontSize should return the font string for title based on window width', () => {
@@ -158,6 +162,27 @@ describe('DataPackGridItem component', () => {
         expect(window.innerWidth).toEqual(1200);
         expect(wrapper.instance().getCardTextFontSize()).toEqual('14px');
     });
+
+    it('handleExpandChange should set expanded to the passed in state', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().handleExpandChange(false);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('toggleExpanded should set expanded state to its negatation', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
+        const wrapper = shallow(<DataPackGridItem {...props}/>);
+        expect(wrapper.state().expanded).toBe(false);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.instance().toggleExpanded();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        stateSpy.restore();
+    })
 });
 
 function getRuns() {

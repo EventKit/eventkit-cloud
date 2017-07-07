@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import styles from '../styles/SearchAOIToolbar.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
-import {getGeonames} from '../actions/searchToolbarActions';
+import {getGeocode} from '../actions/searchToolbarActions';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
 import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../actions/mapToolActions';
@@ -30,8 +30,8 @@ export class SearchAOIToolbar extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.geonames.fetched == true) {
-            this.setState({suggestions: nextProps.geonames.geonames});
+        if(nextProps.geocode.fetched == true) {
+            this.setState({suggestions: nextProps.geocode.data});
         }
         else {
             if(this.state.suggestions.length > 0) {
@@ -48,7 +48,7 @@ export class SearchAOIToolbar extends Component {
     handleChange(e) {
         // If 2 or more characters are entered then make request for suggested names.
         if(e.length >= 2) {
-            this.props.getGeonames(e);
+            this.props.getGeocode(e);
         }
         // If one or zero characters are entered then dont provide suggestions
         else {
@@ -87,7 +87,7 @@ export class SearchAOIToolbar extends Component {
                             return(
                                 <Menu {...menuProps}>
                                     {results.map((result, index) => (
-                                        <TypeaheadMenuItem result={result} index={index}/>
+                                        <TypeaheadMenuItem result={result} index={index} key={index}/>
                                     ))
                                     }
                                 </Menu>        
@@ -105,8 +105,8 @@ export class SearchAOIToolbar extends Component {
 
 SearchAOIToolbar.propTypes = {
     toolbarIcons: React.PropTypes.object,
-    geonames: React.PropTypes.object,
-    getGeonames: React.PropTypes.func,
+    geocode: React.PropTypes.object,
+    getGeocode: React.PropTypes.func,
     handleSearch: React.PropTypes.func,
     handleCancel: React.PropTypes.func,
     setAllButtonsDefault: React.PropTypes.func,
@@ -115,15 +115,15 @@ SearchAOIToolbar.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        geonames: state.geonames,
+        geocode: state.geocode,
         toolbarIcons: state.toolbarIcons,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        getGeonames: (query) => {
-            dispatch(getGeonames(query));
+        getGeocode: (query) => {
+            dispatch(getGeocode(query));
         },
         setAllButtonsDefault: () => {
             dispatch(setAllButtonsDefault());
