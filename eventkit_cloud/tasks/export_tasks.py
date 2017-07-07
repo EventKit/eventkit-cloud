@@ -641,7 +641,6 @@ def external_raster_service_export_task(self, result={}, layer=None, config=None
     """
     Class defining geopackage export for external raster service.
     """
-
     from .models import ExportRun
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -1086,7 +1085,7 @@ class FinalizeRunTask(LockingTask):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         super(FinalizeRunTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-        stage_dir = retval['stage_dir']
+        stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir:
                 shutil.rmtree(stage_dir)
