@@ -4,18 +4,20 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-
 def populate_new_fields(apps, schema_editor):
     """ Populates the fields added in migration #14; ExportTask.new_result & FileProducingTaskResult.id
     """
     ExportTask = apps.get_model('tasks', 'ExportTask')
+    FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
     for i, et in enumerate(ExportTask.objects.all()):
-
-        et.result.id = i
-        et.result.save()
-        et.new_result = et.result
-        et.save()
-
+        try:
+            et.result.id = i
+            et.result.save()
+            et.new_result = et.result
+            et.save()
+        except FileProducingTaskResult.DoesNotExist:
+            # If there's no result there's nothing to update, carry on
+            pass
 
 class Migration(migrations.Migration):
 
