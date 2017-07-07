@@ -27,7 +27,6 @@ from ..utils import (
 import json
 from .exceptions import CancelException, DeleteException
 
-
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
 # Get an instance of a logger
@@ -43,6 +42,7 @@ class TaskStates(Enum):
     CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
+
     # or a non-zero exit code was returned.)
 
     @staticmethod
@@ -232,7 +232,6 @@ class ExportTask(LockingTask):
             return {'state': TaskStates.CANCELED.value}
         super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
-
     def update_task_state(self, result={}, task_uid=None):
         """
         Update the task state and celery task uid.
@@ -339,8 +338,8 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
 def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
-        provider_name=None, bbox=None, user_details=None
-        ):
+                           provider_name=None, bbox=None, user_details=None
+                           ):
     """
     Task to create styles for osm.
     """
@@ -461,7 +460,8 @@ def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
 
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
-def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args,
+                       **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -517,7 +517,7 @@ def output_selection_geojson_task(self, result={}, task_uid=None, selection=None
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
 def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-        user_details=None):
+                           user_details=None):
     """
     Class defining geopackage export function.
     """
@@ -578,7 +578,8 @@ def arcgis_feature_service_export_task(self, result={}, layer=None, config=None,
 
 
 @app.task(name='Project file (.zip)', bind=True, base=FormatTask)
-def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
+def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
+                        stage_dir=None,
                         *args, **kwargs):
     from .models import ExportProviderTask
     from .task_runners import normalize_job_name
@@ -610,7 +611,8 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
     if include_files:
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))), adhoc=True).get('result')
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))),
+                                     adhoc=True).get('result')
     else:
         raise Exception("There are no files in this provider available to zip.")
     if not zip_file:
@@ -668,7 +670,8 @@ def pick_up_run_task(self, result={}, run_uid=None, user_details=None):
 
 
 @app.task(name='Clean Up Failure Task', base=Task)
-def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
+def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args,
+                          **kwargs):
     """
     Used to close tasks in a failed chain.
 
@@ -714,7 +717,8 @@ def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None,
 
 
 @app.task(name='Finalize Export Provider Run', base=LockingTask)
-def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
+def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None,
+                                  *args, **kwargs):
     """
     Finalizes provider task.
 
@@ -902,7 +906,8 @@ def finalize_run_task(result={}, run_uid=None, stage_dir=None):
     # mark run as incomplete if any tasks fail
     if all(TaskStates[provider_task.status] == TaskStates.CANCELED for provider_task in provider_tasks):
         run.status = TaskStates.CANCELED.value
-    elif any(TaskStates[provider_task.status] in TaskStates.get_incomplete_states() for provider_task in provider_tasks):
+    elif any(TaskStates[provider_task.status] in TaskStates.get_incomplete_states() for provider_task in
+             provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
     finished = timezone.now()
     run.finished_at = finished
@@ -1124,7 +1129,6 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
     if estimated_finish:
         export_task.estimated_finish = estimated_finish
     export_task.save()
-
 
 
 def parse_result(task_result, key=''):
