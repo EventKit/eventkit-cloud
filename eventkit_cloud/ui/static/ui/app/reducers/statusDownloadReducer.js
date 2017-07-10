@@ -62,3 +62,16 @@ export function cancelProviderTask(state = initialState.cancelProviderTask, acti
             return state;
     }
 }
+
+export function resetExpirationReducer(state = initialState.resetExpiration, action) {
+    switch(action.type) {
+        case types.RESETTING_EXPIRATION:
+            return {resetting: true, reset: false, data: '', error: null};
+        case types.RESET_EXPIRATION_SUCCESS:
+            return {resetting: false, reset: true, data: action.resetExpiration.data, error: null};
+        case types.RESET_EXPIRATION_ERROR:
+            return {resetting: false, reset: false, data: '', error: action.error};
+        default:
+            return state;
+    }
+}

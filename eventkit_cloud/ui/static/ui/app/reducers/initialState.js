@@ -99,4 +99,9 @@ export default {
         canceled: false,
         error: null,
     },
+    resetExpiration: {
+        resetting: false,
+        reset: false,
+        error: null,
+    }
 }

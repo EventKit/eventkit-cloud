@@ -83,12 +83,14 @@ export const rerunExport = jobuid => dispatch => {
             type: types.RERUN_EXPORT_ERROR, error: error
         });
     });
-}
+};
+
 export function clearReRunInfo() {
     return {
         type: types.CLEAR_RERUN_INFO,
     }
 };
+
 export function cancelProviderTask(uid) {
     return (dispatch) => {
 
@@ -111,3 +113,23 @@ export function cancelProviderTask(uid) {
         });
     }
 };
+
+export function resetExpiration (uid, expiration){
+    return (dispatch) => {
+
+        dispatch({type: types.RESETTING_EXPIRATION});
+
+        const csrftoken = cookie.load('csrftoken');
+
+        return axios({
+            url: '/api/runs/' + uid,
+            method: 'PATCH',
+            data: {"expiration": expiration},
+            headers: {"X-CSRFToken": csrftoken}
+        }).then((response) => {
+            dispatch({type: types.RESET_EXPIRATION_SUCCESS});
+        }).catch(error => {
+            dispatch({type: types.RESET_EXPIRATION_ERROR, error: error});
+        });
+    }
+}

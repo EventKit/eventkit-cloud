@@ -17,17 +17,11 @@ export class DataCartDetails extends React.Component {
     constructor(props) {
         super(props);
 
-        const minDate = new Date();
-        let maxDate;
-        var d = new Date();
-        var m = moment(d);
-        m.add(1, 'days');
-        m.add(1, 'months');
-        maxDate = m.toDate();
-
         this.state = {
-            minDate: minDate,
-            maxDate: maxDate,
+            minDate: null,
+            maxDate: null,
+            expirationDate: null,
+            permission: null,
             cartDetails: {},
             status: '',
             statusBackgroundColor: '',
@@ -56,6 +50,27 @@ export class DataCartDetails extends React.Component {
     componentDidMount(){
         this._initializeOpenLayers();
         this._setTableColors();
+        this._setMaxDate();
+        this._setExpirationDate();
+        this._setPermission();
+    }
+
+    _setExpirationDate(){
+        this.setState({expirationDate : this.props.cartDetails.expiration})
+    }
+
+    _setPermission(){
+        this.setState({permission : this.props.cartDetails.job.published})
+    }
+    _setMaxDate() {
+        const minDate = new Date();
+        let maxDate;
+        var d = new Date();
+        var m = moment(d);
+        m.add(1, 'days');
+        m.add(1, 'months');
+        maxDate = m.toDate();
+        this.setState({minDate, maxDate});
     }
 
     _setTableColors() {
@@ -159,14 +174,18 @@ export class DataCartDetails extends React.Component {
     handlePublishedChange = (event, index, value) => {
         if(value == 1) {
             // hit the API and change published to true
+            this.setState({permission: true})
         }
         else {
             // hit the API and change published to false
+            this.setState({permission: false})
         }
     };
 
     handleExpirationChange = (e, date) => {
         //hit the API and change expiration date.
+        this.setState({expirationDate: date});
+        //this.props.onResetExpiration(this.props.cartDetails.uid);
     }
 
 
@@ -273,7 +292,7 @@ export class DataCartDetails extends React.Component {
                         <tr>
                             <td style={{...styles.tdHeader, width: '15%'}}>Expiration</td>
                             <td style={{backgroundColor: '#f8f8f8', paddingRight: '10px',paddingLeft:'10px', paddingTop:'0px', display:'inlineBlock', paddingBottom:'0px', color: '#8b9396'}}>
-                                {moment(this.props.cartDetails.expiration).format('MMMM Do YYYY')}
+                                {moment(this.state.expirationDate).format('MMMM Do YYYY')}
                                 <DatePicker
                                     ref="dp"
                                     style={{height:'0px',display: '-webkit-inline-box', width:'0px'}}
@@ -289,8 +308,8 @@ export class DataCartDetails extends React.Component {
                         </tr>
                         <tr>
                             <td style={{...styles.tdHeader, width: '15%'}}>Permission</td>
-                            <td style={styles.tdData}><DropDownMenu
-                                value={this.props.cartDetails.job.published == true? 1 : 2}
+                            <td style={{...styles.tdData, paddingTop: '0px', paddingBottom: '0px'}}><DropDownMenu
+                                value={this.state.permission == true? 1 : 2}
                                 onChange={this.handlePublishedChange}
                                 style={styles.dropDown}
                                 labelStyle={styles.label}
@@ -300,11 +319,11 @@ export class DataCartDetails extends React.Component {
                                 underlineStyle={styles.underline}>
                                 <MenuItem value={1}
                                           leftIcon={<SocialGroup style={{fill: '#bcdfbb', height: '26px', marginBottom: '2px'}}/>}
-                                          rightIcon={this.props.cartDetails.job.published == true? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
+                                          rightIcon={this.state.permission == true? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
                                           primaryText="Public"/>
                                 <MenuItem value={2}
                                           leftIcon={<SocialPerson style={{fill: 'grey', height: '26px', marginBottom: '2px'}} />}
-                                          rightIcon={this.props.cartDetails.job.published == false? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
+                                          rightIcon={this.state.permission == false? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
                                           primaryText="Private" />
 
                             </DropDownMenu></td>
@@ -463,6 +482,7 @@ DataCartDetails.propTypes = {
     cartDetails: PropTypes.object,
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun:  PropTypes.func.isRequired,
+    onResetExpiration: PropTypes.func.isRequired,
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
 }

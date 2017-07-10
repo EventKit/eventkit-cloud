@@ -6,7 +6,7 @@ import Paper from 'material-ui/Paper'
 import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails'
 import cssStyles from '../../styles/StatusDownload.css'
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask} from '../../actions/statusDownloadActions'
+import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, resetExpiration} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
@@ -34,6 +34,11 @@ export class StatusDownload extends React.Component {
                 datacartDetails[0] = nextProps.exportReRun.data;
                 this.setState({datacartDetails: datacartDetails});
                 this.startTimer();
+            }
+        }
+        if (nextProps.resetExpiration.reset != this.props.resetExpiration.reset) {
+            if (nextProps.resetExpiration.reset == true) {
+                this.props.getDatacartDetails(this.props.params.jobuid);
             }
         }
         if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
@@ -156,6 +161,7 @@ export class StatusDownload extends React.Component {
                                     <DataCartDetails key={cartDetails.uid}
                                                      cartDetails={cartDetails}
                                                      onRunDelete={this.props.deleteRun}
+                                                     onResetExpiration={this.props.resetExpiration}
                                                      onRunRerun={this.props.rerunExport}
                                                      onClone={this.props.cloneExport}
                                                      onProviderCancel={this.props.cancelProviderTask}/>
@@ -177,6 +183,7 @@ function mapStateToProps(state) {
         jobuid: state.submitJob.jobuid,
         datacartDetails: state.datacartDetails,
         runDeletion: state.runDeletion,
+        resetExpiration: state.resetExpiration,
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
     }
@@ -192,6 +199,9 @@ function mapDispatchToProps(dispatch) {
         },
         rerunExport: (jobuid) => {
             dispatch(rerunExport(jobuid))
+        },
+        resetExpiration: (uid, expiration) => {
+            dispatch(resetExpiration(uid, expiration))
         },
         clearReRunInfo: () => {
             dispatch(clearReRunInfo())
@@ -212,6 +222,7 @@ StatusDownload.propTypes = {
     getDatacartDetails: PropTypes.func.isRequired,
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
+    resetExpiration: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
 };
