@@ -577,15 +577,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         ** returns: 400 on error
 
         """
-        logger.info( uid)
         payload = request.data
         run = ExportRun.objects.get(uid=uid)
 
-        logger.info("********************")
-        logger.info( "Update %s", uid )
-        logger.info("Expiration %s", payload['expiration'])
-        logger.info(run.expiration)
-        logger.info("*******************")
         if "expiration" in payload :
             run.expiration = payload["expiration"]
             run.save()
