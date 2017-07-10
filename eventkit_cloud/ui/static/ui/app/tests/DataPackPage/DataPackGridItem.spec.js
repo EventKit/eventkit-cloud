@@ -11,6 +11,9 @@ import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Car
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
+import ReactDOM from 'react-dom';
+import TestUtils from 'react-dom/test-utils';
+const muiTheme = getMuiTheme();
 
 beforeAll(() => {
     DataPackGridItem.prototype.initMap = new sinon.spy();
@@ -20,18 +23,22 @@ afterAll(() => {
     DataPackGridItem.prototype.initMap.restore();
 });
 
+const getWrapper = (props) => {
+    return mount(<DataPackGridItem {...props}/>, {
+        context: {muiTheme},
+        childContextTypes: {muiTheme: React.PropTypes.object}
+    });
+}
+
 describe('DataPackGridItem component', () => {
     injectTapEventPlugin();
 
-    const muiTheme = getMuiTheme();
+    
     const user = {data: {user: {username: 'admin'}}};
 
     it('should display general run information', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardTitle)).toHaveLength(1);
         expect(wrapper.find(CardTitle).find('span').first()
@@ -41,9 +48,9 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
         const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
-        expect(subtitle.find('span').first().text()).toEqual('Event: Test1 event');
-        expect(subtitle.find('span').at(1).text()).toEqual('Added: 2017-03-10');
-        expect(subtitle.find('span').at(2).text()).toEqual('Expires: 2017-03-24');
+        expect(subtitle.find('div').at(1).text()).toEqual('Event: Test1 event');
+        expect(subtitle.find('span').at(0).text()).toEqual('Added: 2017-03-10');
+        expect(subtitle.find('span').at(1).text()).toEqual('Expires: 2017-03-24');
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
         expect(wrapper.find(CardMedia)).toHaveLength(1);
@@ -54,10 +61,7 @@ describe('DataPackGridItem component', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const mountSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidMount');
         const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({expanded: true})).toBe(true);
@@ -67,30 +71,21 @@ describe('DataPackGridItem component', () => {
 
     it('should display information specific to a unpublished & owned run', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find(SocialPerson)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
     });
 
     it('should display information specific to a published & owned run', () => {
         const props = {run: getRuns()[2], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
     });
 
     it('should display information specific to a published & not owned run', () => {
         const props = {run: getRuns()[1], user: user, onRunDelete: () => {}};
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('notAdmin');
     });
@@ -98,10 +93,7 @@ describe('DataPackGridItem component', () => {
     it('should not display a map when the card is not expanded', () => {
         const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
         const uid = props.run.uid;
-        const wrapper = mount(<DataPackGridItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         const updateSpy = new sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
         expect(wrapper.find('#' + uid + '_map')).toHaveLength(1);
@@ -113,54 +105,37 @@ describe('DataPackGridItem component', () => {
         updateSpy.restore();
     });
 
-    it('getTitleFontSize should return the font string for title based on window width', () => {
-        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = shallow(<DataPackGridItem {...props}/>);
-
-        window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
-        expect(wrapper.instance().getTitleFontSize()).toEqual('20px');
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getTitleFontSize()).toEqual('21px');
-        
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getTitleFontSize()).toEqual('22px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTitleFontSize()).toEqual('23px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getTitleFontSize()).toEqual('24px');
+    it('should set overflow true when mouse enters card text div', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}}
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.find(CardText).simulate('mouseEnter');
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({overflow: true})).toBe(true);
+        stateSpy.restore();
     });
 
-    it('getCardTextFontSize should return the font string for cardText based on window width', () => {
-        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}};
-        const wrapper = shallow(<DataPackGridItem {...props}/>);
-        
-        window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
-        expect(wrapper.instance().getCardTextFontSize()).toEqual('10px');
+    it('should set overflow false when mouse leaves card text div', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}}
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        wrapper.find(CardText).simulate('mouseLeave');
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({overflow: false})).toBe(true);
+        stateSpy.restore();
+    });
 
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getCardTextFontSize()).toEqual('11px');
-        
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getCardTextFontSize()).toEqual('12px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getCardTextFontSize()).toEqual('13px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getCardTextFontSize()).toEqual('14px');
+    it('should negate overflow state on touchTap of card text div', () => {
+        const props = {run: getRuns()[0], user: user, onRunDelete: () => {}}
+        const wrapper = getWrapper(props);
+        const expectedBool = !wrapper.state().overflow;
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        const div = TestUtils.findRenderedComponentWithType(wrapper.instance(), CardText);
+        const node = ReactDOM.findDOMNode(div);
+        TestUtils.Simulate.touchTap(node);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({overflow: expectedBool})).toBe(true);
+        stateSpy.restore();
     });
 
     it('handleExpandChange should set expanded to the passed in state', () => {
