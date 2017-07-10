@@ -533,7 +533,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_d
     return result
 
 
-@app.task(name='WFSExport', bind=True, base=FormatTask)
+@app.task(name='WFSExport', bind=True, base=ExportTask)
 def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
     """
