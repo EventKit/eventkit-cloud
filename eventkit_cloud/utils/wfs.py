@@ -52,7 +52,7 @@ class WFSToGPKG(object):
             self.service_url = self.service_url.rstrip('/\\')
         finally:
             self.service_url = '{}{}'.format(self.service_url,
-                                             '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}'.format(
+                                             '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(
                                                  self.layer))
 
         if self.bbox:
