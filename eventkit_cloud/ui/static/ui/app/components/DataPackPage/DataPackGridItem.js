@@ -24,47 +24,12 @@ export class DataPackGridItem extends Component {
         this.handleExpandChange = this.handleExpandChange.bind(this);
         this.state = { 
             expanded: false,
+            overflow: false,
         };
     }
 
     componentDidMount() {
         this.setState({expanded: true});
-    }
-
-    getTitleFontSize() {
-        if(window.innerWidth <= 575) {
-            return '20px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '21px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '22px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '23px';
-        }
-        else {
-            return '24px';
-        }
-    }
-
-    getCardTextFontSize() {
-        if(window.innerWidth <= 575) {
-            return '10px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '11px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '12px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '13px';
-        }
-        else {
-            return '14px';
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -106,7 +71,6 @@ export class DataPackGridItem extends Component {
         });
         map.addLayer(layer);
         map.getView().fit(source.getExtent(), map.getSize());
-
     }
 
     handleExpandChange = (expanded) => {
@@ -118,23 +82,64 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
-        const cardTextFontSize = this.getCardTextFontSize();
-        const titleFontSize = this.getTitleFontSize();
+        const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
+        const titleFontSize = 22;
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
             },
             cardTitle:{
                 wordWrap: 'break-word',
+                padding: '10px'
             },
-            cardTitle2: {fontSize: titleFontSize},
+            cardTitle2: {fontSize: titleFontSize, height: '36px'},
             cardSubtitle: {fontSize: cardTextFontSize},
             completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
             errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
             runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
             unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon : {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
+            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
             ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
+            cardTextMinimized: {
+                position: 'absolute',
+                wordWrap: 'break-word',
+                width: '100%',
+                backgroundColor: '#f7f8f8',
+                zIndex: 2,
+                padding: '0px 10px 5px',
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                textOverflow: 'ellipsis',
+                WebkitLineClamp: 3,
+                height: window.innerWidth < 768 ? '47px' : '56px'
+            },
+            cardText: {
+                position: 'absolute',
+                wordWrap: 'break-word', 
+                width: '100%', 
+                backgroundColor: '#f7f8f8', 
+                zIndex: 2, 
+                padding: '0px 10px 5px',
+                
+            },
+            cardTextContainer: {
+                fontSize: cardTextFontSize, 
+                padding: '0px', 
+                marginBottom: '10px', 
+                height: window.innerWidth < 768 ? '42px' : '51px', 
+                overflow: this.state.overflow ? 'visible' : 'hidden', 
+                position: 'relative'
+            },
+            titleLink: {
+                color: 'inherit', 
+                display: 'block', 
+                width: '100%', 
+                height: '36px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap',
+                margin: '0px'
+            }
         };
 
         return (
@@ -146,9 +151,14 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <span><Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link></span>
+                            <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
+                                <Link 
+                                    to={'/status/' + this.props.run.job.uid} 
+                                    style={styles.titleLink}
+                                >{this.props.run.job.name}</Link>
+                            </div>
                             <IconMenu
-                                style={{float: 'right'}}
+                                style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
                                     <IconButton 
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
@@ -178,16 +188,25 @@ export class DataPackGridItem extends Component {
                     } 
                     subtitle={
                         <div>
-                        <span>{'Event: ' + this.props.run.job.event}</span><br/>
+                        <div 
+                            style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+                        >
+                            {'Event: ' + this.props.run.job.event}
+                        </div>
                         <span>{'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}</span><br/>
                         <span>{'Expires: ' + moment(this.props.run.expiration).format('YYYY-MM-DD')}</span><br/>
                         </div>
                         } />
-                <CardText style={{fontSize: cardTextFontSize}}>
-                    <span>{this.props.run.job.description}</span>
+                <CardText 
+                    style={styles.cardTextContainer}
+                    onMouseEnter={() => {this.setState({overflow: true})}}
+                    onMouseLeave={() => {this.setState({overflow: false})}}
+                    onTouchTap={() => {this.setState({overflow: !this.state.overflow})}}
+                >
+                    <span style={this.state.overflow ? styles.cardText : styles.cardTextMinimized}>{this.props.run.job.description}</span>
                 </CardText>
                 <CardMedia expandable={true}>
-                    <div id={this.props.run.uid + '_map'} className={style.map} />
+                    <div id={this.props.run.uid + '_map'} className={style.map} style={{padding: '0px 2px'}}/>
                 </CardMedia>
                 <CardActions style={{height: '45px'}}>
                     <span>

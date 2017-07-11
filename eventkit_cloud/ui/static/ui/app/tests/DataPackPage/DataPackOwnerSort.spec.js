@@ -11,8 +11,9 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 describe('DataPackOwnerSort component', () => {
     const getProps = () => {
         return {
-            value: 1,
-            handleChange: () => {}
+            value: '',
+            handleChange: () => {},
+            owner: 'test_user'
         }
     }
     injectTapEventPlugin();
@@ -38,7 +39,7 @@ describe('DataPackOwnerSort component', () => {
 
     it('should render with text "My DataPacks"', () => {
         let props = getProps();
-        props.value = 2;
+        props.value = 'test_user';
         const wrapper = mount(<DataPackOwnerSort {...props}/> , {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
