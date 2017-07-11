@@ -51,7 +51,7 @@ describe('TypeaheadMenuItem component', () => {
     });
 
     it('createDescription should return the proper description', () => {
-        const result = {name: 'test name', province: 'admin name1', region: 'admin name2', countryName: 'country name'}
+        const result = {name: 'test name', province: 'province', region: 'region', country: 'country name'}
         let props = getProps();
         let context = getContext();
         const wrapper = mount(
@@ -67,7 +67,7 @@ describe('TypeaheadMenuItem component', () => {
             }
         );
         let description = wrapper.instance().createDescription(result)
-        expect(description).toEqual('admin name2, admin name1, country name');
+        expect(description).toEqual('province, region, country name');
     });
 
     it('should have the proper text and icon', () => {
@@ -75,9 +75,9 @@ describe('TypeaheadMenuItem component', () => {
         let context = getContext();
         props.result.bbox = {'east': '180'};
         props.result.name = 'test name';
-        props.result.province = 'admin name1';
-        props.result.region = 'admin name2';
-        props.result.countryName = 'country name';
+        props.result.province = 'province';
+        props.result.region = 'region';
+        props.result.country = 'country name';
         const wrapper = mount(
             <TypeaheadMenuItem {...props}/>, {
                 context: context,
@@ -92,6 +92,6 @@ describe('TypeaheadMenuItem component', () => {
         );
         expect(wrapper.find(ImageCropDin)).toHaveLength(1);
         expect(wrapper.find('.menuItemText').first().text()).toEqual('test name');
-        expect(wrapper.find('.menuItemText').last().text()).toEqual('admin name2, admin name1, country name');
+        expect(wrapper.find('.menuItemText').last().text()).toEqual('province, region, country name');
     });
 });

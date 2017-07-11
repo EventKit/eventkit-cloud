@@ -14,9 +14,9 @@ export class TypeaheadMenuItem extends Component {
 
     createDescription(result) {
         let description = [];
-        result.region ? description.push(result.region): null;
         result.province ? description.push(result.province): null;
-        result.countryName ? description.push(result.countryName): null;
+        result.region ? description.push(result.region): null;
+        result.country ? description.push(result.country): null;
 
         return description.join(', ');
     }
