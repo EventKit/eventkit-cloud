@@ -33,9 +33,9 @@ class WFSToGPKG(object):
         self.task_uid = task_uid
         if self.bbox:
             self.cmd = Template(
-                "ogr2ogr -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
+                "ogr2ogr -skipfailures -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
         else:
-            self.cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -f GPKG $gpkg WFS:'$url'")
+            self.cmd = Template("ogr2ogr -skipfailures -f GPKG $gpkg WFS:'$url'")
 
     def convert(self, ):
         """
