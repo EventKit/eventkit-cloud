@@ -9,9 +9,9 @@ def populate_new_fields(apps, schema_editor):
     """
     ExportTask = apps.get_model('tasks', 'ExportTask')
     FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
-    for i, et in enumerate(ExportTask.objects.all()):
+    for et in ExportTask.objects.all():
         try:
-            et.result.id = i
+            et.result.id = et.id
             et.result.save()
             et.new_result = et.result
             et.save()
