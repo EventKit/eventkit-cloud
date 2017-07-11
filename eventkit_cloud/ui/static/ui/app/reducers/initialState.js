@@ -99,9 +99,14 @@ export default {
         canceled: false,
         error: null,
     },
-    resetExpiration: {
-        resetting: false,
-        reset: false,
+    updateExpiration: {
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    updatePermission: {
+        updating: false,
+        updated: false,
         error: null,
     }
 }

@@ -175,17 +175,19 @@ export class DataCartDetails extends React.Component {
         if(value == 1) {
             // hit the API and change published to true
             this.setState({permission: true})
+            //this.props.onUpdatePermission(this.props.cartDetails.uid, true);
         }
         else {
             // hit the API and change published to false
             this.setState({permission: false})
+            //this.props.onUpdatePermission(this.props.cartDetails.uid, false);
         }
     };
 
     handleExpirationChange = (e, date) => {
         //hit the API and change expiration date.
         this.setState({expirationDate: date});
-        //this.props.onResetExpiration(this.props.cartDetails.uid);
+        //this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     }
 
 
@@ -195,8 +197,8 @@ export class DataCartDetails extends React.Component {
         });
 
         const styles = {
-            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold'},
-            tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396'},
+            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold', width: '15%'},
+            tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396', wordWrap: 'break-word'},
             subHeading: {fontSize: '16px', alignContent: 'flex-start', color: 'black', paddingBottom: '10px', paddingTop: '30px', fontWeight: 'bold'},
             textField: {fontSize: '14px', height: '36px', width: '0px', display:'inlineBlock'},
             dropDown: {height: '30px', lineHeight: '35px', float: 'left',},
@@ -269,7 +271,7 @@ export class DataCartDetails extends React.Component {
                     <table>
                         <tbody>
                         <tr>
-                            <td style={{...styles.tdHeader, width: '15%'}}>Name</td>
+                            <td style={styles.tdHeader}>Name</td>
                             <td style={styles.tdData}>{this.props.cartDetails.job.name}</td>
                         </tr>
 
@@ -284,13 +286,13 @@ export class DataCartDetails extends React.Component {
                         <tbody>
 
                         <tr>
-                            <td style={{...styles.tdHeader, backgroundColor: this.state.statusBackgroundColor, width: '15%'}}>Export</td>
+                            <td style={{...styles.tdHeader, backgroundColor: this.state.statusBackgroundColor}}>Export</td>
                             <td style={{...styles.tdData, backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor}}>
                                 {this.props.cartDetails.status}
                             </td>
                         </tr>
                         <tr>
-                            <td style={{...styles.tdHeader, width: '15%'}}>Expiration</td>
+                            <td style={styles.tdHeader}>Expiration</td>
                             <td style={{backgroundColor: '#f8f8f8', paddingRight: '10px',paddingLeft:'10px', paddingTop:'0px', display:'inlineBlock', paddingBottom:'0px', color: '#8b9396'}}>
                                 {moment(this.state.expirationDate).format('MMMM Do YYYY')}
                                 <DatePicker
@@ -307,7 +309,7 @@ export class DataCartDetails extends React.Component {
                                 <Edit onClick={(e) => { this.refs.dp.focus() }}  key={this.props.cartDetails.uid} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
                         </tr>
                         <tr>
-                            <td style={{...styles.tdHeader, width: '15%'}}>Permission</td>
+                            <td style={styles.tdHeader}>Permission</td>
                             <td style={{...styles.tdData, paddingTop: '0px', paddingBottom: '0px'}}><DropDownMenu
                                 value={this.state.permission == true? 1 : 2}
                                 onChange={this.handlePublishedChange}
@@ -405,7 +407,7 @@ export class DataCartDetails extends React.Component {
                     <div style={styles.subHeading}>
                         General Information
                     </div>
-                    <table>
+                    <table style={{tableLayout: 'fixed'}}>
                         <tbody>
                         <tr>
                             <td style={styles.tdHeader}>Description</td>
@@ -482,7 +484,8 @@ DataCartDetails.propTypes = {
     cartDetails: PropTypes.object,
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun:  PropTypes.func.isRequired,
-    onResetExpiration: PropTypes.func.isRequired,
+    onUpdateExpiration: PropTypes.func.isRequired,
+    onUpdatePermission: PropTypes.func.isRequired,
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
 }

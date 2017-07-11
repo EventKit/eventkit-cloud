@@ -63,14 +63,26 @@ export function cancelProviderTask(state = initialState.cancelProviderTask, acti
     }
 }
 
-export function resetExpirationReducer(state = initialState.resetExpiration, action) {
+export function updateExpirationReducer(state = initialState.updateExpiration, action) {
     switch(action.type) {
-        case types.RESETTING_EXPIRATION:
-            return {resetting: true, reset: false, data: '', error: null};
+        case types.UPDATING_EXPIRATION:
+            return {updating: true, updated: false, error: null};
         case types.RESET_EXPIRATION_SUCCESS:
-            return {resetting: false, reset: true, data: action.resetExpiration.data, error: null};
+            return {updating: false, updated: true, error: null};
         case types.RESET_EXPIRATION_ERROR:
-            return {resetting: false, reset: false, data: '', error: action.error};
+            return {updating: false, updated: false, error: action.error};
+        default:
+            return state;
+    }
+}
+export function updatePermissionReducer(state = initialState.updatePermission, action) {
+    switch(action.type) {
+        case types.UPDATING_PERMISSION:
+            return {updating: true, updated: false, error: null};
+        case types.UPDATE_PERMISSION_SUCCESS:
+            return {resetting: false, reset: true, error: null};
+        case types.UPDATE_PERMISSION_ERROR:
+            return {updating: false, updated: false, error: action.error};
         default:
             return state;
     }

@@ -114,10 +114,10 @@ export function cancelProviderTask(uid) {
     }
 };
 
-export function resetExpiration (uid, expiration){
+export function updateExpiration (uid, expiration){
     return (dispatch) => {
 
-        dispatch({type: types.RESETTING_EXPIRATION});
+        dispatch({type: types.UPDATING_EXPIRATION});
 
         const csrftoken = cookie.load('csrftoken');
 
@@ -127,9 +127,29 @@ export function resetExpiration (uid, expiration){
             data: {"expiration": expiration},
             headers: {"X-CSRFToken": csrftoken}
         }).then((response) => {
-            dispatch({type: types.RESET_EXPIRATION_SUCCESS});
+            dispatch({type: types.UPDATE_EXPIRATION_SUCCESS});
         }).catch(error => {
-            dispatch({type: types.RESET_EXPIRATION_ERROR, error: error});
+            dispatch({type: types.UPDATE_EXPIRATION_ERROR, error: error});
+        });
+    }
+}
+
+export function updatePermission (uid, value){
+    return (dispatch) => {
+
+        dispatch({type: types.UPDATING_PERMISSION});
+
+        const csrftoken = cookie.load('csrftoken');
+
+        return axios({
+            url: '/api/runs/' + uid,
+            method: 'PATCH',
+            data: {"permission": value},
+            headers: {"X-CSRFToken": csrftoken}
+        }).then((response) => {
+            dispatch({type: types.UPDATE_PERMISSION_SUCCESS});
+        }).catch(error => {
+            dispatch({type: types.UPDATE_PERMISSION_ERROR, error: error});
         });
     }
 }
