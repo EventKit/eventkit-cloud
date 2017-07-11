@@ -34,7 +34,6 @@ export class DataPackViewButtons extends React.Component {
             button: {height: '35px', width: dimension, padding: '0px', float: 'right'},
             icon: {color: '#4498c0', height: dimension, width: dimension}
         }
-
         return (
             <div style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
                 <IconButton

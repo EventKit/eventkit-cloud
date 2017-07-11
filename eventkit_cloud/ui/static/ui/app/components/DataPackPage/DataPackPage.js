@@ -44,7 +44,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
-            view: 'grid',
+            view: window.innerWidth < 768 ? 'grid' : 'map',
             pageLoading: true,
             order: '-started_at',
             ownerFilter: '',
@@ -189,9 +189,15 @@ export class DataPackPage extends React.Component {
     }
 
     getView(view) {
-        switch(view) {
+        let newView = '';
+        if(window.innerWidth < 768 && view == 'map') {
+            newView = 'grid';
+            this.setState({view: newView});
+        } 
+        else {newView = view}
+        
+        switch(newView) {
             case 'list':
-                console.log('list');
                 return <DataPackList
                     runs={this.props.runsList.runs}
                     user={this.props.user}
@@ -205,7 +211,6 @@ export class DataPackPage extends React.Component {
                     loadMoreDisabled={!this.props.runsList.nextPage}
                 />;
             case 'grid':
-                console.log('grid');
                 return <DataPackGrid 
                     runs={this.props.runsList.runs} 
                     user={this.props.user} 
@@ -217,7 +222,6 @@ export class DataPackPage extends React.Component {
                     loadMoreDisabled={!this.props.runsList.nextPage}
                 />
             case 'map': 
-                console.log('map');
                 return <MapView
                     runs={this.props.runsList.runs} 
                     user={this.props.user} 
@@ -235,7 +239,6 @@ export class DataPackPage extends React.Component {
 
     render() { 
         const pageTitle = "DataPack Library"
-        // const range = this.props.runsList.range ? this.props.runsList.range.split('/') : null;
         const styles = {
             wholeDiv: {
                 height: window.innerHeight - 236,
@@ -268,14 +271,6 @@ export class DataPackPage extends React.Component {
             backgroundStyle: {
                 backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')'
             },
-            // loadMore: {
-            //     color: this.props.runsList.nextPage ? '#4598bf': 'grey', 
-            //     cursor: this.props.runsList.nextPage ? 'pointer' : 'initial'
-            // },
-            // loadLess: {
-            //     color: this.props.runsList.runs.length > 12 ? '#4598bf': 'grey',
-            //     cursor: this.props.runsList.runs.length > 12 ? 'pointer': 'initial'
-            // },
             range: window.innerWidth < 768 ?
                 {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
                 :

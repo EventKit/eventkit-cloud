@@ -1,4 +1,5 @@
 import React, {PropTypes} from 'react';
+import ReactDOM from 'react-dom';
 import RaisedButton from 'material-ui/RaisedButton';
 import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
@@ -7,13 +8,28 @@ export class LoadButtons extends React.Component {
 
     constructor(props) {
         super(props);
+        this.state = {
+            width: window.innerWidth
+        }
+    }
+
+    componentDidMount() {
+        const width = ReactDOM.findDOMNode(this).offsetWidth;
+        this.setState({width: width});
+    }
+
+    componentDidUpdate() {
+        const width = ReactDOM.findDOMNode(this).offsetWidth;
+        if(width != this.state.width) {
+            this.setState({width: width});
+        }
     }
 
     render() {
         const range = this.props.range ? this.props.range.split('/') : null;
 
         const styles = {
-            range: window.innerWidth < 768 ?
+            range: this.state.width < 768 ?
                 {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
                 :
                 {display: 'inline-block', position: 'absolute', color: '#a59c9c', lineHeight: '36px', right: '10px', fontSize: '12px'}
