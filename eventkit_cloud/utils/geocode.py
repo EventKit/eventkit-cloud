@@ -20,11 +20,6 @@ class GeocodeAdapter:
     def __init__(self, url):
         self.url = url
 
-
-    @abstractmethod
-    def get_data(self, url):
-        pass
-
     @abstractmethod
     def property_map(self):
         """
@@ -39,16 +34,71 @@ class GeocodeAdapter:
         pass
 
     @abstractmethod
-    def get_feature(self, bbox=None):
-        feature = {
-            "type": "Feature",
-            "geometry": None,
-            "properties": None
-        }
+    def get_payload(self, query):
+        """
+        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api will expect.
+        :param query: A string
+        :return: A dict of API specific query paramters.
+            Input:
+                "Something"
+            Output:
+                {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'query': "Something"}
+        """
+        pass
+
+    @abstractmethod
+    def create_geojson(self, response):
+        """
+        This method takes a Requests response, and returns a GeoJSON, the returned geojson will be given as a response,
+        to the user, so it should already contain the mapped properties.
+        :param response: A Requests.response object.
+        :return: A FeatureCollection GeoJSON.
+
+            See GeoNames.create_geojson for an example implementation.
+            In general:
+                Convert each location to a GeoJSON Feature, by passing the feature, bbox, and/or properties (as a dict)
+                  to get_feature.
+                Add the Features to a FeatureCollection.
+                Return the FeatureCollection GeoJSON
+        """
+        pass
+
+    def get_data(self, query):
+        """
+        Handles querying the endpoint and returning a geojson (as a python dict).
+        The expectation is that the concrete class will implement `get_payload`.
+        :param query: A string.
+        :return: A dict representing a geojson.
+        """
+        payload = self.get_payload(query)
+        if not self.url:
+            return
+        response = requests.get(self.url, params=payload).json()
+        assert (isinstance(response, dict))
+        return self.create_geojson(response)
+
+    def get_feature(self, feature=None, bbox=None, properties=None):
+        """
+        Used to prepare a feature.  It can take an original feature or create one from a bbox.  If both a feature AND
+        a bbox are used the bbox will be used to update the geometry.
+
+        The concrete class should implement property_map to ensure the information needed for the UI is returned.
+
+        :param feature: A dict representing a geojson feature.
+        :param bbox: A list representing a bounding box in EPSG:4326, [west, south, east, north].
+        :param properties: A dict of properties and their values.
+        :return: A feature with properties mapped.
+        """
+        if not feature:
+            feature = {
+                "type": "Feature",
+                "geometry": None,
+                "properties": None
+            }
         if bbox:
             feature['bbox'] = bbox
             feature['geometry'] = self.bbox2polygon(bbox)
-        return feature
+        return self.map_properties(feature, properties=properties)
 
     @staticmethod
     def get_feature_collection(features=None):
@@ -84,24 +134,27 @@ class GeocodeAdapter:
         return {"type": "Polygon",
                 "coordinates": coordinates}
 
+    def map_properties(self, feature, properties=None):
+        props = properties or feature.get('properties')
+        if props:
+            for key, value in self.property_map().iteritems():
+                props[key] = props.get(value)
+        feature['properties'] = props
+        return feature
+
 
 class GeoNames(GeocodeAdapter):
 
-    def get_data(self, query):
-        payload = {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': query}
-        if not self.url:
-            return
-        response = requests.get(self.url, params=payload).json()
-        assert (isinstance(response, dict))
+    def get_payload(self, query):
+        return {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': query}
+
+    def create_geojson(self, response):
+        logger.error(response)
         features = []
         for result in response.get('geonames'):
-            feature = self.get_feature(bbox=self.get_bbox(result.pop('bbox', None)))
-            feature['properties'] = self.property_map(result)
+            feature = self.get_feature(bbox=self.get_bbox(result.pop('bbox', None)), properties=result)
             features += [feature]
         return self.get_feature_collection(features=features)
-
-    def get_feature(self, *args, **kwargs):
-        return super(GeoNames, self).get_feature(*args, **kwargs)
 
     def get_bbox(self, bbox=None):
         if not bbox:
@@ -111,16 +164,29 @@ class GeoNames(GeocodeAdapter):
         except KeyError:
             return None
 
-    def property_map(self, props):
-        prop_map = {"name": "name", "province": "adminName2", "region": "adminName1", "country": "countryName"}
-        for key, value in prop_map.iteritems():
-            props[key] = props.get(value)
-        return props
+    def property_map(self):
+        return {"name": "name", "province": "adminName2", "region": "adminName1", "country": "countryName"}
+
+
+class Pelias(GeocodeAdapter):
+
+    def get_payload(self, query):
+        return {'text': query}
+
+    def create_geojson(self, response):
+        features = []
+        for feature in response.get('features'):
+            feature = self.get_feature(feature=feature)
+            features += [feature]
+        return self.get_feature_collection(features=features)
+
+    def property_map(self):
+        return {"name": "name", "province": "county", "region": "region", "country": "country"}
 
 
 class Geocode(object):
 
-    _supported_geocoders = {'geonames': GeoNames}
+    _supported_geocoders = {'geonames': GeoNames, 'pelias': Pelias}
 
     def __init__(self):
         url = getattr(settings, 'GEOCODING_API_URL')
