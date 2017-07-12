@@ -58,7 +58,7 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(1).find('td').first().text()).toEqual('Expiration');
         expect(wrapper.find(DatePicker)).toHaveLength(1);
         expect(wrapper.find(Edit)).toHaveLength(1);
-        expect(table.find('tr').at(1).find('td').last().text()).toEqual('June 5th 2017');
+        expect(table.find('tr').at(1).find('td').last().text()).toEqual('2017-08-01');
         expect(table.find('tr').at(2).find('td').first().text()).toEqual('Permission');
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('Public');
@@ -208,7 +208,7 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance()._setExpirationDate();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({expirationDate: '2017-06-05T18:35:01.400407Z'})).toBe(true);
+        expect(stateSpy.calledWith({expirationDate: '2017-08-01T00:00:00Z'})).toBe(true);
 
         let nextProps = getProps();
         nextProps.cartDetails.expiration = '2017-08-08T18:35:01.400407Z';
@@ -360,11 +360,9 @@ describe('DataCartDetails component', () => {
         const wrapper = shallow(<DataCartDetails {...props}/>);
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
         const event = {persist: () => {},};
-        wrapper.instance().handleExpirationChange(event, 'Mon Jun 5 2017 18:35:01 GMT-0400 (Eastern Daylight Time)');
+        wrapper.instance().handleExpirationChange();
         expect(props.onUpdateExpiration.calledOnce).toBe(true);
-        expect(props.onUpdateExpiration.calledWith('7838d3b3-160a-4e7d-89cb-91fdcd6eab43', 'Mon Jun 5 2017 00:00:00 GMT-0400 (Eastern Daylight Time)')).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({expirationDate: 'Mon Jun 5 2017 18:35:01 GMT-0400 (Eastern Daylight Time)'})).toBe(true);
         stateSpy.restore();
     });
 });
@@ -589,5 +587,5 @@ const run = {
         }
     ],
     "zipfile_url": null,
-    "expiration": "2017-06-05T18:35:01.400407Z"
+    "expiration": "2017-08-01T00:00:00Z"
 }

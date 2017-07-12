@@ -166,7 +166,7 @@ export class StatusDownload extends React.Component {
                                     <DataCartDetails key={cartDetails.uid}
                                                      cartDetails={cartDetails}
                                                      onRunDelete={this.props.deleteRun}
-                                                     onUpdateExpiration={this.props.updateExpiration}
+                                                     onUpdateExpiration={this.props.updateExpirationDate}
                                                      onUpdatePermission={this.props.updatePermission}
                                                      onRunRerun={this.props.rerunExport}
                                                      onClone={this.props.cloneExport}
@@ -207,7 +207,7 @@ function mapDispatchToProps(dispatch) {
         rerunExport: (jobuid) => {
             dispatch(rerunExport(jobuid))
         },
-        updateExpiration: (uid, expiration) => {
+        updateExpirationDate: (uid, expiration) => {
             dispatch(updateExpiration(uid, expiration))
         },
         updatePermission: (uid, value) => {
@@ -232,7 +232,7 @@ StatusDownload.propTypes = {
     getDatacartDetails: PropTypes.func.isRequired,
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
-    updateExpiration: PropTypes.func.isRequired,
+    updateExpirationDate: PropTypes.func.isRequired,
     updatePermission: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,

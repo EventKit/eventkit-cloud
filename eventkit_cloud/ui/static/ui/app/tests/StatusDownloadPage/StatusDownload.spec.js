@@ -200,7 +200,7 @@ describe('StatusDownload component', () => {
                 error: null,
             },
             runDeletion: {
-            deleting: false,
+                deleting: false,
                 deleted: false,
                 error: null,
             },
@@ -224,7 +224,7 @@ describe('StatusDownload component', () => {
             deleteRun: (jobuid) => {},
             rerunExport: (jobuid) => {},
             clearReRunInfo: () => {},
-            updateExpiration: (uid, expiration) => {},
+            updateExpirationDate: (uid, expiration) => {},
             updatePermission: (jobuid, value) => {},
             cloneExport: (cartDetails, providerArray) => {},
             cancelProviderTask: (providerUid) => {},
@@ -374,7 +374,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(7);
+        expect(setTimeout.mock.calls.length).toBe(8);
         expect(setTimeout.mock.calls[3][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
@@ -398,7 +398,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(6);
+        expect(setTimeout.mock.calls.length).toBe(7);
         console.log(setTimeout.mock.calls);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
@@ -449,14 +449,12 @@ describe('StatusDownload component', () => {
 
     it('should call componentWillReceiveProps when Expiration is updated', () => {
         const props = getProps();
-        props.getDatacartDetails = new sinon.spy();
-        const wrapper = getWrapper(props);
-        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
         const nextProps = getProps();
         nextProps.updateExpiration.updated = true;
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        props.getDatacartDetails = new sinon.spy();
+        const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
-        expect(props.getDatacartDetails.calledOnce).toBe(true);
-        expect(props.getDatacartDetails.calledWith("6870234f-d876-467c-a332-65fdf0399a0d")).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
         updateSpy.restore();
     });
