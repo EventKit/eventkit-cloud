@@ -4,11 +4,11 @@ import initialState from './initialState';
 export function DataPackListReducer(state = initialState.runsList, action) {
     switch(action.type) {
         case types.FETCHING_RUNS:
-            return {fetching: true, fetched: false, runs: [], error: null}
+            return {...state, fetching: true, fetched: false, error: null}
         case types.RECEIVED_RUNS:
-            return {fetching: false, fetched: true, runs: action.runs, error: null}
+            return {...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage, range: action.range}
         case types.FETCH_RUNS_ERROR:
-            return {fetching: false, fetched: false, runs: [], error: action.error};
+            return {...state, fetching: false, fetched: false, runs: [], error: action.error};
         default:
             return state;
     }
