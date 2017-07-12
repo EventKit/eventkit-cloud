@@ -64,3 +64,33 @@ export function convertGeoJSONtoJSTS(geojson) {
     }
     return geometry;
 }
+
+export function zoomToExtent(opt_option) {
+    let options = opt_option ? opt_option : {};
+    options.className = options.className != undefined ? options.className : ''
+
+    let button = document.createElement('button');
+    let icon = document.createElement('i');
+    icon.className = 'fa fa-globe';
+    button.appendChild(icon);
+    let this_ = this;
+
+    this.zoomer = () => {
+        const extent = !options.extent ? view.getProjection.getExtent() : options.extent;
+        const map = this_.getMap();
+        const view = map.getView();
+        const size = map.getSize();
+        view.fit(options.extent, size);
+    }
+
+    button.addEventListener('click', this_.zoomer, false);
+    button.addEventListener('touchstart', this_.zoomer, false);
+    let element = document.createElement('div');
+    element.className = options.className + ' ol-unselectable ol-control';
+    element.appendChild(button);
+
+    ol.control.Control.call(this, {
+        element: element,
+        target: options.target
+    });
+}

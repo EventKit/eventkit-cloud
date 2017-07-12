@@ -5,18 +5,23 @@ import LoadButtons from './LoadButtons';
 import CustomScrollbar from '../CustomScrollbar';
 import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
+import ZoomOut from 'material-ui/svg-icons/maps/zoom-out-map';
+import {zoomToExtent} from '../../utils/mapUtils';
+import styles from '../../styles/CreateExport.css';
 
 const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#ce4427',
-        width: 4,
+        width: 6,
+        zIndex: 1,
     })
 });
 
 const BLUE_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#4498c0',
-        width: 4,
+        width: 6,
+        zIndex: 1,
     })
 });
 
@@ -28,23 +33,22 @@ export class MapView extends Component {
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleClick = this.handleClick.bind(this);
+        this.onFeatureSelect = this.onFeatureSelect.bind(this);
         this.state = {
-            highlightedFeature: null
+            selected: [],
         }
     }
 
     componentDidMount() {
         this.map = this.initMap();
-        // this.map.on('pointermove', (evt) => {
-        //     if (evt.dragging) {
-        //         return;
-        //     }
-        //     const pixel = this.map.getEventPixel(evt.originalEvent);
-        //     if (this.map.hasFeatureAtPixel(pixel)) {
-        //         console.log('has a feature');
-        //         if (this.highlighted)
-        //     }
-        // });
+        this.selected = [];// selected in the state for rendering, selected here to avoid async issues
+        this.selector = new ol.interaction.Select({
+            condition: ol.events.condition.pointerMove,
+            style: RED_STYLE,
+        });
+        this.selector.on('select', this.onFeatureSelect);
+
+        this.map.addInteraction(this.selector);
         this.source = new ol.source.Vector({wrapX: false});
         this.layer = new ol.layer.Vector({
             source: this.source,
@@ -82,16 +86,19 @@ export class MapView extends Component {
     }
 
     initMap() {
+        ol.control.ZoomExtent = zoomToExtent;
+        ol.inherits(ol.control.ZoomExtent, ol.control.Control);
         return new ol.Map({
             controls: [
-                new ol.control.ScaleLine(),
+                // new ol.control.ScaleLine(),
                 new ol.control.Attribution({
                     collapsible: false,
                     collapsed: false,
                 }),
-                new ol.control.Zoom(),
+                // new ol.control.Zoom(),
                 new ol.control.ZoomExtent({
-                    extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
+                    className: styles.olZoomToExtent,
+                    extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958],
                 }),
             ],
             interactions: ol.interaction.defaults({
@@ -108,8 +115,8 @@ export class MapView extends Component {
             view: new ol.View({
                 projection: "EPSG:3857",
                 center: [110, 0],
-                zoom: 1,
-                minZoom: 1,
+                zoom: 2,
+                minZoom: 2,
                 maxZoom: 22,
             })
         });
@@ -119,7 +126,19 @@ export class MapView extends Component {
         if(runId) {
             const feature = this.source.getFeatureById(runId) || null;
             if (feature) {
-                feature.setStyle(RED_STYLE);
+                // feature.setStyle(RED_STYLE);
+                // feature.getStyle().setZIndex(100);
+                // this.selector.dispatchEvent({
+                //     type: 'select',
+                //     selected: [feature],
+                //     deselected: []
+                // });
+                this.selector.getFeatures().push(feature);
+                this.selector.dispatchEvent({
+                    type: 'select',
+                    selected: [feature],
+                    deselected: []
+                });
             }
         }
     }
@@ -128,7 +147,14 @@ export class MapView extends Component {
         if (runId) {
             const feature = this.source.getFeatureById(runId) || null;
             if (feature) {
-                feature.setStyle(BLUE_STYLE)
+                // feature.setStyle(BLUE_STYLE);
+                // feature.getStyle().setZIndex(1);
+                this.selector.getFeatures().pop();
+                this.selector.dispatchEvent({
+                    type: 'select',
+                    selected: [],
+                    deselected: [feature]
+                });
             }
         }
     }
@@ -140,6 +166,29 @@ export class MapView extends Component {
                 this.map.getView().fit(feature.getGeometry().getExtent(), this.map.getSize());
             }
         }
+    }
+
+    onFeatureSelect(evt) {
+        const selected = evt.selected;
+        const deselected = evt.deselected;
+        let uids = [...this.selected];
+        if (deselected.length) {
+            deselected.forEach((feature) => {
+                const ix = uids.indexOf(feature.getId());
+                if (ix > -1) {
+                    uids.splice(ix, 1);
+                }
+            });
+        }
+        if (selected.length) {
+            selected.forEach((feature) => {
+                if (uids.indexOf(feature.getId()) < 0) {
+                    uids.push(feature.getId());
+                }
+            });
+        }
+        this.selected = uids; // set it here so since async setState is too slow
+        this.setState({selected: [...uids]}); // set it here so the rendering gets updated
     }
 
     render() {
@@ -181,6 +230,7 @@ export class MapView extends Component {
                                 onHoverStart={this.handleMouseOver}
                                 onHoverEnd={this.handleMouseOut}
                                 onClick={this.handleClick}
+                                backgroundColor={this.state.selected.indexOf(run.uid) > -1 ? '#e9ecec': null}
                             />
                         ))}
                         </GridList>

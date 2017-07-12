@@ -21,7 +21,7 @@ export class DataPackListItem extends Component {
     render() {
         const styles = {
             card: {
-                backgroundColor: '#f7f8f8',
+                backgroundColor: this.props.backgroundColor || '#f7f8f8',
                 borderRadius: '0px',
                 borderTop: 'grey 1px solid',
                 paddingBottom: '0px',
@@ -134,7 +134,8 @@ DataPackListItem.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onHoverStart: PropTypes.func,
     onHoverEnd: PropTypes.func,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    backgroundColor: PropTypes.string
 };
 
 export default DataPackListItem;
