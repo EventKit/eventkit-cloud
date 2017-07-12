@@ -28,7 +28,7 @@ class TestWFSToGPKG(TransactionTestCase):
         name = 'Great export'
         service_url = 'http://my-service.org/some-server/wms?'
         expected_url = '{}{}'.format(service_url.rstrip('?'), '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer))
-        cmd = Template("ogr2ogr -skipfailures -t_srs EPSG:3857 -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
+        cmd = Template("ogr2ogr -skipfailures -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
         cmd = cmd.safe_substitute({'gpkg': gpkg, 'url': expected_url, 'minX': bbox[0], 'minY': bbox[1], 'maxX': bbox[2], 'maxY': bbox[3]})
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)

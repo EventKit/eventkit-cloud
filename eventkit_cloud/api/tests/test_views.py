@@ -550,15 +550,17 @@ class TestExportRunViewSet(APITestCase):
         self.run_uid = str(self.export_run.uid)
 
     def test_patch(self):
-        url = reverse('api:runs-list')
-        patch_url = '{0}?job_uid={1}&field=expiration'.format(url, self.job.uid)
-        response = self.client.patch(patch_url)
+        url = reverse('api:runs-detail', args=[self.export_run.uid])
+        request_data = {"expiration": "2019-12-31"}
+
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
 
-        bad_patch_url = '{0}?job_uid={1}'.format(url, self.job_uid)
-        response = self.client.patch(bad_patch_url)
+        request_data = {"exploration": "2019-12-31"}
+
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_delete_run(self,):
