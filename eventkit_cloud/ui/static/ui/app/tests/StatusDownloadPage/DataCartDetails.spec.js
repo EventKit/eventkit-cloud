@@ -8,10 +8,6 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import DropDownMenu from 'material-ui/DropDownMenu';
-import Menu from 'material-ui/Menu';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
-import Check from 'material-ui/svg-icons/navigation/check'
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
 import '../../components/tap_events'
