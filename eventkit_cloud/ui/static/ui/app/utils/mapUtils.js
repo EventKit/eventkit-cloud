@@ -59,8 +59,10 @@ export function convertGeoJSONtoJSTS(geojson) {
         for (var i = 1; i < geometries.length; i++) {
             geometry = UnionOp.union(geometry, bufferGeometry(geometries[i]));
         }
+    } else if (jstsGeoJSON.geometry) {
+        geometry = bufferGeometry(jstsGeoJSON.geometry);
     } else {
-        var geometry = bufferGeometry(jstsGeoJSON);
+        geometry = bufferGeometry(jstsGeoJSON);
     }
     return geometry;
 }
