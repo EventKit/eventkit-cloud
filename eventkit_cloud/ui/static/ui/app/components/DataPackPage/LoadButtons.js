@@ -45,7 +45,7 @@ export class LoadButtons extends React.Component {
                         disabled={this.props.loadLessDisabled}
                         onClick={this.props.handleLoadLess}
                         icon={<KeyboardArrowUp/>}
-                        style={{minWidth: '145px', marginRight: '2.5px'}}
+                        style={{minWidth: '145px', margin: '5px 2.5px'}}
                     />
                     <RaisedButton 
                         backgroundColor={'#e5e5e5'}
@@ -54,7 +54,7 @@ export class LoadButtons extends React.Component {
                         disabled={this.props.loadMoreDisabled}
                         onClick={this.props.handleLoadMore}
                         icon={<KeyboardArrowDown/>}
-                        style={{minWidth: '145px', marginLeft: '2.5px'}}
+                        style={{minWidth: '145px', margin: '5px 2.5px'}}
                     />
                 </div>
                 <div id='range' style={styles.range}>

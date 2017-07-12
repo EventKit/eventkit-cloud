@@ -98,13 +98,14 @@ export class DataPackListItem extends Component {
                             <div style={styles.eventText}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
-                            <div style={{height: '18px', lineHeight: '18px'}}>
+                            <div style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}>
                                 {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
                                 {this.props.run.user == this.props.user.data.user.username ?
-                                    <p style={styles.ownerLabel}>My DataPack</p>
+                                    <div style={styles.ownerLabel}>My DataPack</div>
                                     :
-                                    <p style={styles.ownerLabel}>{this.props.run.user}</p>
+                                    <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
+                                <div style={{display: 'inline-block', float: 'right'}}>
                                 {this.props.run.job.published ? 
                                     <SocialGroup style={styles.publishedIcon}/>
                                     :
@@ -119,6 +120,7 @@ export class DataPackListItem extends Component {
                                         :
                                         <NavigationCheck style={styles.completeIcon}/>
                                 }
+                                </div>
                             </div>
                         </div>
                     }

@@ -7,7 +7,7 @@ import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
 import ZoomOut from 'material-ui/svg-icons/maps/zoom-out-map';
 import {zoomToExtent} from '../../utils/mapUtils';
-import styles from '../../styles/CreateExport.css';
+import css from '../../styles/ol3map.css';
 
 const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -95,9 +95,11 @@ export class MapView extends Component {
                     collapsible: false,
                     collapsed: false,
                 }),
-                // new ol.control.Zoom(),
+                new ol.control.Zoom({
+                    className: css.olZoom
+                }),
                 new ol.control.ZoomExtent({
-                    className: styles.olZoomToExtent,
+                    className: css.olZoomToExtent,
                     extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958],
                 }),
             ],
@@ -213,13 +215,13 @@ export class MapView extends Component {
         
         return (
             <div>
-                <CustomScrollbar style={{height: window.innerHeight - 236, width: '50%', display: 'inline-block'}}>
+                <CustomScrollbar style={{height: window.innerHeight - 236, width: '30%', display: 'inline-block'}}>
                     <div style={styles.root}>
                         <GridList
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
-                            style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                            style={{width: '100%'}}
                         >   
                         {this.props.runs.map((run) => (
                             <DataPackListItem 
@@ -237,7 +239,7 @@ export class MapView extends Component {
                     </div>
                     {load}
                 </CustomScrollbar>
-                <div style={{width: '50%', height: window.innerHeight - 236, display: 'inline-block', overflow: 'hidden', padding: '0px 10px 10px 3px'}}>
+                <div style={{width: '70%', height: window.innerHeight - 236, display: 'inline-block', overflow: 'hidden', padding: '0px 10px 10px 3px'}}>
                     <div style={{width: '100%', height: '100%'}} id='map'/>
                 </div>
             </div>

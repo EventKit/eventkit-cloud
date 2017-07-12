@@ -2,7 +2,7 @@ import 'openlayers/dist/ol.css';
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
-import styles from '../styles/CreateExport.css';
+import css from '../styles/ol3map.css';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import AoiInfobar from './AoiInfobar.js';
 import SearchAOIToolbar from './SearchAOIToolbar.js';
@@ -222,17 +222,17 @@ export class ExportAOI extends Component {
         this._map = new ol.Map({
             controls: [
                 new ol.control.ScaleLine({
-                    className: styles.olScaleLine,
+                    className: css.olScaleLine,
                 }),
                 new ol.control.Attribution({
                     collapsible: false,
                     collapsed: false,
                 }),
                 new ol.control.Zoom({
-                    className: styles.olZoom
+                    className: css.olZoom
                 }),
                 new ol.control.ZoomExtent({
-                    className: styles.olZoomToExtent,
+                    className: css.olZoomToExtent,
                     extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
                 }),
             ],
@@ -276,11 +276,11 @@ export class ExportAOI extends Component {
             mapStyle.left = '0px';
         }
 
-        let buttonClass = `${styles.draw || ''} ol-unselectable ol-control`
+        let buttonClass = `${css.draw || ''} ol-unselectable ol-control`
 
         return (
             <div>
-                <div id="map" className={styles.map}  style={mapStyle} ref="olmap">
+                <div id="map" className={css.map}  style={mapStyle} ref="olmap">
                     <AoiInfobar />
                     <SearchAOIToolbar
                         handleSearch={(result) => this.handleSearch(result)}
