@@ -312,7 +312,7 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Permission</td>
                             <td style={{...styles.tdData, paddingTop: '0px', paddingBottom: '0px'}}><DropDownMenu
                                 value={this.state.permission == true? 1 : 2}
-                                onChange={this.handlePublishedChange}
+                                onChange={this.handlePublishedChange.bind(this)}
                                 style={styles.dropDown}
                                 labelStyle={styles.label}
                                 iconStyle={styles.icon}

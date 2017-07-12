@@ -144,7 +144,7 @@ export function updatePermission (uid, value){
         return axios({
             url: '/api/runs/' + uid,
             method: 'PATCH',
-            data: {"permission": value},
+            data: {"published": value},
             headers: {"X-CSRFToken": csrftoken}
         }).then((response) => {
             dispatch({type: types.UPDATE_PERMISSION_SUCCESS});

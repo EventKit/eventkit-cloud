@@ -210,10 +210,22 @@ describe('StatusDownload component', () => {
                 data: [],
                 error: null,
             },
+            updateExpiration: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            updatePermission: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
             getDatacartDetails: (jobuid) => {},
             deleteRun: (jobuid) => {},
             rerunExport: (jobuid) => {},
             clearReRunInfo: () => {},
+            updateExpiration: (uid, expiration) => {},
+            updatePermission: (jobuid, value) => {},
             cloneExport: (cartDetails, providerArray) => {},
             cancelProviderTask: (providerUid) => {},
         }
@@ -226,7 +238,7 @@ describe('StatusDownload component', () => {
                 muiTheme: React.PropTypes.object
             }
         });
-    }
+    };
 
     it('should render all the basic components', () => {
         let props = getProps();
@@ -431,6 +443,31 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         const updateSpy = new sinon.spy(StatusDownload.prototype, 'forceUpdate');
         wrapper.instance().handleResize();
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
+    });
+
+    it('should call componentWillReceiveProps when Expiration is updated', () => {
+        const props = getProps();
+        props.getDatacartDetails = new sinon.spy();
+        const wrapper = getWrapper(props);
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const nextProps = getProps();
+        nextProps.updateExpiration.updated = true;
+        wrapper.setProps(nextProps);
+        expect(props.getDatacartDetails.calledOnce).toBe(true);
+        expect(props.getDatacartDetails.calledWith("6870234f-d876-467c-a332-65fdf0399a0d")).toBe(true);
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
+    });
+
+    it('should call componentWillReceiveProps when Permission is updated', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const nextProps = getProps();
+        nextProps.updatePermission.updated = true;
+        wrapper.setProps(nextProps);
         expect(updateSpy.calledOnce).toBe(true);
         updateSpy.restore();
     });
