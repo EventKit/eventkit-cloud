@@ -135,14 +135,6 @@ export class ProviderRow extends React.Component {
         });
     }
 
-        // getTimeRemaining(task){
-    //     let date = moment(task.estimated_finish);
-    //     let now = moment();
-    //     let timeRemaining = date - now;
-    //     timeRemaining = timeRemaining/1000;
-    //     return timeRemaining;
-    //     //task.progress == 100 ? '' : task.progress + ' %'
-    // }
 
     getTaskStatus(task) {
         switch (task.status) {

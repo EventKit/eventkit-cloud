@@ -355,16 +355,17 @@ describe('DataCartDetails component', () => {
     });
 
     it('handleExpirationChange should setState of new expiration date', () => {
-        //let props = getProps();
-        //props.onUpdateExpiration = new sinon.spy();
-        //const wrapper = shallow(<DataCartDetails {...props}/>);
-        //const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
-        //wrapper.instance().handleExpirationChange();
-        //expect(props.onUpdateExpiration.calledOnce).toBe(true);
-        //expect(props.onUpdateExpiration.calledWith("7838d3b3-160a-4e7d-89cb-91fdcd6eab43", '1/1/2021')).toBe(true);
-        //expect(stateSpy.calledOnce).toBe(true);
-        //expect(stateSpy.calledWith({expirationDate: 'Mon Jun 5 2017 18:35:01 GMT-0400 (Eastern Daylight Time)'})).toBe(true);
-        //stateSpy.restore();
+        let props = getProps();
+        props.onUpdateExpiration = new sinon.spy();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const event = {persist: () => {},};
+        wrapper.instance().handleExpirationChange(event, 'Mon Jun 5 2017 18:35:01 GMT-0400 (Eastern Daylight Time)');
+        expect(props.onUpdateExpiration.calledOnce).toBe(true);
+        expect(props.onUpdateExpiration.calledWith('7838d3b3-160a-4e7d-89cb-91fdcd6eab43', 'Mon Jun 5 2017 00:00:00 GMT-0400 (Eastern Daylight Time)')).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expirationDate: 'Mon Jun 5 2017 18:35:01 GMT-0400 (Eastern Daylight Time)'})).toBe(true);
+        stateSpy.restore();
     });
 });
 

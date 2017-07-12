@@ -67,9 +67,9 @@ export function updateExpirationReducer(state = initialState.updateExpiration, a
     switch(action.type) {
         case types.UPDATING_EXPIRATION:
             return {updating: true, updated: false, error: null};
-        case types.RESET_EXPIRATION_SUCCESS:
+        case types.UPDATE_EXPIRATION_SUCCESS:
             return {updating: false, updated: true, error: null};
-        case types.RESET_EXPIRATION_ERROR:
+        case types.UPDATE_EXPIRATION_ERROR:
             return {updating: false, updated: false, error: action.error};
         default:
             return state;
