@@ -8,6 +8,7 @@ import logging
 import os
 import shutil
 import socket
+import traceback
 from zipfile import ZipFile
 
 from django.conf import settings
@@ -208,6 +209,8 @@ class ExportTask(LockingTask):
             task.save()
             super(ExportTask, self).on_success(retval, task_id, args, kwargs)
         except Exception as e:
+            tb = traceback.format_exc()
+            logger.error('Exception in on_success handler for {}:\n{}'.format(self.name, tb))
             from billiard.einfo import ExceptionInfo
             einfo = ExceptionInfo()
             einfo.exception = e
@@ -232,6 +235,7 @@ class ExportTask(LockingTask):
         exception = cPickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
+        super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
             task.save()
@@ -241,13 +245,12 @@ class ExportTask(LockingTask):
                 # error_handler = export_task_error_handler()
                 # run error handler
                 stage_dir = kwargs['stage_dir']
-                export_task_error_handler.si(
+                export_task_error_handler(
                     run_uid=str(run.uid),
                     task_id=task_id,
                     stage_dir=stage_dir
-                ).delay()
+                )
             return {'state': TaskStates.CANCELED.value}
-        super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
 
     def update_task_state(self, result={}, task_status=TaskStates.RUNNING.value, task_uid=None):
         """
@@ -1047,9 +1050,9 @@ class FinalizeRunTask(LockingTask):
         run.status = TaskStates.COMPLETED.value
         provider_tasks = run.provider_tasks.all()
         # mark run as incomplete if any tasks fail
-        if any(task.status in TaskStates.get_incomplete_states() for task in provider_tasks):
+        if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
-        if all(task.status == TaskStates.CANCELED.value for task in provider_tasks):
+        if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED.value for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
@@ -1100,13 +1103,8 @@ def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage
     """
     Handles un-recoverable errors in export tasks.
     """
-
     from eventkit_cloud.tasks.models import ExportRun
-    finished = timezone.now()
     run = ExportRun.objects.get(uid=run_uid)
-    run.finished_at = finished
-    run.status = TaskStates.INCOMPLETE.value
-    run.save()
     try:
         if os.path.isdir(stage_dir):
             # DON'T leave the stage_dir in place for debugging
@@ -1208,8 +1206,7 @@ def cancel_export_provider_task(result={}, export_provider_task_uid=None, cancel
         expires=datetime.now() + timedelta(days=2),
         priority=TaskPriority.FINALIZE_PROVIDER.value,
         routing_key=worker,
-        queue=worker,
-        link=finalize_run_task.si(result={}, run_uid=run_uid, stage_dir=stage_dir)
+        queue=worker
     )
     return result
 

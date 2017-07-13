@@ -717,8 +717,6 @@ class TestExportTasks(ExportTaskBase):
         isdir.assert_any_call(stage_dir)
         rmtree.assert_called_once_with(stage_dir)
         email().send.assert_called_once()
-        run = ExportRun.objects.get(uid=run_uid)
-        self.assertEquals(TaskStates.INCOMPLETE.value, run.status)
 
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTask')
