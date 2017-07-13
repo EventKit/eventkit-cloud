@@ -15,7 +15,7 @@ export function bufferGeometry(jstsGeometry) {
     // In order to get meters and circles, 3857 should be used.
     const bufferSize = 1000;
     if (!(jstsGeometry.getGeometryType() === "Polygon" || jstsGeometry.getGeometryType() === "MultiPolygon" )) {
-        var temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
+        const temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
         return transformJSTSGeometry(BufferOp.bufferOp(temp_geom, bufferSize), 'EPSG:3857', 'EPSG:4326')
     }
     return jstsGeometry;
@@ -46,17 +46,18 @@ export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
 export function convertGeoJSONtoJSTS(geojson) {
     const geojsonReader = new reader();
 
-    var jstsGeoJSON = geojsonReader.read(geojson);
+    const jstsGeoJSON = geojsonReader.read(geojson);
+    let geometry;
     if (jstsGeoJSON.features) {
-        var features = jstsGeoJSON.features;
-        var geometry = bufferGeometry(features[0].geometry);
-        for (var i = 1; i < features.length; i++) {
+        let features = jstsGeoJSON.features;
+        geometry = bufferGeometry(features[0].geometry);
+        for (let i = 1; i < features.length; i++) {
             geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry));
         }
     } else if (jstsGeoJSON.geometries) {
-        var geometries = jstsGeoJSON.geometries;
-        var geometry = bufferGeometry(geometries[0]);
-        for (var i = 1; i < geometries.length; i++) {
+        let geometries = jstsGeoJSON.geometries;
+        geometry = bufferGeometry(geometries[0]);
+        for (let i = 1; i < geometries.length; i++) {
             geometry = UnionOp.union(geometry, bufferGeometry(geometries[i]));
         }
     } else if (jstsGeoJSON.geometry) {
