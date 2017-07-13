@@ -22,7 +22,7 @@ export function bufferGeometry(jstsGeometry) {
 }
 
 /**
- * Converts a GeoJSON to a JSTS Polygon/MultiPolygon geometry
+ * Converts a JSTS Polygon/MultiPolygon geometry from one reference system to another
  * @param {jstsGeometry} A JSTS geometry.
  * @param {from_srs} An EPSG code as a string, example: "EPSG:4326".
  * @param {to_srs} An EPSG code as a string, example: "EPSG:3857".
