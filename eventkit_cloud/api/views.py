@@ -1,6 +1,8 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime,timedelta
+from dateutil import parser
 import logging
 
 from django.db import transaction
@@ -10,6 +12,7 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User
 
+from eventkit_cloud.settings.prod import MAX_EXPORTRUN_EXPIRATION_DAYS
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
 )
@@ -549,11 +552,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
 
         """
-        Update the expiration date for an export run
-
+        Update the expiration date for an export run. If the user is a superuser,
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
+        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
 
         * request: the HTTP request in JSON.
 
@@ -562,8 +567,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 {
                     "expiration" : "2019-12-31"
                 }
-
-
 
         * Returns: a copy of the new expiration value on success
 
@@ -577,15 +580,31 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         ** returns: 400 on error
 
         """
+
         payload = request.data
+        if not "expiration" in payload:
+            return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+        expiration = payload["expiration"]
+        target_date = parser.parse(expiration)
         run = ExportRun.objects.get(uid=uid)
 
-        if "expiration" in payload :
-            run.expiration = payload["expiration"]
-            run.save()
-            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
-        else:
-            return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.user.is_superuser:
+            max_days = MAX_EXPORTRUN_EXPIRATION_DAYS
+            now = datetime.today()
+            max_date  = now + timedelta(max_days)
+            logger.info("**** %s %s" % (max_date, run.expiration.replace(tzinfo=None)))
+            if target_date > max_date.replace(tzinfo=None):
+                message = 'expiration date must be before ' + max_date.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+            if ( target_date < run.expiration.replace(tzinfo=None) ):
+                message = 'expiration date must be after ' + run.expiration.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        run.expiration = target_date
+        run.save()
+        return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+
 
     @staticmethod
     def validate_licenses(queryset):

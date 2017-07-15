@@ -3,10 +3,12 @@ from __future__ import absolute_import
 import json
 import logging
 import os
+from datetime import datetime,timedelta,date
 from tempfile import NamedTemporaryFile
 from unittest import skip
 import uuid
 
+from eventkit_cloud.settings.prod import MAX_EXPORTRUN_EXPIRATION_DAYS
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
@@ -551,17 +553,33 @@ class TestExportRunViewSet(APITestCase):
 
     def test_patch(self):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
-        request_data = {"expiration": "2019-12-31"}
-
+        today  = datetime.today()
+        ok_expiration = today + timedelta(MAX_EXPORTRUN_EXPIRATION_DAYS-1)
+        request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"exploration": "2019-12-31"}
-
+        not_ok_expiration = ok_expiration  - timedelta(1)
+        request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertFalse(response.data['success'])
+
+        not_ok_expiration = today + timedelta(MAX_EXPORTRUN_EXPIRATION_DAYS+1)
+        request_data = {"expiration": not_ok_expiration.isoformat()}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertFalse(response.data['success'])
+
+        request_data = {"exploration": ok_expiration.isoformat()}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        run = ExportRun.objects.get(uid=self.export_run.uid)
+        self.assertEquals(ok_expiration,run.expiration.replace(tzinfo=None))
+
 
     def test_delete_run(self,):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
