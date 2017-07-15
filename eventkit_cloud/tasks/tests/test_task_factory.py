@@ -60,10 +60,8 @@ class TestExportTaskFactory(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.get_invalid_licenses')
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.create_task')
-    @patch('eventkit_cloud.tasks.task_factory.group')
-    @patch('eventkit_cloud.tasks.task_factory.chord')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, task_factory_chord, task_factory_group, create_task,
+    def test_task_factory(self, task_factory_chain, create_task,
             finalize_task, mock_invalid_licenses):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
@@ -79,8 +77,6 @@ class TestExportTaskFactory(TestCase):
         task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
-        task_factory_group.assert_called()
-        task_factory_chord.assert_called_once()
         create_task.assert_called()
         finalize_task.s.assert_called()
 
@@ -111,10 +107,11 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.example_finalize_run_hook_task')
     @patch('eventkit_cloud.tasks.task_factory.prepare_for_export_zip_task')
     @patch('eventkit_cloud.tasks.task_factory.zip_file_task')
+    @patch('eventkit_cloud.tasks.task_factory.finalize_run_task_as_errback')
     @patch('eventkit_cloud.tasks.task_factory.finalize_run_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
     def test_create_finalize_run_task_collection(
-            self, chain, finalize_run_task, zip_file_task, prepare_for_export_zip_task, example_finalize_run_hook_task):
+            self, chain, finalize_run_task, finalize_run_task_as_errback, zip_file_task, prepare_for_export_zip_task, example_finalize_run_hook_task):
         """ Checks that all of the expected tasks were prepared and combined in a chain for return.
         """
         chain.return_value = 'When not mocked, this would be a celery chain'
@@ -125,8 +122,24 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         expected_task_settings = {
             'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker, 'priority': 70}
 
-        ret = create_finalize_run_task_collection(run_uid=run_uid, run_dir=run_dir, worker=worker)
-        self.assertEqual(ret, 'When not mocked, this would be a celery chain')
+        # This should return a chain of tasks ending in the finalize_run_task, plus a task sig for just the
+        #    finalize_run_task.
+        finalize_chain, errback = create_finalize_run_task_collection(run_uid=run_uid, run_dir=run_dir, worker=worker)
+
+        example_finalize_run_hook_task.si.assert_called_once_with([], run_uid=run_uid)
+        example_finalize_run_hook_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        prepare_for_export_zip_task.s.assert_called_once_with(run_uid=run_uid)
+        prepare_for_export_zip_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        zip_file_task.s.assert_called_once_with(run_uid=run_uid)
+        zip_file_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        finalize_run_task.si.assert_called_once_with(run_uid=run_uid, stage_dir=run_dir)
+        finalize_run_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
+
+        self.assertEqual(finalize_chain, 'When not mocked, this would be a celery chain')
+        self.assertEqual(errback, finalize_run_task_as_errback.si())
         self.assertEqual(chain.call_count, 1)
 
         # Grab the args for the first (only) call
@@ -140,15 +153,3 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
             finalize_run_task.si.return_value.set.return_value,
         )
         self.assertEqual(chain_inputs, expected_chain_inputs)
-
-        example_finalize_run_hook_task.si.assert_called_once_with([], run_uid=run_uid)
-        example_finalize_run_hook_task.si.return_value.set.assert_called_once_with(**expected_task_settings)
-
-        prepare_for_export_zip_task.s.assert_called_once_with(run_uid=run_uid)
-        prepare_for_export_zip_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
-
-        zip_file_task.s.assert_called_once_with(run_uid=run_uid)
-        zip_file_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
-
-        finalize_run_task.si.assert_called_once_with(run_uid=run_uid, stage_dir=run_dir)
-        finalize_run_task.si.return_value.set.assert_called_once_with(**expected_task_settings)

@@ -1104,6 +1104,14 @@ class FinalizeRunTask(LockingTask):
 finalize_run_task = FinalizeRunTask()
 app.tasks.register(finalize_run_task)
 
+
+# There's a celery bug with callbacks that use bind=True.  This task wraps an invocation of finalize_run_task
+# without bind=True for use as an errback. @see: https://github.com/celery/celery/issues/3723
+@app.task(name='Finalize Run as ErrBack')
+def finalize_run_task_as_errback(run_uid=None, stage_dir=None):
+    finalize_run_task.s({}, run_uid=run_uid, stage_dir=stage_dir).apply_async()
+
+
 @app.task(name='Export Task Error Handler', bind=True, base=LockingTask)
 def export_task_error_handler(self, result={}, run_uid=None, task_id=None, stage_dir=None):
     """

@@ -11,8 +11,8 @@ from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from celery import chain, group, chord
-from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, example_finalize_run_hook_task, \
-    prepare_for_export_zip_task, zip_file_task
+from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
+    example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
 from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
@@ -166,11 +166,15 @@ class TaskFactory:
                     grouped_provider_subtask_chain = chain(provider_subtask_chains)
                     grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
 
-                all_export_provider_task_group = group([gpsc for gpsc in grouped_provider_subtask_chains])
+                # A group would allow things to execute in parallel, but you can't add link_error to a group.
+                #    and we need to assure that the errback from create_finalize_run_task_collection() is called.
+                all_export_provider_task_chain = chain([gpsc for gpsc in grouped_provider_subtask_chains])
 
                 finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
-                tasks_results = \
-                    chain(all_export_provider_task_group, finalize_run_tasks).link_error(errback).apply_async()
+
+                all_tasks = chain(all_export_provider_task_chain, finalize_run_tasks)
+                all_tasks.set(link_error=errback)
+                tasks_results = all_tasks.apply_async()
 
                 return tasks_results
 
@@ -301,8 +305,9 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
     finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
+    errback_sig = finalize_run_task_as_errback.si(run_uid=run_uid, stage_dir=run_dir)
 
     all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
     finalize_chain = chain(*all_task_sigs)
 
-    return finalize_chain, finalize_sig
+    return finalize_chain, errback_sig
