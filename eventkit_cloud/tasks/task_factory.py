@@ -168,8 +168,9 @@ class TaskFactory:
 
                 all_export_provider_task_group = group([gpsc for gpsc in grouped_provider_subtask_chains])
 
-                finalize_run_tasks = create_finalize_run_task_collection(run_uid, run_dir, worker)
-                tasks_results = chord(all_export_provider_task_group)(finalize_run_tasks)
+                finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
+                tasks_results = \
+                    chain(all_export_provider_task_group, finalize_run_tasks).link_error(errback).apply_async()
 
                 return tasks_results
 
@@ -274,8 +275,9 @@ class InvalidLicense(Error):
 
 
 def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None):
-    """ Returns a celery chain of tasks that need to be executed after all of the export providers in a run
-        have finished.  Add any additional tasks you want in hook_tasks.
+    """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
+        have finished, and a finalize_run_task signature for use as an errback.
+        Add any additional tasks you want in hook_tasks.
         @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
     finalize_task_settings = {
@@ -303,4 +305,4 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
     all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
     finalize_chain = chain(*all_task_sigs)
 
-    return finalize_chain
+    return finalize_chain, finalize_sig

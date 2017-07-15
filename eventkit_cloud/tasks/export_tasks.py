@@ -1049,10 +1049,16 @@ class FinalizeRunTask(LockingTask):
             logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
         provider_tasks = run.provider_tasks.all()
+
+        # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
+        #    this waits until all provider tasks have finished before continuing.
+        if any(getattr(TaskStates, task.status, None) == TaskStates.PENDING for task in provider_tasks):
+            finalize_run_task.retry(result=result, run_uid=run_uid, stage_dir=stage_dir, countdown=5)
+
         # mark run as incomplete if any tasks fail
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
-        if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED.value for task in provider_tasks):
+        if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
