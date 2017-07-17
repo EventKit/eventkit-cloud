@@ -124,6 +124,7 @@ class ExportTask(models.Model):
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
     display = models.BooleanField(default=False)
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='export_task')
 
     class Meta:
         ordering = ['created_at']
@@ -134,11 +135,34 @@ class ExportTask(models.Model):
         return 'ExportTask uid: {0}'.format(self.uid)
 
 
-class ExportTaskResult(models.Model):
+class FinalizeRunHookTaskRecord(models.Model):
+    id = models.AutoField(primary_key=True, editable=False)
+    run = models.ForeignKey(ExportRun)
+    celery_uid = models.UUIDField()
+    task_name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    started_at = models.DateTimeField(editable=False, null=True)
+    finished_at = models.DateTimeField(editable=False, null=True)
+    status = models.CharField(blank=True, max_length=20, db_index=True)
+    pid = models.IntegerField(blank=True, default=-1)
+    worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
+    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='finalize_task')
+
+    class Meta:
+        ordering = ['created_at']
+        managed = True
+        db_table = 'finalize_run_hook_task_record'
+
+    def __str__(self):
+        return 'RunFinishedTaskRecord ({}): {}'.format(self.celery_uid, self.status)
+
+
+class FileProducingTaskResult(models.Model):
     """
-         An ExportTaskResult holds the information from the task, i.e. the reason for executing the task.
+         A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
-    task = models.OneToOneField(ExportTask, primary_key=True, related_name='result')
+    id = models.AutoField(primary_key=True)
     filename = models.CharField(max_length=100, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
     download_url = models.URLField(
@@ -147,19 +171,32 @@ class ExportTaskResult(models.Model):
     )
     deleted = models.BooleanField(default=False)
 
+    @property
+    def task(self):
+        if hasattr(self, 'finalize_task') and hasattr(self.export_task):
+            raise Exception('Both an ExportTask and a FinalizeRunHookTaskRecord are linked to FileProducingTaskResult')
+        elif hasattr(self, 'finalize_task'):
+            ret = self.finalize_task
+        elif hasattr(self, 'export_task'):
+            ret = self.export_task
+        else:
+            ret = None
+        return ret
+
     def soft_delete(self, *args, **kwargs):
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
         self.save()
-        self.task.display = False
-        self.task.save()
+        if hasattr(self.task, 'display'):
+            self.task.display = False
+            self.task.save()
 
     class Meta:
         managed = True
         db_table = 'export_task_results'
 
     def __str__(self):
-        return 'ExportTaskResult uid: {0}'.format(self.task.uid)
+        return 'FileProducingTaskResult ({}), {}'.format(self.id, self.filename)
 
 
 class ExportTaskException(models.Model):
@@ -191,10 +228,10 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
         logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
 
 
-@receiver(pre_delete, sender=ExportTaskResult)
+@receiver(pre_delete, sender=FileProducingTaskResult)
 def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
     """
-    Delete associated files when deleting the ExportTaskResult.
+    Delete associated files when deleting the FileProducingTaskResult.
     """
     # The url should be constructed as [download context, run_uid, filename]
     if getattr(settings, 'USE_S3', False):

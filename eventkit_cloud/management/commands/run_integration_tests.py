@@ -4,7 +4,7 @@ from eventkit_cloud.jobs.tests.integration_test_jobs import TestJob, load_provid
 
 
 class Command(BaseCommand):
-    help="Runs all integration tests"
+    help = "Runs all integration tests"
 
     def add_arguments(self, parser):
         parser.add_argument('tests', nargs='*')
@@ -17,7 +17,7 @@ class Command(BaseCommand):
             suite = unittest.TestLoader().loadTestsFromNames(options['tests'])
         else:
             suite = unittest.TestLoader().loadTestsFromTestCase(TestJob)
-        result = unittest.TextTestRunner().run(suite)
+        result = unittest.TextTestRunner(verbosity=2).run(suite)
         print('Removing test providers')
         delete_providers()
         if result.errors or result.failures:
