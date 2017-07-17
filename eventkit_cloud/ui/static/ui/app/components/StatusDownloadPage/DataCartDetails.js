@@ -192,11 +192,11 @@ export class DataCartDetails extends React.Component {
     handleExpirationChange = (e, date) => {
         //hit the API and change expiration date.
         //let newDate = moment(date).add(1, 'days').format('YYYY-MM-DD');
-        let newDate = moment(date).format('YYYY-MM-DD');
+        //let newDate = moment(date).format('YYYY-MM-DD');
         //let newDate = moment(date).format("YYYY-MM-DDT00:00:00.000") + "Z"
         //date.add(4, 'hours');
-        this.setState({expirationDate: newDate});
-        this.props.onUpdateExpiration(this.props.cartDetails.uid, newDate);
+        this.setState({expirationDate: date});
+        this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     }
 
 
@@ -303,7 +303,7 @@ export class DataCartDetails extends React.Component {
                         <tr>
                             <td style={styles.tdHeader}>Expiration</td>
                             <td style={{backgroundColor: '#f8f8f8', paddingRight: '10px',paddingLeft:'10px', paddingTop:'0px', display:'inlineBlock', paddingBottom:'0px', color: '#8b9396'}}>
-                                {moment(this.props.cartDetails.expiration).add(4, 'hours').format('YYYY-MM-DD')}
+                                {moment(this.props.cartDetails.expiration).format('YYYY-MM-DD')}
                                 <DatePicker
                                     ref="dp"
                                     style={{height:'0px',display: '-webkit-inline-box', width:'0px'}}
