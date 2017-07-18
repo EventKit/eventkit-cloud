@@ -587,15 +587,40 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def patch(self, request, uid=None, *args, **kwargs):
-        field = self.request.query_params.get('field', None)
-        job_uid = self.request.query_params.get('job_uid', None)
-        if field == 'expiration' and job_uid:
-            updated_time = timezone.now() + timezone.timedelta(days=14)
-            run = ExportRun.objects.get(job__uid=job_uid)
-            if not run.expiration > updated_time:
-                run.expiration = updated_time
-                run.save()
+    def partial_update(self, request, uid=None, *args, **kwargs):
+
+        """
+        Update the expiration date for an export run
+
+
+        * request: the HTTP request in JSON.
+
+            Example:
+
+                {
+                    "expiration" : "2019-12-31"
+                }
+
+
+
+        * Returns: a copy of the new expiration value on success
+
+            Example:
+
+                {
+                    "expiration": "2019-12-31",
+                    "success": true
+                }
+
+        ** returns: 400 on error
+
+        """
+        payload = request.data
+        run = ExportRun.objects.get(uid=uid)
+
+        if "expiration" in payload :
+            run.expiration = payload["expiration"]
+            run.save()
             return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
         else:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
