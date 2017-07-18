@@ -1,6 +1,5 @@
 import React, {PropTypes, Component} from 'react'
 import '../tap_events'
-import moment from 'moment'
 import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
@@ -18,6 +17,8 @@ import styles from '../../styles/StatusDownload.css'
 import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
+import TaskError from './TaskError'
+import ProviderError from './ProviderError'
 
 export class ProviderRow extends React.Component {
     constructor(props) {
@@ -30,6 +31,8 @@ export class ProviderRow extends React.Component {
             openTable: false,
             selectedRows: { },
             fileSize: null,
+            cloneDialogOpen: false,
+
         }
     }
 
@@ -86,9 +89,6 @@ export class ProviderRow extends React.Component {
         });
     }
 
-
-
-
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
         selectedRows[e.target.name] = checked;
@@ -135,27 +135,15 @@ export class ProviderRow extends React.Component {
         });
     }
 
-        // getTimeRemaining(task){
-    //     let date = moment(task.estimated_finish);
-    //     let now = moment();
-    //     let timeRemaining = date - now;
-    //     timeRemaining = timeRemaining/1000;
-    //     return timeRemaining;
-    //     //task.progress == 100 ? '' : task.progress + ' %'
-    // }
 
     getTaskStatus(task) {
+        //TODO: Take out the hard code error here
+        //task.status = "INCOMPLETE";
         switch (task.status) {
             case "SUCCESS":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
-                return <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+                return <TaskError task={task}/>
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
@@ -167,47 +155,14 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    getTaskStatusIcon(taskStatus) {
-        switch(taskStatus) {
-            case "SUCCESS":
-                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
-            case "PENDING":
-                return "WAITING";
-            case "CANCELED":
-                return "CANCELED";
-            case "FAILED":
-                return <span style={{color:'red'}}>Error</span>;
-            default:
-                return "";
-        }
-    }
-    getProviderStatusIcon(providerStatus) {
-        switch(providerStatus) {
+    getProviderStatus(provider) {
+        //TODO: Take out the hard code error here
+        //provider.status = 'INCOMPLETE'
+        switch (provider.status) {
             case "COMPLETED":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
-                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>;
-            case "SUBMITTED":
-                return null;
-            case "CANCELED":
-                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
-            default:
-                return null;
-        }
-    }
-
-    getProviderStatus(providerStatus) {
-        switch (providerStatus) {
-            case "COMPLETED":
-                return null;
-            case "INCOMPLETE":
-                return <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+                return <ProviderError provider={provider} key={provider.uid}/>;
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
@@ -220,7 +175,7 @@ export class ProviderRow extends React.Component {
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
                     color: '#f4d225'
-                }}>CANCELED</span>
+                }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
             default:
                 return "";
         }
@@ -370,8 +325,8 @@ export class ProviderRow extends React.Component {
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
-                            {this.getProviderStatus(this.props.provider.status)}
-                            {this.getProviderStatusIcon((this.props.provider.status))}
+                            {this.getProviderStatus(this.props.provider)}
+
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'right'}}>
                             {menuItems.length > 0 ? 
