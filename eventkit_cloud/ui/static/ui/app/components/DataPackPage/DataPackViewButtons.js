@@ -50,18 +50,13 @@ export class DataPackViewButtons extends React.Component {
                 >
                     <ActionViewStream />
                 </IconButton>
-                {window.innerWidth >= 768 ?
-                    <IconButton
-                        onClick={() => {this.props.handleViewChange('map')}}
-                        style={styles.button}
-                        iconStyle={styles.icon}
-                    >
-                        <MapsMap/>
-                    </IconButton>
-                :
-                    null
-                }
-                
+                <IconButton
+                    onClick={() => {this.props.handleViewChange('map')}}
+                    style={styles.button}
+                    iconStyle={styles.icon}
+                >
+                    <MapsMap/>
+                </IconButton>
             </div> 
         );
     }

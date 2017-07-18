@@ -44,7 +44,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
-            view: window.innerWidth < 768 ? 'grid' : 'map',
+            view: 'map',
             pageLoading: true,
             order: '-started_at',
             ownerFilter: '',
@@ -189,14 +189,7 @@ export class DataPackPage extends React.Component {
     }
 
     getView(view) {
-        let newView = '';
-        if(window.innerWidth < 768 && view == 'map') {
-            newView = 'grid';
-            this.setState({view: newView});
-        } 
-        else {newView = view}
-        
-        switch(newView) {
+        switch(view) {
             case 'list':
                 return <DataPackList
                     runs={this.props.runsList.runs}
