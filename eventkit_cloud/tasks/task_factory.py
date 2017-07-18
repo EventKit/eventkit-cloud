@@ -13,6 +13,7 @@ from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
     ExportWFSTaskRunner,
+    ExportWCSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
@@ -34,8 +35,11 @@ class TaskFactory:
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner, 'osm': ExportThematicOSMTaskRunner,
-                              'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
+        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner,
+                              'osm': ExportThematicOSMTaskRunner,
+                              'wfs': ExportWFSTaskRunner,
+                              'wms': ExportExternalRasterServiceTaskRunner,
+                              'wcs': ExportWCSTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
                               'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
