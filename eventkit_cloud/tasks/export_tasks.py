@@ -104,18 +104,18 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             generally can be ignored
         @return A url to reach filepath.
     """
-    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT
+    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
     run_dir = os.path.join(download_filesystem_root, run_uid)
-    filename = os.path.split(filepath)[-1]
+    filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(
             run_uid,
-            os.path.join(provider_slug, download_filename),
-            filepath
+            os.path.join(provider_slug, filename),
+            download_filename
         )
     else:
         try:
@@ -126,9 +126,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
 
         download_url = os.path.join(download_url_root, run_uid, download_filename)
 
-    download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
-    if not skip_copy:
-        shutil.copy(filepath, download_filepath)
+        download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+        if not skip_copy:
+            shutil.copy(filepath, download_filepath)
 
     return download_url
 
@@ -176,12 +176,10 @@ class ExportTask(LockingTask):
             stat = os.stat(output_url)
             size = stat.st_size / 1024 / 1024.00
             # construct the download_path
-            download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
             parts = output_url.split('/')
             filename = parts[-1]
             provider_slug = parts[-2]
             run_uid = parts[-3]
-            run_dir = os.path.join(download_root, run_uid)
             name, ext = os.path.splitext(filename)
             download_filename = '{0}-{1}-{2}{3}'.format(
                 name,
