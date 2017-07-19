@@ -224,7 +224,6 @@ export class DataPackPage extends React.Component {
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
-                    open={this.state.open}
                 />;
             default: return null;
         }

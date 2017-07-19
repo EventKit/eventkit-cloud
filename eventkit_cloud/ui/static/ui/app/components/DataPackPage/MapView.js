@@ -381,7 +381,6 @@ MapView.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    open: PropTypes.bool.isRequired,
 };
 
 export default MapView;

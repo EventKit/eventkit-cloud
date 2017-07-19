@@ -64,7 +64,7 @@ export class DataPackViewButtons extends React.Component {
 
 
 DataPackViewButtons.propTypes = {
-    handleViewChange: React.PropTypes.func.isRequired,
+    handleViewChange: PropTypes.func.isRequired,
 };
 
 export default DataPackViewButtons;
