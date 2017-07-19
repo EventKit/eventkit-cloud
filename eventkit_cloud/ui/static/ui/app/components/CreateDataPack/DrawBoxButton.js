@@ -1,47 +1,21 @@
 
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
-import styles from '../../styles/DrawAOIToolbar.css';
-import {setBoxButtonSelected, setAllButtonsDefault} from '../../actions/mapToolActions';
-import {updateMode} from '../../actions/exportsActions.js';
+import React, {Component, PropTypes} from 'react';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ContentClear from 'material-ui/svg-icons/content/clear';
-
-
 
 export class DrawBoxButton extends Component {
 
     constructor(props) {
         super(props);
         this.handleOnClick = this.handleOnClick.bind(this);
-        this.state = {
-            icon: DEFAULT_ICON,
-        }
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if(nextProps.toolbarIcons.box != this.props.toolbarIcons.box) {
-            // If the button has been selected update the button state
-            if(nextProps.toolbarIcons.box == 'SELECTED') {
-                this.setState({icon: SELECTED_ICON});
-            }
-            // If the button has been de-selected update the button state
-            if(nextProps.toolbarIcons.box == 'DEFAULT') {
-                this.setState({icon: DEFAULT_ICON});
-            }
-            // If the button has been set as inactive update the state 
-            if(nextProps.toolbarIcons.box == 'INACTIVE') {
-                this.setState({icon: INACTIVE_ICON});
-            }
-        }
     }
 
     handleOnClick() {
-        if(this.state.icon == SELECTED_ICON) {
+        if(this.props.buttonState == 'SELECTED') {
             this.props.setAllButtonsDefault();
             this.props.handleCancel();
         }
-        else if(this.state.icon == DEFAULT_ICON) {
+        else if(this.props.buttonState == 'DEFAULT') {
             this.props.setBoxButtonSelected();
             this.props.updateMode('MODE_DRAW_BBOX')
 
@@ -49,51 +23,59 @@ export class DrawBoxButton extends Component {
     }
 
     render() {
+        const state = this.props.buttonState;
+        const styles = {
+            buttonName: {
+                fontSize: '.5em',
+                width: '50px',
+                height: '12px',
+                color: '#4498c0',
+                bottom: '0',
+            },
+            drawButtonGeneral: {
+                height: '50px',
+                width: '50px',
+                borderTop: '1px solid #e6e6e6',
+                borderRight: 'none',
+                borderLeft: 'none',
+                borderBottom: 'none',
+                margin: 0,
+                padding: 0,
+                backgroundColor: '#fff',
+                outline: 'none'
+            }
+        }
+
+        const DEFAULT_ICON = <div>
+                <ImageCropSquare style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={styles.buttonName}>BOX</div>
+            </div>
+
+        const INACTIVE_ICON = <div>
+                <ImageCropSquare style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={{...styles.buttonName, opacity: 0.4}}>BOX</div>
+            </div>
+
+        const SELECTED_ICON = <div>
+                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={styles.buttonName}>BOX</div>
+            </div>
+
         return (
-            <button className={styles.drawButtonGeneral} onClick={this.handleOnClick}>
-                {this.state.icon}
+            <button style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+                {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )
     };
 }
 
-const DEFAULT_ICON = <div>
-                        <ImageCropSquare className={styles.defaultButton}/>
-                        <div className={styles.buttonName}>BOX</div>
-                    </div>
+DrawBoxButton.propTypes = {
+    buttonState: PropTypes.string,
+    updateMode: PropTypes.func,
+    setBoxButtonSelected: PropTypes.func,
+    setAllButtonsDefault: PropTypes.func,
+    handleCancel: PropTypes.func
+}
 
-const INACTIVE_ICON = <div>
-                        <ImageCropSquare className={styles.inactiveButton}/>
-                        <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>BOX</div>
-                    </div>
+export default DrawBoxButton;
 
-const SELECTED_ICON = <div>
-                        <ContentClear className={styles.selectedButton}/>
-                        <div className={styles.buttonName}>BOX</div>
-                    </div>
-
-function mapStateToProps(state) {
-    return {
-        toolbarIcons: state.toolbarIcons,
-        mode: state.mode,
-    };
-};
-
-function mapDispatchToProps(dispatch) {
-    return {
-        updateMode: (newMode) => {
-            dispatch(updateMode(newMode));
-        },
-        setBoxButtonSelected: () => {
-            dispatch(setBoxButtonSelected());
-        },
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-    };
-};
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DrawBoxButton);
