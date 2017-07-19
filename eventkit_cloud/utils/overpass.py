@@ -24,7 +24,8 @@ class Overpass(object):
     and filtered by the provided tags.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False, task_uid=None):
+    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False, task_uid=None,
+            raw_data_filename=None, filtered_data_filename=None):
         """
         Initialize the Overpass utility.
 
@@ -67,8 +68,13 @@ class Overpass(object):
             {'maxsize': max_size, 'timeout': timeout, 'bbox': self.bbox}
         )
         # set up required paths
-        self.raw_osm = os.path.join(self.stage_dir, 'query.osm')
-        self.filtered_osm = os.path.join(self.stage_dir, '{0}.osm'.format(job_name))
+        if raw_data_filename is None:
+            raw_data_filename = 'query.osm'
+        if filtered_data_filename is None:
+            filtered_data_filename = '{}.osm'.format(job_name)
+
+        self.raw_osm = os.path.join(self.stage_dir, raw_data_filename)
+        self.filtered_osm = os.path.join(self.stage_dir, filtered_data_filename)
 
     def get_query(self,):
         """Get the overpass query used for this extract."""

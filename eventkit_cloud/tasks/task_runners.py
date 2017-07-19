@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import importlib
+import json
 import logging
 import re
-import json
 
 from django.conf import settings
 from django.db import DatabaseError
 
 from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.tasks.export_tasks import osm_data_collection_task, hotosm_osm_thematic_gpkg_export_task
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 from .export_tasks import (osm_conf_task, osm_prep_schema_task,
@@ -186,6 +187,16 @@ class ExportGenericOSMTaskRunner(TaskRunner):
                                      export_tasks.iteritems() if task is not None)
                 task_chain = (task_chain | format_tasks)
 
+            # Run the osm_data_collection_task task in addition to debug it.
+            osm_data_collection_task_sig = osm_data_collection_task.si(
+                stage_dir, export_provider_task.id, worker=worker, osm_query_filters=job.filters, job_name=job_name,
+                bbox=bbox, user_details=user_details
+            ).set(queue=worker, routing_key=worker)
+
+            hot_osm_thematic_gpkg_sig = \
+                hotosm_osm_thematic_gpkg_export_task.si(stage_dir=stage_dir, job_name=job_name, user_details=user_details)
+
+            task_chain = osm_data_collection_task_sig | hot_osm_thematic_gpkg_sig | task_chain
             """
             the tasks are chained instead of nested groups.
             this is because celery3.x has issues with handling these callbacks

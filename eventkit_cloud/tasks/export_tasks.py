@@ -12,6 +12,8 @@ import traceback
 from zipfile import ZipFile
 
 from django.conf import settings
+from django.contrib.gis.geos import Polygon
+from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -23,12 +25,14 @@ from celery import Task
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+from eventkit_cloud.celery import app, TaskPriority
+from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.utils import (
+    kml, osmconf, osmparse, overpass, pbf, s3, shp,
+    wfs, arcgis_feature_service, sqlite, geopackage
+, thematic_gpkg, external_service)
+from eventkit_cloud.utils.hotosm_geopackage import OSMConfig, Geopackage
 
-from ..celery import app, TaskPriority
-from ..utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
-    external_service, wfs, arcgis_feature_service, sqlite, geopackage
-)
 from .exceptions import CancelException, DeleteException
 
 
@@ -342,7 +346,6 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     """
     Task to create the default sqlite schema.
     """
-
     self.update_task_state(result=result, task_uid=task_uid)
     osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
@@ -354,6 +357,72 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     result['result'] = gpkg
     result['geopackage'] = gpkg
     return result
+
+
+@app.task(name="OSMDataCollection", bind=True, base=ExportTask)
+def osm_data_collection_task(
+        self, stage_dir, export_provider_task_id, worker='celery', osm_query_filters=None,
+        job_name='no_job_name_specified', bbox=None, user_details=None):
+    """ Collects data from OSM & produces a generic (planet osm schema) gpkg.
+    """
+    from eventkit_cloud.tasks.models import ExportProviderTask
+    from eventkit_cloud.tasks.task_runners import create_export_task
+    export_provider_task = ExportProviderTask.objects.get(id=export_provider_task_id)
+    et = create_export_task(self.name, export_provider_task, worker, getattr(self, 'display', False))
+    et.celery_uid = self.request.id
+    et.save()
+
+    if user_details is None:
+        user_details = {'username': 'username not set in osm_data_collection_task'}
+
+    # --- OSMConfig
+    osm_config = OSMConfig(stage_dir, output_filename='osm_conf_hotosm_geopackage.ini')
+    osm_config_filepath = osm_config.create_osm_conf()
+
+    # --- Overpass Query
+    op = overpass.Overpass(
+        bbox=bbox, stage_dir=stage_dir,
+        job_name=job_name, filters=osm_query_filters, task_uid=et.uid,
+        raw_data_filename='query_hotosm_geopackage.osm',
+        filtered_data_filename='{}_hotosm_geopackage.osm'.format(job_name)
+    )
+    op.run_query(user_details=user_details)  # run the query
+    filtered_data_filename = op.filter(user_details=user_details)  # filter the results
+
+    # --- Convert Overpass result to PBF
+    osm_filename = os.path.join(stage_dir, filtered_data_filename)
+    pbf_filename = os.path.join(stage_dir, '{0}_hotosm_geopackage.pbf'.format(job_name))
+    o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=et.uid)
+    pbf_filepath = o2p.convert()
+
+    # --- Generate generic gpkg from PBF
+    gpkg_filepath = os.path.join(stage_dir, '{0}_hotosm_geopackage.gpkg'.format(job_name))
+
+#     feature_selection = FeatureSelection.example('osm_default')
+    feature_selection = FeatureSelection.example('osm_eventkit_generic')
+
+    # bbox is passed as lat1, long1, lat2, long2, rearrange for proper gis use, eg long1, lat1, long2, lat2
+    bbox_values = bbox.split(',')
+    geom_bbox = [bbox_values[1], bbox_values[0], bbox_values[3], bbox_values[2]]
+    geom = Polygon.from_bbox(geom_bbox)
+    g = Geopackage(pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom)
+    g.run()
+    geopackage_filepath = g.results[0].parts[0]
+    return {'generic_gpkg': geopackage_filepath, 'result': geopackage_filepath}
+
+
+@app.task(name="HOTOSM Thematic gpkg", bind=True, base=FormatTask, abort_on_error=True)
+def hotosm_osm_thematic_gpkg_export_task(self, stage_dir=None, job_name=None, user_details=None):
+    pbf_filepath = os.path.join(stage_dir, '{}_hotosm_geopackage.pbf'.format(job_name))
+    thematic_gpkg_filepath = os.path.join(stage_dir, '{}_hotosm_thematic_geopackage.gpkg'.format(job_name))
+
+    feature_selection = FeatureSelection.example('thematic')
+    # Since the input_gpkg has already been clipped, just set the bounding box to the entire world to get
+    # all features.
+    geom = Polygon.from_bbox([-180, -180, 180, 180])
+    g = Geopackage(pbf_filepath, thematic_gpkg_filepath, stage_dir, feature_selection, geom)
+    g.run()
+    return {'thematic_gpkg': thematic_gpkg_filepath}
 
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
@@ -644,6 +713,7 @@ def external_raster_service_export_task(self, result={}, layer=None, config=None
     """
     Class defining geopackage export for external raster service.
     """
+    logger.info('Doing nothing in external_raster_service_export_task ({})'.format(self.name))
     from .models import ExportRun
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -1273,6 +1343,8 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
     :param task_uid: A uid to reference the ExportTask.
     :return: A function which can be called to update the progress on an ExportTask.
     """
+    if task_uid is None:
+        return
 
     from ..tasks.models import ExportTask
     from django.db import connection
