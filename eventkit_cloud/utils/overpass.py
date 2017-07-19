@@ -50,7 +50,8 @@ class Overpass(object):
         if url:
             self.url = url
         if bbox:
-            self.bbox = bbox
+            # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
+            self.bbox = '{},{},{},{}'.format(bbox[1], bbox[0], bbox[3], bbox[2])
         else:
             raise Exception('A bounding box is required: miny,minx,maxy,maxx')
 

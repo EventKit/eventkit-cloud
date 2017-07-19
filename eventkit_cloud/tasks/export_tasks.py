@@ -359,18 +359,20 @@ def osm_prep_schema_task(self, result={}, task_uid=None, stage_dir=None, job_nam
     return result
 
 
-@app.task(name="OSMDataCollection", bind=True, base=ExportTask)
-def osm_data_collection_task(
+@app.task(name="OSMThematicDataCollection", bind=True, base=FormatTask)
+def osm_thematic_data_collection_task(
         self, stage_dir, export_provider_task_id, worker='celery', osm_query_filters=None,
         job_name='no_job_name_specified', bbox=None, user_details=None):
-    """ Collects data from OSM & produces a generic (planet osm schema) gpkg.
+    """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
+        export_provider_task_id.
+        bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
-    from eventkit_cloud.tasks.task_runners import create_export_task
+    from eventkit_cloud.tasks.task_runners import create_export_task_record
     export_provider_task = ExportProviderTask.objects.get(id=export_provider_task_id)
-    et = create_export_task(self.name, export_provider_task, worker, getattr(self, 'display', False))
-    et.celery_uid = self.request.id
-    et.save()
+    etr = create_export_task_record(self.name, export_provider_task, worker, getattr(self, 'display', False))
+    etr.celery_uid = self.request.id
+    etr.save()
 
     if user_details is None:
         user_details = {'username': 'username not set in osm_data_collection_task'}
@@ -382,7 +384,7 @@ def osm_data_collection_task(
     # --- Overpass Query
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir,
-        job_name=job_name, filters=osm_query_filters, task_uid=et.uid,
+        job_name=job_name, filters=osm_query_filters, task_uid=etr.uid,
         raw_data_filename='query_hotosm_geopackage.osm',
         filtered_data_filename='{}_hotosm_geopackage.osm'.format(job_name)
     )
@@ -392,19 +394,15 @@ def osm_data_collection_task(
     # --- Convert Overpass result to PBF
     osm_filename = os.path.join(stage_dir, filtered_data_filename)
     pbf_filename = os.path.join(stage_dir, '{0}_hotosm_geopackage.pbf'.format(job_name))
-    o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=et.uid)
+    o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=etr.uid)
     pbf_filepath = o2p.convert()
 
     # --- Generate generic gpkg from PBF
     gpkg_filepath = os.path.join(stage_dir, '{0}_hotosm_geopackage.gpkg'.format(job_name))
 
-#     feature_selection = FeatureSelection.example('osm_default')
-    feature_selection = FeatureSelection.example('osm_eventkit_generic')
+    feature_selection = FeatureSelection.example('thematic')
 
-    # bbox is passed as lat1, long1, lat2, long2, rearrange for proper gis use, eg long1, lat1, long2, lat2
-    bbox_values = bbox.split(',')
-    geom_bbox = [bbox_values[1], bbox_values[0], bbox_values[3], bbox_values[2]]
-    geom = Polygon.from_bbox(geom_bbox)
+    geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom)
     g.run()
     geopackage_filepath = g.results[0].parts[0]
