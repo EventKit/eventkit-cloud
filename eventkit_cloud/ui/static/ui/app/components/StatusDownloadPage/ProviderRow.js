@@ -48,7 +48,7 @@ export class ProviderRow extends React.Component {
         let fileSize = 0.000;
         nextProps.provider.tasks.forEach((task) => {
             if (task.result != null ){
-                if (task.display != false) {
+                if (task.display != false && task.result.size) {
                     let textReplace = task.result.size.replace(' MB', '');
                     let number = textReplace;
                     fileSize = Number(fileSize) + Number(number);

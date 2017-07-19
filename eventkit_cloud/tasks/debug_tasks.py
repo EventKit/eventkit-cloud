@@ -34,3 +34,12 @@ def test_task(self, a):
     logger.info('TestTask delivery_info: {}'.format(delivery_info))
     logger.info('TestTask: {}'.format(r))
     return r
+
+
+@app.task(name='TestFailingTask', bind=True)
+def test_failing_task(self, a):
+    raise Exception('This exception is not a mistake')
+
+@app.task(name='TestErrBack')
+def test_errback(msg='test_errback'):
+    logger.info('--- {} executing ---'.format(msg))

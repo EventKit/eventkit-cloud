@@ -33,7 +33,7 @@ from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTask,
     ExportTaskException,
-    ExportTaskResult,
+    FileProducingTaskResult,
     ExportProviderTask
 )
 from eventkit_cloud.utils.s3 import get_presigned_url
@@ -53,12 +53,12 @@ logger = logging.getLogger(__name__)
 
 
 class ExportTaskResultSerializer(serializers.ModelSerializer):
-    """Serialize ExportTaskResult models."""
+    """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
 
     class Meta:
-        model = ExportTaskResult
+        model = FileProducingTaskResult
         fields = ('filename', 'size', 'url', 'deleted')
 
     def get_url(self, obj):
@@ -106,12 +106,12 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             'result', 'errors', 'display')
 
     def get_result(self, obj):
-        """Serialize the ExportTaskResult for this ExportTask."""
+        """Serialize the FileProducingTaskResult for this ExportTask."""
         try:
             result = obj.result
             serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
             return serializer.data
-        except ExportTaskResult.DoesNotExist:
+        except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
 
     def get_errors(self, obj):
@@ -411,7 +411,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
-        read_only_fields = ('uid', )
+        read_only_fields = ('uid',)
         fields = '__all__'
 
     @staticmethod
