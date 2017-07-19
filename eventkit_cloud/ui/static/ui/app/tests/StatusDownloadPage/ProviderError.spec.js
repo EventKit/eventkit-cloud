@@ -39,6 +39,7 @@ describe('ProviderError component', () => {
         expect(wrapper.find(Dialog)).toHaveLength(1);
         expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
         expect(wrapper.find(Warning)).toHaveLength(1);
+
     });
 
     it('handleProviderErrorOpen should set provider error dialog to open', () => {
@@ -49,6 +50,12 @@ describe('ProviderError component', () => {
         wrapper.instance().handleProviderErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerErrorDialogOpen: true})).toBe(true);
+        expect(wrapper.find(NavigationArrowForward)).toHaveLength(3);
+        expect(wrapper.find('div').at(1).text()).toEqual('The first three errors:');
+        expect(wrapper.find('div').at(2).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(3).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(4).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(5).text()).toEqual('You may want to restart processing the files or contact an administrator.');
         stateSpy.restore();
     });
 
@@ -60,6 +67,32 @@ describe('ProviderError component', () => {
         wrapper.instance().handleProviderErrorClose();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerErrorDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('should call handleProviderErrorOpen when the error link is clicked. ', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderError.prototype, 'setState');
+        const errorSpy = new sinon.spy(ProviderError.prototype, 'handleProviderErrorOpen');
+        const wrapper = getWrapper(props);
+        expect(errorSpy.notCalled).toBe(true);
+        wrapper.find('a').simulate('click');
+        expect(errorSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerErrorDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+        errorSpy.restore();
+    });
+
+    it('should call handleProviderErrorOpen when the error warning icon is clicked. ', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderError.prototype, 'setState');
+        const errorSpy = new sinon.spy(ProviderError.prototype, 'handleProviderErrorOpen');
+        const wrapper = getWrapper(props);
+        expect(errorSpy.notCalled).toBe(true);
+        wrapper.find(Warning).simulate('click');
+        expect(errorSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerErrorDialogOpen: true})).toBe(true);
+        errorSpy.restore();
         stateSpy.restore();
     });
 

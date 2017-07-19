@@ -14,17 +14,18 @@ export class ProviderError extends React.Component {
         }
     }
 
-    handleProviderErrorOpen = () => {
+    handleProviderErrorOpen() {
         this.setState({providerErrorDialogOpen: true});
     };
 
-    handleProviderErrorClose = () => {
+    handleProviderErrorClose() {
         this.setState({providerErrorDialogOpen: false});
     };
 
 
     render() {
-        //TODO: Uncomment out props call and comment out hard coded fake error
+        //TODO: To test, comment out props call and uncomment out hard coded fake error.
+        //AND In ProviderRow.js, within the getProviderStatus function, uncomment out the hard coded provider status.
         let provider = this.props.provider;
 
         //fake an error

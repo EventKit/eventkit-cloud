@@ -13,17 +13,18 @@ export class TaskError extends React.Component {
         }
     }
 
-    handleTaskErrorOpen = () => {
+    handleTaskErrorOpen() {
         this.setState({taskErrorDialogOpen: true});
     };
 
-    handleTaskErrorClose = () => {
+    handleTaskErrorClose() {
         this.setState({taskErrorDialogOpen: false});
     };
 
 
     render() {
-        //TODO: Uncomment out props call and comment out hard coded fake error
+        //TODO: TO test, comment out props call and uncomment out hard coded fake task with errors
+        //AND In ProviderRow.js, within the getTastStatus function, uncomment out the hard coded provider status.
         let task = this.props.task;
 
         //fake an error
@@ -82,7 +83,7 @@ export class TaskError extends React.Component {
         open={this.state.taskErrorDialogOpen}
         onRequestClose={this.handleTaskErrorClose.bind(this)}
     >
-                <div> <strong>There was an error with {task.name} </strong><div style={{marginTop:'25px'}}><NavigationArrowForward style={{marginRight: '10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
+                <div><strong>There was an error with {task.name} </strong><div style={{marginTop:'25px'}}><NavigationArrowForward style={{marginRight: '10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
     </Dialog></span>
 
         )

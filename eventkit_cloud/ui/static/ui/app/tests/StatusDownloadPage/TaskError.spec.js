@@ -46,7 +46,6 @@ describe('TaskError component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
         expect(wrapper.find(Dialog)).toHaveLength(1);
-        //expect(wrapper.find('div').find('div').find(NavigationArrowForward)).toHaveLength(1);
     });
 
     it('handleTaskErrorOpen should set task error dialog to open', () => {
@@ -57,6 +56,10 @@ describe('TaskError component', () => {
         wrapper.instance().handleTaskErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({taskErrorDialogOpen: true})).toBe(true);
+        expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
+        expect(wrapper.find('div').at(0).text()).toEqual('There was an error with OSM Data (.gpkg) <NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(1).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        stateSpy.restore();
         stateSpy.restore();
     });
 
@@ -69,5 +72,18 @@ describe('TaskError component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({taskErrorDialogOpen: false})).toBe(true);
         stateSpy.restore();
+    });
+
+    it('should call handleTaskErrorOpen when the error link is clicked. ', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(TaskError.prototype, 'setState');
+        const errorSpy = new sinon.spy(TaskError.prototype, 'handleTaskErrorOpen');
+        const wrapper = getWrapper(props);
+        expect(errorSpy.notCalled).toBe(true);
+        wrapper.find('a').simulate('click');
+        expect(errorSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({taskErrorDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+        errorSpy.restore();
     });
 });
