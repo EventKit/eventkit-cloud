@@ -9,13 +9,12 @@ from django.db import DatabaseError
 
 from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
-from eventkit_cloud.tasks.export_tasks import osm_thematic_data_collection_task, hotosm_osm_thematic_gpkg_export_task
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
-from .export_tasks import (osm_conf_task, osm_prep_schema_task,
-                           osm_to_pbf_convert_task, overpass_query_task,
-                           wfs_export_task, external_raster_service_export_task,
-                           arcgis_feature_service_export_task, osm_create_styles_task)
+from eventkit_cloud.tasks.export_tasks import (
+    osm_thematic_data_collection_task, wfs_export_task, external_raster_service_export_task,
+    arcgis_feature_service_export_task, osm_create_styles_task
+)
 
 
 logger = logging.getLogger(__name__)
