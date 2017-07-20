@@ -394,6 +394,44 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
 
+    def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+           Update the published state  for the given job
+
+
+           * request: the HTTP request in JSON.
+
+               Example:
+
+                   {
+                       "published" : false
+                   }
+
+
+
+           * Returns: a copy of the new published value on success
+
+               Example:
+
+                   {
+                       "published": false,
+                       "success": true
+                   }
+
+           ** returns: 400 on error
+
+           """
+        payload = request.data
+        if not "published" in payload:
+            return Response([{'detail': _('missing published state parameter')}], status.HTTP_400_BAD_REQUEST)
+
+        job = Job.objects.get(uid=uid)
+        job.published = payload['published']
+        job.save()
+        return Response({'success': True, 'published': job.published }, status=status.HTTP_200_OK)
+
+
+
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
