@@ -65,7 +65,6 @@ export class DataPackFilterButton extends React.Component {
 
 
 DataPackFilterButton.propTypes = {
-    open: PropTypes.bool.isRequired,
     handleToggle: PropTypes.func.isRequired
 };
 

@@ -43,7 +43,7 @@ jsonfield==2.0.1
 kombu==4.0.2
 librabbitmq==1.6.1
 lxml==3.7.3
-mapproxy==1.10.2
+MapProxy==1.10.2
 Markdown==2.6.8
 MarkupSafe==1.0
 mccabe==0.6.1
@@ -85,4 +85,4 @@ waitress==1.0.2
 WebOb==1.7.1
 WebTest==2.0.26
 whitenoise==3.3.0
--e git+https://github.com/JivanAmara/django-audit-logging.git@v0.1.5#egg=django-audit-logging
+-e git+https://github.com/JivanAmara/django-audit-logging.git@v0.1.7#egg=django-audit-logging

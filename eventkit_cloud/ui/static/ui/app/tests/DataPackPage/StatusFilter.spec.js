@@ -17,7 +17,7 @@ describe('StatusFilter component', () => {
         return {
             completed: false,
             incomplete: false,
-            running: false,
+            submitted: false,
             onChange: (e, v) => {}
         }
     }
@@ -80,7 +80,7 @@ describe('StatusFilter component', () => {
         input.node.checked = true;
         input.simulate('change');
         expect(props.onChange.calledOnce).toBe(true);
-        expect(isEqual(props.onChange.args[0][0], {running: true})).toBe(true);
+        expect(isEqual(props.onChange.args[0][0], {submitted: true})).toBe(true);
     });
 
     it('should set Completed as checked', () => {
@@ -120,7 +120,7 @@ describe('StatusFilter component', () => {
         const input = wrapper.find(Checkbox).at(1).find('input');
         expect(input.node.checked).toBe(false);
         let nextProps = getProps();
-        nextProps.running = true;
+        nextProps.submitted = true;
         wrapper.setProps(nextProps);
         expect(input.node.checked).toBe(true);
     });

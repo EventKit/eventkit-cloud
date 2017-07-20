@@ -78,6 +78,8 @@ INSTALLED_APPS += (
     'audit_logging',
 )
 
+MIDDLEWARE += ['audit_logging.middleware.UserDetailsMiddleware']
+
 AUDIT_MODELS = [
     ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
     ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),

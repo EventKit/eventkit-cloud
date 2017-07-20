@@ -15,14 +15,14 @@ export function bufferGeometry(jstsGeometry) {
     // In order to get meters and circles, 3857 should be used.
     const bufferSize = 1000;
     if (!(jstsGeometry.getGeometryType() === "Polygon" || jstsGeometry.getGeometryType() === "MultiPolygon" )) {
-        var temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
+        const temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
         return transformJSTSGeometry(BufferOp.bufferOp(temp_geom, bufferSize), 'EPSG:3857', 'EPSG:4326')
     }
     return jstsGeometry;
 }
 
 /**
- * Converts a GeoJSON to a JSTS Polygon/MultiPolygon geometry
+ * Converts a JSTS Polygon/MultiPolygon geometry from one reference system to another
  * @param {jstsGeometry} A JSTS geometry.
  * @param {from_srs} An EPSG code as a string, example: "EPSG:4326".
  * @param {to_srs} An EPSG code as a string, example: "EPSG:3857".
@@ -46,21 +46,54 @@ export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
 export function convertGeoJSONtoJSTS(geojson) {
     const geojsonReader = new reader();
 
-    var jstsGeoJSON = geojsonReader.read(geojson);
+    const jstsGeoJSON = geojsonReader.read(geojson);
+    let geometry;
     if (jstsGeoJSON.features) {
-        var features = jstsGeoJSON.features;
-        var geometry = bufferGeometry(features[0].geometry);
-        for (var i = 1; i < features.length; i++) {
+        let features = jstsGeoJSON.features;
+        geometry = bufferGeometry(features[0].geometry);
+        for (let i = 1; i < features.length; i++) {
             geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry));
         }
     } else if (jstsGeoJSON.geometries) {
-        var geometries = jstsGeoJSON.geometries;
-        var geometry = bufferGeometry(geometries[0]);
-        for (var i = 1; i < geometries.length; i++) {
+        let geometries = jstsGeoJSON.geometries;
+        geometry = bufferGeometry(geometries[0]);
+        for (let i = 1; i < geometries.length; i++) {
             geometry = UnionOp.union(geometry, bufferGeometry(geometries[i]));
         }
+    } else if (jstsGeoJSON.geometry) {
+        geometry = bufferGeometry(jstsGeoJSON.geometry);
     } else {
-        var geometry = bufferGeometry(jstsGeoJSON);
+        geometry = bufferGeometry(jstsGeoJSON);
     }
     return geometry;
+}
+
+export function zoomToExtent(opt_option) {
+    let options = opt_option ? opt_option : {};
+    options.className = options.className != undefined ? options.className : ''
+
+    let button = document.createElement('button');
+    let icon = document.createElement('i');
+    icon.className = 'fa fa-globe';
+    button.appendChild(icon);
+    let this_ = this;
+
+    this.zoomer = () => {
+        const extent = !options.extent ? view.getProjection.getExtent() : options.extent;
+        const map = this_.getMap();
+        const view = map.getView();
+        const size = map.getSize();
+        view.fit(options.extent, size);
+    }
+
+    button.addEventListener('click', this_.zoomer, false);
+    button.addEventListener('touchstart', this_.zoomer, false);
+    let element = document.createElement('div');
+    element.className = options.className + ' ol-unselectable ol-control';
+    element.appendChild(button);
+
+    ol.control.Control.call(this, {
+        element: element,
+        target: options.target
+    });
 }

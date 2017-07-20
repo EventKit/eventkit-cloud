@@ -86,7 +86,7 @@ class JobViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
-    search_fields = ('name', 'description', 'event', 'user__username', 'region__name')
+    search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -479,21 +479,47 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportRunViewSet(viewsets.ModelViewSet):
     """
-    Provides an endpoint for querying export runs.
+    **Provides an endpoint for querying export runs**.
 
-    Export runs for a particular job can be filtered by status by appending one of
-    `COMPLETED`, `SUBMITTED`, `INCOMPLETE` or `FAILED` as the value of the `STATUS` parameter:
-    `/api/runs?job_uid=a_job_uid&status=STATUS`
+    **Export runs can be filtered and ordered by adding optional parameters to the url**:
+    
+    * `user`: The user who created the job.
+    
+    * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or FAILED).
+        * Example = `/api/runs?status=SUBMITTED,INCOMPLETE,FAILED`
+        
+    * `job_uid`: The uid of a particular job.
+    
+    * `min_date`: Minimum date (YYYY-MM-DD) for the `started_at` field.
+    
+    * `max_date`: Maximum date (YYYY-MM-DD) for the `started_at` field.
+    
+    * `started_at`: The DateTime a run was started at in ISO date-time format.
+    
+    * `published`: True or False for whether the owning job is published or not.
+    
+    * `search_term`: A value to search the job name, description and event text for.
+    
+    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
+        * Order can be reversed by adding `-` to the front of the order parameter.
+        
+    **Putting it all together: An example request using some of the parameters**.
+    
+    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&search_term=test&ordering=-job__name`
     """
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    filter_backends = (filters.DjangoFilterBackend,)
+    pagination_class = LinkHeaderPagination
+    filter_backends = (filters.DjangoFilterBackend, filters.OrderingFilter)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
-    search_fields = ('job__uid',)
+    search_fields = ('user__username', 'status', 'job__uid', 'min_date',
+                     'max_date', 'started_at', 'job__published')
+    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event')
+    ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False)).order_by('-started_at')
+        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -540,17 +566,60 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         * Returns: the serialized run data.
         """
-        job_uid = self.request.query_params.get('job_uid', None)
-        if job_uid:
-            queryset = self.filter_queryset(self.get_queryset().filter(job__uid=job_uid)).order_by('-started_at')
-        else:
-            queryset = self.get_queryset().order_by('-started_at')
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_term = self.request.query_params.get('search_term', None)
+        if search_term is not None:
+            queryset = queryset.filter(
+                (
+                    Q(job__name__icontains=search_term) |
+                    Q(job__description__icontains=search_term) |
+                    Q(job__event__icontains=search_term)
+                )
+        )
+
         try:
             self.validate_licenses(queryset)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, uid=None, *args, **kwargs):
+
+        """
+        Update the expiration date for an export run
+
+
+        * request: the HTTP request in JSON.
+
+            Example:
+
+                {
+                    "expiration" : "2019-12-31"
+                }
+
+
+
+        * Returns: a copy of the new expiration value on success
+
+            Example:
+
+                {
+                    "expiration": "2019-12-31",
+                    "success": true
+                }
+
+        ** returns: 400 on error
+
+        """
+        payload = request.data
+        run = ExportRun.objects.get(uid=uid)
 
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
@@ -593,7 +662,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             max_days = MAX_EXPORTRUN_EXPIRATION_DAYS
             now = datetime.today()
             max_date  = now + timedelta(max_days)
-            logger.info("**** %s %s" % (max_date, run.expiration.replace(tzinfo=None)))
             if target_date > max_date.replace(tzinfo=None):
                 message = 'expiration date must be before ' + max_date.isoformat()
                 return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)

@@ -553,6 +553,7 @@ class TestExportRunViewSet(APITestCase):
 
     def test_patch(self):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
+
         today  = datetime.today()
         ok_expiration = today + timedelta(MAX_EXPORTRUN_EXPIRATION_DAYS-1)
         request_data = {"expiration": ok_expiration.isoformat()}

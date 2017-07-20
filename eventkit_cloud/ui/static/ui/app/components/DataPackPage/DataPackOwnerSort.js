@@ -91,8 +91,8 @@ export class DataPackOwnerSort extends React.Component {
                 underlineStyle={styles.underline}            
                 value={this.props.value}
                 onChange={this.props.handleChange}>
-                <MenuItem style={styles.item} value={1} primaryText={"All DataPacks"} />
-                <MenuItem style={styles.item} value={2} primaryText={"My DataPacks"} />
+                <MenuItem style={styles.item} value={''} primaryText={"All DataPacks"} />
+                <MenuItem style={styles.item} value={this.props.owner} primaryText={"My DataPacks"} />
             </DropDownMenu>
         );
     }
@@ -100,8 +100,9 @@ export class DataPackOwnerSort extends React.Component {
 
 
 DataPackOwnerSort.propTypes = {
-    value: PropTypes.number.isRequired,
-    handleChange: PropTypes.func.isRequired
+    value: PropTypes.string.isRequired,
+    handleChange: PropTypes.func.isRequired,
+    owner: PropTypes.string.isRequired
 };
 
 export default DataPackOwnerSort;

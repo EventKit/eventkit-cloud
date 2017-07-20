@@ -31,9 +31,9 @@ describe('PermissionsFilter component', () => {
         expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual(null);
         expect(wrapper.find(RadioButton)).toHaveLength(2);
         expect(wrapper.find(RadioButton).first().text()).toEqual('Private');
-        expect(wrapper.find(RadioButton).first().props().value).toEqual('Private');
+        expect(wrapper.find(RadioButton).first().props().value).toEqual("False");
         expect(wrapper.find(RadioButton).last().text()).toEqual('Public');
-        expect(wrapper.find(RadioButton).last().props().value).toEqual('Public');
+        expect(wrapper.find(RadioButton).last().props().value).toEqual("True");
     });
 
     it('should call onChange with "Private"', () => {
@@ -45,7 +45,7 @@ describe('PermissionsFilter component', () => {
         });
         wrapper.find(RadioButton).first().find('input[type="radio"]').simulate('change', {target: {checked: true}});
         expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.args[0][1]).toEqual('Private');
+        expect(props.onChange.args[0][1]).toEqual("False");
     });
 
     it('should call onChange with "Public"', () => {
@@ -57,7 +57,7 @@ describe('PermissionsFilter component', () => {
         });
         wrapper.find(RadioButton).last().find('input[type="radio"]').simulate('change', {target: {checked: true}});
         expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.args[0][1]).toEqual('Public');
+        expect(props.onChange.args[0][1]).toEqual("True");
     });
 
     it('should set the selected value', () => {
@@ -68,8 +68,8 @@ describe('PermissionsFilter component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let nextProps = getProps();
-        nextProps.valueSelected = 'Private';
+        nextProps.valueSelected = "False";
         wrapper.setProps(nextProps);
-        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('Private');
+        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual("False");
     });
 });

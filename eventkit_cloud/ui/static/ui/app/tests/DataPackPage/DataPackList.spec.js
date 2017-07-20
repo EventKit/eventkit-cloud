@@ -11,7 +11,6 @@ import DataPackList from '../../components/DataPackPage/DataPackList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import * as sorts from '../../utils/sortUtils';
 
 describe('DataPackList component', () => {
     injectTapEventPlugin();
@@ -22,15 +21,20 @@ describe('DataPackList component', () => {
             user: {data: {user: {username: 'admin'}}},
             onRunDelete: () => {},
             onSort: () => {},
+            order: '-started_at'
         }
+    };
+
+    const getWrapper = (props) => {
+        return mount(<DataPackList {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
     }
 
     it('should render list items as part of the mobile view', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         // ensure the screen is small
         window.resizeTo(556, 600);
         expect(window.innerWidth).toEqual(556);
@@ -43,10 +47,7 @@ describe('DataPackList component', () => {
 
     it('should render table items as part of the desktop view', () => {
         const props = getProps();
-        const  wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const  wrapper = getWrapper(props);
         //ensure the screen is large
         window.resizeTo(1250, 800);
         expect(window.innerWidth).toEqual(1250);
@@ -75,160 +76,116 @@ describe('DataPackList component', () => {
         expect(wrapper.find(DataPackTableItem)).toHaveLength(3);
     });
 
-    it('should have order newest date active by default in the table', () => {
+    it('name column header should call handleOrder onclick', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        //ensure the screen is large
-        window.resizeTo(1250, 800);
-        expect(window.innerWidth).toEqual(1250);
-        wrapper.update();
-        expect(wrapper.find(TableHeaderColumn).at(2).find('span').props().style).toEqual({color: '#000', fontWeight: 'bold'});
-        expect(wrapper.state().activeSort).toEqual(sorts.orderNewest);
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(0).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__name'));
+        orderSpy.restore();
     });
 
-    it('handleNameSort should use orderAZ if not active, else if should use the opposite of activeSort', () => {
+    it('event column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(1).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__event'));
+        orderSpy.restore();
+    });
+
+    it('date column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(2).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('started_at')).toBe(true);
+        orderSpy.restore();
+    });
+
+    it('status column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(3).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('status'));
+        orderSpy.restore();
+    });
+
+    it('permissions column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(4).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('job__published'));
+        orderSpy.restore();
+    });
+
+    it('owner column header should call handleOrder onclick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(5).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('user__username'));
+        orderSpy.restore();
+    });
+
+    it('handleOrder should call isSameOrderType and props.onSort', () => {
         let props = getProps();
         props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        wrapper.instance().handleNameSort();
-        expect(props.onSort.calledWith(sorts.orderAZ)).toBe(true);;
-        expect(stateSpy.calledWith({activeSort: sorts.orderAZ})).toBe(true);;
-        wrapper.instance().handleNameSort();
-        expect(props.onSort.calledWith(sorts.orderZA)).toBe(true);;
-        expect(stateSpy.calledWith({activeSort: sorts.orderZA})).toBe(true);
-        stateSpy.restore();
+        const isSameSpy = new sinon.spy(DataPackList.prototype, 'isSameOrderType');
+        const wrapper = getWrapper(props);
+
+        let newOrder = 'job__name';
+        wrapper.instance().handleOrder(newOrder);
+        expect(isSameSpy.calledWith('-started_at', 'job__name')).toBe(true);
+        expect(props.onSort.calledOnce).toBe(true);
+        expect(props.onSort.calledWith(newOrder)).toBe(true);
+
+        newOrder = 'started_at';
+        wrapper.instance().handleOrder(newOrder);
+        expect(isSameSpy.calledWith('-started_at', 'started_at')).toBe(true);
+        expect(props.onSort.calledTwice).toBe(true);
+        expect(props.onSort.calledWith(newOrder)).toBe(true);
+
+        let nextProps = getProps();
+        nextProps.order = 'started_at';
+        nextProps.onSort = props.onSort;
+        wrapper.setProps(nextProps);
+        newOrder = '-started_at';
+        wrapper.instance().handleOrder(newOrder);
+        expect(isSameSpy.calledWith('started_at', '-started_at')).toBe(true);
+        expect(props.onSort.calledThrice).toBe(true);
+        expect(props.onSort.calledWith(newOrder)).toBe(true);
+
+        isSameSpy.restore();
     });
 
-    it('handleEventSort should use orderEventAZ if not active, else it should use the opposite of activeSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        wrapper.instance().handleEventSort();
-        expect(props.onSort.calledWith(sorts.orderEventAZ)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderEventAZ})).toBe(true);
-        wrapper.instance().handleEventSort();
-        expect(props.onSort.calledWith(sorts.orderEventZA)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderEventZA})).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleDateSort should use orderNewest if not active, else it should use the opposite of activeSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        //set a different activeSort since dateSort is the default
-        wrapper.instance().handleEventSort();
-        wrapper.instance().handleDateSort();
-        expect(props.onSort.calledWith(sorts.orderNewest)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderNewest})).toBe(true);
-        wrapper.instance().handleDateSort();
-        expect(props.onSort.calledWith(sorts.orderOldest)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderOldest})).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleStatusSort should use orderComplete if not active, else it should use the opposite of activeSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        wrapper.instance().handleStatusSort();
-        expect(props.onSort.calledWith(sorts.orderComplete)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderComplete})).toBe(true);
-        wrapper.instance().handleStatusSort();
-        expect(props.onSort.calledWith(sorts.orderIncomplete)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderIncomplete})).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handlePermissionsSort should use orderPriovate if not active, else it should use the opposite of activeSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        wrapper.instance().handlePermissionsSort();
-        expect(props.onSort.calledWith(sorts.orderPrivate)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderPrivate})).toBe(true);
-        wrapper.instance().handlePermissionsSort();
-        expect(props.onSort.calledWith(sorts.orderPrivate)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderPrivate})).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleOwnerSort should use orderOwnerAZ if not active, else it should use the opposite of activeSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        const stateSpy = new sinon.spy(DataPackList.prototype, 'setState');
-        wrapper.instance().handleOwnerSort();
-        expect(props.onSort.calledWith(sorts.orderOwnerAZ)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderOwnerAZ})).toBe(true);
-        wrapper.instance().handleOwnerSort();
-        expect(props.onSort.calledWith(sorts.orderOwnerZA)).toBe(true);
-        expect(stateSpy.calledWith({activeSort: sorts.orderOwnerZA})).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('isNameActive should return whether activeSort is a name sort function', () => {
+    it('isSameOrderType should return true or false', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isNameActive()).toBe(false);
-        wrapper.setState({activeSort: sorts.orderAZ});
-        expect(wrapper.instance().isNameActive()).toBe(true);
-    });
-
-    it('isEventActive should return whether activeSort is a event sort function', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isEventActive()).toBe(false);
-        wrapper.setState({activeSort: sorts.orderEventAZ});
-        expect(wrapper.instance().isEventActive()).toBe(true);
-    });
-
-    it('isDateActive should return whether activeSort is a date sort function', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isDateActive()).toBe(true);
-        wrapper.setState({activeSort: sorts.orderEventAZ});
-        expect(wrapper.instance().isDateActive()).toBe(false);
-    });
-
-    it('isStatusActive should return whether activeSort is a status sort function', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isStatusActive()).toBe(false);
-        wrapper.setState({activeSort: sorts.orderComplete});
-        expect(wrapper.instance().isStatusActive()).toBe(true);
-    });
-
-    it('isPermissionsActive should return whether activeSort is a permissions sort function', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isPermissionsActive()).toBe(false);
-        wrapper.setState({activeSort: sorts.orderPrivate});
-        expect(wrapper.instance().isPermissionsActive()).toBe(true);
-    });
-
-    it('isOwnerActive should return whether activeSort is a owner sort function', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
-        expect(wrapper.instance().isOwnerActive()).toBe(false);
-        wrapper.setState({activeSort: sorts.orderOwnerAZ});
-        expect(wrapper.instance().isOwnerActive()).toBe(true);
+        expect(wrapper.instance().isSameOrderType('-started_at', 'started_at')).toBe(true);
+        expect(wrapper.instance().isSameOrderType('job__name', 'started_at')).toBe(false);
     });
 
     it('getIcon should return up arrow if activeSort is equal to passed in sort, else it return down arrow', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackList {...props}/>);
-        let icon = wrapper.instance().getIcon(sorts.orderAZ);
+        let icon = wrapper.instance().getIcon('started_at');
         expect(icon).toEqual(<NavigationArrowDropDown style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
-        icon = wrapper.instance().getIcon(sorts.orderNewest);
+        icon = wrapper.instance().getIcon('-started_at');
         expect(icon).toEqual(<NavigationArrowDropUp style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
     });
 
