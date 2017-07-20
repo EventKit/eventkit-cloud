@@ -43,7 +43,7 @@ class Overpass(object):
         self.query = None
         self.stage_dir = stage_dir
         self.job_name = job_name
-        self.filters = filters
+        self.filters = '' if filters is None else filters
         self.debug = debug
         self.task_uid = task_uid
         self.verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
@@ -81,9 +81,11 @@ class Overpass(object):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self, user_details=None):
+    def run_query(self, user_details=None, subtask_percentage=100):
         """
         Run the overpass query.
+        subtask_percentage is the percentage of the task referenced by self.task_uid this method takes up.
+            Used to update progress.
 
         Return:
             the path to the overpass extract
@@ -100,7 +102,7 @@ class Overpass(object):
         try:
             req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
-            update_progress(self.task_uid, progress=50)
+            update_progress(self.task_uid, progress=50.0, subtask_percentage=subtask_percentage)
             try:
                 size = int(req.headers.get('content-length'))
             except (ValueError, TypeError):
@@ -116,7 +118,10 @@ class Overpass(object):
                     fd.write(chunk)
                     size += CHUNK
                     # Because progress is already at 50, we need to make this part start at 50 percent
-                    update_progress(self.task_uid, progress=(float(size) / float(inflated_size)) * 100)
+                    update_progress(
+                        self.task_uid, progress=(float(size) / float(inflated_size)) * 100,
+                        subtask_percentage=subtask_percentage
+                    )
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)

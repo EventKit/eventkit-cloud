@@ -388,7 +388,8 @@ def osm_thematic_data_collection_task(
         raw_data_filename='query_hotosm_geopackage.osm',
         filtered_data_filename='{}_hotosm_geopackage.osm'.format(job_name)
     )
-    op.run_query(user_details=user_details)  # run the query
+    op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
+
     filtered_data_filename = op.filter(user_details=user_details)  # filter the results
 
     # --- Convert Overpass result to PBF
@@ -401,11 +402,14 @@ def osm_thematic_data_collection_task(
     gpkg_filepath = os.path.join(stage_dir, '{0}_hotosm_geopackage.gpkg'.format(job_name))
 
     feature_selection = FeatureSelection.example('thematic')
+    update_progress(etr.uid, progress=75)
 
     geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom)
     g.run()
     geopackage_filepath = g.results[0].parts[0]
+    update_progress(etr.uid, progress=100)
+
     return {'generic_gpkg': geopackage_filepath, 'result': geopackage_filepath}
 
 
@@ -1335,10 +1339,11 @@ def kill_task(result={}, task_pid=None, celery_uid=None):
     return result
 
 
-def update_progress(task_uid, progress=None, estimated_finish=None):
+def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
     """
     Updates the progress of the ExportTask from the given task_uid.
     :param task_uid: A uid to reference the ExportTask.
+    :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
     :return: A function which can be called to update the progress on an ExportTask.
     """
     if task_uid is None:
@@ -1349,20 +1354,21 @@ def update_progress(task_uid, progress=None, estimated_finish=None):
 
     if not estimated_finish and not progress:
         return
-    if progress > 100:
-        progress = 100
+
+    absolute_progress = progress * (subtask_percentage / 100.0)
+    if absolute_progress > 100:
+        absolute_progress = 100
 
     # We need to close the existing connection because the logger could be using a forked process which,
     # will be invalid and throw an error.
     connection.close()
 
     export_task = ExportTask.objects.get(uid=task_uid)
-    if progress:
-        export_task.progress = progress
+    if absolute_progress:
+        export_task.progress = absolute_progress
     if estimated_finish:
         export_task.estimated_finish = estimated_finish
     export_task.save()
-
 
 
 def parse_result(task_result, key=''):
