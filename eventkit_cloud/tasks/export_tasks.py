@@ -158,7 +158,6 @@ class ExportTask(LockingTask):
             6. create the export task result
             7. update the export task status and save it
         """
-
         # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks should
         # just return.
         if not retval:
@@ -313,8 +312,8 @@ def osm_thematic_data_collection_task(
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir,
         job_name=job_name, filters=osm_query_filters, task_uid=etr.uid,
-        raw_data_filename='query_hotosm_geopackage.osm',
-        filtered_data_filename='{}_hotosm_geopackage.osm'.format(job_name)
+        raw_data_filename='{}_raw_query.osm'.format(job_name),
+        filtered_data_filename='{}_filtered_query.osm'.format(job_name)
     )
     op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
 
@@ -322,37 +321,24 @@ def osm_thematic_data_collection_task(
 
     # --- Convert Overpass result to PBF
     osm_filename = os.path.join(stage_dir, filtered_data_filename)
-    pbf_filename = os.path.join(stage_dir, '{0}_hotosm_geopackage.pbf'.format(job_name))
+    pbf_filename = os.path.join(stage_dir, '{}_filtered_query.pbf'.format(job_name))
     o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=etr.uid)
     pbf_filepath = o2p.convert()
 
     # --- Generate thematic gpkg from PBF
-    gpkg_filepath = os.path.join(stage_dir, '{0}_hotosm_geopackage.gpkg'.format(job_name))
+    geopackage_filepath = os.path.join(stage_dir, '{}_thematic.gpkg'.format(job_name))
 
     feature_selection = FeatureSelection.example('thematic')
     update_progress(etr.uid, progress=75)
 
     geom = Polygon.from_bbox(bbox)
-    g = Geopackage(pbf_filepath, gpkg_filepath, stage_dir, feature_selection, geom)
+    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
     g.run()
-    geopackage_filepath = g.results[0].parts[0]
+    ret_geopackage_filepath = g.results[0].parts[0]
+    assert(ret_geopackage_filepath == geopackage_filepath)
     update_progress(etr.uid, progress=100)
 
-    return {'generic_gpkg': geopackage_filepath, 'result': geopackage_filepath}
-
-
-@app.task(name="HOTOSM Thematic gpkg", bind=True, base=FormatTask, abort_on_error=True)
-def hotosm_osm_thematic_gpkg_export_task(self, stage_dir=None, job_name=None, user_details=None):
-    pbf_filepath = os.path.join(stage_dir, '{}_hotosm_geopackage.pbf'.format(job_name))
-    thematic_gpkg_filepath = os.path.join(stage_dir, '{}_hotosm_thematic_geopackage.gpkg'.format(job_name))
-
-    feature_selection = FeatureSelection.example('thematic')
-    # Since the input_gpkg has already been clipped, just set the bounding box to the entire world to get
-    # all features.
-    geom = Polygon.from_bbox([-180, -180, 180, 180])
-    g = Geopackage(pbf_filepath, thematic_gpkg_filepath, stage_dir, feature_selection, geom)
-    g.run()
-    return {'thematic_gpkg': thematic_gpkg_filepath}
+    return {'result': geopackage_filepath}
 
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
@@ -365,9 +351,7 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     self.update_task_state(result=result, task_uid=task_uid)
     input_gpkg = parse_result(result, 'geopackage')
 
-    gpkg_file = '{0}-{1}-{2}.gpkg'.format(job_name,
-                                          provider_slug,
-                                          timezone.now().strftime('%Y%m%d'))
+    gpkg_file = '{}.gpkg'.format(job_name)
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 

@@ -122,23 +122,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         thematic_tasks = (thematic_task | format_tasks) if format_tasks else thematic_task
 
-        style_task_record = create_export_task_record(
-            task_name=osm_create_styles_task.name,
-            export_provider_task=export_provider_task_record,
-            worker=worker,
-            display=getattr(osm_create_styles_task, "display", False)
-        )
-        style_task = osm_create_styles_task.s(
-            task_uid=style_task_record.uid,
-            stage_dir=stage_dir,
-            job_name=job_name,
-            bbox=bbox,
-            provider_slug=provider_task.provider.slug,
-            provider_name=provider_task.provider.name,
-            user_details=user_details
-        ).set(queue=worker, routing_key=worker)
-
-        return export_provider_task_record.uid, (thematic_tasks | style_task)
+        return export_provider_task_record.uid, thematic_tasks
 
 
 class ExportWFSTaskRunner(TaskRunner):
