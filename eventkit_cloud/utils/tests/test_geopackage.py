@@ -213,8 +213,9 @@ class TestGeopackage(TransactionTestCase):
         with self.assertRaises(Exception):
             add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
 
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
     @patch('os.rename')
-    def test_clip_geopackage(self, rename):
+    def test_clip_geopackage(self, rename, sqlite3):
         geojson = "{}"
         gpkg = None
         with self.assertRaises(Exception):
@@ -223,12 +224,24 @@ class TestGeopackage(TransactionTestCase):
         geojson_file = "test.geojson"
         in_gpkg = "old_test.gpkg"
         gpkg = "test.gpkg"
-        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {1} {2}".format(geojson_file, gpkg, in_gpkg)
+        expected_tables_no_tiles = ()
+        expected_tables_with_tiles = (("",),)  # contents don't matter, just checks length
+
+        sqlite3.connect().__enter__().execute.return_value = expected_tables_no_tiles
+        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {2} {1}".format(geojson_file, in_gpkg, gpkg)
         self.task_process.return_value = Mock(exitcode=0)
         clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
+        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True,
+                                                                  stderr=-1, stdout=-1)
         rename.assert_called_once_with(gpkg, in_gpkg)
+
+        sqlite3.connect().__enter__().execute.return_value = expected_tables_with_tiles
+        expected_call = "gdalwarp -cutline {0} -crop_to_cutline -dstalpha {1} {2}".format(geojson_file, in_gpkg, gpkg)
+        self.task_process.return_value = Mock(exitcode=0)
+        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
+        self.task_process().start_process.assert_called_with(expected_call, executable='/bin/bash', shell=True,
+                                                                  stderr=-1, stdout=-1)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

@@ -569,7 +569,7 @@ def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
-@app.task(name='WCSExport', bind=True, base=FormatTask)
+@app.task(name='WCSExport', bind=True, base=ExportTask)
 def wcs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
     """

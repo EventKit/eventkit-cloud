@@ -15,12 +15,12 @@ class TestWCSToGPKG(TransactionTestCase):
 
     def setUp(self):
         self.path = settings.ABS_PATH()
-        self.task_process_patcher = patch('eventkit_cloud.utils.wfs.TaskProcess')
+        self.task_process_patcher = patch('eventkit_cloud.utils.wcs.TaskProcess')
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.utils.wfs.os.path.exists')
+    @patch('eventkit_cloud.utils.wcs.os.path.exists')
     def test_create_convert(self, exists):
         gpkg = '/path/to/sqlite.gpkg'
         bbox = [-45, -45, 45, 45]
@@ -28,14 +28,14 @@ class TestWCSToGPKG(TransactionTestCase):
         name = 'Great export'
         service_url = 'http://my-service.org/some-server/wcs?'
         expected_url = '{}{}'.format(service_url.rstrip('?'),
-                                     ('?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGEID={}&CRS=EPSG:4326' +
-                                      '&FORMAT=GeoTIFF').format(layer))
+                                     '?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGEID={}&CRS=EPSG:4326'
+                                     .format(layer))
         cmd = Template("gdal_translate -projwin $minX $maxY $maxX $minY -of GPKG $wcs $out")
-        cmd = cmd.safe_substitute({'out': gpkg, 'url': expected_url, 'minX': bbox[0], 'minY': bbox[1], 'maxX': bbox[2], 'maxY': bbox[3]})
+
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
-        # set zipped to False for testing
-        w2g = WCStoGPKG(gpkg=gpkg,
+
+        w2g = WCStoGPKG(out=gpkg,
                         bbox=bbox,
                         service_url=service_url,
                         layer=layer,
@@ -46,6 +46,9 @@ class TestWCSToGPKG(TransactionTestCase):
         out = w2g.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(gpkg))
+
+        cmd = cmd.safe_substitute({'out': gpkg, 'wcs': w2g.wcs_xml_path, 'minX': bbox[0], 'minY': bbox[1],
+                                   'maxX': bbox[2], 'maxY': bbox[3]})
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
         self.assertEquals(out, gpkg)

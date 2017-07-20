@@ -42,6 +42,7 @@ class WCStoGPKG(object):
               <CoverageName>$coverage</CoverageName>
               <PreferredFormat>GeoTIFF</PreferredFormat>
             </WCS_GDAL>""")
+        self.wcs_xml_path = None # determined after mkstemp call
         if self.bbox:
             self.cmd = Template(
                 "gdal_translate -projwin $minX $maxY $maxX $minY -of $fmt $wcs $out"
@@ -69,25 +70,25 @@ class WCStoGPKG(object):
             self.service_url = '{}?'.format(self.service_url,
                                             (
                                                 '?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&CoverageId={}' +
-                                                '&SRSNAME=EPSG:4326&subset=Long({},{})&subset=Lat({},{})'
-                                             ).format(self.layer, self.bbox[0], self.bbox[2], self.bbox[1], self.bbox[3]))
+                                                '&SRS=EPSG:4326'
+                                             ).format(self.layer))
 
         # Create temporary WCS description XML file for gdal_translate
-        (wcs_xml_fd, wcs_xml_path) = tempfile.mkstemp()
+        (wcs_xml_fd, self.wcs_xml_path) = tempfile.mkstemp()
         wcs_xml_string = self.wcs_xml.safe_substitute({
             'url': self.service_url,
             'coverage': self.layer
         })
-        logger.debug("Creating temporary WCS XML at {}:\n{}".format(wcs_xml_path, wcs_xml_string))
+        logger.debug("Creating temporary WCS XML at {}:\n{}".format(self.wcs_xml_path, wcs_xml_string))
         os.write(wcs_xml_fd, wcs_xml_string)
         os.close(wcs_xml_fd)
 
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
-                {'out': self.out, 'wcs': wcs_xml_path, 'minX': self.bbox[0], 'minY': self.bbox[1],
+                {'out': self.out, 'wcs': self.wcs_xml_path, 'minX': self.bbox[0], 'minY': self.bbox[1],
                  'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.fmt})
         else:
-            convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': wcs_xml_path, 'fmt': self.fmt})
+            convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.fmt})
 
         if self.debug:
             logger.debug('Running: %s' % convert_cmd)
@@ -96,11 +97,11 @@ class WCStoGPKG(object):
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception("WCS translation failed with code {}: xml={}".format(task_process.exitcode, wcs_xml_string))
+            raise Exception("WCS translation failed with code {}".format(task_process.exitcode))
         if self.debug:
             logger.debug('gdal_translate returned: %s' % task_process.exitcode)
 
-        os.remove(wcs_xml_path)
+        os.remove(self.wcs_xml_path)
 
         return self.out
 
