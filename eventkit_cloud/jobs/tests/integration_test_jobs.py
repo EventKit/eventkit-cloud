@@ -264,12 +264,23 @@ class TestJob(TestCase):
 
     def test_wfs_kml(self):
         """
-        This test is to ensure that an WFS job will export a gpkg file.
+        This test is to ensure that an WFS job will export a kml file.
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
+        self.assertTrue(self.run_job(job_data))
+
+    def test_wcs_gpkg(self):
+        """
+        This test is to ensure that a WCS job will export a gpkg file.
+        :returns:
+        """
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WCS",
+                    "description": "Test Description",
+                    "event": "TestProject", "selection": self.selection, "tags": [],
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
 
     def test_arcgis_feature_service(self):
@@ -301,6 +312,8 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wfs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                   {"provider": "eventkit-integration-test-wcs",
+                                                    "formats": ["gpkg"]},
                                                    {"provider": "eventkit-integration-test-arc-fs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
         self.assertTrue(self.run_job(job_data, run_timeout=300))
@@ -325,6 +338,8 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wfs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
+                                                   {"provider": "eventkit-integration-test-wcs",
+                                                    "formats": ["gpkg"]},
                                                    {"provider": "eventkit-integration-test-arc-fs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
         response = self.client.post(self.jobs_url,
@@ -549,6 +564,18 @@ def get_providers_list():
         "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
         "layer": "geonode:Eurasia_Oceania_LSIB7a_gen_polygons",
         "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wfs'),
+        "level_from": 0,
+        "level_to": 2,
+        "config": ""
+
+    }, {
+        "created_at": "2016-10-13T17:23:26.890Z",
+        "updated_at": "2016-10-13T17:23:26.890Z",
+        "name": "eventkit-integration-test-wcs",
+        "slug": "eventkit-integration-test-wcs",
+        "url": "http://demo.pixia.com/wcsserver/?",
+        "layer": "3",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wcs'),
         "level_from": 0,
         "level_to": 2,
         "config": ""

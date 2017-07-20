@@ -41,17 +41,19 @@ class WCStoGPKG(object):
               <ServiceURL>$url</ServiceURL>
               <CoverageName>$coverage</CoverageName>
               <PreferredFormat>GeoTIFF</PreferredFormat>
+              <GetCoverageExtra>&amp;crs=EPSG:4326</GetCoverageExtra>
             </WCS_GDAL>""")
         self.wcs_xml_path = None # determined after mkstemp call
         if self.bbox:
             self.cmd = Template(
-                "gdal_translate -projwin $minX $maxY $maxX $minY -of $fmt $wcs $out"
+                "gdal_translate -projwin $minX $maxY $maxX $minY -of $fmt $type $wcs $out"
             )
         else:
             self.cmd = Template(
-                "gdal_translate -of $fmt $wcs $out"
+                "gdal_translate -of $fmt $type $wcs $out"
             )
         self.fmt = "GPKG"
+        self.type = "-ot byte"  # geopackage raster is limited to byte band type
 
     def convert(self, ):
         """
@@ -63,15 +65,8 @@ class WCStoGPKG(object):
         try:
             # remove any url params so we can add our own
             self.service_url = self.service_url.split('?')[0]
-        except ValueError:
-            # if no url params we can just check for trailing slash and move on
-            self.service_url = self.service_url.rstrip('/\\')
         finally:
-            self.service_url = '{}?'.format(self.service_url,
-                                            (
-                                                '?SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&CoverageId={}' +
-                                                '&SRS=EPSG:4326'
-                                             ).format(self.layer))
+            self.service_url += "?"
 
         # Create temporary WCS description XML file for gdal_translate
         (wcs_xml_fd, self.wcs_xml_path) = tempfile.mkstemp()
@@ -86,7 +81,7 @@ class WCStoGPKG(object):
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
                 {'out': self.out, 'wcs': self.wcs_xml_path, 'minX': self.bbox[0], 'minY': self.bbox[1],
-                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.fmt})
+                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.fmt, 'type': self.type})
         else:
             convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.fmt})
 
@@ -120,3 +115,4 @@ class WCStoGeotiff(object):
                                            debug=debug, name=name, service_type=service_type, task_uid=task_uid)
 
         self.fmt = "GeoTIFF"  # overriding base class
+        self.type = ""  # no need to restrict to byte band type

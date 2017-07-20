@@ -113,7 +113,7 @@ def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
         raise Exception("A geojson_file: {0} \nor a geopackage: {1} was not accessible.".format(geojson_file, gpkg))
 
     # set cmd to gdalwarp if tiled gpkg, otherwise ogr2ogr
-    if 0 < len((get_tile_table_names(gpkg))):
+    if get_tile_table_names(gpkg):
         cmd = Template("gdalwarp -cutline $geojson_file -crop_to_cutline -dstalpha $in_gpkg $out_gpkg")
     else:
         cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
@@ -125,7 +125,7 @@ def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
                                       'in_gpkg': in_gpkg,
                                       'out_gpkg': gpkg})
 
-    logger.error(append_cmd)
+    logger.info(append_cmd)
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -27,10 +27,7 @@ class TestWCSToGPKG(TransactionTestCase):
         layer = 'awesomeLayer'
         name = 'Great export'
         service_url = 'http://my-service.org/some-server/wcs?'
-        expected_url = '{}{}'.format(service_url.rstrip('?'),
-                                     '?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGEID={}&CRS=EPSG:4326'
-                                     .format(layer))
-        cmd = Template("gdal_translate -projwin $minX $maxY $maxX $minY -of GPKG $wcs $out")
+        cmd = Template("gdal_translate -projwin $minX $maxY $maxX $minY -of GPKG -ot byte $wcs $out")
 
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
