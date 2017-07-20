@@ -27,7 +27,6 @@ export class LoadButtons extends React.Component {
 
     render() {
         const range = this.props.range ? this.props.range.split('/') : null;
-
         const styles = {
             range: this.state.width < 768 ?
                 {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}

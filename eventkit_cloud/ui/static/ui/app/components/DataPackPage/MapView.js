@@ -6,15 +6,12 @@ import MapPopup from './MapPopup';
 import CustomScrollbar from '../CustomScrollbar';
 import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
-import Clear from 'material-ui/svg-icons/content/clear';
-import Forward from 'material-ui/svg-icons/content/forward';
-import ZoomIn from 'material-ui/svg-icons/action/zoom-in';
 import {zoomToExtent} from '../../utils/mapUtils';
 import css from '../../styles/ol3map.css';
 import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
 
-const RED_STYLE = new ol.style.Style({
+export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#ce4427',
         width: 6,
@@ -22,7 +19,7 @@ const RED_STYLE = new ol.style.Style({
     })
 });
 
-const BLUE_STYLE = new ol.style.Style({
+export const BLUE_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#4498c0',
         width: 6,
@@ -59,7 +56,6 @@ export class MapView extends Component {
         this.map.addLayer(this.layer);
         this.addRunFeatures(this.props.runs, this.source);
         this.map.getView().fit(this.source.getExtent(), this.map.getSize());
-
         this.map.on('singleclick', this.onMapClick);
     }
 
@@ -384,4 +380,3 @@ MapView.propTypes = {
 };
 
 export default MapView;
-
