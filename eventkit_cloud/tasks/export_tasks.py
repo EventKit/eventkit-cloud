@@ -377,10 +377,6 @@ def osm_thematic_data_collection_task(
     if user_details is None:
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
-    # --- OSMConfig
-    osm_config = OSMConfig(stage_dir, output_filename='osm_conf_hotosm_geopackage.ini')
-    osm_config_filepath = osm_config.create_osm_conf()
-
     # --- Overpass Query
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir,
@@ -398,7 +394,7 @@ def osm_thematic_data_collection_task(
     o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=etr.uid)
     pbf_filepath = o2p.convert()
 
-    # --- Generate generic gpkg from PBF
+    # --- Generate thematic gpkg from PBF
     gpkg_filepath = os.path.join(stage_dir, '{0}_hotosm_geopackage.gpkg'.format(job_name))
 
     feature_selection = FeatureSelection.example('thematic')
@@ -547,61 +543,6 @@ def sqlite_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
         raise Exception(e)
-
-
-@app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
-def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
-    """
-    Class defining geopackage export function.
-    """
-    user_details = kwargs.get('user_details')
-    # This is just to make it easier to trace when user_details haven't been sent
-    if user_details is None:
-        user_details = {'username': 'unknown-bounds_export_task'}
-
-    from .models import ExportRun
-
-    self.update_task_state(result=result, task_uid=task_uid)
-    run = ExportRun.objects.get(uid=run_uid)
-
-    result_gpkg = parse_result(result, 'geopackage')
-    bounds = run.job.the_geom.geojson or run.job.bounds_geojson
-
-    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
-    gpkg = geopackage.add_geojson_to_geopackage(
-        geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid, user_details=user_details
-    )
-
-    result['result'] = gpkg
-    result['geopackage'] = result_gpkg
-    return result
-
-
-@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
-def output_selection_geojson_task(self, result={}, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
-                                  *args, **kwargs):
-    """
-    Class defining geopackage export function.
-    """
-
-    self.update_task_state(result=result, task_uid=task_uid)
-
-    geojson_file = os.path.join(stage_dir,
-                                "{0}_selection.geojson".format(provider_slug))
-
-    if selection and not os.path.isfile(geojson_file):
-        # Test if json.
-        json.loads(selection)
-        from audit_logging.file_logging import logging_open
-        user_details = kwargs.get('user_details')
-        with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
-            open_file.write(selection)
-        result['selection'] = geojson_file
-        result['result'] = geojson_file
-    else:
-        result['result'] = None
-
-    return result
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)

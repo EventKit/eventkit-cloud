@@ -10,17 +10,15 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from celery import chain, group, chord
+from celery import chain
 from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
     example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
 
-from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
-from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
-                                  bounds_export_task, output_selection_geojson_task)
+from ..jobs.models import Job
+from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
 from ..tasks.models import ExportRun, ExportProviderTask
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
-    ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
     ExportWFSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
@@ -38,7 +36,7 @@ class TaskFactory:
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner, 'osm': ExportThematicOSMTaskRunner,
+        self.type_task_map = {'osm': ExportThematicOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
@@ -90,25 +88,14 @@ class TaskFactory:
                     provider_task_uids += [provider_task_uid]
 
                     if provider_subtask_chain:
-                        # Create a geojson for clipping this provider if needed
-                        selection_task = create_task(
-                            export_provider_task_uid=provider_task_uid, stage_dir=stage_dir,
-                            worker=worker, task=output_selection_geojson_task, selection=job.the_geom.geojson,
-                            user_details=user_details
-                        )
-
-                        # Export the bounds for this provider
-                        bounds_task = create_task(
-                            export_provider_task_uid=provider_task_uid, stage_dir=stage_dir,
-                            worker=worker, task=bounds_export_task, user_details=user_details
-                        )
-
                         if provider_task_record.provider.zip:
-                            zip_task = create_task(
+                            zip_task_sig = create_task(
                                 export_provider_task_uid=provider_task_uid, stage_dir=stage_dir,
                                 worker=worker, task=zip_export_provider, job_name=job.name, user_details=user_details
                             )
-                            bounds_task = chain(bounds_task, zip_task)
+                        else:
+                            zip_task_sig = chain()
+
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
                         clean_up_task_sig = clean_up_failure_task.si(
@@ -125,10 +112,10 @@ class TaskFactory:
                             queue=worker,
                             routing_key=worker
                         )
-                        finalize_chain_task_runner_tasks = chain(
-                            selection_task, provider_subtask_chain, bounds_task, finalize_export_provider_sig
+                        finalized_provider_task_chain = chain(
+                            provider_subtask_chain, zip_task_sig, finalize_export_provider_sig
                         )
-                        provider_subtask_chains.append(finalize_chain_task_runner_tasks)
+                        provider_subtask_chains.append(finalized_provider_task_chain)
 
                 if not provider_subtask_chains:
                     continue
