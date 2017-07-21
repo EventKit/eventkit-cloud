@@ -426,6 +426,10 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _('missing published state parameter')}], status.HTTP_400_BAD_REQUEST)
 
         job = Job.objects.get(uid=uid)
+
+        if job.user != request.user and not request.user.is_superuser:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
         job.published = payload['published']
         job.save()
         return Response({'success': True, 'published': job.published }, status=status.HTTP_200_OK)
