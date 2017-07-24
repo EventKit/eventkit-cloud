@@ -1,8 +1,11 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime,timedelta
+from dateutil import parser
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -660,12 +663,58 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         payload = request.data
         run = ExportRun.objects.get(uid=uid)
 
-        if "expiration" in payload :
-            run.expiration = payload["expiration"]
-            run.save()
-            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
-        else:
+    @transaction.atomic
+    def partial_update(self, request, uid=None, *args, **kwargs):
+
+        """
+        Update the expiration date for an export run. If the user is a superuser,
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
+        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
+
+        * request: the HTTP request in JSON.
+
+            Example:
+
+                {
+                    "expiration" : "2019-12-31"
+                }
+
+        * Returns: a copy of the new expiration value on success
+
+            Example:
+
+                {
+                    "expiration": "2019-12-31",
+                    "success": true
+                }
+
+        ** returns: 400 on error
+
+        """
+
+        payload = request.data
+        if not "expiration" in payload:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+        expiration = payload["expiration"]
+        target_date = parser.parse(expiration)
+        run = ExportRun.objects.get(uid=uid)
+
+        if not request.user.is_superuser:
+            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
+            now = datetime.today()
+            max_date  = now + timedelta(max_days)
+            if target_date > max_date.replace(tzinfo=None):
+                message = 'expiration date must be before ' + max_date.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+            if ( target_date < run.expiration.replace(tzinfo=None) ):
+                message = 'expiration date must be after ' + run.expiration.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        run.expiration = target_date
+        run.save()
+        return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+
 
     @staticmethod
     def validate_licenses(queryset):
