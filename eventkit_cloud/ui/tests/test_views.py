@@ -23,7 +23,7 @@ class TestUIViews(TestCase):
         with self.settings(UI_CONFIG={}):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(json.loads(response.content), {'MAX_EXPORTRUN_EXPIRATION_DAYS': '30'})
+            self.assertEqual(json.loads(response.content), {'MAX_EXPORTRUN_EXPIRATION_DAYS': 30})
 
         with self.settings(
             UI_CONFIG={
