@@ -309,7 +309,7 @@ export class DataCartDetails extends React.Component {
                                 <td style={styles.tdData}>{this.props.cartDetails.job.published.toString()}</td>
                             </tr>
                             <tr>
-                                <td style={styles.tdHeader}>Layer Data</td>
+                                <td style={styles.tdHeader}>Data Sources</td>
                                 <td style={styles.tdData} >{
                                     providers.map((provider) => {
                                             return <p key={provider.name}>{provider.name}</p>

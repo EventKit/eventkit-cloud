@@ -59,7 +59,7 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(1).find('td').last().text()).toEqual('test');
         expect(table.find('tr').at(2).find('td').first().text()).toEqual('Published');
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('true');
-        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Layer Data');
+        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Data Sources');
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
         expect(table.find('tr').at(4).find('td').first().text()).toEqual('File Formats');
         expect(table.find('tr').at(4).find('td').last().text()).toEqual('.gpkg');

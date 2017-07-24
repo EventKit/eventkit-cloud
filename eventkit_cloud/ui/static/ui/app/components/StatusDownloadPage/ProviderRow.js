@@ -138,7 +138,7 @@ export class ProviderRow extends React.Component {
 
     getTaskStatus(task) {
         //TODO: Take out the hard code error here
-        //task.status = "INCOMPLETE";
+        task.status = "INCOMPLETE";
         switch (task.status) {
             case "SUCCESS":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
@@ -157,7 +157,7 @@ export class ProviderRow extends React.Component {
 
     getProviderStatus(provider) {
         //TODO: Take out the hard code error here
-        //provider.status = 'INCOMPLETE'
+        provider.status = 'INCOMPLETE'
         switch (provider.status) {
             case "COMPLETED":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
