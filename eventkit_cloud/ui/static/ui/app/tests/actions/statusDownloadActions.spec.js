@@ -102,20 +102,20 @@ describe('statusDownload actions', () => {
     });
 
     it('updatePermission should dispatch a patch and update the published state on the job', () => {
-        // var mock = new MockAdapter(axios, {delayResponse: 1000});
-        //
-        // mock.onPatch('/api/jobs/123456789').reply(204);
-        // const expectedActions = [
-        //     {type: types.UPDATING_PERMISSION},
-        //     {type: types.UPDATE_PERMISSION_SUCCESS},
-        // ];
-        //
-        // const store = mockStore({updatePermission: {}});
-        //
-        // return store.dispatch(actions.updatePermission('123456789', 'true'))
-        //     .then(() => {
-        //         expect(store.getActions()).toEqual(expectedActions);
-        //     });
+        var mock = new MockAdapter(axios, {delayResponse: 1000});
+
+        mock.onPatch('/api/jobs/123456789').reply(204);
+        const expectedActions = [
+            {type: types.UPDATING_PERMISSION},
+            {type: types.UPDATE_PERMISSION_SUCCESS},
+        ];
+
+        const store = mockStore({updatePermission: {}});
+
+        return store.dispatch(actions.updatePermission('123456789', 'true'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
 });
 

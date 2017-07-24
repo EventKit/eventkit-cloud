@@ -80,7 +80,7 @@ export function updatePermissionReducer(state = initialState.updatePermission, a
         case types.UPDATING_PERMISSION:
             return {updating: true, updated: false, error: null};
         case types.UPDATE_PERMISSION_SUCCESS:
-            return {resetting: false, reset: true, error: null};
+            return {updating: false, updated: true, error: null};
         case types.UPDATE_PERMISSION_ERROR:
             return {updating: false, updated: false, error: action.error};
         default:

@@ -180,12 +180,12 @@ export class DataCartDetails extends React.Component {
         if(value == 1) {
             // hit the API and change published to true
             this.setState({permission: true})
-            //this.props.onUpdatePermission(this.props.cartDetails.uid, true);
+            this.props.onUpdatePermission(this.props.cartDetails.job.uid, true);
         }
         else {
             // hit the API and change published to false
             this.setState({permission: false})
-            //this.props.onUpdatePermission(this.props.cartDetails.uid, false);
+            this.props.onUpdatePermission(this.props.cartDetails.job.uid, false);
         }
     };
 

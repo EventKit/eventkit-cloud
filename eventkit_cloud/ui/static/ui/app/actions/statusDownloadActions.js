@@ -142,7 +142,7 @@ export function updatePermission (uid, value){
         const csrftoken = cookie.load('csrftoken');
 
         return axios({
-            url: '/api/runs/' + uid,
+            url: '/api/jobs/' + uid,
             method: 'PATCH',
             data: {"published": value},
             headers: {"X-CSRFToken": csrftoken}

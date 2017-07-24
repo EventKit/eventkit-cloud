@@ -388,69 +388,69 @@ describe('updateExpiration Reducer', () => {
 });
 
 describe('updatePermissions Reducer', () => {
-    // it('it should return the initial state', () => {
-    //     expect(reducers.updatePermissionReducer(undefined, {})).toEqual(
-    //         {
-    //             updating: false,
-    //             updated: false,
-    //             error: null
-    //         }
-    //     );
-    // });
-    //
-    // it('should handle UPDATING_PERMISSION', () => {
-    //     expect(reducers.updatePermissionReducer(
-    //         {
-    //             updating: false,
-    //             updated: false,
-    //             error: null
-    //         },
-    //         {
-    //             type: 'UPDATING_PERMISSION'
-    //         }
-    //     )).toEqual(
-    //         {
-    //             updating: true,
-    //             updated: false,
-    //             error: null
-    //         }
-    //     );
-    // });
-    // it('should handle UPDATE_PERMISSION_SUCCESS', () => {
-    //     expect(reducers.updateExpirationReducer(
-    //         {
-    //             updating: false,
-    //             updated: false,
-    //             error: null
-    //         },
-    //         {
-    //             type: 'UPDATE_PERMISSION_SUCCESS'
-    //         }
-    //     )).toEqual(
-    //         {
-    //             updating: false,
-    //             updated: true,
-    //             error: null
-    //         }
-    //     );
-    // });
-    // it('should handle UPDATE_PERMISSION_ERROR', () => {
-    //     expect(reducers.updateExpirationReducer(
-    //         {
-    //             updating: true,
-    //             updated: false,
-    //             error: null
-    //         },
-    //         {
-    //             type: 'UPDATE_PERMISSION_ERROR',
-    //             error: 'This is an error'
-    //         }
-    //     )).toEqual(
-    //         {
-    //             updating: false,
-    //             updated: false,
-    //             error: 'This is an error'
-    //         }
-    //     );
-    // });
+    it('it should return the initial state', () => {
+        expect(reducers.updatePermissionReducer(undefined, {})).toEqual(
+            {
+                updating: false,
+                updated: false,
+                error: null
+            }
+        );
+    });
+
+    it('should handle UPDATING_PERMISSION', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: false,
+                updated: false,
+                error: null
+            },
+            {
+                type: 'UPDATING_PERMISSION'
+            }
+        )).toEqual(
+            {
+                updating: true,
+                updated: false,
+                error: null
+            }
+        );
+    });
+    it('should handle UPDATE_PERMISSION_SUCCESS', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: false,
+                updated: false,
+                error: null
+            },
+            {
+                type: 'UPDATE_PERMISSION_SUCCESS'
+            }
+        )).toEqual(
+            {
+                updating: false,
+                updated: true,
+                error: null
+            }
+        );
+    });
+    it('should handle UPDATE_PERMISSION_ERROR', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: true,
+                updated: false,
+                error: null
+            },
+            {
+                type: 'UPDATE_PERMISSION_ERROR',
+                error: 'This is an error'
+            }
+        )).toEqual(
+            {
+                updating: false,
+                updated: false,
+                error: 'This is an error'
+            }
+        );
+    });
 });

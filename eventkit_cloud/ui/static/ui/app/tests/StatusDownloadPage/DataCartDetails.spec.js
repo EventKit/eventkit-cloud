@@ -215,7 +215,6 @@ describe('DataCartDetails component', () => {
         wrapper.setProps(nextProps);
         wrapper.instance()._setExpirationDate();
         expect(stateSpy.calledWith({expirationDate: '2017-08-08T18:35:01.400407Z'})).toBe(true);
-
         stateSpy.restore();
     });
 
@@ -343,12 +342,12 @@ describe('DataCartDetails component', () => {
 
     it('handlePublishedChange should setState of new published value', () => {
         let props = getProps();
-        //props.onUpdatePermission = new sinon.spy();
+        props.onUpdatePermission = new sinon.spy();
         const wrapper = shallow(<DataCartDetails {...props}/>);
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
-        wrapper.instance().handlePublishedChange();
-        //expect(props.onUpdatePermission.calledOnce).toBe(true);
-        //expect(props.onUpdatePermission.calledWith("29f5cbab-09d8-4d6c-9505-438967062964", true)).toBe(true);
+        wrapper.instance().handlePublishedChange("7838d3b3-160a-4e7d-89cb-91fdcd6eab43", false);
+        expect(props.onUpdatePermission.calledOnce).toBe(true);
+        expect(props.onUpdatePermission.calledWith("7838d3b3-160a-4e7d-89cb-91fdcd6eab43", false)).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({permission: false})).toBe(true);
         stateSpy.restore();
