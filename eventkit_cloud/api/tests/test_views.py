@@ -8,7 +8,6 @@ from tempfile import NamedTemporaryFile
 from unittest import skip
 import uuid
 
-from eventkit_cloud.settings.prod import MAX_EXPORTRUN_EXPIRATION_DAYS
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
