@@ -27,7 +27,7 @@ from audit_logging.celery_support import UserDetailsBase
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
-    external_service, wfs, arcgis_feature_service, sqlite, geopackage
+    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage
 )
 from .exceptions import CancelException, DeleteException
 
@@ -567,6 +567,25 @@ def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task
         return result
     except Exception as e:
         logger.error('Raised exception in external service export, %s', str(e))
+        raise Exception(e)
+
+@app.task(name='WCSExport', bind=True, base=ExportTask)
+def wcs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
+                    job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
+    """
+    Class defining export for WCS services
+    """
+    self.update_task_state(result=result, task_uid=task_uid)
+    out = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    try:
+        wcs2gpkg = wcs.WCStoGPKG(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                 config=config, service_type=service_type, task_uid=task_uid, debug=True)
+        wcs2gpkg.convert()
+        result['result'] = out
+        result['geopackage'] = out
+        return result
+    except Exception as e:
+        logger.error('Raised exception in WCS service export: %s', str(e))
         raise Exception(e)
 
 
