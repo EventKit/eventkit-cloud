@@ -56,11 +56,6 @@ export class DataCartDetails extends React.Component {
     }
 
     _setExpirationDate(){
-        // let date = this.props.cartDetails.expiration;
-        // let expDate;
-        // let m = moment(date);
-        // m.add(1, 'days');
-        // expDate = m.toDate();
         this.setState({expirationDate : this.props.cartDetails.expiration})
     }
 
@@ -69,11 +64,11 @@ export class DataCartDetails extends React.Component {
     }
     _setMaxDate() {
         const minDate = new Date();
+        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
         let maxDate;
         let d = new Date();
         let m = moment(d);
-        m.add(1, 'days');
-        m.add(1, 'months');
+        m.add(maxDays, 'days');
         maxDate = m.toDate();
         this.setState({minDate, maxDate});
     }
@@ -190,11 +185,6 @@ export class DataCartDetails extends React.Component {
     };
 
     handleExpirationChange = (e, date) => {
-        //hit the API and change expiration date.
-        //let newDate = moment(date).add(1, 'days').format('YYYY-MM-DD');
-        //let newDate = moment(date).format('YYYY-MM-DD');
-        //let newDate = moment(date).format("YYYY-MM-DDT00:00:00.000") + "Z"
-        //date.add(4, 'hours');
         this.setState({expirationDate: date});
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     }
@@ -487,6 +477,10 @@ export class DataCartDetails extends React.Component {
 
         )
     }
+}
+
+DataCartDetails.contextTypes = {
+    config: React.PropTypes.object
 }
 
 DataCartDetails.propTypes = {

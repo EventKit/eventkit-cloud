@@ -22,6 +22,7 @@ describe('DataCartDetails component', () => {
         DataCartDetails.prototype._initializeOpenLayers.restore();
     });
     const muiTheme = getMuiTheme();
+    const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: 30};
 
     const getProps = () => {
         return  {
@@ -37,7 +38,7 @@ describe('DataCartDetails component', () => {
 
     const getWrapper = (props) => {
         return mount(<DataCartDetails {...props}/>, {
-            context: {muiTheme},
+            context: {muiTheme, config: config},
             childContextTypes: {
                 muiTheme: React.PropTypes.object
             }
