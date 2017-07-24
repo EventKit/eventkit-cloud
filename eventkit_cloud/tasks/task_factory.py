@@ -4,25 +4,30 @@ from __future__ import absolute_import
 from datetime import datetime, timedelta
 import logging
 import os
+import itertools
 
-from celery import chain
+from django.conf import settings
+from django.db import DatabaseError, transaction
+from django.utils import timezone
+
+from celery import chain, group, chord
+from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
+    example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
 
 from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
+from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
+                                  bounds_export_task, output_selection_geojson_task)
 from ..tasks.models import ExportRun, ExportProviderTask
+from ..tasks.task_runners import create_export_task
 from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
     ExportWFSTaskRunner,
+    ExportWCSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
 
-from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
-                                  bounds_export_task, output_selection_geojson_task, zip_export_provider)
-from django.conf import settings
-from django.db import DatabaseError, transaction
-from django.utils import timezone
-from ..tasks.task_runners import create_export_task
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -34,8 +39,11 @@ class TaskFactory:
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner, 'osm': ExportThematicOSMTaskRunner,
-                              'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
+        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner,
+                              'osm': ExportThematicOSMTaskRunner,
+                              'wfs': ExportWFSTaskRunner,
+                              'wms': ExportExternalRasterServiceTaskRunner,
+                              'wcs': ExportWCSTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
                               'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
@@ -82,9 +90,11 @@ class TaskFactory:
 
             if grouped_provider_tasks:
                 tasks_results = []
+                # Contains one chain per item in grouped_provider_tasks
+                grouped_provider_subtask_chains = []
                 for grouped_provider_task in grouped_provider_tasks:
-                    task_runner_tasks = None
                     export_provider_task_uids = []
+                    provider_subtask_chains = []
                     for provider_task in grouped_provider_task:
                         if not provider_task:
                             continue
@@ -131,35 +141,47 @@ class TaskFactory:
                                     )
                                     bounds_task = chain(bounds_task, zip_task)
                                 # Run the task, and when it completes return the status of the task to the model.
-                                # The finalize_export_provider_task will check to see if all of the tasks are done, and if they are
-                                # it will call FinalizeTask which will mark the entire job complete/incomplete
-                                finalize_chain_task_runner_tasks = chain(selection_task, chain_task_runner_tasks,
-                                                                         bounds_task, finalize_export_provider_task.s(
-                                        run_uid=run_uid,
-                                        run_dir=run_dir,
-                                        export_provider_task_uid=export_provider_task_uid,
-                                        worker=worker
-                                    ).set(queue=worker, routing_key=worker))
-                                if not task_runner_tasks:
-                                    task_runner_tasks = finalize_chain_task_runner_tasks
-                                else:
-                                    task_runner_tasks = chain(task_runner_tasks, finalize_chain_task_runner_tasks)
+                                # The finalize_export_provider_task will check all of the export tasks
+                                # for this provider and save the export provider's status.
+                                clean_up_task_sig = clean_up_failure_task.si(
+                                    run_uid=run_uid, run_dir=run_dir,
+                                    export_provider_task_uids=export_provider_task_uids, worker=worker, queue=worker,
+                                    routing_key=worker
+                                )
+                                finalize_export_provider_sig = finalize_export_provider_task.s(
+                                    run_uid=run_uid,
+                                    run_dir=run_dir,
+                                    export_provider_task_uid=export_provider_task_uid,
+                                    worker=worker,
+                                    link_error=clean_up_task_sig,
+                                    queue=worker,
+                                    routing_key=worker
+                                )
+                                finalize_chain_task_runner_tasks = chain(
+                                    selection_task, chain_task_runner_tasks, bounds_task, finalize_export_provider_sig
+                                )
+                                provider_subtask_chains.append(finalize_chain_task_runner_tasks)
 
-                    if not task_runner_tasks:
+                    if not provider_subtask_chains:
                         continue
 
-                    tasks_results += [task_runner_tasks.apply_async(
-                        interval=1,
-                        max_retries=10,
-                        expires=datetime.now() + timedelta(days=2),
-                        priority=TaskPriority.TASK_RUNNER.value,
-                        routing_key=worker,
-                        queue=worker,
-                        user_details=user_details,
-                        link_error=clean_up_failure_task.si(run_uid=run_uid, run_dir=run_dir,
-                                                            export_provider_task_uids=export_provider_task_uids,
-                                                            worker=worker).set(queue=worker, routing_key=worker))]
+                    # This ensures the export provider's subtasks are sequenced in the order the providers appear
+                    # in the group.
+                    grouped_provider_subtask_chain = chain(provider_subtask_chains)
+                    grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
+
+                # A group would allow things to execute in parallel, but you can't add link_error to a group.
+                #    and we need to assure that the errback from create_finalize_run_task_collection() is called.
+                all_export_provider_task_chain = chain([gpsc for gpsc in grouped_provider_subtask_chains])
+
+                finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
+
+                all_tasks = chain(all_export_provider_task_chain, finalize_run_tasks)
+                all_tasks.set(link_error=errback)
+                tasks_results = all_tasks.apply_async()
+
                 return tasks_results
+
             return False
 
 
@@ -214,7 +236,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     :param export_provider_task_uid: An export provider task UUID.
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
-    """""
+    """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {'username': 'unknown-create_task'}
@@ -258,3 +280,38 @@ class Unauthorized(Error):
 class InvalidLicense(Error):
     def __init__(self, message):
         super(Error, self).__init__('InvalidLicense: {0}'.format(message))
+
+
+def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None):
+    """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
+        have finished, and a finalize_run_task signature for use as an errback.
+        Add any additional tasks you want in hook_tasks.
+        @see export_tasks.FinalizeRunHookTask for expected hook task signature.
+    """
+    finalize_task_settings = {
+        'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+        'priority': TaskPriority.FINALIZE_RUN.value}
+
+    # These should be subclassed from FinalizeRunHookTask
+    hook_tasks = [example_finalize_run_hook_task]
+    hook_task_sigs = []
+    if len(hook_tasks) > 0:
+        # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
+        #    link getting passed to the first hook task
+        hook_task_sigs.append(hook_tasks[0].si([], run_uid=run_uid).set(**finalize_task_settings))
+        hook_task_sigs.extend(
+            [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks[1:]]
+        )
+
+    prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
+
+    zip_task_sig = zip_file_task.s(run_uid=run_uid).set(**finalize_task_settings)
+
+    # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
+    finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
+    errback_sig = finalize_run_task_as_errback.si(run_uid=run_uid, stage_dir=run_dir)
+
+    all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
+    finalize_chain = chain(*all_task_sigs)
+
+    return finalize_chain, errback_sig

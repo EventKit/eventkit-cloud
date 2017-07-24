@@ -6,9 +6,9 @@ import FloatingActionButton from 'material-ui/FloatingActionButton'
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './ExportAOI'
-import ExportInfo from './ExportInfo'
-import ExportSummary from './ExportSummary'
+import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from './CreateDataPack/ExportAOI'
+import ExportInfo from './CreateDataPack/ExportInfo'
+import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'

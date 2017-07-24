@@ -432,6 +432,19 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(['invalid_extents'], response.data['id'])
 
 
+    def test_patch(self):
+        expected = '/api/jobs/{0}'.format(self.job.uid)
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.assertEquals(expected, url)
+        request_data = {"published": False}
+
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['published'])
+        self.assertTrue(response.data['success'])
+
+
+
 class TestBBoxSearch(APITestCase):
     """
     Test cases for testing bounding box searches.
