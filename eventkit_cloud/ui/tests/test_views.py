@@ -23,7 +23,7 @@ class TestUIViews(TestCase):
         with self.settings(UI_CONFIG={}):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(json.loads(response.content), {})
+            self.assertEqual(json.loads(response.content), {'MAX_EXPORTRUN_EXPIRATION_DAYS': '30'})
 
         with self.settings(
             UI_CONFIG={
@@ -31,7 +31,8 @@ class TestUIViews(TestCase):
                 'BANNER_BACKGROUND_COLOR': 'red',
                 'BANNER_TEXT_COLOR': 'green',
                 'BANNER_TEXT': 'This is banner text',
-            }
+            },
+            MAX_EXPORTRUN_EXPIRATION_DAYS=45
         ):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
@@ -40,6 +41,7 @@ class TestUIViews(TestCase):
                 'BANNER_BACKGROUND_COLOR': 'red',
                 'BANNER_TEXT_COLOR': 'green',
                 'BANNER_TEXT': 'This is banner text',
+                'MAX_EXPORTRUN_EXPIRATION_DAYS': 45,
             })
 
 
