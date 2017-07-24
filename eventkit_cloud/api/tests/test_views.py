@@ -14,6 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -555,7 +556,8 @@ class TestExportRunViewSet(APITestCase):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
 
         today  = datetime.today()
-        ok_expiration = today + timedelta(MAX_EXPORTRUN_EXPIRATION_DAYS-1)
+        max_days = int(getattr(settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30))
+        ok_expiration = today + timedelta(max_days-1)
         request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
@@ -568,7 +570,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertFalse(response.data['success'])
 
-        not_ok_expiration = today + timedelta(MAX_EXPORTRUN_EXPIRATION_DAYS+1)
+        not_ok_expiration = today + timedelta(max_days+1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)

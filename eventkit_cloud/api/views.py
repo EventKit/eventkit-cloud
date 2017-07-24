@@ -5,6 +5,7 @@ from datetime import datetime,timedelta
 from dateutil import parser
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -12,7 +13,6 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User
 
-from eventkit_cloud.settings.prod import MAX_EXPORTRUN_EXPIRATION_DAYS
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
 )
@@ -659,7 +659,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=uid)
 
         if not request.user.is_superuser:
-            max_days = MAX_EXPORTRUN_EXPIRATION_DAYS
+            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
             now = datetime.today()
             max_date  = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
