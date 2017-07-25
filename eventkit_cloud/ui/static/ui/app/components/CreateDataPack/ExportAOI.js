@@ -15,6 +15,10 @@ import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import isEqual from 'lodash/isEqual';
 import {zoomToExtent} from '../../utils/mapUtils';
+import menuStyles from '../../styles/TypeaheadMenuItem.css';
+import ActionRoom from 'material-ui/svg-icons/action/room';
+import ReactDOM from 'react-dom';
+
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
@@ -84,11 +88,16 @@ export class ExportAOI extends Component {
         this.props.setNextDisabled();
     }
 
-    handleZoomToSelection(bbox) {
-        this._map.getView().fit(
-            ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR),
-            this._map.getSize()
-        );
+    handleZoomToSelection(geom) {
+        if(geom.getType() != 'Point') {
+            this._map.getView().fit(
+                geom,
+                // ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR),
+                this._map.getSize()
+            );
+        } else {
+            this._map.getView().setCenter(geom.getCoordinates())
+        }
     }
 
     handleResetMap() {
@@ -97,26 +106,23 @@ export class ExportAOI extends Component {
     }
 
     handleSearch(result) {
-        const formatted_bbox = result.bbox;
         this._clearDraw();
         this.props.hideInvalidDrawWarning();
-        const bbox = formatted_bbox.map(truncate);
-        const mercBbox = ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR);
-        const geom = new ol.geom.Polygon.fromExtent(mercBbox);
-        const geojson = createGeoJSON(geom);
-        const bboxFeature = new ol.Feature({
-            geometry: geom
-        });
-        this._drawLayer.getSource().addFeature(bboxFeature);
+
+        const feature = (new ol.format.GeoJSON()).readFeature(result);
+        feature.getGeometry().transform(WGS84, WEB_MERCATOR);
+        const geojson = createGeoJSON(feature.getGeometry());
+
+        this._drawLayer.getSource().addFeature(feature);
+
         let description = '';
         description = description + (result.country ? result.country : '');
         description = description + (result.province ? ', ' + result.province : '');
         description = description + (result.region ? ', ' + result.region : '');
 
-
-        this.props.updateAoiInfo(geojson, 'Polygon', result.name, description);
+        this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description);
         this.props.setNextEnabled();
-        this.handleZoomToSelection(bbox);
+        this.handleZoomToSelection(feature.getGeometry());
     }
 
     handleGeoJSONUpload(geom) {
@@ -126,9 +132,8 @@ export class ExportAOI extends Component {
                 geometry: geom
             })
         )
-        const bbox = serialize(geom.getExtent());
         const geojson = createGeoJSON(geom);
-        this.handleZoomToSelection(bbox);
+        this.handleZoomToSelection(geom);
         this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import');
         this.props.setNextEnabled();
 
@@ -383,12 +388,17 @@ function generateDrawLayer() {
             stroke: new ol.style.Stroke({
                 color: '#ce4427',
                 width: 3,
+            }),
+            image: new ol.style.Icon({
+                src: require("../../../images/ic_room_black_24px.svg"),
             })
+
         })
     })
 }
 
 function _generateDrawBoxInteraction(drawLayer) {
+
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
@@ -486,14 +496,14 @@ function isGeoJSONValid(geojson) {
 
 function createGeoJSON(ol3Geometry) {
     const bbox = serialize(ol3Geometry.getExtent());
-    const coords = ol3Geometry.getCoordinates();
+    // const coords = ol3Geometry.getCoordinates();
     // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
-    var geom = null;
-    if (ol3Geometry.getType() == 'Polygon') {
-        geom = new ol.geom.Polygon(coords)
-    }else if(ol3Geometry.getType() == 'MultiPolygon'){
-        geom = new ol.geom.MultiPolygon(coords)
-    }
+    const geom = ol3Geometry.clone();
+    // if (ol3Geometry.getType() == 'Polygon') {
+    //     geom = new ol.geom.Polygon(coords)
+    // }else if(ol3Geometry.getType() == 'MultiPolygon'){
+    //     geom = new ol.geom.MultiPolygon(coords)
+    // }
     geom.transform(WEB_MERCATOR, WGS84);
     const wgs84Coords = geom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
