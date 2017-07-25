@@ -1,0 +1,85 @@
+planet_osm_point:
+  types:
+    - points
+  select:
+    - addr:housenumber
+    - addr:street
+    - aeroway
+    - amenity
+    - barrier
+    - bladder
+    - borehole
+    - building
+    - capital
+    - craft
+    - emergency
+    - ford
+    - highway
+    - historic
+    - information
+    - leisure
+    - man_made
+    - name
+    - natural
+    - office
+    - place
+    - power
+    - religion
+    - shop
+    - tank
+    - tap
+    - tourism
+    - traffic_calming
+    - waterway
+
+planet_osm_line:
+  type:
+    - lines
+  select:
+    - aeroway
+    - amenity
+    - barrier
+    - bicycle_road
+    - bridge
+    - ford
+    - highway
+    - layer
+    - leisure
+    - man_made
+    - name
+    - natural
+    - railway
+    - tourism
+    - tunnel
+    - waterway
+
+planet_osm_polygon:
+  type:
+    - polygons
+  select:
+    - addr:housenumber
+    - addr:street
+    - aeroway
+    - amenity
+    - area
+    - barrier
+    - bladder
+    - borehole
+    - bridge
+    - building
+    - highway
+    - historic
+    - information
+    - junction
+    - landuse
+    - leisure
+    - man_made
+    - name
+    - natural
+    - power
+    - religion
+    - shop
+    - surface
+    - tank
+    - tap
+    - tourism
