@@ -13,11 +13,7 @@ import {updateMode, updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNex
 import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../../actions/drawToolBarActions.js';
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
-import isEqual from 'lodash/isEqual';
 import {zoomToExtent} from '../../utils/mapUtils';
-import menuStyles from '../../styles/TypeaheadMenuItem.css';
-import ActionRoom from 'material-ui/svg-icons/action/room';
-import ReactDOM from 'react-dom';
 
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
