@@ -62,9 +62,10 @@ export class DataCartDetails extends React.Component {
     _setPermission(){
         this.setState({permission : this.props.cartDetails.job.published})
     }
+
     _setMaxDate() {
         const minDate = new Date();
-        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
+        const maxDays = this.props.maxResetExpirationDays;
         let maxDate;
         let d = new Date();
         let m = moment(d);
@@ -479,10 +480,6 @@ export class DataCartDetails extends React.Component {
     }
 }
 
-DataCartDetails.contextTypes = {
-    config: React.PropTypes.object
-}
-
 DataCartDetails.propTypes = {
     cartDetails: PropTypes.object,
     onRunDelete: PropTypes.func.isRequired,
@@ -491,6 +488,7 @@ DataCartDetails.propTypes = {
     onUpdatePermission: PropTypes.func.isRequired,
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
+    maxResetExpirationDays: PropTypes.string.isRequired,
 }
 
 export default DataCartDetails;

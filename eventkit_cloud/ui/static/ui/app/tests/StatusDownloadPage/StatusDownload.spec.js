@@ -22,6 +22,8 @@ describe('StatusDownload component', () => {
     });
     const muiTheme = getMuiTheme();
 
+    const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: '30'};
+
     const tasks = [
         {
             "duration": "0:00:15.317672",
@@ -233,7 +235,7 @@ describe('StatusDownload component', () => {
 
     const getWrapper = (props) => {
         return mount(<StatusDownload {...props}/>, {
-            context: {muiTheme},
+            context: {muiTheme, config: config},
             childContextTypes: {
                 muiTheme: React.PropTypes.object
             }
@@ -311,11 +313,12 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, startTimer, and addEventListener when mounted', () => {
+    it('should call getDatacartDetails, startTimer, setMaxDays state and addEventListener when mounted', () => {
         let props = getProps();
         props.getDatacartDetails = new sinon.spy();
         let startTimerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
         const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
+        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
         const eventSpy = new sinon.spy(window, 'addEventListener');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
@@ -324,9 +327,12 @@ describe('StatusDownload component', () => {
         expect(startTimerSpy.calledOnce).toBe(true);
         expect(eventSpy.calledOnce).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({maxDays: '30'})).toBe(true);
         startTimerSpy.restore();
         mountSpy.restore();
         eventSpy.restore();
+        stateSpy.restore();
     });
 
     it('should remove timer and eventlistener before unmounting', () => {
@@ -369,7 +375,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
@@ -394,7 +400,7 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
@@ -418,7 +424,7 @@ describe('StatusDownload component', () => {
         const timerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(timerSpy.calledOnce).toBe(true);
         StatusDownload.prototype.setState.restore();

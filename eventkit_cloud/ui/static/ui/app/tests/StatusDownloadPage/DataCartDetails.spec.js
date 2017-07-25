@@ -10,7 +10,8 @@ import Dialog from 'material-ui/Dialog';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
-import '../../components/tap_events'
+import '../../components/tap_events';
+import moment from 'moment';
 
 describe('DataCartDetails component', () => {
 
@@ -22,11 +23,11 @@ describe('DataCartDetails component', () => {
         DataCartDetails.prototype._initializeOpenLayers.restore();
     });
     const muiTheme = getMuiTheme();
-    const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: 30};
 
     const getProps = () => {
         return  {
             cartDetails: {...run},
+            maxResetExpirationDays: '30',
             onUpdateExpiration: () => {},
             onUpdatePermission: () => {},
             onRunDelete: () => {},
@@ -38,7 +39,7 @@ describe('DataCartDetails component', () => {
 
     const getWrapper = (props) => {
         return mount(<DataCartDetails {...props}/>, {
-            context: {muiTheme, config: config},
+            context: {muiTheme},
             childContextTypes: {
                 muiTheme: React.PropTypes.object
             }
@@ -170,7 +171,26 @@ describe('DataCartDetails component', () => {
         expect(DataCartDetails.prototype._initializeOpenLayers.called).toBe(true);
         mountSpy.restore();
         colorsSpy.restore();
+        maxDateSpy.restore();
+
     });
+
+    it('should call setState in _setMaxDate', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const minDate = new Date();
+        let maxDate;
+        let d = new Date();
+        let m = moment(d);
+        m.add(props.maxResetExpirationDays, 'days');
+        maxDate = m.toDate();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setMaxDate();
+        expect(stateSpy.calledOnce).toBe(true);
+        stateSpy.restore();
+    });
+
 
     it('_setTableColors should set the state for table color ', () => {
         const props = getProps();

@@ -19,6 +19,7 @@ export class StatusDownload extends React.Component {
         this.state = {
             datacartDetails: [],
             isLoading: true,
+            maxDays: null,
         }
     }
 
@@ -90,6 +91,8 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.startTimer();
         window.addEventListener('resize', this.handleResize);
+        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
+        this.setState({maxDays});
     }
 
     componentWillUnmount() {
@@ -170,7 +173,8 @@ export class StatusDownload extends React.Component {
                                                      onUpdatePermission={this.props.updatePermission}
                                                      onRunRerun={this.props.rerunExport}
                                                      onClone={this.props.cloneExport}
-                                                     onProviderCancel={this.props.cancelProviderTask}/>
+                                                     onProviderCancel={this.props.cancelProviderTask}
+                                                     maxResetExpirationDays={this.state.maxDays}/>
                                 ))}
 
                             </Paper>
@@ -225,6 +229,9 @@ function mapDispatchToProps(dispatch) {
             dispatch(cancelProviderTask(providerUid))
         }
     }
+}
+StatusDownload.contextTypes = {
+    config: React.PropTypes.object
 }
 
 StatusDownload.propTypes = {
