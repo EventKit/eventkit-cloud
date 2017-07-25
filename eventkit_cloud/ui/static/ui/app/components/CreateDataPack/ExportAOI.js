@@ -88,7 +88,6 @@ export class ExportAOI extends Component {
         if(geom.getType() != 'Point') {
             this._map.getView().fit(
                 geom,
-                // ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR),
                 this._map.getSize()
             );
         } else {
@@ -492,14 +491,7 @@ function isGeoJSONValid(geojson) {
 
 function createGeoJSON(ol3Geometry) {
     const bbox = serialize(ol3Geometry.getExtent());
-    // const coords = ol3Geometry.getCoordinates();
-    // need to apply transform to a cloned geom but simple geometry does not support .clone() operation.
     const geom = ol3Geometry.clone();
-    // if (ol3Geometry.getType() == 'Polygon') {
-    //     geom = new ol.geom.Polygon(coords)
-    // }else if(ol3Geometry.getType() == 'MultiPolygon'){
-    //     geom = new ol.geom.MultiPolygon(coords)
-    // }
     geom.transform(WEB_MERCATOR, WGS84);
     const wgs84Coords = geom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
