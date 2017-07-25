@@ -9,12 +9,9 @@ from django.db import DatabaseError
 
 from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
-from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
-
 from eventkit_cloud.tasks.export_tasks import (
-    osm_thematic_data_collection_task, wfs_export_task, external_raster_service_export_task,
-    arcgis_feature_service_export_task, osm_create_styles_task
-)
+    wfs_export_task, external_raster_service_export_task, arcgis_feature_service_export_task, osm_data_collection_task)
+from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +20,8 @@ export_task_registry = {
     'sqlite': 'eventkit_cloud.tasks.export_tasks.sqlite_export_task',
     'kml': 'eventkit_cloud.tasks.export_tasks.kml_export_task',
     'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
-    'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task'
+    'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task',
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.osm_generic_data_collection_task',
 }
 
 
@@ -42,6 +40,7 @@ class TaskRunner(object):
 class ExportThematicOSMTaskRunner(TaskRunner):
     """ Run Thematic OSM Export Tasks; Essentially, collect data and convert to thematic gpkg, then run output formats.
     """
+    feature_selection_config = 'thematic'
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
@@ -61,7 +60,6 @@ class ExportThematicOSMTaskRunner(TaskRunner):
             user_details = {'username': 'unknown-ExportThematicOSMTaskRunner.run_task'}
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
-
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
@@ -99,8 +97,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
             export_tasks[format]['task_uid'] = export_task.uid
 
         """
-        Create a celery chain which gets a thematic gpkg, runs export formats, and creates a qgis style
-        (***I don't think the qgis style generation belongs here; move to an export task or finalize hook task.)
+        Create a celery chain which gets a gpkg of osm data & runs export formats
         """
         if export_tasks:
             format_tasks = chain(
@@ -115,14 +112,19 @@ class ExportThematicOSMTaskRunner(TaskRunner):
 
         bbox = run.job.extents
 
-        thematic_task = osm_thematic_data_collection_task.si(
+        osm_gpkg_task = osm_data_collection_task.si(
             stage_dir, export_provider_task_record.id, worker=worker, osm_query_filters=job.filters,
-            job_name=job_name, bbox=bbox, user_details=user_details
+            job_name=job_name, bbox=bbox, user_details=user_details,
+            feature_selection_config=self.feature_selection_config
         )
 
-        thematic_tasks = (thematic_task | format_tasks) if format_tasks else thematic_task
+        thematic_tasks = (osm_gpkg_task | format_tasks) if format_tasks else osm_gpkg_task
 
         return export_provider_task_record.uid, thematic_tasks
+
+
+class ExportGenericOSMTaskRunner(ExportThematicOSMTaskRunner):
+    feature_selection_config = 'simple'
 
 
 class ExportWFSTaskRunner(TaskRunner):
@@ -355,17 +357,19 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_job_name(job.name)
-        # get the formats to export
+
+        formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
-        try:
-            # instantiate the required class.
-            export_tasks['gpkg'] = {'obj': create_format_task('gpkg'), 'task_uid': None}
-        except KeyError as e:
-            logger.debug('KeyError: {}'.format(e))
-        except ImportError as e:
-            msg = 'Error importing export task: {0}'.format(e)
-            logger.debug(msg)
+        for _format in formats:
+            try:
+                # instantiate the required class.
+                export_tasks[_format] = {'obj': create_format_task(_format), 'task_uid': None}
+            except KeyError as e:
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(_format, e))
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
 
         # run the tasks
         if len(export_tasks) > 0:

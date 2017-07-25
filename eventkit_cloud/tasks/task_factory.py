@@ -19,6 +19,7 @@ from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure
 from ..tasks.models import ExportRun, ExportProviderTask
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
+    ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
     ExportWFSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
@@ -36,7 +37,8 @@ class TaskFactory:
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm': ExportThematicOSMTaskRunner,
+        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner,
+                              'osm': ExportThematicOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
@@ -59,6 +61,7 @@ class TaskFactory:
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
 
+            from pydevd import settrace; settrace('172.21.0.1')
             # Contains one chain per item in provider_task_records
             provider_task_chains = []
             for provider_task_record in job.provider_tasks.all():
@@ -88,14 +91,6 @@ class TaskFactory:
                     provider_task_uids += [provider_task_uid]
 
                     if provider_subtask_chain:
-                        if provider_task_record.provider.zip:
-                            zip_task_sig = create_task(
-                                export_provider_task_uid=provider_task_uid, stage_dir=stage_dir,
-                                worker=worker, task=zip_export_provider, job_name=job.name, user_details=user_details
-                            )
-                        else:
-                            zip_task_sig = chain()
-
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
                         clean_up_task_sig = clean_up_failure_task.si(
@@ -113,7 +108,7 @@ class TaskFactory:
                             routing_key=worker
                         )
                         finalized_provider_task_chain = chain(
-                            provider_subtask_chain, zip_task_sig, finalize_export_provider_sig
+                            provider_subtask_chain, finalize_export_provider_sig
                         )
                         provider_subtask_chains.append(finalized_provider_task_chain)
 

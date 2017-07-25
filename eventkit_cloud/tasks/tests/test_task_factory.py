@@ -59,10 +59,8 @@ class TestExportTaskFactory(TestCase):
 
     @patch('eventkit_cloud.tasks.task_factory.get_invalid_licenses')
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
-    @patch('eventkit_cloud.tasks.task_factory.create_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, create_task,
-            finalize_task, mock_invalid_licenses):
+    def test_task_factory(self, task_factory_chain, finalize_task, mock_invalid_licenses):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
@@ -72,12 +70,10 @@ class TestExportTaskFactory(TestCase):
         task_runner = MagicMock()
         task = Mock()
         task_runner().run_task.return_value = (provider_uuid, task)
-        create_task.return_value = task
         task_factory = TaskFactory()
         task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
-        create_task.assert_called()
         finalize_task.s.assert_called()
 
         # Test that run is prevented and deleted if the user has not agreed to the licenses.
