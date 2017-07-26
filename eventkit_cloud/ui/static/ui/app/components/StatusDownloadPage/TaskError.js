@@ -84,7 +84,7 @@ export class TaskError extends React.Component {
         open={this.state.taskErrorDialogOpen}
         onRequestClose={this.handleTaskErrorClose.bind(this)}
     >
-                <div><strong> {task.name} has <strong style={{color:'#ce4427'}}>1 error(s).</strong> </strong><div style={{marginTop:'25px'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
+                <div><strong>{task.name} has <strong style={{color:'#ce4427'}}>1 error(s).</strong> </strong><div style={{marginTop:'25px'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
     </Dialog></span>
 
         )

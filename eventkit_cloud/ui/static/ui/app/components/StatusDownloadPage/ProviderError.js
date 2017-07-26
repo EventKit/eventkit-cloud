@@ -2,7 +2,6 @@ import React, {PropTypes, Component} from 'react'
 import '../tap_events'
 import Dialog from 'material-ui/Dialog';
 import RaisedButton from 'material-ui/RaisedButton';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning'
 

@@ -4,8 +4,7 @@ import {mount, shallow} from 'enzyme';
 import '../../components/tap_events';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dialog from 'material-ui/Dialog';
-
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
+import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 
@@ -40,6 +39,7 @@ describe('ProviderError component', () => {
         expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
         expect(wrapper.find(Warning)).toHaveLength(1);
 
+
     });
 
     it('handleProviderErrorOpen should set provider error dialog to open', () => {
@@ -50,11 +50,12 @@ describe('ProviderError component', () => {
         wrapper.instance().handleProviderErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerErrorDialogOpen: true})).toBe(true);
-        expect(wrapper.find(NavigationArrowForward)).toHaveLength(3);
+        expect(wrapper.find(Warning)).toHaveLength(4)
+        expect(wrapper.find(Divider)).toHaveLength(3);
         expect(wrapper.find('div').at(1).text()).toEqual('The first three errors:');
-        expect(wrapper.find('div').at(2).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
-        expect(wrapper.find('div').at(3).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
-        expect(wrapper.find('div').at(4).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(2).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.<Divider />');
+        expect(wrapper.find('div').at(3).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.<Divider />');
+        expect(wrapper.find('div').at(4).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.<Divider />');
         expect(wrapper.find('div').at(5).text()).toEqual('You may want to restart processing the files or contact an administrator.');
         stateSpy.restore();
     });

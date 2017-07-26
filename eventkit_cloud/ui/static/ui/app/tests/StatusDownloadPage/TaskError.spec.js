@@ -4,7 +4,7 @@ import {mount, shallow} from 'enzyme';
 import '../../components/tap_events';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dialog from 'material-ui/Dialog';;
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
+import Warning from 'material-ui/svg-icons/alert/warning';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 
 describe('TaskError component', () => {
@@ -56,9 +56,9 @@ describe('TaskError component', () => {
         wrapper.instance().handleTaskErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({taskErrorDialogOpen: true})).toBe(true);
-        expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
-        expect(wrapper.find('div').at(0).text()).toEqual('There was an error with OSM Data (.gpkg) <NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
-        expect(wrapper.find('div').at(1).text()).toEqual('<NavigationArrowForward />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find(Warning)).toHaveLength(1);
+        expect(wrapper.find('div').at(0).text()).toEqual('OSM Data (.gpkg) has 1 error(s). <AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(1).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
         stateSpy.restore();
         stateSpy.restore();
     });
