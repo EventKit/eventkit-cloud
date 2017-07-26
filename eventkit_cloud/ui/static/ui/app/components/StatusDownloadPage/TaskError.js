@@ -26,27 +26,27 @@ export class TaskError extends React.Component {
     render() {
         //TODO: TO test, comment out props call and uncomment out hard coded fake task with errors
         //AND In ProviderRow.js, within the getTastStatus function, uncomment out the hard coded provider status.
-        //let task = this.props.task;
+        let task = this.props.task;
 
         //fake an error
-        let task ={
-            uid: "1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
-            url: "http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
-            name: "OSM Data (.gpkg)",
-            status: "CANCELED",
-            progress: 0,
-            estimated_finish: null,
-            started_at: null,
-            finished_at: null,
-            duration: null,
-            result: null,
-            errors: [
-                {
-                    exception: "OpenStreetMap Data (Themes) was canceled by admin."
-                }
-            ],
-            display: true
-        }
+        // let task ={
+        //     uid: "1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
+        //     url: "http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
+        //     name: "OSM Data (.gpkg)",
+        //     status: "CANCELED",
+        //     progress: 0,
+        //     estimated_finish: null,
+        //     started_at: null,
+        //     finished_at: null,
+        //     duration: null,
+        //     result: null,
+        //     errors: [
+        //         {
+        //             exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //         }
+        //     ],
+        //     display: true
+        // }
 
         const errors = task.errors;
         let error;
@@ -84,7 +84,7 @@ export class TaskError extends React.Component {
         open={this.state.taskErrorDialogOpen}
         onRequestClose={this.handleTaskErrorClose.bind(this)}
     >
-                <div><strong>There was an error with {task.name} </strong><div style={{marginTop:'25px'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
+                <div><strong> {task.name} has <strong style={{color:'#ce4427'}}>1 error(s).</strong> </strong><div style={{marginTop:'25px'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
     </Dialog></span>
 
         )

@@ -27,96 +27,96 @@ export class ProviderError extends React.Component {
     render() {
         //TODO: To test, comment out props call and uncomment out hard coded fake error.
         //AND In ProviderRow.js, within the getProviderStatus function, uncomment out the hard coded provider status.
-        //let provider = this.props.provider;
+        let provider = this.props.provider;
 
         //fake an error
-        let provider ={
-            uid: "55e3d844-2139-46ed-a029-9253d52ffb1f",
-            url: "http://cloud.eventkit.dev/api/provider_tasks/55e3d844-2139-46ed-a029-9253d52ffb1f",
-            name: "OpenStreetMap Data (Themes)",
-            tasks: [
-            {
-                uid: "1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
-                url: "http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
-                name: "OSM Data (.gpkg)",
-                status: "CANCELED",
-                progress: 0,
-                estimated_finish: null,
-                started_at: null,
-                finished_at: null,
-                duration: null,
-                result: null,
-                errors: [
-                    {
-                        exception: "OpenStreetMap Data (Themes) was canceled by admin."
-                    }
-                ],
-                display: true
-            },
-            {
-                uid: "cfb971d4-432d-48ba-ba36-cce314228fba",
-                url: "http://cloud.eventkit.dev/api/tasks/cfb971d4-432d-48ba-ba36-cce314228fba",
-                name: "QGIS Project file (.qgs)",
-                status: "CANCELED",
-                progress: 0,
-                estimated_finish: null,
-                started_at: null,
-                finished_at: null,
-                duration: null,
-                result: null,
-                errors: [
-                    {
-                        exception: "OpenStreetMap Data (Themes) was canceled by admin."
-                    }
-                ],
-                display: true
-            },
-            {
-                uid: "aff6ccb9-6bc3-4080-aeb9-d599780949d5",
-                url: "http://cloud.eventkit.dev/api/tasks/aff6ccb9-6bc3-4080-aeb9-d599780949d5",
-                name: "Area of Interest (.geojson)",
-                status: "CANCELED",
-                progress: 0,
-                estimated_finish: null,
-                started_at: null,
-                finished_at: "2017-07-17T16:33:47.519125Z",
-                duration: null,
-                result: null,
-                errors: [
-                    {
-                        exception: "OpenStreetMap Data (Themes) was canceled by admin."
-                    }
-                ],
-                display: false
-            },
-            {
-                uid: "47d8f8a6-9611-4fc7-8f1b-210d3ff87198",
-                url: "http://cloud.eventkit.dev/api/tasks/47d8f8a6-9611-4fc7-8f1b-210d3ff87198",
-                name: "Area of Interest (.gpkg)",
-                status: "CANCELED",
-                progress: 0,
-                estimated_finish: null,
-                started_at: null,
-                finished_at: null,
-                duration: null,
-                result: null,
-                errors: [
-                    {
-                        exception: "OpenStreetMap Data (Themes) was canceled by admin."
-                    }
-                ],
-                display: false
-            }
-        ],
-            status: "CANCELED",
-            display: true
-        };
+        // let provider ={
+        //     uid: "55e3d844-2139-46ed-a029-9253d52ffb1f",
+        //     url: "http://cloud.eventkit.dev/api/provider_tasks/55e3d844-2139-46ed-a029-9253d52ffb1f",
+        //     name: "OpenStreetMap Data (Themes)",
+        //     tasks: [
+        //     {
+        //         uid: "1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
+        //         url: "http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553",
+        //         name: "OSM Data (.gpkg)",
+        //         status: "CANCELED",
+        //         progress: 0,
+        //         estimated_finish: null,
+        //         started_at: null,
+        //         finished_at: null,
+        //         duration: null,
+        //         result: null,
+        //         errors: [
+        //             {
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //             }
+        //         ],
+        //         display: true
+        //     },
+        //     {
+        //         uid: "cfb971d4-432d-48ba-ba36-cce314228fba",
+        //         url: "http://cloud.eventkit.dev/api/tasks/cfb971d4-432d-48ba-ba36-cce314228fba",
+        //         name: "QGIS Project file (.qgs)",
+        //         status: "CANCELED",
+        //         progress: 0,
+        //         estimated_finish: null,
+        //         started_at: null,
+        //         finished_at: null,
+        //         duration: null,
+        //         result: null,
+        //         errors: [
+        //             {
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //             }
+        //         ],
+        //         display: true
+        //     },
+        //     {
+        //         uid: "aff6ccb9-6bc3-4080-aeb9-d599780949d5",
+        //         url: "http://cloud.eventkit.dev/api/tasks/aff6ccb9-6bc3-4080-aeb9-d599780949d5",
+        //         name: "Area of Interest (.geojson)",
+        //         status: "CANCELED",
+        //         progress: 0,
+        //         estimated_finish: null,
+        //         started_at: null,
+        //         finished_at: "2017-07-17T16:33:47.519125Z",
+        //         duration: null,
+        //         result: null,
+        //         errors: [
+        //             {
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //             }
+        //         ],
+        //         display: false
+        //     },
+        //     {
+        //         uid: "47d8f8a6-9611-4fc7-8f1b-210d3ff87198",
+        //         url: "http://cloud.eventkit.dev/api/tasks/47d8f8a6-9611-4fc7-8f1b-210d3ff87198",
+        //         name: "Area of Interest (.gpkg)",
+        //         status: "CANCELED",
+        //         progress: 0,
+        //         estimated_finish: null,
+        //         started_at: null,
+        //         finished_at: null,
+        //         duration: null,
+        //         result: null,
+        //         errors: [
+        //             {
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //             }
+        //         ],
+        //         display: false
+        //     }
+        // ],
+        //     status: "CANCELED",
+        //     display: true
+        // };
 
         //const errors = task.errors;
-        //let errors = [];
+        let errors = [];
 
         //fake array to test for more than 3 errors.
-        let errors = ['1','2','3','4'];
+        //let errors = ['1','2','3','4'];
 
         provider.tasks.forEach((column) => {
             if(column.display == true) {
@@ -130,12 +130,12 @@ export class ProviderError extends React.Component {
         let errorData;
         if(errors.length > 3){
             errorData =  <div>
-                <strong>{provider.name} has {errors.length} error(s).</strong>
+                <strong>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>
                     <div style={{marginTop:'15px'}}>The first three errors:
                     </div>
                     {errors.slice(0,3).map((error, index) => (
                         <div style={{marginTop:'15px'}} key={index} >
-                            <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
+                            <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                             {error}
                             <Divider style={{marginTop: '5px'}}/>
                         </div>
@@ -146,10 +146,10 @@ export class ProviderError extends React.Component {
             </div>
         }
         else {
-            errorData = <div> <strong>{provider.name} has {errors.length} error(s) </strong>
+            errorData = <div> <strong>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
                 {errors.map((error, index) => (
                     <div style={{marginTop:'25px'}} key={index} >
-                        <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
+                        <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                         {error}
                         <Divider style={{marginTop: '15px'}}/>
                     </div>
