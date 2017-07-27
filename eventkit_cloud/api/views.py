@@ -399,20 +399,19 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
-           Update the published state  for the given job
+           Update the published state or the featured state  for the given job
 
 
            * request: the HTTP request in JSON.
 
-               Example:
+               Examples:
 
-                   {
-                       "published" : false
-                   }
+                   { "published" : false }
+
+                   { "featured" : false }
 
 
-
-           * Returns: a copy of the new published value on success
+           * Returns: a copy of the new  value on success
 
                Example:
 
@@ -425,17 +424,27 @@ class JobViewSet(viewsets.ModelViewSet):
 
            """
         payload = request.data
-        if not "published" in payload:
-            return Response([{'detail': _('missing published state parameter')}], status.HTTP_400_BAD_REQUEST)
+        key = None
+        for v in ['published', 'featured']:
+            if v in payload:  key = v
+
+        if key == None:
+            return Response([{'detail': _('missing published or featured state parameter')}], status.HTTP_400_BAD_REQUEST)
 
         job = Job.objects.get(uid=uid)
 
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        job.published = payload['published']
+        newValue = payload[key]
+
+        if key == 'published':
+            job.published = newValue
+        else:
+            job.featured = newValue
+
         job.save()
-        return Response({'success': True, 'published': job.published }, status=status.HTTP_200_OK)
+        return Response({'success': True, key: newValue }, status=status.HTTP_200_OK)
 
 
 

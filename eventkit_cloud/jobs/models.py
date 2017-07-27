@@ -263,8 +263,7 @@ class Job(TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
-    feature_save = models.BooleanField(default=False, db_index=True)  # save feature selections
-    feature_pub = models.BooleanField(default=False, db_index=True)  # publish feature selections
+    featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
