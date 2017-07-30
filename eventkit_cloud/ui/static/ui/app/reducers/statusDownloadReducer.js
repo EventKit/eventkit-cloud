@@ -62,3 +62,28 @@ export function cancelProviderTask(state = initialState.cancelProviderTask, acti
             return state;
     }
 }
+
+export function updateExpirationReducer(state = initialState.updateExpiration, action) {
+    switch(action.type) {
+        case types.UPDATING_EXPIRATION:
+            return {updating: true, updated: false, error: null};
+        case types.UPDATE_EXPIRATION_SUCCESS:
+            return {updating: false, updated: true, error: null};
+        case types.UPDATE_EXPIRATION_ERROR:
+            return {updating: false, updated: false, error: action.error};
+        default:
+            return state;
+    }
+}
+export function updatePermissionReducer(state = initialState.updatePermission, action) {
+    switch(action.type) {
+        case types.UPDATING_PERMISSION:
+            return {updating: true, updated: false, error: null};
+        case types.UPDATE_PERMISSION_SUCCESS:
+            return {updating: false, updated: true, error: null};
+        case types.UPDATE_PERMISSION_ERROR:
+            return {updating: false, updated: false, error: action.error};
+        default:
+            return state;
+    }
+}

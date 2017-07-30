@@ -99,4 +99,14 @@ export default {
         canceled: false,
         error: null,
     },
+    updateExpiration: {
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    updatePermission: {
+        updating: false,
+        updated: false,
+        error: null,
+    }
 }
