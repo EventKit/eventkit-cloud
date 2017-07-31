@@ -40,11 +40,9 @@ class TaskFactory:
     def __init__(self,):
         self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner,
                               'osm': ExportThematicOSMTaskRunner,
-                              'wfs': ExportWFSTaskRunner, 'wms': ExportExternalRasterServiceTaskRunner,
                               'wfs': ExportWFSTaskRunner,
                               'wms': ExportExternalRasterServiceTaskRunner,
                               'wcs': ExportWCSTaskRunner,
->>>>>>> 1b11df21318f24ef2ed787733e6cdb22db19d21a
                               'wmts': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
                               'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
