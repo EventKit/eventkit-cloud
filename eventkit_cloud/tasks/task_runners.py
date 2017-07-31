@@ -13,6 +13,12 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task, external_raster_service_export_task, arcgis_feature_service_export_task, osm_data_collection_task)
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
+from .export_tasks import (osm_conf_task, osm_prep_schema_task,
+                           osm_to_pbf_convert_task, overpass_query_task,
+                           wfs_export_task, external_raster_service_export_task,
+                           arcgis_feature_service_export_task, osm_create_styles_task,
+                           wcs_export_task)
+
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +135,7 @@ class ExportGenericOSMTaskRunner(ExportThematicOSMTaskRunner):
 
 class ExportWFSTaskRunner(TaskRunner):
     """
-    Runs External Service Export Tasks
+    Runs External WFS Service Export Tasks
     """
     export_task_registry = settings.EXPORT_TASKS
 
@@ -213,6 +219,105 @@ class ExportWFSTaskRunner(TaskRunner):
                                                         job_name=job_name,
                                                         task_uid=task.get('task_uid'),
                                                         user_details=user_details).set(queue=worker, routing_key=worker) for task_name, task
+                                     in
+                                     export_tasks.iteritems() if task is not None)
+
+                task_chain = (task_chain | format_tasks)
+            return export_provider_task.uid, task_chain
+        else:
+            return None, None
+
+
+# TODO: create super class for OGC web service task runners, to cut down on code duplication
+class ExportWCSTaskRunner(TaskRunner):
+    """
+    Runs External WCS Service Export Tasks
+    """
+    export_task_registry = settings.EXPORT_TASKS
+
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
+        """
+        Run WCS export tasks. Specifically create a task chain to be picked up by a celery worker later.
+
+        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param user: The user executing the task.
+        :param run: The ExportRun which this task will belong to.
+        :param stage_dir: The directory where to store the files while they are being created.
+        :param worker: The celery worker assigned this task.
+        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        """
+        # This is just to make it easier to trace when user_details haven't been sent
+        user_details = kwargs.get('user_details')
+        if user_details is None:
+            user_details = {'username': 'unknown-ExportWCSTaskRunner.run_task'}
+
+        logger.debug('Running Job with id: {0}'.format(provider_task_uid))
+        # pull the provider_task from the database
+        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        job = run.job
+        job_name = normalize_job_name(job.name)
+        # get the formats to export
+        formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
+        export_tasks = {}
+        # build a list of celery tasks based on the export formats..
+        for _format in formats:
+            try:
+                # instantiate the required class.
+                export_tasks[_format] = {'obj': create_format_task(_format), 'task_uid': None}
+            except KeyError as e:
+                logger.debug('KeyError: export_tasks[{}] - {}'.format(_format, e))
+            except ImportError as e:
+                msg = 'Error importing export task: {0}'.format(e)
+                logger.debug(msg)
+
+        # run the tasks
+        if len(export_tasks) > 0:
+            bbox = json.loads("[{}]".format(job.overpass_extents))
+
+            # swap xy
+            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
+            export_provider_task = ExportProviderTask.objects.create(run=run,
+                                                                     name=provider_task.provider.name,
+                                                                     slug=provider_task.provider.slug,
+                                                                     status="PENDING",
+                                                                     display=True)
+
+            for task_type, task in export_tasks.iteritems():
+                export_task = create_export_task(task_name=task.get('obj').name,
+                                                 export_provider_task=export_provider_task, worker=worker,
+                                                 display=getattr(task.get('obj'), "display", False))
+                export_tasks[task_type]['task_uid'] = export_task.uid
+
+            service_task = wcs_export_task
+            export_task = create_export_task(task_name=service_task.name,
+                                             export_provider_task=export_provider_task, worker=worker,
+                                             display=getattr(service_task, "display", False))
+
+            task_chain = (service_task.s(stage_dir=stage_dir,
+                                         job_name=job_name,
+                                         task_uid=export_task.uid,
+                                         name=provider_task.provider.slug,
+                                         layer=provider_task.provider.layer,
+                                         bbox=bbox,
+                                         service_url=provider_task.provider.url,
+                                         user_details=user_details).set(queue=worker, routing_key=worker))
+
+            if export_tasks.get('gpkg'):
+                gpkg_export_task = export_tasks.pop('gpkg')
+                task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
+                                                                         stage_dir=stage_dir,
+                                                                         job_name=job_name,
+                                                                         task_uid=gpkg_export_task.get('task_uid'),
+                                                                         user_details=user_details) \
+                              .set(queue=worker, routing_key=worker))
+
+            if len(export_tasks) > 0:
+                format_tasks = chain(task.get('obj').s(run_uid=run.uid,
+                                                       stage_dir=stage_dir,
+                                                       job_name=job_name,
+                                                       task_uid=task.get('task_uid'),
+                                                       user_details=user_details).set(queue=worker, routing_key=worker)
+                                     for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
 

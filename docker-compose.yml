@@ -45,6 +45,7 @@ services:
         - BANNER_BACKGROUND_COLOR
         - GEOCODING_API_URL
         - GEOCODING_API_TYPE
+        - MAX_EXPORTRUN_EXPIRATION_DAYS=30
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'

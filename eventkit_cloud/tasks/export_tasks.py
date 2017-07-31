@@ -20,19 +20,18 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-
 from celery import Task
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
-from eventkit_cloud.celery import app, TaskPriority
-from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
-from eventkit_cloud.utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp,
-    wfs, arcgis_feature_service, sqlite, geopackage
-, thematic_gpkg, external_service)
-from eventkit_cloud.utils.hotosm_geopackage import OSMConfig, Geopackage
-
+from ..feature_selection.feature_selection import FeatureSelection
+from audit_logging.celery_support import UserDetailsBase
+from ..celery import app, TaskPriority
+from ..utils import (
+    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
+    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage
+)
+from ..utils.hotosm_geopackage import OSMConfig, Geopackage
 from .exceptions import CancelException, DeleteException
 
 
@@ -66,7 +65,7 @@ class TaskStates(Enum):
 # https://github.com/celery/celery/issues/3270
 
 
-class LockingTask(Task):
+class LockingTask(UserDetailsBase):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
     It's happens with multiple workers for tasks with any delay (countdown, ETA).
@@ -108,18 +107,18 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             generally can be ignored
         @return A url to reach filepath.
     """
-    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT
+    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
     run_dir = os.path.join(download_filesystem_root, run_uid)
-    filename = os.path.split(filepath)[-1]
+    filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(
             run_uid,
-            os.path.join(provider_slug, download_filename),
-            filepath
+            os.path.join(provider_slug, filename),
+            download_filename
         )
     else:
         try:
@@ -130,9 +129,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
 
         download_url = os.path.join(download_url_root, run_uid, download_filename)
 
-    download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
-    if not skip_copy:
-        shutil.copy(filepath, download_filepath)
+        download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+        if not skip_copy:
+            shutil.copy(filepath, download_filepath)
 
     return download_url
 
@@ -179,12 +178,10 @@ class ExportTask(LockingTask):
             stat = os.stat(output_url)
             size = stat.st_size / 1024 / 1024.00
             # construct the download_path
-            download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
             parts = output_url.split('/')
             filename = parts[-1]
             provider_slug = parts[-2]
             run_uid = parts[-3]
-            run_dir = os.path.join(download_root, run_uid)
             name, ext = os.path.splitext(filename)
             download_filename = '{0}-{1}-{2}{3}'.format(
                 name,
@@ -518,6 +515,25 @@ def wfs_export_task(self, result={}, layer=None, config=None, run_uid=None, task
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
+@app.task(name='WCSExport', bind=True, base=ExportTask)
+def wcs_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
+                    job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
+    """
+    Class defining export for WCS services
+    """
+    self.update_task_state(result=result, task_uid=task_uid)
+    out = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    try:
+        wcs2gpkg = wcs.WCStoGPKG(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                 config=config, service_type=service_type, task_uid=task_uid, debug=True)
+        wcs2gpkg.convert()
+        result['result'] = out
+        result['geopackage'] = out
+        return result
+    except Exception as e:
+        logger.error('Raised exception in WCS service export: %s', str(e))
+        raise Exception(e)
+
 
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
 def arcgis_feature_service_export_task(self, result={}, layer=None, config=None, run_uid=None, task_uid=None,
@@ -632,7 +648,7 @@ def pick_up_run_task(self, result={}, run_uid=None, user_details=None):
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
 
 
-@app.task(name='Clean Up Failure Task', base=Task)
+@app.task(name='Clean Up Failure Task', base=UserDetailsBase)
 def clean_up_failure_task(result={}, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
     """
     Used to close tasks in a failed chain.
@@ -902,7 +918,7 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
     return result
 
 
-@app.task(name='Zip File Task', bind=False)
+@app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
 def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
     """
     rolls up runs into a zip file

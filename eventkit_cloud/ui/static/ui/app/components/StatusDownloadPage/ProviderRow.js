@@ -135,14 +135,6 @@ export class ProviderRow extends React.Component {
         });
     }
 
-        // getTimeRemaining(task){
-    //     let date = moment(task.estimated_finish);
-    //     let now = moment();
-    //     let timeRemaining = date - now;
-    //     timeRemaining = timeRemaining/1000;
-    //     return timeRemaining;
-    //     //task.progress == 100 ? '' : task.progress + ' %'
-    // }
 
     getTaskStatus(task) {
         switch (task.status) {
@@ -268,7 +260,7 @@ export class ProviderRow extends React.Component {
             return '80px';
         }
         else {
-            return '128px';
+            return '120px';
         }
     }
 
@@ -324,7 +316,7 @@ export class ProviderRow extends React.Component {
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
                     <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '10px', paddingLeft: '10px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
