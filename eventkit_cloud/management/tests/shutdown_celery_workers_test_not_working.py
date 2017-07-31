@@ -57,7 +57,7 @@
 #         """ Checks that 'shutdown_celery_workers' allows previous tasks to finish, but prevents additional processing
 #             then stops the celery workers.
 #         """
-#         #from pydevd import settrace; settrace('172.21.0.1')
+#         from pydevd import settrace; settrace('172.21.0.1')
 #         # Ensure celery container is running
 #         self.assertIsNotNone(app.control.inspect().ping(), 'No worker nodes found running prior to test')
 #

@@ -64,7 +64,6 @@ class TaskFactory:
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
 
-            #from pydevd import settrace; settrace('172.21.0.1')
             # Contains one chain per item in provider_task_records
             provider_task_chains = []
             for provider_task_record in job.provider_tasks.all():

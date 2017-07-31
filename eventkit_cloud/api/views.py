@@ -90,7 +90,6 @@ class JobViewSet(viewsets.ModelViewSet):
 
 
     def dispatch(self, request, *args, **kwargs):
-        #from pydevd import settrace; settrace('172.21.0.1')
         return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
@@ -272,7 +271,6 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        #from pydevd import settrace; settrace('172.21.0.1')
         from ..tasks.task_factory import InvalidLicense, Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -376,7 +374,6 @@ class JobViewSet(viewsets.ModelViewSet):
         *Returns:*
             - the serialized run data.
         """
-        #from pydevd import settrace; settrace('172.21.0.1')
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = get_user_details(request)
         if user_details is None:
