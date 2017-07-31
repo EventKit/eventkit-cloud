@@ -313,7 +313,7 @@ def osm_data_collection_pipeline(
     pbf_filepath = o2p.convert()
 
     # --- Generate thematic gpkg from PBF
-    geopackage_filepath = os.path.join(stage_dir, '{}_thematic.gpkg'.format(job_name))
+    geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
 
     feature_selection = FeatureSelection.example(feature_selection_config)
     update_progress(export_task_record_uid, progress=75)
