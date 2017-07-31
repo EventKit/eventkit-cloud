@@ -131,7 +131,7 @@ export class DataPackDetails extends React.Component {
             return '80px';
         }
         else {
-            return '128px';
+            return '120px';
         }
     }
 

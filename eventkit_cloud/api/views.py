@@ -706,7 +706,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
         expiration = payload["expiration"]
-        target_date = parser.parse(expiration)
+        target_date = parser.parse(expiration).replace(tzinfo=None)
         run = ExportRun.objects.get(uid=uid)
 
         if not request.user.is_superuser:
