@@ -20,8 +20,8 @@ export_task_registry = {
     'sqlite': 'eventkit_cloud.tasks.export_tasks.sqlite_export_task',
     'kml': 'eventkit_cloud.tasks.export_tasks.kml_export_task',
     'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
+    'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task',
     'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task',
-    'gpkg': 'eventkit_cloud.tasks.export_tasks.osm_generic_data_collection_task',
 }
 
 
