@@ -10,15 +10,12 @@ from django.db import DatabaseError
 from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.export_tasks import (
-    wfs_export_task, external_raster_service_export_task, arcgis_feature_service_export_task, osm_data_collection_task)
+    wcs_export_task,
+    wfs_export_task, 
+    external_raster_service_export_task, 
+    arcgis_feature_service_export_task, 
+    osm_data_collection_task)
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
-
-from .export_tasks import (osm_conf_task, osm_prep_schema_task,
-                           osm_to_pbf_convert_task, overpass_query_task,
-                           wfs_export_task, external_raster_service_export_task,
-                           arcgis_feature_service_export_task, osm_create_styles_task,
-                           wcs_export_task)
-
 
 logger = logging.getLogger(__name__)
 
@@ -283,13 +280,13 @@ class ExportWCSTaskRunner(TaskRunner):
                                                                      display=True)
 
             for task_type, task in export_tasks.iteritems():
-                export_task = create_export_task(task_name=task.get('obj').name,
+                export_task = create_export_task_record(task_name=task.get('obj').name,
                                                  export_provider_task=export_provider_task, worker=worker,
                                                  display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = wcs_export_task
-            export_task = create_export_task(task_name=service_task.name,
+            export_task = create_export_task_record(task_name=service_task.name,
                                              export_provider_task=export_provider_task, worker=worker,
                                              display=getattr(service_task, "display", False))
 
