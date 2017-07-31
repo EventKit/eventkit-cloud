@@ -191,6 +191,7 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
+
     def test_osm_kml_thematic(self):
         """
         This test is to ensure that an OSM job will export a kml file.
@@ -200,6 +201,7 @@ class TestJob(TestCase):
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
+
 
     def test_wms_gpkg(self):
         """

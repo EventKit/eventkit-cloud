@@ -10,15 +10,14 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from celery import chain, group, chord
+from celery import chain
 from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
     example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
 
-from ..jobs.models import Job, ExportProvider, ProviderTask, ExportFormat
-from ..tasks.export_tasks import (finalize_export_provider_task, clean_up_failure_task, TaskPriority,
-                                  bounds_export_task, output_selection_geojson_task)
+from ..jobs.models import Job
+from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
 from ..tasks.models import ExportRun, ExportProviderTask
-from ..tasks.task_runners import create_export_task
+from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
     ExportGenericOSMTaskRunner,
     ExportThematicOSMTaskRunner,
@@ -53,7 +52,7 @@ class TaskFactory:
         :param worker: A worker node (hostname) for a celery worker, this should match the node name used when starting,
          the celery worker.
         :param run_uid: A uid to reference an ExportRun.
-        :return:The results from the celery chain or False.
+        :return: The AsyncResult from the celery chain of all tasks for this run.
         """
         # This is just to make it easier to trace when user_details haven't been sent
         if user_details is None:
@@ -64,125 +63,76 @@ class TaskFactory:
             job = run.job
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
-            grouped_provider_tasks = []
-            # Add providers to list.
-            # Note that if a provider depends on a different provider they should be grouped in a list,
-            # otherwise passed in as a single element list.
-            osm_thematic_provider_task = osm_generic_provider_task = None
-            for grouped_provider_task in job.provider_tasks.all():
-                provider_type = grouped_provider_task.provider.export_provider_type.type_name
-                # If both osm and osm-thematic are requested then only add one task which will run both exports
-                # It would be nice if this could be done for any arbitrary providers, via the API and/or models.
-                if provider_type == 'osm':
-                    osm_thematic_provider_task = grouped_provider_task
-                elif provider_type == 'osm-generic':
-                    osm_generic_provider_task = grouped_provider_task
-                else:
-                    grouped_provider_tasks.append([grouped_provider_task])
 
-            if osm_thematic_provider_task and not osm_generic_provider_task:
-                # If a generic OSM task doesn't exist we need to create one so that it can be used.
-                osm_generic_provider_task = ProviderTask.objects.create(
-                    provider=ExportProvider.objects.get(slug='osm-generic'))
-                osm_generic_provider_task.formats.add(ExportFormat.objects.get(slug='gpkg'))
-                osm_generic_provider_task.save()
-            grouped_provider_tasks.append([osm_generic_provider_task, osm_thematic_provider_task])
+            # Contains one chain per item in provider_task_records
+            provider_task_chains = []
+            for provider_task_record in job.provider_tasks.all():
+                provider_subtask_chains = []
+                provider_task_uids = []
 
-            if grouped_provider_tasks:
-                tasks_results = []
-                # Contains one chain per item in grouped_provider_tasks
-                grouped_provider_subtask_chains = []
-                for grouped_provider_task in grouped_provider_tasks:
-                    export_provider_task_uids = []
-                    provider_subtask_chains = []
-                    for provider_task in grouped_provider_task:
-                        if not provider_task:
-                            continue
-                        # Create an instance of a task runner based on the type name
-                        if self.type_task_map.get(provider_task.provider.export_provider_type.type_name):
-                            type_name = provider_task.provider.export_provider_type.type_name
-                            task_runner = self.type_task_map.get(type_name)()
-                            os.makedirs(os.path.join(run_dir, provider_task.provider.slug), 6600)
-                            stage_dir = os.path.join(
-                                        run_dir,
-                                        provider_task.provider.slug)
+                # Create an instance of a task runner based on the type name
+                if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
+                    type_name = provider_task_record.provider.export_provider_type.type_name
+                    task_runner = self.type_task_map.get(type_name)()
+                    os.makedirs(os.path.join(run_dir, provider_task_record.provider.slug), 6600)
+                    stage_dir = os.path.join(
+                                run_dir,
+                                provider_task_record.provider.slug)
 
-                            args = {
-                                'user': job.user,
-                                'provider_task_uid': provider_task.uid,
-                                'run': run,
-                                'stage_dir': stage_dir,
-                                'service_type': provider_task.provider.export_provider_type.type_name,
-                                'worker': worker,
-                                'user_details': user_details
-                            }
+                    args = {
+                        'user': job.user,
+                        'provider_task_uid': provider_task_record.uid,
+                        'run': run,
+                        'stage_dir': stage_dir,
+                        'service_type': provider_task_record.provider.export_provider_type.type_name,
+                        'worker': worker,
+                        'user_details': user_details
+                    }
 
-                            export_provider_task_uid, chain_task_runner_tasks = task_runner.run_task(**args)
-                            export_provider_task_uids += [export_provider_task_uid]
+                    provider_task_uid, provider_subtask_chain = task_runner.run_task(**args)
+                    provider_task_uids += [provider_task_uid]
 
-                            if chain_task_runner_tasks:
-                                # Create a geojson for clipping this provider if needed
-                                selection_task = create_task(
-                                    export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                    worker=worker, task=output_selection_geojson_task, selection=job.the_geom.geojson,
-                                    user_details=user_details
-                                )
+                    if provider_subtask_chain:
+                        # The finalize_export_provider_task will check all of the export tasks
+                        # for this provider and save the export provider's status.
+                        clean_up_task_sig = clean_up_failure_task.si(
+                            run_uid=run_uid, run_dir=run_dir,
+                            export_provider_task_uids=provider_task_uids, worker=worker, queue=worker,
+                            routing_key=worker
+                        )
+                        finalize_export_provider_sig = finalize_export_provider_task.s(
+                            run_uid=run_uid,
+                            run_dir=run_dir,
+                            export_provider_task_uid=provider_task_uid,
+                            worker=worker,
+                            link_error=clean_up_task_sig,
+                            queue=worker,
+                            routing_key=worker
+                        )
+                        finalized_provider_task_chain = chain(
+                            provider_subtask_chain, finalize_export_provider_sig
+                        )
+                        provider_subtask_chains.append(finalized_provider_task_chain)
 
-                                # Export the bounds for this provider
-                                bounds_task = create_task(
-                                    export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                    worker=worker, task=bounds_export_task, user_details=user_details
-                                )
+                if not provider_subtask_chains:
+                    continue
 
-                                if provider_task.provider.zip:
-                                    zip_task = create_task(
-                                        export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir,
-                                        worker=worker, task=zip_export_provider, job_name=job.name, user_details=user_details
-                                    )
-                                    bounds_task = chain(bounds_task, zip_task)
-                                # Run the task, and when it completes return the status of the task to the model.
-                                # The finalize_export_provider_task will check all of the export tasks
-                                # for this provider and save the export provider's status.
-                                clean_up_task_sig = clean_up_failure_task.si(
-                                    run_uid=run_uid, run_dir=run_dir,
-                                    export_provider_task_uids=export_provider_task_uids, worker=worker, queue=worker,
-                                    routing_key=worker
-                                )
-                                finalize_export_provider_sig = finalize_export_provider_task.s(
-                                    run_uid=run_uid,
-                                    run_dir=run_dir,
-                                    export_provider_task_uid=export_provider_task_uid,
-                                    worker=worker,
-                                    link_error=clean_up_task_sig,
-                                    queue=worker,
-                                    routing_key=worker
-                                )
-                                finalize_chain_task_runner_tasks = chain(
-                                    selection_task, chain_task_runner_tasks, bounds_task, finalize_export_provider_sig
-                                )
-                                provider_subtask_chains.append(finalize_chain_task_runner_tasks)
+                # This ensures the export provider's subtasks are sequenced in the order the providers appear
+                # in the group.
+                provider_task_chain = chain(provider_subtask_chains)
+                provider_task_chains.append(provider_task_chain)
 
-                    if not provider_subtask_chains:
-                        continue
+            # A group would allow things to execute in parallel, but you can't add link_error to a group.
+            #    and we need to assure that the errback from create_finalize_run_task_collection() is called.
+            all_provider_task_chain = chain([ptc for ptc in provider_task_chains])
 
-                    # This ensures the export provider's subtasks are sequenced in the order the providers appear
-                    # in the group.
-                    grouped_provider_subtask_chain = chain(provider_subtask_chains)
-                    grouped_provider_subtask_chains.append(grouped_provider_subtask_chain)
+            finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
 
-                # A group would allow things to execute in parallel, but you can't add link_error to a group.
-                #    and we need to assure that the errback from create_finalize_run_task_collection() is called.
-                all_export_provider_task_chain = chain([gpsc for gpsc in grouped_provider_subtask_chains])
+            all_tasks = chain(all_provider_task_chain, finalize_run_tasks)
+            all_tasks.set(link_error=errback)
+            tasks_results = all_tasks.apply_async()
 
-                finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
-
-                all_tasks = chain(all_export_provider_task_chain, finalize_run_tasks)
-                all_tasks.set(link_error=errback)
-                tasks_results = all_tasks.apply_async()
-
-                return tasks_results
-
-            return False
+            return tasks_results
 
 
 @transaction.atomic
@@ -242,7 +192,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
         user_details = {'username': 'unknown-create_task'}
 
     export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-    export_task = create_export_task(
+    export_task = create_export_task_record(
         task_name=task.name, export_provider_task=export_provider_task, worker=worker,
         display=getattr(task, "display", False)
     )

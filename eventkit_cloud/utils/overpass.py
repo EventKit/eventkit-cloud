@@ -24,7 +24,8 @@ class Overpass(object):
     and filtered by the provided tags.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False, task_uid=None):
+    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, filters=None, debug=False, task_uid=None,
+            raw_data_filename=None, filtered_data_filename=None):
         """
         Initialize the Overpass utility.
 
@@ -42,14 +43,15 @@ class Overpass(object):
         self.query = None
         self.stage_dir = stage_dir
         self.job_name = job_name
-        self.filters = filters
+        self.filters = '' if filters is None else filters
         self.debug = debug
         self.task_uid = task_uid
         self.verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
         if url:
             self.url = url
         if bbox:
-            self.bbox = bbox
+            # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
+            self.bbox = '{},{},{},{}'.format(bbox[1], bbox[0], bbox[3], bbox[2])
         else:
             raise Exception('A bounding box is required: miny,minx,maxy,maxx')
 
@@ -67,16 +69,23 @@ class Overpass(object):
             {'maxsize': max_size, 'timeout': timeout, 'bbox': self.bbox}
         )
         # set up required paths
-        self.raw_osm = os.path.join(self.stage_dir, 'query.osm')
-        self.filtered_osm = os.path.join(self.stage_dir, '{0}.osm'.format(job_name))
+        if raw_data_filename is None:
+            raw_data_filename = 'query.osm'
+        if filtered_data_filename is None:
+            filtered_data_filename = '{}.osm'.format(job_name)
+
+        self.raw_osm = os.path.join(self.stage_dir, raw_data_filename)
+        self.filtered_osm = os.path.join(self.stage_dir, filtered_data_filename)
 
     def get_query(self,):
         """Get the overpass query used for this extract."""
         return self.query
 
-    def run_query(self, user_details=None):
+    def run_query(self, user_details=None, subtask_percentage=100):
         """
         Run the overpass query.
+        subtask_percentage is the percentage of the task referenced by self.task_uid this method takes up.
+            Used to update progress.
 
         Return:
             the path to the overpass extract
@@ -93,7 +102,7 @@ class Overpass(object):
         try:
             req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
-            update_progress(self.task_uid, progress=50)
+            update_progress(self.task_uid, progress=50.0, subtask_percentage=subtask_percentage)
             try:
                 size = int(req.headers.get('content-length'))
             except (ValueError, TypeError):
@@ -109,7 +118,10 @@ class Overpass(object):
                     fd.write(chunk)
                     size += CHUNK
                     # Because progress is already at 50, we need to make this part start at 50 percent
-                    update_progress(self.task_uid, progress=(float(size) / float(inflated_size)) * 100)
+                    update_progress(
+                        self.task_uid, progress=(float(size) / float(inflated_size)) * 100,
+                        subtask_percentage=subtask_percentage
+                    )
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
