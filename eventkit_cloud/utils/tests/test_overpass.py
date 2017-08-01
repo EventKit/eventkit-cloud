@@ -59,7 +59,6 @@ class TestOverpass(TestCase):
         overpass = Overpass(
             stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters
         )
         q = overpass.get_query()
         self.assertEquals(q, self.query)
@@ -76,7 +75,6 @@ class TestOverpass(TestCase):
         op = Overpass(
             stage_dir=self.path + '/files/', task_uid=mock_export_task_instance_id,
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'

@@ -298,19 +298,16 @@ def osm_data_collection_pipeline(
     # --- Overpass Query
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir,
-        job_name=job_name, filters=osm_query_filters, task_uid=export_task_record_uid,
-        raw_data_filename='{}_raw_query.osm'.format(job_name),
-        filtered_data_filename='{}_filtered_query.osm'.format(job_name)
+        job_name=job_name, task_uid=export_task_record_uid,
+        raw_data_filename='{}_query.osm'.format(job_name)
     )
-    op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
 
-    filtered_data_filename = op.filter(user_details=user_details)  # filter the results
+    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
 
     # --- Convert Overpass result to PBF
-    osm_filename = os.path.join(stage_dir, filtered_data_filename)
-    pbf_filename = os.path.join(stage_dir, '{}_filtered_query.pbf'.format(job_name))
-    o2p = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid)
-    pbf_filepath = o2p.convert()
+    osm_filename = os.path.join(stage_dir, osm_data_filename)
+    pbf_filename = os.path.join(stage_dir, '{}_query.pbf'.format(job_name))
+    pbf_filepath = pbf.OSMToPBF(osm=osm_filename, pbffile=pbf_filename, task_uid=export_task_record_uid).convert()
 
     # --- Generate thematic gpkg from PBF
     geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
