@@ -118,7 +118,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         osm_gpkg_task = osm_data_collection_task.si(
             stage_dir, export_provider_task_record.id, worker=worker, osm_query_filters=job.filters,
             job_name=job_name, bbox=bbox, user_details=user_details,
-            feature_selection_config=self.feature_selection_config
+            config=provider_task.provider.config 
         )
 
         thematic_tasks = (osm_gpkg_task | format_tasks) if format_tasks else osm_gpkg_task

@@ -82,13 +82,8 @@ def slugify(s):
 # to create in a Spatialite database.
 class FeatureSelection(object):
     @staticmethod
-    def example_raw(filename):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        return open(os.path.join(dir_path,'examples',filename+".yml")).read()
-
-    @staticmethod
-    def example(filename):
-        f = FeatureSelection(FeatureSelection.example_raw(filename))
+    def example(config):
+        f = FeatureSelection(config)
         assert f.valid
         return f
 

@@ -289,11 +289,10 @@ class FormatTask(ExportTask):
 
 def osm_data_collection_pipeline(
         export_task_record_uid, stage_dir, osm_query_filters, job_name='no_job_name_specified',
-        bbox=None, user_details=None, feature_selection_config=None):
+        bbox=None, user_details=None, config=None):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
-        Valid values of feature_selection_config; thematic, simple
     """
     # --- Overpass Query
     op = overpass.Overpass(
@@ -312,7 +311,7 @@ def osm_data_collection_pipeline(
     # --- Generate thematic gpkg from PBF
     geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
 
-    feature_selection = FeatureSelection.example(feature_selection_config)
+    feature_selection = FeatureSelection.example(config)
     update_progress(export_task_record_uid, progress=75)
 
     geom = Polygon.from_bbox(bbox)
@@ -330,11 +329,10 @@ def osm_data_collection_pipeline(
 def osm_data_collection_task(
         self, stage_dir, export_provider_task_id, worker='celery', osm_query_filters=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
-        feature_selection_config=None):
+        config=None):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
-        feature_selection_config: 'thematic' or 'simple'
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
     from eventkit_cloud.tasks.task_runners import create_export_task_record
@@ -348,7 +346,7 @@ def osm_data_collection_task(
 
     gpkg_filepath = osm_data_collection_pipeline(
         etr.uid, stage_dir, osm_query_filters, job_name=job_name, bbox=bbox, user_details=user_details,
-        feature_selection_config='thematic'
+        config=config
     )
 
     return {'result': gpkg_filepath}
