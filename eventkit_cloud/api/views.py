@@ -399,52 +399,47 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
-           Update the published state or the featured state  for the given job
-
+           Update one or more attributes for the given job
 
            * request: the HTTP request in JSON.
 
                Examples:
 
-                   { "published" : false }
-
+                   { "published" : false, "featured" : true }
                    { "featured" : false }
 
-
-           * Returns: a copy of the new  value on success
+           * Returns: a copy of the new  values on success
 
                Example:
 
                    {
                        "published": false,
+                       "featured" : true,
                        "success": true
                    }
 
            ** returns: 400 on error
 
            """
-        payload = request.data
-        key = None
-        for v in ['published', 'featured']:
-            if v in payload:  key = v
-
-        if key == None:
-            return Response([{'detail': _('missing published or featured state parameter')}], status.HTTP_400_BAD_REQUEST)
 
         job = Job.objects.get(uid=uid)
-
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        newValue = payload[key]
+        response = {}
+        payload = request.data
 
-        if key == 'published':
-            job.published = newValue
-        else:
-            job.featured = newValue
+        for attribute, value in payload.iteritems():
+            if hasattr(job, attribute):
+                setattr(job, attribute, value)
+                response[attribute] = value
+            else:
+                msg = "unidentified job attribute - %s" % attribute
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
 
         job.save()
-        return Response({'success': True, key: newValue }, status=status.HTTP_200_OK)
+        response['success'] = True
+        return Response(response, status=status.HTTP_200_OK)
 
 
 

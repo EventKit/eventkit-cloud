@@ -445,13 +445,18 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['published'])
         self.assertTrue(response.data['success'])
 
-
         request_data = {"featured": True}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
+        request_data = {"featured": True, "published" : False}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['featured'])
+        self.assertIsNotNone(response.data['published'])
+        self.assertTrue(response.data['success'])
 
 class TestBBoxSearch(APITestCase):
     """
