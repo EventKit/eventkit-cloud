@@ -13,7 +13,7 @@ from django.db.utils import DatabaseError
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
 
 from ..task_runners import (
-    ExportThematicOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
+    ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
 )
 from ..task_factory import create_run
 
@@ -51,7 +51,7 @@ class TestExportTaskRunner(TestCase):
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.first().formats.add(shp_task)
-        runner = ExportThematicOSMTaskRunner()
+        runner = ExportOSMTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
             runner.run_task(provider_task_uid=provider_task.uid, run=self.job.runs.first(),
