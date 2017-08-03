@@ -66,7 +66,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
             layer_name: A DB table.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully uploaded.
         """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
@@ -99,14 +99,13 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
 
 
 def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
-    """Uses an ogr2ogr and/or gdalwarp script to upload a geojson file.
+    """Uses an ogr2ogr and/or gdalwarp script to clip a geopackage.
         Args:
             geojson_file: A geojson file to serve as a cutline.
-            gpkg: Database dict from the django settings.
-            layer_name: A DB table.
+            gpkg: Geopackage to clip.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully clipped.
         """
 
     if not geojson_file or not gpkg:

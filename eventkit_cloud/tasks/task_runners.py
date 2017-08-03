@@ -25,7 +25,8 @@ export_task_registry = {
     'kml': 'eventkit_cloud.tasks.export_tasks.kml_export_task',
     'shp': 'eventkit_cloud.tasks.export_tasks.shp_export_task',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task',
-    'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task'
+    'gpkg-thematic': 'eventkit_cloud.tasks.export_tasks.osm_thematic_gpkg_export_task',
+    'geotiff': 'eventkit_cloud.tasks.export_tasks.geotiff_export_task'
 }
 
 
@@ -463,13 +464,13 @@ class ExportWCSTaskRunner(TaskRunner):
                                          service_url=provider_task.provider.url,
                                          user_details=user_details).set(queue=worker, routing_key=worker))
 
-            if export_tasks.get('gpkg'):
-                gpkg_export_task = export_tasks.pop('gpkg')
-                task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
-                                                                         stage_dir=stage_dir,
-                                                                         job_name=job_name,
-                                                                         task_uid=gpkg_export_task.get('task_uid'),
-                                                                         user_details=user_details) \
+            if export_tasks.get('geotiff'):
+                gtiff_export_task = export_tasks.pop('geotiff')
+                task_chain = (task_chain | gtiff_export_task.get('obj').s(run_uid=run.uid,
+                                                                          stage_dir=stage_dir,
+                                                                          job_name=job_name,
+                                                                          task_uid=gtiff_export_task.get('task_uid'),
+                                                                          user_details=user_details)
                               .set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:

@@ -9,13 +9,14 @@ import tempfile
 
 logger = logging.getLogger(__name__)
 
-class WCStoGPKG(object):
+
+class WCSConverter(object):
     """
-    Convert a WCS request to a geopackage file.
+    Convert a WCS request to a file of the specified format.
     """
 
     def __init__(self, config=None, out=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 service_type=None, task_uid=None):
+                 service_type=None, task_uid=None, fmt=None):
         """
         Initialize the WCStoGPKG utility.
         :param config:
@@ -52,8 +53,11 @@ class WCStoGPKG(object):
             self.cmd = Template(
                 "gdal_translate -of $fmt $type $wcs $out"
             )
-        self.fmt = "GPKG"
-        self.type = "-ot byte"  # geopackage raster is limited to byte band type
+
+        self.format = fmt or "gtiff"
+        self.type = ""
+        if self.format.lower() == "gpkg":
+            self.type = "-ot byte"  # geopackage raster is limited to byte band type
 
     def convert(self, ):
         """
@@ -81,9 +85,10 @@ class WCStoGPKG(object):
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
                 {'out': self.out, 'wcs': self.wcs_xml_path, 'minX': self.bbox[0], 'minY': self.bbox[1],
-                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.fmt, 'type': self.type})
+                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.format, 'type': self.type})
         else:
-            convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.fmt})
+            convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.format,
+                                                    'type': self.type})
 
         if self.debug:
             logger.debug('Running: %s' % convert_cmd)
@@ -92,27 +97,10 @@ class WCStoGPKG(object):
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception("WCS translation failed with code {}".format(task_process.exitcode))
+            raise Exception("WCS translation failed with code {}: \n{}\n{}".format(task_process.exitcode, convert_cmd, wcs_xml_string))
         if self.debug:
             logger.debug('gdal_translate returned: %s' % task_process.exitcode)
 
         os.remove(self.wcs_xml_path)
 
         return self.out
-
-
-class WCStoGeotiff(object):
-    """
-    Convert a WCS request to a geotiff file.
-    """
-
-    def __init__(self, config=None, out=None, bbox=None, service_url=None, layer=None, debug=None, name=None,
-                 service_type=None, task_uid=None):
-        """
-        Initialize the WCStoGPKG utility.
-        """
-        super(WCStoGeotiff, self).__init__(self, config=config, out=out, service_url=service_url, layer=layer,
-                                           debug=debug, name=name, service_type=service_type, task_uid=task_uid)
-
-        self.fmt = "GeoTIFF"  # overriding base class
-        self.type = ""  # no need to restrict to byte band type

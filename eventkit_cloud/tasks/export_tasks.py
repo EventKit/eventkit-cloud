@@ -27,10 +27,10 @@ from ..ui.helpers import get_style_files
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
-    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage
+    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage,
+    gdalutils
 )
 from .exceptions import CancelException, DeleteException
-
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
@@ -47,6 +47,7 @@ class TaskStates(Enum):
     CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
     SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
     FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
+
     # or a non-zero exit code was returned.)
 
     @staticmethod
@@ -255,8 +256,7 @@ class ExportTask(LockingTask):
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
         """
-        if not result:
-            result = {}
+        result = result or {}
         started = timezone.now()
         from ..tasks.models import ExportTask as ExportTaskModel
         try:
@@ -293,8 +293,7 @@ def osm_conf_task(self, result=None, categories=None, stage_dir=None, job_name=N
     Task to create the ogr2ogr conf file.
     """
     # This is just to make it easier to trace when user_details haven't been sent
-    if not result:
-        result = {}
+    result = result or {}
     if user_details is None:
         user_details = {'username': 'unknown-osm_conf_task'}
 
@@ -311,8 +310,7 @@ def overpass_query_task(
     """
     Runs the query and returns the path to the filtered osm file.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
     op = overpass.Overpass(
@@ -331,8 +329,7 @@ def osm_to_pbf_convert_task(self, result=None, task_uid=None, stage_dir=None, jo
     Task to convert osm to pbf format.
     Returns the path to the pbf file.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
     osm = os.path.join(stage_dir, '{0}.osm'.format(job_name))
@@ -348,8 +345,7 @@ def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_n
     """
     Task to create the default sqlite schema.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
     osm = os.path.join(stage_dir, '{0}.pbf'.format(job_name))
@@ -366,13 +362,12 @@ def osm_prep_schema_task(self, result=None, task_uid=None, stage_dir=None, job_n
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
 def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
-        provider_name=None, bbox=None, user_details=None
-        ):
+                           provider_name=None, bbox=None, user_details=None
+                           ):
     """
     Task to create styles for osm.
     """
-    if not result:
-        result = {}
+    result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
     input_gpkg = parse_result(result, 'geopackage')
 
@@ -404,8 +399,7 @@ def osm_thematic_gpkg_export_task(
     """
     Task to export thematic gpkg.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
@@ -436,8 +430,7 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     """
     Class defining SHP export function.
     """
-    if not result:
-        result = {}
+    result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
@@ -458,8 +451,7 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     """
     Class defining KML export function.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
@@ -476,12 +468,12 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
 
 
 @app.task(name='SQLITE Format', bind=True, base=FormatTask)
-def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
+def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                       user_details=None):
     """
     Class defining SQLITE export function.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
@@ -498,12 +490,12 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
 
 
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
-def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+def bounds_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args,
+                       **kwargs):
     """
     Class defining geopackage export function.
     """
-    if not result:
-        result = {}
+    result = result or {}
     user_details = kwargs.get('user_details')
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
@@ -533,8 +525,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     """
     Class defining geopackage export function.
     """
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -556,23 +547,70 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     return result
 
 
-@app.task(name='Geopackage Format', bind=True, base=FormatTask)
+@app.task(name='Geopackage Format (.gpkg)', bind=True, base=FormatTask)
 def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-        user_details=None):
+                           user_details=None):
     """
     Class defining geopackage export function.
     """
     from .models import ExportRun
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
+
+    clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+
     selection = parse_result(result, 'selection')
     gpkg = parse_result(result, 'result')
     if selection:
-        gpkg = geopackage.clip_geopackage(geojson_file=selection, gpkg=gpkg, task_uid=task_uid)
+        gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
     result['result'] = gpkg
     result['geopackage'] = gpkg
+    return result
+
+
+@app.task(name='Geotiff Format (.tif)', bind=True, base=FormatTask)
+def geotiff_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+                        user_details=None):
+    """
+    Class defining geopackage export function.
+    """
+    from .models import ExportRun
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+
+    selection = parse_result(result, 'selection')
+    gtiff = parse_result(result, 'result')
+    if selection:
+        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+    result['result'] = gtiff
+    result['geotiff'] = gtiff
+    return result
+
+
+@app.task(name='Clip Export', bind=True, base=ExportTask)
+def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
+    """
+    Clips a dataset to a vector cutline and returns a dataset of the same format.
+    :param self:
+    :param result:
+    :param run_uid:
+    :param task_uid:
+    :param stage_dir:
+    :param job_name:
+    :param user_details:
+    :return:
+    """
+    result = result or {}
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    dataset = parse_result(result, 'result')
+    selection = parse_result(result, 'selection')
+    dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
+
+    result['result'] = dataset
     return result
 
 
@@ -582,10 +620,9 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining geopackage export for WFS service.
     """
-    if not result:
-        result = {}
-
+    result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
+
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
         w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
@@ -598,22 +635,23 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         logger.error('Raised exception in external service export, %s', str(e))
         raise Exception(e)
 
-@app.task(name='WCSExport', bind=True, base=ExportTask)
+
+@app.task(name='WCS Export', bind=True, base=ExportTask)
 def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None):
     """
     Class defining export for WCS services
     """
-    if not result:
-        result = {}
+    result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
-    out = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+    out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
     try:
-        wcs2gpkg = wcs.WCStoGPKG(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                 config=config, service_type=service_type, task_uid=task_uid, debug=True)
-        wcs2gpkg.convert()
+        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
+                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
+                                    fmt="gtiff")
+        wcs_conv.convert()
         result['result'] = out
-        result['geopackage'] = out
+        result['geotiff'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in WCS service export: %s', str(e))
@@ -627,8 +665,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
     """
     Class defining sqlite export for ArcFeatureService service.
     """
-    if not result:
-        result = {}
+    result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
@@ -646,12 +683,12 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
 
 
 @app.task(name='Project file (.zip)', bind=True, base=FormatTask)
-def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None, stage_dir=None,
+def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
+                        stage_dir=None,
                         *args, **kwargs):
     from .models import ExportProviderTask
     from .task_runners import normalize_job_name
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -700,8 +737,7 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     Class defining geopackage export for external raster service.
     """
     from .models import ExportRun
-    if not result:
-        result = {}
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -727,9 +763,8 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
+    result = result or {}
     # This is just to make it easier to trace when user_details haven't been sent
-    if not result:
-        result = {}
     if user_details is None:
         user_details = {'username': 'unknown-pick_up_run_task'}
 
@@ -744,7 +779,8 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
 
 
 @app.task(name='Clean Up Failure Task', base=UserDetailsBase)
-def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args, **kwargs):
+def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=None, run_dir=None, worker=None, *args,
+                          **kwargs):
     """
     Used to close tasks in a failed chain.
 
@@ -755,8 +791,7 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
     from eventkit_cloud.tasks.models import ExportProviderTask, ExportTaskException
     from billiard.einfo import ExceptionInfo
 
-    if not result:
-        result = {}
+    result = result or {}
 
     task_status = None
     incomplete_export_provider_task = None
@@ -946,7 +981,7 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
 
     created_files = [f2_stage_path]
 
-    logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}'\
+    logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}' \
                  .format(created_files, new_zip_filepaths, run_uid))
 
     return created_files
@@ -988,7 +1023,8 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
 
 
 @app.task(name='Finalize Export Provider Task', base=LockingTask)
-def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None, *args, **kwargs):
+def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None,
+                                  *args, **kwargs):
     """
     Finalizes provider task.
 
@@ -996,8 +1032,7 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
     Updates export provider status.
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
-    if not result:
-        result = {}
+    result = result or {}
 
     with transaction.atomic():
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
@@ -1078,8 +1113,6 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 arcname=filename
             )
 
-
-
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTask.
 
@@ -1109,14 +1142,13 @@ class FinalizeRunTask(LockingTask):
     def run(self, result=None, run_uid=None, stage_dir=None):
         """
          Finalizes export run.
-    
+
         Cleans up staging directory.
         Updates run with finish time.
         Emails user notification.
         """
         from eventkit_cloud.tasks.models import ExportRun
-        if not result:
-            result = {}
+        result = result or {}
 
         run = ExportRun.objects.get(uid=run_uid)
         if run.job.include_zipfile and not run.zipfile_url:
@@ -1170,10 +1202,11 @@ class FinalizeRunTask(LockingTask):
         super(FinalizeRunTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
-            if stage_dir:
+            if stage_dir and os.path.isdir(stage_dir):
                 shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
 
 finalize_run_task = FinalizeRunTask()
 app.tasks.register(finalize_run_task)
@@ -1192,8 +1225,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     Handles un-recoverable errors in export tasks.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    if not result:
-        result = {}
+    result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
     try:
@@ -1234,8 +1266,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     from billiard.einfo import ExceptionInfo
     from datetime import datetime, timedelta
 
-    if not result:
-        result = {}
+    result = result or {}
 
     export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
 
@@ -1309,8 +1340,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
 def cancel_run(result=None, export_run_uid=None, canceling_user=None, revoke=None, delete=False):
     from ..tasks.models import ExportRun
 
-    if not result:
-        result = {}
+    result = result or {}
 
     export_run = ExportRun.objects.filter(uid=export_run_uid).first()
 
@@ -1335,8 +1365,7 @@ def kill_task(result=None, task_pid=None, celery_uid=None):
 
     import os, signal
     import celery
-    if not result:
-        result = {}
+    result = result or {}
 
     if task_pid:
         # Don't kill tasks with default pid.

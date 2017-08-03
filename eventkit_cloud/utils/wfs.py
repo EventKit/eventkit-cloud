@@ -62,7 +62,7 @@ class WFSToGPKG(object):
         else:
             convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
 
-        if (self.debug):
+        if self.debug:
             logger.debug('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
