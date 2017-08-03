@@ -964,11 +964,12 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
         # mark run as incomplete if any tasks fail
         export_tasks = export_provider_task.tasks.all()
-
         if (TaskStates[export_provider_task.status] != TaskStates.CANCELED) and any(
                         TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
             export_provider_task.status = TaskStates.INCOMPLETE.value
-            export_provider_task.save()
+
+        export_provider_task.finished_at = timezone.now()
+        export_provider_task.save()
 
     result['finalize_status'] = export_provider_task.status
     return result
