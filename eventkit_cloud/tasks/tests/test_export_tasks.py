@@ -30,6 +30,7 @@ from eventkit_cloud.tasks.models import (
 
 from ...celery import TaskPriority, app
 from ...jobs.models import Job
+from ...ui.helpers import get_style_files
 from ..export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
@@ -261,7 +262,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
         mock_zip_file.run.assert_called_once_with(adhoc=True, run_uid=self.run.uid, include_files=expected_file_names,
-                                           file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)))
+                                           file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)), static_files=get_style_files())
 
         # Check that an exception is raised if no zip file is returned.
         mock_zip_file.run.return_value = None

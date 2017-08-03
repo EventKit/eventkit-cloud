@@ -20,12 +20,12 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from celery import Task
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
+from ..ui.helpers import get_style_files
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
@@ -570,6 +570,7 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
         for export_task in export_provider_task.tasks.all():
             try:
                 filename = export_task.result.filename
+                export_task.display = False
             except Exception:
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
@@ -579,6 +580,7 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
                                                                               export_task.name))
                 continue
             include_files += [full_file_path]
+            export_task.save()
     # Need to remove duplicates from the list because
     # some intermediate tasks produce files with the same name.
     # sorted while adding time allows comparisons in tests.
@@ -586,7 +588,8 @@ def zip_export_provider(self, result={}, job_name=None, export_provider_task_uid
     if include_files:
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))), adhoc=True).get('result')
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))),
+                                     adhoc=True, static_files=get_style_files()).get('result')
     else:
         raise Exception("There are no files in this provider available to zip.")
     if not zip_file:
@@ -903,18 +906,19 @@ def finalize_export_provider_task(result={}, run_uid=None, export_provider_task_
 
         # mark run as incomplete if any tasks fail
         export_tasks = export_provider_task.tasks.all()
-
         if (TaskStates[export_provider_task.status] != TaskStates.CANCELED) and any(
                         TaskStates[task.status] in TaskStates.get_incomplete_states() for task in export_tasks):
             export_provider_task.status = TaskStates.INCOMPLETE.value
-            export_provider_task.save()
+
+        export_provider_task.finished_at = timezone.now()
+        export_provider_task.save()
 
     result['finalize_status'] = export_provider_task.status
     return result
 
 
 @app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
-def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
+def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, static_files=None):
     """
     rolls up runs into a zip file
     """
@@ -951,6 +955,12 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
     with ZipFile(zip_st_filepath, 'w', allowZip64=True) as zipfile:
+        if static_files:
+            for absolute_file_path, relative_file_path in static_files.iteritems():
+                zipfile.write(
+                    absolute_file_path,
+                    relative_file_path
+                )
         for filepath in files:
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
@@ -966,6 +976,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False):
                 filepath,
                 arcname=filename
             )
+
+
 
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTask.
