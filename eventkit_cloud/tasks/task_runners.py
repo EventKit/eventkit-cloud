@@ -40,10 +40,9 @@ class TaskRunner(object):
         raise NotImplementedError('Override in subclass.')
 
 
-class ExportThematicOSMTaskRunner(TaskRunner):
-    """ Run Thematic OSM Export Tasks; Essentially, collect data and convert to thematic gpkg, then run output formats.
+class ExportOSMTaskRunner(TaskRunner):
+    """ Run OSM Export Tasks; Essentially, collect data and convert to thematic gpkg, then run output formats.
     """
-    feature_selection_config = 'thematic'
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):
         """
@@ -60,7 +59,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get('user_details')
         if user_details is None:
-            user_details = {'username': 'unknown-ExportThematicOSMTaskRunner.run_task'}
+            user_details = {'username': 'unknown-ExportOSMTaskRunner.run_task'}
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
@@ -116,7 +115,7 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         bbox = run.job.extents
 
         osm_gpkg_task = osm_data_collection_task.si(
-            stage_dir, export_provider_task_record.id, worker=worker, osm_query_filters=job.filters,
+            stage_dir, export_provider_task_record.id, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details,
             config=provider_task.provider.config 
         )
@@ -124,10 +123,6 @@ class ExportThematicOSMTaskRunner(TaskRunner):
         thematic_tasks = (osm_gpkg_task | format_tasks) if format_tasks else osm_gpkg_task
 
         return export_provider_task_record.uid, thematic_tasks
-
-
-class ExportGenericOSMTaskRunner(ExportThematicOSMTaskRunner):
-    feature_selection_config = 'simple'
 
 
 class ExportWFSTaskRunner(TaskRunner):

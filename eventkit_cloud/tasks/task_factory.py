@@ -19,8 +19,7 @@ from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure
 from ..tasks.models import ExportRun, ExportProviderTask
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
-    ExportGenericOSMTaskRunner,
-    ExportThematicOSMTaskRunner,
+    ExportOSMTaskRunner,
     ExportWFSTaskRunner,
     ExportWCSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
@@ -38,8 +37,7 @@ class TaskFactory:
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm-generic': ExportGenericOSMTaskRunner,
-                              'osm': ExportThematicOSMTaskRunner,
+        self.type_task_map = {'osm': ExportOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner,
                               'wms': ExportExternalRasterServiceTaskRunner,
                               'wcs': ExportWCSTaskRunner,

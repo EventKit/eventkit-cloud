@@ -288,7 +288,7 @@ class FormatTask(ExportTask):
 
 
 def osm_data_collection_pipeline(
-        export_task_record_uid, stage_dir, osm_query_filters, job_name='no_job_name_specified',
+        export_task_record_uid, stage_dir, job_name='no_job_name_specified',
         bbox=None, user_details=None, config=None):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
@@ -327,7 +327,7 @@ def osm_data_collection_pipeline(
 
 @app.task(name="OSM Data Collection", bind=True, base=FormatTask)
 def osm_data_collection_task(
-        self, stage_dir, export_provider_task_id, worker='celery', osm_query_filters=None,
+        self, stage_dir, export_provider_task_id, worker='celery',
         job_name='no_job_name_specified', bbox=None, user_details=None,
         config=None):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
@@ -345,7 +345,7 @@ def osm_data_collection_task(
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
     gpkg_filepath = osm_data_collection_pipeline(
-        etr.uid, stage_dir, osm_query_filters, job_name=job_name, bbox=bbox, user_details=user_details,
+        etr.uid, stage_dir, job_name=job_name, bbox=bbox, user_details=user_details,
         config=config
     )
 
@@ -380,36 +380,6 @@ def osm_create_styles_task(self, result={}, task_uid=None, stage_dir=None, job_n
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result
-
-
-# @app.task(name="OSM Data (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
-# def osm_thematic_gpkg_export_task(
-#         self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
-#     """
-#     Task to export thematic gpkg.
-#     """
-#     # This is just to make it easier to trace when user_details haven't been sent
-#     if user_details is None:
-#         user_details = {'username': 'unknown-osm_thematic_gpkg_export_task'}
-#
-#     from eventkit_cloud.tasks.models import ExportRun
-#     self.update_task_state(result=result, task_uid=task_uid)
-#     run = ExportRun.objects.get(uid=run_uid)
-#     tags = run.job.categorised_tags
-#     if os.path.isfile(os.path.join(stage_dir, '{0}.gpkg'.format(job_name))):
-#         result['result'] = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
-#         return result
-#     # This allows the thematic task to be chained with the osm task taking the output as an input here.
-#     input_gpkg = parse_result(result, 'geopackage')
-#     try:
-#         t2s = thematic_gpkg.ThematicGPKG(gpkg=input_gpkg, stage_dir=stage_dir, tags=tags, job_name=job_name,
-#                                          task_uid=task_uid)
-#         out = t2s.convert(user_details=user_details)
-#         result['result'] = out
-#         return result
-#     except Exception as e:
-#         logger.error('Raised exception in thematic gpkg task, %s', str(e))
-#         raise Exception(e)  # hand off to celery..
 
 
 @app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
