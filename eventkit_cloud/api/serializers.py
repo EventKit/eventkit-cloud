@@ -150,6 +150,7 @@ class SimpleJobSerializer(serializers.Serializer):
     extent = serializers.SerializerMethodField()
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
+    featured = serializers.BooleanField()
 
     @staticmethod
     def get_uid(obj):
@@ -414,6 +415,8 @@ class ListJobSerializer(serializers.Serializer):
     extent = serializers.SerializerMethodField()
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
+    featured  = serializers.BooleanField()
+
 
     @staticmethod
     def get_uid(obj):
@@ -511,8 +514,7 @@ class JobSerializer(serializers.Serializer):
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
-    feature_save = serializers.BooleanField(required=False)
-    feature_pub = serializers.BooleanField(required=False)
+    featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(
