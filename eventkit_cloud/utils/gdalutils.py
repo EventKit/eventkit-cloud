@@ -43,7 +43,7 @@ def open_ds(ds_path):
     ogr_dataset = ogr.Open(ds_path)
 
     if not ogr_dataset:
-        logger.debug("Could not identify driver for dataset {0}".format(ds_path))
+        logger.debug("Unknown file format: {0}".format(ds_path))
         return None
 
     return ogr_dataset
@@ -117,22 +117,22 @@ def clip_dataset(geojson_file=None, dataset=None, fmt=None, task_uid=None):
     if not dataset:
         raise Exception("Could not open input dataset: {0}".format(dataset))
 
-    (driver, is_raster) = driver_for(dataset)
+    (driver, raster) = driver_for(dataset)
 
     if not fmt:
-        fmt = driver
+        fmt = driver or 'gpkg'
 
     in_dataset = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
     os.rename(dataset, in_dataset)
 
     band_type = ""
-    if is_raster:
+    if raster:
         cmd_template = Template("gdalwarp -cutline $geojson -crop_to_cutline -dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -f $fmt -clipsrc $geojson_file $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -f $fmt -clipsrc $geojson $out_ds $in_ds")
 
     cmd = cmd_template.safe_substitute({'geojson': geojson_file,
                                         'fmt': fmt,
@@ -158,16 +158,16 @@ def convert(dataset=None, fmt=None, task_uid=None):
     if not dataset:
         raise Exception("Could not open input file: {0}".format(dataset))
 
-    (driver, is_raster) = driver_for(dataset)
+    (driver, raster) = driver_for(dataset)
 
-    if not fmt or driver.lower() == fmt.lower():
+    if not fmt or not driver or driver.lower() == fmt.lower():
         return dataset
 
     in_ds = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
     os.rename(dataset, in_ds)
 
     band_type = ""
-    if is_raster:
+    if raster:
         cmd_template = Template("gdalwarp -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
