@@ -583,14 +583,13 @@ def geotiff_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=
 
     selection = parse_result(result, 'selection')
     gtiff = parse_result(result, 'result')
-    if selection:
-        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+    gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
     result['result'] = gtiff
     result['geotiff'] = gtiff
     return result
 
 
-@app.task(name='Clip Export', bind=True, base=ExportTask)
+@app.task(name='Clip Export', bind=True, base=LockingTask)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
     Clips a dataset to a vector cutline and returns a dataset of the same format.
@@ -604,7 +603,7 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     :return:
     """
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
+    # self.update_task_state(result=result, task_uid=task_uid)
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')

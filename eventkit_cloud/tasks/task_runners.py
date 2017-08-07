@@ -420,6 +420,7 @@ class ExportWCSTaskRunner(TaskRunner):
         job_name = normalize_job_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
+        formats += ['geotiff']
         export_tasks = {}
         # build a list of celery tasks based on the export formats..
         for _format in formats:
@@ -444,6 +445,8 @@ class ExportWCSTaskRunner(TaskRunner):
                                                                      status="PENDING",
                                                                      display=True)
 
+            export_tasks.pop('gpkg')
+
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task(task_name=task.get('obj').name,
                                                  export_provider_task=export_provider_task, worker=worker,
@@ -463,6 +466,8 @@ class ExportWCSTaskRunner(TaskRunner):
                                          bbox=bbox,
                                          service_url=provider_task.provider.url,
                                          user_details=user_details).set(queue=worker, routing_key=worker))
+
+
 
             if export_tasks.get('geotiff'):
                 gtiff_export_task = export_tasks.pop('geotiff')
