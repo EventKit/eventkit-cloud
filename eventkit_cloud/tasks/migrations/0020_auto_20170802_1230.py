@@ -47,6 +47,11 @@ class Migration(migrations.Migration):
             name='updated_at',
             field=models.DateTimeField(default=django.utils.timezone.now, editable=False),
         ),
+        migrations.AlterField(
+            model_name='exporttask',
+            name='started_at',
+            field=models.DateTimeField(default=django.utils.timezone.now, editable=False),
+        ),
         migrations.AddField(
             model_name='exportrun',
             name='updated_at',
@@ -70,11 +75,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='finalizerunhooktaskrecord',
             name='updated_at',
-            field=models.DateTimeField(default=django.utils.timezone.now, editable=False),
-        ),
-        migrations.AlterField(
-            model_name='exporttask',
-            name='started_at',
             field=models.DateTimeField(default=django.utils.timezone.now, editable=False),
         ),
     ]
