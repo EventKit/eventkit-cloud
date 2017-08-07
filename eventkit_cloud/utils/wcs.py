@@ -42,8 +42,10 @@ class WCSConverter(object):
               <ServiceURL>$url</ServiceURL>
               <CoverageName>$coverage</CoverageName>
               <PreferredFormat>GeoTIFF</PreferredFormat>
-              <GetCoverageExtra>&amp;crs=EPSG:4326</GetCoverageExtra>
+              <GetCoverageExtra>&amp;crs=EPSG:4326$params</GetCoverageExtra>
+              <DescribeCoverageExtra>$params</DescribeCoverageExtra>
             </WCS_GDAL>""")
+        self.params = ""
         self.wcs_xml_path = None # determined after mkstemp call
         if self.bbox:
             self.cmd = Template(
@@ -55,9 +57,9 @@ class WCSConverter(object):
             )
 
         self.format = fmt or "gtiff"
-        self.type = ""
+        self.band_type = ""
         if self.format.lower() == "gpkg":
-            self.type = "-ot byte"  # geopackage raster is limited to byte band type
+            self.band_type = "-ot byte"  # geopackage raster is limited to byte band type
 
     def convert(self, ):
         """
@@ -67,7 +69,8 @@ class WCSConverter(object):
             os.makedirs(os.path.dirname(self.out), 6600)
 
         try:
-            # remove any url params so we can add our own
+            # Isolate url params
+            self.params = "&amp;" + self.service_url.split('?')[1]
             self.service_url = self.service_url.split('?')[0]
         finally:
             self.service_url += "?"
@@ -76,7 +79,8 @@ class WCSConverter(object):
         (wcs_xml_fd, self.wcs_xml_path) = tempfile.mkstemp()
         wcs_xml_string = self.wcs_xml.safe_substitute({
             'url': self.service_url,
-            'coverage': self.layer
+            'coverage': self.layer,
+            'params': self.params
         })
         logger.debug("Creating temporary WCS XML at {}:\n{}".format(self.wcs_xml_path, wcs_xml_string))
         os.write(wcs_xml_fd, wcs_xml_string)
@@ -85,10 +89,10 @@ class WCSConverter(object):
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
                 {'out': self.out, 'wcs': self.wcs_xml_path, 'minX': self.bbox[0], 'minY': self.bbox[1],
-                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.format, 'type': self.type})
+                 'maxX': self.bbox[2], 'maxY': self.bbox[3], 'fmt': self.format, 'type': self.band_type})
         else:
             convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.format,
-                                                    'type': self.type})
+                                                    'type': self.band_type})
 
         if self.debug:
             logger.debug('Running: %s' % convert_cmd)
