@@ -399,43 +399,47 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
-           Update the published state  for the given job
-
+           Update one or more attributes for the given job
 
            * request: the HTTP request in JSON.
 
-               Example:
+               Examples:
 
-                   {
-                       "published" : false
-                   }
+                   { "published" : false, "featured" : true }
+                   { "featured" : false }
 
-
-
-           * Returns: a copy of the new published value on success
+           * Returns: a copy of the new  values on success
 
                Example:
 
                    {
                        "published": false,
+                       "featured" : true,
                        "success": true
                    }
 
            ** returns: 400 on error
 
            """
-        payload = request.data
-        if not "published" in payload:
-            return Response([{'detail': _('missing published state parameter')}], status.HTTP_400_BAD_REQUEST)
 
         job = Job.objects.get(uid=uid)
-
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        job.published = payload['published']
+        response = {}
+        payload = request.data
+
+        for attribute, value in payload.iteritems():
+            if hasattr(job, attribute):
+                setattr(job, attribute, value)
+                response[attribute] = value
+            else:
+                msg = "unidentified job attribute - %s" % attribute
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
         job.save()
-        return Response({'success': True, 'published': job.published }, status=status.HTTP_200_OK)
+        response['success'] = True
+        return Response(response, status=status.HTTP_200_OK)
 
 
 
@@ -697,7 +701,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
         expiration = payload["expiration"]
-        target_date = parser.parse(expiration)
+        target_date = parser.parse(expiration).replace(tzinfo=None)
         run = ExportRun.objects.get(uid=uid)
 
         if not request.user.is_superuser:

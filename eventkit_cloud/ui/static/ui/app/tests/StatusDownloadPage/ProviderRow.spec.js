@@ -138,15 +138,15 @@ describe('ProviderRow component', () => {
 
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1000, 600);
         expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1200, 600);
         expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
     it('getToggleCellWidth should return the pixel string for table width based on window width', () => {
