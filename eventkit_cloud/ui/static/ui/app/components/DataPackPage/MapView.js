@@ -32,9 +32,10 @@ export class MapView extends Component {
         super(props);
         this.initMap = this.initMap.bind(this);
         this.initOverlay = this.initOverlay.bind(this);
+        this.handlePopupClose = this.handlePopupClose.bind(this);
         this.addRunFeatures = this.addRunFeatures.bind(this);
         this.handleClick = this.handleClick.bind(this);
-        this.handlePopupClose = this.handlePopupClose.bind(this);
+        this.handleOlPopupClose = this.handleOlPopupClose.bind(this);
         this.zoomToSelected = this.zoomToSelected.bind(this);
         this.animate = this.animate.bind(this);
         this.onMapClick = this.onMapClick.bind(this);
@@ -145,12 +146,14 @@ export class MapView extends Component {
             },
             stopEvent: false
         });
-        this.closer.onclick = () => {
-            this.overlay.setPosition(undefined);
-            this.closer.blur();
-            return false;
-        }
+        this.closer.onclick = this.handleOlPopupClose
         this.map.addOverlay(this.overlay);
+    }
+
+    handleOlPopupClose() {
+        this.overlay.setPosition(undefined);
+        this.closer.blur();
+        return false;
     }
 
     // Called when a user clicks on a list item
@@ -192,8 +195,10 @@ export class MapView extends Component {
                         this.map.render();
                     }
                 }
+                return true;
             }
         }
+        return false;
     }
 
     // animates a circle expanding out from the geometry in question
@@ -206,7 +211,7 @@ export class MapView extends Component {
         const tl = this.map.getPixelFromCoordinate(ol.extent.getTopLeft(ext));
         const tr = this.map.getPixelFromCoordinate(ol.extent.getTopRight(ext));
         const bl = this.map.getPixelFromCoordinate(ol.extent.getBottomLeft(ext));
-        const width = tr[0] - tl[0];
+        const width = tr[0] - tl[0]; 
         const height = bl[1] - tl[1];
         const featureRad = Math.max(width, height);
 
@@ -230,7 +235,7 @@ export class MapView extends Component {
         vectorContext.drawGeometry(point);
         if(elapsed > 3000) {
             ol.Observable.unByKey(this.listener);
-            return;
+            return 0;
         }
         this.map.render();
     }
@@ -339,7 +344,10 @@ export class MapView extends Component {
                             {this.state.groupedFeatures.map((feature, ix) => {
                                 return <a 
                                     key={ix}
-                                    onClick={() => {this.handleClick(feature.getId()); this.closer.onclick();}}
+                                    onClick={() => {
+                                        this.handleClick(feature.getId()); 
+                                        this.closer.onclick();
+                                    }}
                                     style={{display: 'block', cursor: 'pointer'}}
                                 >
                                     {ix + 1 + ': ' + feature.getProperties().name}

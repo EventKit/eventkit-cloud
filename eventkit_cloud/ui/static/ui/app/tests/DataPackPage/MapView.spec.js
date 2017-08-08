@@ -200,8 +200,11 @@ describe('MapView component', () => {
         const mapSpy = new sinon.spy(ol, 'Map');
         const attributeSpy = new sinon.spy(ol.control, 'Attribution');
         const zoomSpy = new sinon.spy(ol.control, 'Zoom');
-        // const extentSpy = new sinon.spy(ol.control, 'ZoomExtent');
         const overviewSpy = new sinon.spy(ol.control, 'OverviewMap');
+        const interactionSpy = new sinon.spy(ol.interaction, 'defaults');
+        const layerSpy = new sinon.spy(ol.layer, 'Tile');
+        const osmSpy = new sinon.spy(ol.source, 'OSM');
+        const viewSpy = new sinon.spy(ol, 'View');
         expect(inheritSpy.notCalled).toBe(true);
         wrapper.instance().initMap();
         expect(inheritSpy.calledOnce).toBe(true);
@@ -209,39 +212,261 @@ describe('MapView component', () => {
         expect(mapSpy.calledOnce).toBe(true);
         expect(attributeSpy.calledOnce).toBe(true);
         expect(zoomSpy.calledOnce).toBe(true);
-        // expect(extentSpy.called).toBe(true);
         expect(overviewSpy.calledOnce).toBe(true);
-
-
-        // IN PROGRESS . . . 
-
+        expect(interactionSpy.calledOnce).toBe(true);
+        expect(layerSpy.calledOnce).toBe(true);
+        expect(osmSpy.calledOnce).toBe(true);
+        expect(viewSpy.calledOnce).toBe(true);
         inheritSpy.restore();
         mapSpy.restore();
         attributeSpy.restore();
         zoomSpy.restore();
+        interactionSpy.restore();
+        layerSpy.restore();
+        osmSpy.restore();
+        viewSpy.restore();
     });
 
     it('initOverlay should create an overlay for in map popups', () => {
-        //TODO
+        MapView.prototype.initOverlay = initOverlay;
+        const overlaySpy = new sinon.spy(ol, 'Overlay');
+        const stub = sinon.stub(document, 'getElementById');
+        const div = document.createElement('div');
+        const a = document.createElement('a');
+        stub.withArgs('popup').returns(div);
+        stub.withArgs('popup-closer').returns(a);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().map.addOverlay = new sinon.spy();
+        wrapper.instance().initOverlay();
+        expect(stub.calledWith('popup')).toBe(true);
+        expect(stub.calledWith('popup-content')).toBe(true);
+        expect(stub.calledWith('popup-closer')).toBe(true);
+        expect(overlaySpy.calledWith({
+            element: div,
+            autoPan: true,
+            autoPanAnimation: {
+                duration: 250
+            },
+            stopEvent: false
+        })).toBe(true);
+        expect(wrapper.instance().closer.onclick).toEqual(wrapper.instance().handleOlPopupClose);
+        expect((wrapper.instance().map.addOverlay.calledOnce)).toBe(true);
+        stub.restore();
     });
 
-    it('handleClick should deselect old features and select new features', () => {
-        //TODO
+    it('handleOlPopupClose should call setPosition on overlay and blur on closer', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const setSpy = new sinon.spy();
+        const blurSpy = new sinon.spy();
+        wrapper.instance().overlay = {setPosition: setSpy};
+        wrapper.instance().closer = {blur: blurSpy};
+        wrapper.instance().handleOlPopupClose();
+        expect(setSpy.calledOnce).toBe(true);
+        expect(setSpy.calledWith(undefined)).toBe(true);
+        expect(blurSpy.calledOnce).toBe(true);
+    });
+
+    it('handleClick should return false if there is no runId or feature associated with runId', () => {
+        const getSpy = new sinon.spy(ol.source.Vector.prototype, 'getFeatureById');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().handleClick()).toBe(false);
+        expect(getSpy.notCalled).toBe(true);
+        expect(wrapper.instance().handleClick('22222')).toBe(false);
+        expect(getSpy.calledOnce).toBe(true);
+        getSpy.restore();
+    });
+
+    it('handleClick should deselect feature if its already clicked', () => {
+        const stateSpy = new sinon.spy(MapView.prototype, 'setState');
+        const deselectSpy = new sinon.spy(MapView.prototype, 'setFeatureNotSelected');
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Point([-10, 10])
+        });
+        feature.setId('12345');
+        feature.setStyle(RED_STYLE);
+        feature.setProperties({name: 'name', event: 'event', job: {uid: '12345'}});
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stub = new sinon.stub(wrapper.instance().source, 'getFeatureById');
+        stub.withArgs('12345').returns(feature);
+        wrapper.setState({selectedFeature: '12345'});
+        expect(wrapper.instance().handleClick('12345')).toBe(true);
+        expect(stateSpy.calledWith({showPopup: false})).toBe(true);
+        expect(deselectSpy.calledOnce).toBe(true);
+        expect(deselectSpy.calledWith(feature)).toBe(true);
+        expect(stateSpy.calledWith({selectedFeature: null})).toBe(true);
+        stateSpy.restore();
+        deselectSpy.restore();
     });
 
     it('handleClick should center on feature', () => {
-        //TODO
+        const stateSpy = new sinon.spy(MapView.prototype, 'setState');
+        const deselectSpy = new sinon.spy(MapView.prototype, 'setFeatureNotSelected');
+        const selectSpy = new sinon.spy(MapView.prototype, 'setFeatureSelected');
+        const setCenterSpy = new sinon.spy(ol.View.prototype, 'setCenter');
+        const newFeature = new ol.Feature({
+            geometry: new ol.geom.Point([-10, 10])
+        });
+        newFeature.setId('12345');
+        newFeature.setStyle(BLUE_STYLE);
+        newFeature.setProperties({name: 'feature name', event: 'feature event', job: {uid: '12345'}});
+        const oldFeature = new ol.Feature();
+        oldFeature.setId('56789');
+        oldFeature.setStyle(RED_STYLE);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().map.getView().fit([-500,-300,-400,-200])
+        const stub = new sinon.stub(wrapper.instance().source, 'getFeatureById');
+        stub.withArgs('12345').returns(newFeature);
+        stub.withArgs('56789').returns(oldFeature);
+        wrapper.setState({selectedFeature: '56789'});
+        expect(wrapper.instance().handleClick('12345')).toBe(true);
+        expect(stateSpy.calledWith({showPopup: false}));
+        expect(deselectSpy.calledOnce).toBe(true);
+        expect(deselectSpy.calledWith(oldFeature)).toBe(true);
+        expect(selectSpy.calledOnce).toBe(true);
+        expect(selectSpy.calledWith(newFeature)).toBe(true);
+        expect(stateSpy.calledWith({selectedFeature: newFeature.getId(), showPopup: true})).toBe(true);
+        expect(setCenterSpy.calledOnce).toBe(true);
+        stateSpy.restore();
+        deselectSpy.restore();
+        selectSpy.restore();
+        setCenterSpy.restore();
     });
 
     it('handleClick should trigger an animation', () => {
-        //TODO
+        const stateSpy = new sinon.spy(MapView.prototype, 'setState');
+        const deselectSpy = new sinon.spy(MapView.prototype, 'setFeatureNotSelected');
+        const selectSpy = new sinon.spy(MapView.prototype, 'setFeatureSelected');
+        const setCenterSpy = new sinon.spy(ol.View.prototype, 'setCenter');
+        const newFeature = new ol.Feature({
+            geometry: new ol.geom.Point([-1, 1])
+        });
+        newFeature.setId('12345');
+        newFeature.setStyle(BLUE_STYLE);
+        newFeature.setProperties({name: 'feature name', event: 'feature event', job: {uid: '12345'}});
+        const oldFeature = new ol.Feature();
+        oldFeature.setId('56789');
+        oldFeature.setStyle(RED_STYLE);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().map.render = new sinon.spy();
+        const stub = new sinon.stub(wrapper.instance().source, 'getFeatureById');
+        stub.withArgs('12345').returns(newFeature);
+        stub.withArgs('56789').returns(oldFeature);
+        wrapper.setState({selectedFeature: '56789'});
+        wrapper.instance().handleClick('12345');
+        expect(stateSpy.calledWith({showPopup: false}));
+        expect(deselectSpy.calledOnce).toBe(true);
+        expect(deselectSpy.calledWith(oldFeature)).toBe(true);
+        expect(selectSpy.calledOnce).toBe(true);
+        expect(selectSpy.calledWith(newFeature)).toBe(true);
+        expect(stateSpy.calledWith({selectedFeature: newFeature.getId(), showPopup: true})).toBe(true);
+        expect(setCenterSpy.notCalled).toBe(true);
+        expect(wrapper.instance().map.render.calledOnce).toBe(true);
+        stateSpy.restore();
+        deselectSpy.restore();
+        selectSpy.restore();
+        setCenterSpy.restore();
+    });
+
+    it('handleClick should remove listener and set to null', () => {
+        const unSpy = new sinon.spy(ol.Observable, 'unByKey');
+        const newFeature = new ol.Feature({
+            geometry: new ol.geom.Point([-1, 1])
+        });
+        newFeature.setId('12345');
+        newFeature.setStyle(BLUE_STYLE);
+        newFeature.setProperties({name: 'feature name', event: 'feature event', job: {uid: '12345'}});
+        const oldFeature = new ol.Feature();
+        oldFeature.setId('56789');
+        oldFeature.setStyle(RED_STYLE);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().map.render = new sinon.spy();
+        const stub = new sinon.stub(wrapper.instance().source, 'getFeatureById');
+        stub.withArgs('12345').returns(newFeature);
+        stub.withArgs('56789').returns(oldFeature);
+        const listener = () => {};
+        wrapper.instance().listener = listener
+        wrapper.setState({selectedFeature: '56789'});
+        wrapper.instance().handleClick('12345');
+        expect(unSpy.calledOnce).toBe(true);
+        expect(unSpy.calledWith(listener)).toBe(true);
+        expect(wrapper.instance().listener).not.toEqual(listener);
+        expect(wrapper.instance().map.render.calledOnce).toBe(true);
+        unSpy.restore();
     });
 
     it('animate should render a geom for animation', () => {
-        //TODO
+        const Style = ol.style.Style;
+        const Circle = ol.style.Circle;
+        ol.style.Style = new sinon.spy();
+        ol.style.Circle = new sinon.spy();
+        const maxSpy = new sinon.spy(Math, 'max');
+        const unSpy = new sinon.spy(ol.Observable, 'unByKey');
+        const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const styleSpy = new sinon.spy();
+        const geomSpy = new sinon.spy();
+        const event = {vectorContext: {setStyle: styleSpy, drawGeometry: geomSpy}, frameState: {time: 500}}
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        const stub = new sinon.stub(wrapper.instance().map, 'getPixelFromCoordinate');
+        stub.withArgs([-29,28]).returns([10, 50]);
+        stub.withArgs([-4,28]).returns([50,50]);
+        stub.withArgs([-29,9]).returns([10,100]);
+        const renderCalls = renderSpy.callCount;
+        wrapper.instance().animate(event, geom, 300);
+        expect(maxSpy.calledWith(40,50)).toBe(true);
+        expect(ol.style.Style.calledOnce).toBe(true);
+        expect(ol.style.Circle.calledOnce).toBe(true);
+        expect(event.vectorContext.setStyle.calledOnce).toBe(true);
+        expect(event.vectorContext.drawGeometry.calledOnce).toBe(true);
+        expect(unSpy.notCalled).toBe(true);
+        expect(renderSpy.callCount).toEqual(renderCalls + 1);
+        ol.style.Style = Style;
+        ol.style.Circle = Circle;
+        maxSpy.restore();
+        unSpy.restore();
+        renderSpy.restore();
     });
 
-    it('onMapClick should check for features, if one feature it calls handle click, if multiple it should display in map popup', () => {
+    it('animate should unregister the listener and return 0', () => {
+        const Style = ol.style.Style;
+        const Circle = ol.style.Circle;
+        ol.style.Style = new sinon.spy();
+        ol.style.Circle = new sinon.spy();
+        const unSpy = new sinon.spy(ol.Observable, 'unByKey');
+        const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const styleSpy = new sinon.spy();
+        const geomSpy = new sinon.spy();
+        const event = {vectorContext: {setStyle: styleSpy, drawGeometry: geomSpy}, frameState: {time: 4000}}
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        const stub = new sinon.stub(wrapper.instance().map, 'getPixelFromCoordinate');
+        stub.withArgs([-29,28]).returns([10, 50]);
+        stub.withArgs([-4,28]).returns([50,50]);
+        stub.withArgs([-29,9]).returns([10,100]);
+        const renderCalls = renderSpy.callCount;
+        expect(wrapper.instance().animate(event, geom, 500)).toEqual(0);
+        expect(ol.style.Style.calledOnce).toBe(true);
+        expect(ol.style.Circle.calledOnce).toBe(true);
+        expect(event.vectorContext.setStyle.calledOnce).toBe(true);
+        expect(event.vectorContext.drawGeometry.calledOnce).toBe(true);
+        expect(unSpy.called).toBe(true);
+        expect(renderSpy.callCount).toEqual(renderCalls);
+        ol.style.Style = Style;
+        ol.style.Circle = Circle;
+        unSpy.restore();
+        renderSpy.restore();
+    });
+
+    it('onMapClick should check for features, if multiple it should display in map popup', () => {
         const forEachFeatureAtPixel = ol.Map.prototype.forEachFeatureAtPixel;
         MapView.prototype.overlay = {setPosition: new sinon.spy()};
         // create a mock function to replace map.forEachFeatureAtPixel
@@ -269,6 +494,32 @@ describe('MapView component', () => {
         expect(MapView.prototype.overlay.setPosition.calledWith(event.coordinate)).toBe(true);
         //restore
         stateSpy.restore();
+        ol.Map.prototype.forEachFeatureAtPixel = forEachFeatureAtPixel;
+    });
+
+    it('onMapClick should check for features, if single feature it should call handle click', () => {
+        const handleClickSpy = new sinon.spy(MapView.prototype, 'handleClick');
+        const forEachFeatureAtPixel = ol.Map.prototype.forEachFeatureAtPixel;
+        // create a mock function to replace map.forEachFeatureAtPixel
+        const forEachMock = (pixel, func, options) => {
+            const feature1 = new ol.Feature(new ol.geom.Polygon([-1,-1,1,1]));
+            feature1.setId('1');
+            feature1.setProperties({name: 'number 1'});
+            [feature1].forEach((feature) => {
+                func(feature);
+            });
+        }
+        ol.Map.prototype.forEachFeatureAtPixel = forEachMock;
+        const forEachSpy = new sinon.spy(ol.Map.prototype, 'forEachFeatureAtPixel');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const event = {pixel: 'fake', coordinate: [0,0]}
+        wrapper.instance().onMapClick(event);
+        expect(forEachSpy.calledOnce).toBe(true);
+        expect(handleClickSpy.calledOnce).toBe(true);
+        expect(handleClickSpy.calledWith('1')).toBe(true);
+        //restore
+        handleClickSpy.restore();
         ol.Map.prototype.forEachFeatureAtPixel = forEachFeatureAtPixel;
     });
 
