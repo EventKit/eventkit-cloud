@@ -72,9 +72,9 @@ def driver_for(ds_path):
     try:
         ds = open_ds(ds_path)
 
-        if type(ds) == gdal.Dataset:
+        if isinstance(ds, gdal.Dataset):
             ret = (ds.GetDriver().ShortName, True)
-        elif type(ds) == ogr.DataSource:
+        elif isinstance(ds, ogr.DataSource):
             ret = (ds.GetDriver().GetName(), False)
         else:
             ret = (None, None)

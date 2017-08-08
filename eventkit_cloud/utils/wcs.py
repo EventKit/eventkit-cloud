@@ -70,7 +70,7 @@ class WCSConverter(object):
 
         try:
             # Isolate url params
-            self.params = "&amp;" + self.service_url.split('?')[1]
+            self.params = "&amp;" + self.service_url.split('?')[1].replace('&', '&amp;')
             self.service_url = self.service_url.split('?')[0]
         finally:
             self.service_url += "?"

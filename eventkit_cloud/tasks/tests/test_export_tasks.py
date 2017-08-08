@@ -300,7 +300,8 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.geopackage.clip_geopackage')
     @patch('celery.app.task.Task.request')
-    def test_run_gpkg_export_task(self, mock_request, mock_clip):
+    @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
+    def test_run_gpkg_export_task(self, mock_request, mock_clip, clip_dataset):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
@@ -314,6 +315,7 @@ class TestExportTasks(ExportTaskBase):
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=geopackage_export_task.name)
+        clip_dataset.return_value = expected_output_path
         result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
         mock_clip.assert_not_called()
@@ -668,14 +670,17 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('shutil.rmtree')
-    def test_finalize_run_task_after_return(self, rmtree, logger):
+    @patch('os.path.isdir')
+    def test_finalize_run_task_after_return(self, isdir, rmtree, logger):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
+        isdir.return_value = True
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
         finalize_run_task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+        isdir.assert_called_with(stage_dir)
         rmtree.assert_called_with(stage_dir)
 
         celery_uid = str(uuid.uuid4())

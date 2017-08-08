@@ -558,12 +558,13 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
 
     self.update_task_state(result=result, task_uid=task_uid)
 
-    clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
-
     selection = parse_result(result, 'selection')
-    gpkg = parse_result(result, 'result')
     if selection:
-        gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
+        clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+
+    gpkg = parse_result(result, 'result')
+    gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
+
     result['result'] = gpkg
     result['geopackage'] = gpkg
     return result
@@ -579,9 +580,10 @@ def geotiff_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=
 
     self.update_task_state(result=result, task_uid=task_uid)
 
-    clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
-
     selection = parse_result(result, 'selection')
+    if selection:
+        clip_export_task.run(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+
     gtiff = parse_result(result, 'result')
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
     result['result'] = gtiff
