@@ -62,7 +62,7 @@ export class MapView extends Component {
 
     componentWillReceiveProps(nextProps) {
         // if the runs have changed, clear out old features and re-add with new features
-        if(!isEqual(nextProps.runs, this.props.runs)) {
+        if(nextProps.runs.length != this.props.runs.length) {
             this.source.clear();
             this.addRunFeatures(nextProps.runs, this.source);
             this.map.getView().fit(this.source.getExtent(), this.map.getSize());

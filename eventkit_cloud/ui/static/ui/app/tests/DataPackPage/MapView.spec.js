@@ -148,7 +148,6 @@ describe('MapView component', () => {
         expect(getViewSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith(wrapper.instance().source.getExtent(), wrapper.instance().map.getSize()));
-
         receiveSpy.restore();
         clearSpy.restore();
         addRunSpy.restore();
