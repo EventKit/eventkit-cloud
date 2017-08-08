@@ -153,3 +153,28 @@ export function updatePermission (uid, value){
         });
     }
 }
+
+export const getProviderDesc = (slug) => dispatch => {
+    dispatch({
+        type: types.GETTING_PROVIDER_DESC
+    });
+
+    return axios({
+        url: '/api/providers/'+ slug,
+        method: 'GET',
+    }).then((response) => {
+
+        let desc = response.data.service_description;
+
+        dispatch({
+            type: types.PROVIDER_DESC_RECEIVED,
+            getProviderDesc: {
+                desc: desc
+            }
+        });
+    }).catch((error) => {console.log(error)
+        dispatch({
+            type: types.PROVIDER_DESC_ERROR, error: error
+        });
+    });
+};

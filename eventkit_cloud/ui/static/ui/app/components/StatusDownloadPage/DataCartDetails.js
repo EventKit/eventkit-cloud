@@ -12,6 +12,7 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import Check from 'material-ui/svg-icons/navigation/check'
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
+import Info from 'material-ui/svg-icons/action/info'
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -29,6 +30,8 @@ export class DataCartDetails extends React.Component {
             deleteDialogOpen: false,
             rerunDialogOpen: false,
             cloneDialogOpen: false,
+            providerDialogOpen: false,
+            providerDesc: 'initial state',
         };
     }
 
@@ -44,6 +47,11 @@ export class DataCartDetails extends React.Component {
                 default:
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
+        }
+        if(nextProps.getProviderDesc.desc != this.state.providerDesc) {
+
+         return this.setState({providerDesc: nextProps.getProviderDesc.desc});
+
         }
     }
 
@@ -144,6 +152,15 @@ export class DataCartDetails extends React.Component {
 
     handleCloneClose = () => {
         this.setState({cloneDialogOpen: false});
+    };
+
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+    };
+
+    handleProviderOpen(slug) {
+        this.props.onGetProviderDesc(slug)
+        this.setState({providerDialogOpen: true});
     };
 
     handleDelete = () => {
@@ -263,6 +280,18 @@ export class DataCartDetails extends React.Component {
                 label="Clone"
                 primary={true}
                 onTouchTap={this.handleClone.bind(this)}
+            />,
+        ];
+
+        const providerInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProviderClose.bind(this)}
             />,
         ];
         return (
@@ -421,7 +450,16 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Layer Data</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
-                                    return <p key={provider.name}>{provider.name}</p>
+                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider.slug)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        <Dialog
+                                            contentStyle={{width:'30%'}}
+                                            actions={providerInfoActions}
+                                            modal={false}
+                                            open={this.state.providerDialogOpen}
+                                            onRequestClose={this.handleProviderClose.bind(this)}
+                                        >
+                                            <strong>{this.state.providerDesc}</strong>
+                                        </Dialog></p>
                                 })}
                             </td>
                         </tr>
@@ -489,6 +527,7 @@ DataCartDetails.propTypes = {
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
+    onGetProviderDesc: PropTypes.func.isRequired,
 }
 
 export default DataCartDetails;

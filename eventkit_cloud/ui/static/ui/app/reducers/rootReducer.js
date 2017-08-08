@@ -10,7 +10,7 @@ import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
 import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
 import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
-import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer, updateExpirationReducer, updatePermissionReducer} from './statusDownloadReducer'
+import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer, updateExpirationReducer, updatePermissionReducer, getProviderDescReducer} from './statusDownloadReducer'
 
 
 const rootReducer = combineReducers({
@@ -43,6 +43,7 @@ const rootReducer = combineReducers({
     licenses: licenseReducer,
     updateExpiration: updateExpirationReducer,
     updatePermission: updatePermissionReducer,
+    getProviderDesc: getProviderDescReducer,
 });
 
 export default rootReducer;

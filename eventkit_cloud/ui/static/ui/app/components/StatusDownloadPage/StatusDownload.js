@@ -6,7 +6,7 @@ import Paper from 'material-ui/Paper'
 import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails'
 import cssStyles from '../../styles/StatusDownload.css'
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration,updatePermission} from '../../actions/statusDownloadActions'
+import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration,updatePermission, getProviderDesc} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
 import reactMixin from 'react-mixin'
@@ -174,6 +174,7 @@ export class StatusDownload extends React.Component {
                                                      onRunRerun={this.props.rerunExport}
                                                      onClone={this.props.cloneExport}
                                                      onProviderCancel={this.props.cancelProviderTask}
+                                                     onGetProviderDesc={this.props.getProviderDesc}
                                                      maxResetExpirationDays={this.state.maxDays}/>
                                 ))}
 
@@ -197,6 +198,7 @@ function mapStateToProps(state) {
         updatePermission: state.updatePermission,
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
+        getProviderDesc: state.getProviderDesc,
     }
 }
 
@@ -227,6 +229,9 @@ function mapDispatchToProps(dispatch) {
         },
         cancelProviderTask:(providerUid) => {
             dispatch(cancelProviderTask(providerUid))
+        },
+        getProviderDesc:(slug) => {
+            dispatch(getProviderDesc(slug))
         }
     }
 }
@@ -243,6 +248,7 @@ StatusDownload.propTypes = {
     updatePermission: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
+    getProviderDesc: PropTypes.func.isRequired,
 };
 
 reactMixin(StatusDownload.prototype, TimerMixin);

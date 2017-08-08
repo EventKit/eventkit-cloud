@@ -492,7 +492,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'id'
+    lookup_field = 'slug'
     ordering = ['name']
 
     def get_queryset(self):
