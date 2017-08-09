@@ -571,12 +571,13 @@ def geopackage_export_task(self, result=None, run_uid=None, task_uid=None, stage
 
 
 @app.task(name='Geotiff Format (.tif)', bind=True, base=FormatTask)
-def geotiff_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
+def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
                         user_details=None):
     """
     Class defining geopackage export function.
     """
     from .models import ExportRun
+    result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -586,6 +587,7 @@ def geotiff_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=
 
     gtiff = parse_result(result, 'result')
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+
     result['result'] = gtiff
     result['geotiff'] = gtiff
     return result
