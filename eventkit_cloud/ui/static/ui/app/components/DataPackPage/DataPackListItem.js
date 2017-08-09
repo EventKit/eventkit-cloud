@@ -19,14 +19,9 @@ export class DataPackListItem extends Component {
     }
 
     render() {
-        const width = window.innerWidth;
-        const titleFontSize = width < 576 ? '19px' : '23px';
-        const subtitleFontSize = width < 576 ? '10px': '14px';
-        const subtitleHeight = width < 576 ? '16px': '20px';
-
         const styles = {
             card: {
-                backgroundColor: '#f7f8f8',
+                backgroundColor: this.props.backgroundColor || '#f7f8f8',
                 borderRadius: '0px',
                 borderTop: 'grey 1px solid',
                 paddingBottom: '0px',
@@ -35,31 +30,43 @@ export class DataPackListItem extends Component {
                 wordWrap: 'break-word',
                 padding: '10px 15px',
             },
-            completeIcon: {height: subtitleHeight, float: 'right', color: '#bcdfbb', opacity: '0.6'},
-            errorIcon: {height: subtitleHeight, float: 'right', color: '#ce4427', opacity: '0.6'},
-            runningIcon: {height: subtitleHeight, float: 'right', color: '#f4D225'},
-            unpublishedIcon: {height: subtitleHeight, float: 'right', color: 'grey', marginRight: '5px'},
-            publishedIcon : {height: subtitleHeight, float: 'right', color: '#bcdfbb', marginRight: '5px'},
+            completeIcon: {height: '18px', float: 'right', color: '#bcdfbb', opacity: '0.6'},
+            errorIcon: {height: '18px', float: 'right', color: '#ce4427', opacity: '0.6'},
+            runningIcon: {height: '18px', float: 'right', color: '#f4D225'},
+            unpublishedIcon: {height: '18px', float: 'right', color: 'grey', marginRight: '5px'},
+            publishedIcon : {height: '18px', float: 'right', color: '#bcdfbb', marginRight: '5px'},
             ownerLabel: {float: 'right', color: 'grey'},
-            eventText: {height: subtitleHeight, lineHeight: subtitleHeight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'},
-            titleLink: {color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}
+            eventText: {height: '18px', lineHeight: '18px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'},
+            titleLink: {height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}
         };
 
+        const onMouseEnter = this.props.onHoverStart ? () => {this.props.onHoverStart(this.props.run.uid)} : null;
+        const onMouseLeave = this.props.onHoverEnd ? () => {this.props.onHoverEnd(this.props.run.uid)} : null;
+        const onClick = this.props.onClick ? () => {this.props.onClick(this.props.run.uid)} : null;
         return (
-            <Card style={styles.card} key={this.props.run.uid} containerStyle={{padding: '0px'}}>
+            <Card 
+                style={styles.card} 
+                key={this.props.run.uid} 
+                containerStyle={{padding: '0px'}}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+                onClick={onClick}
+            >
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
-                    titleStyle={{fontSize: titleFontSize, height: '36px'}}
-                    subtitleStyle={{fontSize: subtitleFontSize}}
+                    titleStyle={{fontSize: '21px', height: '36px'}}
+                    subtitleStyle={{fontSize: '12px'}}
                     title={
                         <div>
                             <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
-                                <Link 
-                                    to={'/status/' + this.props.run.job.uid} 
-                                    style={styles.titleLink}>
-                                    {this.props.run.job.name}
-                                </Link>
+                                <div style={styles.titleLink}>
+                                    <Link 
+                                        to={'/status/' + this.props.run.job.uid} 
+                                        style={{color: 'inherit'}}>
+                                        {this.props.run.job.name}
+                                    </Link>
+                                </div>
                             </div>
                             <IconMenu
                                 style={{float: 'right', width: '24px', height: '100%'}}
@@ -73,13 +80,13 @@ export class DataPackListItem extends Component {
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
                                 <MenuItem 
-                                    style={{fontSize: subtitleFontSize}}
+                                    style={{fontSize: '12px'}}
                                     primaryText="Go to Export Detail"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
-                                    style={{fontSize: subtitleFontSize}}
+                                    style={{fontSize: '12px'}}
                                     primaryText={'Delete Export'}
                                     onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
@@ -91,13 +98,14 @@ export class DataPackListItem extends Component {
                             <div style={styles.eventText}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
-                            <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
+                            <div style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}>
                                 {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
                                 {this.props.run.user == this.props.user.data.user.username ?
-                                    <p style={styles.ownerLabel}>My DataPack</p>
+                                    <div style={styles.ownerLabel}>My DataPack</div>
                                     :
-                                    <p style={styles.ownerLabel}>{this.props.run.user}</p>
+                                    <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
+                                <div style={{display: 'inline-block', float: 'right'}}>
                                 {this.props.run.job.published ? 
                                     <SocialGroup style={styles.publishedIcon}/>
                                     :
@@ -112,6 +120,7 @@ export class DataPackListItem extends Component {
                                         :
                                         <NavigationCheck style={styles.completeIcon}/>
                                 }
+                                </div>
                             </div>
                         </div>
                     }
@@ -124,7 +133,11 @@ export class DataPackListItem extends Component {
 DataPackListItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired
+    onRunDelete: PropTypes.func.isRequired,
+    onHoverStart: PropTypes.func,
+    onHoverEnd: PropTypes.func,
+    onClick: PropTypes.func,
+    backgroundColor: PropTypes.string
 };
 
 export default DataPackListItem;

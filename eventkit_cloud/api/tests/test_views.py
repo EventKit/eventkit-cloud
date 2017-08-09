@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import json
 import logging
 import os
+from datetime import datetime,timedelta,date
 from tempfile import NamedTemporaryFile
 from unittest import skip
 import uuid
@@ -12,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
@@ -432,6 +434,30 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(['invalid_extents'], response.data['id'])
 
 
+    def test_patch(self):
+        expected = '/api/jobs/{0}'.format(self.job.uid)
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        self.assertEquals(expected, url)
+
+        request_data = {"published": False}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['published'])
+        self.assertTrue(response.data['success'])
+
+        request_data = {"featured": True}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['featured'])
+        self.assertTrue(response.data['success'])
+
+        request_data = {"featured": True, "published" : False}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['featured'])
+        self.assertIsNotNone(response.data['published'])
+        self.assertTrue(response.data['success'])
+
 class TestBBoxSearch(APITestCase):
     """
     Test cases for testing bounding box searches.
@@ -551,17 +577,35 @@ class TestExportRunViewSet(APITestCase):
 
     def test_patch(self):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
-        request_data = {"expiration": "2019-12-31"}
 
+        today  = datetime.today()
+        max_days = int(getattr(settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30))
+        ok_expiration = today + timedelta(max_days-1)
+        request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"exploration": "2019-12-31"}
-
+        not_ok_expiration = ok_expiration  - timedelta(1)
+        request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertFalse(response.data['success'])
+
+        not_ok_expiration = today + timedelta(max_days+1)
+        request_data = {"expiration": not_ok_expiration.isoformat()}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertFalse(response.data['success'])
+
+        request_data = {"exploration": ok_expiration.isoformat()}
+        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+        run = ExportRun.objects.get(uid=self.export_run.uid)
+        self.assertEquals(ok_expiration,run.expiration.replace(tzinfo=None))
+
 
     def test_delete_run(self,):
         url = reverse('api:runs-detail', args=[self.export_run.uid])

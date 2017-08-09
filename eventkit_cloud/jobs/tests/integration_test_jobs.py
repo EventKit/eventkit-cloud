@@ -264,7 +264,7 @@ class TestJob(TestCase):
 
     def test_wfs_kml(self):
         """
-        This test is to ensure that an WFS job will export a gpkg file.
+        This test is to ensure that an WFS job will export a kml file.
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestKML-WFS", "description": "Test Description",
@@ -272,15 +272,26 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_arcgis_feature_service(self):
+    def test_wcs_gpkg(self):
         """
-        This test is to ensure that an ArcGIS Feature Service job will export a gpkg file.
+        This test is to ensure that a WCS job will export a gpkg file.
         :returns:
         """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-WCS",
+                    "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
+                    "provider_tasks": [{"provider": "eventkit-integration-test-wcs", "formats": ["gpkg"]}]}
         self.assertTrue(self.run_job(job_data))
+
+    # def test_arcgis_feature_service(self):
+    #     """
+    #     This test is to ensure that an ArcGIS Feature Service job will export a gpkg file.
+    #     :returns:
+    #     """
+    #     job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG-Arcfs", "description": "Test Description",
+    #                 "event": "TestProject", "selection": self.selection, "tags": [],
+    #                 "provider_tasks": [{"provider": "eventkit-integration-test-arc-fs", "formats": ["gpkg"]}]}
+    #     self.assertTrue(self.run_job(job_data))
 
     def test_all(self):
         """
@@ -301,8 +312,11 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wfs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-fs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+                                                   {"provider": "eventkit-integration-test-wcs",
+                                                    "formats": ["gpkg"]},
+                                                   # {"provider": "eventkit-integration-test-arc-fs",
+                                                   #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
+                                                   ]}
         self.assertTrue(self.run_job(job_data, run_timeout=300))
 
     def test_rerun_all(self):
@@ -325,8 +339,11 @@ class TestJob(TestCase):
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
                                                    {"provider": "eventkit-integration-test-wfs",
                                                     "formats": ["shp", "gpkg", "kml", "sqlite"]},
-                                                   {"provider": "eventkit-integration-test-arc-fs",
-                                                    "formats": ["shp", "gpkg", "kml", "sqlite"]}]}
+                                                   {"provider": "eventkit-integration-test-wcs",
+                                                    "formats": ["gpkg"]},
+                                                   # {"provider": "eventkit-integration-test-arc-fs",
+                                                   #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
+                                                   ]}
         response = self.client.post(self.jobs_url,
                                     json=job_data,
                                     headers={'X-CSRFToken': self.csrftoken,
@@ -554,17 +571,31 @@ def get_providers_list():
         "config": ""
 
     }, {
-        "created_at": "2016-10-21T14:30:27.066Z",
-        "updated_at": "2016-10-21T14:30:27.066Z",
-        "name": "eventkit-integration-test-arc-fs",
-        "slug": "eventkit-integration-test-arc-fs",
-        "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
-        "layer": "0",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
+        "created_at": "2016-10-13T17:23:26.890Z",
+        "updated_at": "2016-10-13T17:23:26.890Z",
+        "name": "eventkit-integration-test-wcs",
+        "slug": "eventkit-integration-test-wcs",
+        "url": "http://demo.pixia.com/wcsserver/?",
+        "layer": "3",
+        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wcs'),
         "level_from": 0,
         "level_to": 2,
         "config": ""
-    }]
+
+    }
+    #     , {
+    #     "created_at": "2016-10-21T14:30:27.066Z",
+    #     "updated_at": "2016-10-21T14:30:27.066Z",
+    #     "name": "eventkit-integration-test-arc-fs",
+    #     "slug": "eventkit-integration-test-arc-fs",
+    #     "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
+    #     "layer": "0",
+    #     "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
+    #     "level_from": 0,
+    #     "level_to": 2,
+    #     "config": ""
+    # }
+    ]
 
 
 def load_providers():

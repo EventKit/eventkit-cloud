@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import ActionViewModule from 'material-ui/svg-icons/action/view-module';
 import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
+import MapsMap from 'material-ui/svg-icons/maps/map';
 import IconButton from 'material-ui/IconButton';
 
 export class DataPackViewButtons extends React.Component {
@@ -33,22 +34,28 @@ export class DataPackViewButtons extends React.Component {
             button: {height: '35px', width: dimension, padding: '0px', float: 'right'},
             icon: {color: '#4498c0', height: dimension, width: dimension}
         }
-
         return (
             <div style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
                 <IconButton
-                    onClick={this.props.handleGridSelect}
+                    onClick={() => {this.props.handleViewChange('grid')}}
                     style={styles.button}
                     iconStyle={styles.icon}
                 >
                     <ActionViewModule />
                 </IconButton>
                 <IconButton
-                    onClick={this.props.handleListSelect}
+                    onClick={() => {this.props.handleViewChange('list')}}
                     style={styles.button}
                     iconStyle={styles.icon}
                 >
                     <ActionViewStream />
+                </IconButton>
+                <IconButton
+                    onClick={() => {this.props.handleViewChange('map')}}
+                    style={styles.button}
+                    iconStyle={styles.icon}
+                >
+                    <MapsMap/>
                 </IconButton>
             </div> 
         );
@@ -57,8 +64,7 @@ export class DataPackViewButtons extends React.Component {
 
 
 DataPackViewButtons.propTypes = {
-    handleGridSelect: React.PropTypes.func.isRequired,
-    handleListSelect: React.PropTypes.func.isRequired,
+    handleViewChange: PropTypes.func.isRequired,
 };
 
 export default DataPackViewButtons;
