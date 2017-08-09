@@ -88,6 +88,10 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_class = JobFilter
     search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
 
+
+    def dispatch(self, request, *args, **kwargs):
+        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
+
     def get_queryset(self):
         """Return all objects user can view."""
         return Job.objects.filter(Q(user=self.request.user) | Q(published=True))
