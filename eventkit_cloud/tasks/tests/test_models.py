@@ -161,10 +161,9 @@ class TestExportTask(TestCase):
             run.delete()
             delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
-    @patch('eventkit_cloud.tasks.models.ExportProvider')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.models.delete_from_s3')
-    def test_exporttaskresult_delete_exports(self, delete_from_s3, remove, export_provider):
+    def test_exporttaskresult_delete_exports(self, delete_from_s3, remove):
 
         # setup
         download_dir = "/test_download_dir"
