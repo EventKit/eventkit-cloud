@@ -298,14 +298,16 @@ class TestExportTasks(ExportTaskBase):
         mock_isfile.assert_called_once_with(expected_file)
         mock_open.assert_called_once_with(expected_file, 'w')
 
-    @patch('eventkit_cloud.tasks.export_tasks.geopackage.clip_geopackage')
+    @patch('eventkit_cloud.utils.gdalutils.convert')
+    @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
     @patch('celery.app.task.Task.request')
-    def test_run_gpkg_export_task(self, mock_request, mock_clip):
+    def test_run_gpkg_export_task(self, mock_request, mock_clip, mock_convert):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.gpkg'.format(job_name))
+        mock_convert.return_value = expected_output_path
 
         previous_task_result = {'result': expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
@@ -317,6 +319,9 @@ class TestExportTasks(ExportTaskBase):
         result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
         mock_clip.assert_not_called()
+        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
+                                             task_uid=str(saved_export_task.uid))
+        mock_convert.reset_mock()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
@@ -328,8 +333,10 @@ class TestExportTasks(ExportTaskBase):
         previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
         result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
-        mock_clip.assert_called_once_with(geojson_file=expected_geojson, gpkg=expected_output_path,
-                                          task_uid=str(saved_export_task.uid))
+        mock_clip.assert_called_once_with(geojson_file=expected_geojson, dataset=expected_output_path,
+                                          fmt=None)
+        mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
+                                             task_uid=str(saved_export_task.uid))
         self.assertEquals(expected_output_path, result['result'])
         self.assertEquals(expected_output_path, result['geopackage'])
 
@@ -668,14 +675,17 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('shutil.rmtree')
-    def test_finalize_run_task_after_return(self, rmtree, logger):
+    @patch('os.path.isdir')
+    def test_finalize_run_task_after_return(self, isdir, rmtree, logger):
         celery_uid = str(uuid.uuid4())
         run_uid = self.run.uid
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(self.run.uid))
+        isdir.return_value = True
         export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status='SUCCESS', name='Default Shapefile Export')
         finalize_run_task.after_return('status', {'stage_dir': stage_dir}, run_uid, (), {}, 'Exception Info')
+        isdir.assert_called_with(stage_dir)
         rmtree.assert_called_with(stage_dir)
 
         celery_uid = str(uuid.uuid4())
