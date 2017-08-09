@@ -162,32 +162,6 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
-    @patch('eventkit_cloud.tasks.export_tasks.os.path.isfile')
-    @patch('__builtin__.open')
-    def test_output_selection_geojson_task(self, mock_open, mock_isfile):
-        import json
-
-        selection = {"data": "example"}
-        stage_dir = "/stage"
-        provider_slug = "provider"
-        expected_file = os.path.join(stage_dir,
-                                     "{0}_selection.geojson".format(provider_slug))
-
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='GeoJSONTask',
-                                                                 status=TaskStates.PENDING.value)
-        saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
-                                                      status=TaskStates.PENDING.value,
-                                                      name=output_selection_geojson_task.name)
-
-        result = output_selection_geojson_task.run(task_uid=saved_export_task.uid, stage_dir=stage_dir, provider_slug=provider_slug)
-        self.assertEqual(result, {'result': None})
-
-        mock_isfile.return_value = False
-        result = output_selection_geojson_task.run(task_uid=saved_export_task.uid, selection=json.dumps(selection), stage_dir=stage_dir,
-                                                   provider_slug=provider_slug)
-        self.assertEqual(result['selection'], expected_file)
-        mock_isfile.assert_called_once_with(expected_file)
-        mock_open.assert_called_once_with(expected_file, 'w')
 
     @patch('eventkit_cloud.utils.gdalutils.convert')
     @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
