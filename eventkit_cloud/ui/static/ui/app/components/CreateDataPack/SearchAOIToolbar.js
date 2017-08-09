@@ -62,8 +62,11 @@ export class SearchAOIToolbar extends Component {
     handleEnter(e) {
         this.setState({suggestions: []});
         if (e.length > 0) {
-            this.props.setSearchAOIButtonSelected();
-            this.props.handleSearch(e[0]);
+            if(this.props.handleSearch(e[0])){
+                this.props.setSearchAOIButtonSelected();
+            }else{
+                this.props.setAllButtonsDefault();
+            }
             this.refs.typeahead.getInstance().blur();
         }
     }

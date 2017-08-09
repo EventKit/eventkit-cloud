@@ -48,7 +48,7 @@ export class ExportAOI extends Component {
             });
             this._drawLayer.getSource().addFeature(feature[0]);
             //this.handleZoomToSelection(bbox);
-            this._map.getView().fit(this._drawLayer.getSource().getExtent(), this._map.getSize())
+            this._map.getView().fit(this._drawLayer.getSource().getExtent())
             this.props.setNextEnabled();
         }
     }
@@ -87,8 +87,7 @@ export class ExportAOI extends Component {
     handleZoomToSelection(geom) {
         if(geom.getType() != 'Point') {
             this._map.getView().fit(
-                geom,
-                this._map.getSize()
+                geom
             );
         } else {
             this._map.getView().setCenter(geom.getCoordinates())
@@ -116,8 +115,11 @@ export class ExportAOI extends Component {
         description = description + (result.region ? ', ' + result.region : '');
 
         this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description);
-        this.props.setNextEnabled();
         this.handleZoomToSelection(feature.getGeometry());
+        if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
+            this.props.setNextEnabled();
+            return true;
+        }
     }
 
     handleGeoJSONUpload(geom) {
