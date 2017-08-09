@@ -1,30 +1,48 @@
 [{
-		"model" : "jobs.exportprovider",
-		"fields" : {
-			"name" : "OpenStreetMap Data (Generic)",
-			"slug" : "osm-generic",
-			"url" : "",
-			"layer" : null,
-			"export_provider_type" : 1,
-			"level_from" : 0,
-			"level_to" : 10,
-			"config" : "",
-			"service_description" : "OpenStreetMap vector data provided in the 'planet' tables. \n\nAll points, lines, and polygons are three separate tables.",
-			"display": false
-		}
-	},{
-		"model" : "jobs.exportprovider",
-		"fields" : {
-			"name" : "OpenStreetMap Data (Themes)",
-			"slug" : "osm",
-			"url" : "",
-			"layer" : null,
-			"export_provider_type" : 2,
-			"level_from" : 0,
-			"level_to" : 10,
-			"config" : "",
-  			"service_description" : "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-			"display": true
-		}
-	}
-]
+    "model": "jobs.exportprovider",
+    "pk": 1,
+    "fields": {
+        "created_at": "2017-08-01T15:53:09.203Z",
+        "updated_at": "2017-08-01T15:53:09.203Z",
+        "uid": "a3e2ca55-ae8b-4686-be20-51023a9ee314",
+        "name": "OpenStreetMap Data (Generic)",
+        "slug": "osm-generic",
+        "url": "",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in the 'planet' tables. \r\n\r\nAll points, lines, and polygons are three separate tables.",
+        "layer": "",
+        "export_provider_type": 1,
+        "level_from": 0,
+        "level_to": 10,
+        "config": "planet_osm_point:\r\n  types:\r\n    - points\r\n  select:\r\n    - name\r\n\r\nplanet_osm_line:\r\n  type:\r\n    - lines\r\n  select:\r\n    - name\r\n\r\nplanet_osm_polygon:\r\n  type:\r\n    - polygons\r\n  select:\r\n    - name",
+        "user": null,
+        "license": null,
+        "zip": false,
+        "display": false
+    }
+},
+{
+    "model": "jobs.exportprovider",
+    "pk": 2,
+    "fields": {
+        "created_at": "2017-08-01T15:53:09.206Z",
+        "updated_at": "2017-08-01T15:53:09.206Z",
+        "uid": "6f5771ce-587d-4c77-a4cd-aaf01a305dee",
+        "name": "OpenStreetMap Data (Themes)",
+        "slug": "osm",
+        "url": "",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\r\nData is grouped into separate tables (e.g. water, roads...).",
+        "layer": "",
+        "export_provider_type": 2,
+        "level_from": 0,
+        "level_to": 10,
+        "config": "amenities:\r\n  types:\r\n    - points\r\n    - polygons\r\n  select:\r\n    - amenity\r\n    - name\r\n    - addr:housenumber\r\n    - addr:street\r\n    - building\r\n    - historic\r\n    - information\r\n    - leisure\r\n    - shop\r\n    - tourism\r\n    - office\r\n  where: amenity IS NOT NULL\r\n\r\naviation:\r\n  types:\r\n    - points\r\n    - polygons\r\n    - lines\r\n  select:\r\n    - aeroway\r\n    - name\r\n    - surface\r\n    - source\r\n    - building\r\n    - icao\r\n    - iata\r\n    - type\r\n  where: aeroway IS NOT NULL \r\n\r\nplaces:\r\n  types:\r\n    - points\r\n    - polygons\r\n  select:\r\n    - place\r\n    - name\r\n    - is_in\r\n  where: place IS NOT NULL\r\n\r\nbuildings:\r\n  types:\r\n    - polygons\r\n  select:\r\n    - building\r\n    - name\r\n    - addr:housenumber\r\n    - addr:street\r\n    - hazard_prone\r\n  where: building IS NOT NULL\r\n\r\nnatural:\r\n  types:\r\n    - lines\r\n    - polygons\r\n  select:\r\n    - natural\r\n    - name\r\n    - hazard_prone\r\n  where: natural IS NOT NULL\r\n\r\nlanduse:\r\n  types:\r\n    - polygons\r\n  select:\r\n    - landuse\r\n    - name\r\n  where: landuse IS NOT NULL\r\n\r\nroads:\r\n  types:\r\n    - lines\r\n  select:\r\n    - highway\r\n    - barrier\r\n    - ford\r\n    - hazard_prone\r\n    - name\r\n    - traffic_calming\r\n    - tunnel\r\n    - layer\r\n    - bicycle_road\r\n  where: highway IS NOT NULL\r\n\r\nrail:\r\n  types:\r\n    - lines\r\n  select:\r\n    - railway\r\n    - name\r\n    - bridge\r\n    - cutting\r\n    - embankment\r\n    - frequency\r\n    - service\r\n    - tracks\r\n    - tunnel\r\n    - usage\r\n    - voltage\r\n    - source\r\n    - operator\r\n    - layer\r\n  where: railway IS NOT NULL\r\n\r\nwaterways:\r\n  types:\r\n    - lines\r\n  select:\r\n    - waterway\r\n    - name\r\n    - hazard_prone\r\n  where: waterway IS NOT NULL\r\n\r\ntowers_antennas:\r\n  types:\r\n    - points\r\n  select:\r\n    - man_made\r\n    - name\r\n  where: man_made IN ('antenna','mast','tower')\r\n\r\nharbours:\r\n  types:\r\n    - points\r\n  select:\r\n    - harbour\r\n    - name\r\n    - leisure\r\n    - landuse\r\n  where: harbour IS NOT NULL\r\n\r\nleisure:\r\n  types:\r\n    - polygons\r\n  select:\r\n    - leisure\r\n    - name\r\n  where:  leisure IS NOT NULL",
+        "user": null,
+        "license": null,
+        "zip": false,
+        "display": true
+    }
+}]
