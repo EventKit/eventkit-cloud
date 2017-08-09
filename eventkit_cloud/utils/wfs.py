@@ -5,6 +5,7 @@ import os
 import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
+from ..utils.geopackage import check_content_exists
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +52,8 @@ class WFSToGPKG(object):
             # if no url params we can just check for trailing slash and move on
             self.service_url = self.service_url.rstrip('/\\')
         finally:
-            self.service_url = '{}{}'.format(self.service_url,
-                                             '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(
-                                                 self.layer))
+            self.service_url = '{}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'\
+                .format(self.service_url, self.layer)
 
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
@@ -62,7 +62,8 @@ class WFSToGPKG(object):
         else:
             convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
 
-        if (self.debug):
+        logger.info('Running: %s' % convert_cmd)
+        if self.debug:
             logger.debug('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
@@ -70,6 +71,11 @@ class WFSToGPKG(object):
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
             raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+
+        # Check for geopackage contents; gdal wfs driver fails silently
+        if not check_content_exists(self.gpkg):
+            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(self.layer)
+
         if self.debug:
             logger.debug('ogr2ogr returned: %s' % task_process.exitcode)
 

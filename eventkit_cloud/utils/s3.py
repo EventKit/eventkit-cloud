@@ -31,11 +31,10 @@ def upload_to_s3(run_uuid, source_filename, destination_filename, client=None, u
     asset_remote_path = os.path.join(run_uuid, destination_filename)
     from audit_logging.file_logging import logging_open
     with logging_open(asset_path, 'rb', user_details=user_details) as asset_file:
-        asset_file.seek(0)
-        client.put_object(
+        client.upload_fileobj(
             Bucket=settings.AWS_BUCKET_NAME,
             Key=asset_remote_path,
-            Body=asset_file.read()
+            Fileobj=asset_file
         )
 
     return client.generate_presigned_url(
