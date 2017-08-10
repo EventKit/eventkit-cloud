@@ -22,7 +22,7 @@ class TestOverpass(TestCase):
 
     def setUp(self,):
         self.url = settings.OVERPASS_API_URL
-        self.bbox = '6.25,-10.85,6.40,-10.62'  # monrovia
+        self.bbox = [-10.85, 6.25, -10.62, 6.4]  # [<long0>, <lat0>, <long1>, <lat1>]
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         Group.objects.create(name='TestDefaultExportExtentGroup')
@@ -42,7 +42,7 @@ class TestOverpass(TestCase):
         self.job.formats = self.formats
         self.job.save()
         self.osm = self.path + '/files/query.osm'
-        self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.40,-10.62);<;);out body;'
+        self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.4,-10.62);<;);out body;'
 
 #         parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
 #         self.assertIsNotNone(tags)
@@ -59,7 +59,6 @@ class TestOverpass(TestCase):
         overpass = Overpass(
             stage_dir=self.path + '/files/',
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters
         )
         q = overpass.get_query()
         self.assertEquals(q, self.query)
@@ -71,10 +70,11 @@ class TestOverpass(TestCase):
         verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
         export_task_instance = Mock(progress=0, estimated_finish=None)
         export_task.objects.get.return_value = export_task_instance
+        # Only important that it's not None
+        mock_export_task_instance_id = 1
         op = Overpass(
-            stage_dir=self.path + '/files/',
+            stage_dir=self.path + '/files/', task_uid=mock_export_task_instance_id,
             bbox=self.bbox, job_name='testjob',
-            filters=self.job.filters
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'
