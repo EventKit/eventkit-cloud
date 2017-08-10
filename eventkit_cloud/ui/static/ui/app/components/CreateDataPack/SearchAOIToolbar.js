@@ -1,22 +1,17 @@
 import React, {Component, PropTypes} from 'react';
-import {connect} from 'react-redux';
 import css from '../../styles/SearchAOIToolbar.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
-import {getGeocode} from '../../actions/searchToolbarActions';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
-import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../../actions/mapToolActions';
-
+import {getGeocode} from '../../actions/searchToolbarActions';
 import debounce from 'lodash/debounce';
 
 export class SearchAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
-
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
-
         this.state = {
             value: '',
             suggestions: [],
@@ -136,28 +131,4 @@ SearchAOIToolbar.propTypes = {
     setSearchAOIButtonSelected: PropTypes.func,
 }
 
-function mapStateToProps(state) {
-    return {
-        geocode: state.geocode,
-        toolbarIcons: state.toolbarIcons,
-    };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        getGeocode: (query) => {
-            dispatch(getGeocode(query));
-        },
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-        setSearchAOIButtonSelected: () => {
-            dispatch(setSearchAOIButtonSelected());
-        },
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SearchAOIToolbar);
+export default SearchAOIToolbar;

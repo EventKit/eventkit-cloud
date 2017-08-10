@@ -1,12 +1,8 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component, PropTypes} from 'react';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
-import {updateMode} from '../../actions/exportsActions.js';
-import {setBoxButtonSelected, setFreeButtonSelected, setMapViewButtonSelected, setImportButtonSelected, setImportModalState, setAllButtonsDefault} from '../../actions/mapToolActions';
-
 
 export class DrawAOIToolbar extends Component {
 
@@ -75,39 +71,17 @@ export class DrawAOIToolbar extends Component {
     }
 }
 
-function mapStateToProps(state) {
-    return {
-        toolbarIcons: state.toolbarIcons,
-    }
+DrawAOIToolbar.propTypes = {
+    toolbarIcons: PropTypes.object,
+    updateMode: PropTypes.func,
+    setMapView: PropTypes.func,
+    handleCancel: PropTypes.func,
+    setAllButtonsDefault: PropTypes.func,
+    setBoxButtonSelected: PropTypes.func,
+    setFreeButtonSelected: PropTypes.func,
+    setMapViewButtonSelected: PropTypes.func,
+    setImportButtonSelected: PropTypes.func,
+    setImportModalState: PropTypes.func,
 }
 
-function mapDispatchToProps(dispatch) {
-    return {
-        updateMode: (newMode) => {
-            dispatch(updateMode(newMode));
-        },
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-        setBoxButtonSelected: () => {
-            dispatch(setBoxButtonSelected());
-        },
-        setFreeButtonSelected: () => {
-            dispatch(setFreeButtonSelected());
-        },
-        setMapViewButtonSelected: () => {
-            dispatch(setMapViewButtonSelected());
-        },
-        setImportButtonSelected: () => {
-            dispatch(setImportButtonSelected());
-        },
-        setImportModalState: (visible) => {
-            dispatch(setImportModalState(visible));
-        }
-    };
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DrawAOIToolbar);
+export default DrawAOIToolbar;

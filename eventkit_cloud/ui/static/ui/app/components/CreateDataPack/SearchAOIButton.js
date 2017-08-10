@@ -18,7 +18,6 @@ export class SearchAOIButton extends Component {
 
     render() {
         const state = this.props.buttonState;
-        console.log(state);
         const styles = {
             buttonName: {
                 color: '#4498c0',

@@ -6,8 +6,6 @@ import {mount} from 'enzyme';
 describe('InvalidDrawWarning component', () => {
     let props = {
         show: false,
-        hideInvalidDrawWarning: () => {},
-        showInvalidDrawWarning: () => {}
     };
 
     it('should always have a div and a span element', () => {
