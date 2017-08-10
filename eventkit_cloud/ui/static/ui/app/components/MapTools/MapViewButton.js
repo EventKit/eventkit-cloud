@@ -44,17 +44,17 @@ export class MapViewButton extends Component {
             }
         }
 
-        const DEFAULT_ICON = <div>
+        const DEFAULT_ICON = <div id='default_icon'>
                 <ActionSettingsOverscan style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>CURRENT VIEW</div>
             </div>
                     
-        const INACTIVE_ICON = <div>
+        const INACTIVE_ICON = <div id='inactive_icon'>
                 <ActionSettingsOverscan style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={{...styles.buttonName, opacity: 0.4}}>CURRENT VIEW</div>
             </div>
 
-        const SELECTED_ICON =<div>
+        const SELECTED_ICON =<div id='selected_icon'>
                 <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>CURRENT VIEW</div>
             </div>

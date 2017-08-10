@@ -35,8 +35,8 @@ export class DrawAOIToolbar extends Component {
         }
         return (
             <div>
-                <div style={styles.container}>
-                    <div style={styles.title}><strong>TOOLS</strong></div>
+                <div id='container' style={styles.container}>
+                    <div id='title' style={styles.title}><strong>TOOLS</strong></div>
                     <DrawBoxButton 
                         handleCancel={(sender) => this.props.handleCancel(sender)}
                         buttonState={this.props.toolbarIcons.box}

@@ -1,4 +1,4 @@
-import {TypeaheadMenuItem} from '../../components/CreateDataPack/TypeaheadMenuItem';
+import {TypeaheadMenuItem} from '../../components/MapTools/TypeaheadMenuItem';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';

@@ -1,7 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {SearchAOIButton} from '../../components/CreateDataPack/SearchAOIButton';
+import {SearchAOIButton} from '../../components/MapTools/SearchAOIButton';
 import {fakeStore} from '../../__mocks__/fakeStore'
 import { Provider } from 'react-redux';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -12,7 +12,7 @@ describe('SearchAOIButton component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
-            toolbarIcons: {search: 'DEFAULT'},
+            buttonState: 'DEFAULT',
             handleCancel: () => {},
             setSearchAOIButtonSelected: () => {},
             setAllButtonsDefault: () => {},
@@ -24,12 +24,10 @@ describe('SearchAOIButton component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.buttonGeneral')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
-        expect(wrapper.find(ActionSearch).hasClass('defaultButton')).toEqual(true);
-        expect(wrapper.find('.buttonName')).toHaveLength(1);
-        expect(wrapper.find('.buttonName').text()).toEqual('SEARCH');
+        expect(wrapper.find('#default_icon')).toHaveLength(1);
+        expect(wrapper.find('#default_icon').text()).toEqual('SEARCH');
     });
 
     it('should render its inactive state', () => {
@@ -39,15 +37,12 @@ describe('SearchAOIButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let nextProps = getProps();
-        nextProps.toolbarIcons.search = 'INACTIVE';
+        nextProps.buttonState = 'INACTIVE';
         wrapper.setProps(nextProps);
-        expect(wrapper.find('.buttonGeneral')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
-        expect(wrapper.find(ActionSearch).hasClass('inactiveButton')).toEqual(true);
-        expect(wrapper.find('.buttonName')).toHaveLength(1);
-        expect(wrapper.find('.buttonName').text()).toEqual('SEARCH');
-        expect(wrapper.find('.buttonName').hasClass('buttonNameInactive')).toEqual(true);
+        expect(wrapper.find('#inactive_icon')).toHaveLength(1);
+        expect(wrapper.find('#inactive_icon').text()).toEqual('SEARCH');
     });
 
     it('should render its active state', () => {
@@ -57,14 +52,12 @@ describe('SearchAOIButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let nextProps = getProps();
-        nextProps.toolbarIcons.search = 'SELECTED';
+        nextProps.buttonState = 'SELECTED';
         wrapper.setProps(nextProps);
-        expect(wrapper.find('.buttonGeneral')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ContentClear)).toHaveLength(1);
-        expect(wrapper.find(ContentClear).hasClass('selectedButton')).toEqual(true);
-        expect(wrapper.find('.buttonName')).toHaveLength(1);
-        expect(wrapper.find('.buttonName').text()).toEqual('SEARCH');
+        expect(wrapper.find('#selected_icon')).toHaveLength(1);
+        expect(wrapper.find('#selected_icon').text()).toEqual('SEARCH');
     });
 
     it('should handle onClick', () => {
@@ -74,7 +67,7 @@ describe('SearchAOIButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let nextProps = getProps();
-        nextProps.toolbarIcons.search = 'SELECTED';
+        nextProps.buttonState = 'SELECTED';
         nextProps.handleCancel = sinon.spy();
         nextProps.setAllButtonsDefault = sinon.spy();
         wrapper.setProps(nextProps);
@@ -90,7 +83,7 @@ describe('SearchAOIButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let nextProps = getProps();
-        nextProps.toolbarIcons.search = 'INACTIVE';
+        nextProps.buttonState = 'INACTIVE';
         nextProps.handleCancel = sinon.spy();
         nextProps.setAllButtonsDefault = sinon.spy();
         wrapper.setProps(nextProps);

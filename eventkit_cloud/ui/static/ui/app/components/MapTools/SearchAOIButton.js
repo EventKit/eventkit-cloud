@@ -40,17 +40,17 @@ export class SearchAOIButton extends Component {
             }
 
         }
-        const DEFAULT_ICON = <div>
+        const DEFAULT_ICON = <div id='default_icon'>
                 <ActionSearch style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>SEARCH</div>
             </div>
                     
-        const INACTIVE_ICON = <div>
+        const INACTIVE_ICON = <div id='inactive_icon'>
                 <ActionSearch style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={{...styles.buttonName, opacity: 0.4}}>SEARCH</div>
             </div>
 
-        const SELECTED_ICON =<div>
+        const SELECTED_ICON =<div id='selected_icon'>
                 <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>SEARCH</div>
             </div>

@@ -1,10 +1,10 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {SearchAOIToolbar} from '../../components/CreateDataPack/SearchAOIToolbar';
-import {SearchAOIButton} from '../../components/CreateDataPack/SearchAOIButton';
+import {SearchAOIToolbar} from '../../components/MapTools/SearchAOIToolbar';
+import {SearchAOIButton} from '../../components/MapTools/SearchAOIButton';
 import {Typeahead, Menu} from 'react-bootstrap-typeahead';
-import {TypeaheadMenuItem} from '../../components/CreateDataPack/TypeaheadMenuItem';
+import {TypeaheadMenuItem} from '../../components/MapTools/TypeaheadMenuItem';
 import {fakeStore} from '../../__mocks__/fakeStore'
 import { Provider } from 'react-redux';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -35,11 +35,9 @@ describe('SearchAOIToolbar button', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.searchbarDiv')).toHaveLength(1);
         expect(wrapper.find(Typeahead)).toHaveLength(1);
         expect(wrapper.find(Menu)).toHaveLength(0);
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(0);
-        expect(wrapper.find('.searchAOIButtonContainer')).toHaveLength(1);
         expect(wrapper.find(SearchAOIButton)).toHaveLength(1);
     });
 

@@ -1,9 +1,8 @@
-
 import React, {Component, PropTypes} from 'react';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
+import ContentCreate from 'material-ui/svg-icons/content/create';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 
-export class DrawBoxButton extends Component {
+export class DrawFreeButton extends Component {
 
     constructor(props) {
         super(props);
@@ -14,11 +13,11 @@ export class DrawBoxButton extends Component {
         if(this.props.buttonState == 'SELECTED') {
             this.props.setAllButtonsDefault();
             this.props.handleCancel();
+
         }
         else if(this.props.buttonState == 'DEFAULT') {
-            this.props.setBoxButtonSelected();
-            this.props.updateMode('MODE_DRAW_BBOX')
-
+            this.props.setFreeButtonSelected();
+            this.props.updateMode('MODE_DRAW_FREE');
         }
     }
 
@@ -46,19 +45,19 @@ export class DrawBoxButton extends Component {
             }
         }
 
-        const DEFAULT_ICON = <div>
-                <ImageCropSquare style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>BOX</div>
+        const DEFAULT_ICON = <div id='default_icon'>
+                <ContentCreate style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={styles.buttonName}>DRAW</div>
             </div>
 
-        const INACTIVE_ICON = <div>
-                <ImageCropSquare style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={{...styles.buttonName, opacity: 0.4}}>BOX</div>
+        const INACTIVE_ICON = <div id='inactive_icon'>
+                <ContentCreate className={styles.inactiveButton}style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={{...styles.buttonName, opacity: 0.4}}>DRAW</div>
             </div>
 
-        const SELECTED_ICON = <div>
+        const SELECTED_ICON =<div id='selected_icon'>
                 <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>BOX</div>
+                <div style={styles.buttonName}>DRAW</div>
             </div>
 
         return (
@@ -66,16 +65,16 @@ export class DrawBoxButton extends Component {
                 {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )
-    };
+    }
 }
 
-DrawBoxButton.propTypes = {
+DrawFreeButton.propTypes = {
     buttonState: PropTypes.string,
     updateMode: PropTypes.func,
-    setBoxButtonSelected: PropTypes.func,
+    setFreeButtonSelected: PropTypes.func,
     setAllButtonsDefault: PropTypes.func,
     handleCancel: PropTypes.func
 }
 
-export default DrawBoxButton;
+export default DrawFreeButton;
 

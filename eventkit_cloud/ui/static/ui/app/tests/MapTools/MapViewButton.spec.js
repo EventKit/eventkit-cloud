@@ -1,87 +1,72 @@
-import {DrawFreeButton} from '../../components/CreateDataPack/DrawFreeButton';
+import {MapViewButton} from '../../components/MapTools/MapViewButton';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import ContentCreate from 'material-ui/svg-icons/content/create';
-import ContentClear from 'material-ui/svg-icons/content/clear';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import ActionSettingsOverscan from 'material-ui/svg-icons/action/settings-overscan';
+import ContentClear from 'material-ui/svg-icons/content/clear';
 
-describe('DrawFreeButton component', () => {
+describe('MapViewButton component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
-            toolbarIcons: {
-                box: 'DEFAULT',
-                free: 'DEFAULT',
-                mapView: 'DEFAULT',
-                import: 'DEFAULT',
-            },
-            mode: 'DRAW_NORMAL',
-            updateMode: () => {},
-            setFreeButtonSelected: () => {},
+            buttonState: 'DEFAULT',
+            setMapViewButtonSelected: () => {},
             setAllButtonsDefault: () => {},
             handleCancel: () => {},
+            setMapView: () => {},
         }
     }
     it('should display the default icon', () => {
         const props = getProps()
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
-        expect(wrapper.find(ContentCreate)).toHaveLength(1);
-        expect(wrapper.find(ContentCreate).hasClass('defaultButton')).toBe(true);
+        expect(wrapper.find(ActionSettingsOverscan)).toHaveLength(1);
+        expect(wrapper.find('#default_icon')).toHaveLength(1);
     });
 
     it('should display inactive icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        const newProps = {toolbarIcons: {free: 'INACTIVE'}}
+        const newProps = getProps();
+        newProps.buttonState = 'INACTIVE';
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).toHaveLength(1);
-        expect(wrapper.find('div')).toHaveLength(2);  
-        expect(wrapper.find(ContentCreate)).toHaveLength(1);
-        expect(wrapper.find(ContentCreate).hasClass('inactiveButton')).toBe(true);
+        expect(wrapper.find('div')).toHaveLength(2); 
+        expect(wrapper.find(ActionSettingsOverscan)).toHaveLength(1);
+        expect(wrapper.find('#inactive_icon')).toHaveLength(1);
     });
 
     it('should display selected icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        const newProps = {toolbarIcons: {free: 'SELECTED'}}
+        const newProps = getProps();
+        newProps.buttonState = 'SELECTED';
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ContentClear)).toHaveLength(1);
-        expect(wrapper.find(ContentClear).hasClass('selectedButton')).toBe(true);
-    });
-
-    it('should execute componentWillReceiveProps when new props are passed in', () => {
-        const props = getProps();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        const updateSpy = new sinon.spy(DrawFreeButton.prototype, 'componentWillReceiveProps');
-        wrapper.setProps(props);
-        expect(updateSpy.calledOnce).toEqual(true);
+        expect(wrapper.find('#selected_icon')).toHaveLength(1);
     });
 
     it('should handleOnClick when icon is in SELECTED state', () => {   
         const props = getProps();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let newProps = getProps();
-        newProps.toolbarIcons.free = 'SELECTED';
+        newProps.buttonState = 'SELECTED';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
         wrapper.setProps(newProps);
@@ -92,33 +77,33 @@ describe('DrawFreeButton component', () => {
 
     it('should handleOnClick when icon is in DEFAULT state', () => {
         let props = getProps();
-        props.setFreeButtonSelected = sinon.spy();
-        props.updateMode = sinon.spy();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        props.setMapViewButtonSelected = sinon.spy();
+        props.setMapView = sinon.spy();
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         wrapper.find('button').simulate('click');
-        expect(props.setFreeButtonSelected.calledOnce).toEqual(true);
-        expect(props.updateMode.calledOnce).toEqual(true);
+        expect(props.setMapViewButtonSelected.calledOnce).toEqual(true);
+        expect(props.setMapView.calledOnce).toEqual(true);
     });
 
     it('handleOnClick should do nothing when icon is in INACTIVE state', () => {
         const props = getProps();
-        const wrapper = mount(<DrawFreeButton {...props}/>, {
+        const wrapper = mount(<MapViewButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let newProps = getProps();
-        newProps.toolbarIcons.free = 'INACTIVE';
+        newProps.buttonState = 'INACTIVE';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
-        newProps.setFreeButtonSelected = sinon.spy();
-        newProps.updateMode = sinon.spy();
+        newProps.setMapViewButtonSelected = sinon.spy();
+        newProps.setMapView = sinon.spy();
         wrapper.setProps(newProps);
         expect(newProps.setAllButtonsDefault.calledOnce).toEqual(false);
         expect(newProps.handleCancel.calledOnce).toEqual(false);
-        expect(newProps.setFreeButtonSelected.calledOnce).toEqual(false);
-        expect(newProps.updateMode.calledOnce).toEqual(false);
+        expect(newProps.setMapViewButtonSelected.calledOnce).toEqual(false);
+        expect(newProps.setMapView.calledOnce).toEqual(false);
     });
 });

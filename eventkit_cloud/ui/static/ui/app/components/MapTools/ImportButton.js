@@ -45,17 +45,17 @@ export class ImportButton extends Component {
             }
         }
 
-        const DEFAULT_ICON = <div>
+        const DEFAULT_ICON = <div id='default_icon'>
                 <FileFileUpload style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>IMPORT</div>
             </div>
 
-        const INACTIVE_ICON = <div>
+        const INACTIVE_ICON = <div id='inactive_icon'>
                 <FileFileUpload style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={{...styles.buttonName, opacity: 0.4}}>IMPORT</div>
             </div>
 
-        const SELECTED_ICON =<div>
+        const SELECTED_ICON =<div id='selected_icon'>
                 <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
                 <div style={styles.buttonName}>IMPORT</div>
             </div>
