@@ -1,8 +1,4 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
-import styles from '../../styles/SearchAOIButton.css';
-import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../../actions/mapToolActions';
-import {updateMode} from '../../actions/exportsActions';
+import React, {Component, PropTypes} from 'react';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 
@@ -11,85 +7,68 @@ export class SearchAOIButton extends Component {
     constructor(props) {
         super(props) 
         this.handleOnClick = this.handleOnClick.bind(this);
-        this.state = {
-            icon: DEFAULT_ICON,
-        }
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if(nextProps.toolbarIcons.search != this.props.toolbarIcons.search) {
-            // If the button has been selected update the button state
-            if(nextProps.toolbarIcons.search == 'SELECTED') {
-                this.setState({icon: SELECTED_ICON});
-            }
-            // If the button has been de-selected update the button state
-            if(nextProps.toolbarIcons.search == 'DEFAULT') {
-                this.setState({icon: DEFAULT_ICON});
-            }
-            // If the button has been set as inactive update the state
-            if(nextProps.toolbarIcons.search == 'INACTIVE') {
-                this.setState({icon: INACTIVE_ICON});
-            }
-        }
     }
 
     handleOnClick() {
-        if(this.state.icon == SELECTED_ICON) {
+        if(this.props.buttonState == 'SELECTED') {
             this.props.handleCancel();            
             this.props.setAllButtonsDefault();
         }
     }
 
     render() {
+        const state = this.props.buttonState;
+        console.log(state);
+        const styles = {
+            buttonName: {
+                color: '#4498c0',
+                bottom: '0px',
+                fontSize: '.5em',
+                width: '50px',
+                height: '12px',
+            },
+            buttonGeneral: {
+                height: '50px',
+                width: '50px',
+                borderLeft: '1px solid #e6e6e6',
+                borderBottom: 'none',
+                borderTop: 'none',
+                borderRight: 'none',
+                margin: '0px',
+                padding: '0px',
+                backgroundColor: '#fff',
+                outline: 'none',
+            }
+
+        }
+        const DEFAULT_ICON = <div>
+                <ActionSearch style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={styles.buttonName}>SEARCH</div>
+            </div>
+                    
+        const INACTIVE_ICON = <div>
+                <ActionSearch style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={{...styles.buttonName, opacity: 0.4}}>SEARCH</div>
+            </div>
+
+        const SELECTED_ICON =<div>
+                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div style={styles.buttonName}>SEARCH</div>
+            </div>
+
         return(
-            <button className={styles.buttonGeneral} onClick={this.handleOnClick}>
-                {this.state.icon}
+            <button style={styles.buttonGeneral} onClick={this.handleOnClick}>
+                {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )
     }
 }
 
-const DEFAULT_ICON = <div>
-                        <ActionSearch className={styles.defaultButton}/>
-                        <div className={styles.buttonName}>SEARCH</div>
-                    </div>
-                    
-const INACTIVE_ICON = <div>
-                        <ActionSearch className={styles.inactiveButton}/>
-                        <div className={styles.buttonName + ' ' + styles.buttonNameInactive}>SEARCH</div>
-                    </div>
-
-const SELECTED_ICON =<div>
-                        <ContentClear className={styles.selectedButton}/>
-                        <div className={styles.buttonName}>SEARCH</div>
-                    </div>
-
 SearchAOIButton.propTypes = {
-    toolbarIcons: React.PropTypes.object,
+    buttonState: PropTypes.string,
     handleCancel: React.PropTypes.func,
-    setSearchAOIButtonSelected: React.PropTypes.func,
     setAllButtonsDefault: React.PropTypes.func,
-    
 }
 
-function mapStateToProps(state) {
-    return {
-        toolbarIcons: state.toolbarIcons,
-    };
-}
+export default SearchAOIButton;
 
-function mapDispatchToProps(dispatch) {
-    return {
-        setSearchAOIButtonSelected: () => {
-            dispatch(setSearchAOIButtonSelected());
-        },
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        }
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SearchAOIButton);

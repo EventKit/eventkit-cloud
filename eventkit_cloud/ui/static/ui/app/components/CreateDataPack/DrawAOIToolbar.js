@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
-import styles from '../../styles/DrawAOIToolbar.css';
 import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
@@ -20,10 +19,28 @@ export class DrawAOIToolbar extends Component {
     }
 
     render() {
+        const styles = {
+            container: {
+                zIndex: 1, 
+                position: 'absolute', 
+                width: '50px', 
+                height: '230px', 
+                top: '70px', 
+                right: '10px', 
+                backgroundColor: '#fff'
+            },
+            title: {
+                textAlign: 'center', 
+                height: '30px', 
+                width: '50px', 
+                fontSize: '.7em', 
+                lineHeight: '30px'
+            }
+        }
         return (
             <div>
-                <div className={styles.drawButtonsContainer}>
-                    <div className={styles.drawButtonsTitle}><strong>TOOLS</strong></div>
+                <div style={styles.container}>
+                    <div style={styles.title}><strong>TOOLS</strong></div>
                     <DrawBoxButton 
                         handleCancel={(sender) => this.props.handleCancel(sender)}
                         buttonState={this.props.toolbarIcons.box}
