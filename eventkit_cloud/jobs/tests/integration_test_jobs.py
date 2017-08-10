@@ -72,16 +72,6 @@ class TestJob(TestCase):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
 
-    def test_osm_geopackage(self):
-        """
-        This test is to ensure that an OSM file by itself only exporting GeoPackage returns data.
-        :return:
-        """
-        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestGPKG", "description": "Test Description",
-                    "event": "TestProject", "selection": self.selection, "tags": [],
-                    "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["gpkg"]}]}
-        self.assertTrue(self.run_job(job_data))
-
     def test_cancel_job(self):
         # update provider to ensure it runs long enough to cancel...
         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
@@ -129,9 +119,9 @@ class TestJob(TestCase):
                                              headers={'X-CSRFToken': self.csrftoken, 'Referer': self.create_export_url})
         self.assertTrue(delete_response)
 
-    def test_osm_geopackage_thematic(self):
+    def test_osm_geopackage(self):
         """
-        This test is to ensure that an OSM job will export a thematic GeoPackage.
+        This test is to ensure that an OSM job will export a GeoPackage.
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicGPKG",
@@ -150,9 +140,9 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["sqlite"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_osm_sqlite_thematic(self):
+    def test_osm_sqlite(self):
         """
-        This test is to ensure that an OSM job will export a thematic sqlite file.
+        This test is to ensure that an OSM job will export a sqlite file.
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSQLITE",
@@ -171,9 +161,9 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["shp"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_osm_shp_thematic(self):
+    def test_osm_shp(self):
         """
-        This test is to ensure that an OSM job will export a thematic shp.
+        This test is to ensure that an OSM job will export a shp.
         :returns:
         """
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestThematicSHP", "description": "Test Description",
@@ -191,7 +181,8 @@ class TestJob(TestCase):
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Generic)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
 
-    def test_osm_kml_thematic(self):
+
+    def test_osm_kml(self):
         """
         This test is to ensure that an OSM job will export a kml file.
         :returns:
@@ -200,6 +191,7 @@ class TestJob(TestCase):
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["kml"]}]}
         self.assertTrue(self.run_job(job_data))
+
 
     def test_wms_gpkg(self):
         """
