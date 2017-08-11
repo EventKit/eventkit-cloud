@@ -95,7 +95,8 @@ class GeocodeAdapter:
                 "geometry": None,
                 "properties": None
             }
-        if bbox:
+        if bbox and is_valid_bbox(bbox):
+            # testing
             feature['bbox'] = bbox
             feature['geometry'] = self.bbox2polygon(bbox)
         return self.map_properties(feature, properties=properties)
@@ -176,7 +177,7 @@ class Pelias(GeocodeAdapter):
     def create_geojson(self, response):
         features = []
         for feature in response.get('features'):
-            feature = self.get_feature(feature=feature)
+            feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
             features += [feature]
         return self.get_feature_collection(features=features)
 
