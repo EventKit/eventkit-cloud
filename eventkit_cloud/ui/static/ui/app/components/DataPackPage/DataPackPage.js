@@ -16,6 +16,8 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
+import {getGeocode} from '../../actions/searchToolbarActions';
+import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 
 export class DataPackPage extends React.Component {
 
@@ -119,6 +121,7 @@ export class DataPackPage extends React.Component {
         params += minDate;
         params += maxDate;
         params += this.state.search ? `&search_term=${this.state.search}` : '';
+        params += `&geojson_geometry=${JSON.stringify(GEOJSON)}`;
         return this.props.getRuns(params);
     }
 
@@ -224,6 +227,11 @@ export class DataPackPage extends React.Component {
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
+                    geocode={this.props.geocode}
+                    getGeocode={this.props.getGeocode}
+                    importGeom={this.props.importGeom}
+                    processGeoJSONFile={this.props.processGeoJSONFile}
+                    resetGeoJSONFile={this.props.resetGeoJSONFile}
                 />;
             default: return null;
         }
@@ -343,6 +351,11 @@ DataPackPage.propTypes = {
     deleteRuns: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
     drawerOpen: PropTypes.bool.isRequired,
+    importGeom: PropTypes.object.isRequired,
+    geocode: PropTypes.object.isRequired,
+    getGeocode: PropTypes.func.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
+    resetGeoJSONFile: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -351,6 +364,8 @@ function mapStateToProps(state) {
         user: state.user,
         runsDeletion: state.runsDeletion,
         drawerOpen: state.drawerOpen,
+        importGeom: state.importGeom,
+        geocode: state.geocode,
     };
 }
 
@@ -362,6 +377,15 @@ function mapDispatchToProps(dispatch) {
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
+        getGeocode: (query) => {
+            dispatch(getGeocode(query));
+        },
+        processGeoJSONFile: (file) => {
+            dispatch(processGeoJSONFile(file));
+        },
+        resetGeoJSONFile: (file) => {
+            dispatch(resetGeoJSONFile());
+        },
     }
 }
 
@@ -369,3 +393,36 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(DataPackPage);
+
+
+const GEOJSON = {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.46142578125,
+              51.80861475198521
+            ],
+            [
+              -3.5815429687499996,
+              49.89463439573421
+            ],
+            [
+              1.69189453125,
+              48.09275716032736
+            ],
+            [
+              4.306640625,
+              49.296471602658066
+            ],
+            [
+              2.13134765625,
+              51.37178037591737
+            ],
+            [
+              -0.46142578125,
+              51.80861475198521
+            ]
+          ]
+        ]
+      }

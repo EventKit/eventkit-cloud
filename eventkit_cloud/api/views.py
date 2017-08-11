@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.gis.geos import Polygon, GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User
 
@@ -620,6 +621,15 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
+        search_geojson = self.request.query_params.get('geojson_geometry', None)
+        if search_geojson is not None:
+            try:
+                geom = geojson_to_geos(search_geojson, 4326)
+                queryset = queryset.filter(job__the_geom__within=geom)
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
         search_bbox = self.request.query_params.get('bbox', None)
         if search_bbox is not None and len(search_bbox.split(',')) == 4:
             extents = search_bbox.split(',')
@@ -959,6 +969,30 @@ def get_user_details(request):
         'is_superuser': logged_in_user.is_superuser,
         'is_staff': logged_in_user.is_staff
     }
+
+def geojson_to_geos(geojson_geom, srid=None):
+    """
+    :param geojson_geom: A stringified geojson geometry
+    :param srid: The ESPG code of the input data
+    :return: A GEOSGeometry object
+    """
+    if not geojson_geom:
+        raise exceptions.ValidationError(
+            'No geojson geometry string supplied'
+        )
+    if not srid:
+        srid = 4326
+    try:
+        geom = GEOSGeometry(geojson_geom, srid=srid)
+    except GEOSException:
+        raise exceptions.ValidationError(
+            'Could not convert geojson geometry, check that your geometry is valid'
+        )
+    if not geom.valid:
+        raise exceptions.ValidationError(
+            'GEOSGeometry invalid, check that your geojson geometry is valid'
+        )
+    return geom
 
 
 class SwaggerSchemaView(views.APIView):

@@ -10,6 +10,10 @@ import {zoomToExtent} from '../../utils/mapUtils';
 import css from '../../styles/ol3map.css';
 import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
+import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
+import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
+import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
+import DropZone from '../MapTools/DropZone.js';
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -39,10 +43,25 @@ export class MapView extends Component {
         this.zoomToSelected = this.zoomToSelected.bind(this);
         this.animate = this.animate.bind(this);
         this.onMapClick = this.onMapClick.bind(this);
+        this.setAllButtonsDefault = this.setAllButtonsDefault.bind(this);
+        this.setButtonSelected = this.setButtonSelected.bind(this);
+        this.toggleImportModal = this.toggleImportModal.bind(this);
+        this.showInvalidDrawWarning = this.showInvalidDrawWarning.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
             showPopup: false,
+            toolbarIcons: {
+                box: "DEFAULT",
+                free: "DEFAULT",
+                mapView: "DEFAULT",
+                import: "DEFAULT",
+                search: "DEFAULT",
+            },
+            showImportModal: false,
+            showInvalidDrawWarning: false,
         }
     }
 
@@ -282,6 +301,79 @@ export class MapView extends Component {
         feature.getStyle().setZIndex(100);
     }
 
+    handleSearch(result) {
+        const formatted_bbox = result.bbox;
+        console.log(result);
+        // this._clearDraw();
+        // this.showInvalidDrawWarning(false);
+        // const bbox = formatted_bbox.map(truncate);
+        // const mercBbox = ol.proj.transformExtent(bbox, WGS84, WEB_MERCATOR);
+        // const geom = new ol.geom.Polygon.fromExtent(mercBbox);
+        // const geojson = createGeoJSON(geom);
+        // const bboxFeature = new ol.Feature({
+        //     geometry: geom
+        // });
+        // this._drawLayer.getSource().addFeature(bboxFeature);
+        // let description = '';
+        // description = description + (result.country ? result.country : '');
+        // description = description + (result.province ? ', ' + result.province : '');
+        // description = description + (result.region ? ', ' + result.region : '');
+
+
+        // this.props.updateAoiInfo(geojson, 'Polygon', result.name, description);
+        // this.props.setNextEnabled();
+        // this.handleZoomToSelection(bbox);
+    }
+
+    handleCancel(sender) {
+        // this.showInvalidDrawWarning(false);
+        // if(this.props.mode != MODE_NORMAL) {
+        //     this.props.updateMode(MODE_NORMAL);
+        // }
+        // this._clearDraw();
+        // this.props.clearAoiInfo();
+        // this.props.setNextDisabled();
+    }
+
+    setButtonSelected(iconName) {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            if (key == iconName) {
+                icons[key] = 'SELECTED';
+            }
+            else {
+                icons[key] = 'INACTIVE';
+            }
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    setAllButtonsDefault() {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            icons[key] = 'DEFAULT';
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    toggleImportModal(show) {
+        if (show != undefined) {
+            this.setState({showImportModal: show});
+        }
+        else {
+            this.setState({showImportModal: !this.state.showImportModal});
+        }
+    }
+
+    showInvalidDrawWarning(show) {
+        if (show != undefined) {
+            this.setState({showInvalidDrawWarning: show});
+        }
+        else {
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
+        }
+    }
+
     render() {
         const styles = {
             root: {
@@ -337,7 +429,40 @@ export class MapView extends Component {
                     {load}
                 </CustomScrollbar>
                 <div style={styles.map}>
-                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'/>
+                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
+                    <SearchAOIToolbar
+                        handleSearch={(result) => this.handleSearch(result)}
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        geocode={this.props.geocode}
+                        toolbarIcons={this.state.toolbarIcons}
+                        getGeocode={this.props.getGeocode}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                    />
+                    <DrawAOIToolbar
+                        toolbarIcons={this.state.toolbarIcons}
+                        updateMode={() => {}}
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        setMapView={this.setMapView}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setBoxButtonSelected={() => {this.setButtonSelected('box')}}
+                        setFreeButtonSelected={() => {this.setButtonSelected('free')}}
+                        setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
+                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setImportModalState={this.toggleImportModal}
+                    />
+                    <InvalidDrawWarning 
+                        show={this.state.showInvalidDrawWarning}
+                    />
+                    <DropZone
+                        importGeom={this.props.importGeom}
+                        showImportModal={this.state.showImportModal}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setImportModalState={this.toggleImportModal}
+                        processGeoJSONFile={this.props.processGeoJSONFile}
+                        resetGeoJSONFile={this.props.resetGeoJSONFile}
+                    />
+                    </div>
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}></a>
                         <div id="popup-content">
