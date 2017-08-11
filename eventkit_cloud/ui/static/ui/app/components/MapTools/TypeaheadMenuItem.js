@@ -22,15 +22,14 @@ export class TypeaheadMenuItem extends Component {
     }
 
     render() {
+        let icon = null;
+        if (this.props.result && this.props.result.geometry && this.props.result.geometry.type) {
+            icon = this.props.result.geometry.type == 'Point' ? <ActionRoom className={styles.menuItemIcon}/> : <ImageCropDin className={styles.menuItemIcon}/>;
+        }
         return (
             <MenuItem option={this.props.result} position={this.props.index} className={styles.menuItem}>
                 <div className={styles.menuItemIconDiv}>
-                    {this.props.result.bbox && !isEqual(this.props.result.bbox, [])
-                    ?
-                    <ImageCropDin className={styles.menuItemIcon}/>
-                    : 
-                    <ActionRoom className={styles.menuItemIcon}/>
-                    }
+                    {icon}
                 </div>
                 <div className={styles.menuItemText}><strong>{this.props.result.name}</strong></div>
                 <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>

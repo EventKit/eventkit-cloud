@@ -1,4 +1,3 @@
-import {Config} from '../config';
 import types from './actionTypes';
 import axios from 'axios'
 import cookie from 'react-cookie'
