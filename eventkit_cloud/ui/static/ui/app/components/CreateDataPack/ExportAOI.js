@@ -63,7 +63,13 @@ export class ExportAOI extends Component {
             this._updateInteractions(nextProps.mode);
         }
         if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
-            this.handleZoomToSelection(nextProps.aoiInfo.geojson.features[0].bbox);
+            const ol3GeoJSON = new ol.format.GeoJSON();
+            const geom = ol3GeoJSON.readGeometry(nextProps.aoiInfo.geojson.features[0].geometry, {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857'
+            });
+
+            this.handleZoomToSelection(geom);
         }
         // Check if the reset map button has been clicked
         if(this.props.resetMap.click != nextProps.resetMap.click) {
