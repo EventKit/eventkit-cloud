@@ -1,6 +1,6 @@
-import {DropZone} from '../../components/CreateDataPack/DropZone';
-import {DropZoneDialog} from '../../components/CreateDataPack/DropZoneDialog';
-import {DropZoneError} from '../../components/CreateDataPack/DropZoneError';
+import {DropZone} from '../../components/MapTools/DropZone';
+import {DropZoneDialog} from '../../components/MapTools/DropZoneDialog';
+import {DropZoneError} from '../../components/MapTools/DropZoneError';
 import React from 'react';
 import { Provider } from 'react-redux';
 import {mount} from 'enzyme';

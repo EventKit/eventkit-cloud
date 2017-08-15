@@ -1,22 +1,17 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
-import styles from '../../styles/SearchAOIToolbar.css';
+import React, {Component, PropTypes} from 'react';
+import css from '../../styles/SearchAOIToolbar.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
-import {getGeocode} from '../../actions/searchToolbarActions';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
-import {setSearchAOIButtonSelected, setAllButtonsDefault} from '../../actions/mapToolActions';
-
+import {getGeocode} from '../../actions/searchToolbarActions';
 import debounce from 'lodash/debounce';
 
 export class SearchAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
-
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
-
         this.state = {
             value: '',
             suggestions: [],
@@ -72,9 +67,28 @@ export class SearchAOIToolbar extends Component {
     }
 
     render() {
+        const styles = {
+            container: {
+                zIndex: 2, 
+                position: 'absolute', 
+                width: 'calc(100% - 60px)', 
+                minWidth: '320px', 
+                maxWidth: '700px', 
+                height: '50px', 
+                top: '1em', 
+                right: '10px', 
+                backgroundColor: '#fff'
+            },
+            buttonContainer: {
+                position: 'absolute', 
+                right: '0px', 
+                width: '50px', 
+                height: '50px'
+            }
+        }
         return (
-            <div className={styles.searchbarDiv}>
-                <div className={styles.typeahead}>
+            <div style={styles.container}>
+                <div className={css.typeahead}>
                     <Typeahead
                         ref="typeahead"
                         disabled={this.props.toolbarIcons.search == 'INACTIVE'}
@@ -98,8 +112,12 @@ export class SearchAOIToolbar extends Component {
                         }}
                     />
                 </div>
-                <div className={styles.searchAOIButtonContainer}>
-                    <SearchAOIButton handleCancel={this.props.handleCancel}/>
+                <div style={styles.buttonContainer}>
+                    <SearchAOIButton
+                        buttonState={this.props.toolbarIcons.search}
+                        handleCancel={this.props.handleCancel}
+                        setAllButtonsDefault={this.props.setAllButtonsDefault}
+                    />
                 </div>
             </div>
         )
@@ -107,38 +125,13 @@ export class SearchAOIToolbar extends Component {
 }
 
 SearchAOIToolbar.propTypes = {
-    toolbarIcons: React.PropTypes.object,
-    geocode: React.PropTypes.object,
-    getGeocode: React.PropTypes.func,
-    handleSearch: React.PropTypes.func,
-    handleCancel: React.PropTypes.func,
-    setAllButtonsDefault: React.PropTypes.func,
-    setSearchAOIButtonSelected: React.PropTypes.func,
+    toolbarIcons: PropTypes.object,
+    geocode: PropTypes.object,
+    getGeocode: PropTypes.func,
+    handleSearch: PropTypes.func,
+    handleCancel: PropTypes.func,
+    setAllButtonsDefault: PropTypes.func,
+    setSearchAOIButtonSelected: PropTypes.func,
 }
 
-function mapStateToProps(state) {
-    return {
-        geocode: state.geocode,
-        toolbarIcons: state.toolbarIcons,
-    };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        getGeocode: (query) => {
-            dispatch(getGeocode(query));
-        },
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-        setSearchAOIButtonSelected: () => {
-            dispatch(setSearchAOIButtonSelected());
-        },
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(SearchAOIToolbar);
-
+export default SearchAOIToolbar;
