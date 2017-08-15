@@ -114,6 +114,9 @@ class ExternalRasterServiceToGeopackage(object):
         mapproxy_config = load_default_config()
         load_config(mapproxy_config, config_dict=conf_dict)
 
+        #FOR TESTING ONLY!!
+        raise Exception("TEST!")
+
         # Create a configuration object
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 

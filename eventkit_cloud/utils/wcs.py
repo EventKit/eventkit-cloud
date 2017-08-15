@@ -68,6 +68,9 @@ class WCSConverter(object):
         if not os.path.exists(os.path.dirname(self.out)):
             os.makedirs(os.path.dirname(self.out), 6600)
 
+        # FOR TESTING ONLY!!
+        raise Exception("TEST!")
+
         try:
             # Isolate url params
             self.params = "&amp;" + self.service_url.split('?')[1].replace('&', '&amp;')

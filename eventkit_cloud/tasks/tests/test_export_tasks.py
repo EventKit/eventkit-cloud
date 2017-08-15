@@ -698,7 +698,7 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task_uids = [canceled_export_provider_task.uid, export_provider_task.uid]
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
-        clean_up_failure_task.run(export_provider_task_uids=export_provider_task_uids, run_uid=run_uid,
+        clean_up_failure_task.run(export_provider_task_uid=export_provider_task_uids, run_uid=run_uid,
                                   run_dir=run_dir, worker=worker_name)
         updated_task = ExportTask.objects.get(uid=task.uid)
         self.assertEqual(updated_task.status, TaskStates.CANCELED.value)

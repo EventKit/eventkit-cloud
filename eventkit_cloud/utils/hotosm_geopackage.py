@@ -280,6 +280,7 @@ class Geopackage(object):
         """
         Create the GeoPackage from the osm data.
         """
+
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")
             return

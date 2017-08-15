@@ -14,7 +14,8 @@ from eventkit_cloud.tasks.export_tasks import (
     wfs_export_task, 
     external_raster_service_export_task, 
     arcgis_feature_service_export_task, 
-    osm_data_collection_task)
+    osm_data_collection_task,
+    TaskStates)
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ class ExportOSMTaskRunner(TaskRunner):
         export_provider_task_record = ExportProviderTask.objects.create(run=run,
                                                                  name=provider_task.provider.name,
                                                                  slug=provider_task.provider.slug,
-                                                                 status="PENDING",
+                                                                 status=TaskStates.PENDING.value,
                                                                  display=True)
 
         for format, task in export_tasks.iteritems():
@@ -176,7 +177,7 @@ class ExportWFSTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             for task_type, task in export_tasks.iteritems():
@@ -273,7 +274,7 @@ class ExportWCSTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             export_tasks.pop('gpkg')
@@ -382,7 +383,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             for task_type, task in export_tasks.iteritems():
@@ -483,7 +484,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
 
@@ -530,11 +531,8 @@ def normalize_job_name(name):
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=None):
     try:
-        export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
-                                                name=task_name, worker=worker)
-        if display:
-            export_task.display = True
-            export_task.save()
+        export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
+                                                name=task_name, worker=worker, display=display)
         logger.debug('Saved task: {0}'.format(task_name))
     except DatabaseError as e:
         logger.error('Saving task {0} threw: {1}'.format(task_name, e))
