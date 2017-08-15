@@ -1,4 +1,4 @@
-import {DropZoneDialog} from '../../components/CreateDataPack/DropZoneDialog';
+import {DropZoneDialog} from '../../components/MapTools/DropZoneDialog';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';

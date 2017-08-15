@@ -1,7 +1,5 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component, PropTypes} from 'react';
 import styles from '../../styles/DropZone.css';
-import {setAllButtonsDefault, resetGeoJSONFile} from '../../actions/mapToolActions';
 import {PopupBox} from '../PopupBox';
 
 export class DropZoneError extends Component {
@@ -44,25 +42,10 @@ export class DropZoneError extends Component {
     }
 }
 
-function mapStateToProps(state) {
-    return {
-        importGeom: state.importGeom,
-    };
+DropZoneError.propTypes = {
+    importGeom: PropTypes.object,
+    setAllButtonsDefault: PropTypes.func,
+    resetGeoJSONFile: PropTypes.func,
 }
 
-
-function mapDispatchToProps(dispatch) {
-    return {
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-        resetGeoJSONFile: (file) => {
-            dispatch(resetGeoJSONFile());
-        },
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DropZoneError);
+export default DropZoneError;

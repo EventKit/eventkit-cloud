@@ -1,7 +1,5 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component, PropTypes} from 'react';
 import styles from '../../styles/DropZone.css';
-import {setImportButtonSelected, setAllButtonsDefault, setImportModalState, processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 import {PopupBox} from '../PopupBox.js';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
@@ -54,28 +52,11 @@ export class DropZoneDialog extends Component {
     }
 }
 
-function mapStateToProps(state) {
-    return {
-        showImportModal: state.showImportModal,
-    };
+DropZoneDialog.propTypes = {
+    showImportModal: PropTypes.bool,
+    setAllButtonsDefault: PropTypes.func,
+    setImportModalState: PropTypes.func,
+    processGeoJSONFile: PropTypes.func,
 }
 
-
-function mapDispatchToProps(dispatch) {
-    return {
-        setAllButtonsDefault: () => {
-            dispatch(setAllButtonsDefault());
-        },
-        setImportModalState: (visibility) => {
-            dispatch(setImportModalState(visibility));
-        },
-        processGeoJSONFile: (file) => {
-            dispatch(processGeoJSONFile(file));
-        },
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(DropZoneDialog);
+export default DropZoneDialog;

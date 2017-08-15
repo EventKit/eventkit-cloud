@@ -1,4 +1,4 @@
-import {InvalidDrawWarning} from '../../components/CreateDataPack/InvalidDrawWarning';
+import {InvalidDrawWarning} from '../../components/MapTools/InvalidDrawWarning';
 import React from 'react';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
@@ -6,8 +6,6 @@ import {mount} from 'enzyme';
 describe('InvalidDrawWarning component', () => {
     let props = {
         show: false,
-        hideInvalidDrawWarning: () => {},
-        showInvalidDrawWarning: () => {}
     };
 
     it('should always have a div and a span element', () => {

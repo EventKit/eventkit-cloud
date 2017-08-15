@@ -1,4 +1,4 @@
-import {DrawBoxButton} from '../../components/CreateDataPack/DrawBoxButton';
+import {DrawBoxButton} from '../../components/MapTools/DrawBoxButton';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
@@ -10,13 +10,7 @@ describe('DrawBoxButton component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
-            toolbarIcons: {
-                box: 'DEFAULT',
-                free: 'DEFAULT',
-                mapView: 'DEFAULT',
-                import: 'DEFAULT',
-            },
-            mode: 'DRAW_NORMAL',
+            buttonState: 'DEFAULT',
             updateMode: () => {},
             setBoxButtonSelected: () => {},
             setAllButtonsDefault: () => {},
@@ -32,7 +26,7 @@ describe('DrawBoxButton component', () => {
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ImageCropSquare)).toHaveLength(1);
-        expect(wrapper.find(ImageCropSquare).hasClass('defaultButton')).toBe(true);
+        expect(wrapper.find('#default_icon')).toHaveLength(1);
     });
 
     it('should display inactive icon based on updated props', () => {
@@ -41,12 +35,13 @@ describe('DrawBoxButton component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        const newProps = {toolbarIcons: {box: 'INACTIVE'}}
+        const newProps = getProps();
+        newProps.buttonState = 'INACTIVE';
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ImageCropSquare)).toHaveLength(1);
-        expect(wrapper.find(ImageCropSquare).hasClass('inactiveButton')).toBe(true);
+        expect(wrapper.find('#inactive_icon')).toHaveLength(1);
     });
 
     it('should display selected icon based on updated props', () => {
@@ -55,23 +50,13 @@ describe('DrawBoxButton component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        const newProps = {toolbarIcons: {box: 'SELECTED'}}
+        const newProps = getProps();
+        newProps.buttonState = 'SELECTED';
         wrapper.setProps(newProps);
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ContentClear)).toHaveLength(1);
-        expect(wrapper.find(ContentClear).hasClass('selectedButton'));
-    });
-
-    it('should execute componentWillReceiveProps when new props are passed in', () => {
-        const props = getProps();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        const updateSpy = new sinon.spy(DrawBoxButton.prototype, 'componentWillReceiveProps');
-        wrapper.setProps(props);
-        expect(updateSpy.calledOnce).toEqual(true);
+        expect(wrapper.find('#selected_icon')).toHaveLength(1);
     });
 
     it('should handleOnClick when icon is in SELECTED state', () => {   
@@ -81,7 +66,7 @@ describe('DrawBoxButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let newProps = getProps();
-        newProps.toolbarIcons.box = 'SELECTED';
+        newProps.buttonState = 'SELECTED';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
         wrapper.setProps(newProps);
@@ -110,7 +95,7 @@ describe('DrawBoxButton component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         let newProps = getProps();
-        newProps.toolbarIcons.box = 'INACTIVE';
+        newProps.buttonState = 'INACTIVE';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
         newProps.setBoxButtonSelected = sinon.spy();

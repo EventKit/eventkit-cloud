@@ -1,4 +1,4 @@
-import {DropZoneError} from '../../components/CreateDataPack/DropZoneError';
+import {DropZoneError} from '../../components/MapTools/DropZoneError';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';

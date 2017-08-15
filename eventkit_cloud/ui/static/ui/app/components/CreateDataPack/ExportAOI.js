@@ -1,16 +1,17 @@
 import 'openlayers/dist/ol.css';
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
 import css from '../../styles/ol3map.css';
 import {Toolbar, ToolbarGroup, ToolbarSeparator,ToolbarTitle} from 'material-ui/Toolbar';
 import AoiInfobar from './AoiInfobar.js';
-import SearchAOIToolbar from './SearchAOIToolbar.js';
-import DrawAOIToolbar from './DrawAOIToolbar.js';
-import InvalidDrawWarning from './InvalidDrawWarning.js';
-import DropZone from './DropZone.js';
+import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
+import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
+import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
+import DropZone from '../MapTools/DropZone.js';
 import {updateMode, updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled} from '../../actions/exportsActions.js';
-import {hideInvalidDrawWarning, showInvalidDrawWarning} from '../../actions/drawToolBarActions.js';
+import {getGeocode} from '../../actions/searchToolbarActions';
+import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import {zoomToExtent} from '../../utils/mapUtils';
@@ -26,6 +27,10 @@ export class ExportAOI extends Component {
 
     constructor(props) {
         super(props)
+        this.setButtonSelected = this.setButtonSelected.bind(this);
+        this.setAllButtonsDefault = this.setAllButtonsDefault.bind(this);
+        this.toggleImportModal = this.toggleImportModal.bind(this);
+        this.showInvalidDrawWarning = this.showInvalidDrawWarning.bind(this);
         this._handleDrawStart = this._handleDrawStart.bind(this);
         this._handleDrawEnd = this._handleDrawEnd.bind(this);
         this.handleCancel = this.handleCancel.bind(this);
@@ -34,6 +39,17 @@ export class ExportAOI extends Component {
         this.handleSearch = this.handleSearch.bind(this);
         this.setMapView = this.setMapView.bind(this);
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
+        this.state = {
+            toolbarIcons: {
+                box: "DEFAULT",
+                free: "DEFAULT",
+                mapView: "DEFAULT",
+                import: "DEFAULT",
+                search: "DEFAULT",
+            },
+            showImportModal: false,
+            showInvalidDrawWarning: false,
+        }
     }
 
     componentDidMount() {
@@ -80,8 +96,47 @@ export class ExportAOI extends Component {
         }
     }
 
+    setButtonSelected(iconName) {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            if (key == iconName) {
+                icons[key] = 'SELECTED';
+            }
+            else {
+                icons[key] = 'INACTIVE';
+            }
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    setAllButtonsDefault() {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            icons[key] = 'DEFAULT';
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    toggleImportModal(show) {
+        if (show != undefined) {
+            this.setState({showImportModal: show});
+        }
+        else {
+            this.setState({showImportModal: !this.state.showImportModal});
+        }
+    }
+
+    showInvalidDrawWarning(show) {
+        if (show != undefined) {
+            this.setState({showInvalidDrawWarning: show});
+        }
+        else {
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
+        }
+    }
+
     handleCancel(sender) {
-        this.props.hideInvalidDrawWarning();
+        this.showInvalidDrawWarning(false);
         if(this.props.mode != MODE_NORMAL) {
             this.props.updateMode(MODE_NORMAL);
         }
@@ -107,7 +162,7 @@ export class ExportAOI extends Component {
 
     handleSearch(result) {
         this._clearDraw();
-        this.props.hideInvalidDrawWarning();
+        this.showInvalidDrawWarning(false);
 
         const feature = (new ol.format.GeoJSON()).readFeature(result);
         feature.getGeometry().transform(WGS84, WEB_MERCATOR);
@@ -195,7 +250,7 @@ export class ExportAOI extends Component {
                     this.props.setNextEnabled();
                 }
                 else {
-                    this.props.showInvalidDrawWarning();
+                    this.showInvalidDrawWarning(true);
                 }
             }
             else if (this.props.mode == MODE_DRAW_BBOX) {
@@ -296,11 +351,36 @@ export class ExportAOI extends Component {
                     <AoiInfobar />
                     <SearchAOIToolbar
                         handleSearch={(result) => this.handleSearch(result)}
-                        handleCancel={(sender) => this.handleCancel(sender)}/>
-                    <DrawAOIToolbar handleCancel={(sender) => this.handleCancel(sender)}
-                                    setMapView={this.setMapView}/>
-                    <InvalidDrawWarning />
-                    <DropZone/>
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        geocode={this.props.geocode}
+                        toolbarIcons={this.state.toolbarIcons}
+                        getGeocode={this.props.getGeocode}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                    />
+                    <DrawAOIToolbar
+                        toolbarIcons={this.state.toolbarIcons}
+                        updateMode={this.props.updateMode}
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        setMapView={this.setMapView}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setBoxButtonSelected={() => {this.setButtonSelected('box')}}
+                        setFreeButtonSelected={() => {this.setButtonSelected('free')}}
+                        setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
+                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setImportModalState={this.toggleImportModal}
+                    />
+                    <InvalidDrawWarning 
+                        show={this.state.showInvalidDrawWarning}
+                    />
+                    <DropZone
+                        importGeom={this.props.importGeom}
+                        showImportModal={this.state.showImportModal}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setImportModalState={this.toggleImportModal}
+                        processGeoJSONFile={this.props.processGeoJSONFile}
+                        resetGeoJSONFile={this.props.resetGeoJSONFile}
+                    />
                 </div>
             </div>
         );
@@ -322,19 +402,21 @@ export class ExportAOI extends Component {
 }
 
 ExportAOI.propTypes = {
-    aoiInfo: React.PropTypes.object,
-    mode: React.PropTypes.string,
-    zoomToSelection: React.PropTypes.object,
-    resetMap: React.PropTypes.object,
-    importGeom: React.PropTypes.object,
-    drawerOpen: React.PropTypes.bool,
-    updateMode: React.PropTypes.func,
-    hideInvalidDrawWarning: React.PropTypes.func,
-    showInvalidDrawWarning: React.PropTypes.func,
-    updateAoiInfo: React.PropTypes.func,
-    clearAoiInfo: React.PropTypes.func,
-    setNextDisabled: React.PropTypes.func,
-    setNextEnabled: React.PropTypes.func
+    aoiInfo: PropTypes.object,
+    mode: PropTypes.string,
+    zoomToSelection: PropTypes.object,
+    resetMap: PropTypes.object,
+    importGeom: PropTypes.object,
+    drawerOpen: PropTypes.bool,
+    geocode: PropTypes.object,
+    updateMode: PropTypes.func,
+    updateAoiInfo: PropTypes.func,
+    clearAoiInfo: PropTypes.func,
+    setNextDisabled: PropTypes.func,
+    setNextEnabled: PropTypes.func,
+    getGeocode: PropTypes.func,
+    processGeoJSONFile: PropTypes.func,
+    resetGeoJSONFile: PropTypes.func,
 }
 
 
@@ -346,6 +428,7 @@ function mapStateToProps(state) {
         resetMap: state.resetMap,
         importGeom: state.importGeom,
         drawerOpen: state.drawerOpen,
+        geocode: state.geocode,
     };
 }
 
@@ -353,12 +436,6 @@ function mapDispatchToProps(dispatch) {
     return {
         updateMode: (newMode) => {
             dispatch(updateMode(newMode));
-        },
-        hideInvalidDrawWarning: () => {
-            dispatch(hideInvalidDrawWarning());
-        },
-        showInvalidDrawWarning: () => {
-            dispatch(showInvalidDrawWarning());
         },
         updateAoiInfo: (geojson, geomType, title, description) => {
             dispatch(updateAoiInfo(geojson, geomType, title, description));
@@ -371,6 +448,15 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
+        },
+        getGeocode: (query) => {
+            dispatch(getGeocode(query));
+        },
+        processGeoJSONFile: (file) => {
+            dispatch(processGeoJSONFile(file));
+        },
+        resetGeoJSONFile: (file) => {
+            dispatch(resetGeoJSONFile());
         },
     }
 }
