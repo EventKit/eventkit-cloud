@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
                                     slug='shp')
         ExportFormat.objects.create(name='KML Format', description='Google Earth KMZ', slug='kml')
         ExportFormat.objects.create(name='SQLITE Format', description='SQlite SQL', slug='sqlite')
+        ExportFormat.objects.create(name='GeoTIFF Format', description="GeoTIFF Raster", slug='gtiff')
 
     dependencies = [
         ('jobs', '0001_initial'),

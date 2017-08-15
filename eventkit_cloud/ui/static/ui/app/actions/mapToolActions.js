@@ -3,37 +3,6 @@ import ol from 'openlayers';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import { convertGeoJSONtoJSTS } from '../utils/mapUtils'
 
-export function setBoxButtonSelected() {
-    return {type: types.SET_BOX_SELECTED}
-}
-
-export function setFreeButtonSelected() {
-    return {type: types.SET_FREE_SELECTED}
-}
-
-export function setMapViewButtonSelected() {
-    return {type: types.SET_VIEW_SELECTED}
-}
-
-export function setImportButtonSelected() {
-    return {type: types.SET_IMPORT_SELECTED}
-}
-
-export function setSearchAOIButtonSelected() {
-    return {type: types.SET_SEARCH_SELECTED}
-}
-
-export function setAllButtonsDefault() {
-    return {type: types.SET_BUTTONS_DEFAULT}
-}
-
-export function setImportModalState(visibility) {
-    return {
-        type: types.SET_IMPORT_MODAL_STATE,
-        showImportModal: visibility,
-    }
-}
-
 export function resetGeoJSONFile() {
     return {
         type: types.FILE_RESET
@@ -67,7 +36,6 @@ export const processGeoJSONFile = file => dispatch => {
             });
         }
         try {
-
             //Because the UI doesn't support multiple features combine all polygons into one feature.
             var multipolygon = convertGeoJSONtoJSTS(geojson);
 
