@@ -20,7 +20,7 @@ from eventkit_cloud.jobs.models import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -608,7 +608,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance.soft_delete(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def list(self, request, *args, **kwargs):
+    @list_route(methods=['post'])
+    def filter(self, request, *args, **kwargs):
         """
         List the ExportRuns for a single Job.
 
@@ -621,7 +622,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
-        search_geojson = self.request.query_params.get('geojson_geometry', None)
+        search_geojson = self.request.data.get('geojson', None)
         if search_geojson is not None:
             try:
                 geom = geojson_to_geos(search_geojson, 4326)

@@ -9,7 +9,6 @@ export default {
         title: null,
         description: null,
     },
-    mode: 'DRAW_NORMAL',
     zoomToSelection: {
         click: false
     },
