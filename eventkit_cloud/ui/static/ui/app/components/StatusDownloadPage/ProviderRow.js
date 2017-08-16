@@ -280,12 +280,9 @@ export class ProviderRow extends React.Component {
     };
 
     handleProviderOpen(runProviders) {
-
         let propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
-        let providerDesc = propsProvider.service_description.toString();
-        this.setState({providerDesc})
-        this.setState({providerDialogOpen: true});
-
+        let providerDesc = propsProvider.service_description;
+        this.setState({providerDesc, providerDialogOpen: true});
     };
 
     getDialogWidth() {

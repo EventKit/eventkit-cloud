@@ -27,6 +27,7 @@ describe('DataCartDetails component', () => {
     const getProps = () => {
         return  {
             cartDetails: {...run},
+            providers: providers,
             maxResetExpirationDays: '30',
             onUpdateExpiration: () => {},
             onUpdatePermission: () => {},
@@ -50,7 +51,7 @@ describe('DataCartDetails component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(Dialog)).toHaveLength(4);
+        expect(wrapper.find(Dialog)).toHaveLength(6);
         let table = wrapper.find('table').at(0);
         expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
         expect(table.find('tr').first().find('td').last().text()).toEqual('test');
@@ -115,6 +116,27 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr')).toHaveLength(4);
         expect(table.find('tr').at(3).find('td').first().text()).toEqual('Finished');
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
+    });
+
+    it('getDialogWidth should return the percentage string for dialog width based on window width', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        expect(wrapper.instance().getDialogWidth()).toEqual('70%');
+
+        window.resizeTo(800, 900);
+        expect(window.innerWidth).toEqual(800);
+        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
+
+        window.resizeTo(1000, 600);
+        expect(window.innerWidth).toEqual(1000);
+        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
+
+        window.resizeTo(1200, 600);
+        expect(window.innerWidth).toEqual(1200);
+        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
     });
 
     it('should handle setting state of datacartDetails when component updates', () => {
@@ -289,6 +311,21 @@ describe('DataCartDetails component', () => {
         stateSpy.restore();
     });
 
+    it('handleProviderOpen should set provider dialog to open', () => {
+        const props = getProps();
+        props.providers = providers;
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProviderOpen(run.provider_tasks[0]);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerName: "OpenStreetMap Data (Themes)", providerDialogOpen: true})).toBe(true);
+        expect(wrapper.find('span')).toHaveLength(1)
+        expect(wrapper.find('p')).toHaveLength(2);
+        expect(wrapper.find('p').at(1).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        stateSpy.restore();
+    });
+
     it('handleRerunClose should set the rerun dialog to closed', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
@@ -319,6 +356,16 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleDeleteClose();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({deleteDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+    it('handleProviderClose should set the provider dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProviderClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -390,6 +437,7 @@ describe('DataCartDetails component', () => {
 const providerArray = [
     {
         "display": true,
+        "slug": "osm",
         "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
         "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
         "name": "OpenStreetMap Data (Themes)",
@@ -526,6 +574,7 @@ const run = {
     "provider_tasks": [
         {
             "display": true,
+            "slug": "osm",
             "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "name": "OpenStreetMap Data (Themes)",
@@ -609,3 +658,26 @@ const run = {
     "zipfile_url": null,
     "expiration": "2017-08-01T00:00:00Z"
 }
+const providers = [
+    {
+        "id": 2,
+        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+        "type": "osm",
+        "license": null,
+        "created_at": "2017-08-15T19:25:10.844911Z",
+        "updated_at": "2017-08-15T19:25:10.844919Z",
+        "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+        "name": "OpenStreetMap Data (Themes)",
+        "slug": "osm",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+        "layer": null,
+        "level_from": 0,
+        "level_to": 10,
+        "zip": false,
+        "display": true,
+        "export_provider_type": 2
+    },
+]
+

@@ -35,8 +35,7 @@ export class DataPackListItem extends Component {
             let a = this.props.providers.find(x => x.slug === runProvider.slug)
             providerDesc[a.name] = a.service_description;
         })
-        this.setState({providerDescs:providerDesc})
-        this.setState({providerDialogOpen: true});
+        this.setState({providerDescs:providerDesc, providerDialogOpen: true});
 
     };
 

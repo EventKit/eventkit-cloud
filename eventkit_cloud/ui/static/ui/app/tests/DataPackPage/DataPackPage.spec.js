@@ -26,6 +26,28 @@ import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return {
             runsList: {
@@ -39,12 +61,14 @@ describe('DataPackPage component', () => {
             user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
             deleteRuns: () => {},
+            getProviders: () => {},
             runsDeletion: {
                 deleting: false,
                 deleted: false,
                 error: null
             },
             drawerOpen: true,
+            providers: providers,
         }
     };
 

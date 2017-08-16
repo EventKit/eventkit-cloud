@@ -1,7 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import {Link} from 'react-router';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
-import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
@@ -93,8 +92,7 @@ export class DataPackGridItem extends Component {
             let a = this.props.providers.find(x => x.slug === runProvider.slug)
             providerDesc[a.name] = a.service_description;
         })
-        this.setState({providerDescs:providerDesc})
-        this.setState({providerDialogOpen: true});
+        this.setState({providerDescs:providerDesc, providerDialogOpen: true});
 
     };
     toggleExpanded() {

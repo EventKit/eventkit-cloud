@@ -152,15 +152,13 @@ export class DataCartDetails extends React.Component {
 
     handleProviderClose = () => {
         this.setState({providerDialogOpen: false});
-
     };
 
     handleProviderOpen(runProviders) {
         let propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
         let providerDesc = propsProvider.service_description.toString();
         let providerName = propsProvider.name.toString();
-        this.setState({providerDesc, providerName})
-        this.setState({providerDialogOpen: true});
+        this.setState({providerDesc, providerName, providerDialogOpen: true})
     };
 
     handleDelete = () => {
