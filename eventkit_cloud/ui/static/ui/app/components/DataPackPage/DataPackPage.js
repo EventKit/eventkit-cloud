@@ -5,10 +5,10 @@ import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
-import RaisedButton from 'material-ui/RaisedButton';
 import Drawer from 'material-ui/Drawer';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
+import MapView from './MapView';
 import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
 import DataPackViewButtons from './DataPackViewButtons';
@@ -17,9 +17,6 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import CustomScrollbar from '../CustomScrollbar';
-import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 
 export class DataPackPage extends React.Component {
 
@@ -32,10 +29,11 @@ export class DataPackPage extends React.Component {
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
-        this.toggleView = this.toggleView.bind(this);
+        this.changeView = this.changeView.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
+        this.getView = this.getView.bind(this);
         this.state = {
             open: window.innerWidth < 1200 ? false: true,
             search: '',
@@ -47,7 +45,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
-            grid: true,
+            view: 'map',
             pageLoading: true,
             order: '-started_at',
             ownerFilter: '',
@@ -160,15 +158,15 @@ export class DataPackPage extends React.Component {
         this.forceUpdate();
     }
 
-    toggleView() {
+    changeView(view) {
         if (['started_at', '-started_at', 'job__name', '-job__name'].indexOf(this.state.order) < 0) {
             this.setState({order: '-started_at', loading: true}, () => {
                 let promise = this.makeRunRequest();
-                promise.then(() => this.setState({grid: !this.state.grid}));
+                promise.then(() => this.setState({view: view}));
             });
         }
         else {
-            this.setState({grid: !this.state.grid,});
+            this.setState({view: view});
         }
     }
 
@@ -194,9 +192,52 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    render() { 
+    getView(view) {
+        switch(view) {
+            case 'list':
+                return <DataPackList
+                    runs={this.props.runsList.runs}
+                    user={this.props.user}
+                    onRunDelete={this.props.deleteRuns}
+                    onSort={this.handleSortChange}
+                    order={this.state.order}
+                    range={this.props.runsList.range}
+                    handleLoadLess={this.loadLess}
+                    handleLoadMore={this.loadMore}
+                    loadLessDisabled={this.props.runsList.runs.length <= 12}
+                    loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
+                />;
+            case 'grid':
+                return <DataPackGrid
+                    runs={this.props.runsList.runs}
+                    user={this.props.user}
+                    onRunDelete={this.props.deleteRuns}
+                    range={this.props.runsList.range}
+                    handleLoadLess={this.loadLess}
+                    handleLoadMore={this.loadMore}
+                    loadLessDisabled={this.props.runsList.runs.length <= 12}
+                    loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
+                />
+            case 'map':
+                return <MapView
+                    runs={this.props.runsList.runs}
+                    user={this.props.user}
+                    onRunDelete={this.props.deleteRuns}
+                    range={this.props.runsList.range}
+                    handleLoadLess={this.loadLess}
+                    handleLoadMore={this.loadMore}
+                    loadLessDisabled={this.props.runsList.runs.length <= 12}
+                    loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
+                />;
+            default: return null;
+        }
+    }
+
+    render() {
         const pageTitle = "DataPack Library"
-        const range = this.props.runsList.range ? this.props.runsList.range.split('/') : null;
         const styles = {
             wholeDiv: {
                 height: window.innerHeight - 236,
@@ -229,14 +270,6 @@ export class DataPackPage extends React.Component {
             backgroundStyle: {
                 backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')'
             },
-            loadMore: {
-                color: this.props.runsList.nextPage ? '#4598bf': 'grey', 
-                cursor: this.props.runsList.nextPage ? 'pointer' : 'initial'
-            },
-            loadLess: {
-                color: this.props.runsList.runs.length > 12 ? '#4598bf': 'grey',
-                cursor: this.props.runsList.runs.length > 12 ? 'pointer': 'initial'
-            },
             range: window.innerWidth < 768 ?
                 {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
                 :
@@ -265,12 +298,12 @@ export class DataPackPage extends React.Component {
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
                         <DataPackFilterButton handleToggle={this.handleToggle} />
-                        {(!this.state.grid) && window.innerWidth >= 768 ? 
+                        {this.state.view == 'list' && window.innerWidth >= 768 ?
                             null
                             : 
                             <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
                         }
-                        <DataPackViewButtons handleGridSelect={this.toggleView} handleListSelect={this.toggleView} />
+                        <DataPackViewButtons handleViewChange={this.changeView}/>
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>
@@ -300,52 +333,7 @@ export class DataPackPage extends React.Component {
                                 </div>
                             </div>
                             : null}
-                        <CustomScrollbar style={{height: styles.wholeDiv.height, width: '100%'}}>
-                            
-                            {this.state.grid ?
-                                <DataPackGrid 
-                                    runs={this.props.runsList.runs} 
-                                    user={this.props.user} 
-                                    onRunDelete={this.props.deleteRuns}
-                                    providers={this.props.providers}
-                                />
-                            :
-                                <DataPackList
-                                    runs={this.props.runsList.runs}
-                                    user={this.props.user}
-                                    onRunDelete={this.props.deleteRuns}
-                                    onSort={this.handleSortChange}
-                                    order={this.state.order}
-                                    providers={this.props.providers}
-                                />
-                            }
-                            <div style={{textAlign: 'center', paddingBottom: '10px', margin: '0px 10px', position: 'relative', height: '46px'}}>
-                                <div style={{display: 'inline-block'}}>
-                                    <RaisedButton 
-                                        backgroundColor={'#e5e5e5'}
-                                        labelColor={'#4498c0'}
-                                        label={'Show Less'}
-                                        disabled={this.props.runsList.runs.length <= 12}
-                                        onClick={this.loadLess}
-                                        icon={<KeyboardArrowUp/>}
-                                        style={{minWidth: '145px', marginRight: '2.5px'}}
-                                    />
-                                    
-                                    <RaisedButton 
-                                        backgroundColor={'#e5e5e5'}
-                                        labelColor={'#4498c0'}
-                                        label={'Show More'}
-                                        disabled={!this.props.runsList.nextPage}
-                                        onClick={this.loadMore}
-                                        icon={<KeyboardArrowDown/>}
-                                        style={{minWidth: '145px', marginLeft: '2.5px'}}
-                                    />
-                                </div>
-                                <div id='range' style={styles.range}>
-                                    {range ? `${range[0]} of ${range[1]}` : ''}
-                                </div>
-                            </div>
-                        </CustomScrollbar>
+                            {this.getView(this.state.view)}
                         </div>
                     }
                 </div>

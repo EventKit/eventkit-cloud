@@ -5,6 +5,7 @@ import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
+import LoadButtons from './LoadButtons';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackList extends Component {
@@ -64,91 +65,107 @@ export class DataPackList extends Component {
             permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
             ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
         };
+
+        const load = <LoadButtons
+                range={this.props.range}
+                handleLoadLess={this.props.handleLoadLess}
+                handleLoadMore={this.props.handleLoadMore}
+                loadLessDisabled={this.props.loadLessDisabled}
+                loadMoreDisabled={this.props.loadMoreDisabled}
+            />
+
         if(window.innerWidth < 768) {
             return (
-                <div style={styles.root}>
-                    <GridList
-                        cellHeight={'auto'}
-                        cols={1}
-                        padding={0}
-                        style={{width: window.innerWidth - 10, minWidth: '360px'}}
-                    >   
-                    {this.props.runs.map((run) => (
-                        <DataPackListItem 
-                            run={run} 
-                            user={this.props.user} 
-                            key={run.uid}
-                            onRunDelete={this.props.onRunDelete}
-                            providers={this.props.providers}/>
-                    ))}
-                    </GridList>
-                </div>
+                <CustomScrollbar style={{height: window.innerHeight - 236, width: '100%'}}>
+                    <div style={styles.root}>
+                        <GridList
+                            cellHeight={'auto'}
+                            cols={1}
+                            padding={0}
+                            style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                        >
+                        {this.props.runs.map((run) => (
+                            <DataPackListItem
+                                run={run}
+                                user={this.props.user}
+                                key={run.uid}
+                                onRunDelete={this.props.onRunDelete}
+                                providers={this.props.providers}/>
+                        ))}
+                        </GridList>
+                    </div>
+                    {load}
+                </CustomScrollbar>
             )
         }
         else {
             return (
-                <div style={styles.root}>
-                    <Table >
-                        <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
-                            <TableRow style={styles.tableRow}>
-                                <TableHeaderColumn 
-                                    style={styles.nameColumn}>
-                                    <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
-                                        {this.getIcon('-job__name')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={styles.eventColumn}>
-                                    <div onClick={() => {this.handleOrder('job__event')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
-                                        {this.getIcon('-job__event')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={styles.dateColumn}>
-                                    <div onClick={() => {this.handleOrder('started_at')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
-                                        {this.getIcon('started_at')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={styles.statusColumn}>
-                                    <div onClick={() => {this.handleOrder('status')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'status'))}>Status</span>
-                                        {this.getIcon('-status')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={styles.permissionsColumn}>
-                                    <div onClick={() => {this.handleOrder('job__published')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__published'))}>Permissions</span>
-                                        {this.getIcon('-job__published')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={styles.ownerColumn}>
-                                    <div onClick={() => {this.handleOrder('user__username')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'user__username'))}>Owner</span>
-                                        {this.getIcon('-user__username')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
-                            </TableRow>
-                        </TableHeader>
-                    </Table>
-                    <CustomScrollbar style={{height: window.innerHeight - 343}}>
-                        <Table>
-                            <TableBody displayRowCheckbox={false}>
-                                
-                                {this.props.runs.map((run) => (
-                                    <DataPackTableItem 
-                                        run={run} 
-                                        user={this.props.user} 
-                                        key={run.uid}
-                                        onRunDelete={this.props.onRunDelete}
-                                        providers={this.props.providers}
-                                    />
-                                ))}
-                                
-                            </TableBody>          
+                <div>
+                    <div style={styles.root}>
+                        <Table >
+                            <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
+                                <TableRow style={styles.tableRow}>
+                                    <TableHeaderColumn
+                                        style={styles.nameColumn}>
+                                        <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
+                                            {this.getIcon('-job__name')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={styles.eventColumn}>
+                                        <div onClick={() => {this.handleOrder('job__event')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
+                                            {this.getIcon('-job__event')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={styles.dateColumn}>
+                                        <div onClick={() => {this.handleOrder('started_at')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
+                                            {this.getIcon('started_at')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={styles.statusColumn}>
+                                        <div onClick={() => {this.handleOrder('status')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'status'))}>Status</span>
+                                            {this.getIcon('-status')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={styles.permissionsColumn}>
+                                        <div onClick={() => {this.handleOrder('job__published')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__published'))}>Permissions</span>
+                                            {this.getIcon('-job__published')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={styles.ownerColumn}>
+                                        <div onClick={() => {this.handleOrder('user__username')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'user__username'))}>Owner</span>
+                                            {this.getIcon('-user__username')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
+                                </TableRow>
+                            </TableHeader>
                         </Table>
-                    </CustomScrollbar>
+                        <CustomScrollbar style={{height: window.innerHeight - 343}}>
+                            <Table>
+                                <TableBody displayRowCheckbox={false}>
+
+                                    {this.props.runs.map((run) => (
+                                        <DataPackTableItem
+                                            run={run}
+                                            user={this.props.user}
+                                            key={run.uid}
+                                            onRunDelete={this.props.onRunDelete}
+                                            providers={this.props.providers}
+                                        />
+                                    ))}
+
+                                </TableBody>
+                            </Table>
+                        </CustomScrollbar>
+
+                    </div>
+                    {load}
                 </div>
             )
         }
@@ -162,7 +179,12 @@ DataPackList.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
     order: PropTypes.string.isRequired,
-    providers: PropTypes.array.isRequired
+    providers: PropTypes.array.isRequired,
+    range: PropTypes.string.isRequired,
+    handleLoadLess: PropTypes.func.isRequired,
+    handleLoadMore: PropTypes.func.isRequired,
+    loadLessDisabled: PropTypes.bool.isRequired,
+    loadMoreDisabled: PropTypes.bool.isRequired
 };
 
 export default DataPackList;

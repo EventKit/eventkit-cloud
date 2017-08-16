@@ -88,6 +88,10 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_class = JobFilter
     search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
 
+
+    def dispatch(self, request, *args, **kwargs):
+        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
+
     def get_queryset(self):
         """Return all objects user can view."""
         return Job.objects.filter(Q(user=self.request.user) | Q(published=True))
@@ -546,6 +550,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     
     * `search_term`: A value to search the job name, description and event text for.
     
+    * `bbox`: Bounding box in the form of `xmin,ymin,xmax,ymax`. 
+    
     * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
         * Order can be reversed by adding `-` to the front of the order parameter.
         
@@ -613,6 +619,26 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         * Returns: the serialized run data.
         """
         queryset = self.filter_queryset(self.get_queryset())
+
+        search_bbox = self.request.query_params.get('bbox', None)
+        if search_bbox is not None and len(search_bbox.split(',')) == 4:
+            extents = search_bbox.split(',')
+            data = {
+                'xmin': extents[0],
+                'ymin': extents[1],
+                'xmax': extents[2],
+                'ymax': extents[3]
+            }
+
+            try:
+                bbox_extents = validate_bbox_params(data)
+                bbox = validate_search_bbox(bbox_extents)
+                queryset = queryset.filter(job__the_geom__within=bbox)
+
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
 
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
