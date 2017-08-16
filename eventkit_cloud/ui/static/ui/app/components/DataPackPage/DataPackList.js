@@ -78,7 +78,8 @@ export class DataPackList extends Component {
                             run={run} 
                             user={this.props.user} 
                             key={run.uid}
-                            onRunDelete={this.props.onRunDelete}/>
+                            onRunDelete={this.props.onRunDelete}
+                            providers={this.props.providers}/>
                     ))}
                     </GridList>
                 </div>
@@ -141,6 +142,7 @@ export class DataPackList extends Component {
                                         user={this.props.user} 
                                         key={run.uid}
                                         onRunDelete={this.props.onRunDelete}
+                                        providers={this.props.providers}
                                     />
                                 ))}
                                 
@@ -160,6 +162,7 @@ DataPackList.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
     order: PropTypes.string.isRequired,
+    providers: PropTypes.array.isRequired
 };
 
 export default DataPackList;

@@ -30,8 +30,8 @@ export class DataCartDetails extends React.Component {
             deleteDialogOpen: false,
             rerunDialogOpen: false,
             cloneDialogOpen: false,
+            providerDesc: '',
             providerDialogOpen: false,
-            providerDesc: 'initial state',
         };
     }
 
@@ -48,11 +48,7 @@ export class DataCartDetails extends React.Component {
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
         }
-        if(nextProps.getProviderDesc.desc != this.state.providerDesc) {
 
-         return this.setState({providerDesc: nextProps.getProviderDesc.desc});
-
-        }
     }
 
     componentDidMount(){
@@ -156,10 +152,14 @@ export class DataCartDetails extends React.Component {
 
     handleProviderClose = () => {
         this.setState({providerDialogOpen: false});
+
     };
 
-    handleProviderOpen(slug) {
-        this.props.onGetProviderDesc(slug)
+    handleProviderOpen(runProviders) {
+        let propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
+        let providerDesc = propsProvider.service_description.toString();
+        let providerName = propsProvider.name.toString();
+        this.setState({providerDesc, providerName})
         this.setState({providerDialogOpen: true});
     };
 
@@ -205,10 +205,19 @@ export class DataCartDetails extends React.Component {
     handleExpirationChange = (e, date) => {
         this.setState({expirationDate: date});
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
+    };
+
+    getDialogWidth() {
+        if(window.innerWidth <= 767) {
+            return '70%';
+        }
+        else {
+            return '40%';
+        }
     }
 
-
     render() {
+        const dialogWidth = this.getDialogWidth();
         const providers = this.props.cartDetails.provider_tasks.filter((provider) => {
             return provider.display != false;
         });
@@ -365,7 +374,8 @@ export class DataCartDetails extends React.Component {
 
                 <div style={{paddingBottom:'10px'}}>
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
-                                     onProviderCancel={this.props.onProviderCancel}/>
+                                     onProviderCancel={this.props.onProviderCancel}
+                                     providers={this.props.providers}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                     <div style={styles.subHeading}>
@@ -383,7 +393,7 @@ export class DataCartDetails extends React.Component {
                             label="RUN EXPORT AGAIN"
                         />
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:dialogWidth}}
                             actions={rerunExportActions}
                             modal={false}
                             open={this.state.rerunDialogOpen}
@@ -401,7 +411,7 @@ export class DataCartDetails extends React.Component {
                             label="CLONE"
                         />
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:dialogWidth}}
                             actions={cloneExportActions}
                             modal={false}
                             open={this.state.cloneDialogOpen}
@@ -420,7 +430,7 @@ export class DataCartDetails extends React.Component {
                         />
 
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:dialogWidth}}
                             actions={deleteActions}
                             modal={false}
                             open={this.state.deleteDialogOpen}
@@ -450,15 +460,16 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Layer Data</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
-                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider.slug)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                         <Dialog
-                                            contentStyle={{width:'30%'}}
+                                            contentStyle={{width:dialogWidth}}
                                             actions={providerInfoActions}
                                             modal={false}
                                             open={this.state.providerDialogOpen}
                                             onRequestClose={this.handleProviderClose.bind(this)}
                                         >
-                                            <strong>{this.state.providerDesc}</strong>
+                                            <span><strong>{this.state.providerName}</strong>
+                                               <p style={{paddingTop:'20px'}}>{this.state.providerDesc}</p></span>
                                         </Dialog></p>
                                 })}
                             </td>
@@ -527,7 +538,7 @@ DataCartDetails.propTypes = {
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
-    onGetProviderDesc: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 export default DataCartDetails;

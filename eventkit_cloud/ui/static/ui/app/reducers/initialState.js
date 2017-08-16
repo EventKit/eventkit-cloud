@@ -108,11 +108,5 @@ export default {
         updating: false,
         updated: false,
         error: null,
-    },
-    getProviderDesc: {
-        fetching: false,
-        fetched: false,
-        desc: '',
-        error: null,
-    },
+    }
 }

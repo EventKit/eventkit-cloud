@@ -52,7 +52,8 @@ export class DataPackGrid extends Component {
                             run={run} 
                             user={this.props.user} 
                             key={run.uid}
-                            onRunDelete={this.props.onRunDelete}/>
+                            onRunDelete={this.props.onRunDelete}
+                            providers={this.props.providers}/>
                     ))}
                 </GridList>
             </div>
@@ -64,6 +65,7 @@ DataPackGrid.propTypes = {
     runs: PropTypes.array.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired,
 };
 
 export default DataPackGrid;

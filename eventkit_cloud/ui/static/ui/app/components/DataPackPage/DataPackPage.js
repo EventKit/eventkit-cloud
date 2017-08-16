@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
+import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
@@ -71,6 +72,9 @@ export class DataPackPage extends React.Component {
                 this.setState({loading: true}, this.makeRunRequest);
             }
         }
+    }
+    componentDidMount() {
+        this.props.getProviders();
     }
 
     componentWillMount() {
@@ -303,6 +307,7 @@ export class DataPackPage extends React.Component {
                                     runs={this.props.runsList.runs} 
                                     user={this.props.user} 
                                     onRunDelete={this.props.deleteRuns}
+                                    providers={this.props.providers}
                                 />
                             :
                                 <DataPackList
@@ -311,6 +316,7 @@ export class DataPackPage extends React.Component {
                                     onRunDelete={this.props.deleteRuns}
                                     onSort={this.handleSortChange}
                                     order={this.state.order}
+                                    providers={this.props.providers}
                                 />
                             }
                             <div style={{textAlign: 'center', paddingBottom: '10px', margin: '0px 10px', position: 'relative', height: '46px'}}>
@@ -354,6 +360,7 @@ DataPackPage.propTypes = {
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
     drawerOpen: PropTypes.bool.isRequired,
 };
@@ -364,6 +371,7 @@ function mapStateToProps(state) {
         user: state.user,
         runsDeletion: state.runsDeletion,
         drawerOpen: state.drawerOpen,
+        providers: state.providers
     };
 }
 
@@ -374,6 +382,9 @@ function mapDispatchToProps(dispatch) {
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
+        },
+        getProviders: () => {
+            dispatch(getProviders())
         },
     }
 }

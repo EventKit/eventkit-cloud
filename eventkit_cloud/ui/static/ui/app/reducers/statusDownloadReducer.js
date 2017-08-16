@@ -87,15 +87,3 @@ export function updatePermissionReducer(state = initialState.updatePermission, a
             return state;
     }
 }
-export function getProviderDescReducer(state = initialState.getProviderDesc, action) {
-    switch(action.type) {
-        case types.GETTING_PROVIDER_DESC:
-            return {fetching: true, fetched: false, desc: '', error: null};
-        case types.PROVIDER_DESC_RECEIVED:
-            return {fetching: false, fetched: true, desc: action.desc, error: null};
-        case types.PROVIDER_DESC_ERROR:
-            return {fetching: false, fetched: false, desc: '', error: action.error};
-        default:
-            return state;
-    }
-}

@@ -12,13 +12,73 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import RaisedButton from 'material-ui/RaisedButton';
+import Dialog from 'material-ui/Dialog';
+import { List, ListItem} from 'material-ui/List'
 
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            providerDescs: {},
+            providerDialogOpen: false,
+        };
     }
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+
+    };
+
+    handleProviderOpen(runProviders) {
+        let providerDesc = {};
+        runProviders.forEach((runProvider) => {
+            let a = this.props.providers.find(x => x.slug === runProvider.slug)
+            providerDesc[a.name] = a.service_description;
+        })
+        this.setState({providerDescs:providerDesc})
+        this.setState({providerDialogOpen: true});
+
+    };
 
     render() {
+
+        const runProviders = this.props.run.provider_tasks.filter((provider) => {
+            return provider.display != false;
+        });
+
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value])=>{
+            return (
+                <ListItem
+                    key={key}
+                    style={{backgroundColor:'whitesmoke', fontWeight:'bold'}}
+                    nestedListStyle={{padding: '0px'}}
+                    primaryText={key}
+                    initiallyOpen={false}
+                    primaryTogglesNestedList={false}
+                    nestedItems={[
+                        <ListItem
+                            key={1}
+                            primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
+                            style={{backgroundColor: 'whitesmoke', fontSize: '14px'}}
+                        />
+                    ]}
+                />
+
+            );
+        })
+
+        const providerInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProviderClose.bind(this)}
+            />,
+        ];
+
         const width = window.innerWidth;
         const titleFontSize = width < 576 ? '19px' : '23px';
         const subtitleFontSize = width < 576 ? '10px': '14px';
@@ -74,8 +134,13 @@ export class DataPackListItem extends Component {
                             >
                                 <MenuItem 
                                     style={{fontSize: subtitleFontSize}}
-                                    primaryText="Go to Export Detail"
+                                    primaryText="Go to Status & Download"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
+                                <MenuItem
+                                    style={{fontSize: subtitleFontSize}}
+                                    primaryText="View Provider Data"
+                                    onClick={this.handleProviderOpen.bind(this, runProviders)}
+                                />
                                
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
@@ -84,6 +149,15 @@ export class DataPackListItem extends Component {
                                     onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
                             </IconMenu>
+                            <Dialog
+                                contentStyle={{width:'70%'}}
+                                actions={providerInfoActions}
+                                modal={false}
+                                open={this.state.providerDialogOpen}
+                                onRequestClose={this.handleProviderClose.bind(this)}
+                            >
+                                <span><strong>PROVIDER DATA</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
+                            </Dialog>
                         </div>
                     } 
                     subtitle={
@@ -124,7 +198,8 @@ export class DataPackListItem extends Component {
 DataPackListItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired
+    onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 };
 
 export default DataPackListItem;
