@@ -10,7 +10,19 @@ Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/) o
 A setup guide for running docker in vagrant can be found in the [windows setup guide](windows.md).
 
 ### Installation 
-Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc. 
+_Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc._
+
+There are several options that are optional, however prior to using the EventKit docker setup, two variables need to be set
+in the environment running docker, `SITE_NAME` and `SITE_IP`.
+
+Typically `SITE_NAME` is set to 'cloud.eventkit.dev' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
+then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
+This is typically done by using `export SITE_NAME=cloud.eventkit.dev` on mac/linux or `setx SITE_NAME cloud.eventkit.dev`. 
+Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
+
+
+
+_Note: if running the docker setup with an IP set other than 127.0.0.1, then the application will be made available to other computer that can access the host machine at the `SITE_IP` address._
 
 After installing docker open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
@@ -24,20 +36,15 @@ On windows:
 <code> echo "127.0.0.1  cloud.eventkit.dev" > "C:\Windows\System32\drivers\etc\hosts"</code>
 Then open a browser and navigate to http://cloud.eventkit.dev
 
+Linux users have indicated issues with the docker setup.  That is because it mounts directories in the containers, and on linux the container user and host user permissions are mapped. To solve this problem run:
+<pre>groupadd -g 880 eventkit
+useradd -u 8800 -g 880 eventkit</pre>
+Then give ownership of the repo to that user and group, _being careful_ not to change permissions in a way that your current user (i.e. `whoami`) will no longer have access to the files.
+Ownership is typically given with
+<code> chown eventkit:eventkit -R <repo_path></code>
+
 ### Settings
 The following are a few of the relevant environment variables that can be used to adjust how eventkit_cloud is configured.
-
-#### Site Name
-
-You can set the hostname that the web server will respond and properly authenticate using `SITE_NAME`.
-
-*Please make sure you have SITE_NAME environment variable set to `cloud.eventkit.dev` 
-in your shell or when you invoke `docker-compose up`.  If you are experiencing 302s or 403s when you attempt
-login this is likely the culprit*
-
-```
-SITE_NAME='cloud.eventkit.dev'
-```
 
 #### S3 Storage
 If you want your export files to be stored on S3 rather than locally add:
@@ -66,6 +73,11 @@ EMAIL_HOST_PASSWORD='email-password'</pre>
 #### Overpass API
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
+
+#### Geocoder
+By default EventKit will use geonames.org. However it also supports pelias. If wishing to change the geocoder add:
+<pre>GEOCODING_API_URL = 'http://my-pelias.com/api/v1'</pre>
+<pre>GEOCODING_API_TYPE = 'pelias'</pre>
 
 ### Tests
 To run tests:
