@@ -228,14 +228,6 @@ describe('mapUtils', () => {
         expect(extentSpy.notCalled).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith([-1,1,-1,1], [500,500]))
-        
-
-
-        // const div = document.createElement('div');
-        // const a = document.createElement('a');
-        // stub.withArgs('popup').returns(div);
-        // stub.withArgs('popup-closer').returns(a);
-
     });
 
     it('generateDrawBoxInteraction should setup a new interaction', () => {
