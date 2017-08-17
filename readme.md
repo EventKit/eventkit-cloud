@@ -12,12 +12,12 @@ A setup guide for running docker in vagrant can be found in the [windows setup g
 ### Installation 
 _Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc._
 
-There are several options that are optional, however prior to using the EventKit docker setup, two variables need to be set
+There are several options that may be set, however prior to using the EventKit docker setup, two variables must be set
 in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
 Typically `SITE_NAME` is set to 'cloud.eventkit.dev' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-This is typically done by using `export SITE_NAME=cloud.eventkit.dev` on mac/linux or `setx SITE_NAME cloud.eventkit.dev`. 
+This is usually done by using `export SITE_NAME=cloud.eventkit.dev` on mac/linux or `setx SITE_NAME cloud.eventkit.dev`. 
 Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
 
 
