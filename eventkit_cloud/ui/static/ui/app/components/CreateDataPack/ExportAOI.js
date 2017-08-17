@@ -91,7 +91,6 @@ export class ExportAOI extends Component {
 
     setButtonSelected(iconName) {
         const icons = {...this.state.toolbarIcons};
-        console.log('setting ', iconName, ' selected');
         Object.keys(icons).forEach((key) => {
             if (key == iconName) {
                 icons[key] = 'SELECTED';

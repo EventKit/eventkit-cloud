@@ -34,7 +34,6 @@ export class DrawAOIToolbar extends Component {
                 lineHeight: '30px'
             }
         }
-        // this.props.containerStyle ? styles.container = {...styles.container, ...this.props.containerStyle} : 
         return (
             <div>
                 <div id='container' style={styles.container}>
