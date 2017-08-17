@@ -72,7 +72,7 @@ export class SearchAOIToolbar extends Component {
                 zIndex: 2, 
                 position: 'absolute', 
                 width: 'calc(100% - 60px)', 
-                minWidth: '320px', 
+                minWidth: '300px', 
                 maxWidth: '700px', 
                 height: '50px', 
                 top: '1em', 

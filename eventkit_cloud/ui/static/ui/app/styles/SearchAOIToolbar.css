@@ -2,7 +2,7 @@
     left: 0px;
     top: 0px;
     height: 50px;
-    width: calc(100% - 70px);
+    width: calc(100% - 50px);
     position: absolute;
 }
 
@@ -24,7 +24,6 @@
     box-shadow: none;
     color: #707274;
     background-color: #fff !important;
-    padding-left: 25px;
 }
 
 .typeahead > div > div > input:focus {
