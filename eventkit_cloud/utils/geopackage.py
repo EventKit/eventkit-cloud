@@ -66,7 +66,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
             layer_name: A DB table.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully uploaded.
         """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
@@ -99,20 +99,23 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
 
 
 def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
-    """Uses an ogr2ogr script to upload a geojson file.
+    """Uses an ogr2ogr and/or gdalwarp script to clip a geopackage.
         Args:
-            geojson: A geojson string.
-            gpkg: Database dict from the django settings.
-            layer_name: A DB table.
+            geojson_file: A geojson file to serve as a cutline.
+            gpkg: Geopackage to clip.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully clipped.
         """
 
     if not geojson_file or not gpkg:
         raise Exception("A geojson_file: {0} \nor a geopackage: {1} was not accessible.".format(geojson_file, gpkg))
 
-    cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
+    # set cmd to gdalwarp if tiled gpkg, otherwise ogr2ogr
+    if get_tile_table_names(gpkg):
+        cmd = Template("gdalwarp -cutline $geojson_file -crop_to_cutline -dstalpha $in_gpkg $out_gpkg")
+    else:
+        cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
 
     in_gpkg = os.path.join(os.path.dirname(gpkg), "old_{0}".format(os.path.basename(gpkg)))
     os.rename(gpkg, in_gpkg)
@@ -121,13 +124,13 @@ def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
                                       'in_gpkg': in_gpkg,
                                       'out_gpkg': gpkg})
 
-    logger.error(append_cmd)
+    logger.info(append_cmd)
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if task_process.exitcode != 0:
         logger.error('{0}'.format(task_process.stderr))
-        raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+        raise Exception("{} process failed with returncode: {0}".format(append_cmd.split()[0], task_process.exitcode))
     return gpkg
 
 

@@ -62,6 +62,15 @@
 			"type_name": "arcgis-feature",
 			"supported_formats": []
 		}
+	},
+	{
+		"model" : "jobs.exportprovidertype",
+		"pk" : 8,
+		"fields" : {
+			"created_at" : "2016-10-19T18:01:26.116Z",
+			"updated_at" : "2016-10-19T18:01:26.116Z",
+			"type_name" : "wcs",
+			"supported_formats" : []
+		}
 	}
-
 ]

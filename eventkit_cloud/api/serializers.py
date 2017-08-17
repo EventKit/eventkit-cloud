@@ -91,9 +91,6 @@ class ExportTaskSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
     result = serializers.SerializerMethodField()
     errors = serializers.SerializerMethodField()
-    started_at = serializers.SerializerMethodField()
-    finished_at = serializers.SerializerMethodField()
-    duration = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         view_name='api:tasks-detail',
         lookup_field='uid'
@@ -123,30 +120,6 @@ class ExportTaskSerializer(serializers.ModelSerializer):
         except ExportTaskException.DoesNotExist:
             return None
 
-    @staticmethod
-    def get_started_at(obj):
-        if not obj.started_at:
-            return None  # not started yet
-        else:
-            return obj.started_at
-
-    @staticmethod
-    def get_finished_at(obj):
-        if not obj.finished_at:
-            return None  # not finished yet
-        else:
-            return obj.finished_at
-
-    @staticmethod
-    def get_duration(obj):
-        """Get the duration for this ExportTask."""
-        started = obj.started_at
-        finished = obj.finished_at
-        if started and finished:
-            return str(finished - started)
-        else:
-            return None  # can't compute yet
-
 
 class ExportProviderTaskSerializer(serializers.ModelSerializer):
     tasks = ExportTaskSerializer(many=True, required=False)
@@ -157,7 +130,7 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProviderTask
-        fields = ('uid', 'url', 'name', 'tasks', 'status', 'display')
+        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display')
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -177,6 +150,7 @@ class SimpleJobSerializer(serializers.Serializer):
     extent = serializers.SerializerMethodField()
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
+    featured = serializers.BooleanField()
 
     @staticmethod
     def get_uid(obj):
@@ -214,8 +188,6 @@ class ExportRunSerializer(serializers.ModelSerializer):
     )
     job = SimpleJobSerializer()  # nest the job details
     provider_tasks = ExportProviderTaskSerializer(many=True)
-    finished_at = serializers.SerializerMethodField()
-    duration = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
     expiration = serializers.SerializerMethodField
@@ -223,26 +195,10 @@ class ExportRunSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportRun
         fields = (
-            'uid', 'url', 'started_at', 'finished_at', 'duration', 'user',
+            'uid', 'url', 'created_at', 'updated_at', 'started_at', 'finished_at', 'duration', 'user',
             'status', 'job', 'provider_tasks', 'zipfile_url', 'expiration', 'deleted'
         )
-
-    @staticmethod
-    def get_finished_at(obj):
-        if not obj.finished_at:
-            return ""
-        else:
-            return obj.finished_at
-
-    @staticmethod
-    def get_duration(obj):
-        """Return the duration of the the run."""
-        started = obj.started_at
-        finished = obj.finished_at
-        if started and finished:
-            return str(finished - started)
-        else:
-            return None
+        read_only_fields = ('created_at', 'updated_at')
 
     @staticmethod
     def get_user(obj):
@@ -459,6 +415,8 @@ class ListJobSerializer(serializers.Serializer):
     extent = serializers.SerializerMethodField()
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
+    featured  = serializers.BooleanField()
+
 
     @staticmethod
     def get_uid(obj):
@@ -551,12 +509,12 @@ class JobSerializer(serializers.Serializer):
         required=False
     )
     created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
-    feature_save = serializers.BooleanField(required=False)
-    feature_pub = serializers.BooleanField(required=False)
+    featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(

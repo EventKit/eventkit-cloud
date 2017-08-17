@@ -37,8 +37,8 @@ class TaskProcess(object):
         # We need to close the existing connection because the logger could be using a forked process which,
         # will be invalid and throw an error.
         connection.close()
-        export_task = ExportTask.objects.get(uid=self.task_uid)
-        if export_task.status == TaskStates.CANCELED.value:
+        export_task = ExportTask.objects.filter(uid=self.task_uid).first()
+        if export_task and export_task.status == TaskStates.CANCELED.value:
             from ..tasks.exceptions import CancelException
             raise CancelException(task_name=export_task.export_provider_task.name,
                                   user_name=export_task.cancel_user.username)

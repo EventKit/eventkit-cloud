@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 4.7625044 4.7625082"
+   height="4.7625079mm"
+   width="4.7625046mm">
+  <defs
+     id="defs2">
+    <pattern
+       id="EMFhbasepattern"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <pattern
+       id="EMFhbasepattern-8"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <pattern
+       id="EMFhbasepattern-1"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-117.92466,-32.333682)"
+     id="layer1">
+    <g
+       transform="matrix(0.26458333,0,0,0.26458333,120.36632,-201.93337)"
+       id="g5354">
+      <rect
+         style="opacity:0.3;fill:none;stroke:none"
+         id="rect7026"
+         width="18"
+         height="18"
+         x="0"
+         y="866.36218" />
+      <g
+         transform="translate(-93.625326,53.056688)"
+         id="g5663">
+        <rect
+           style="fill:none;stroke:none"
+           id="rect4844"
+           width="18"
+           height="18"
+           x="102"
+           y="812.36218" />
+        <g
+           id="g1542"
+           transform="matrix(3.7795276,0,0,3.7795276,-44.602973,372.84246)">
+          <g
+             id="g7467"
+             transform="matrix(0.26458333,0,0,0.26458333,24.606248,-145.74375)">
+            <g
+               style="opacity:0.3;fill:#ffffff;stroke:#ffffff;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+               id="g8592"
+               transform="translate(-307,-162)">
+              <path
+                 style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#ffffff;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker:none;enable-background:accumulate"
+                 d="m 346,1176.3622 c -0.40011,0 -1,0.5998 -1,1 v 7 c 0,0.4001 0.59989,1 1,1 3.75926,0 1,0 12,0 0.40011,0 1,-0.5999 1,-1 v -7 c 0,-0.4002 -0.59989,-1 -1,-1 z m 0,2 h 12 v 2 h -12 z m 0,4 h 3 v 2 h -3 z m 7,1 h 5 v 1 h -5 z"
+                 id="path8594" />
+            </g>
+            <g
+               style="fill:#000000"
+               transform="translate(-307,-162)"
+               id="g21558">
+              <path
+                 id="rect10401-9"
+                 d="m 346,1176.3622 c -0.40011,0 -1,0.5998 -1,1 v 7 c 0,0.4001 0.59989,1 1,1 3.75926,0 1,0 12,0 0.40011,0 1,-0.5999 1,-1 v -7 c 0,-0.4002 -0.59989,-1 -1,-1 z m 0,2 h 12 v 2 h -12 z m 0,4 h 3 v 2 h -3 z m 7,1 h 5 v 1 h -5 z"
+                 style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" />
+            </g>
+          </g>
+          <rect
+             y="121.58124"
+             x="34.131241"
+             height="4.7625079"
+             width="4.7625046"
+             id="rect22423"
+             style="color:#000000;display:inline;overflow:visible;visibility:visible;opacity:0.5;fill:none;stroke:none;stroke-width:0.52916664;marker:none;enable-background:accumulate" />
+        </g>
+      </g>
+      <g
+         transform="translate(-97.123436,36.007642)"
+         id="g5667" />
+    </g>
+  </g>
+</svg>

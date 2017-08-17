@@ -1,8 +1,11 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime,timedelta
+from dateutil import parser
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -84,6 +87,10 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
     search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
+
+
+    def dispatch(self, request, *args, **kwargs):
+        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -394,6 +401,52 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
 
+    def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+           Update one or more attributes for the given job
+
+           * request: the HTTP request in JSON.
+
+               Examples:
+
+                   { "published" : false, "featured" : true }
+                   { "featured" : false }
+
+           * Returns: a copy of the new  values on success
+
+               Example:
+
+                   {
+                       "published": false,
+                       "featured" : true,
+                       "success": true
+                   }
+
+           ** returns: 400 on error
+
+           """
+
+        job = Job.objects.get(uid=uid)
+        if job.user != request.user and not request.user.is_superuser:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
+        response = {}
+        payload = request.data
+
+        for attribute, value in payload.iteritems():
+            if hasattr(job, attribute):
+                setattr(job, attribute, value)
+                response[attribute] = value
+            else:
+                msg = "unidentified job attribute - %s" % attribute
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
+        job.save()
+        response['success'] = True
+        return Response(response, status=status.HTTP_200_OK)
+
+
+
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -497,6 +550,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     
     * `search_term`: A value to search the job name, description and event text for.
     
+    * `bbox`: Bounding box in the form of `xmin,ymin,xmax,ymax`. 
+    
     * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
         * Order can be reversed by adding `-` to the front of the order parameter.
         
@@ -565,6 +620,26 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
 
+        search_bbox = self.request.query_params.get('bbox', None)
+        if search_bbox is not None and len(search_bbox.split(',')) == 4:
+            extents = search_bbox.split(',')
+            data = {
+                'xmin': extents[0],
+                'ymin': extents[1],
+                'xmax': extents[2],
+                'ymax': extents[3]
+            }
+
+            try:
+                bbox_extents = validate_bbox_params(data)
+                bbox = validate_search_bbox(bbox_extents)
+                queryset = queryset.filter(job__the_geom__within=bbox)
+
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
+
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
             queryset = queryset.filter(
@@ -618,12 +693,58 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         payload = request.data
         run = ExportRun.objects.get(uid=uid)
 
-        if "expiration" in payload :
-            run.expiration = payload["expiration"]
-            run.save()
-            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
-        else:
+    @transaction.atomic
+    def partial_update(self, request, uid=None, *args, **kwargs):
+
+        """
+        Update the expiration date for an export run. If the user is a superuser,
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
+        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
+
+        * request: the HTTP request in JSON.
+
+            Example:
+
+                {
+                    "expiration" : "2019-12-31"
+                }
+
+        * Returns: a copy of the new expiration value on success
+
+            Example:
+
+                {
+                    "expiration": "2019-12-31",
+                    "success": true
+                }
+
+        ** returns: 400 on error
+
+        """
+
+        payload = request.data
+        if not "expiration" in payload:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+        expiration = payload["expiration"]
+        target_date = parser.parse(expiration).replace(tzinfo=None)
+        run = ExportRun.objects.get(uid=uid)
+
+        if not request.user.is_superuser:
+            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
+            now = datetime.today()
+            max_date  = now + timedelta(max_days)
+            if target_date > max_date.replace(tzinfo=None):
+                message = 'expiration date must be before ' + max_date.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+            if ( target_date < run.expiration.replace(tzinfo=None) ):
+                message = 'expiration date must be after ' + run.expiration.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        run.expiration = target_date
+        run.save()
+        return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+
 
     @staticmethod
     def validate_licenses(queryset):
