@@ -87,11 +87,11 @@ export function zoomToExtent(opt_option) {
     let this_ = this;
 
     this.zoomer = () => {
-        const extent = !options.extent ? view.getProjection.getExtent() : options.extent;
         const map = this_.getMap();
         const view = map.getView();
         const size = map.getSize();
-        view.fit(options.extent, size);
+        const extent = !options.extent ? view.getProjection().getExtent() : options.extent;        
+        view.fit(extent, size);
     }
 
     button.addEventListener('click', this_.zoomer, false);
@@ -125,7 +125,6 @@ export function generateDrawLayer() {
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
-
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
