@@ -3,14 +3,13 @@ import { reducer as reduxFormReducer } from 'redux-form'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
 import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
-import {invalidDrawWarningReducer} from './drawToolBarReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
-import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import {importGeomReducer} from './mapToolReducer';
 import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
-import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer} from './statusDownloadReducer'
+import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer, updateExpirationReducer, updatePermissionReducer} from './statusDownloadReducer'
 
 
 const rootReducer = combineReducers({
@@ -22,9 +21,6 @@ const rootReducer = combineReducers({
     zoomToSelection: zoomToSelectionReducer,
     resetMap: resetMapReducer,
     geocode: getGeocodeReducer,
-    showInvalidDrawWarning: invalidDrawWarningReducer,
-    toolbarIcons: toolbarIconsReducer,
-    showImportModal: showImportModalReducer,
     importGeom: importGeomReducer,
     form: reduxFormReducer,
     user: userReducer,
@@ -41,6 +37,8 @@ const rootReducer = combineReducers({
     runDeletion: deleteRunReducer,
     exportReRun: rerunExportReducer,
     licenses: licenseReducer,
+    updateExpiration: updateExpirationReducer,
+    updatePermission: updatePermissionReducer,
 });
 
 export default rootReducer;

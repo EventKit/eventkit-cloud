@@ -12,7 +12,6 @@ export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>
 export const MULTIPOLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
-
 import isEqual from 'lodash/isEqual';
 
 export class AoiInfobar extends Component {
@@ -21,13 +20,10 @@ export class AoiInfobar extends Component {
         super(props)
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
         this.handleAoiInfo = this.handleAoiInfo.bind(this);
-        // this.handleInfoClick = this.handleInfoClick.bind(this);
-
         this.state = {
             aoiDescription: '',
             aoiTitle: '',
             geometryIcon: NO_SELECTION_ICON,
-            showInfoPopup: false,
             showAoiInfobar: false,
         }
     }
@@ -61,10 +57,6 @@ export class AoiInfobar extends Component {
         }
     }
 
-    // handleInfoClick() {
-    //     this.setState({showInfoPopup: true})
-    // }
-
     dispatchZoomToSelection() {
         //If the zoom button is active dispatch the click
         if(!this.props.zoomToSelection.disabled){
@@ -90,11 +82,6 @@ export class AoiInfobar extends Component {
                             <div className={styles.detailText}>
                                 <div className={styles.aoiTitle}>
                                     <strong>{this.state.aoiTitle}</strong>
-                                    {/*{this.state.geometryIcon != NO_SELECTION_ICON ? 
-                                        <button className={styles.aoiInfo} onClick={this.handleInfoClick}>
-                                            <i className={"material-icons"} style={{fontSize: '15px', color: '#4598bf'}}>info</i>
-                                        </button>
-                                    : null}*/}
                                 </div>
                                 <div className={styles.aoiDescription}>
                                     {this.state.aoiDescription}
@@ -105,10 +92,6 @@ export class AoiInfobar extends Component {
                     
                 </div>
                 : null}
-                {/*<PopupBox show={this.state.showInfoPopup} title='AOI Info' onExit={() => {this.setState({showInfoPopup: false})}}>
-                    <p> AOI Geojson </p>
-                    <div style={{overflowY: 'scroll', maxHeight: '430px'}}>{JSON.stringify(this.props.aoiInfo.geojson, undefined, 2)}</div>
-                </PopupBox>*/}
             </div>
         )
     }

@@ -10,8 +10,6 @@ export default {
         description: null,
     },
     mode: 'DRAW_NORMAL',
-    showInvalidDrawWarning: false,
-    showImportModal: false,
     zoomToSelection: {
         click: false
     },
@@ -30,13 +28,6 @@ export default {
         processed: false,
         geom: {},
         error: null,
-    },
-    toolbarIcons: {
-        box: "DEFAULT",
-        free: "DEFAULT",
-        mapView: "DEFAULT",
-        import: "DEFAULT",
-        search: "DEFAULT",
     },
     drawerOpen: false,
     runsList: {
@@ -99,4 +90,14 @@ export default {
         canceled: false,
         error: null,
     },
+    updateExpiration: {
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    updatePermission: {
+        updating: false,
+        updated: false,
+        error: null,
+    }
 }
