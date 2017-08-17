@@ -1,4 +1,5 @@
 import ol from 'openlayers';
+import sinon from 'sinon';
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
@@ -182,5 +183,83 @@ describe('mapUtils', () => {
         }
         const returnedGeom = utils.convertGeoJSONtoJSTS(featureCollection)
         expect(returnedGeom.getGeometryType()).toEqual("MultiPolygon");
+    });
+
+    it('createGeoJSON should take an ol3 geom and return a feature collection containing a feature with that geom', () => {
+        const serializeSpy = new sinon.spy(utils, 'serialize');
+        const extentSpy = new sinon.spy(ol.geom.Point.prototype, 'getExtent');
+        const createSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        const coords = ol.proj.transform([-1,1], utils.WGS84, utils.WEB_MERCATOR);
+        const geom = new ol.geom.Point(coords);
+        const expected = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "bbox": [-1,1,-1,1],
+                    "geometry": {"type": 'Point', "coordinates": [-1,1]}
+                }
+            ]
+        };
+        expect(utils.createGeoJSON(geom)).toEqual(expected);
+        // expect(serializeSpy.called).toBe(true);
+        expect(extentSpy.calledOnce).toBe(true);
+        // expect(serializeSpy.calledWith(geom.getExtent())).toBe(true);
+        // expect(createSpy.calledOnce).toBe(true);
+        // expect(createSpy.calledWith(geom)).toBe(true);
+    });
+
+    it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
+        const coords = ol.proj.transform([-1,1], utils.WGS84, utils.WEB_MERCATOR);
+        const geom = new ol.geom.Point(coords);
+        const expected = {"type": 'Point', "coordinates": [-1,1]};
+        const cloneSpy = new sinon.spy(ol.geom.Point.prototype, 'clone');
+        const transformSpy = new sinon.spy(ol.geom.Point.prototype, 'transform');
+        const coordsSpy = new sinon.spy(ol.geom.Point.prototype, 'getCoordinates');
+        expect(utils.createGeoJSONGeometry(geom)).toEqual(expected);
+        expect(cloneSpy.calledOnce).toBe(true);
+        expect(transformSpy.calledOnce).toBe(true);
+        expect(transformSpy.calledWith(utils.WEB_MERCATOR, utils.WGS84)).toBe(true);
+        expect(coordsSpy.calledOnce).toBe(true);
+        cloneSpy.restore();
+        transformSpy.restore();
+        coordsSpy.restore();
+    });
+
+    it('clearDraw should get the layer source then clear it', () => {
+        const clear = new sinon.spy();
+        const layer = {
+            getSource: new sinon.spy(() => {return {clear: clear}})
+        }
+        utils.clearDraw(layer);
+        expect(layer.getSource.calledOnce).toBe(true);
+        expect(clear.calledOnce).toBe(true);
+    });
+
+    it('zoomToGeometry should fit view to geom if its not a point type', () => {
+        const geom = {getType: new sinon.spy(() => {return 'Polygon'})};
+        const fit = new sinon.spy(() => {});
+        const map = {getView: new sinon.spy(() => {return {fit: fit}})};
+        utils.zoomToGeometry(geom, map);
+        expect(geom.getType.calledOnce).toBe(true);
+        expect(map.getView.calledOnce).toBe(true);
+        expect(fit.calledOnce).toBe(true);
+    });
+
+    it('zoomToGeometry should center on geom if it is a point type', () => {
+        const coords = new sinon.spy();
+        const geom = {
+            getType: new sinon.spy(() => {return 'Point'}),
+            getCoordinates: new sinon.spy()
+        };
+        const center = new sinon.spy();
+        const map = {
+            getView: new sinon.spy(() => {return {setCenter: center}})
+        };
+        utils.zoomToGeometry(geom, map);
+        expect(geom.getType.calledOnce).toBe(true);
+        expect(map.getView.calledOnce).toBe(true);
+        expect(center.calledOnce).toBe(true);
+        expect(geom.getCoordinates.calledOnce).toBe(true);
     });
 });

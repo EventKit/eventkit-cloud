@@ -126,7 +126,6 @@ export class DataPackPage extends React.Component {
         params += minDate;
         params += maxDate;
         params += this.state.search ? `&search_term=${this.state.search}` : '';
-        // params += this.state.geojson_geometry ? `&geojson_geometry=${JSON.stringify(this.state.geojson_geometry)}` : '';
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
@@ -159,7 +158,6 @@ export class DataPackPage extends React.Component {
     }
 
     handleSpatialFilter = (geojson) => {
-        console.log('setting state and making request');
         this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
     }
 

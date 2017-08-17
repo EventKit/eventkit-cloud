@@ -9,8 +9,8 @@ export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
 export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 
-const WGS84 = 'EPSG:4326';
-const WEB_MERCATOR = 'EPSG:3857';
+export const WGS84 = 'EPSG:4326';
+export const WEB_MERCATOR = 'EPSG:3857';
 
 /**
  * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
@@ -223,15 +223,12 @@ export function isGeoJSONValid(geojson) {
 
 export function createGeoJSON(ol3Geometry) {
     const bbox = serialize(ol3Geometry.getExtent());
-    const geom = ol3Geometry.clone();
-    geom.transform(WEB_MERCATOR, WGS84);
-    const wgs84Coords = geom.getCoordinates();
     const geojson = {"type": "FeatureCollection",
                     "features": [
                         {
                             "type": "Feature",
                             "bbox": bbox,
-                            "geometry": {"type": geom.getType(), "coordinates": wgs84Coords}
+                            "geometry": createGeoJSONGeometry(ol3Geometry)
                         }
                     ]}
     return geojson;

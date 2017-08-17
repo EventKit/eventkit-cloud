@@ -105,14 +105,14 @@ export class MapView extends Component {
         if(nextProps.runs.length != this.props.runs.length) {
             this.source.clear();
             const added = this.addRunFeatures(nextProps.runs, this.source);
-            // if (added) {
-            //     if (this.drawLayer.getSource().getFeatures().length) {
-            //         this.map.getView().fit(this.drawLayer.getSource().getExtent(), this.map.getSize());
-            //     }
-            //     else {
-            //         this.map.getView().fit(this.source.getExtent(), this.map.getSize());
-            //     }
-            // }
+            if (added) {
+                if (this.drawLayer.getSource().getFeatures().length) {
+                    this.map.getView().fit(this.drawLayer.getSource().getExtent(), this.map.getSize());
+                }
+                else {
+                    this.map.getView().fit(this.source.getExtent(), this.map.getSize());
+                }
+            }
         }
 
         if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
@@ -341,13 +341,11 @@ export class MapView extends Component {
     handleSearch(result) {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
-
         const feature = (new ol.format.GeoJSON()).readFeature(result);
         feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
         this.drawLayer.getSource().addFeature(feature);
         zoomToGeometry(feature.getGeometry(), this.map);
         if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
-        //     this.props.setNextEnabled();
             const geojson_geometry = createGeoJSONGeometry(feature.getGeometry());
             this.props.onMapFilter(geojson_geometry);
             return true;
@@ -366,8 +364,6 @@ export class MapView extends Component {
 
     setButtonSelected(iconName) {
         const icons = {...this.state.toolbarIcons};
-        console.log('setting ', iconName, ' selected');
-        console.log(icons);
         Object.keys(icons).forEach((key) => {
             if (key == iconName) {
                 icons[key] = 'SELECTED';
@@ -377,7 +373,6 @@ export class MapView extends Component {
             }
         });
         this.setState({toolbarIcons: icons});
-        console.log(icons);
     }
 
     setAllButtonsDefault() {
