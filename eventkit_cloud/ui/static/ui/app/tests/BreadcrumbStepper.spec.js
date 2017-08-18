@@ -8,7 +8,7 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
-import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from '../components/CreateDataPack/ExportAOI';
+import ExportAOI from '../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
 import isEqual from 'lodash/isEqual';

@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.gis.geos import Polygon, GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User
 
@@ -19,7 +20,7 @@ from eventkit_cloud.jobs.models import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -529,35 +530,49 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportRunViewSet(viewsets.ModelViewSet):
     """
-    **Provides an endpoint for querying export runs**.
+    **retrieve:**
+    
+    Returns the exact run as specified by the run UID in the url `/runs/{uid}`
+    
+    **list:**
+    
+    Returns a list of all the runs.
+    
+    Export runs can be filtered and ordered by adding optional parameters to the url:
 
-    **Export runs can be filtered and ordered by adding optional parameters to the url**:
-    
     * `user`: The user who created the job.
-    
+
     * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or FAILED).
         * Example = `/api/runs?status=SUBMITTED,INCOMPLETE,FAILED`
-        
+
     * `job_uid`: The uid of a particular job.
-    
+
     * `min_date`: Minimum date (YYYY-MM-DD) for the `started_at` field.
-    
+
     * `max_date`: Maximum date (YYYY-MM-DD) for the `started_at` field.
-    
+
     * `started_at`: The DateTime a run was started at in ISO date-time format.
-    
+
     * `published`: True or False for whether the owning job is published or not.
+
+    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
+        * Order can be reversed by adding `-` to the front of the order parameter.
+
+    An example request using some of the parameters.
+
+    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&ordering=-job__name`
+    
+    **filter:**
+    
+    Accessed at `/runs/filter`.
+    
+    Accepts GET and POST. Support all the url params of 'list' with the addition of advanced features like `search_term`, `bbox`, and `geojson`.
     
     * `search_term`: A value to search the job name, description and event text for.
     
     * `bbox`: Bounding box in the form of `xmin,ymin,xmax,ymax`. 
     
-    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
-        * Order can be reversed by adding `-` to the front of the order parameter.
-        
-    **Putting it all together: An example request using some of the parameters**.
-    
-    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&search_term=test&ordering=-job__name`
+    To filter by geojson send the geojson geometry in the body of a POST request under the key `geojson`.
     """
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -602,23 +617,53 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """
             Destroy a model instance.
-            """
+        """
         instance = self.get_object()
         instance.soft_delete(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         """
-        List the ExportRuns for a single Job.
-
-        Gets the job_uid from the request and returns run data for the
-        associated Job.
-
-        * request: the http request.
-
-        * Returns: the serialized run data.
+        List the ExportRuns
+        :param request: the http request
+        :param args: 
+        :param kwargs: 
+        :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @list_route(methods=['post', 'get'])
+    def filter(self, request, *args, **kwargs):
+        """
+        Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
+        Accepts GET and POST request. POST is required if you want to filter by a geojson geometry contained in the request data
+        :param request: the http request
+        :param args: 
+        :param kwargs: 
+        :return: the serialized runs
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_geojson = self.request.data.get('geojson', None)
+        if search_geojson is not None:
+            try:
+                geom = geojson_to_geos(search_geojson, 4326)
+                queryset = queryset.filter(job__the_geom__within=geom)
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
         search_bbox = self.request.query_params.get('bbox', None)
         if search_bbox is not None and len(search_bbox.split(',')) == 4:
@@ -959,6 +1004,30 @@ def get_user_details(request):
         'is_superuser': logged_in_user.is_superuser,
         'is_staff': logged_in_user.is_staff
     }
+
+def geojson_to_geos(geojson_geom, srid=None):
+    """
+    :param geojson_geom: A stringified geojson geometry
+    :param srid: The ESPG code of the input data
+    :return: A GEOSGeometry object
+    """
+    if not geojson_geom:
+        raise exceptions.ValidationError(
+            'No geojson geometry string supplied'
+        )
+    if not srid:
+        srid = 4326
+    try:
+        geom = GEOSGeometry(geojson_geom, srid=srid)
+    except GEOSException:
+        raise exceptions.ValidationError(
+            'Could not convert geojson geometry, check that your geometry is valid'
+        )
+    if not geom.valid:
+        raise exceptions.ValidationError(
+            'GEOSGeometry invalid, check that your geojson geometry is valid'
+        )
+    return geom
 
 
 class SwaggerSchemaView(views.APIView):

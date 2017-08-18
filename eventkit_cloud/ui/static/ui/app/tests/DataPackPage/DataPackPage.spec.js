@@ -8,7 +8,6 @@ import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Drawer from 'material-ui/Drawer';
-import RaisedButton from 'material-ui/RaisedButton';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackList from '../../components/DataPackPage/DataPackList';
@@ -21,21 +20,13 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import isEqual from 'lodash/isEqual';
-import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import * as utils from '../../utils/mapUtils';
+import ol from 'openlayers';
 
-// mock function that add ol map since it will throw errors
-beforeAll(() => {
-    MapView.prototype.componentDidMount = new sinon.spy();
-    MapView.prototype.componentDidUpdate = new sinon.spy();
-});
-
-// restore mocks
-afterAll(() => {
-    MapView.prototype.componentDidMount.restore();
-    MapView.prototype.componentDidUpdate.restore();
-});
-
+// this polyfills requestAnimationFrame in the test browser, required for ol3
+import raf from 'raf';
+raf.polyfill();
+jest.mock('../../components/DataPackPage/MapView')
 
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
@@ -59,6 +50,11 @@ describe('DataPackPage component', () => {
                 error: null
             },
             drawerOpen: true,
+            importGeom: {},
+            geocode: {},
+            getGeocode: () => {},
+            processGeoJSONFile: () => {},
+            resetGeoJSONFile: () => {},
         }
     };
 
@@ -86,9 +82,6 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
         expect(wrapper.find(DataPackList)).toHaveLength(0);
-        expect(wrapper.find(RaisedButton)).toHaveLength(2);
-        expect(wrapper.find(KeyboardArrowDown)).toHaveLength(0);
-        expect(wrapper.find(KeyboardArrowUp)).toHaveLength(0);
     });
 
     it('should show MapView instead of progress circle when runs are received', () => {
@@ -106,12 +99,7 @@ describe('DataPackPage component', () => {
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({pageLoading: false})).toBe(true);
         expect(wrapper.find(MapView)).toHaveLength(1);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
-        expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
-        expect(wrapper.find('#range')).toHaveLength(1);
-        expect(wrapper.find('#range').text()).toEqual('12 of 24')
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);;
         stateSpy.restore();
     });
 
@@ -134,11 +122,14 @@ describe('DataPackPage component', () => {
 
     it('should call makeRunRequest, add eventlistener, and setInterval when mounting', () => {
         const props = getProps();
-        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
+        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
         const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const eventSpy = new sinon.spy(window, 'addEventListener');
         const intervalSpy = new sinon.spy(global, 'setInterval');
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(mountSpy.calledOnce).toBe(true);
         expect(requestSpy.calledOnce).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
@@ -173,7 +164,10 @@ describe('DataPackPage component', () => {
         jest.useFakeTimers();
         let props = getProps();
         props.getRuns = new sinon.spy();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -234,7 +228,10 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const makeRequestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(makeRequestSpy.calledOnce).toBe(true);
         let nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
@@ -283,8 +280,8 @@ describe('DataPackPage component', () => {
             search: search
         });
         wrapper.instance().makeRunRequest();
-        expect(props.getRuns.calledTwice).toBe(true);
-        expect(props.getRuns.calledWith(expectedString)).toBe(true);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(props.getRuns.calledWith(expectedString, null)).toBe(true);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -344,6 +341,27 @@ describe('DataPackPage component', () => {
         expect(stateSpy.calledWith({open: false})).toBe(true);
         stateSpy.restore();
     });
+
+    it('handleSpatialFilter should setstate then call make run request', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const geojson = {
+            "type": "LineString",
+            "coordinates": [
+                [69.60937499999999, 60.23981116999893],
+                [46.40625, 55.178867663281984],
+                [26.3671875, 55.97379820507658]
+            ]
+        }
+        wrapper.instance().handleSpatialFilter(geojson);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith(
+            {geojson_geometry: geojson, loading: true}, 
+            wrapper.instance().makeRunRequest
+        )).toBe(true);
+        stateSpy.restore();
+    })
 
     it('screenSizeUpdate should force the component to update', () => {
         const props = getProps();
@@ -442,6 +460,12 @@ describe('DataPackPage component', () => {
                 handleLoadMore={wrapper.instance().loadMore}
                 loadLessDisabled={props.runsList.runs.length <= 12}
                 loadMoreDisabled={!props.runsList.nextPage}
+                geocode={props.geocode}
+                getGeocode={props.getGeocode}
+                importGeom={props.importGeom}
+                processGeoJSONFile={props.processGeoJSONFile}
+                resetGeoJSONFile={props.resetGeoJSONFile}
+                onMapFilter={wrapper.instance().handleSpatialFilter}
             />
         );
         expect(wrapper.instance().getView('bad case')).toEqual(null);

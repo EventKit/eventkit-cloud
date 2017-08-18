@@ -31,7 +31,7 @@ div.map {
 
 .olZoom {
     z-index: 3;
-    top: 135px;
+    top: 50px;
     left: 10px;
     color: #66a3ff;
     background-color: white;
@@ -39,7 +39,7 @@ div.map {
 
 .olZoomToExtent {
     z-index: 3;
-    top: 100px;
+    top: 15px;
     left: 10px;
     color: #66a3ff;
     background-color: white;   
@@ -83,15 +83,6 @@ div.map {
 
 .olZoom button:focus {
     background-color: white;
-}
-
-@media only screen and (min-width: 768px) {
-    .olZoom {
-        top: 50px;
-    }
-    .olZoomToExtent {
-        top: 15px;
-    }
 }
 
 .olPopup {

@@ -35,15 +35,6 @@ export function startExportPackageReducer(state = initialState.setExportPackageF
     }
 }
 
-export function exportModeReducer(state = initialState.mode, action) {
-    switch(action.type) {
-        case types.SET_MODE:
-            return action.mode;
-        default:
-            return state;
-    }
-}
-
 export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
         case types.UPDATE_AOI_INFO:

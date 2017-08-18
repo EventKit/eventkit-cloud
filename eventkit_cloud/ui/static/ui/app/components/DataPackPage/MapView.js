@@ -6,10 +6,16 @@ import MapPopup from './MapPopup';
 import CustomScrollbar from '../CustomScrollbar';
 import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
-import {zoomToExtent} from '../../utils/mapUtils';
 import css from '../../styles/ol3map.css';
 import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
+import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
+import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
+import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
+import DropZone from '../MapTools/DropZone.js';
+import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
+    serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -39,10 +45,30 @@ export class MapView extends Component {
         this.zoomToSelected = this.zoomToSelected.bind(this);
         this.animate = this.animate.bind(this);
         this.onMapClick = this.onMapClick.bind(this);
+        this.setAllButtonsDefault = this.setAllButtonsDefault.bind(this);
+        this.setButtonSelected = this.setButtonSelected.bind(this);
+        this.toggleImportModal = this.toggleImportModal.bind(this);
+        this.showInvalidDrawWarning = this.showInvalidDrawWarning.bind(this);
+        this.handleCancel = this.handleCancel.bind(this);
+        this.handleSearch = this.handleSearch.bind(this);
+        this.onDrawEnd = this.onDrawEnd.bind(this);
+        this.onDrawStart = this.onDrawStart.bind(this);
+        this.updateMode = this.updateMode.bind(this);
+        this.setMapView = this.setMapView.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
             showPopup: false,
+            toolbarIcons: {
+                box: "DEFAULT",
+                free: "DEFAULT",
+                mapView: "DEFAULT",
+                import: "DEFAULT",
+                search: "DEFAULT",
+            },
+            showImportModal: false,
+            showInvalidDrawWarning: false,
+            mode: MODE_NORMAL
         }
     }
 
@@ -54,6 +80,20 @@ export class MapView extends Component {
             source: this.source,
             style: BLUE_STYLE
         });
+        this.drawLayer = generateDrawLayer();
+
+        this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
+        this.drawBoxInteraction.on('drawstart', this.onDrawStart);
+        this.drawBoxInteraction.on('drawend', this.onDrawEnd);
+
+        this.drawFreeInteraction = generateDrawFreeInteraction(this.drawLayer);
+        this.drawFreeInteraction.on('drawstart', this.onDrawStart);
+        this.drawFreeInteraction.on('drawend', this.onDrawEnd);
+
+        this.map.addInteraction(this.drawBoxInteraction);
+        this.map.addInteraction(this.drawFreeInteraction);
+        this.map.addLayer(this.drawLayer);
+
         this.map.addLayer(this.layer);
         this.addRunFeatures(this.props.runs, this.source);
         this.map.getView().fit(this.source.getExtent(), this.map.getSize());
@@ -64,8 +104,19 @@ export class MapView extends Component {
         // if the runs have changed, clear out old features and re-add with new features
         if(nextProps.runs.length != this.props.runs.length) {
             this.source.clear();
-            this.addRunFeatures(nextProps.runs, this.source);
-            this.map.getView().fit(this.source.getExtent(), this.map.getSize());
+            const added = this.addRunFeatures(nextProps.runs, this.source);
+            if (added) {
+                if (this.drawLayer.getSource().getFeatures().length) {
+                    this.map.getView().fit(this.drawLayer.getSource().getExtent(), this.map.getSize());
+                }
+                else {
+                    this.map.getView().fit(this.source.getExtent(), this.map.getSize());
+                }
+            }
+        }
+
+        if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
+            this.handleGeoJSONUpload(nextProps.importGeom.geom);
         }
     }
 
@@ -86,7 +137,11 @@ export class MapView extends Component {
             feature.setProperties(run);
             return feature;
         });
-        source.addFeatures(features);
+        if (features.length) {
+            source.addFeatures(features);
+            return true;
+        };
+        return false;
     }
 
     // add map with controls and basemap to the page
@@ -241,6 +296,7 @@ export class MapView extends Component {
     }
 
     onMapClick(evt) {
+        if (this.state.mode != MODE_NORMAL) {return};
         let features = [];
         this.map.forEachFeatureAtPixel(evt.pixel, (feature) => {
             features.push(feature);
@@ -261,7 +317,7 @@ export class MapView extends Component {
     zoomToSelected() {
         if (this.state.selectedFeature) {
             const feature = this.source.getFeatureById(this.state.selectedFeature);
-            this.map.getView().fit(feature.getGeometry().getExtent(), this.map.getSize());
+            zoomToGeometry(feature.getGeometry(), this.map);
         }
     }
 
@@ -280,6 +336,138 @@ export class MapView extends Component {
     setFeatureSelected(feature) {
         feature.setStyle(RED_STYLE);
         feature.getStyle().setZIndex(100);
+    }
+
+    handleSearch(result) {
+        clearDraw(this.drawLayer);
+        this.showInvalidDrawWarning(false);
+        const feature = (new ol.format.GeoJSON()).readFeature(result);
+        feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+        this.drawLayer.getSource().addFeature(feature);
+        zoomToGeometry(feature.getGeometry(), this.map);
+        if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
+            const geojson_geometry = createGeoJSONGeometry(feature.getGeometry());
+            this.props.onMapFilter(geojson_geometry);
+            return true;
+        }
+    }
+
+    handleCancel(sender) {
+        this.showInvalidDrawWarning(false);
+        if(this.state.mode != MODE_NORMAL) {
+            this.updateMode(MODE_NORMAL);
+        }
+        clearDraw(this.drawLayer);
+        // remove filter
+        this.props.onMapFilter(null);
+    }
+
+    setButtonSelected(iconName) {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            if (key == iconName) {
+                icons[key] = 'SELECTED';
+            }
+            else {
+                icons[key] = 'INACTIVE';
+            }
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    setAllButtonsDefault() {
+        const icons = {...this.state.toolbarIcons};
+        Object.keys(icons).forEach((key) => {
+            icons[key] = 'DEFAULT';
+        });
+        this.setState({toolbarIcons: icons});
+    }
+
+    toggleImportModal(show) {
+        if (show != undefined) {
+            this.setState({showImportModal: show});
+        }
+        else {
+            this.setState({showImportModal: !this.state.showImportModal});
+        }
+    }
+
+    showInvalidDrawWarning(show) {
+        if (show != undefined) {
+            this.setState({showInvalidDrawWarning: show});
+        }
+        else {
+            this.setState({showInvalidDrawWarning: !this.state.showInvalidDrawWarning});
+        }
+    }
+
+    onDrawStart() {
+        clearDraw(this.drawLayer);
+    }
+
+    onDrawEnd(event) {
+        // get the drawn geometry
+        const geom = event.feature.getGeometry();
+        const geojson = createGeoJSON(geom);
+        const bbox = geojson.features[0].bbox;
+        //make sure the user didnt create a polygon with no area
+        if(bbox[0] != bbox[2] && bbox[1] != bbox[3]) {
+            if (this.state.mode == MODE_DRAW_FREE) {
+                const feature = new ol.Feature({geometry: geom});
+                this.drawLayer.getSource().addFeature(feature);
+                if(isGeoJSONValid(geojson)) {
+                    const geojson_geometry = createGeoJSONGeometry(geom);
+                    this.props.onMapFilter(geojson_geometry);
+                }
+                else {
+                    this.showInvalidDrawWarning(true);
+                }
+            }
+            else if (this.state.mode = MODE_DRAW_BBOX) {
+                const geojson_geometry = createGeoJSONGeometry(geom);
+                this.props.onMapFilter(geojson_geometry);
+            }
+            this.updateMode(MODE_NORMAL);
+        }
+    }
+
+    setMapView() {
+        clearDraw(this.drawLayer);
+        const extent = this.map.getView().calculateExtent(this.map.getSize());
+        const geom = new ol.geom.Polygon.fromExtent(extent);
+        const feature = new ol.Feature({
+            geometry: geom
+        });
+        this.drawLayer.getSource().addFeature(feature);
+        const geojson_geometry = createGeoJSONGeometry(geom);
+        this.props.onMapFilter(geojson_geometry);
+    }
+
+    updateMode(mode) {
+        // make sure interactions are deactivated
+        this.drawBoxInteraction.setActive(false);
+        this.drawFreeInteraction.setActive(false);
+        // if box or draw activate the respective interaction
+        if(mode == MODE_DRAW_BBOX) {
+            this.drawBoxInteraction.setActive(true);
+        }
+        else if(mode == MODE_DRAW_FREE) {
+            this.drawFreeInteraction.setActive(true);
+        }
+        // update the state
+        this.setState({mode: mode});
+    }
+
+    handleGeoJSONUpload(geom) {
+        clearDraw(this.drawLayer);
+        this.drawLayer.getSource().addFeature(
+            new ol.Feature({
+                geometry: geom
+            })
+        );
+        zoomToGeometry(geom, this.map);
+        const geojson_geometry = createGeoJSONGeometry(geom);
+        this.props.onMapFilter(geojson_geometry);
     }
 
     render() {
@@ -337,7 +525,40 @@ export class MapView extends Component {
                     {load}
                 </CustomScrollbar>
                 <div style={styles.map}>
-                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'/>
+                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
+                    <SearchAOIToolbar
+                        handleSearch={(result) => this.handleSearch(result)}
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        geocode={this.props.geocode}
+                        toolbarIcons={this.state.toolbarIcons}
+                        getGeocode={this.props.getGeocode}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                    />
+                    <DrawAOIToolbar
+                        toolbarIcons={this.state.toolbarIcons}
+                        updateMode={this.updateMode}
+                        handleCancel={(sender) => this.handleCancel(sender)}
+                        setMapView={this.setMapView}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setBoxButtonSelected={() => {this.setButtonSelected('box')}}
+                        setFreeButtonSelected={() => {this.setButtonSelected('free')}}
+                        setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
+                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setImportModalState={this.toggleImportModal}
+                    />
+                    <InvalidDrawWarning 
+                        show={this.state.showInvalidDrawWarning}
+                    />
+                    <DropZone
+                        importGeom={this.props.importGeom}
+                        showImportModal={this.state.showImportModal}
+                        setAllButtonsDefault={this.setAllButtonsDefault}
+                        setImportModalState={this.toggleImportModal}
+                        processGeoJSONFile={this.props.processGeoJSONFile}
+                        resetGeoJSONFile={this.props.resetGeoJSONFile}
+                    />
+                    </div>
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}></a>
                         <div id="popup-content">
@@ -385,6 +606,12 @@ MapView.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    geocode: PropTypes.object.isRequired,
+    getGeocode: PropTypes.func.isRequired,
+    importGeom: PropTypes.object.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
+    resetGeoJSONFile: PropTypes.func.isRequired,
+    onMapFilter: PropTypes.func.isRequired,
 };
 
 export default MapView;

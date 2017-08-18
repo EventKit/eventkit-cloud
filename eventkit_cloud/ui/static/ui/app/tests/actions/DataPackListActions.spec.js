@@ -13,9 +13,9 @@ const mockStore = configureMockStore(middlewares);
 describe('DataPackList actions', () => {
 
     
-    it('getRuns should return runs from "api/runs"', () => {
+    it('getRuns should return runs from "api/runs/filter"', () => {
         var mock = new MockAdapter(axios, {delayResponse: 1000});
-        mock.onGet('/api/runs').reply(200, expectedRuns, {link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24'});
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24'});
         const expectedActions = [
             {type: types.FETCHING_RUNS},
             {type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24'}

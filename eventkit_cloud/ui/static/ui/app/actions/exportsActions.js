@@ -123,13 +123,6 @@ export function clearJobInfo() {
     }
 }
 
-export function updateMode(mode) {
-    return {
-        type: types.SET_MODE,
-        mode: mode
-    }
-}
-
 export function closeDrawer() {
     return {
         type: types.CLOSE_DRAWER

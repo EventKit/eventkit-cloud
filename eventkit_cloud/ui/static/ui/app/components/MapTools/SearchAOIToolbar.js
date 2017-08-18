@@ -72,12 +72,13 @@ export class SearchAOIToolbar extends Component {
                 zIndex: 2, 
                 position: 'absolute', 
                 width: 'calc(100% - 60px)', 
-                minWidth: '320px', 
+                minWidth: '300px', 
                 maxWidth: '700px', 
                 height: '50px', 
                 top: '1em', 
                 right: '10px', 
-                backgroundColor: '#fff'
+                backgroundColor: '#fff',
+                ...this.props.containerStyle
             },
             buttonContainer: {
                 position: 'absolute', 
@@ -132,6 +133,7 @@ SearchAOIToolbar.propTypes = {
     handleCancel: PropTypes.func,
     setAllButtonsDefault: PropTypes.func,
     setSearchAOIButtonSelected: PropTypes.func,
+    containerStyle: PropTypes.object
 }
 
 export default SearchAOIToolbar;

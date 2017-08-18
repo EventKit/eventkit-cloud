@@ -16,6 +16,9 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
+import {getGeocode} from '../../actions/searchToolbarActions';
+import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
+import {isGeoJSONValid} from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
 
@@ -33,6 +36,7 @@ export class DataPackPage extends React.Component {
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
+        this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.state = {
             open: window.innerWidth < 1200 ? false: true,
             search: '',
@@ -50,6 +54,7 @@ export class DataPackPage extends React.Component {
             ownerFilter: '',
             pageSize: 12,
             loading: false,
+            geojson_geometry: null,
         }
     }
 
@@ -71,10 +76,12 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    componentWillMount() {
+    componentDidMount() {
         this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
+        // make sure no geojson upload is in the state
+        this.props.resetGeoJSONFile();
     }
 
     componentWillUnmount() {
@@ -119,7 +126,7 @@ export class DataPackPage extends React.Component {
         params += minDate;
         params += maxDate;
         params += this.state.search ? `&search_term=${this.state.search}` : '';
-        return this.props.getRuns(params);
+        return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
     handleOwnerFilter = (event, index, value) => {
@@ -148,6 +155,10 @@ export class DataPackPage extends React.Component {
         if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
+    }
+
+    handleSpatialFilter = (geojson) => {
+        this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
     }
 
     screenSizeUpdate() {
@@ -224,6 +235,12 @@ export class DataPackPage extends React.Component {
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
+                    geocode={this.props.geocode}
+                    getGeocode={this.props.getGeocode}
+                    importGeom={this.props.importGeom}
+                    processGeoJSONFile={this.props.processGeoJSONFile}
+                    resetGeoJSONFile={this.props.resetGeoJSONFile}
+                    onMapFilter={this.handleSpatialFilter}
                 />;
             default: return null;
         }
@@ -343,6 +360,11 @@ DataPackPage.propTypes = {
     deleteRuns: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
     drawerOpen: PropTypes.bool.isRequired,
+    importGeom: PropTypes.object.isRequired,
+    geocode: PropTypes.object.isRequired,
+    getGeocode: PropTypes.func.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
+    resetGeoJSONFile: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -351,16 +373,27 @@ function mapStateToProps(state) {
         user: state.user,
         runsDeletion: state.runsDeletion,
         drawerOpen: state.drawerOpen,
+        importGeom: state.importGeom,
+        geocode: state.geocode,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params) => {
-            return dispatch(getRuns(params));
+        getRuns: (params, geojson) => {
+            return dispatch(getRuns(params, geojson));
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
+        },
+        getGeocode: (query) => {
+            dispatch(getGeocode(query));
+        },
+        processGeoJSONFile: (file) => {
+            dispatch(processGeoJSONFile(file));
+        },
+        resetGeoJSONFile: (file) => {
+            dispatch(resetGeoJSONFile());
         },
     }
 }
@@ -369,3 +402,4 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(DataPackPage);
+
