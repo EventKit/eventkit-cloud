@@ -23,7 +23,8 @@ export class DrawAOIToolbar extends Component {
                 height: '230px', 
                 top: '70px', 
                 right: '10px', 
-                backgroundColor: '#fff'
+                backgroundColor: '#fff',
+                ...this.props.containerStyle
             },
             title: {
                 textAlign: 'center', 
@@ -82,6 +83,7 @@ DrawAOIToolbar.propTypes = {
     setMapViewButtonSelected: PropTypes.func,
     setImportButtonSelected: PropTypes.func,
     setImportModalState: PropTypes.func,
+    containerStyle: PropTypes.object,
 }
 
 export default DrawAOIToolbar;

@@ -10,10 +10,15 @@ import MapPopup from '../../components/DataPackPage/MapPopup';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
-import {zoomToExtent} from '../../utils/mapUtils';
 import css from '../../styles/ol3map.css';
 import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
 import FlatButton from 'material-ui/FlatButton';
+import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar.js';
+import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
+import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
+import DropZone from '../../components/MapTools/DropZone.js';
+import * as utils from '../../utils/mapUtils';
+
 import MapView, {RED_STYLE, BLUE_STYLE} from '../../components/DataPackPage/MapView';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -56,6 +61,12 @@ describe('MapView component', () => {
             handleLoadMore: () => {},
             loadLessDisabled: true,
             loadMoreDisabled: false,
+            geocode: {},
+            getGeocode: () => {},
+            importGeom: {},
+            processGeoJSONFile: () => {},
+            resetGeoJSONFile: () => {},
+            onMapFilter: () => {},
             providers: providers,
         }
     };
@@ -67,16 +78,18 @@ describe('MapView component', () => {
         });
     }
 
-    // This is to avoid an error with creating onclick handler.
-    // There is probably a better way to handle this, a component code update perhaps,
-    // but this will have to do just for right now. Feel free to look into it if you have time
     const initOverlay = MapView.prototype.initOverlay;
     beforeEach(() => {
         MapView.prototype.initOverlay = new sinon.spy();
+        const stub1 = new sinon.stub(utils, 'generateDrawBoxInteraction', () => {return {on: () => {}, setActive: () => {}}})
+        const stub2 = new sinon.stub(utils, 'generateDrawFreeInteraction', () => {return {on: () => {}, setActive: () => {}}})
+        ol.Map.prototype.addInteraction = new sinon.spy()
     });
 
     afterEach(() => {
         MapView.prototype.initOverlay = initOverlay;
+        utils.generateDrawBoxInteraction.restore();
+        utils.generateDrawFreeInteraction.restore();
     });
 
     it('should render all the basic components', () => {        
@@ -87,6 +100,10 @@ describe('MapView component', () => {
         expect(wrapper.find(LoadButtons)).toHaveLength(1);
         expect(wrapper.find(DataPackListItem)).toHaveLength(props.runs.length);
         expect(wrapper.find('#map')).toHaveLength(1);
+        expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
+        expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
+        expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
+        expect(wrapper.find(DropZone)).toHaveLength(1);
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-closer')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
@@ -122,14 +139,15 @@ describe('MapView component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(mapSpy.calledOnce).toBe(true);
         expect(MapView.prototype.initOverlay.calledOnce).toBe(true);
-        expect(sourceSpy.calledOnce).toBe(true);
+        expect(sourceSpy.calledTwice).toBe(true);
         expect(sourceSpy.calledWith({wrapX: false})).toBe(true);
-        expect(layerSpy.calledOnce).toBe(true);
+        expect(layerSpy.calledTwice).toBe(true);
         expect(layerSpy.calledWith(
             {source: wrapper.instance().source, style: BLUE_STYLE}
         )).toBe(true);
-        expect(addLayerSpy.calledOnce).toBe(true);
+        expect(addLayerSpy.calledTwice).toBe(true);
         expect(addLayerSpy.calledWith(wrapper.instance().layer)).toBe(true);
+        expect(addLayerSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
         expect(MapView.prototype.addRunFeatures.calledOnce).toBe(true);
         expect(MapView.prototype.addRunFeatures.calledWith(props.runs, wrapper.instance().source)).toBe(true);
         expect(getViewSpy.calledOnce).toBe(true);
@@ -158,7 +176,15 @@ describe('MapView component', () => {
         const addRunSpy = new sinon.spy(wrapper.instance(), 'addRunFeatures');
         const getViewSpy = new sinon.spy(ol.Map.prototype, 'getView');
         const fitSpy = new sinon.spy(ol.View.prototype, 'fit');
-        
+        wrapper.instance().drawLayer = {
+            getSource: () => {
+                return {
+                    getFeatures: () => {return {length:1}},
+                    getExtent: () => {return [-1, -1, 1, 1]}
+                }
+            }
+        }
+
         expect(receiveSpy.notCalled).toBe(true);
         let nextProps = getProps();
         let run = {...getRuns()[0]};
@@ -184,11 +210,11 @@ describe('MapView component', () => {
         const mapUpdateSpy = new sinon.spy(ol.Map.prototype, 'updateSize');
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(updateSpy.notCalled).toBe(true);
-        expect(mapUpdateSpy.notCalled).toBe(true);
+        const updates = updateSpy.args.length;
+        const mapUpdate = mapUpdateSpy.args.length;
         wrapper.update();
-        expect(updateSpy.calledOnce).toBe(true);
-        expect(mapUpdateSpy.calledOnce).toBe(true);
+        expect(updateSpy.args.length).toEqual(updates + 1);
+        expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);
         updateSpy.restore();
         mapUpdateSpy.restore();
     });
@@ -214,6 +240,10 @@ describe('MapView component', () => {
             expect(propSpy.calledWith(run)).toBe(true);
         });
         expect(addSpy.called).toBe(true);
+        readerSpy.restore();
+        idSpy.restore();
+        propSpy.restore();
+        addSpy.restore();
     });
 
     it('initMap should return a map with controls, interactions, and view', () => {
@@ -231,7 +261,7 @@ describe('MapView component', () => {
         expect(inheritSpy.notCalled).toBe(true);
         wrapper.instance().initMap();
         expect(inheritSpy.calledOnce).toBe(true);
-        expect(inheritSpy.calledWith(zoomToExtent, ol.control.Control)).toBe(true);
+        expect(inheritSpy.calledWith(utils.zoomToExtent, ol.control.Control)).toBe(true);
         expect(mapSpy.calledOnce).toBe(true);
         expect(attributeSpy.calledOnce).toBe(true);
         expect(zoomSpy.calledOnce).toBe(true);
@@ -425,18 +455,17 @@ describe('MapView component', () => {
     });
 
     it('animate should render a geom for animation', () => {
-        const Style = ol.style.Style;
         const Circle = ol.style.Circle;
-        ol.style.Style = new sinon.spy();
         ol.style.Circle = new sinon.spy();
+        const styleSpy = new sinon.spy(ol.style, 'Style');
         const maxSpy = new sinon.spy(Math, 'max');
         const unSpy = new sinon.spy(ol.Observable, 'unByKey');
         const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
         const props = getProps();
         const wrapper = getWrapper(props);
-        const styleSpy = new sinon.spy();
+        const setStyleSpy = new sinon.spy();
         const geomSpy = new sinon.spy();
-        const event = {vectorContext: {setStyle: styleSpy, drawGeometry: geomSpy}, frameState: {time: 500}}
+        const event = {vectorContext: {setStyle: setStyleSpy, drawGeometry: geomSpy}, frameState: {time: 500}}
         const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
         const stub = new sinon.stub(wrapper.instance().map, 'getPixelFromCoordinate');
         stub.withArgs([-29,28]).returns([10, 50]);
@@ -445,31 +474,30 @@ describe('MapView component', () => {
         const renderCalls = renderSpy.callCount;
         wrapper.instance().animate(event, geom, 300);
         expect(maxSpy.calledWith(40,50)).toBe(true);
-        expect(ol.style.Style.calledOnce).toBe(true);
+        expect(styleSpy.called).toBe(true);
         expect(ol.style.Circle.calledOnce).toBe(true);
         expect(event.vectorContext.setStyle.calledOnce).toBe(true);
         expect(event.vectorContext.drawGeometry.calledOnce).toBe(true);
         expect(unSpy.notCalled).toBe(true);
         expect(renderSpy.callCount).toEqual(renderCalls + 1);
-        ol.style.Style = Style;
         ol.style.Circle = Circle;
         maxSpy.restore();
         unSpy.restore();
         renderSpy.restore();
+        styleSpy.restore();
     });
 
     it('animate should unregister the listener and return 0', () => {
-        const Style = ol.style.Style;
         const Circle = ol.style.Circle;
-        ol.style.Style = new sinon.spy();
         ol.style.Circle = new sinon.spy();
+        const styleSpy = new sinon.spy(ol.style, 'Style');
         const unSpy = new sinon.spy(ol.Observable, 'unByKey');
         const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
         const props = getProps();
         const wrapper = getWrapper(props);
-        const styleSpy = new sinon.spy();
+        const setStyleSpy = new sinon.spy();
         const geomSpy = new sinon.spy();
-        const event = {vectorContext: {setStyle: styleSpy, drawGeometry: geomSpy}, frameState: {time: 4000}}
+        const event = {vectorContext: {setStyle: setStyleSpy, drawGeometry: geomSpy}, frameState: {time: 4000}}
         const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
         const stub = new sinon.stub(wrapper.instance().map, 'getPixelFromCoordinate');
         stub.withArgs([-29,28]).returns([10, 50]);
@@ -477,16 +505,16 @@ describe('MapView component', () => {
         stub.withArgs([-29,9]).returns([10,100]);
         const renderCalls = renderSpy.callCount;
         expect(wrapper.instance().animate(event, geom, 500)).toEqual(0);
-        expect(ol.style.Style.calledOnce).toBe(true);
+        expect(styleSpy.called).toBe(true);
         expect(ol.style.Circle.calledOnce).toBe(true);
         expect(event.vectorContext.setStyle.calledOnce).toBe(true);
         expect(event.vectorContext.drawGeometry.calledOnce).toBe(true);
         expect(unSpy.called).toBe(true);
         expect(renderSpy.callCount).toEqual(renderCalls);
-        ol.style.Style = Style;
         ol.style.Circle = Circle;
         unSpy.restore();
         renderSpy.restore();
+        styleSpy.restore();
     });
 
     it('onMapClick should check for features, if multiple it should display in map popup', () => {
@@ -550,19 +578,15 @@ describe('MapView component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const getFeature = new sinon.spy(ol.source.Vector.prototype, 'getFeatureById');
-        const viewSpy = new sinon.spy(ol.Map.prototype, 'getView');
-        const fitSpy = new sinon.spy(ol.View.prototype, 'fit');
+        const zoomToSpy = new sinon.spy(utils, 'zoomToGeometry');
         wrapper.setState({selectedFeature: '6870234f-d876-467c-a332-65fdf0399a0d'});
         wrapper.instance().zoomToSelected();
         // called twice because of the render method also using it
         expect(getFeature.calledTwice).toBe(true);
         expect(getFeature.calledWith('6870234f-d876-467c-a332-65fdf0399a0d')).toBe(true);
-        expect(viewSpy.calledOnce).toBe(true);
-        expect(fitSpy.calledOnce).toBe(true);
-        expect(fitSpy.calledWith([-8618.243657724446, 6582145.331339892, -4146.762351540234, 6589254.048693137], wrapper.instance().map.getSize())).toBe(true);
+        expect(zoomToSpy.calledOnce).toBe(true);
         getFeature.restore();
-        viewSpy.restore();
-        fitSpy.restore();
+        zoomToSpy.restore();
     });
 
     it('handlePopupClose should call handleClick', () => {
@@ -617,6 +641,368 @@ describe('MapView component', () => {
         setStyleSpy.restore();
         getStyleSpy.restore();
         setIndexSpy.restore();
+    });
+
+    it('handleSearch should clearDraw, hide warning, create and add a feature, zoom to feature, and call onMapFitler if its a polygon', () => {
+        const result = {
+            geometry: {
+                type: "Polygon",
+                coordinates: [[[-77.479588, 38.802139], [-77.401989, 38.802139], [-77.401989, 38.873112], [-77.479588, 38.873112], [-77.479588, 38.802139]]]
+            },
+            type: "Feature",
+        }
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        const warningSpy = new sinon.spy(wrapper.instance(), 'showInvalidDrawWarning');
+        const readSpy = new sinon.spy(ol.format.GeoJSON.prototype, 'readFeature');
+        const transformSpy = new sinon.spy(ol.geom.Polygon.prototype, 'transform');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');
+        const typeSpy = new sinon.spy(ol.geom.Polygon.prototype, 'getType');
+        const createSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        expect(wrapper.instance().handleSearch(result)).toBe(true);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        expect(warningSpy.calledOnce).toBe(true);
+        expect(warningSpy.calledWith(false)).toBe(true);
+        expect(readSpy.calledOnce).toBe(true);
+        expect(readSpy.calledWith(result)).toBe(true);
+        expect(transformSpy.called).toBe(true);
+        expect(transformSpy.calledWith('EPSG:4326', 'EPSG:3857')).toBe(true);
+        expect(addSpy.calledOnce).toBe(true);
+        expect(zoomSpy.calledOnce).toBe(true);
+        expect(typeSpy.calledThrice).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        clearSpy.restore();
+        readSpy.restore();
+        transformSpy.restore();
+        addSpy.restore();
+        zoomSpy.restore();
+        typeSpy.restore();
+        createSpy.restore();
+    })
+
+    it('handleCancel should hide warning, set mode to normal, clearDraw, and call onMapFilter', () => {
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.setState({mode: 'NOT_NORMAL_MODE'});
+        const warningSpy = new sinon.spy(wrapper.instance(), 'showInvalidDrawWarning');
+        const updateSpy = new sinon.spy(wrapper.instance(), 'updateMode');
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        wrapper.instance().handleCancel();
+        expect(warningSpy.calledOnce).toBe(true);
+        expect(warningSpy.calledWith(false)).toBe(true);
+        expect(updateSpy.calledOnce).toBe(true);
+        expect(updateSpy.calledWith('MODE_NORMAL')).toBe(true);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith(null)).toBe(true);
+        clearSpy.restore();
+    });
+
+    it('setButtonSelected should set target icon SELECTED and the rest INACTIVE', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const initial = {
+            box: "DEFAULT",
+            free: "DEFAULT",
+            mapView: "DEFAULT",
+            import: "DEFAULT",
+            search: "DEFAULT",
+        };
+        const expected = {
+            box: 'SELECTED',
+            free: 'INACTIVE',
+            mapView: 'INACTIVE',
+            import: 'INACTIVE',
+            search: 'INACTIVE'
+        };
+        expect(wrapper.state()['toolbarIcons']).toEqual(initial);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        wrapper.instance().setButtonSelected('box');
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({toolbarIcons: expected})).toBe(true);
+    });
+
+    it('setAllButtonsDefault should set all toolbarIcons to DEFAULT', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const icons = {
+            box: "SELECTED",
+            free: "INACTIVE",
+            mapView: "INACTIVE",
+            import: "INACTIVE",
+            search: "INACTIVE",
+        };
+        const expected = {
+            box: "DEFAULT",
+            free: "DEFAULT",
+            mapView: "DEFAULT",
+            import: "DEFAULT",
+            search: "DEFAULT",
+        }
+        wrapper.setState({toolbarIcons: icons});
+        expect(wrapper.state()['toolbarIcons']).toEqual(icons);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        wrapper.instance().setAllButtonsDefault();
+        expect(stateSpy.calledOnce);
+        expect(stateSpy.calledWith({toolbarIcons: expected})).toBe(true);
+    });
+
+    it('toggleImportModal should set state to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        wrapper.instance().toggleImportModal(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({showImportModal: true})).toBe(true);
+    });
+
+    it('toggleImportModal should toggle the state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        const before = wrapper.state()['showImportModal'];
+        wrapper.instance().toggleImportModal();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({showImportModal: !before})).toBe(true);
+    });
+
+    it('showInvalidDrawWarning should set state to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        wrapper.instance().showInvalidDrawWarning(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({showInvalidDrawWarning: true})).toBe(true);
+    });
+
+    it('showInvalidDrawWarning should toggle state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        const before = wrapper.state()['showInvalidDrawWarning'];
+        wrapper.instance().showInvalidDrawWarning();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({showInvalidDrawWarning: !before})).toBe(true);
+    });
+
+    it('onDrawStart should call clearDraw', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        wrapper.instance().onDrawStart();
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        clearSpy.restore();
+    });
+
+    it('onDrawEnd should handle a free draw polygon', () => {
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const modeSpy = new sinon.spy(MapView.prototype, 'updateMode');
+        const wrapper = getWrapper(props);
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        const feature = new ol.Feature({geometry: geom});
+        const event = {feature: feature};
+        const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
+        const createSpy = new sinon.spy(utils, 'createGeoJSON');
+        const featureSpy = new sinon.spy(ol, 'Feature');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const validSpy = new sinon.spy(utils, 'isGeoJSONValid');
+        const createGeomSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        wrapper.setState({mode: 'MODE_DRAW_FREE'});
+        wrapper.instance().onDrawEnd(event);
+        expect(geomSpy.calledOnce).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledWith(geom)).toBe(true);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(featureSpy.calledWith({geometry: geom})).toBe(true);
+        expect(addSpy.calledOnce).toBe(true);
+        expect(validSpy.calledOnce).toBe(true);
+        expect(validSpy.calledWith(utils.createGeoJSON(geom))).toBe(true);
+        expect(createGeomSpy.calledOnce).toBe(true);
+        expect(createGeomSpy.calledWith(geom)).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith(utils.createGeoJSONGeometry(geom))).toBe(true);
+        expect(modeSpy.calledOnce).toBe(true);
+        expect(modeSpy.calledWith('MODE_NORMAL')).toBe(true);
+        modeSpy.restore();
+        geomSpy.restore();
+        createSpy.restore();
+        featureSpy.restore();
+        addSpy.restore();
+        validSpy.restore();
+        createGeomSpy.restore();
+    });
+
+    it('onDrawEnd should handle an invalid free draw', () => {
+        const props = getProps();
+        const modeSpy = new sinon.spy(MapView.prototype, 'updateMode');
+        const warningSpy = new sinon.spy(MapView.prototype, 'showInvalidDrawWarning');
+        const wrapper = getWrapper(props);
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        const feature = new ol.Feature({geometry: geom});
+        const event = {feature: feature};
+        const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
+        const createSpy = new sinon.spy(utils, 'createGeoJSON');
+        const featureSpy = new sinon.spy(ol, 'Feature');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
+        wrapper.setState({mode: 'MODE_DRAW_FREE'});
+        wrapper.instance().onDrawEnd(event);
+        expect(geomSpy.calledOnce).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledWith(geom)).toBe(true);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(featureSpy.calledWith({geometry: geom})).toBe(true);
+        expect(validSpy.calledOnce).toBe(true);
+        expect(validSpy.calledWith(utils.createGeoJSON(geom))).toBe(true);
+        expect(warningSpy.calledOnce).toBe(true);
+        expect(warningSpy.calledWith(true)).toBe(true);
+        expect(modeSpy.calledOnce).toBe(true);
+        expect(modeSpy.calledWith('MODE_NORMAL')).toBe(true);
+        modeSpy.restore();
+        warningSpy.restore();
+        geomSpy.restore();
+        createSpy.restore();
+        featureSpy.restore();
+        addSpy.restore();
+        validSpy.restore();
+    });
+
+    it('onDrawEnd should handle a bbox polygon', () => {
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const modeSpy = new sinon.spy(MapView.prototype, 'updateMode');
+        const wrapper = getWrapper(props);
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        const feature = new ol.Feature({geometry: geom});
+        const event = {feature: feature};
+        const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
+        const createSpy = new sinon.spy(utils, 'createGeoJSON');
+        const createGeomSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
+        wrapper.setState({mode: 'MODE_DRAW_BOX'});
+        wrapper.instance().onDrawEnd(event);
+        expect(geomSpy.calledOnce).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledWith(geom)).toBe(true);
+        expect(createGeomSpy.calledOnce).toBe(true);
+        expect(createGeomSpy.calledWith(geom)).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith(utils.createGeoJSONGeometry(geom))).toBe(true);
+        expect(addSpy.notCalled).toBe(true);
+        expect(validSpy.notCalled).toBe(true);
+        expect(modeSpy.calledOnce).toBe(true);
+        expect(modeSpy.calledWith('MODE_NORMAL')).toBe(true);
+        modeSpy.restore();
+        geomSpy.restore();
+        createSpy.restore();
+        createGeomSpy.restore();
+        validSpy.restore();
+        addSpy.restore();
+    });
+
+    it('setMapView should clear draw, create a feature from extent, and call onMapFilter', () => {
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        const calculateSpy = new sinon.spy(ol.View.prototype, 'calculateExtent');
+        const extentSpy =  new sinon.spy(ol.geom.Polygon, 'fromExtent');
+        const featureSpy = new sinon.spy(ol, 'Feature');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const createSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        wrapper.instance().setMapView();
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        expect(calculateSpy.calledOnce).toBe(true);
+        expect(calculateSpy.calledWith(wrapper.instance().map.getSize())).toBe(true);
+        expect(extentSpy.calledOnce).toBe(true);
+        const extent = wrapper.instance().map.getView().calculateExtent(wrapper.instance().map.getSize());
+        expect(extentSpy.calledWith(extent)).toBe(true);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(addSpy.calledOnce).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        clearSpy.restore();
+        calculateSpy.restore();
+        extentSpy.restore();
+        featureSpy.restore();
+        addSpy.restore();
+        createSpy.restore();
+    });
+
+    it('updateMode should set interactions to inactive, activate drawBox, and update the state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        const boxSpy = new sinon.spy();
+        const freeSpy = new sinon.spy();
+        wrapper.instance().drawBoxInteraction = {setActive: boxSpy}
+        wrapper.instance().drawFreeInteraction = {setActive: freeSpy}
+        wrapper.instance().updateMode('MODE_DRAW_BBOX');
+        expect(freeSpy.calledOnce).toBe(true);
+        expect(freeSpy.calledWith(false)).toBe(true);
+        expect(boxSpy.calledTwice).toBe(true);
+        expect(boxSpy.calledWith(true)).toBe(true);
+        expect(boxSpy.calledWith(false)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({mode: 'MODE_DRAW_BBOX'})).toBe(true);
+    });
+
+    it('updateMode should set interactions to inactive, activate drawFree, and update state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(wrapper.instance(), 'setState');
+        const boxSpy = new sinon.spy();
+        const freeSpy = new sinon.spy();
+        wrapper.instance().drawBoxInteraction = {setActive: boxSpy}
+        wrapper.instance().drawFreeInteraction = {setActive: freeSpy}
+        wrapper.instance().updateMode('MODE_DRAW_FREE');
+        expect(boxSpy.calledOnce).toBe(true);
+        expect(boxSpy.calledWith(false)).toBe(true);
+        expect(freeSpy.calledTwice).toBe(true);
+        expect(freeSpy.calledWith(true)).toBe(true);
+        expect(freeSpy.calledWith(false)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({mode: 'MODE_DRAW_FREE'})).toBe(true);
+    });
+
+    it('handleGeoJSONUpload should clear the draw layer, add a feature, zoom, and call onMapFilter', () => {
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const featureSpy = new sinon.spy(ol, 'Feature');
+        const createSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
+        const geom = new ol.geom.Polygon([[[-29,9],[-4,9],[-4,28],[-29,28],[-29,9]]]);
+        wrapper.instance().handleGeoJSONUpload(geom);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        expect(addSpy.calledOnce).toBe(true);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(featureSpy.calledWith({geometry: geom})).toBe(true);
+        expect(zoomSpy.calledOnce).toBe(true);
+        expect(zoomSpy.calledWith(geom, wrapper.instance().map)).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(createSpy.calledWith(geom)).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith(utils.createGeoJSONGeometry(geom))).toBe(true);
+        clearSpy.restore();
+        zoomSpy.restore();
+        addSpy.restore();
+        featureSpy.restore();
+        createSpy.restore();
     });
 
 });
