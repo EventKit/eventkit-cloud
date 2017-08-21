@@ -115,11 +115,11 @@ export class DataPackGridItem extends Component {
             return provider.display != false;
         });
 
-        const providersList = Object.entries(this.state.providerDescs).map(([key,value])=>{
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
             return (
             <ListItem
                 key={key}
-                style={{backgroundColor:'whitesmoke', fontWeight:'bold', width:'95%'}}
+                style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'95%'}}
                 nestedListStyle={{padding: '0px'}}
                 primaryText={key}
                 initiallyOpen={false}
@@ -128,7 +128,7 @@ export class DataPackGridItem extends Component {
                     <ListItem
                         key={1}
                         primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                        style={{backgroundColor: 'whitesmoke', fontSize: '14px', width:'95%'}}
+                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white',  fontSize: '14px', width:'95%'}}
                     />
                 ]}
             />
@@ -246,7 +246,7 @@ export class DataPackGridItem extends Component {
 
                                 <MenuItem
                                     style={{fontSize: cardTextFontSize}}
-                                    primaryText="View Provider Data"
+                                    primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen.bind(this, runProviders)}
                                     />
 
@@ -264,7 +264,7 @@ export class DataPackGridItem extends Component {
                                 open={this.state.providerDialogOpen}
                                 onRequestClose={this.handleProviderClose.bind(this)}
                             ><CustomScrollbar style={{height: window.innerHeight - 900, overflowX: 'hidden', width:'100%'}}>
-                                <span><strong>PROVIDER DATA</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
+                                <span><strong>DATA SOURCES</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
                             </CustomScrollbar></Dialog>
                         </div>
                     } 

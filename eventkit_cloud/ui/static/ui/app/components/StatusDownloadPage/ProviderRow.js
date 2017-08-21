@@ -322,7 +322,7 @@ export class ProviderRow extends React.Component {
         />,<MenuItem
         key={'viewProviderData'}
         style={{fontSize: '12px'}}
-        primaryText='View Provider Data'
+        primaryText='View Data Source'
         onClick={this.handleProviderOpen.bind(this, this.props.provider)}
     />);
 

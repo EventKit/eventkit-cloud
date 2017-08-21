@@ -45,11 +45,11 @@ export class DataPackListItem extends Component {
             return provider.display != false;
         });
 
-        const providersList = Object.entries(this.state.providerDescs).map(([key,value])=>{
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
             return (
                 <ListItem
                     key={key}
-                    style={{backgroundColor:'whitesmoke', fontWeight:'bold'}}
+                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold'}}
                     nestedListStyle={{padding: '0px'}}
                     primaryText={key}
                     initiallyOpen={false}
@@ -58,7 +58,7 @@ export class DataPackListItem extends Component {
                         <ListItem
                             key={1}
                             primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                            style={{backgroundColor: 'whitesmoke', fontSize: '14px'}}
+                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px'}}
                         />
                     ]}
                 />
@@ -149,7 +149,7 @@ export class DataPackListItem extends Component {
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                 <MenuItem
                                     style={{fontSize: subtitleFontSize}}
-                                    primaryText="View Provider Data"
+                                    primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen.bind(this, runProviders)}
                                 />
 
@@ -167,7 +167,7 @@ export class DataPackListItem extends Component {
                                 open={this.state.providerDialogOpen}
                                 onRequestClose={this.handleProviderClose.bind(this)}
                             >
-                                <span><strong>PROVIDER DATA</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
+                                <span><strong>DATA SOURCES</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
                             </Dialog>
                         </div>
                     } 
