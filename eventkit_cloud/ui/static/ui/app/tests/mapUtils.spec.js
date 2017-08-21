@@ -480,4 +480,26 @@ describe('mapUtils', () => {
         expect(center.calledOnce).toBe(true);
         expect(geom.getCoordinates.calledOnce).toBe(true);
     });
+
+    it('featureToPoint should return a point representing the center of a feature\'s extent', () => {
+        expect(utils.featureToPoint()).toBe(null);
+        const coords = [[[-15,-14],[14,-14],[14,12],[-15,12],[-15,-14]]];
+        const bbox = [-15,-14,14,12];
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(coords)
+        });
+        const expectedCoords = ol.extent.getCenter(bbox);
+        const centerSpy = new sinon.spy(ol.extent, 'getCenter');
+        const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
+        const extentSpy = new sinon.spy(ol.geom.Polygon.prototype, 'getExtent');
+        const point = utils.featureToPoint(feature);
+        expect(centerSpy.calledOnce).toBe(true);
+        expect(centerSpy.calledWith(bbox)).toBe(true);
+        expect(geomSpy.calledOnce).toBe(true);
+        expect(extentSpy.calledOnce).toBe(true);
+        expect(point.getCoordinates()).toEqual(expectedCoords);
+        centerSpy.restore();
+        geomSpy.restore();
+        extentSpy.restore();
+    });
 });
