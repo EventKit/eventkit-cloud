@@ -17,6 +17,7 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import {browserHistory} from 'react-router';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -104,7 +105,7 @@ export class DataPackGridItem extends Component {
             return '70%';
         }
         else {
-            return '40%';
+            return '530px';
         }
     }
 
@@ -118,7 +119,7 @@ export class DataPackGridItem extends Component {
             return (
             <ListItem
                 key={key}
-                style={{backgroundColor:'whitesmoke', fontWeight:'bold'}}
+                style={{backgroundColor:'whitesmoke', fontWeight:'bold', width:'95%'}}
                 nestedListStyle={{padding: '0px'}}
                 primaryText={key}
                 initiallyOpen={false}
@@ -127,7 +128,7 @@ export class DataPackGridItem extends Component {
                     <ListItem
                         key={1}
                         primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                        style={{backgroundColor: 'whitesmoke', fontSize: '14px'}}
+                        style={{backgroundColor: 'whitesmoke', fontSize: '14px', width:'95%'}}
                     />
                 ]}
             />
@@ -262,9 +263,9 @@ export class DataPackGridItem extends Component {
                                 modal={false}
                                 open={this.state.providerDialogOpen}
                                 onRequestClose={this.handleProviderClose.bind(this)}
-                            >
+                            ><CustomScrollbar style={{height: window.innerHeight - 900, overflowX: 'hidden', width:'100%'}}>
                                 <span><strong>PROVIDER DATA</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
-                            </Dialog>
+                            </CustomScrollbar></Dialog>
                         </div>
                     } 
                     subtitle={

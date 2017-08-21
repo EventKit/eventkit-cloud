@@ -13,6 +13,7 @@ import Check from 'material-ui/svg-icons/navigation/check'
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
 import Info from 'material-ui/svg-icons/action/info'
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -210,7 +211,7 @@ export class DataCartDetails extends React.Component {
             return '70%';
         }
         else {
-            return '40%';
+            return '530px';
         }
     }
 
@@ -465,10 +466,11 @@ export class DataCartDetails extends React.Component {
                                             modal={false}
                                             open={this.state.providerDialogOpen}
                                             onRequestClose={this.handleProviderClose.bind(this)}
-                                        >
+                                        ><CustomScrollbar style={{height: window.innerHeight - 975, overflowX: 'hidden', width:'100%'}}>
                                             <span><strong>{this.state.providerName}</strong>
-                                               <p style={{paddingTop:'20px'}}>{this.state.providerDesc}</p></span>
-                                        </Dialog></p>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div></span>
+
+                                        </CustomScrollbar></Dialog></p>
                                 })}
                             </td>
                         </tr>
