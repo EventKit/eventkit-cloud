@@ -100,17 +100,8 @@ export class DataPackGridItem extends Component {
         this.setState({expanded: !this.state.expanded});
     }
 
-    getDialogWidth() {
-        if(window.innerWidth <= 767) {
-            return '70%';
-        }
-        else {
-            return '530px';
-        }
-    }
-
     render() {
-        const dialogWidth = this.getDialogWidth();
+
         const runProviders = this.props.run.provider_tasks.filter((provider) => {
             return provider.display != false;
         });
@@ -258,14 +249,18 @@ export class DataPackGridItem extends Component {
                                 : null}
                             </IconMenu>
                             <Dialog
-                                contentStyle={{width:dialogWidth}}
+                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                                 actions={providerInfoActions}
                                 modal={false}
                                 open={this.state.providerDialogOpen}
                                 onRequestClose={this.handleProviderClose.bind(this)}
-                            ><CustomScrollbar style={{height: window.innerHeight - 900, overflowX: 'hidden', width:'100%'}}>
-                                <span><strong>DATA SOURCES</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
-                            </CustomScrollbar></Dialog>
+                            >
+                                <span><strong>DATA SOURCES</strong>
+                                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                        <List style={{marginTop:'10px'}}>{providersList}</List>
+                                    </CustomScrollbar>
+                                </span>
+                            </Dialog>
                         </div>
                     } 
                     subtitle={

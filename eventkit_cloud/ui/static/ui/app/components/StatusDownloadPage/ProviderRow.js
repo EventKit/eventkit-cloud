@@ -20,6 +20,7 @@ import styles from '../../styles/StatusDownload.css'
 import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class ProviderRow extends React.Component {
     constructor(props) {
@@ -285,21 +286,11 @@ export class ProviderRow extends React.Component {
         this.setState({providerDesc, providerDialogOpen: true});
     };
 
-    getDialogWidth() {
-        if(window.innerWidth <= 767) {
-            return '70%';
-        }
-        else {
-            return '40%';
-        }
-    }
-
 
     render() {
         const style = {
               textDecoration: 'underline'
              }
-        const dialogWidth = this.getDialogWidth();
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
@@ -427,13 +418,17 @@ export class ProviderRow extends React.Component {
                             :
                                 null
                             }<Dialog
-                            contentStyle={{width:dialogWidth}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={providerInfoActions}
                             modal={false}
                             open={this.state.providerDialogOpen}
                             onRequestClose={this.handleProviderClose.bind(this)}
                         >
-                            <span><strong>{this.props.provider.name}</strong><p style={{paddingTop:'20px'}}>{this.state.providerDesc}</p></span>
+                            <span><strong>{this.props.provider.name}</strong>
+                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
+                                </CustomScrollbar>
+                            </span>
                         </Dialog>
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>

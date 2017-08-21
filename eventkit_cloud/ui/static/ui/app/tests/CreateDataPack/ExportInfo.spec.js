@@ -66,7 +66,7 @@ describe('ExportInfo component', () => {
         const store = fakeStore({});
         const props = getProps();
         const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
-        expect(wrapper.find('#layersHeader').text()).toEqual('Select Layers');
+        expect(wrapper.find('#layersHeader').text()).toEqual('Select Data Sources');
         expect(wrapper.find('.subHeading')).toHaveLength(1);
         expect(wrapper.find('.subHeading').text()).toEqual('You must choose at least one');
         // expect(wrapper.find('.sectionBottom')).toHaveLength(1);

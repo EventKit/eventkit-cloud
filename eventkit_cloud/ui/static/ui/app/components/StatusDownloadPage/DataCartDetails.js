@@ -216,7 +216,6 @@ export class DataCartDetails extends React.Component {
     }
 
     render() {
-        const dialogWidth = this.getDialogWidth();
         const providers = this.props.cartDetails.provider_tasks.filter((provider) => {
             return provider.display != false;
         });
@@ -392,7 +391,7 @@ export class DataCartDetails extends React.Component {
                             label="RUN EXPORT AGAIN"
                         />
                         <Dialog
-                            contentStyle={{width:dialogWidth}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={rerunExportActions}
                             modal={false}
                             open={this.state.rerunDialogOpen}
@@ -410,7 +409,7 @@ export class DataCartDetails extends React.Component {
                             label="CLONE"
                         />
                         <Dialog
-                            contentStyle={{width:dialogWidth}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={cloneExportActions}
                             modal={false}
                             open={this.state.cloneDialogOpen}
@@ -429,7 +428,7 @@ export class DataCartDetails extends React.Component {
                         />
 
                         <Dialog
-                            contentStyle={{width:dialogWidth}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={deleteActions}
                             modal={false}
                             open={this.state.deleteDialogOpen}
@@ -456,21 +455,23 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
                         </tr>
                         <tr>
-                            <td style={styles.tdHeader}>Layer Data</td>
+                            <td style={styles.tdHeader}>Data Sources</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
                                     return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                         <Dialog
-                                            contentStyle={{width:dialogWidth}}
+                                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                                             actions={providerInfoActions}
                                             modal={false}
                                             open={this.state.providerDialogOpen}
                                             onRequestClose={this.handleProviderClose.bind(this)}
-                                        ><CustomScrollbar style={{height: window.innerHeight - 975, overflowX: 'hidden', width:'100%'}}>
+                                        >
                                             <span><strong>{this.state.providerName}</strong>
-                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div></span>
+                                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
+                                            </CustomScrollbar></span>
 
-                                        </CustomScrollbar></Dialog></p>
+                                        </Dialog></p>
                                 })}
                             </td>
                         </tr>

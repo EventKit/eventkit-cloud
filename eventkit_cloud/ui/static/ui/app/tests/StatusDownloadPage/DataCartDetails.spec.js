@@ -74,7 +74,7 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(0).find('td').last().text()).toEqual('test');
         expect(table.find('tr').at(1).find('td').first().text()).toEqual('Project/Category');
         expect(table.find('tr').at(1).find('td').last().text()).toEqual('test');
-        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Layer Data');
+        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Data Sources');
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
         expect(table.find('tr').at(3).find('td').first().text()).toEqual('File Formats');
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('.gpkg');
@@ -118,26 +118,6 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
     });
 
-    it('getDialogWidth should return the percentage string for dialog width based on window width', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getDialogWidth()).toEqual('70%');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-    });
 
     it('should handle setting state of datacartDetails when component updates', () => {
         let props = getProps();
@@ -321,8 +301,7 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerName: "OpenStreetMap Data (Themes)", providerDialogOpen: true})).toBe(true);
         expect(wrapper.find('span')).toHaveLength(1)
-        expect(wrapper.find('p')).toHaveLength(2);
-        expect(wrapper.find('p').at(1).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        expect(wrapper.find('div').at(10).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
     });
 

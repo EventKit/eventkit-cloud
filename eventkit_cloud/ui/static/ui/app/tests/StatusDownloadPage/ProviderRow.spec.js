@@ -195,27 +195,6 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
     });
 
-    it('getDialogWidth should return the percentage string for dialog width based on window width', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getDialogWidth()).toEqual('70%');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getDialogWidth()).toEqual('40%');
-    });
-
 
     it('should call componentWillMount and set the row and count state', () => {
         const props = getProps();
@@ -238,8 +217,8 @@ describe('ProviderRow component', () => {
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
         expect(wrapper.find('span')).toHaveLength(1)
-        expect(wrapper.find('p')).toHaveLength(1);
-        expect(wrapper.find('p').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        expect(wrapper.find('div')).toHaveLength(1);
+        expect(wrapper.find('div').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
     });
 

@@ -15,6 +15,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import { List, ListItem} from 'material-ui/List'
 import moment from 'moment';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
@@ -70,7 +71,7 @@ export class DataPackTableItem extends Component {
             return (
                 <ListItem
                     key={key}
-                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold'}}
+                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'95%'}}
                     nestedListStyle={{padding: '0px'}}
                     primaryText={key}
                     initiallyOpen={false}
@@ -79,7 +80,7 @@ export class DataPackTableItem extends Component {
                         <ListItem
                             key={1}
                             primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px'}}
+                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'95%'}}
                         />
                     ]}
                 />
@@ -158,13 +159,17 @@ export class DataPackTableItem extends Component {
                         : null}
                     </IconMenu>
                     <Dialog
-                        contentStyle={{width:'40%'}}
+                        contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                         actions={providerInfoActions}
                         modal={false}
                         open={this.state.providerDialogOpen}
                         onRequestClose={this.handleProviderClose.bind(this)}
                     >
-                        <span><strong>DATA SOURCES</strong><List style={{marginTop:'10px'}}>{providersList}</List></span>
+                        <span><strong>DATA SOURCES</strong>
+                                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                        <List style={{marginTop:'10px'}}>{providersList}</List>
+                                    </CustomScrollbar>
+                                </span>
                     </Dialog>
                 </TableRowColumn>
             </TableRow>
