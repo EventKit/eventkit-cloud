@@ -381,7 +381,7 @@ function mapStateToProps(state) {
         user: state.user,
         runsDeletion: state.runsDeletion,
         drawerOpen: state.drawerOpen,
-        providers: state.providers
+        providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
     };
