@@ -67,7 +67,7 @@ class ExportOSMTaskRunner(TaskRunner):
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
 
-        job_name = normalize_job_name(job.name)
+        job_name = normalize_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
@@ -152,7 +152,7 @@ class ExportWFSTaskRunner(TaskRunner):
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
-        job_name = normalize_job_name(job.name)
+        job_name = normalize_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
@@ -248,7 +248,7 @@ class ExportWCSTaskRunner(TaskRunner):
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
-        job_name = normalize_job_name(job.name)
+        job_name = normalize_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         formats += ['geotiff']
@@ -358,7 +358,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
-        job_name = normalize_job_name(job.name)
+        job_name = normalize_name(job.name)
         # get the formats to export
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
@@ -459,7 +459,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         # pull the provider_task from the database
         provider_task = ProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
-        job_name = normalize_job_name(job.name)
+        job_name = normalize_name(job.name)
 
         formats = [provider_task_format.slug for provider_task_format in provider_task.formats.all()]
         export_tasks = {}
@@ -520,7 +520,7 @@ def create_format_task(task_format):
     return CeleryExportTask
 
 
-def normalize_job_name(name):
+def normalize_name(name):
     # Remove all non-word characters
     s = re.sub(r"[^\w\s]", '', name)
     # Replace all whitespace with a single underscore

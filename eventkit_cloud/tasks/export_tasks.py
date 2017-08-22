@@ -9,11 +9,10 @@ import os
 import shutil
 import socket
 import traceback
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
-from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -28,11 +27,9 @@ from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files
 from ..celery import app, TaskPriority
 from ..utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
-    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage,
-    gdalutils
+    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
 )
-from ..utils.hotosm_geopackage import OSMConfig, Geopackage
+from ..utils.hotosm_geopackage import Geopackage
 from .exceptions import CancelException, DeleteException
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
@@ -355,20 +352,23 @@ def osm_data_collection_task(
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
 def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
-                           provider_name=None, bbox=None, user_details=None
-                           ):
+                           provider_name=None, bbox=None, user_details=None, *args, **kwargs):
     """
     Task to create styles for osm.
     """
+    from .task_runners import normalize_name
+    from audit_logging.file_logging import logging_open
+
     result = result or {}
     self.update_task_state(result=result, task_uid=task_uid)
     input_gpkg = parse_result(result, 'geopackage')
 
-    gpkg_file = '{}.gpkg'.format(job_name)
+    job_name = normalize_name(job_name)
+
+    gpkg_file = '{0}.gpkg'.format(job_name)
     style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
-    from audit_logging.file_logging import logging_open
     with logging_open(style_file, 'w', user_details=user_details) as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
                                                                       'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
@@ -587,15 +587,15 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
         raise Exception(e)
 
 
-@app.task(name='Project file (.zip)', bind=True, base=UserDetailsBase)
+@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
-                        stage_dir=None,
-                        *args, **kwargs):
+                        stage_dir=None, *args, **kwargs):
     from .models import ExportProviderTask
-    from .task_runners import normalize_job_name
+    from .task_runners import normalize_name
+
     result = result or {}
 
-    #self.update_task_state(result=result, task_uid=task_uid)
+    self.update_task_state(result=result, task_uid=task_uid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
@@ -624,13 +624,41 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     if include_files:
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))),
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
                                      adhoc=True, static_files=get_style_files()).get('result')
     else:
         raise Exception("There are no files in this provider available to zip.")
     if not zip_file:
         raise Exception("A zipfile could not be created, please contact an administrator.")
     result['result'] = zip_file
+    return result
+
+
+@app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
+def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+    """
+    Class defining geopackage export function.
+    """
+    user_details = kwargs.get('user_details')
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-bounds_export_task'}
+
+    from .models import ExportRun
+
+    self.update_task_state(result=result, task_uid=task_uid)
+    run = ExportRun.objects.get(uid=run_uid)
+
+    result_gpkg = parse_result(result, 'geopackage')
+    bounds = run.job.the_geom.geojson or run.job.bounds_geojson
+
+    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
+    gpkg = geopackage.add_geojson_to_geopackage(
+        geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid, user_details=user_details
+    )
+
+    result['result'] = gpkg
+    result['geopackage'] = result_gpkg
     return result
 
 
@@ -642,7 +670,6 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     Class defining geopackage export for external raster service.
     """
     logger.info('Doing nothing in external_raster_service_export_task ({})'.format(self.name))
-    from .models import ExportRun
     result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -669,7 +696,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
-    result = result or {}
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {'username': 'unknown-pick_up_run_task'}
@@ -997,12 +1023,12 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
-    with ZipFile(zip_st_filepath, 'w', allowZip64=True) as zipfile:
+    with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
                 zipfile.write(
                     absolute_file_path,
-                    relative_file_path
+                    arcname=relative_file_path
                 )
         for filepath in files:
             name, ext = os.path.splitext(filepath)

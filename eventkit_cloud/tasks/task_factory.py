@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from celery import chain
 from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
-    example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
+    example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task, osm_create_styles_task, bounds_export_task
 
 from ..jobs.models import Job
 from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
@@ -108,14 +108,11 @@ class TaskFactory:
                             routing_key=worker
                         )
                         if provider_task_record.provider.zip:
-                            zip_export_provider_sig = zip_export_provider.s(
-                                job_name=run.job.name,
-                                export_provider_task_uid=provider_task_uid,
-                                run_uid=run_uid,
-                                stage_dir=stage_dir
-                            )
+                            zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
+                                                                         stage_dir=stage_dir, worker=worker,
+                                                                         job_name=run.job.name)
                             finalized_provider_task_chain = chain(
-                                provider_subtask_chain, finalize_export_provider_sig, zip_export_provider_sig
+                                provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_sig
                             )
                         else:
                             finalized_provider_task_chain = chain(
@@ -212,6 +209,16 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     ).set(queue=worker, routing_key=worker)
 
 
+def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
+    return chain(
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=osm_create_styles_task, job_name=job_name),
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=bounds_export_task, job_name=job_name),
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=zip_export_provider, job_name=job_name)
+    )
+
 def get_invalid_licenses(job):
     """
     :param user: A user to verify licenses against.
@@ -262,9 +269,9 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
             [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks[1:]]
         )
 
-    prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
+    # prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
 
-    zip_task_sig = zip_file_task.s(run_uid=run_uid).set(**finalize_task_settings)
+    # zip_task_sig = zip_file_task.s(run_uid=run_uid).set(**finalize_task_settings)
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
     finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
