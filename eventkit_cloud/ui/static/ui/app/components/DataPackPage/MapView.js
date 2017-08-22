@@ -7,8 +7,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import ol from 'openlayers';
 import isEqual from 'lodash/isEqual';
 import css from '../../styles/ol3map.css';
-import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
@@ -196,6 +195,7 @@ export class MapView extends Component {
         this.overlay = new ol.Overlay({
             element: this.container,
             autoPan: true,
+            autoPanMargin: 100,
             autoPanAnimation: {
                 duration: 250
             },
@@ -206,6 +206,7 @@ export class MapView extends Component {
     }
 
     handleOlPopupClose() {
+        this.map.addInteraction(new ol.interaction.MouseWheelZoom());
         this.overlay.setPosition(undefined);
         this.closer.blur();
         return false;
@@ -306,7 +307,15 @@ export class MapView extends Component {
                 this.handleClick(features[0].getId());
             }
             else {
-                this.setState({groupedFeatures: features})
+                this.setState({groupedFeatures: features});
+                // disable scroll zoom while popup is open
+                let zoom = null;
+                this.map.getInteractions().forEach((interaction) => {
+                    if (interaction instanceof ol.interaction.MouseWheelZoom) {
+                        zoom = interaction
+                    }
+                });
+                if (zoom) {this.map.removeInteraction(zoom)};
                 const coord = evt.coordinate;
                 this.overlay.setPosition(coord);
             }
@@ -488,7 +497,7 @@ export class MapView extends Component {
             {display: 'none'}
             :
             {height: window.innerHeight - 236, width: '30%', display: 'inline-block'},
-            popupContainer: {position: 'absolute', width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`, bottom: '50px', textAlign: 'center', display: 'relative'}
+            popupContainer: {position: 'absolute', width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`, bottom: '50px', textAlign: 'center', display: 'relative', zIndex: 1}
         };
 
         const load = <LoadButtons
@@ -562,6 +571,8 @@ export class MapView extends Component {
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}></a>
                         <div id="popup-content">
+                            <p style={{color: 'grey'}}>Select One:</p>
+                            <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                             {this.state.groupedFeatures.map((feature, ix) => {
                                 return <a 
                                     key={ix}
@@ -571,17 +582,17 @@ export class MapView extends Component {
                                     }}
                                     style={{display: 'block', cursor: 'pointer'}}
                                 >
-                                    {ix + 1 + ': ' + feature.getProperties().name}
+                                    <Dot style={{opacity: '0.5', color: '#ce4427', backgroundColor: 'white', border: '1px solid #4598bf', borderRadius: '100%', height: '14px', width: '14px', verticalAlign: 'middle', marginRight: '5px'}}/> {feature.getProperties().name}
                                 </a>
                             })}
+                            </CustomScrollbar>
                         </div>
                     </div>
                     {this.state.showPopup && feature ?
                         <div style={styles.popupContainer}>
-                            <div style={{margin: '0px auto', maxWidth: window.innerWidth < 768 ? '90%' : 'calc(100% - 240px)', minWidth: '250px', display: 'inline-block', textAlign: 'left'}}>
-                                <MapPopup 
-                                    name={feature.getProperties().name}
-                                    event={feature.getProperties().job.event}
+                            <div style={{margin: '0px auto', width: '70%', maxWidth: window.innerWidth < 768 ? '90%' : '455px', minWidth: '250px', display: 'inline-block', textAlign: 'left'}}>
+                                <MapPopup
+                                    featureInfo={feature.getProperties()} 
                                     detailUrl={`/status/${feature.getProperties().job.uid}`}
                                     handleZoom={this.zoomToSelected}
                                     handlePopupClose={this.handlePopupClose}
