@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import '../tap_events'
+import moment from 'moment'
 import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
@@ -386,31 +387,17 @@ export class ProviderRow extends React.Component {
                                 </IconMenu>
                             :
                                 null
-                            }<Dialog
-                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                            actions={providerInfoActions}
-                            modal={false}
-                            open={this.state.providerDialogOpen}
-                            onRequestClose={this.handleProviderClose.bind(this)}
-                        >
-                            <span><strong>{this.props.provider.name}</strong>
-                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
-                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
-                                </CustomScrollbar>
-                            </span>
-                        </Dialog>
+                            }
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>
-
                         </TableHeaderColumn>
                     </TableRow>
                 </TableHeader>
                             {tableData}
             </Table>
-
         )
     }
 }
@@ -420,7 +407,6 @@ ProviderRow.propTypes = {
     onSelectionToggle: PropTypes.func,
     selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired
 }
 
 export default ProviderRow;
