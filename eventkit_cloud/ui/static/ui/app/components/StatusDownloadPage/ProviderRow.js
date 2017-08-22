@@ -4,6 +4,8 @@ import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
+import Dialog from 'material-ui/Dialog';
+import RaisedButton from 'material-ui/RaisedButton';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down'
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up'
@@ -17,6 +19,7 @@ import styles from '../../styles/StatusDownload.css'
 import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
+import CustomScrollbar from '../CustomScrollbar';
 import TaskError from './TaskError'
 import ProviderError from './ProviderError'
 
@@ -31,6 +34,8 @@ export class ProviderRow extends React.Component {
             openTable: false,
             selectedRows: { },
             fileSize: null,
+            providerDesc: '',
+            providerDialogOpen: false,
             cloneDialogOpen: false,
 
         }
@@ -88,6 +93,9 @@ export class ProviderRow extends React.Component {
             window.open(value, '_blank');
         });
     }
+
+
+
 
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
@@ -236,6 +244,17 @@ export class ProviderRow extends React.Component {
         }
     }
 
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+
+    };
+
+    handleProviderOpen(runProviders) {
+        let propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
+        let providerDesc = propsProvider.service_description;
+        this.setState({providerDesc, providerDialogOpen: true});
+    };
+
 
     render() {
         const style = {
@@ -247,14 +266,37 @@ export class ProviderRow extends React.Component {
         const {provider, ...rowProps} = this.props;
 
         let menuItems = [];
+        let cancelMenuDisabled;
         if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
-            menuItems.push(<MenuItem
-                key={'cancel'}
-                style={{fontSize: '12px'}}
-                primaryText="Cancel"
-                onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
-            />);
+            cancelMenuDisabled = false;
         }
+        else {
+            cancelMenuDisabled = true;
+        }
+        menuItems.push(<MenuItem
+            key={'cancel'}
+            disabled={cancelMenuDisabled}
+            style={{fontSize: '12px'}}
+            primaryText="Cancel"
+            onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
+        />,<MenuItem
+        key={'viewProviderData'}
+        style={{fontSize: '12px'}}
+        primaryText='View Data Source'
+        onClick={this.handleProviderOpen.bind(this, this.props.provider)}
+    />);
+
+        const providerInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProviderClose.bind(this)}
+            />,
+        ];
 
         const tasks = provider.tasks.filter((task) => {
             return task.display != false;
@@ -344,17 +386,31 @@ export class ProviderRow extends React.Component {
                                 </IconMenu>
                             :
                                 null
-                            }
+                            }<Dialog
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                            actions={providerInfoActions}
+                            modal={false}
+                            open={this.state.providerDialogOpen}
+                            onRequestClose={this.handleProviderClose.bind(this)}
+                        >
+                            <span><strong>{this.props.provider.name}</strong>
+                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
+                                </CustomScrollbar>
+                            </span>
+                        </Dialog>
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>
+
                         </TableHeaderColumn>
                     </TableRow>
                 </TableHeader>
                             {tableData}
             </Table>
+
         )
     }
 }
@@ -364,6 +420,7 @@ ProviderRow.propTypes = {
     onSelectionToggle: PropTypes.func,
     selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 export default ProviderRow;

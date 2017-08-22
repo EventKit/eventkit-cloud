@@ -12,6 +12,8 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import Check from 'material-ui/svg-icons/navigation/check'
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
+import Info from 'material-ui/svg-icons/action/info'
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -29,6 +31,8 @@ export class DataCartDetails extends React.Component {
             deleteDialogOpen: false,
             rerunDialogOpen: false,
             cloneDialogOpen: false,
+            providerDesc: '',
+            providerDialogOpen: false,
         };
     }
 
@@ -45,6 +49,7 @@ export class DataCartDetails extends React.Component {
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
         }
+
     }
 
     componentDidMount(){
@@ -146,6 +151,17 @@ export class DataCartDetails extends React.Component {
         this.setState({cloneDialogOpen: false});
     };
 
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+    };
+
+    handleProviderOpen(runProviders) {
+        let propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
+        let providerDesc = propsProvider.service_description.toString();
+        let providerName = propsProvider.name.toString();
+        this.setState({providerDesc, providerName, providerDialogOpen: true})
+    };
+
     handleDelete = () => {
         this.props.onRunDelete(this.props.cartDetails.uid)
         this.setState({deleteDialogOpen: false});
@@ -188,8 +204,16 @@ export class DataCartDetails extends React.Component {
     handleExpirationChange = (e, date) => {
         this.setState({expirationDate: date});
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
-    }
+    };
 
+    getDialogWidth() {
+        if(window.innerWidth <= 767) {
+            return '70%';
+        }
+        else {
+            return '530px';
+        }
+    }
 
     render() {
         const providers = this.props.cartDetails.provider_tasks.filter((provider) => {
@@ -265,6 +289,18 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleClone.bind(this)}
             />,
         ];
+
+        const providerInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProviderClose.bind(this)}
+            />,
+        ];
         return (
             <div>
                 <div>
@@ -336,7 +372,8 @@ export class DataCartDetails extends React.Component {
 
                 <div style={{paddingBottom:'10px'}}>
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
-                                     onProviderCancel={this.props.onProviderCancel}/>
+                                     onProviderCancel={this.props.onProviderCancel}
+                                     providers={this.props.providers}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                     <div style={styles.subHeading}>
@@ -354,7 +391,7 @@ export class DataCartDetails extends React.Component {
                             label="RUN EXPORT AGAIN"
                         />
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={rerunExportActions}
                             modal={false}
                             open={this.state.rerunDialogOpen}
@@ -372,7 +409,7 @@ export class DataCartDetails extends React.Component {
                             label="CLONE"
                         />
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={cloneExportActions}
                             modal={false}
                             open={this.state.cloneDialogOpen}
@@ -391,7 +428,7 @@ export class DataCartDetails extends React.Component {
                         />
 
                         <Dialog
-                            contentStyle={{width:'30%'}}
+                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                             actions={deleteActions}
                             modal={false}
                             open={this.state.deleteDialogOpen}
@@ -418,10 +455,23 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
                         </tr>
                         <tr>
-                            <td style={styles.tdHeader}>Layer Data</td>
+                            <td style={styles.tdHeader}>Data Sources</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
-                                    return <p key={provider.name}>{provider.name}</p>
+                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        <Dialog
+                                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                            actions={providerInfoActions}
+                                            modal={false}
+                                            open={this.state.providerDialogOpen}
+                                            onRequestClose={this.handleProviderClose.bind(this)}
+                                        >
+                                            <span><strong>{this.state.providerName}</strong>
+                                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
+                                            </CustomScrollbar></span>
+
+                                        </Dialog></p>
                                 })}
                             </td>
                         </tr>
@@ -489,6 +539,7 @@ DataCartDetails.propTypes = {
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 export default DataCartDetails;

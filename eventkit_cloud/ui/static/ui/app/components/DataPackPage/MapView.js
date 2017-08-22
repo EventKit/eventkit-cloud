@@ -13,7 +13,7 @@ import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
-import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
+import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint} from '../../utils/mapUtils'
 
@@ -579,6 +579,7 @@ export class MapView extends Component {
                                 onRunDelete={this.props.onRunDelete}
                                 onClick={this.handleClick}
                                 backgroundColor={this.state.selectedFeature == run.uid ? '#dedfdf': null}
+                                providers={this.props.providers}
                             />
                         ))}
                         </GridList>
@@ -594,7 +595,7 @@ export class MapView extends Component {
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}}
                     />
                     <DrawAOIToolbar
                         toolbarIcons={this.state.toolbarIcons}
@@ -605,10 +606,10 @@ export class MapView extends Component {
                         setBoxButtonSelected={() => {this.setButtonSelected('box')}}
                         setFreeButtonSelected={() => {this.setButtonSelected('free')}}
                         setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
-                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setImportButtonSelected={() => {this.setButtonSelected('import')}}
                         setImportModalState={this.toggleImportModal}
                     />
-                    <InvalidDrawWarning 
+                    <InvalidDrawWarning
                         show={this.state.showInvalidDrawWarning}
                     />
                     <DropZone
@@ -667,6 +668,7 @@ MapView.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    providers: PropTypes.array.isRequired,
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
     importGeom: PropTypes.object.isRequired,
