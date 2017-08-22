@@ -25,6 +25,29 @@ import MapView, {RED_STYLE, BLUE_STYLE} from '../../components/DataPackPage/MapV
 import raf from 'raf';
 raf.polyfill();
 
+const providers = [
+    {
+        "id": 2,
+        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+        "type": "osm",
+        "license": null,
+        "created_at": "2017-08-15T19:25:10.844911Z",
+        "updated_at": "2017-08-15T19:25:10.844919Z",
+        "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+        "name": "OpenStreetMap Data (Themes)",
+        "slug": "osm",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+        "layer": null,
+        "level_from": 0,
+        "level_to": 10,
+        "zip": false,
+        "display": true,
+        "export_provider_type": 2
+    },
+]
+
 describe('MapView component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
@@ -43,7 +66,8 @@ describe('MapView component', () => {
             importGeom: {},
             processGeoJSONFile: () => {},
             resetGeoJSONFile: () => {},
-            onMapFilter: () => {}
+            onMapFilter: () => {},
+            providers: providers,
         }
     };
 
@@ -155,12 +179,12 @@ describe('MapView component', () => {
         wrapper.instance().drawLayer = {
             getSource: () => {
                 return {
-                    getFeatures: () => {return {length:1}}, 
+                    getFeatures: () => {return {length:1}},
                     getExtent: () => {return [-1, -1, 1, 1]}
                 }
             }
         }
-        
+
         expect(receiveSpy.notCalled).toBe(true);
         let nextProps = getProps();
         let run = {...getRuns()[0]};
@@ -939,8 +963,8 @@ describe('MapView component', () => {
         const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
         const createSpy = new sinon.spy(utils, 'createGeoJSON');
         const createGeomSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
-        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');        
-        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});        
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
         wrapper.setState({mode: 'MODE_DRAW_BOX'});
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);

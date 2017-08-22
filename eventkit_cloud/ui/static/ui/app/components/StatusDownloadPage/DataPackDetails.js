@@ -225,7 +225,8 @@ export class DataPackDetails extends React.Component {
                         onProviderCancel={this.props.onProviderCancel}
                         updateSelectionNumber={this.updateSelectionNumber} 
                         provider={provider} 
-                        selectedProviders={this.state.selectedProviders}/>
+                        selectedProviders={this.state.selectedProviders}
+                        providers={this.props.providers}/>
                 ))}
            </div>
         )
@@ -235,6 +236,7 @@ export class DataPackDetails extends React.Component {
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 

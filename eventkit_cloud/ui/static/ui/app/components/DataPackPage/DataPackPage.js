@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
+import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
@@ -74,6 +75,9 @@ export class DataPackPage extends React.Component {
                 this.setState({loading: true}, this.makeRunRequest);
             }
         }
+    }
+    componentDidMount() {
+        this.props.getProviders();
     }
 
     componentDidMount() {
@@ -213,28 +217,31 @@ export class DataPackPage extends React.Component {
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
                 />;
             case 'grid':
-                return <DataPackGrid 
-                    runs={this.props.runsList.runs} 
-                    user={this.props.user} 
+                return <DataPackGrid
+                    runs={this.props.runsList.runs}
+                    user={this.props.user}
                     onRunDelete={this.props.deleteRuns}
                     range={this.props.runsList.range}
                     handleLoadLess={this.loadLess}
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
                 />
-            case 'map': 
+            case 'map':
                 return <MapView
-                    runs={this.props.runsList.runs} 
-                    user={this.props.user} 
+                    runs={this.props.runsList.runs}
+                    user={this.props.user}
                     onRunDelete={this.props.deleteRuns}
                     range={this.props.runsList.range}
                     handleLoadLess={this.loadLess}
                     handleLoadMore={this.loadMore}
                     loadLessDisabled={this.props.runsList.runs.length <= 12}
                     loadMoreDisabled={!this.props.runsList.nextPage}
+                    providers={this.props.providers}
                     geocode={this.props.geocode}
                     getGeocode={this.props.getGeocode}
                     importGeom={this.props.importGeom}
@@ -246,7 +253,7 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    render() { 
+    render() {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
@@ -308,7 +315,7 @@ export class DataPackPage extends React.Component {
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
                         <DataPackFilterButton handleToggle={this.handleToggle} />
-                        {this.state.view == 'list' && window.innerWidth >= 768 ? 
+                        {this.state.view == 'list' && window.innerWidth >= 768 ?
                             null
                             : 
                             <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
@@ -342,7 +349,7 @@ export class DataPackPage extends React.Component {
                                     />
                                 </div>
                             </div>
-                            : null}                            
+                            : null}
                             {this.getView(this.state.view)}
                         </div>
                     }
@@ -358,6 +365,7 @@ DataPackPage.propTypes = {
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
     drawerOpen: PropTypes.bool.isRequired,
     importGeom: PropTypes.object.isRequired,
@@ -373,6 +381,7 @@ function mapStateToProps(state) {
         user: state.user,
         runsDeletion: state.runsDeletion,
         drawerOpen: state.drawerOpen,
+        providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
     };
@@ -385,6 +394,9 @@ function mapDispatchToProps(dispatch) {
         },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
+        },
+        getProviders: () => {
+            dispatch(getProviders())
         },
         getGeocode: (query) => {
             dispatch(getGeocode(query));
