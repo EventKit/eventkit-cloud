@@ -416,6 +416,7 @@ ProviderRow.propTypes = {
     onSelectionToggle: PropTypes.func,
     selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 export default ProviderRow;
