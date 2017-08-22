@@ -1,9 +1,6 @@
 import React, {PropTypes, Component} from 'react';
 import Clear from 'material-ui/svg-icons/content/clear';
-import Forward from 'material-ui/svg-icons/content/forward';
-import ZoomIn from 'material-ui/svg-icons/action/zoom-in';
 import {Card} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
@@ -53,17 +50,17 @@ export class MapPopup extends Component {
                 <div id="popup-actions" style={{width: '100%', height: '100%', padding: '5px 10px 0px', color: 'grey'}}>
                     <div style={{display: 'inline-block', margin: 'auto', width: '100%'}}>
                         <div style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
-                            <a href={this.props.detailUrl} style={{color: '#4598bf'}}>
+                            <a id='details-url' href={this.props.detailUrl} style={{color: '#4598bf'}}>
                                 Go To Detail and Downloads
                             </a>
                         </div>
                         <div style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
-                            <a onClick={this.props.handleZoom} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
+                            <a id='zoom-to' onClick={this.props.handleZoom} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
                                 Zoom To Selection
                             </a>
                         </div>
                         <div style={{display: 'inline-block', height: '22px', float: 'left'}}>
-                            <div onClick={this.showMore} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
+                            <div id='show-more' onClick={this.showMore} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
                                 Show More
                                 {this.state.showMore ? <ArrowUp style={styles.showMoreIcon}/> : <ArrowDown style={styles.showMoreIcon}/>}
                             </div>
