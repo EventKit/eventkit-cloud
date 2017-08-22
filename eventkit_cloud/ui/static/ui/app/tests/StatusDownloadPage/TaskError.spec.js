@@ -57,8 +57,8 @@ describe('TaskError component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({taskErrorDialogOpen: true})).toBe(true);
         expect(wrapper.find(Warning)).toHaveLength(1);
-        expect(wrapper.find('div').at(0).text()).toEqual('OSM Data (.gpkg) has 1 error(s). <AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
-        expect(wrapper.find('div').at(1).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('div').at(0).text()).toEqual('OSM Data (.gpkg) has 1 error(s). <CustomScrollbar />');
+        expect(wrapper.find('div').at(2).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
         stateSpy.restore();
         stateSpy.restore();
     });

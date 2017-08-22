@@ -3,7 +3,8 @@ import '../tap_events'
 import Dialog from 'material-ui/Dialog';
 import RaisedButton from 'material-ui/RaisedButton';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning'
+import Warning from 'material-ui/svg-icons/alert/warning';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class ProviderError extends React.Component {
     constructor(props) {
@@ -65,7 +66,7 @@ export class ProviderError extends React.Component {
         //         result: null,
         //         errors: [
         //             {
-        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin."
         //             }
         //         ],
         //         display: true
@@ -101,7 +102,7 @@ export class ProviderError extends React.Component {
         //         result: null,
         //         errors: [
         //             {
-        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //                 exception: "OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin."
         //             }
         //         ],
         //         display: false
@@ -115,7 +116,7 @@ export class ProviderError extends React.Component {
         let errors = [];
 
         //fake array to test for more than 3 errors.
-        //let errors = ['1','2','3','4'];
+        //let errors = ["OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin.","OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin.","OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin.","OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin."];
 
         provider.tasks.forEach((column) => {
             if(column.display == true) {
@@ -130,29 +131,33 @@ export class ProviderError extends React.Component {
         if(errors.length > 3){
             errorData =  <div>
                 <strong>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>
-                    <div style={{marginTop:'15px'}}>The first three errors:
+                    <div style={{marginTop:'15px', marginBottom:'15px'}}>The first three errors:
                     </div>
+                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
                     {errors.slice(0,3).map((error, index) => (
-                        <div style={{marginTop:'15px'}} key={index} >
+                        <div style={{marginTop:'15px', width:'95%'}} key={index} >
                             <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                             {error}
                             <Divider style={{marginTop: '5px'}}/>
                         </div>
                     ))}
-                    <div style={{marginTop:'15px'}}><strong>You may want to restart processing the files or contact an administrator.
+                </CustomScrollbar>
+                    <div style={{marginTop:'25px'}}><strong>You may want to restart processing the files or contact an administrator.
                     </strong></div>
 
             </div>
         }
         else {
-            errorData = <div> <strong>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
+            errorData = <div> <div style={{marginBottom:'15px'}}><strong>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong></div>
+                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
                 {errors.map((error, index) => (
-                    <div style={{marginTop:'25px'}} key={index} >
+                    <div style={{marginTop:'25px', width:'95%'}} key={index} >
                         <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                         {error}
                         <Divider style={{marginTop: '15px'}}/>
                     </div>
                 ))}
+                </CustomScrollbar>
 
             </div>
         }
@@ -182,7 +187,7 @@ export class ProviderError extends React.Component {
             }}>ERROR</a>
             <Warning onClick={() => {this.handleProviderErrorOpen()}} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
             <Dialog
-                contentStyle={{width:'40%'}}
+                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
                 actions={providerErrorActions}
                 modal={false}
                 open={this.state.providerErrorDialogOpen}

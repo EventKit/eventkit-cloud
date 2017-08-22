@@ -2,8 +2,8 @@ import React, {PropTypes, Component} from 'react'
 import '../tap_events'
 import Dialog from 'material-ui/Dialog';
 import RaisedButton from 'material-ui/RaisedButton';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import Warning from 'material-ui/svg-icons/alert/warning'
+import CustomScrollbar from '../CustomScrollbar';
 
 export class TaskError extends React.Component {
     constructor(props) {
@@ -42,7 +42,7 @@ export class TaskError extends React.Component {
         //     result: null,
         //     errors: [
         //         {
-        //             exception: "OpenStreetMap Data (Themes) was canceled by admin."
+        //             exception: "OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin. OpenStreetMap Data (Themes) was canceled by admin."
         //         }
         //     ],
         //     display: true
@@ -78,13 +78,16 @@ export class TaskError extends React.Component {
                 cursor: 'pointer',
             }}>ERROR</a>
             <Dialog
-        contentStyle={{width:'40%'}}
+                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
         actions={taskErrorActions}
         modal={false}
         open={this.state.taskErrorDialogOpen}
         onRequestClose={this.handleTaskErrorClose.bind(this)}
     >
-                <div><strong>{task.name} has <strong style={{color:'#ce4427'}}>1 error(s).</strong> </strong><div style={{marginTop:'25px'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div></div>
+                <div><div style={{marginBottom:'15px'}}><strong>{task.name} has <strong style={{color:'#ce4427'}}>1 error(s).</strong> </strong></div>
+                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                    <div style={{marginTop:'25px', width:'95%'}}><Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>{error!= null ? error[0].exception : ''}</div>
+                    </CustomScrollbar></div>
     </Dialog></span>
 
         )
