@@ -587,7 +587,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
         raise Exception(e)
 
 
-@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
+@app.task(name='Project file (.zip)', bind=True, base=UserDetailsBase)
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
                         stage_dir=None,
                         *args, **kwargs):
@@ -595,7 +595,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     from .task_runners import normalize_job_name
     result = result or {}
 
-    self.update_task_state(result=result, task_uid=task_uid)
+    #self.update_task_state(result=result, task_uid=task_uid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.

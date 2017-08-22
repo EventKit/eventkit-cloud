@@ -107,9 +107,20 @@ class TaskFactory:
                             queue=worker,
                             routing_key=worker
                         )
-                        finalized_provider_task_chain = chain(
-                            provider_subtask_chain, finalize_export_provider_sig
-                        )
+                        if provider_task_record.provider.zip:
+                            zip_export_provider_sig = zip_export_provider.s(
+                                job_name=run.job.name,
+                                export_provider_task_uid=provider_task_uid,
+                                run_uid=run_uid,
+                                stage_dir=stage_dir
+                            )
+                            finalized_provider_task_chain = chain(
+                                provider_subtask_chain, finalize_export_provider_sig, zip_export_provider_sig
+                            )
+                        else:
+                            finalized_provider_task_chain = chain(
+                                provider_subtask_chain, finalize_export_provider_sig
+                            )
                         provider_subtask_chains.append(finalized_provider_task_chain)
 
                 if not provider_subtask_chains:
@@ -203,7 +214,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
 def get_invalid_licenses(job):
     """
-    :param user: A user to verify licenses against. 
+    :param user: A user to verify licenses against.
     :param job: The job containing the licensed datasets.
     :return: A list of invalid licenses.
     """
@@ -241,7 +252,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
         'priority': TaskPriority.FINALIZE_RUN.value}
 
     # These should be subclassed from FinalizeRunHookTask
-    hook_tasks = [example_finalize_run_hook_task]
+    hook_tasks = []
     hook_task_sigs = []
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
@@ -259,7 +270,8 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
     finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
     errback_sig = finalize_run_task_as_errback.si(run_uid=run_uid, stage_dir=run_dir)
 
-    all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
+    #all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
+    all_task_sigs = itertools.chain(hook_task_sigs, [finalize_sig])
     finalize_chain = chain(*all_task_sigs)
 
     return finalize_chain, errback_sig
