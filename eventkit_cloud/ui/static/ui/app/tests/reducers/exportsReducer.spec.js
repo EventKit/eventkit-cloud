@@ -1,18 +1,5 @@
 import * as reducers from '../../reducers/exportsReducer'
 
-describe('exportMode reducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.exportModeReducer(undefined, {})).toEqual('DRAW_NORMAL')
-    });
-
-    it('should handle SET_MODE', () => {
-        expect(reducers.exportModeReducer(
-            'DRAW_NORMAL',
-            {type: 'SET_MODE', mode: 'DRAW_BBOX'}
-        )).toEqual('DRAW_BBOX')
-    });
-});
-
 describe('exportAoiInfo reducer', () => {
     it('should return initial state', () => {
         expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null})

@@ -752,6 +752,88 @@ class TestExportRunViewSet(APITestCase):
         # test significant content
         self.assertEquals(response.data, [])
 
+    def test_filter_runs(self,):
+        expected = '/api/runs/filter'
+        url = reverse('api:runs-filter')
+        self.assertEquals(expected, url)
+        query = '{0}'.format(url)
+        extents = (-4, 15, 8.0, 28)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        geojson = the_geom.geojson
+        response = self.client.post(query, {"geojson": "{}".format(geojson)})
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure we get a single run back
+        self.assertEquals(1, len(result))
+        self.assertEquals(self.run_uid, result[0].get('uid'))
+
+        extents = (4, 17, 9.0, 28)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        geojson = the_geom.geojson
+        response = self.client.post(query, {"geojson": "{}".format(geojson)})
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure no runs are returned as they should have been filtered out
+        self.assertEquals(0, len(result))
+
+        name='TestJob'
+        query = '{0}?search_term={1}'.format(url, name)
+        response = self.client.get(query)
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure we get a single run back
+        self.assertEqual(1, len(result))
+        self.assertEqual(name, result[0].get('job').get('name'))
+
+        name='NotFound'
+        query = '{0}?search_term={1}'.format(url, name)
+        response = self.client.get(query)
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure no runs are returned as they should have been filtered out
+        self.assertEquals(0, len(result))
+
+
+
+    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
+    def test_filter_runs_invalid_license(self, mock_validate_licenses):
+        from ...tasks.task_factory import InvalidLicense
+        expected = '/api/runs/filter'
+        url = reverse('api:runs-filter')
+        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        result = response.data
+        self.assertTrue("InvalidLicense" in result[0].get('detail'))
+        self.assertEquals(response.status_code, 400)
+
+    def test_filter_runs_no_permissions(self,):
+        user = User.objects.create_user(
+            username='other_user', email='other_user@demo.com', password='demo'
+        )
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        expected = '/api/runs/filter'
+        url = reverse('api:runs-filter')
+        self.assertEquals(expected, url)
+        query = '{0}?job_uid={1}'.format(url, self.job.uid)
+        response = self.client.get(query)
+        self.assertIsNotNone(response)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response['Content-Type'], 'application/json')
+        self.assertEquals(response['Content-Language'], 'en')
+
+        # test significant content
+        self.assertEquals(response.data, [])
+
 
 class TestExportTaskViewSet(APITestCase):
     """

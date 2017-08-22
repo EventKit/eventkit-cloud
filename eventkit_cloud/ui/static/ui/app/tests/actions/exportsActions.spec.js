@@ -94,13 +94,6 @@ describe('export actions', () => {
         });
     });
 
-    it('updateMode should return the passed in mode string', () => {
-        expect(actions.updateMode(mode)).toEqual({
-            type: 'SET_MODE',
-            mode: mode
-        });
-    });
-
     it('closeDrawer should return type CLOSE_DRAWER', () => {
         expect(actions.closeDrawer()).toEqual({
             type: 'CLOSE_DRAWER'

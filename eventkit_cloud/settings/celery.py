@@ -21,8 +21,8 @@ CELERY_TRACK_STARTED = True
 CELERY_CHORD_PROPAGATES = False
 
 CELERYD_PREFETCH_MULTIPLIER = 1
-CELERYBEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
-CELERY_RESULT_BACKEND=os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
+CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'django-db')
 
 # Pickle used to be the default, and accepting pickled content is a security concern.  Using the new default json,
 # causes a circular reference error, that will need to be resolved.
@@ -42,7 +42,7 @@ if os.getenv("VCAP_SERVICES"):
 CELERYD_USER = os.getenv("CELERYD_USER", CELERYD_USER)
 CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
-BROKER_URL=None
+BROKER_URL = None
 if os.getenv("VCAP_SERVICES"):
     for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
         try:
