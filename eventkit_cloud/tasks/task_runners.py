@@ -8,14 +8,14 @@ from django.conf import settings
 from django.db import DatabaseError
 
 from celery import group, chain  # required for tests
-from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
     wfs_export_task, 
     external_raster_service_export_task, 
     arcgis_feature_service_export_task, 
     osm_data_collection_task)
-from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.models import ExportTask, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class ExportOSMTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
 
         job_name = normalize_job_name(job.name)
@@ -85,11 +85,11 @@ class ExportOSMTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
-        export_provider_task_record = ExportProviderTask.objects.create(run=run,
-                                                                 name=provider_task.provider.name,
-                                                                 slug=provider_task.provider.slug,
-                                                                 status="PENDING",
-                                                                 display=True)
+        export_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
+                                                                            name=provider_task.provider.name,
+                                                                            slug=provider_task.provider.slug,
+                                                                            status="PENDING",
+                                                                            display=True)
 
         for format, task in export_tasks.iteritems():
             export_task = create_export_task_record(
@@ -150,7 +150,7 @@ class ExportWFSTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -173,11 +173,11 @@ class ExportWFSTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status="PENDING",
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status="PENDING",
+                                                                         display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
@@ -246,7 +246,7 @@ class ExportWCSTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -270,11 +270,11 @@ class ExportWCSTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status="PENDING",
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status="PENDING",
+                                                                         display=True)
 
             export_tasks.pop('gpkg')
 
@@ -356,7 +356,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_job_name(job.name)
         # get the formats to export
@@ -379,11 +379,11 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status="PENDING",
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status="PENDING",
+                                                                         display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
@@ -457,7 +457,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_job_name(job.name)
 
@@ -480,11 +480,11 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
             # swap xy
             bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status="PENDING",
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status="PENDING",
+                                                                         display=True)
 
 
             export_task = create_export_task_record(task_name=external_raster_service_export_task.name,

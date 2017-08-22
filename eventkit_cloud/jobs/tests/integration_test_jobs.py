@@ -8,9 +8,9 @@ from pysqlite2 import dbapi2 as sqlite3
 from time import sleep
 from datetime import timedelta, datetime
 
-from ...tasks.models import ExportTask, ExportProviderTask
+from ...tasks.models import ExportTask, DataProviderTaskRecord
 from ...tasks.export_tasks import TaskStates
-from ..models import ExportProvider, ExportProviderType, Job
+from ..models import DataProvider, ExportProviderType, Job
 from ...utils.geopackage import check_content_exists, check_zoom_levels
 
 from django.conf import settings
@@ -74,7 +74,7 @@ class TestJob(TestCase):
 
     def test_cancel_job(self):
         # update provider to ensure it runs long enough to cancel...
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        export_provider = DataProvider.objects.get(slug="eventkit-integration-test-wms")
         original_level_to = export_provider.level_to
         export_provider.level_to = 19
         export_provider.save()
@@ -87,7 +87,7 @@ class TestJob(TestCase):
 
         run_json = self.wait_for_task_pickup(job_uid=job_json.get('uid'))
 
-        export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
 
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
@@ -101,7 +101,7 @@ class TestJob(TestCase):
         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
         self.orm_run = self.orm_job.runs.last()
 
-        pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
+        pt = DataProviderTaskRecord.objects.get(uid=export_provider_task.uid)
 
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
@@ -111,7 +111,7 @@ class TestJob(TestCase):
         self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
 
         # update provider to original setting.
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        export_provider = DataProvider.objects.get(slug="eventkit-integration-test-wms")
         export_provider.level_to = original_level_to
         export_provider.save()
 
@@ -592,14 +592,14 @@ def get_providers_list():
 
 def load_providers():
     export_providers = get_providers_list()
-    providers = [ExportProvider(**export_provider) for export_provider in export_providers]
-    ExportProvider.objects.bulk_create(providers)
+    providers = [DataProvider(**export_provider) for export_provider in export_providers]
+    DataProvider.objects.bulk_create(providers)
 
 
 def delete_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
-        provider = ExportProvider.objects.using('default').filter(
+        provider = DataProvider.objects.using('default').filter(
             name=export_provider.get('name')
         ).first()
         if provider:

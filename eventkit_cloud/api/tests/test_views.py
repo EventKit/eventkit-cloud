@@ -22,9 +22,9 @@ from ..pagination import LinkHeaderPagination
 from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License
-from ...tasks.models import ExportRun, ExportTask, ExportProviderTask
+from ...jobs.models import ExportFormat, Job, DataProvider, \
+    ExportProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
+from ...tasks.models import ExportRun, ExportTask, DataProviderTaskRecord
 from mock import patch, Mock
 
 
@@ -58,11 +58,11 @@ class TestJobViewSet(APITestCase):
                                       user=self.user, the_geom=the_geom)
 
         formats = ExportFormat.objects.all()
-        provider = ExportProvider.objects.first()
-        provider_task = ProviderTask.objects.create(provider=provider)
-        provider_task.formats.add(*formats)
+        provider = DataProvider.objects.first()
+        data_provider_task = DataProviderTask.objects.create(provider=provider)
+        data_provider_task.formats.add(*formats)
 
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(data_provider_task)
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -104,7 +104,7 @@ class TestJobViewSet(APITestCase):
 
     def test_make_job_with_export_providers(self,):
         """tests job creation with export providers"""
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
         export_providers_start_len = len(export_providers)
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
 
@@ -113,7 +113,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'test', 'formats': formats}],
+            'data_provider_tasks': [{'provider': 'test', 'formats': formats}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 1,
                                   'url': 'http://coolproviderurl.to',
                                   'preview_url': 'http://coolproviderurl.to'}],
@@ -122,7 +122,7 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
         response = json.loads(response.content)
         self.assertEqual(response['exports'][0]['provider'], 'test')
@@ -131,7 +131,7 @@ class TestJobViewSet(APITestCase):
         # should be idempotent
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
 
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
     def test_get_job_detail(self,):
@@ -199,7 +199,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags,
@@ -226,7 +226,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
             'tags': self.tags
@@ -245,9 +245,9 @@ class TestJobViewSet(APITestCase):
         # test significant response content
 
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
-                         request_data['provider_tasks'][0]['formats'][0])
+                         request_data['data_provider_tasks'][0]['formats'][0])
         self.assertEqual(response.data['exports'][0]['formats'][1]['slug'],
-                         request_data['provider_tasks'][0]['formats'][1])
+                         request_data['data_provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertTrue(response.data['published'])
@@ -268,7 +268,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
             'translation': ''
@@ -287,9 +287,9 @@ class TestJobViewSet(APITestCase):
 
         # test significant response content
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
-                         request_data['provider_tasks'][0]['formats'][0])
+                         request_data['data_provider_tasks'][0]['formats'][0])
         self.assertEqual(response.data['exports'][0]['formats'][1]['slug'],
-                         request_data['provider_tasks'][0]['formats'][1])
+                         request_data['data_provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
         self.assertFalse(response.data['published'])
@@ -307,7 +307,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
             'translate': '',
@@ -327,9 +327,9 @@ class TestJobViewSet(APITestCase):
 
         # test significant response content
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
-                         request_data['provider_tasks'][0]['formats'][0])
+                         request_data['data_provider_tasks'][0]['formats'][0])
         self.assertEqual(response.data['exports'][0]['formats'][1]['slug'],
-                         request_data['provider_tasks'][0]['formats'][1])
+                         request_data['data_provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
 
@@ -342,7 +342,7 @@ class TestJobViewSet(APITestCase):
             'event': 'Test Activation',
             'selection':  {},
             'preset': self.job.preset.id,
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -373,12 +373,12 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response.data['provider_tasks'][0]['formats'], ['This field is required.'])
+        self.assertEquals(response.data['data_provider_tasks'][0]['formats'], ['This field is required.'])
 
     def test_invalid_format_param(self,):
         url = reverse('api:jobs-list')
@@ -387,13 +387,13 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertIsNotNone(response.data.get('provider_tasks')[0].get('formats'))
+        self.assertIsNotNone(response.data.get('data_provider_tasks')[0].get('formats'))
 
     def test_no_matching_format_slug(self,):
         url = reverse('api:jobs-list')
@@ -402,7 +402,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
-            'provider_tasks': [
+            'data_provider_tasks': [
                 {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
         response = self.client.post(url, request_data, format='json')
@@ -410,7 +410,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response.data['provider_tasks'][0]['formats'],
+        self.assertEquals(response.data['data_provider_tasks'][0]['formats'],
                           ['Object with slug=broken-format-one does not exist.'])
 
     def test_extents_too_large(self,):
@@ -422,7 +422,7 @@ class TestJobViewSet(APITestCase):
             'description': 'Test description',
             'event': 'Test Activation',
             'selection':  bbox_to_geojson([-180, -90, 180, 90]),
-            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+            'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
 
         with self.settings(JOB_MAX_EXTENT=100000):
@@ -496,7 +496,7 @@ class TestBBoxSearch(APITestCase):
                 'description': 'Test description',
                 'event': 'Test Activation',
                 'selection': bbox_to_geojson(extent),
-                'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+                'data_provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
             self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code, response.content)
@@ -848,7 +848,7 @@ class TestExportTaskViewSet(APITestCase):
         self.celery_uid = None
         self.client = None
         self.export_run = None
-        self.export_provider_task = None
+        self.data_provider_task = None
         self.task = None
         self.task_uid = None
 
@@ -868,10 +868,10 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.celery_uid = str(uuid.uuid4())
-        self.export_provider_task = ExportProviderTask.objects.create(run=self.export_run,
-                                                                      name='Shapefile Export',
-                                                                      status=TaskStates.PENDING.value)
-        self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
+        self.data_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
+                                                                          name='Shapefile Export',
+                                                                          status=TaskStates.PENDING.value)
+        self.task = ExportTask.objects.create(data_provider_task=self.data_provider_task, name='Shapefile Export',
                                               celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 
@@ -902,15 +902,15 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEquals(self.task_uid, data[0].get('uid'))
 
     def test_patch_cancel_task(self,):
-        expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
-        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
+        expected = '/api/provider_tasks/{0}'.format(self.data_provider_task.uid)
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.data_provider_task.uid,)
         self.assertEquals(expected, url)
         response = self.client.patch(url)
         # test significant content
         self.assertEquals(response.data, {'success': True})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
+        pt = DataProviderTaskRecord.objects.get(uid=self.data_provider_task.uid)
         et = pt.tasks.last()
 
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
@@ -926,8 +926,8 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
-        expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
-        url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
+        expected = '/api/provider_tasks/{0}'.format(self.data_provider_task.uid)
+        url = reverse('api:provider_tasks-list') + '/%s' % (self.data_provider_task.uid,)
         self.assertEquals(expected, url)
         response = self.client.patch(url)
         # test the response headers
@@ -938,7 +938,7 @@ class TestExportTaskViewSet(APITestCase):
         # test significant content
         self.assertEquals(response.data, {'success': False})
 
-    def test_export_provider_task_get(self):
+    def test_data_provider_task_get(self):
         url = reverse('api:provider_tasks-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -968,7 +968,7 @@ class TestStaticFunctions(APITestCase):
         provider_type.save()
 
         # Assign the type to an arbitrary provider.
-        export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
+        export_provider = DataProvider.objects.create(name="provider1", export_provider_type=provider_type)
         # Get a ProviderTask object to ensure that it is only trying to process
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)

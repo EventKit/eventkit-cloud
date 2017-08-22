@@ -15,9 +15,9 @@ from django.contrib.gis.geos import Polygon, GEOSException, GEOSGeometry
 from django.contrib.auth.models import User
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
 )
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.models import ExportRun, ExportTask, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -307,7 +307,7 @@ class JobViewSet(viewsets.ModelViewSet):
                             error_data = OrderedDict()
                             error_data['errors'] = [_('A provider and an export format must be selected.')]
                             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
-                        job.provider_tasks = provider_serializer.save()
+                        job.data_provider_tasks = provider_serializer.save()
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: %s' % preset)
@@ -505,7 +505,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        return ExportProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -811,7 +811,9 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'uid'
 
     def get_queryset(self):
-        return ExportTask.objects.filter(Q(export_provider_task__run__user=self.request.user) | Q(export_provider_task__run__job__published=True)).order_by('-started_at')
+#        return ExportTask.objects.filter(Q(export_provider_task__run__user=self.request.user) | Q(export_provider_task__run__job__published=True)).order_by('-started_at')
+         return ExportTask.objects.filter(Q(data_provider_task__run__user=self.request.user) | Q(data_provider_task__run__job__published=True)).order_by('-started_at')
+
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -842,7 +844,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return all objects user can view."""
-        return ExportProviderTask.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
+        return DataProviderTaskRecord.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -863,7 +865,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, uid=None, *args, **kwargs):
 
-        export_provider_task = ExportProviderTask.objects.get(uid=uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
 
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
@@ -982,7 +984,7 @@ def get_provider_task(export_provider, export_formats):
     Returns:
 
     """
-    provider_task = ProviderTask.objects.create(provider=export_provider)
+    provider_task = DataProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
         supported_formats = \
             export_provider.export_provider_type.supported_formats.all()

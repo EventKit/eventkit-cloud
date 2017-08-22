@@ -16,7 +16,7 @@ from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_
 
 from ..jobs.models import Job
 from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
-from ..tasks.models import ExportRun, ExportProviderTask
+from ..tasks.models import ExportRun, DataProviderTaskRecord
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
     ExportOSMTaskRunner,
@@ -64,7 +64,7 @@ class TaskFactory:
 
             # Contains one chain per item in provider_task_records
             provider_task_chains = []
-            for provider_task_record in job.provider_tasks.all():
+            for provider_task_record in job.data_provider_tasks.all():
                 provider_subtask_chains = []
                 provider_task_uids = []
 
@@ -189,14 +189,14 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     if user_details is None:
         user_details = {'username': 'unknown-create_task'}
 
-    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    data_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task_record(
-        task_name=task.name, export_provider_task=export_provider_task, worker=worker,
+        task_name=task.name, export_provider_task=data_provider_task, worker=worker,
         display=getattr(task, "display", False)
     )
     return task.s(
-        run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
-        provider_slug=export_provider_task.slug, export_provider_task_uid=export_provider_task_uid, job_name=job_name,
+        run_uid=data_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
+        provider_slug=data_provider_task.slug, export_provider_task_uid=export_provider_task_uid, job_name=job_name,
         user_details=user_details
     ).set(queue=worker, routing_key=worker)
 
@@ -210,7 +210,7 @@ def get_invalid_licenses(job):
     from ..api.serializers import UserDataSerializer
     licenses = UserDataSerializer.get_accepted_licenses(job.user)
     invalid_licenses = []
-    for provider_tasks in job.provider_tasks.all():
+    for provider_tasks in job.data_provider_tasks.all():
         license = provider_tasks.provider.license
         if license and not licenses.get(license.slug):
             invalid_licenses += [license.name]

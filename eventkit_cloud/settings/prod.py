@@ -82,7 +82,7 @@ MIDDLEWARE += ['audit_logging.middleware.UserDetailsMiddleware']
 
 AUDIT_MODELS = [
     ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
+    ('eventkit_cloud.tasks.models.DataProviderTaskRecord', 'DataProviderTaskRecord'),
     ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
 ]
 

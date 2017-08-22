@@ -61,7 +61,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         self.save()
 
 
-class ExportProviderTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     The ExportProviderTask stores the task information for a specific provider.
     """
@@ -74,10 +74,10 @@ class ExportProviderTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
     class Meta:
         ordering = ['name']
         managed = True
-        db_table = 'export_provider_tasks'
+        db_table = 'data_provider_tasks'
 
     def __str__(self):
-        return 'ExportProviderTask uid: {0}'.format(self.uid)
+        return 'DataProviderTaskRecord uid: {0}'.format(self.uid)
 
 
 class ExportTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
@@ -86,7 +86,7 @@ class ExportTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
-    export_provider_task = models.ForeignKey(ExportProviderTask, related_name='tasks')
+    data_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
     progress = models.IntegerField(default=0, editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)

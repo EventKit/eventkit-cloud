@@ -229,7 +229,7 @@ class ExportTask(LockingTask):
                - this is only for initial tasks on which subsequent export tasks depend
         """
         from ..tasks.models import ExportTask as ExportTaskModel
-        from ..tasks.models import ExportTaskException, ExportProviderTask
+        from ..tasks.models import ExportTaskException, DataProviderTaskRecord
         task = ExportTaskModel.objects.get(celery_uid=task_id)
         task.finished_at = timezone.now()
         task.save()
@@ -242,7 +242,7 @@ class ExportTask(LockingTask):
             task.save()
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
-                run = ExportProviderTask.objects.get(tasks__celery_uid=task_id).run
+                run = DataProviderTaskRecord.objects.get(tasks__celery_uid=task_id).run
                 # error_handler = export_task_error_handler()
                 # run error handler
                 stage_dir = kwargs['stage_dir']
@@ -335,9 +335,9 @@ def osm_data_collection_task(
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from eventkit_cloud.tasks.models import ExportProviderTask
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
     from eventkit_cloud.tasks.task_runners import create_export_task_record
-    export_provider_task = ExportProviderTask.objects.get(id=export_provider_task_id)
+    export_provider_task = DataProviderTaskRecord.objects.get(id=export_provider_task_id)
     etr = create_export_task_record(self.name, export_provider_task, worker, getattr(self, 'display', False))
     etr.celery_uid = self.request.id
     etr.save()
@@ -591,7 +591,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
                         stage_dir=None,
                         *args, **kwargs):
-    from .models import ExportProviderTask
+    from .models import DataProviderTaskRecord
     from .task_runners import normalize_job_name
     result = result or {}
 
@@ -601,7 +601,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # deleted during cancellation.
     logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
     include_files = []
-    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
     if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
         for export_task in export_provider_task.tasks.all():
             try:
@@ -694,7 +694,7 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
     to the subsequent tasks in the chain. Additionally they will be finalized to ensure that the run finishes.
     """
 
-    from eventkit_cloud.tasks.models import ExportProviderTask, ExportTaskException
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskException
     from billiard.einfo import ExceptionInfo
 
     result = result or {}
@@ -702,7 +702,7 @@ def clean_up_failure_task(result=None, export_provider_task_uids=[], run_uid=Non
     task_status = None
     incomplete_export_provider_task = None
     for export_provider_task_uid in export_provider_task_uids:
-        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
         for export_task in export_provider_task.tasks.all():
             if TaskStates[export_task.status] in TaskStates.get_incomplete_states():
                 if not task_status:
@@ -937,11 +937,11 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
     Cleans up staging directory.
     Updates export provider status.
     """
-    from eventkit_cloud.tasks.models import ExportProviderTask
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
     result = result or {}
 
     with transaction.atomic():
-        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
 
         if export_provider_task.status != TaskStates.CANCELED.value:
             export_provider_task.status = TaskStates.COMPLETED.value
@@ -1170,14 +1170,14 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     Cancels an ExportProviderTask and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
-    from ..tasks.models import ExportProviderTask, ExportTaskException, FileProducingTaskResult
+    from ..tasks.models import DataProviderTaskRecord, ExportTaskException, FileProducingTaskResult
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from datetime import datetime, timedelta
 
     result = result or {}
 
-    export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
+    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
 
     if not export_provider_task:
         result['result'] = False

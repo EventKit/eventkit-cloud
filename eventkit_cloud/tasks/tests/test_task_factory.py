@@ -8,7 +8,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
 
-from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider, License, UserLicense
+from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
     get_invalid_licenses)
@@ -33,12 +33,12 @@ class TestExportTaskFactory(TestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
-        provider = ExportProvider.objects.get(slug='osm')
+        provider = DataProvider.objects.get(slug='osm')
         self.license = License.objects.create(slug='odbl-test', name='test_osm_license')
         provider.license = self.license
         provider.save()
         UserLicense.objects.create(license=self.license, user=self.user)
-        provider_task = ProviderTask.objects.create(provider=provider)
+        provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
         self.region = Region.objects.get(name='Africa')
         self.job.region = self.region

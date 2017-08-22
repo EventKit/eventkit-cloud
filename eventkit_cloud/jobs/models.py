@@ -132,7 +132,7 @@ class ExportProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
-class ExportProvider(UIDMixin, TimeStampedModelMixin):
+class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportProvider.
     """
@@ -163,14 +163,14 @@ class ExportProvider(UIDMixin, TimeStampedModelMixin):
 
     class Meta:  # pragma: no cover
         managed = True
-        db_table = 'export_provider'
+        db_table = 'data_provider'
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = self.name.replace(' ', '_').lower()
             if len(self.slug) > 40:
                 self.slug = self.slug[0:39]
-        super(ExportProvider, self).save(*args, **kwargs)
+        super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{0}'.format(self.name)
@@ -210,13 +210,13 @@ class Region(UIDMixin, TimeStampedModelMixin):
         super(Region, self).save(*args, **kwargs)
 
 
-class ProviderTask(models.Model):
+class DataProviderTask(models.Model):
     """
     Model for a set of tasks assigned to a provider for a job.
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    provider = models.ForeignKey(ExportProvider, related_name='provider')
+    provider = models.ForeignKey(DataProvider, related_name='provider')
     formats = models.ManyToManyField(ExportFormat, related_name='formats')
 
     def __str__(self):
@@ -241,7 +241,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
     region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
-    provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
+    data_provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
