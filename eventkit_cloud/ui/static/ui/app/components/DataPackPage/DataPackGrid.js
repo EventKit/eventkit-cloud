@@ -50,11 +50,12 @@ export class DataPackGrid extends Component {
                         cols={this.getColumns()}
                     >
                         {this.props.runs.map((run) => (
-                            <DataPackGridItem 
-                                run={run} 
-                                user={this.props.user} 
+                            <DataPackGridItem
+                                run={run}
+                                user={this.props.user}
                                 key={run.uid}
-                                onRunDelete={this.props.onRunDelete}/>
+                                onRunDelete={this.props.onRunDelete}
+                                providers={this.props.providers}/>
                         ))}
                     </GridList>
                 </div>
@@ -74,6 +75,7 @@ DataPackGrid.propTypes = {
     runs: PropTypes.array.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,

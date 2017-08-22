@@ -257,3 +257,9 @@ export function zoomToGeometry(geom, map) {
         map.getView().setCenter(geom.getCoordinates())
     }
 }
+
+export function featureToPoint(feature) {
+    if (!feature) {return null}
+    const center = ol.extent.getCenter(feature.getGeometry().getExtent());
+    return new ol.geom.Point(center);
+}

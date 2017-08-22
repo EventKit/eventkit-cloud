@@ -25,6 +25,29 @@ import MapView, {RED_STYLE, BLUE_STYLE} from '../../components/DataPackPage/MapV
 import raf from 'raf';
 raf.polyfill();
 
+const providers = [
+    {
+        "id": 2,
+        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+        "type": "osm",
+        "license": null,
+        "created_at": "2017-08-15T19:25:10.844911Z",
+        "updated_at": "2017-08-15T19:25:10.844919Z",
+        "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+        "name": "OpenStreetMap Data (Themes)",
+        "slug": "osm",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+        "layer": null,
+        "level_from": 0,
+        "level_to": 10,
+        "zip": false,
+        "display": true,
+        "export_provider_type": 2
+    },
+]
+
 describe('MapView component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
@@ -43,7 +66,8 @@ describe('MapView component', () => {
             importGeom: {},
             processGeoJSONFile: () => {},
             resetGeoJSONFile: () => {},
-            onMapFilter: () => {}
+            onMapFilter: () => {},
+            providers: providers,
         }
     };
 
@@ -119,7 +143,7 @@ describe('MapView component', () => {
         expect(sourceSpy.calledWith({wrapX: false})).toBe(true);
         expect(layerSpy.calledTwice).toBe(true);
         expect(layerSpy.calledWith(
-            {source: wrapper.instance().source, style: BLUE_STYLE}
+            {source: wrapper.instance().source, style: wrapper.instance().defaultStyleFunction}
         )).toBe(true);
         expect(addLayerSpy.calledTwice).toBe(true);
         expect(addLayerSpy.calledWith(wrapper.instance().layer)).toBe(true);
@@ -155,12 +179,12 @@ describe('MapView component', () => {
         wrapper.instance().drawLayer = {
             getSource: () => {
                 return {
-                    getFeatures: () => {return {length:1}}, 
+                    getFeatures: () => {return {length:1}},
                     getExtent: () => {return [-1, -1, 1, 1]}
                 }
             }
         }
-        
+
         expect(receiveSpy.notCalled).toBe(true);
         let nextProps = getProps();
         let run = {...getRuns()[0]};
@@ -577,28 +601,19 @@ describe('MapView component', () => {
         expect(handleClickSpy.calledWith('1234')).toBe(true);
     });
 
-    it('setFeatureNotSelected should set style to BLUE_STYLE and z-index 1', () => {
+    it('setFeatureNotSelected should set style to defaultStyle and z-index 1', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const setStyleSpy = new sinon.spy(ol.Feature.prototype, 'setStyle');
-        const getStyleSpy = new sinon.spy(ol.Feature.prototype, 'getStyle');
-        const setIndexSpy = new sinon.spy(ol.style.Style.prototype, 'setZIndex');
         const feature = new ol.Feature();
         expect(setStyleSpy.notCalled).toBe(true);
-        expect(getStyleSpy.notCalled).toBe(true);
-        expect(setIndexSpy.notCalled).toBe(true);
         wrapper.instance().setFeatureNotSelected(feature);
         expect(setStyleSpy.called).toBe(true);
-        expect(setStyleSpy.calledWith(BLUE_STYLE)).toBe(true);
-        expect(getStyleSpy.called).toBe(true);
-        expect(setIndexSpy.called).toBe(true);
-        expect(setIndexSpy.calledWith(1)).toBe(true);
+        expect(setStyleSpy.calledWith(wrapper.instance().defaultStyleFunction)).toBe(true);
         setStyleSpy.restore();
-        getStyleSpy.restore();
-        setIndexSpy.restore();
     });
 
-    it('setFeatureSelected should set style to RED_STYLE and z-index 100', () => {
+    it('setFeatureSelected should set style to selectedStyle and z-index 100', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const setStyleSpy = new sinon.spy(ol.Feature.prototype, 'setStyle');
@@ -606,17 +621,102 @@ describe('MapView component', () => {
         const setIndexSpy = new sinon.spy(ol.style.Style.prototype, 'setZIndex');
         const feature = new ol.Feature();
         expect(setStyleSpy.notCalled).toBe(true);
-        expect(getStyleSpy.notCalled).toBe(true);
-        expect(setIndexSpy.notCalled).toBe(true);
         wrapper.instance().setFeatureSelected(feature);
         expect(setStyleSpy.called).toBe(true);
-        expect(setStyleSpy.calledWith(RED_STYLE)).toBe(true);
-        expect(getStyleSpy.called).toBe(true);
-        expect(setIndexSpy.called).toBe(true);
-        expect(setIndexSpy.calledWith(100)).toBe(true);
+        expect(setStyleSpy.calledWith(wrapper.instance().selectedStyleFunction)).toBe(true);
         setStyleSpy.restore();
-        getStyleSpy.restore();
-        setIndexSpy.restore();
+    });
+
+    it('displayAsPoint should return true or false if a feature is displayed small enough to be a point', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().displayAsPoint()).toBe(null);
+        const coords = [[[-15,-14],[14,-14],[14,12],[-15,12],[-15,-14]]];
+        const bbox = [-15,-14,14,12];
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(coords)
+        });
+        const extentSpy = new sinon.spy(ol.geom.Polygon.prototype, 'getExtent');
+        const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
+        const pixelSpy = new sinon.spy(ol.Map.prototype, 'getPixelFromCoordinate');
+        const tlSpy = new sinon.spy(ol.extent, 'getTopLeft');
+        const brSpy = new sinon.spy(ol.extent, 'getBottomRight');
+        const result = wrapper.instance().displayAsPoint(feature);
+        expect(result).toBe(true);
+        expect(extentSpy.calledOnce).toBe(true);
+        expect(geomSpy.calledOnce).toBe(true);
+        expect(pixelSpy.calledTwice).toBe(true);
+        expect(tlSpy.calledOnce).toBe(true);
+        expect(brSpy.calledOnce).toBe(true);
+        extentSpy.restore();
+        geomSpy.restore();
+        pixelSpy.restore();
+        tlSpy.restore();
+        brSpy.restore();
+    });
+
+    it('default style function should return either a point style or BLUE_STYLE', () => {
+        const coords = [[[-15,-14],[14,-14],[14,12],[-15,12],[-15,-14]]];
+        const bbox = [-15,-14,14,12];
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(coords)
+        });
+        const center = ol.extent.getCenter(feature.getGeometry().getExtent());
+        const point = new ol.geom.Point(center);
+        const featureStub = new sinon.stub(utils, 'featureToPoint');
+        featureStub.withArgs(feature).returns(point)
+        const displayStub = new sinon.stub(MapView.prototype, 'displayAsPoint');
+        displayStub.withArgs(feature).returns(true)
+        const circle = ol.style.Circle;
+        ol.style.Circle = new sinon.spy();
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const style = wrapper.instance().defaultStyleFunction(feature, null);
+        expect(style).not.toEqual(BLUE_STYLE);
+        expect(style.getGeometry()).toEqual(utils.featureToPoint);
+        expect(style.getImage()).not.toBe(null);
+
+        displayStub.withArgs(feature).returns(false);
+        const style2 = wrapper.instance().defaultStyleFunction(feature, null);
+        expect(style2).toEqual(BLUE_STYLE);
+        expect(style2.getGeometry()).not.toEqual(utils.featureToPoint);
+        expect(style2.getImage()).toBe(null);
+
+        featureStub.restore();
+        displayStub.restore();
+        ol.style.Circle = circle;
+    });
+
+    it('selected style function should return either a point style or RED_STYLE', () => {
+        const coords = [[[-15,-14],[14,-14],[14,12],[-15,12],[-15,-14]]];
+        const bbox = [-15,-14,14,12];
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(coords)
+        });
+        const center = ol.extent.getCenter(feature.getGeometry().getExtent());
+        const point = new ol.geom.Point(center);
+        const featureStub = new sinon.stub(utils, 'featureToPoint');
+        featureStub.withArgs(feature).returns(point)
+        const displayStub = new sinon.stub(MapView.prototype, 'displayAsPoint');
+        displayStub.withArgs(feature).returns(true)
+        const circle = ol.style.Circle;
+        ol.style.Circle = new sinon.spy();
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const style = wrapper.instance().selectedStyleFunction(feature, null);
+        expect(style).not.toEqual(RED_STYLE);
+        expect(style.getGeometry()).toEqual(utils.featureToPoint);
+        expect(style.getImage()).not.toBe(null);
+
+        displayStub.withArgs(feature).returns(false);
+        const style2 = wrapper.instance().selectedStyleFunction(feature, null);
+        expect(style2).toEqual(RED_STYLE);
+        expect(style2.getGeometry()).not.toEqual(utils.featureToPoint);
+        expect(style2.getImage()).toBe(null);
+
+        featureStub.restore();
+        displayStub.restore();
+        ol.style.Circle = circle;
     });
 
     it('handleSearch should clearDraw, hide warning, create and add a feature, zoom to feature, and call onMapFitler if its a polygon', () => {
@@ -863,8 +963,8 @@ describe('MapView component', () => {
         const geomSpy = new sinon.spy(ol.Feature.prototype, 'getGeometry');
         const createSpy = new sinon.spy(utils, 'createGeoJSON');
         const createGeomSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
-        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');        
-        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});        
+        const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
         wrapper.setState({mode: 'MODE_DRAW_BOX'});
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);

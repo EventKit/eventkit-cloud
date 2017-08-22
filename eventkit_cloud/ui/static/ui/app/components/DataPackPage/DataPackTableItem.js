@@ -11,11 +11,19 @@ import SocialGroup from 'material-ui/svg-icons/social/group';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import RaisedButton from 'material-ui/RaisedButton';
+import Dialog from 'material-ui/Dialog';
+import { List, ListItem} from 'material-ui/List'
 import moment from 'moment';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            providerDescs: {},
+            providerDialogOpen: false,
+        };
     }
 
     getOwnerText(run, user) {
@@ -38,8 +46,60 @@ export class DataPackTableItem extends Component {
             return <NavigationCheck style={{color: '#bcdfbb', height: '22px'}}/>
         }
     }
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+
+    };
+
+    handleProviderOpen(runProviders) {
+        let providerDesc = {};
+        runProviders.forEach((runProvider) => {
+            let a = this.props.providers.find(x => x.slug === runProvider.slug)
+            providerDesc[a.name] = a.service_description;
+        })
+        this.setState({providerDescs:providerDesc, providerDialogOpen: true});
+
+    };
+
 
     render() {
+        const runProviders = this.props.run.provider_tasks.filter((provider) => {
+            return provider.display != false;
+        });
+
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
+            return (
+                <ListItem
+                    key={key}
+                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'95%'}}
+                    nestedListStyle={{padding: '0px'}}
+                    primaryText={key}
+                    initiallyOpen={false}
+                    primaryTogglesNestedList={false}
+                    nestedItems={[
+                        <ListItem
+                            key={1}
+                            primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
+                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'95%'}}
+                        />
+                    ]}
+                />
+
+            );
+        })
+
+        const providerInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProviderClose.bind(this)}
+            />,
+        ];
+
         const styles = {
             headerColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center',},
             rowColumn: {paddingLeft: '0px',paddingRight: '0px',textAlign: 'center'},
@@ -83,8 +143,13 @@ export class DataPackTableItem extends Component {
                     >
                         <MenuItem 
                             style={{fontSize: '12px'}}
-                            primaryText="Go to Export Detail"
+                            primaryText="Go to Status & Download"
                             onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
+                        <MenuItem
+                            style={{fontSize: '12px'}}
+                            primaryText="View Data Sources"
+                            onClick={this.handleProviderOpen.bind(this, runProviders)}
+                        />
                         
                         {this.props.run.user == this.props.user.data.user.username ?
                         <MenuItem
@@ -93,6 +158,19 @@ export class DataPackTableItem extends Component {
                             onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                         : null}
                     </IconMenu>
+                    <Dialog
+                        contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                        actions={providerInfoActions}
+                        modal={false}
+                        open={this.state.providerDialogOpen}
+                        onRequestClose={this.handleProviderClose.bind(this)}
+                    >
+                        <span><strong>DATA SOURCES</strong>
+                                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                        <List style={{marginTop:'10px'}}>{providersList}</List>
+                                    </CustomScrollbar>
+                                </span>
+                    </Dialog>
                 </TableRowColumn>
             </TableRow>
         )
@@ -103,6 +181,7 @@ DataPackTableItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 };
 
 export default DataPackTableItem;

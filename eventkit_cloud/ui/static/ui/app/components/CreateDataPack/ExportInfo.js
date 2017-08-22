@@ -274,7 +274,7 @@ export class ExportInfo extends React.Component {
                                 />
                             </div>
 
-                            <div id="layersHeader" className={styles.heading}>Select Layers</div>
+                            <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
                             <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                             <div className={styles.sectionBottom}>
                                 <List className={styles.list}>

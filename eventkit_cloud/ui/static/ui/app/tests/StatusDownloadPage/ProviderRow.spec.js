@@ -28,6 +28,28 @@ describe('ProviderRow component', () => {
         '81909b77-a6cd-403f-9e62-9662c9e2cdf3': false,
     }
 
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return  {
             provider: {
@@ -37,8 +59,10 @@ describe('ProviderRow component', () => {
                 uid: "e261d619-2a02-4ba5-a58c-be0908f97d04",
                 url: "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
                 display: true,
+                slug: 'osm',
             },
             selectedProviders: selectedProviders,
+            providers: providers,
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
         }
@@ -62,8 +86,8 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(6);
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(IconMenu)).toHaveLength(0);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
     });
@@ -171,6 +195,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
     });
 
+
     it('should call componentWillMount and set the row and count state', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(ProviderRow.prototype, 'componentWillMount');
@@ -183,16 +208,29 @@ describe('ProviderRow component', () => {
         mountSpy.restore();
     });
 
-    // it('should call onChangeCheck with the task box is checked', () => {
-    //     const props = getProps();
-    //     const onChangeSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({openTable: true});
-    //     wrapper.find(TableBody).find(Checkbox).find('input').simulate('change');
-    //     expect(onChangeSpy.calledOnce).toBe(true);
-    //     onChangeSpy.restore();
-    // });
+    it('handleProviderOpen should set provider dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = shallow(<ProviderRow {...props}/>);
+        wrapper.instance().handleProviderOpen(props.provider);
+        console.log(props.provider)
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
+        expect(wrapper.find('span')).toHaveLength(1)
+        expect(wrapper.find('div')).toHaveLength(1);
+        expect(wrapper.find('div').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        stateSpy.restore();
+    });
 
+    it('handleProviderClose should set the provider dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = shallow(<ProviderRow {...props}/>);
+        wrapper.instance().handleProviderClose();
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
     it('should call onAllCheck when the provider box is checked', () => {
         const props = getProps();
         const onChangeCheckSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');

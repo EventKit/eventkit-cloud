@@ -23,7 +23,28 @@ describe('StatusDownload component', () => {
     const muiTheme = getMuiTheme();
 
     const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: '30'};
-
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const tasks = [
         {
             "duration": "0:00:15.317672",
@@ -222,6 +243,7 @@ describe('StatusDownload component', () => {
                 updated: false,
                 error: null,
             },
+            providers:providers,
             getDatacartDetails: (jobuid) => {},
             deleteRun: (jobuid) => {},
             rerunExport: (jobuid) => {},
@@ -230,6 +252,7 @@ describe('StatusDownload component', () => {
             updatePermission: (jobuid, value) => {},
             cloneExport: (cartDetails, providerArray) => {},
             cancelProviderTask: (providerUid) => {},
+            getProviders: () => {},
         }
     };
 
@@ -313,9 +336,10 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, startTimer, setMaxDays state and addEventListener when mounted', () => {
+    it('should call getDatacartDetails, getProviders, startTimer, setMaxDays state and addEventListener when mounted', () => {
         let props = getProps();
         props.getDatacartDetails = new sinon.spy();
+        props.getProviders = new sinon.spy();
         let startTimerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
         const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
         const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
@@ -324,6 +348,7 @@ describe('StatusDownload component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
+        expect(props.getProviders.calledOnce).toBe(true);
         expect(startTimerSpy.calledOnce).toBe(true);
         expect(eventSpy.calledOnce).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
@@ -380,7 +405,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(8);
+        expect(setTimeout.mock.calls.length).toBe(10);
         expect(setTimeout.mock.calls[3][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
@@ -404,7 +429,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(7);
+        expect(setTimeout.mock.calls.length).toBe(9);
         console.log(setTimeout.mock.calls);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();

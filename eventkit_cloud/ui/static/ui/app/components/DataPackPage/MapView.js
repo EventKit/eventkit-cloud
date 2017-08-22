@@ -12,24 +12,27 @@ import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
-import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
+import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#ce4427',
         width: 6,
-        zIndex: 100,
-    })
+        
+    }),
+    image: null,
+    zIndex: Infinity,
 });
 
 export const BLUE_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
         color: '#4498c0',
-        width: 6,
-        zIndex: 1,
-    })
+        width: 4,
+    }),
+    image: null,
+    zIndex: 1
 });
 
 export class MapView extends Component {
@@ -54,6 +57,8 @@ export class MapView extends Component {
         this.onDrawStart = this.onDrawStart.bind(this);
         this.updateMode = this.updateMode.bind(this);
         this.setMapView = this.setMapView.bind(this);
+        this.defaultStyleFunction = this.defaultStyleFunction.bind(this);
+        this.selectedStyleFunction = this.selectedStyleFunction.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -77,7 +82,7 @@ export class MapView extends Component {
         this.source = new ol.source.Vector({wrapX: false});
         this.layer = new ol.layer.Vector({
             source: this.source,
-            style: BLUE_STYLE
+            style: this.defaultStyleFunction
         });
         this.drawLayer = generateDrawLayer();
 
@@ -223,9 +228,8 @@ export class MapView extends Component {
                     const oldFeature = this.source.getFeatureById(this.state.selectedFeature);
                     this.setFeatureNotSelected(oldFeature);
                 }
-                const style = feature.getStyle();
                 // if clicked on feature is already selected it should be deselected
-                if(style && style == RED_STYLE) {
+                if(this.state.selectedFeature && this.state.selectedFeature == feature.getId()) {
                     this.setFeatureNotSelected(feature);
                     this.setState({selectedFeature: null});
                 }
@@ -239,8 +243,12 @@ export class MapView extends Component {
                     if(!ol.extent.containsExtent(mapExtent, feature.getGeometry().getExtent())) {
                         this.map.getView().setCenter(ol.extent.getCenter(feature.getGeometry().getExtent()));
                     }
-                    // if it is in view trigger an animation
+                    // if it is in view and not a polygon, trigger an animation
                     else {
+                        if (!this.displayAsPoint(feature)) {
+                            return;
+                        }
+                        
                         const start = new Date().getTime();
                         const geom = feature.getGeometry();
                         if (this.listener) {
@@ -337,14 +345,67 @@ export class MapView extends Component {
 
     // helper function that changes feature style to unselected
     setFeatureNotSelected(feature) {
-        feature.setStyle(BLUE_STYLE);
-        feature.getStyle().setZIndex(1);
+        feature.setStyle(this.defaultStyleFunction);
     }
 
     // helper function that changes feature style to selected
     setFeatureSelected(feature) {
-        feature.setStyle(RED_STYLE);
-        feature.getStyle().setZIndex(100);
+        feature.setStyle(this.selectedStyleFunction);
+    }
+
+    displayAsPoint(feature) {
+        if(!feature) {return null}
+        const extent = feature.getGeometry().getExtent();
+        const topLeft = this.map.getPixelFromCoordinate(ol.extent.getTopLeft(extent));
+        const bottomRight = this.map.getPixelFromCoordinate(ol.extent.getBottomRight(extent));
+        if(topLeft && bottomRight) {
+            const height =  bottomRight[1] - topLeft[1];
+            const width = bottomRight[0] - topLeft[0];
+            return !((height > 10 || width > 10) && height * width >= 50);    
+        }
+        return true
+    }
+
+    defaultStyleFunction(feature, resolution) {
+        const pointStyle = new ol.style.Style({
+            geometry: featureToPoint,
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                    color: '#4598bf',
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 2
+                }),
+            }),
+            zIndex: 1
+        });
+        if(this.displayAsPoint(feature)) {
+            return pointStyle;
+        }
+        return BLUE_STYLE;
+    }
+
+    selectedStyleFunction(feature, resolution) {
+        const pointStyle = new ol.style.Style({
+            geometry: featureToPoint,
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                    color: '#ce4427'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 2
+                }),
+            }),
+            zIndex: Infinity
+        });
+        if(this.displayAsPoint(feature)) {
+            return pointStyle;
+        }
+        return RED_STYLE;
     }
 
     handleSearch(result) {
@@ -527,6 +588,7 @@ export class MapView extends Component {
                                 onRunDelete={this.props.onRunDelete}
                                 onClick={this.handleClick}
                                 backgroundColor={this.state.selectedFeature == run.uid ? '#dedfdf': null}
+                                providers={this.props.providers}
                             />
                         ))}
                         </GridList>
@@ -542,7 +604,7 @@ export class MapView extends Component {
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}}
                     />
                     <DrawAOIToolbar
                         toolbarIcons={this.state.toolbarIcons}
@@ -553,10 +615,10 @@ export class MapView extends Component {
                         setBoxButtonSelected={() => {this.setButtonSelected('box')}}
                         setFreeButtonSelected={() => {this.setButtonSelected('free')}}
                         setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
-                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setImportButtonSelected={() => {this.setButtonSelected('import')}}
                         setImportModalState={this.toggleImportModal}
                     />
-                    <InvalidDrawWarning 
+                    <InvalidDrawWarning
                         show={this.state.showInvalidDrawWarning}
                     />
                     <DropZone
@@ -617,6 +679,7 @@ MapView.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    providers: PropTypes.array.isRequired,
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
     importGeom: PropTypes.object.isRequired,

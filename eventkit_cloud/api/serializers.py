@@ -130,7 +130,7 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportProviderTask
-        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display')
+        fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -359,7 +359,7 @@ class ExportFormatSerializer(serializers.ModelSerializer):
 class ExportProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(
         view_name='api:providers-detail',
-        lookup_field='id'
+        lookup_field='slug'
     )
     type = serializers.SerializerMethodField(read_only=True)
     license = LicenseSerializer(required=False)
