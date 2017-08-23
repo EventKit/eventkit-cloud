@@ -87,10 +87,10 @@ class ExportOSMTaskRunner(TaskRunner):
 
         # run the tasks
         export_provider_task_record = ExportProviderTask.objects.create(run=run,
-                                                                 name=provider_task.provider.name,
-                                                                 slug=provider_task.provider.slug,
-                                                                 status=TaskStates.PENDING.value,
-                                                                 display=True)
+                                                                        name=provider_task.provider.name,
+                                                                        slug=provider_task.provider.slug,
+                                                                        status=TaskStates.PENDING.value,
+                                                                        display=True)
 
         for format, task in export_tasks.iteritems():
             export_task = create_export_task_record(
@@ -116,15 +116,21 @@ class ExportOSMTaskRunner(TaskRunner):
 
         bbox = run.job.extents
 
-        osm_gpkg_task = osm_data_collection_task.si(
-            stage_dir, export_provider_task_record.id, worker=worker,
-            job_name=job_name, bbox=bbox, user_details=user_details,
-            config=provider_task.provider.config 
+        osm_data_collection_task_record = create_export_task_record(
+            task_name=osm_data_collection_task.name,
+            export_provider_task=export_provider_task_record, worker=worker,
+            display=getattr(osm_data_collection_task, "display", False)
         )
 
-        thematic_tasks = (osm_gpkg_task | format_tasks) if format_tasks else osm_gpkg_task
+        osm_gpkg_task = osm_data_collection_task.si(
+            stage_dir=stage_dir, export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
+            job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
+            config=provider_task.provider.config
+        )
 
-        return export_provider_task_record.uid, thematic_tasks
+        tasks = chain(osm_gpkg_task, format_tasks) if format_tasks else osm_gpkg_task
+
+        return export_provider_task_record.uid, tasks
 
 
 class ExportWFSTaskRunner(TaskRunner):

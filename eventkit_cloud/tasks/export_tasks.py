@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 import cPickle
 from collections import Sequence
-import json
 import logging
 import os
 import shutil
@@ -19,7 +18,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from celery import Task
+from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
@@ -28,11 +27,9 @@ from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files
 from ..celery import app, TaskPriority
 from ..utils import (
-    kml, osmconf, osmparse, overpass, pbf, s3, shp, thematic_gpkg,
-    external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage,
-    gdalutils
+    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, gdalutils
 )
-from ..utils.hotosm_geopackage import OSMConfig, Geopackage
+from ..utils.hotosm_geopackage import Geopackage
 from .exceptions import CancelException, DeleteException
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
@@ -42,9 +39,11 @@ logger = get_task_logger(__name__)
 
 
 class TaskStates(Enum):
+
     COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
     INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
     SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
+
     PENDING = "PENDING"  # Used for tasks that have not been started
     RUNNING = "RUNNING"  # Used for tasks that have been started
     CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
@@ -55,7 +54,7 @@ class TaskStates(Enum):
 
     @staticmethod
     def get_finished_states():
-        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS]
+        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS, TaskStates.FAILED]
 
     @staticmethod
     def get_incomplete_states():
@@ -64,11 +63,13 @@ class TaskStates(Enum):
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
 # https://github.com/celery/celery/issues/3270
+
 class LockingTask(UserDetailsBase):
     """
     Base task with lock to prevent multiple execution of tasks with ETA.
-    It's happens with multiple workers for tasks with any delay (countdown, ETA).
-    You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file
+    It happens with multiple workers for tasks with any delay (countdown, ETA). Its a bug
+    https://github.com/celery/kombu/issues/337.
+    You may override cache backend by setting `CELERY_TASK_LOCK_CACHE` in your Django settings file.
 
     This task can also be used to ensure that a task isn't running at the same time as another task by specifying,
     a lock_key in the task arguments.  If the lock_key is present but unavailable the task will be tried again later.
@@ -109,17 +110,19 @@ class LockingTask(UserDetailsBase):
             retry = True
         else:
             self.lock_key = self.get_lock_key()
+
         if self.acquire_lock():
             logger.debug('Task {0} started.'.format(self.request.id))
             return super(LockingTask, self).__call__(*args, **kwargs)
         else:
-            logger.info('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
             if retry:
-                raise self.retry(countdown=10)
+                logger.info('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
+                self.delay(*args, **kwargs)
             else:
                 logger.info('Task {0} skipped due to lock'.format(self.request.id))
 
     def after_return(self, *args, **kwargs):
+        logger.info('Task {0} releasing lock'.format(self.request.id))
         self.cache.delete(self.lock_key)
         super(LockingTask, self).after_return(*args, **kwargs)
 
@@ -269,8 +272,9 @@ class ExportTask(LockingTask):
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = ExportProviderTask.objects.get(tasks__celery_uid=task_id)
-                cancel_export_provider_task(export_provider_task_uid=export_provider_task.uid,
-                                            canceling_user=None, delete=False)
+                cancel_export_provider_task.delay(export_provider_task_uid=export_provider_task.uid,
+                                                  canceling_username=None, delete=False,
+                                                  locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid))
                 run = export_provider_task.run
                 stage_dir = kwargs['stage_dir']
                 export_task_error_handler(
@@ -355,25 +359,23 @@ def osm_data_collection_pipeline(
 
 @app.task(name="OSM Data Collection", bind=True, base=FormatTask)
 def osm_data_collection_task(
-        self, stage_dir, export_provider_task_id, worker='celery',
+        self, result=None, stage_dir=None, provider_slug=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
-        config=None):
+        config=None, *args, **kwargs):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
     from eventkit_cloud.tasks.models import ExportProviderTask
     from eventkit_cloud.tasks.task_runners import create_export_task_record
-    export_provider_task = ExportProviderTask.objects.get(id=export_provider_task_id)
-    etr = create_export_task_record(self.name, export_provider_task, worker, getattr(self, 'display', False))
-    etr.celery_uid = self.request.id
-    etr.save()
+
+    self.update_task_state(result=result, task_uid=task_uid)
 
     if user_details is None:
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
     gpkg_filepath = osm_data_collection_pipeline(
-        etr.uid, stage_dir, job_name=job_name, bbox=bbox, user_details=user_details,
+        task_uid, stage_dir, job_name=job_name, bbox=bbox, user_details=user_details,
         config=config
     )
 
@@ -711,45 +713,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
 
 
-# @app.task(name='Clean Up Failure Task', bind=True, base=UserDetailsBase)
-# def clean_up_failure_task(self, result=None, export_provider_task_uid=None, run_uid=None, worker=None,
-#                           *args, **kwargs):
-#     """
-#     Used to close tasks in a failed chain.
-#
-#     If a task fails or is canceled, the uid will be passed here and the failed object will be found and propagated,
-#     to the subsequent tasks in the chain. Additionally they will be finalized to ensure that the run finishes.
-#     """
-#
-#     from eventkit_cloud.tasks.models import ExportProviderTask, ExportTaskException
-#     from billiard.einfo import ExceptionInfo
-#
-#     result = result or {}
-#
-#     task_status = None
-#     incomplete_export_provider_task = None
-#     with transaction.atomic():
-#         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-#
-#             # else:
-#             #     if task_status:
-#             #         export_task.status = task_status
-#             #         try:
-#             #             raise CancelException(message="{0} could not complete because it depends on {1}".format(
-#             #                 export_provider_task.name, incomplete_export_provider_task))
-#             #         except CancelException as ce:
-#             #             einfo = ExceptionInfo()
-#             #             einfo.exception = ce
-#             #             ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
-#             #         export_task.save()
-#
-#     finalize_export_provider_task(run_uid=run_uid,
-#                                   export_provider_task_uid=export_provider_task_uid,
-#                                   worker=worker,
-#                                   status=TaskStates.INCOMPLETE.value)
-#     return result
-
-
 def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
     """ Collects all export provider result files, combines them with @extra_files,
         and runs a zip_file_task with the resulting set of files.
@@ -786,25 +749,22 @@ def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
             logger.warn('No files to zip for run_uid/provider_tasks: {}/{}'.format(run_uid, provider_tasks))
 
 
-#This might be improved by using Redis or Memcached to help manage state.
+#This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', bind=True, base=LockingTask)
-# def wait_for_providers_task(*args, **kwargs):
 def wait_for_providers_task(self, result=None, task_name=None, task_args=None, task_kwargs=None, apply_args=None,
-                            run_uid=None, *args, **kwargs):
+                            run_uid=None, callback_task=None, *args, **kwargs):
     from .models import ExportRun
 
-    task = get_function(task_name)
+    if isinstance(callback_task, dict):
+        callback_task = signature(callback_task)
 
     run = ExportRun.objects.filter(uid=run_uid).first()
     if run:
         if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in run.provider_tasks.all()):
-            task(*task_args, **task_kwargs).apply_async(**apply_args)
-            logger.error("Running finish.")
+            callback_task.apply_async(**apply_args)
+            logger.error("Run finish.")
         else:
             logger.error("Waiting for other tasks to finish.")
-            raise self.retry("WAITING....", countdown=10)
-    else:
-        return "NO RUN!!!"
 
 
 class FinalizeRunHookTask(LockingTask):
@@ -966,7 +926,6 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
-# def finalize_export_provider_task(result=None, *args, **kwargs):
 def finalize_export_provider_task(result=None, export_provider_task_uid=None,
                                   status=None, *args, **kwargs):
     """
@@ -980,14 +939,12 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     with transaction.atomic():
 
         export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
-        logger.error("Finalizing ExportProviderTask:{}-{}->{}".format(export_provider_task.name, export_provider_task.status, status))
         for export_task in export_provider_task.tasks.all():
-            logger.error("Export_task:{}-{}".format(export_task.name, export_task.status))
             if TaskStates[status] not in TaskStates.get_finished_states():
+                logger.error("UPDATING:{0} to {1}".format(export_task.name, status))
                 export_task.status = status
-                logger.error("Export_task:{}-{}".format(export_task.name, export_task.status))
+                export_task.finished_at = timezone.now()
                 export_task.save()
-
         export_provider_task.status = status
         export_provider_task.finished_at = timezone.now()
         export_provider_task.save()
@@ -1192,7 +1149,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
 
 
 @app.task(name='Cancel Export Provider Task', base=LockingTask)
-def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_user=None, delete=False):
+def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_username=None, delete=False,
+                                *args, **kwargs):
     """
     Cancels an ExportProviderTask and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
@@ -1200,11 +1158,12 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     from ..tasks.models import ExportProviderTask, ExportTaskException, FileProducingTaskResult
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
-    from datetime import datetime, timedelta
+    from django.contrib.auth.models import User
 
     result = result or {}
 
     export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
+    canceling_user = User.objects.filter(username=canceling_username).first()
 
     if not export_provider_task:
         result['result'] = False
@@ -1220,7 +1179,8 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
             exception_class = CancelException
         if TaskStates[export_task.status] not in TaskStates.get_finished_states():
             export_task.status = TaskStates.FAILED.value
-            export_task.cancel_user = canceling_user
+            if canceling_user:
+                export_task.cancel_user = canceling_user
             export_task.save()
         # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
         # to pass task information to the users, then it may make sense to replace this.
@@ -1264,8 +1224,8 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     return result
 
 
-@app.task(name='Cancel Run', base=LockingTask)
-def cancel_run(result=None, export_run_uid=None, canceling_user=None, delete=False):
+@app.task(name='Cancel Run', base=UserDetailsBase)
+def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False):
     from ..tasks.models import ExportRun
 
     result = result or {}
@@ -1277,10 +1237,9 @@ def cancel_run(result=None, export_run_uid=None, canceling_user=None, delete=Fal
         return result
 
     for export_provider_task in export_run.provider_tasks.all():
-        # Note that a user object `canceling_user` can't be serialized if using apply_async or delay query user after call.
-        cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid,
-                                        canceling_user=canceling_user,
-                                        delete=delete)
+        cancel_export_provider_task(export_provider_task_uid=export_provider_task.uid,
+                                    canceling_username=canceling_username, delete=delete,
+                                    locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid))
     result['result'] = True
     return result
 

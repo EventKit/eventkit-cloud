@@ -120,13 +120,19 @@ class TaskFactory:
 
                     provider_task_uid, provider_subtask_chain = task_runner.run_task(**args)
 
+                    # wait_for_providers_signature = wait_for_providers_task.s(
+                    #             run_uid=run_uid,
+                    #             locking_task_key=run_uid,
+                    #             task_name="eventkit_cloud.tasks.task_factory.create_finalize_run_task_collection",
+                    #             task_args=[run_uid, run_dir, worker],
+                    #             task_kwargs={"apply_args":finalize_task_settings},
+                    #             apply_args=finalize_task_settings)
+
                     wait_for_providers_signature = wait_for_providers_task.s(
-                                run_uid=run_uid,
-                                locking_task_key=run_uid,
-                                task_name="eventkit_cloud.tasks.task_factory.create_finalize_run_task_collection",
-                                task_args=[run_uid, run_dir, worker],
-                                task_kwargs={"apply_args":finalize_task_settings},
-                                apply_args=finalize_task_settings)
+                        run_uid=run_uid,
+                        locking_task_key=run_uid,
+                        callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker, apply_args=finalize_task_settings),
+                        apply_args=finalize_task_settings)
 
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
@@ -134,18 +140,22 @@ class TaskFactory:
                         clean_up_task_chain = chain(
                             finalize_export_provider_task.si(
                                 export_provider_task_uid=provider_task_uid,
-                                status=TaskStates.FAILED.value),
+                                status=TaskStates.INCOMPLETE.value,
+                                locking_task_key=run_uid),
                             wait_for_providers_signature
                         )
 
-                        # add clean up to subtasks
+                        # add clean up to subtask(s)
                         if hasattr(provider_subtask_chain, "tasks"):
                             for task in provider_subtask_chain.tasks:
                                 task.on_error(clean_up_task_chain)
+                        else:
+                            provider_subtask_chain.on_error(clean_up_task_chain)
 
                         finalize_export_provider_signature = finalize_export_provider_task.s(
                             export_provider_task_uid=provider_task_uid,
-                            status=TaskStates.COMPLETED.value
+                            status=TaskStates.COMPLETED.value,
+                            locking_task_key=run_uid
                         )
 
                         finalized_provider_task_chain = chain(
@@ -155,19 +165,6 @@ class TaskFactory:
                         )
 
                         finalized_provider_task_chain.apply_async(**finalize_task_settings)
-                        # provider_subtask_chains.append(finalized_provider_task_chain)
-            #
-            #     if not provider_subtask_chains:
-            #         continue
-            #
-            #     provider_task_chain = chain(provider_subtask_chains)
-            #     provider_task_chains.append(provider_task_chain)
-            #     # This ensures the export provider's subtasks are sequenced in the order the providers appear
-            #     # in the group.
-            #
-            # group_result = group(provider_task_chains).apply_async(**finalize_task_settings)
-            #
-            # return group_result
 
 
 @transaction.atomic

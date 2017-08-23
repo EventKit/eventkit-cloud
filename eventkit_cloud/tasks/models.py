@@ -57,7 +57,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         self.delete_user = user
         self.deleted = True
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
-        cancel_run.run(export_run_uid=self.uid, canceling_user=user, delete=True)
+        cancel_run(export_run_uid=self.uid, canceling_username=user.username, delete=True)
         self.save()
 
 
