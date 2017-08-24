@@ -902,7 +902,10 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
     if run.job.include_zipfile:
         # To prepare for the zipfile task, the files need to be checked to ensure they weren't
         # deleted during cancellation.
-        include_files = list(extra_files)
+
+        include_files = []
+        if extra_files:
+            include_files = list(extra_files)
 
         provider_tasks = run.provider_tasks.all()
 
