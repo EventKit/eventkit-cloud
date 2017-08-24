@@ -215,6 +215,24 @@ def get_table_gpkg_contents_information(gpkg, table_name):
                 "srs_id": table_information[9]}
 
 
+def set_gpkg_contents_bounds(gpkg, table_name, bbox):
+    """
+
+    :param gpkg: Path to geopackage file.
+    :param table_name: A table name to set the bounds.
+    :param bbox: An iterable with doubles representing the bounds [w,s,e,n]
+    :return: A dict with the column names as the key.
+    """
+    with sqlite3.connect(gpkg) as conn:
+        result = conn.execute(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name))
+        if result:
+            return True
+        else:
+            return False
+
+
 def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
