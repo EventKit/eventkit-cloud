@@ -15,7 +15,7 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint, doesGeomContainGeom} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
