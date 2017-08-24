@@ -120,14 +120,6 @@ class TaskFactory:
 
                     provider_task_uid, provider_subtask_chain = task_runner.run_task(**args)
 
-                    # wait_for_providers_signature = wait_for_providers_task.s(
-                    #             run_uid=run_uid,
-                    #             locking_task_key=run_uid,
-                    #             task_name="eventkit_cloud.tasks.task_factory.create_finalize_run_task_collection",
-                    #             task_args=[run_uid, run_dir, worker],
-                    #             task_kwargs={"apply_args":finalize_task_settings},
-                    #             apply_args=finalize_task_settings)
-
                     wait_for_providers_signature = wait_for_providers_task.s(
                         run_uid=run_uid,
                         locking_task_key=run_uid,
@@ -270,9 +262,10 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None,
         Add any additional tasks you want in hook_tasks.
         @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
+    apply_args = apply_args or dict()
 
     # These should be subclassed from FinalizeRunHookTask
-    hook_tasks = [example_finalize_run_hook_task]
+    hook_tasks = []
     hook_task_sigs = []
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous

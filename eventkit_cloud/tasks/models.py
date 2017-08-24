@@ -54,10 +54,13 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def soft_delete(self, user=None, *args, **kwargs):
         from .export_tasks import cancel_run
         exportrun_delete_exports(self.__class__, self)
-        self.delete_user = user
+        username = None
+        if user:
+            self.delete_user = user
+            username = user.username
         self.deleted = True
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
-        cancel_run(export_run_uid=self.uid, canceling_username=user.username, delete=True)
+        cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
 
 

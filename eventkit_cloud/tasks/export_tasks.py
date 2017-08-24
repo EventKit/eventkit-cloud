@@ -750,9 +750,8 @@ def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
 
 
 #This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', bind=True, base=LockingTask)
-def wait_for_providers_task(self, result=None, task_name=None, task_args=None, task_kwargs=None, apply_args=None,
-                            run_uid=None, callback_task=None, *args, **kwargs):
+@app.task(name='Wait For Providers', base=LockingTask)
+def wait_for_providers_task(apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from .models import ExportRun
 
     if isinstance(callback_task, dict):
@@ -765,6 +764,8 @@ def wait_for_providers_task(self, result=None, task_name=None, task_args=None, t
             logger.error("Run finish.")
         else:
             logger.error("Waiting for other tasks to finish.")
+    else:
+        raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
 class FinalizeRunHookTask(LockingTask):
@@ -1067,13 +1068,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     run.status = TaskStates.COMPLETED.value
     provider_tasks = run.provider_tasks.all()
 
-    # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
-    #    this waits until all provider tasks have finished before continuing.
-    # if any(getattr(TaskStates, task.status, None) == TaskStates.PENDING for task in provider_tasks):
-    #     finalize_run_task.retry(
-    #         result=result, run_uid=run_uid, stage_dir=stage_dir, interval_start=4, interval_max=10
-    #     )
-
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
@@ -1178,7 +1172,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         else:
             exception_class = CancelException
         if TaskStates[export_task.status] not in TaskStates.get_finished_states():
-            export_task.status = TaskStates.FAILED.value
+            export_task.status = TaskStates.CANCELED.value
             if canceling_user:
                 export_task.cancel_user = canceling_user
             export_task.save()
@@ -1204,21 +1198,17 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
                 routing_key="{0}.cancel".format(export_task.worker))
 
     if TaskStates[export_provider_task.status] not in TaskStates.get_finished_states():
-        export_provider_task.status = TaskStates.FAILED.value
+        export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
 
     # Because the task is revoked the follow on is never run... if using revoke this is required, if using kill,
     # this can probably be removed as the task will simply fail and the follow on task from the task_factory will
     # pick up the task.
     run_uid = export_provider_task.run.uid
-    worker = export_provider_task.tasks.first().worker
-    # Because we don't care about the files in a canceled task the stage dir can be the run dir,
-    # which will be cleaned up in final steps.
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run_uid))
 
     finalize_export_provider_task(
         export_provider_task_uid=export_provider_task_uid,
-        status=TaskStates.FAILED.value
+        status=TaskStates.CANCELED.value
     )
 
     return result

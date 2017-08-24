@@ -535,7 +535,7 @@ def normalize_job_name(name):
     return s.lower()
 
 
-def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=None):
+def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
         export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status=TaskStates.PENDING.value,
                                                 name=task_name, worker=worker, display=display)
