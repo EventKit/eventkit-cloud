@@ -19,6 +19,7 @@ describe('LoadButtons component', () => {
             featureInfo: {
                 name: 'test name',
                 job: {
+                    uid: '111',
                     event: 'test event',
                     description: 'test description'
                 },
@@ -46,6 +47,8 @@ describe('LoadButtons component', () => {
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find('#popup-header')).toHaveLength(1);
         expect(wrapper.find('#popup-name')).toHaveLength(1);
+        expect(wrapper.find('#popup-name').find('a')).toHaveLength(1);
+        expect(wrapper.find('#popup-name').find('a').props().href).toEqual(`/status/${props.featureInfo.job.uid}`)
         expect(wrapper.find('#popup-name').text()).toEqual('test name');
         expect(wrapper.find(Dot)).toHaveLength(1);
         expect(wrapper.find(Clear)).toHaveLength(1);

@@ -34,7 +34,10 @@ export class MapPopup extends Component {
                 <div id="popup-header" style={{width: '100%', height: '100%', padding: '10px 10px 5px', color: '#4598bf'}}>
                     <div id="popup-name-container" style={{display: 'inline-block', verticalAlign: 'middle', height: '22px', width: 'calc(100% - 20px)'}}>
                         <div id="popup-name" style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '18px'}}>
-                            <Dot style={styles.dot}/><strong>{this.props.featureInfo.name}</strong>
+                            <a href={`/status/${this.props.featureInfo.job.uid}`} style={{color: '#4598bf'}}>
+                                <Dot style={styles.dot}/>
+                                <strong>{this.props.featureInfo.name}</strong>
+                            </a>
                         </div>
                     </div>
                     <div id="close-button-container" style={{display: 'inline-block', verticalAlign: 'middle', height: '22px', float: 'right'}}>
