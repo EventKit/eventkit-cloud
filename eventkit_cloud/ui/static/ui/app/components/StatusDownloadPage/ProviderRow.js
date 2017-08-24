@@ -21,6 +21,8 @@ import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
 import CustomScrollbar from '../CustomScrollbar';
+import TaskError from './TaskError'
+import ProviderError from './ProviderError'
 
 export class ProviderRow extends React.Component {
     constructor(props) {
@@ -35,6 +37,8 @@ export class ProviderRow extends React.Component {
             fileSize: null,
             providerDesc: '',
             providerDialogOpen: false,
+            cloneDialogOpen: false,
+
         }
     }
 
@@ -91,6 +95,9 @@ export class ProviderRow extends React.Component {
         });
     }
 
+
+
+
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
         selectedRows[e.target.name] = checked;
@@ -143,13 +150,7 @@ export class ProviderRow extends React.Component {
             case "SUCCESS":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
-                return <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+                return <TaskError task={task}/>
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
@@ -161,47 +162,12 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    getTaskStatusIcon(taskStatus) {
-        switch(taskStatus) {
-            case "SUCCESS":
-                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
-            case "PENDING":
-                return "WAITING";
-            case "CANCELED":
-                return "CANCELED";
-            case "FAILED":
-                return <span style={{color:'red'}}>Error</span>;
-            default:
-                return "";
-        }
-    }
-    getProviderStatusIcon(providerStatus) {
-        switch(providerStatus) {
+    getProviderStatus(provider) {
+        switch (provider.status) {
             case "COMPLETED":
                 return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
-                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>;
-            case "SUBMITTED":
-                return null;
-            case "CANCELED":
-                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
-            default:
-                return null;
-        }
-    }
-
-    getProviderStatus(providerStatus) {
-        switch (providerStatus) {
-            case "COMPLETED":
-                return null;
-            case "INCOMPLETE":
-                return <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+                return <ProviderError provider={provider} key={provider.uid}/>;
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
@@ -214,7 +180,7 @@ export class ProviderRow extends React.Component {
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
                     color: '#f4d225'
-                }}>CANCELED</span>
+                }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
             default:
                 return "";
         }
@@ -398,8 +364,8 @@ export class ProviderRow extends React.Component {
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
-                            {this.getProviderStatus(this.props.provider.status)}
-                            {this.getProviderStatusIcon((this.props.provider.status))}
+                            {this.getProviderStatus(this.props.provider)}
+
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'right'}}>
                             {menuItems.length > 0 ? 
@@ -417,31 +383,30 @@ export class ProviderRow extends React.Component {
                                 </IconMenu>
                             :
                                 null
-                            }<Dialog
-                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                            actions={providerInfoActions}
-                            modal={false}
-                            open={this.state.providerDialogOpen}
-                            onRequestClose={this.handleProviderClose.bind(this)}
-                        >
+                            }
+                            <Dialog
+                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                actions={providerInfoActions}
+                                modal={false}
+                                open={this.state.providerDialogOpen}
+                                onRequestClose={this.handleProviderClose.bind(this)}
+                            >
                             <span><strong>{this.props.provider.name}</strong>
                                 <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
                                 <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
                                 </CustomScrollbar>
                             </span>
-                        </Dialog>
+                            </Dialog>
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
                                 {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
                             </IconButton>
-
                         </TableHeaderColumn>
                     </TableRow>
                 </TableHeader>
                             {tableData}
             </Table>
-
         )
     }
 }
