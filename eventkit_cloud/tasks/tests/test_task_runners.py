@@ -40,6 +40,7 @@ class TestExportTaskRunner(TestCase):
     @patch('eventkit_cloud.tasks.task_runners.chain')
     def test_run_osm_task(self, mock_chain):
         shp_task = ExportFormat.objects.get(slug='shp')
+
         provider = ExportProvider.objects.get(slug='osm')
         provider_task = ProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
@@ -59,6 +60,7 @@ class TestExportTaskRunner(TestCase):
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(len(tasks), 2)
+
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
@@ -97,13 +99,16 @@ class TestExportTaskRunner(TestCase):
         mock_export_task.objects.create.return_value = expected_result
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
                                          worker=worker, display=False)
+
         self.assertEquals(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name,
                                             status=TaskStates.PENDING.value,
                                             name=task_name, worker=worker, display=False)
 
+
         expected_result = MagicMock(display=True)
         mock_export_task.objects.create.return_value = expected_result
+
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
                                          worker=worker, display=True)
         self.assertEquals(task_result, expected_result)

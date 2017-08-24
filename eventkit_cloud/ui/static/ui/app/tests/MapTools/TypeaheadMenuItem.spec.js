@@ -1,4 +1,4 @@
-import {TypeaheadMenuItem} from '../../components/CreateDataPack/TypeaheadMenuItem';
+import {TypeaheadMenuItem} from '../../components/MapTools/TypeaheadMenuItem';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
@@ -26,7 +26,7 @@ describe('TypeaheadMenuItem component', () => {
         }
     }
 
-    it('should renter a MenuItem with proper child components', () => {
+    it('should return a MenuItem with proper child components', () => {
         const props = getProps();
         const context = getContext();
         const wrapper = mount(
@@ -45,7 +45,7 @@ describe('TypeaheadMenuItem component', () => {
         expect(wrapper.find('div')).toHaveLength(3);
         expect(wrapper.find('.menuItem')).toHaveLength(1);
         expect(wrapper.find('.menuItemIconDiv')).toHaveLength(1);
-        expect(wrapper.find(ActionRoom)).toHaveLength(1);
+        expect(wrapper.find(ActionRoom)).toHaveLength(0);
         expect(wrapper.find('.menuItemText')).toHaveLength(2);
         expect(wrapper.find('.menuItemText').first().text()).toEqual('');
     });
@@ -73,7 +73,7 @@ describe('TypeaheadMenuItem component', () => {
     it('should have the proper text and icon', () => {
         let props = getProps();
         let context = getContext();
-        props.result.bbox = {'east': '180'};
+        props.result = {"geometry" : { "type": "Polygon"}}
         props.result.name = 'test name';
         props.result.province = 'province';
         props.result.region = 'region';

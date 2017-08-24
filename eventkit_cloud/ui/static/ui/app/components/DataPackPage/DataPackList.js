@@ -83,13 +83,14 @@ export class DataPackList extends Component {
                             cols={1}
                             padding={0}
                             style={{width: window.innerWidth - 10, minWidth: '360px'}}
-                        >   
+                        >
                         {this.props.runs.map((run) => (
-                            <DataPackListItem 
-                                run={run} 
-                                user={this.props.user} 
+                            <DataPackListItem
+                                run={run}
+                                user={this.props.user}
                                 key={run.uid}
-                                onRunDelete={this.props.onRunDelete}/>
+                                onRunDelete={this.props.onRunDelete}
+                                providers={this.props.providers}/>
                         ))}
                         </GridList>
                     </div>
@@ -104,7 +105,7 @@ export class DataPackList extends Component {
                         <Table >
                             <TableHeader displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
                                 <TableRow style={styles.tableRow}>
-                                    <TableHeaderColumn 
+                                    <TableHeaderColumn
                                         style={styles.nameColumn}>
                                         <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
                                             <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
@@ -148,20 +149,21 @@ export class DataPackList extends Component {
                         <CustomScrollbar style={{height: window.innerHeight - 343}}>
                             <Table>
                                 <TableBody displayRowCheckbox={false}>
-                                    
+
                                     {this.props.runs.map((run) => (
-                                        <DataPackTableItem 
-                                            run={run} 
-                                            user={this.props.user} 
+                                        <DataPackTableItem
+                                            run={run}
+                                            user={this.props.user}
                                             key={run.uid}
                                             onRunDelete={this.props.onRunDelete}
+                                            providers={this.props.providers}
                                         />
                                     ))}
-                                    
-                                </TableBody>          
+
+                                </TableBody>
                             </Table>
                         </CustomScrollbar>
-                        
+
                     </div>
                     {load}
                 </div>
@@ -177,6 +179,7 @@ DataPackList.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
     order: PropTypes.string.isRequired,
+    providers: PropTypes.array.isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,

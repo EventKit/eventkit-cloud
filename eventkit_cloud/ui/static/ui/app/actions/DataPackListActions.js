@@ -2,13 +2,17 @@ import types from './actionTypes';
 import axios from 'axios';
 import cookie from 'react-cookie';
 
-export function getRuns(params) {
+export function getRuns(params, geojson) {
     let thunk = dispatch => {
         dispatch({type: types.FETCHING_RUNS});
-        const url = params ? `/api/runs?${params}` : '/api/runs'
+        const url = params ? `/api/runs/filter?${params}` : '/api/runs/filter'
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        const data = geojson ? {geojson: JSON.stringify(geojson)} : {}
         return axios ({
             url: url,
-            method: 'GET',
+            method: 'POST',
+            data: data,
+            headers: {"X-CSRFToken": csrfmiddlewaretoken}
         }).then((response) => {
             let nextPage = false;
             let links = [];
@@ -28,7 +32,7 @@ export function getRuns(params) {
                 range = response.headers['content-range'].split('-')[1]; 
             }
             dispatch({type: types.RECEIVED_RUNS, runs: response.data, nextPage: nextPage, range: range});
-        }).catch(error => {
+        }).catch((error) => {
             dispatch({type: types.FETCH_RUNS_ERROR, error: error});
         });
         

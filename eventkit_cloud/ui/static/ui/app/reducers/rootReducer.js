@@ -2,12 +2,11 @@ import {combineReducers} from 'redux'
 import { reducer as reduxFormReducer } from 'redux-form'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
-import {exportJobsReducer, exportModeReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
-import {invalidDrawWarningReducer} from './drawToolBarReducer';
+import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
-import {toolbarIconsReducer, showImportModalReducer, importGeomReducer} from './mapToolReducer';
+import {importGeomReducer} from './mapToolReducer';
 import {licenseReducer} from './licenseReducer';
 import authReducer from './authReducer'
 import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer, updateExpirationReducer, updatePermissionReducer} from './statusDownloadReducer'
@@ -16,15 +15,11 @@ import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, 
 const rootReducer = combineReducers({
     // short hand property names
     auth: authReducer,
-    mode: exportModeReducer,
     aoiInfo: exportAoiInfoReducer,
     exportInfo: exportInfoReducer,
     zoomToSelection: zoomToSelectionReducer,
     resetMap: resetMapReducer,
     geocode: getGeocodeReducer,
-    showInvalidDrawWarning: invalidDrawWarningReducer,
-    toolbarIcons: toolbarIconsReducer,
-    showImportModal: showImportModalReducer,
     importGeom: importGeomReducer,
     form: reduxFormReducer,
     user: userReducer,

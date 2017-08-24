@@ -36,8 +36,7 @@ from ..export_tasks import (
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
-    parse_result, finalize_export_provider_task, osm_create_styles_task,
-    FormatTask, wait_for_providers_task
+    parse_result, finalize_export_provider_task, osm_create_styles_task, FormatTask, wait_for_providers_task
 )
 
 

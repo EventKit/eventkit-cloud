@@ -71,7 +71,9 @@ class TestExportTaskFactory(TestCase):
         task_runner = MagicMock()
         task = Mock()
         task_runner().run_task.return_value = (provider_uuid, task)
+
         del task.tasks
+
         task_factory = TaskFactory()
         task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
 

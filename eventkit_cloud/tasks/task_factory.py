@@ -16,6 +16,7 @@ from eventkit_cloud.tasks.export_tasks import finalize_run_task, example_finaliz
 from ..jobs.models import Job
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
                                   wait_for_providers_task, TaskStates)
+
 from ..tasks.models import ExportRun, ExportProviderTask
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
@@ -126,9 +127,11 @@ class TaskFactory:
                         callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker, apply_args=finalize_task_settings),
                         apply_args=finalize_task_settings)
 
+
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
+
                         clean_up_task_chain = chain(
                             finalize_export_provider_task.si(
                                 export_provider_task_uid=provider_task_uid,

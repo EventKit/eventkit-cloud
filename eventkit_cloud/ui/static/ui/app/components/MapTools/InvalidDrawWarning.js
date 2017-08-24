@@ -1,5 +1,4 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, {Component, PropTypes} from 'react';
 import styles from '../../styles/InvalidDrawWarning.css';
 
 export class InvalidDrawWarning extends Component {
@@ -16,17 +15,8 @@ export class InvalidDrawWarning extends Component {
     }
 }
 
-function mapStateToProps(state) {
-    return {
-        show: state.showInvalidDrawWarning
-    };
-}
-
 InvalidDrawWarning.propTypes = {
-    show: React.PropTypes.bool.isRequired,
+    show: PropTypes.bool.isRequired,
 };
 
-export default connect(
-    mapStateToProps,
-    null
-)(InvalidDrawWarning);
+export default InvalidDrawWarning;

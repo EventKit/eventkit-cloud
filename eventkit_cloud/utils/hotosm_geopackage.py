@@ -7,7 +7,9 @@ from string import Template
 from artifact import Artifact
 
 from osgeo import gdal, ogr, osr
-import sqlite3
+
+from pysqlite2 import dbapi2 as sqlite3
+
 from eventkit_cloud.feature_selection.feature_selection import slugify
 
 LOG = logging.getLogger(__name__)
