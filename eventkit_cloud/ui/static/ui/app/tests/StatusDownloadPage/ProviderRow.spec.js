@@ -11,13 +11,12 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
 import Warning from 'material-ui/svg-icons/alert/warning'
 import Check from 'material-ui/svg-icons/navigation/check'
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
+import ProviderError from '../../components/StatusDownloadPage/ProviderError';
+import TaskError from '../../components/StatusDownloadPage/TaskError';
 
 describe('ProviderRow component', () => {
 
@@ -216,7 +215,7 @@ describe('ProviderRow component', () => {
         console.log(props.provider)
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
-        expect(wrapper.find('span')).toHaveLength(1)
+        expect(wrapper.find('span')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('div').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
@@ -276,21 +275,17 @@ describe('ProviderRow component', () => {
     it('getTaskStatus should be called with the correct status from a given task', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTaskStatus({status: 'SUCCESS'})).toEqual(
+        props.provider.tasks[0].status = 'SUCCESS';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
             <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
-        expect(wrapper.instance().getTaskStatus({status: 'INCOMPLETE'})).toEqual(
-            <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'}}
-            >
-                ERROR
-            </span>
-        )
-        expect(wrapper.instance().getTaskStatus({status: 'PENDING'})).toEqual('WAITING');
+        props.provider.tasks[0].status = 'INCOMPLETE';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
+            <TaskError task={props.provider.tasks[0]}/>
+        );
+        props.provider.tasks[0].status = 'PENDING';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual('WAITING');
+        props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
             <span><LinearProgress mode="determinate" value={100}/>{''}</span>
         );
@@ -300,60 +295,31 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getTaskStatus({status: ''})).toEqual('');
     });
 
-    it('getTaskStatusIcon should be called with the correct icon from a given task', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTaskStatusIcon('SUCCESS')).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
-        );
-        expect(wrapper.instance().getTaskStatusIcon('PENDING')).toEqual('WAITING');
-        expect(wrapper.instance().getTaskStatusIcon('CANCELED')).toEqual('CANCELED');
-        expect(wrapper.instance().getTaskStatusIcon('FAILED')).toEqual(
-            <span style={{color: 'red'}}>Error</span>
-        );
-        expect(wrapper.instance().getTaskStatusIcon('')).toEqual('');
-    });
-
-    it('getProviderStatusIcon should be called with the icon from a given provider status', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getProviderStatusIcon('COMPLETED')).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('INCOMPLETE')).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('SUBMITTED')).toEqual(null);
-        expect(wrapper.instance().getProviderStatusIcon('CANCELED')).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('')).toEqual(null);
-    });
-
     it('getProviderStatus should be called with the correct icon from a given provider status', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().getProviderStatus('COMPLETED')).toEqual(null);
-        expect(wrapper.instance().getProviderStatus('INCOMPLETE')).toEqual(
-            <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+        props.provider.status = 'COMPLETED';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
+            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
-        expect(wrapper.instance().getProviderStatus('PENDING')).toEqual('WAITING');
-        expect(wrapper.instance().getProviderStatus('RUNNING')).toEqual('IN PROGRESS');
-        expect(wrapper.instance().getProviderStatus('CANCELED')).toEqual(
+        props.provider.status = 'INCOMPLETE';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
+            <ProviderError provider={props.provider} key={props.provider.uid}/>
+        );
+        props.provider.status = 'PENDING';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('WAITING');
+        props.provider.status = 'RUNNING';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('IN PROGRESS');
+        props.provider.status = 'CANCELED';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
             <span style={{
-                    fontWeight: 'bold',
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#f4d225'
-                }}>CANCELED</span>
+                fontWeight: 'bold',
+                display: 'inlineBlock',
+                borderTopWidth: '10px',
+                borderBottomWidth: '10px',
+                borderLeftWidth: '10px',
+                color: '#f4d225'
+            }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
         );
         expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });
