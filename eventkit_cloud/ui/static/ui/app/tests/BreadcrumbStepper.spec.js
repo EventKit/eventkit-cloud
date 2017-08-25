@@ -157,7 +157,8 @@ describe('BreadcrumbStepper component', () => {
         content = wrapper.instance().getStepContent(1);
         expect(isEqual(content, <ExportInfo 
             providers={props.providers} 
-            incrementStepper={wrapper.instance().incrementStepper}/>)).toBe(true);
+            incrementStepper={wrapper.instance().incrementStepper}
+            handlePrev={wrapper.instance().handlePrev}/>)).toBe(true);
         
         content = wrapper.instance().getStepContent(2);
         expect(isEqual(content, <ExportSummary/>)).toBe(true);
