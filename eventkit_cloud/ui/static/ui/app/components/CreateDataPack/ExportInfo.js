@@ -346,9 +346,14 @@ export class ExportInfo extends React.Component {
                                     onExpandChange={this.expandedChange.bind(this)}>
                                     <CardHeader
                                         title="Selected Area of Interest"
-                                        actAsExpander={true}
+                                        actAsExpander={false}
                                         showExpandableButton={true}
-                                    />
+                                        textStyle={{paddingRight: '6px'}}>
+                                        <a onClick={this.props.handlePrev}
+                                           style={{fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer'}}>
+                                            Edit
+                                        </a>
+                                    </CardHeader>
                                     <CardText expandable={true}>
                                         <div id="infoMap" className={styles.map}></div>
                                     </CardText>
@@ -408,7 +413,7 @@ ExportInfo.propTypes = {
     providers:       PropTypes.array.isRequired,
     exportInfo:     React.PropTypes.object,
     incrementStepper: React.PropTypes.func,
-
+    handlePrev:       React.PropTypes.func,
 }
 
 ExportInfo.childContextTypes = {
