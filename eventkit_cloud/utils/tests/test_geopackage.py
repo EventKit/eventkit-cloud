@@ -91,15 +91,14 @@ class TestGeopackage(TransactionTestCase):
         bbox = [-1, 0, 2, 1]
 
         sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
-        returned_value = set_gpkg_contents_bounds(gpkg, table_name, bbox)
+        set_gpkg_contents_bounds(gpkg, table_name, bbox)
         sqlite3.connect().__enter__().execute.assert_called_once_with(
             "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
                 bbox[0], bbox[1], bbox[2], bbox[3], table_name))
-        self.assertTrue(returned_value)
 
-        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
-        returned_value = set_gpkg_contents_bounds(gpkg, table_name, bbox)
-        self.assertFalse(returned_value)
+        with self.assertRaises(Exception):
+            sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            set_gpkg_contents_bounds(gpkg, table_name, bbox)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_zoom_levels_table(self, sqlite3):
@@ -124,16 +123,20 @@ class TestGeopackage(TransactionTestCase):
         zoom_level = 1
         gpkg = "/test/file.gpkg"
 
-        bad_table_name = "test;this"
-        returned_value = remove_zoom_level(gpkg, bad_table_name, zoom_level)
-        sqlite3.connect().__enter__().execute.assert_not_called()
-        self.assertFalse(returned_value)
+        with self.assertRaises(Exception):
+            bad_table_name = "test;this"
+            remove_zoom_level(gpkg, bad_table_name, zoom_level)
 
         table_name = "test"
-        returned_value = remove_zoom_level(gpkg, table_name, zoom_level)
+        with self.assertRaises(Exception):
+            sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            remove_zoom_level(gpkg, table_name, zoom_level)
+
+        sqlite3.reset_mock()
+        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
+        remove_zoom_level(gpkg, table_name, zoom_level)
         sqlite3.connect().__enter__().execute.assert_called_once_with(
             "DELETE FROM gpkg_tile_matrix WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table_name, int(zoom_level)))
-        self.assertTrue(returned_value)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_tile_matrix_table_zoom_levels(self, sqlite3):
