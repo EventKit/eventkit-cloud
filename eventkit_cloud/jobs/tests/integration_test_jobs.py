@@ -108,7 +108,7 @@ class TestJob(TestCase):
         self.wait_for_run(self.orm_job.uid)
         self.orm_run = self.orm_job.runs.last()
         self.orm_run.refresh_from_db()
-        self.assertEqual(self.orm_run.status, TaskStates.CANCELED.value)
+        self.assertIn(self.orm_run.status, [TaskStates.CANCELED.value, TaskStates.INCOMPLETE.value])
 
         # update provider to original setting.
         export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
