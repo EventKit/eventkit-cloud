@@ -7,7 +7,9 @@ from string import Template
 from artifact import Artifact
 
 from osgeo import gdal, ogr, osr
+
 from pysqlite2 import dbapi2 as sqlite3
+
 from eventkit_cloud.feature_selection.feature_selection import slugify
 
 LOG = logging.getLogger(__name__)
@@ -280,6 +282,7 @@ class Geopackage(object):
         """
         Create the GeoPackage from the osm data.
         """
+
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")
             return
