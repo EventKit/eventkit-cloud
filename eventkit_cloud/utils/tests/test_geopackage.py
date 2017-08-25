@@ -10,7 +10,7 @@ from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_na
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
                           add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info,
-                          get_table_gpkg_contents_information)
+                          get_table_gpkg_contents_information, set_gpkg_contents_bounds)
 
 
 logger = logging.getLogger(__name__)
@@ -83,6 +83,23 @@ class TestGeopackage(TransactionTestCase):
         sqlite3.connect().__enter__().execute.assert_called_once_with(
             "SELECT table_name FROM gpkg_contents WHERE data_type = 'tiles';")
         self.assertEqual(expected_table_names, return_table_names)
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_set_gpkg_contents_bounds(self, sqlite3):
+        table_name = "test1"
+        gpkg = "/test/file.gpkg"
+        bbox = [-1, 0, 2, 1]
+
+        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
+        returned_value = set_gpkg_contents_bounds(gpkg, table_name, bbox)
+        sqlite3.connect().__enter__().execute.assert_called_once_with(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name))
+        self.assertTrue(returned_value)
+
+        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+        returned_value = set_gpkg_contents_bounds(gpkg, table_name, bbox)
+        self.assertFalse(returned_value)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_zoom_levels_table(self, sqlite3):

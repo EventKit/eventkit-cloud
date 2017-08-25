@@ -224,13 +224,9 @@ def set_gpkg_contents_bounds(gpkg, table_name, bbox):
     :return: A dict with the column names as the key.
     """
     with sqlite3.connect(gpkg) as conn:
-        result = conn.execute(
+        return conn.execute(
             "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
-                bbox[0], bbox[1], bbox[2], bbox[3], table_name))
-        if result:
-            return True
-        else:
-            return False
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name)).rowcount
 
 
 def get_table_tile_matrix_information(gpkg, table_name):
@@ -289,10 +285,8 @@ def remove_zoom_level(gpkg, table, zoom_level):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
-            conn.execute("DELETE FROM gpkg_tile_matrix "
-                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level))
-            return True
-    return False
+            return conn.execute("DELETE FROM gpkg_tile_matrix "
+                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level)).rowcount
 
 
 def get_tile_matrix_table_zoom_levels(gpkg, table_name):
