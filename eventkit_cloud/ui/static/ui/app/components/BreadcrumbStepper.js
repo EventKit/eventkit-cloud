@@ -135,7 +135,8 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
-                                    incrementStepper={this.incrementStepper}/>
+                                   incrementStepper={this.incrementStepper}
+                                   handlePrev={this.handlePrev}/>
             case 2:
                 return <ExportSummary/>
             default:
