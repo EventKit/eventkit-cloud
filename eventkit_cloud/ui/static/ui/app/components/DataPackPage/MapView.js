@@ -73,7 +73,8 @@ export class MapView extends Component {
             },
             showImportModal: false,
             showInvalidDrawWarning: false,
-            mode: MODE_NORMAL
+            mode: MODE_NORMAL,
+            disableMapClick: false,
         }
     }
 
@@ -97,26 +98,31 @@ export class MapView extends Component {
 
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
-        this.map.addLayer(this.drawLayer);
+        
 
         this.map.addLayer(this.layer);
+        this.map.addLayer(this.drawLayer);
+
         this.addRunFeatures(this.props.runs, this.source);
         this.map.getView().fit(this.source.getExtent(), this.map.getSize());
-        this.map.on('singleclick', this.onMapClick);
+        this.clickListener = this.map.on('singleclick', this.onMapClick);
     }
 
     componentWillReceiveProps(nextProps) {
         // if the runs have changed, clear out old features and re-add with new features
-        if(nextProps.runs.length != this.props.runs.length) {
+        if (this.hasNewRuns(this.props.runs, nextProps.runs)) {
             this.source.clear();
             const added = this.addRunFeatures(nextProps.runs, this.source);
             if (added) {
+                const drawExtent = this.drawLayer.getSource().getExtent();
+                const runsExtent = this.source.getExtent();
                 if (this.drawLayer.getSource().getFeatures().length) {
-                    this.map.getView().fit(this.drawLayer.getSource().getExtent(), this.map.getSize());
+                    if (ol.extent.containsExtent(drawExtent, runsExtent)) {
+                        this.map.getView().fit(drawExtent);
+                    }
+                    else {this.map.getView().fit(runsExtent);}
                 }
-                else {
-                    this.map.getView().fit(this.source.getExtent(), this.map.getSize());
-                }
+                else {this.map.getView().fit(runsExtent);}
             }
         }
 
@@ -128,6 +134,20 @@ export class MapView extends Component {
     // update map size so it doesnt look like crap after page resize
     componentDidUpdate() {
         this.map.updateSize();
+    }
+
+    hasNewRuns(prevRuns, nextRuns) {
+        if (prevRuns.length != nextRuns.length) {
+            return true;
+        }
+        else {
+            for (let i=0; i < nextRuns.length; i++) {
+                if (nextRuns[i].uid != prevRuns[i].uid) {
+                    return true;
+                }
+            };
+            return false
+        }
     }
 
     // read the extents from the runs and add each feature to the source
@@ -213,9 +233,12 @@ export class MapView extends Component {
         this.map.addOverlay(this.overlay);
     }
 
-    handleOlPopupClose() {
+    handleOlPopupClose(e) {
         this.overlay.setPosition(undefined);
         this.closer.blur();
+        window.setTimeout(() => {
+            this.setState({disableMapClick: false});
+        }, 300);
         return false;
     }
 
@@ -248,7 +271,7 @@ export class MapView extends Component {
                     // if it is in view and not a polygon, trigger an animation
                     else {
                         if (!this.displayAsPoint(feature)) {
-                            return;
+                            return true;
                         }
                         
                         const start = new Date().getTime();
@@ -307,21 +330,26 @@ export class MapView extends Component {
     }
 
     onMapClick(evt) {
-        if (this.state.mode != MODE_NORMAL) {return};
+        if (this.state.mode != MODE_NORMAL || this.state.disableMapClick) {
+            return false;
+        };
         let features = [];
         this.map.forEachFeatureAtPixel(evt.pixel, (feature) => {
-            features.push(feature);
+            if (feature.getProperties().uid) {
+                features.push(feature);                
+            }
         }, {hitTolerance: 3});
         if (features.length) {
             if(features.length == 1) {
                 this.handleClick(features[0].getId());
             }
             else {
-                this.setState({groupedFeatures: features})
+                this.setState({groupedFeatures: features, disableMapClick: true});
                 const coord = evt.coordinate;
                 this.overlay.setPosition(coord);
             }
         }
+        return true;
     }
 
     // checks the state for a selectedFeature ID and zooms to that feature
@@ -348,7 +376,7 @@ export class MapView extends Component {
     }
 
     displayAsPoint(feature) {
-        if(!feature) {return null}
+        if(!feature) {return false}
         const extent = feature.getGeometry().getExtent();
         const topLeft = this.map.getPixelFromCoordinate(ol.extent.getTopLeft(extent));
         const bottomRight = this.map.getPixelFromCoordinate(ol.extent.getBottomRight(extent));
@@ -408,15 +436,12 @@ export class MapView extends Component {
         const feature = (new ol.format.GeoJSON()).readFeature(result);
         feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
         this.drawLayer.getSource().addFeature(feature);
-        zoomToGeometry(feature.getGeometry(), this.map);
-        if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
             const geojson_geometry = createGeoJSONGeometry(feature.getGeometry());
             this.props.onMapFilter(geojson_geometry);
             return true;
-        }
     }
 
-    handleCancel(sender) {
+    handleCancel() {
         this.showInvalidDrawWarning(false);
         if(this.state.mode != MODE_NORMAL) {
             this.updateMode(MODE_NORMAL);
@@ -467,6 +492,7 @@ export class MapView extends Component {
 
     onDrawStart() {
         clearDraw(this.drawLayer);
+        this.setState({disableMapClick: true});
     }
 
     onDrawEnd(event) {
@@ -492,7 +518,12 @@ export class MapView extends Component {
                 this.props.onMapFilter(geojson_geometry);
             }
             this.updateMode(MODE_NORMAL);
+            window.setTimeout(() => {
+                this.setState({disableMapClick: false});
+            }, 300);
         }
+        
+        
     }
 
     setMapView() {
@@ -507,7 +538,7 @@ export class MapView extends Component {
         this.props.onMapFilter(geojson_geometry);
     }
 
-    updateMode(mode) {
+    updateMode(mode, callback) {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
@@ -519,7 +550,7 @@ export class MapView extends Component {
             this.drawFreeInteraction.setActive(true);
         }
         // update the state
-        this.setState({mode: mode});
+        this.setState({mode: mode}, callback);
     }
 
     handleGeoJSONUpload(geom) {
@@ -592,8 +623,8 @@ export class MapView extends Component {
                 <div style={styles.map}>
                     <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
                     <SearchAOIToolbar
-                        handleSearch={(result) => this.handleSearch(result)}
-                        handleCancel={(sender) => this.handleCancel(sender)}
+                        handleSearch={this.handleSearch}
+                        handleCancel={this.handleCancel}
                         geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
@@ -603,7 +634,7 @@ export class MapView extends Component {
                     <DrawAOIToolbar
                         toolbarIcons={this.state.toolbarIcons}
                         updateMode={this.updateMode}
-                        handleCancel={(sender) => this.handleCancel(sender)}
+                        handleCancel={this.handleCancel}
                         setMapView={this.setMapView}
                         setAllButtonsDefault={this.setAllButtonsDefault}
                         setBoxButtonSelected={() => {this.setButtonSelected('box')}}
@@ -625,7 +656,7 @@ export class MapView extends Component {
                     />
                     </div>
                     <div id="popup" className={css.olPopup}>
-                        <a href="#" id="popup-closer" className={css.olPopupCloser}></a>
+                        <a href="#" id="popup-closer" className={css.olPopupCloser}/>
                         <div id="popup-content">
                             {this.state.groupedFeatures.map((feature, ix) => {
                                 return <a 

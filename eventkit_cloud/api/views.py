@@ -660,7 +660,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_geojson is not None:
             try:
                 geom = geojson_to_geos(search_geojson, 4326)
-                queryset = queryset.filter(job__the_geom__within=geom)
+                queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
