@@ -287,7 +287,10 @@ export class ExportAOI extends Component {
             layers: [
                 // Order matters here
                 new ol.layer.Tile({
-                    source: new ol.source.OSM()
+                    source: new ol.source.XYZ({
+                        url: this.context.config.BASEMAP_URL,
+                        wrapX: false
+                    })
                 }),
             ],
             target: 'map',
@@ -361,6 +364,10 @@ export class ExportAOI extends Component {
             </div>
         );
     }
+}
+
+ExportAOI.contextTypes = {
+    config: React.PropTypes.object
 }
 
 ExportAOI.propTypes = {

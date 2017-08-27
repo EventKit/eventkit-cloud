@@ -868,7 +868,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
+        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 

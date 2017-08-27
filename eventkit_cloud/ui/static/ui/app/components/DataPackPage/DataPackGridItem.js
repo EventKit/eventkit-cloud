@@ -50,7 +50,10 @@ export class DataPackGridItem extends Component {
             target: this.props.run.uid + '_map',
             layers: [
                 new ol.layer.Tile({
-                    source: new ol.source.OSM()
+                    source: new ol.source.XYZ({
+                        url: this.context.config.BASEMAP_URL,
+                        wrapX: false
+                    })
                 }),
             ],
             view: new ol.View({
@@ -312,6 +315,10 @@ export class DataPackGridItem extends Component {
             </Card>
         )
     }
+}
+
+DataPackGridItem.contextTypes = {
+    config: React.PropTypes.object
 }
 
 DataPackGridItem.propTypes = {

@@ -161,6 +161,7 @@ UI_CONFIG = {
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
     'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
+    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png')
 }
 
 if os.environ.get('USE_S3'):

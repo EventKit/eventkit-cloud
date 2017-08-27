@@ -72,9 +72,13 @@ describe('MapView component', () => {
     };
 
     const getWrapper = (props) => {
+        const config= {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};
         return mount(<MapView {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+            context: {muiTheme, config},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object, 
+                config: React.PropTypes.object
+            }
         });
     }
 
@@ -432,7 +436,7 @@ describe('MapView component', () => {
         const overviewSpy = new sinon.spy(ol.control, 'OverviewMap');
         const interactionSpy = new sinon.spy(ol.interaction, 'defaults');
         const layerSpy = new sinon.spy(ol.layer, 'Tile');
-        const osmSpy = new sinon.spy(ol.source, 'OSM');
+        const xyzSpy = new sinon.spy(ol.source, 'XYZ');
         const viewSpy = new sinon.spy(ol, 'View');
         expect(inheritSpy.notCalled).toBe(true);
         wrapper.instance().initMap();
@@ -444,7 +448,7 @@ describe('MapView component', () => {
         expect(overviewSpy.calledOnce).toBe(true);
         expect(interactionSpy.calledOnce).toBe(true);
         expect(layerSpy.calledOnce).toBe(true);
-        expect(osmSpy.calledOnce).toBe(true);
+        expect(xyzSpy.calledOnce).toBe(true);
         expect(viewSpy.calledOnce).toBe(true);
         inheritSpy.restore();
         mapSpy.restore();
@@ -452,7 +456,7 @@ describe('MapView component', () => {
         zoomSpy.restore();
         interactionSpy.restore();
         layerSpy.restore();
-        osmSpy.restore();
+        xyzSpy.restore();
         viewSpy.restore();
     });
 

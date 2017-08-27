@@ -199,7 +199,10 @@ export class MapView extends Component {
             }),
             layers: [
                 new ol.layer.Tile({
-                    source: new ol.source.OSM({wrapX: false})
+                    source: new ol.source.XYZ({
+                        url: this.context.config.BASEMAP_URL,
+                        wrapX: false
+                    })
                 }),
             ],
             target: 'map',
@@ -688,6 +691,10 @@ export class MapView extends Component {
             </div>
         )      
     }
+}
+
+MapView.contextTypes = {
+    config: React.PropTypes.object
 }
 
 MapView.propTypes = {

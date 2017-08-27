@@ -61,7 +61,7 @@ class UIDMixin(models.Model):
     Mixin for adding identifiers to a model.
     """
     id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
 
     class Meta:
         abstract = True

@@ -79,6 +79,10 @@ By default EventKit will use geonames.org. However it also supports pelias. If w
 <pre>GEOCODING_API_URL = 'http://my-pelias.com/api/v1'</pre>
 <pre>GEOCODING_API_TYPE = 'pelias'</pre>
 
+#### Basemap URL
+To set the application basemap add:
+<pre>BASEMAP_URL=http://my-tile-service.com/{z}/{x}/{y}.png</pre>
+
 ### Tests
 To run tests:
 <pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
