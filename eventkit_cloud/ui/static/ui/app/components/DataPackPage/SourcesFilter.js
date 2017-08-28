@@ -45,3 +45,10 @@ export class SourcesFilter extends React.Component {
     }
 
 }
+
+SourcesFilter.propTypes = {
+    providers: React.PropTypes.array.isRequired,
+    selected: React.PropTypes.object.isRequired,
+}
+
+export default SourcesFilter;

@@ -10,15 +10,39 @@ import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import SourcesFilter from "../../components/DataPackPage/SourcesFilter";
 
 describe('FilterDrawer component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ];
     const getProps = () => {
         return {
             onFilterApply: () => {},
             onFilterClear: () => {},
-            open: true
+            open: true,
+            providers: providers,
         }
     };
 
@@ -38,6 +62,7 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find(PermissionFilter)).toHaveLength(1);
         expect(wrapper.find(StatusFilter)).toHaveLength(1);
         expect(wrapper.find(DateFilter)).toHaveLength(1);
+        expect(wrapper.find(SourcesFilter)).toHaveLength(1);
     });
 
     it('handleFilterApply should just call props.onFilterApply with current state', () => {
@@ -93,6 +118,16 @@ describe('FilterDrawer component', () => {
         wrapper.instance().handleStatusChange({completed: true});
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({status: {completed: true, incomplete: false, submitted: false}})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProvidersChange should set state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        wrapper.instance().handleProvidersChange(providers[0].slug, true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providers: {[providers[0].slug]: true}})).toBe(true);
         stateSpy.restore();
     });
 
