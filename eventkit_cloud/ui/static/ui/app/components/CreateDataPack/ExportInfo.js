@@ -168,8 +168,11 @@ export class ExportInfo extends React.Component {
 
     }
     _initializeOpenLayers() {
-        var osm = new ol.layer.Tile({
-            source: new ol.source.OSM()
+        var base = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: this.context.config.BASEMAP_URL,
+                wrapX: false
+            })
         })
 
         this._map = new ol.Map({
@@ -179,7 +182,7 @@ export class ExportInfo extends React.Component {
                 pinchRotate: false,
                 mouseWheelZoom: false
             }),
-            layers: [osm],
+            layers: [base],
             target: 'infoMap',
             view: new ol.View({
                 projection: "EPSG:3857",
@@ -406,6 +409,10 @@ function mapDispatchToProps(dispatch) {
         }
 
     }
+}
+
+ExportInfo.contextTypes = {
+    config: React.PropTypes.object
 }
 
 ExportInfo.propTypes = {

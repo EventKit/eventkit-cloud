@@ -81,6 +81,7 @@ class Overpass(object):
         Return:
             the path to the overpass extract
         """
+
         # This is just to make it easier to trace when user_details haven't been sent
         if user_details is None:
             user_details = {'username': 'unknown-run_query'}

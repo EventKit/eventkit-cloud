@@ -768,6 +768,16 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(1, len(result))
         self.assertEquals(self.run_uid, result[0].get('uid'))
 
+        extents = (-3, 16, 7.0, 27)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        geojson = the_geom.geojson
+        response = self.client.post(query, {"geojson": "{}".format(geojson)})
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure 1 run is returned as it should be completely contained
+        self.assertEquals(1, len(result))
+
         extents = (4, 17, 9.0, 28)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
@@ -775,7 +785,17 @@ class TestExportRunViewSet(APITestCase):
         response = self.client.post(query, {"geojson": "{}".format(geojson)})
         self.assertIsNotNone(response)
         result = response.data
-        # make sure no runs are returned as they should have been filtered out
+        # make sure 1 run is returned as it should intersect
+        self.assertEquals(1, len(result))
+
+        extents = (-40, -5, -30, 5)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        geojson = the_geom.geojson
+        response = self.client.post(query, {"geojson": "{}".format(geojson)})
+        self.assertIsNotNone(response)
+        result = response.data
+        #make sure no runs are returned since it should not intersect
         self.assertEquals(0, len(result))
 
         name='TestJob'

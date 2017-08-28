@@ -18,7 +18,7 @@ CELERY_TRACK_STARTED = True
  finalize task to collect the results and update the overall run state.
 
 """
-CELERY_CHORD_PROPAGATES = False
+# CELERY_CHORD_PROPAGATES = False
 
 CELERYD_PREFETCH_MULTIPLIER = 1
 CELERYBEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
