@@ -18,7 +18,8 @@ import logging
 from django.db import connections
 import requests
 from pysqlite2 import dbapi2 as sqlite3
-from .geopackage import (get_tile_table_names, get_zoom_levels_table, get_table_tile_matrix_information)
+from .geopackage import (get_tile_table_names, get_zoom_levels_table,
+                         get_table_tile_matrix_information, set_gpkg_contents_bounds)
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class ExternalRasterServiceToGeopackage(object):
         except KeyError:
             conf_dict['caches']['cache'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
                                                      [grids for grids in conf_dict.get('grids')],
-                                                     self.gpkgfile)
+                                                     self.gpkgfile, table_name=self.layer)
 
         # Prevent the service from failing if source has missing tiles.
         for source in conf_dict.get('sources'):
@@ -139,6 +140,7 @@ class ExternalRasterServiceToGeopackage(object):
                                                "progress_logger": progress_logger})
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
+            set_gpkg_contents_bounds(self.gpkgfile, self.layer, self.bbox)
             if task_process.exitcode != 0:
                 raise Exception("The Raster Service failed to complete, please contact an administrator.")
         except Exception:
@@ -160,7 +162,7 @@ class ExternalRasterServiceToGeopackage(object):
         return self.gpkgfile
 
 
-def get_cache_template(sources, grids, geopackage):
+def get_cache_template(sources, grids, geopackage, table_name='tiles'):
     """
     Returns the cache template which is "controlled" settings for the application.
 
@@ -176,6 +178,7 @@ def get_cache_template(sources, grids, geopackage):
         "cache": {
             "type": "geopackage",
             "filename": str(geopackage),
+            "table_name": table_name
         },
         "grids": [grid for grid in grids if grid == 'geodetic'] or grids,
         "format": "mixed",

@@ -11,10 +11,12 @@ from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import ProviderTask
 from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
-    wfs_export_task, 
-    external_raster_service_export_task, 
-    arcgis_feature_service_export_task, 
-    osm_data_collection_task)
+    wfs_export_task,
+    external_raster_service_export_task,
+    arcgis_feature_service_export_task,
+    osm_data_collection_task,
+    TaskStates)
+
 from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
 
 logger = logging.getLogger(__name__)
@@ -86,10 +88,10 @@ class ExportOSMTaskRunner(TaskRunner):
 
         # run the tasks
         export_provider_task_record = ExportProviderTask.objects.create(run=run,
-                                                                 name=provider_task.provider.name,
-                                                                 slug=provider_task.provider.slug,
-                                                                 status="PENDING",
-                                                                 display=True)
+                                                                        name=provider_task.provider.name,
+                                                                        slug=provider_task.provider.slug,
+                                                                        status=TaskStates.PENDING.value,
+                                                                        display=True)
 
         for format, task in export_tasks.iteritems():
             export_task = create_export_task_record(
@@ -115,15 +117,21 @@ class ExportOSMTaskRunner(TaskRunner):
 
         bbox = run.job.extents
 
-        osm_gpkg_task = osm_data_collection_task.si(
-            stage_dir, export_provider_task_record.id, worker=worker,
-            job_name=job_name, bbox=bbox, user_details=user_details,
-            config=provider_task.provider.config 
+        osm_data_collection_task_record = create_export_task_record(
+            task_name=osm_data_collection_task.name,
+            export_provider_task=export_provider_task_record, worker=worker,
+            display=getattr(osm_data_collection_task, "display", False)
         )
 
-        thematic_tasks = (osm_gpkg_task | format_tasks) if format_tasks else osm_gpkg_task
+        osm_gpkg_task = osm_data_collection_task.si(
+            stage_dir=stage_dir, export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
+            job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
+            config=provider_task.provider.config
+        )
 
-        return export_provider_task_record.uid, thematic_tasks
+        tasks = chain(osm_gpkg_task, format_tasks) if format_tasks else osm_gpkg_task
+
+        return export_provider_task_record.uid, tasks
 
 
 class ExportWFSTaskRunner(TaskRunner):
@@ -176,17 +184,19 @@ class ExportWFSTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
+                                                        export_provider_task=export_provider_task, worker=worker,
+                                                        display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = wfs_export_task
             export_task = create_export_task_record(task_name=service_task.name,
-                                             export_provider_task=export_provider_task, worker=worker, display=getattr(service_task, "display", False))
+                                                    export_provider_task=export_provider_task, worker=worker,
+                                                    display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
                                          job_name=job_name,
@@ -203,15 +213,16 @@ class ExportWFSTaskRunner(TaskRunner):
                                                                          stage_dir=stage_dir,
                                                                          job_name=job_name,
                                                                          task_uid=gpkg_export_task.get('task_uid'),
-                                                                         user_details=user_details)\
-                                                                            .set(queue=worker, routing_key=worker))
+                                                                         user_details=user_details) \
+                              .set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
                 format_tasks = chain(task.get('obj').s(run_uid=run.uid,
-                                                        stage_dir=stage_dir,
-                                                        job_name=job_name,
-                                                        task_uid=task.get('task_uid'),
-                                                        user_details=user_details).set(queue=worker, routing_key=worker) for task_name, task
+                                                       stage_dir=stage_dir,
+                                                       job_name=job_name,
+                                                       task_uid=task.get('task_uid'),
+                                                       user_details=user_details).set(queue=worker, routing_key=worker)
+                                     for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
 
@@ -273,21 +284,21 @@ class ExportWCSTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             export_tasks.pop('gpkg')
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker,
-                                                 display=getattr(task.get('obj'), "display", False))
+                                                        export_provider_task=export_provider_task, worker=worker,
+                                                        display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = wcs_export_task
             export_task = create_export_task_record(task_name=service_task.name,
-                                             export_provider_task=export_provider_task, worker=worker,
-                                             display=getattr(service_task, "display", False))
+                                                    export_provider_task=export_provider_task, worker=worker,
+                                                    display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
                                          job_name=job_name,
@@ -297,8 +308,6 @@ class ExportWCSTaskRunner(TaskRunner):
                                          bbox=bbox,
                                          service_url=provider_task.provider.url,
                                          user_details=user_details).set(queue=worker, routing_key=worker))
-
-
 
             if export_tasks.get('geotiff'):
                 gtiff_export_task = export_tasks.pop('geotiff')
@@ -382,42 +391,45 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
-                                                 export_provider_task=export_provider_task, worker=worker, display=getattr(task.get('obj'), "display", False))
+                                                        export_provider_task=export_provider_task, worker=worker,
+                                                        display=getattr(task.get('obj'), "display", False))
                 export_tasks[task_type]['task_uid'] = export_task.uid
 
             service_task = arcgis_feature_service_export_task
             export_task = create_export_task_record(task_name=service_task.name,
-                                             export_provider_task=export_provider_task, worker=worker, display=getattr(service_task, "display", False))
+                                                    export_provider_task=export_provider_task, worker=worker,
+                                                    display=getattr(service_task, "display", False))
 
             task_chain = (service_task.s(stage_dir=stage_dir,
-                                            job_name=job_name,
-                                            task_uid=export_task.uid,
-                                            name=provider_task.provider.slug,
-                                            layer=provider_task.provider.layer,
-                                            bbox=bbox,
-                                            service_url=provider_task.provider.url,
-                                            user_details=user_details).set(queue=worker, routing_key=worker))
+                                         job_name=job_name,
+                                         task_uid=export_task.uid,
+                                         name=provider_task.provider.slug,
+                                         layer=provider_task.provider.layer,
+                                         bbox=bbox,
+                                         service_url=provider_task.provider.url,
+                                         user_details=user_details).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('gpkg'):
                 gpkg_export_task = export_tasks.pop('gpkg')
                 task_chain = (task_chain | gpkg_export_task.get('obj').s(run_uid=run.uid,
-                                                                           stage_dir=stage_dir,
-                                                                           job_name=job_name,
-                                                                           task_uid=gpkg_export_task.get('task_uid'),
-                                                                           user_details=user_details).set(
+                                                                         stage_dir=stage_dir,
+                                                                         job_name=job_name,
+                                                                         task_uid=gpkg_export_task.get('task_uid'),
+                                                                         user_details=user_details).set(
                     queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
                 format_tasks = chain(task.get('obj').s(run_uid=run.uid,
-                                                        stage_dir=stage_dir,
-                                                        job_name=job_name,
-                                                        task_uid=task.get('task_uid'),
-                                                        user_details=user_details).set(queue=worker, routing_key=worker) for task_name, task
+                                                       stage_dir=stage_dir,
+                                                       job_name=job_name,
+                                                       task_uid=task.get('task_uid'),
+                                                       user_details=user_details).set(queue=worker, routing_key=worker)
+                                     for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
 
@@ -441,7 +453,8 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
         """
 
-    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None, **kwargs):
+    def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None,
+                 **kwargs):
         """
         Run export tasks.
 
@@ -483,12 +496,13 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
-                                                                     status="PENDING",
+                                                                     status=TaskStates.PENDING.value,
                                                                      display=True)
 
-
             export_task = create_export_task_record(task_name=external_raster_service_export_task.name,
-                                             export_provider_task=export_provider_task, worker=worker, display=getattr(external_raster_service_export_task, "display", False))
+                                                    export_provider_task=export_provider_task, worker=worker,
+                                                    display=getattr(external_raster_service_export_task, "display",
+                                                                    False))
 
             service_task = external_raster_service_export_task.s(stage_dir=stage_dir,
                                                                  run_uid=run.uid,
@@ -528,13 +542,11 @@ def normalize_job_name(name):
     return s.lower()
 
 
-def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=None):
+def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
-        export_task = ExportTask.objects.create(export_provider_task=export_provider_task, status='PENDING',
-                                                name=task_name, worker=worker)
-        if display:
-            export_task.display = True
-            export_task.save()
+        export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
+                                                status=TaskStates.PENDING.value,
+                                                name=task_name, worker=worker, display=display)
         logger.debug('Saved task: {0}'.format(task_name))
     except DatabaseError as e:
         logger.error('Saving task {0} threw: {1}'.format(task_name, e))
