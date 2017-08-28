@@ -32,7 +32,11 @@ describe('ProviderRow component', () => {
             "id": 2,
             "model_url": "http://cloud.eventkit.dev/api/providers/osm",
             "type": "osm",
-            "license": null,
+            "license": {
+                "slug": "osm",
+                "name": "Open Database License (ODbL) v1.0",
+                "text": "ODC Open Database License (ODbL)."
+            },
             "created_at": "2017-08-15T19:25:10.844911Z",
             "updated_at": "2017-08-15T19:25:10.844919Z",
             "uid": "bc9a834a-727a-4779-8679-2500880a8526",
@@ -62,6 +66,7 @@ describe('ProviderRow component', () => {
             },
             selectedProviders: selectedProviders,
             providers: providers,
+            backgroundColor:'white',
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
         }
@@ -107,8 +112,8 @@ describe('ProviderRow component', () => {
         wrapper.setState({openTable: true});
         expect(wrapper.find(Table)).toHaveLength(1);
         expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(2);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(6);
+        expect(wrapper.find(TableRow)).toHaveLength(3);
+        expect(wrapper.find(TableRowColumn)).toHaveLength(12);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(TableBody)).toHaveLength(1);
     });

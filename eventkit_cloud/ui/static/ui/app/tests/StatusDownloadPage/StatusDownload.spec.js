@@ -28,7 +28,11 @@ describe('StatusDownload component', () => {
             "id": 2,
             "model_url": "http://cloud.eventkit.dev/api/providers/osm",
             "type": "osm",
-            "license": null,
+            "license": {
+                "slug": "osm",
+                "name": "Open Database License (ODbL) v1.0",
+                "text": "ODC Open Database License (ODbL)."
+            },
             "created_at": "2017-08-15T19:25:10.844911Z",
             "updated_at": "2017-08-15T19:25:10.844919Z",
             "uid": "bc9a834a-727a-4779-8679-2500880a8526",
@@ -86,14 +90,16 @@ describe('StatusDownload component', () => {
         "status": "COMPLETED",
         "tasks": tasks,
         "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+        "slug":"osm"
     }];
     const providerTasksRunning = [{
         "name": "OpenStreetMap Data (Themes)",
         "status": "COMPLETED",
         "tasks": tasksRunning,
         "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+        "slug":"osm"
     }];
     const exampleRun = [
         {

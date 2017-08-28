@@ -1,6 +1,5 @@
 import React, {PropTypes, Component} from 'react'
 import '../tap_events'
-import moment from 'moment'
 import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
@@ -38,7 +37,6 @@ export class ProviderRow extends React.Component {
             providerDesc: '',
             providerDialogOpen: false,
             cloneDialogOpen: false,
-
         }
     }
 
@@ -94,9 +92,6 @@ export class ProviderRow extends React.Component {
             window.open(value, '_blank');
         });
     }
-
-
-
 
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
@@ -243,7 +238,6 @@ export class ProviderRow extends React.Component {
 
     handleProviderClose = () => {
         this.setState({providerDialogOpen: false});
-
     };
 
     handleProviderOpen(runProviders) {
@@ -255,12 +249,62 @@ export class ProviderRow extends React.Component {
 
     render() {
         const style = {
-              textDecoration: 'underline'
-             }
+            textDecoration: 'underline'
+        }
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
         const {provider, ...rowProps} = this.props;
+
+        let propsProvider = this.props.providers.find(x => x.slug === this.props.provider.slug);
+        let licenseText = '';
+        let licenseData;
+        if (propsProvider.license != null) {
+            licenseText = <i>Use of this data is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
+            licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
+                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
+
+                    </TableRowColumn>
+                    <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
+                        {licenseText}
+                    </TableRowColumn>
+                    <TableRowColumn style={{
+                        width: tableCellWidth,
+                        paddingRight: '0px',
+                        paddingLeft: '0px',
+                        textAlign: 'center',
+                        fontSize: textFontSize
+                    }}>
+
+                    </TableRowColumn>
+                    <TableRowColumn style={{
+                        width: tableCellWidth,
+                        paddingRight: '10px',
+                        paddingLeft: '10px',
+                        textAlign: 'center',
+                        fontSize: textFontSize,
+                        fontWeight: 'bold'
+                    }}>
+
+                    </TableRowColumn>
+                    <TableRowColumn style={{
+                        paddingRight: '0px',
+                        paddingLeft: '0px',
+                        width: '20px',
+                        textAlign: 'center',
+                        fontSize: textFontSize
+                    }}></TableRowColumn>
+                    <TableRowColumn style={{
+                        paddingRight: '0px',
+                        paddingLeft: '0px',
+                        width: toggleCellWidth,
+                        textAlign: 'center',
+                        fontSize: textFontSize
+                    }}></TableRowColumn>
+                </TableRow>
+        }
+
+
 
         let menuItems = [];
         let cancelMenuDisabled;
@@ -305,8 +349,8 @@ export class ProviderRow extends React.Component {
                 displayRowCheckbox={false}
                 deselectOnClickaway={false}
                 showRowHover={false}
-                className={styles.tableRowHighlight}
-            >
+                >
+                {licenseData}
                 {tasks.map((task) => (
 
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
@@ -336,7 +380,7 @@ export class ProviderRow extends React.Component {
         
         return (
             <Table key={this.props.provider.uid}
-                   style={{width:'100%'}}
+                   style={{width:'100%', backgroundColor:this.props.backgroundColor}}
                    selectable={false}
                    multiSelectable={false}
             >
@@ -404,6 +448,7 @@ export class ProviderRow extends React.Component {
                             </IconButton>
                         </TableHeaderColumn>
                     </TableRow>
+
                 </TableHeader>
                             {tableData}
             </Table>
@@ -416,7 +461,8 @@ ProviderRow.propTypes = {
     onSelectionToggle: PropTypes.func,
     selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired
+    providers: PropTypes.array.isRequired,
+    backgroundColor: PropTypes.string.isRequired,
 }
 
 export default ProviderRow;
