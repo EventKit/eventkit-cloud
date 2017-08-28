@@ -94,9 +94,6 @@ class TaskFactory:
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
 
-            # Contains one chain per item in provider_task_records
-            provider_task_chains = []
-
             finalize_task_settings = {
                 'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
                 'priority': TaskPriority.FINALIZE_RUN.value}
@@ -162,12 +159,12 @@ class TaskFactory:
                             zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
                                                                          stage_dir=stage_dir, worker=worker,
                                                                          job_name=run.job.name)
-                            provider_task_chain = chain(
+                            provider_subtask_chain = chain(
                                 provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_signature
                             )
 
                         finalized_provider_task_chain = chain(
-                            provider_task_chain,
+                            provider_subtask_chain,
                             finalize_export_provider_signature,
                             wait_for_providers_signature
                         )
