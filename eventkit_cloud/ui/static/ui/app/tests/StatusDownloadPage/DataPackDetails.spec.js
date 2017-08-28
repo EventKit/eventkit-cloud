@@ -250,7 +250,6 @@ const providerTasks = [
                 "finished_at": "2017-05-15T15:29:04.356182Z",
                 "name": "OverpassQuery",
                 "progress": 100,
-                "result": {},
                 "started_at": "2017-05-15T15:28:49.038510Z",
                 "status": "SUCCESS",
                 "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
