@@ -14,15 +14,15 @@ export class DataPackFilterButton extends React.Component {
             button: {
                 float: 'right',
                 height: '30px',
-                
-                lineHeight: '30px',
-                minWidth: 'none'
+                lineHeight: '15px',
+                minWidth: 'none',
+                maxWidth: window.innerWidth > 575 ? 'none': '40px'
             },
             label: {
                 color: '#4498c0', 
                 textTransform: 'none', 
                 padding: '0px',
-                fontSize: '12px',
+                fontSize: window.innerWidth > 575 ? '12px' : '10px',
             },
             icon: {
                 fill: '#4498c0',

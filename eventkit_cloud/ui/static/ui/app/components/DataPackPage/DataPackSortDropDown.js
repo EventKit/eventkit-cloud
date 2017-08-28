@@ -13,9 +13,10 @@ export class DataPackSortDropDown extends React.Component {
             dropDown: {
                 height: '30px',
                 lineHeight: '30px',
+                marginRight: '10px'
             },
             item: {
-                fontSize: '12px'
+                fontSize: window.innerWidth > 575 ? '12px' : '11px',
             },
             icon: {
                 padding: 0,
@@ -36,7 +37,7 @@ export class DataPackSortDropDown extends React.Component {
                 height: '30px',
                 display: 'inline-block',
                 padding: 0,
-                fontSize: '14px'
+                fontSize: window.innerWidth > 575 ? '14px' : '12px'
             },
             list: {
                 paddingTop: '5px', 

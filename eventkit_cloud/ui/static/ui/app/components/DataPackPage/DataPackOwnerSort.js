@@ -8,78 +8,48 @@ export class DataPackOwnerSort extends React.Component {
         super(props);
     }
 
-    getLabelFontSize() {
-        if(window.innerWidth <= 575) {
-            return '12px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '13px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '14px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '15px';
-        }
-        else {
-            return '16px';
-        }
-    }
-
-    getItemFontSize() {
-        if(window.innerWidth <= 575) {
-            return '10px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '11px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '12px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '13px';
-        }
-        else {
-            return '14px';
-        }
-    }
-
     render() {
         const styles = {
             dropDown: {
                 height: '30px',
                 lineHeight: '35px',
-                float: 'left',
+                marginRight: '10px'
             },
             item: {
-                fontSize: this.getItemFontSize(),
+                fontSize: window.innerWidth > 575 ? '12px' : '11px',
             },
             icon: {
-                height: '30px', 
-                width: '30px', 
-                padding: '0px', 
-                marginRight: '5px', 
-                fill: '#4498c0'
+                padding: 0,
+                fill: '#4498c0',
+                position: 'inline-block',
+                verticalAlign: 'top',
+                top: 0,
+                right: 0,
+                width: 20,
+                height: 24,
+                margin: 3
             },
             label: {
                 lineHeight: '30px', 
                 color: '#4498c0', 
-                paddingLeft: '5px',
-                fontSize: this.getLabelFontSize(),
-                fontWeight: 'bold'
+                paddingLeft: 0,
+                paddingRight: 32,
+                height: '30px',
+                display: 'inline-block',
+                padding: 0,
+                fontSize: window.innerWidth > 575 ? '14px' : '12px'
             },
             list: {
                 paddingTop: '5px', 
                 paddingBottom: '0px'
             },
+            selectedItem: {
+                color: '#4498c0'
+            },
             underline: {
                 borderTopColor: '#4498c0', 
-                marginLeft: '0px',
-                marginRight: '28px'
+                margin: '0px',
             },
-            selected: {
-                color: '#4498c0'
-            }
         };
 
         return (
@@ -88,7 +58,7 @@ export class DataPackOwnerSort extends React.Component {
                 labelStyle={styles.label} 
                 iconStyle={styles.icon}
                 listStyle={styles.list}
-                selectedMenuItemStyle={styles.selected} 
+                selectedMenuItemStyle={styles.selectedItem} 
                 underlineStyle={styles.underline}            
                 value={this.props.value}
                 onChange={this.props.handleChange}>
