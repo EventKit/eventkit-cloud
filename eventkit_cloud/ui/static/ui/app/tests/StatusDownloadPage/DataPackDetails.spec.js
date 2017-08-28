@@ -250,7 +250,6 @@ const providerTasks = [
                 "finished_at": "2017-05-15T15:29:04.356182Z",
                 "name": "OverpassQuery",
                 "progress": 100,
-                "result": {},
                 "started_at": "2017-05-15T15:28:49.038510Z",
                 "status": "SUCCESS",
                 "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
@@ -264,6 +263,7 @@ const providerTasks = [
         "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
         "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
         "display": true,
+        "slug":"osm"
     }];
 
 const providers = [
@@ -271,7 +271,11 @@ const providers = [
         "id": 2,
         "model_url": "http://cloud.eventkit.dev/api/providers/osm",
         "type": "osm",
-        "license": null,
+        "license":  {
+            "slug": "osm",
+            "name": "Open Database License (ODbL) v1.0",
+            "text": "ODC Open Database License (ODbL)."
+        },
         "created_at": "2017-08-15T19:25:10.844911Z",
         "updated_at": "2017-08-15T19:25:10.844919Z",
         "uid": "bc9a834a-727a-4779-8679-2500880a8526",

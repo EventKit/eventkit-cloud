@@ -218,8 +218,9 @@ export class DataPackDetails extends React.Component {
                     </TableHeader>
                     </Table>
 
-                {providers.map((provider) => (
-                    <ProviderRow 
+                {providers.map((provider, ix) => (
+                    <ProviderRow
+                        backgroundColor={ix % 2 == 0 ? 'whitesmoke': 'white'}
                         key={provider.uid} 
                         onSelectionToggle={this.onSelectionToggle}
                         onProviderCancel={this.props.onProviderCancel}
