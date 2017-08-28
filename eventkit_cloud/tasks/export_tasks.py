@@ -168,9 +168,9 @@ class ExportTask(LockingTask):
             # update the task
             finished = timezone.now()
             task = ExportTaskModel.objects.get(celery_uid=task_id)
-            if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
+            if TaskStates.CANCELED.value in [task.status, task.data_provider_task.status]:
                 logging.info('Task reported on success but was previously canceled ', format(task_id))
-                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+                raise CancelException(task_name=task.data_provider_task.name, user_name=task.cancel_user.username)
             task.finished_at = finished
             task.progress = 100
             task.pid = -1
@@ -267,15 +267,15 @@ class ExportTask(LockingTask):
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, 'state') or []
-            if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status, result]:
+            if TaskStates.CANCELED.value in [task.status, task.data_provider_task.status, result]:
                 logging.info('canceling before run %s', celery_uid)
-                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+                raise CancelException(task_name=task.data_provider_task.name, user_name=task.cancel_user.username)
             task.pid = os.getpid()
             task.status = task_status
-            task.export_provider_task.status = TaskStates.RUNNING.value
+            task.data_provider_task.status = TaskStates.RUNNING.value
             task.started_at = started
             task.save()
-            task.export_provider_task.save()
+            task.data_provider_task.save()
             logger.debug('Updated task: {0} with uid: {1}'.format(task.name, task.uid))
         except DatabaseError as e:
             logger.error('Updating task {0} state throws: {1}'.format(task_uid, e))
@@ -929,7 +929,7 @@ def prepare_for_export_zip_task(extra_files, run_uid=None):
 
 
 @app.task(name='Finalize Export Provider Task', base=LockingTask)
-def finalize_export_provider_task(result=None, run_uid=None, export_provider_task_uid=None, run_dir=None, worker=None,
+def finalize_export_provider_task(result=None, run_uid=None, data_provider_task_uid=None, run_dir=None, worker=None,
                                   *args, **kwargs):
     """
     Finalizes provider task.
@@ -941,7 +941,7 @@ def finalize_export_provider_task(result=None, run_uid=None, export_provider_tas
     result = result or {}
 
     with transaction.atomic():
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
         if export_provider_task.status != TaskStates.CANCELED.value:
             export_provider_task.status = TaskStates.COMPLETED.value
@@ -1163,6 +1163,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     msg.send()
     return result
 
+# todo - refactor this function.  Should become cancel_data_provider_task
 
 @app.task(name='Cancel Export Provider Task', base=LockingTask)
 def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_user=None, delete=False):

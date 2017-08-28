@@ -31,7 +31,7 @@ class TestJob(TestCase):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         export_provider = DataProvider.objects.get(slug='osm-generic')
-        provider_task = DataProviderTask.objects.create(provider=export_provider)
+        data_provider_task = DataProviderTask.objects.create(provider=export_provider)
         self.tags = [
             {'key': 'building', 'value': 'yes'}, {'key': 'place', 'value': 'city'},
             {'key': 'highway', 'value': 'service'}, {'key': 'aeroway', 'value': 'helipad'}
@@ -43,8 +43,8 @@ class TestJob(TestCase):
         self.job.save()
         self.uid = self.job.uid
         # add the formats to the job
-        provider_task.formats.add(*self.formats)
-        self.job.provider_tasks.add(provider_task)
+        data_provider_task.formats.add(*self.formats)
+        self.job.data_provider_tasks.add(data_provider_task)
         self.job.save()
 
     def test_job_creation(self,):
@@ -53,7 +53,7 @@ class TestJob(TestCase):
         self.assertEquals(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_provider_tasks = saved_job.provider_tasks.first()
+        saved_provider_tasks = saved_job.data_provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
         self.assertEquals('Test description', saved_job.description)
@@ -66,7 +66,7 @@ class TestJob(TestCase):
         self.assertEquals(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
-        saved_provider_tasks = saved_job.provider_tasks.first()
+        saved_provider_tasks = saved_job.data_provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
         self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job

@@ -39,7 +39,7 @@ class TestExportTaskFactory(TestCase):
         provider.save()
         UserLicense.objects.create(license=self.license, user=self.user)
         provider_task = DataProviderTask.objects.create(provider=provider)
-        self.job.provider_tasks.add(provider_task)
+        self.job.data_provider_tasks.add(provider_task)
         self.region = Region.objects.get(name='Africa')
         self.job.region = self.region
         self.uid = str(provider_task.uid)

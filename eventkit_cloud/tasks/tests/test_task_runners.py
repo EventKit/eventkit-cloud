@@ -43,18 +43,18 @@ class TestExportTaskRunner(TestCase):
         shp_task = ExportFormat.objects.get(slug='shp')
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='osm')
-        provider_task = DataProviderTask.objects.create(provider=provider)
-        self.job.provider_tasks.add(provider_task)
+        data_provider_task = DataProviderTask.objects.create(provider=provider)
+        self.job.data_provider_tasks.add(data_provider_task)
         # shp export task mock
         mock_shp.run.return_value = Mock(state='PENDING', id=celery_uid)
         type(mock_shp).name = PropertyMock(return_value='Shapefile Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.data_provider_tasks.first().formats.add(shp_task)
         runner = ExportOSMTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            runner.run_task(provider_task_uid=provider_task.uid, run=self.job.runs.first(),
+            runner.run_task(provider_task_uid=data_provider_task.uid, run=self.job.runs.first(),
                             worker="some_worker")
         except TypeError:
             pass
@@ -72,13 +72,13 @@ class TestExportTaskRunner(TestCase):
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
-        self.job.provider_tasks.add(provider_task_record)
+        self.job.data_provider_tasks.add(provider_task_record)
         # shp export task mock
         mock_shp.run.return_value = Mock(state='PENDING', id=celery_uid)
         type(mock_shp).name = PropertyMock(return_value='Geopackage Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.data_provider_tasks.first().formats.add(shp_task)
         runner = ExportExternalRasterServiceTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:

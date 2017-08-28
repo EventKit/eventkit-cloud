@@ -277,7 +277,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
             export_providers = request.data.get('export_providers', [])
-            provider_tasks = request.data.get('provider_tasks', [])
+            provider_tasks = request.data.get('data_provider_tasks', [])
             tags = request.data.get('tags')
             preset = request.data.get('preset')
 

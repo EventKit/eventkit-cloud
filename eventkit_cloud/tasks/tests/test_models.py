@@ -34,7 +34,7 @@ class TestExportRun(TestCase):
         # add the formats to the provider task
         provider_task.formats.add(*formats)
         job = Job.objects.create(name='TestExportRun', description='Test description', user=user, the_geom=the_geom)
-        job.provider_tasks.add(provider_task)
+        job.data_provider_tasks.add(provider_task)
 
     def test_export_run(self,):
         job = Job.objects.first()
@@ -52,8 +52,8 @@ class TestExportRun(TestCase):
         saved_run = ExportRun.objects.get(uid=str(run.uid))
         self.assertEqual(run, saved_run)
         task_uid = str(uuid.uuid4())  # from celery
-        export_provider_task = DataProviderTaskRecord.objects.create(run=run)
-        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
+        data_provider_task = DataProviderTaskRecord.objects.create(run=run)
+        ExportTask.objects.create(data_provider_task=data_provider_task, uid=task_uid)
         saved_task = ExportTask.objects.get(uid=task_uid)
         self.assertIsNotNone(saved_task)
         tasks = run.provider_tasks.all()[0].tasks.all()
@@ -64,8 +64,8 @@ class TestExportRun(TestCase):
         for x in range(5):
             run = ExportRun.objects.create(job=job, user=job.user)
             task_uid = str(uuid.uuid4())  # from celery
-            export_provider_task = DataProviderTaskRecord.objects.create(run=run)
-            ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
+            data_provider_task = DataProviderTaskRecord.objects.create(run=run)
+            ExportTask.objects.create(data_provider_task=data_provider_task, uid=task_uid)
         runs = job.runs.all()
         tasks = runs[0].provider_tasks.all()[0].tasks.all()
         self.assertEquals(5, len(runs))
@@ -75,8 +75,8 @@ class TestExportRun(TestCase):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
-        export_provider_task = DataProviderTaskRecord.objects.create(run=run)
-        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
+        data_provider_task = DataProviderTaskRecord.objects.create(run=run)
+        ExportTask.objects.create(data_provider_task=data_provider_task, uid=task_uid)
         runs = job.runs.all()
         self.assertEquals(1, runs.count())
         run.delete()
@@ -89,8 +89,8 @@ class TestExportRun(TestCase):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
         task_uid = str(uuid.uuid4())  # from celery
-        export_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value)
-        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value)
+        data_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value)
+        ExportTask.objects.create(data_provider_task=data_provider_task, uid=task_uid, status=TaskStates.PENDING.value)
         runs = job.runs.all()
         self.assertEquals(1, runs.count())
         run.soft_delete()
@@ -124,8 +124,8 @@ class TestExportTask(TestCase):
         job = Job.objects.get(name='TestExportTask')
         self.run = ExportRun.objects.create(job=job, user=job.user)
         self.task_uid = uuid.uuid4()
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run)
-        self.task = ExportTask.objects.create(export_provider_task=export_provider_task, uid=self.task_uid)
+        data_provider_task = DataProviderTaskRecord.objects.create(run=self.run)
+        self.task = ExportTask.objects.create(data_provider_task=data_provider_task, uid=self.task_uid)
         self.assertEqual(self.task_uid, self.task.uid)
         saved_task = ExportTask.objects.get(uid=self.task_uid)
         self.assertEqual(saved_task, self.task)
@@ -155,8 +155,8 @@ class TestExportTask(TestCase):
         run = ExportRun.objects.create(job=job, user=job.user)
         run_uid = run.uid
         task_uid = str(uuid.uuid4())  # from celery
-        export_provider_task = DataProviderTaskRecord.objects.create(run=run)
-        ExportTask.objects.create(export_provider_task=export_provider_task, uid=task_uid)
+        data_provider_task = DataProviderTaskRecord.objects.create(run=run)
+        ExportTask.objects.create(data_provider_task=data_provider_task, uid=task_uid)
         with self.settings(USE_S3=True):
             run.delete()
             delete_from_s3.assert_called_once_with(run_uid=str(run_uid))

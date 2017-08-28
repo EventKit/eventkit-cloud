@@ -42,8 +42,8 @@ class TestJobFilter(APITestCase):
         export_provider = DataProvider.objects.get(slug='osm-generic')
         provider_task = DataProviderTask.objects.create(provider=export_provider)
         provider_task.formats.add(export_format)
-        self.job1.provider_tasks.add(provider_task)
-        self.job2.provider_tasks.add(provider_task)
+        self.job1.data_provider_tasks.add(provider_task)
+        self.job2.data_provider_tasks.add(provider_task)
         token = Token.objects.create(user=self.user1)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
