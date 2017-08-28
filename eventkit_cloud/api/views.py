@@ -497,7 +497,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'id'
+    lookup_field = 'slug'
     ordering = ['name']
 
     def get_queryset(self):
@@ -660,7 +660,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         if search_geojson is not None:
             try:
                 geom = geojson_to_geos(search_geojson, 4326)
-                queryset = queryset.filter(job__the_geom__within=geom)
+                queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
@@ -868,7 +868,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
+        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 

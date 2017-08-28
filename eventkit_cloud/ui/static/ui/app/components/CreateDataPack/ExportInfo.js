@@ -168,8 +168,11 @@ export class ExportInfo extends React.Component {
 
     }
     _initializeOpenLayers() {
-        var osm = new ol.layer.Tile({
-            source: new ol.source.OSM()
+        var base = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: this.context.config.BASEMAP_URL,
+                wrapX: false
+            })
         })
 
         this._map = new ol.Map({
@@ -179,7 +182,7 @@ export class ExportInfo extends React.Component {
                 pinchRotate: false,
                 mouseWheelZoom: false
             }),
-            layers: [osm],
+            layers: [base],
             target: 'infoMap',
             view: new ol.View({
                 projection: "EPSG:3857",
@@ -274,7 +277,7 @@ export class ExportInfo extends React.Component {
                                 />
                             </div>
 
-                            <div id="layersHeader" className={styles.heading}>Select Layers</div>
+                            <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
                             <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                             <div className={styles.sectionBottom}>
                                 <List className={styles.list}>
@@ -346,9 +349,14 @@ export class ExportInfo extends React.Component {
                                     onExpandChange={this.expandedChange.bind(this)}>
                                     <CardHeader
                                         title="Selected Area of Interest"
-                                        actAsExpander={true}
+                                        actAsExpander={false}
                                         showExpandableButton={true}
-                                    />
+                                        textStyle={{paddingRight: '6px'}}>
+                                        <a onClick={this.props.handlePrev}
+                                           style={{fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer'}}>
+                                            Edit
+                                        </a>
+                                    </CardHeader>
                                     <CardText expandable={true}>
                                         <div id="infoMap" className={styles.map}></div>
                                     </CardText>
@@ -403,12 +411,16 @@ function mapDispatchToProps(dispatch) {
     }
 }
 
+ExportInfo.contextTypes = {
+    config: React.PropTypes.object
+}
+
 ExportInfo.propTypes = {
     geojson:         React.PropTypes.object,
     providers:       PropTypes.array.isRequired,
     exportInfo:     React.PropTypes.object,
     incrementStepper: React.PropTypes.func,
-
+    handlePrev:       React.PropTypes.func,
 }
 
 ExportInfo.childContextTypes = {

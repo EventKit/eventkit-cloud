@@ -36,8 +36,8 @@ from ..export_tasks import (
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
-    parse_result, finalize_export_provider_task, clean_up_failure_task, osm_create_styles_task,
-    FormatTask, bounds_export_task
+    clean_up_failure_task, bounds_export_task, parse_result, finalize_export_provider_task, osm_create_styles_task,
+    FormatTask, wait_for_providers_task
 )
 
 
@@ -161,7 +161,6 @@ class TestExportTasks(ExportTaskBase):
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-
 
     @patch('eventkit_cloud.utils.gdalutils.convert')
     @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
@@ -571,7 +570,7 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task = ExportProviderTask.objects.create(status=TaskStates.SUCCESS.value, run=self.run, name='Shapefile Export')
         ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
                                   status=TaskStates.SUCCESS.value, name='Default Shapefile Export')
-        self.assertEquals('Finalize Export Run', finalize_run_task.name)
+        self.assertEquals('Finalize Run Task', finalize_run_task.name)
         finalize_run_task.run(run_uid=run_uid, stage_dir=stage_dir)
         email().send.assert_called_once()
 
@@ -635,7 +634,7 @@ class TestExportTasks(ExportTaskBase):
 
         self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
         cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid,
-                                        canceling_user=user)
+                                        canceling_username=user.username)
         mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
                                                            queue="{0}.cancel".format(worker_name),
                                                            priority=TaskPriority.CANCEL.value,
@@ -658,56 +657,6 @@ class TestExportTasks(ExportTaskBase):
         expected_result = True
         returned_result = parse_result(task_result, "test")
         self.assertEqual(expected_result, returned_result)
-
-    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
-    def test_clean_up_failure_task(self, finalize_export_provider_task):
-        worker_name = "test_worker"
-        task_pid = 55
-        celery_uid = uuid.uuid4()
-        run_uid = self.run.uid
-        canceled_export_provider_task = ExportProviderTask.objects.create(
-            run=self.run,
-            name='test_provider_task',
-            status=TaskStates.CANCELED.value,
-            slug='test_provider_task_slug'
-        )
-        ExportTask.objects.create(
-            export_provider_task=canceled_export_provider_task,
-            status=TaskStates.CANCELED.value,
-            name="test_task",
-            celery_uid=celery_uid,
-            pid=task_pid,
-            worker=worker_name
-        )
-        export_provider_task = ExportProviderTask.objects.create(
-            run=self.run,
-            name='test_provider_task',
-            status=TaskStates.PENDING.value,
-            slug='test_provider_task_slug'
-        )
-        task = ExportTask.objects.create(
-            export_provider_task=export_provider_task,
-            status=TaskStates.PENDING.value,
-            name="test_task",
-            celery_uid=celery_uid,
-            pid=task_pid,
-            worker=worker_name
-        )
-        export_provider_task_uids = [canceled_export_provider_task.uid, export_provider_task.uid]
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-        run_dir = os.path.join(download_root, str(run_uid))
-        clean_up_failure_task.run(export_provider_task_uids=export_provider_task_uids, run_uid=run_uid,
-                                  run_dir=run_dir, worker=worker_name)
-        updated_task = ExportTask.objects.get(uid=task.uid)
-        self.assertEqual(updated_task.status, TaskStates.CANCELED.value)
-        finalize_export_provider_task.si.assert_any_call(export_provider_task_uid=canceled_export_provider_task.uid,
-                  run_uid=run_uid, worker=worker_name)
-        finalize_export_provider_task.si.assert_any_call(export_provider_task_uid=export_provider_task.uid,
-                                                             run_uid=run_uid, worker=worker_name)
-        finalize_export_provider_task.si().set.assert_any_call(queue=worker_name, routing_key=worker_name)
-        finalize_export_provider_task.si().set().apply_async.assert_any_call(interval=1, max_retries=10,
-                                                                             priority=TaskPriority.FINALIZE_PROVIDER.value,
-                                                                             queue=worker_name, routing_key=worker_name)
 
     def test_finalize_export_provider_task(self):
         worker_name = "test_worker"
@@ -736,9 +685,10 @@ class TestExportTasks(ExportTaskBase):
 
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
-        res = finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
-                                          run_dir=run_dir)
-        self.assertEqual(res['finalize_status'], 'COMPLETED')
+        finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
+                                                run_dir=run_dir, status=TaskStates.COMPLETED.value)
+        export_provider_task.refresh_from_db()
+        self.assertEqual(export_provider_task.status, TaskStates.COMPLETED.value)
 
     @patch('os.kill')
     @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
@@ -787,6 +737,34 @@ class TestExportTasks(ExportTaskBase):
         provider_task_mock.tasks.all.return_value = [provider_subtask_mock]
         include_zipfile(run_uid=None, provider_tasks=[provider_task_mock], extra_files=[])
         zip_file_task.run.called_once_with(['provider_export_file'])
+
+    @patch('eventkit_cloud.tasks.models.ExportRun')
+    def test_wait_for_providers_task(self, mock_export_run):
+        mock_run_uid = str(uuid.uuid4())
+
+        mock_provider_task = Mock(status=TaskStates.SUCCESS.value)
+        mock_export_run.objects.filter().first.return_value = Mock()
+        mock_export_run.objects.filter().first().provider_tasks.all.return_value = [mock_provider_task]
+
+        callback_task = MagicMock()
+        apply_args = {"arg1": "example_value"}
+
+        wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
+        callback_task.apply_async.assert_called_once_with(**apply_args)
+
+        callback_task.reset_mock()
+
+        mock_provider_task = Mock(status=TaskStates.RUNNING.value)
+        mock_export_run.objects.filter().first.return_value = Mock()
+        mock_export_run.objects.filter().first().provider_tasks.all.return_value = [mock_provider_task]
+
+        wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
+        callback_task.apply_async.assert_not_called()
+
+        with self.assertRaises(Exception):
+            mock_export_run.reset_mock()
+            mock_export_run.objects.filter().first().__nonzero__.return_value = False
+            wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
     @patch('os.path.join', side_effect=lambda *args: args[-1])
     @patch('os.path.isfile')

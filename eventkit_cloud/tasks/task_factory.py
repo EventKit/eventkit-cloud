@@ -11,11 +11,15 @@ from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from celery import chain
-from eventkit_cloud.tasks.export_tasks import zip_export_provider, finalize_run_task, finalize_run_task_as_errback, \
-    example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task, osm_create_styles_task, bounds_export_task
+
+from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task, finalize_run_task_as_errback,
+                                               osm_create_styles_task, bounds_export_task,
+                                               prepare_for_export_zip_task, zip_file_task)
 
 from ..jobs.models import Job
-from ..tasks.export_tasks import finalize_export_provider_task, clean_up_failure_task, TaskPriority
+from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
+                                  wait_for_providers_task, TaskStates)
+
 from ..tasks.models import ExportRun, ExportProviderTask
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
@@ -47,6 +51,34 @@ class TaskFactory:
 
     def parse_tasks(self, worker=None, run_uid=None, user_details=None):
         """
+        This handles all of the logic for taking the information about what individual celery tasks and groups them under
+        specific providers.
+
+        Each Provider (e.g. OSM) gets a chain:  OSM_TASK -> FORMAT_TASKS = PROVIDER_SUBTASK_CHAIN
+        They need to be finalized (was the task successful?) to update the database state:
+            PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK
+
+        We also have an optional chain of tasks that get processed after the providers are ran:
+            AD_HOC_TASK1 -> AD_HOC_TASK2 -> FINALIZE_RUN_TASK = FINALIZE_RUN_TASK_COLLECTION
+
+        If the PROVIDER_SUBTASK_CHAIN fails it needs to be cleaned up.  The clean up task also calls the finalize provider
+        task. This is because when a task fails the failed task will call an on_error (link_error) task and never return.
+            PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK
+                   |
+                   v
+                CLEAN_UP_FAILURE_TASK -> FINALIZE_PROVIDER_TASK
+
+        Now there needs to be someway for the finalize tasks to be called.  Since we now have several a possible forked path,
+        we need each path to check the state of the providers to see if they are all finished before moving on.
+        It would be great if celery would implicitly handled that, but it doesn't ever merge the forked paths.
+        So we add a WAIT_FOR_PROVIDERS task to check state once the providers are ready they call the final tasks.
+
+        PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK -> WAIT_FOR_PROVIDERS   \
+                   |                                                              ==> FINALIZE_RUN_TASK_COLLECTION
+                   v                                                             /
+            CLEAN_UP_FAILURE_TASK -> FINALIZE_PROVIDER_TASK -> WAIT_FOR_PROVIDERS
+
+
         :param worker: A worker node (hostname) for a celery worker, this should match the node name used when starting,
          the celery worker.
         :param run_uid: A uid to reference an ExportRun.
@@ -64,9 +96,12 @@ class TaskFactory:
 
             # Contains one chain per item in provider_task_records
             provider_task_chains = []
+
+            finalize_task_settings = {
+                'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+                'priority': TaskPriority.FINALIZE_RUN.value}
+
             for provider_task_record in job.provider_tasks.all():
-                provider_subtask_chains = []
-                provider_task_uids = []
 
                 # Create an instance of a task runner based on the type name
                 if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
@@ -88,57 +123,56 @@ class TaskFactory:
                     }
 
                     provider_task_uid, provider_subtask_chain = task_runner.run_task(**args)
-                    provider_task_uids += [provider_task_uid]
+
+                    wait_for_providers_signature = wait_for_providers_task.s(
+                        run_uid=run_uid,
+                        locking_task_key=run_uid,
+                        callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker, apply_args=finalize_task_settings),
+                        apply_args=finalize_task_settings)
+
 
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
-                        clean_up_task_sig = clean_up_failure_task.si(
-                            run_uid=run_uid, run_dir=run_dir,
-                            export_provider_task_uids=provider_task_uids, worker=worker, queue=worker,
-                            routing_key=worker
+
+                        clean_up_task_chain = chain(
+                            finalize_export_provider_task.si(
+                                export_provider_task_uid=provider_task_uid,
+                                status=TaskStates.INCOMPLETE.value,
+                                locking_task_key=run_uid),
+                            wait_for_providers_signature
                         )
-                        finalize_export_provider_sig = finalize_export_provider_task.s(
-                            run_uid=run_uid,
-                            run_dir=run_dir,
+
+                        # add clean up to subtask(s)
+                        if hasattr(provider_subtask_chain, "tasks"):
+                            for task in provider_subtask_chain.tasks:
+                                task.on_error(clean_up_task_chain)
+                        else:
+                            provider_subtask_chain.on_error(clean_up_task_chain)
+
+                        # create signature to close out the provider tasks
+                        finalize_export_provider_signature = finalize_export_provider_task.s(
                             export_provider_task_uid=provider_task_uid,
-                            worker=worker,
-                            link_error=clean_up_task_sig,
-                            queue=worker,
-                            routing_key=worker
+                            status=TaskStates.COMPLETED.value,
+                            locking_task_key=run_uid
                         )
+
+                        # add zip if required
                         if provider_task_record.provider.zip:
                             zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
                                                                          stage_dir=stage_dir, worker=worker,
                                                                          job_name=run.job.name)
-                            finalized_provider_task_chain = chain(
-                                provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_sig
+                            provider_task_chain = chain(
+                                provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_signature
                             )
-                        else:
-                            finalized_provider_task_chain = chain(
-                                provider_subtask_chain, finalize_export_provider_sig
-                            )
-                        provider_subtask_chains.append(finalized_provider_task_chain)
 
-                if not provider_subtask_chains:
-                    continue
+                        finalized_provider_task_chain = chain(
+                            provider_task_chain,
+                            finalize_export_provider_signature,
+                            wait_for_providers_signature
+                        )
 
-                # This ensures the export provider's subtasks are sequenced in the order the providers appear
-                # in the group.
-                provider_task_chain = chain(provider_subtask_chains)
-                provider_task_chains.append(provider_task_chain)
-
-            # A group would allow things to execute in parallel, but you can't add link_error to a group.
-            #    and we need to assure that the errback from create_finalize_run_task_collection() is called.
-            all_provider_task_chain = chain([ptc for ptc in provider_task_chains])
-
-            finalize_run_tasks, errback = create_finalize_run_task_collection(run_uid, run_dir, worker)
-
-            all_tasks = chain(all_provider_task_chain, finalize_run_tasks)
-            all_tasks.set(link_error=errback)
-            tasks_results = all_tasks.apply_async()
-
-            return tasks_results
+                        finalized_provider_task_chain.apply_async(**finalize_task_settings)
 
 
 @transaction.atomic
@@ -248,15 +282,13 @@ class InvalidLicense(Error):
         super(Error, self).__init__('InvalidLicense: {0}'.format(message))
 
 
-def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None):
+def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None, apply_args=None):
     """ Returns a 2-tuple celery chain of tasks that need to be executed after all of the export providers in a run
         have finished, and a finalize_run_task signature for use as an errback.
         Add any additional tasks you want in hook_tasks.
         @see export_tasks.FinalizeRunHookTask for expected hook task signature.
     """
-    finalize_task_settings = {
-        'interval': 1, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
-        'priority': TaskPriority.FINALIZE_RUN.value}
+    apply_args = apply_args or dict()
 
     # These should be subclassed from FinalizeRunHookTask
     hook_tasks = []
@@ -264,21 +296,20 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None)
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
         #    link getting passed to the first hook task
-        hook_task_sigs.append(hook_tasks[0].si([], run_uid=run_uid).set(**finalize_task_settings))
+        hook_task_sigs.append(hook_tasks[0].si([], run_uid=run_uid).set(**apply_args))
         hook_task_sigs.extend(
-            [hook_task.s(run_uid=run_uid).set(**finalize_task_settings) for hook_task in hook_tasks[1:]]
+            [hook_task.s(run_uid=run_uid).set(**apply_args) for hook_task in hook_tasks[1:]]
         )
 
-    # prepare_zip_sig = prepare_for_export_zip_task.s(run_uid=run_uid).set(**finalize_task_settings)
+    prepare_zip_sigature = prepare_for_export_zip_task.s(run_uid=run_uid).set(**apply_args)
 
-    # zip_task_sig = zip_file_task.s(run_uid=run_uid).set(**finalize_task_settings)
+    zip_task_signature = zip_file_task.s(run_uid=run_uid).set(**apply_args)
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
-    finalize_sig = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**finalize_task_settings)
-    errback_sig = finalize_run_task_as_errback.si(run_uid=run_uid, stage_dir=run_dir)
+    finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
 
-    #all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sig, zip_task_sig, finalize_sig])
-    all_task_sigs = itertools.chain(hook_task_sigs, [finalize_sig])
+    all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sigature, zip_task_signature, finalize_signature])
+
     finalize_chain = chain(*all_task_sigs)
 
-    return finalize_chain, errback_sig
+    return finalize_chain

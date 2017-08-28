@@ -31,6 +31,28 @@ jest.mock('../../components/DataPackPage/MapView')
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return {
             runsList: {
@@ -44,12 +66,14 @@ describe('DataPackPage component', () => {
             user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
             deleteRuns: () => {},
+            getProviders: () => {},
             runsDeletion: {
                 deleting: false,
                 deleted: false,
                 error: null
             },
             drawerOpen: true,
+            providers: providers,
             importGeom: {},
             geocode: {},
             getGeocode: () => {},
@@ -357,7 +381,7 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleSpatialFilter(geojson);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith(
-            {geojson_geometry: geojson, loading: true}, 
+            {geojson_geometry: geojson, loading: true},
             wrapper.instance().makeRunRequest
         )).toBe(true);
         stateSpy.restore();
@@ -436,6 +460,7 @@ describe('DataPackPage component', () => {
                 handleLoadMore={wrapper.instance().loadMore}
                 loadLessDisabled={props.runsList.runs.length <= 12}
                 loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
             />
         );
         expect(wrapper.instance().getView('grid')).toEqual(
@@ -448,6 +473,7 @@ describe('DataPackPage component', () => {
                 handleLoadMore={wrapper.instance().loadMore}
                 loadLessDisabled={props.runsList.runs.length <= 12}
                 loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
             />
         );
         expect(wrapper.instance().getView('map')).toEqual(
@@ -460,6 +486,7 @@ describe('DataPackPage component', () => {
                 handleLoadMore={wrapper.instance().loadMore}
                 loadLessDisabled={props.runsList.runs.length <= 12}
                 loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
                 geocode={props.geocode}
                 getGeocode={props.getGeocode}
                 importGeom={props.importGeom}

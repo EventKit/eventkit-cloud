@@ -49,8 +49,11 @@ class ExportSummary extends React.Component {
 
     _initializeOpenLayers() {
 
-        var osm = new ol.layer.Tile({
-            source: new ol.source.OSM()
+        var base = new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: this.context.config.BASEMAP_URL,
+                wrapX: false
+            })
         });
 
         this._map = new ol.Map({
@@ -60,7 +63,7 @@ class ExportSummary extends React.Component {
                 pinchRotate: false,
                 mouseWheelZoom: false
             }),
-            layers: [osm],
+            layers: [base],
             target: 'summaryMap',
             view: new ol.View({
                 projection: "EPSG:3857",
@@ -199,7 +202,9 @@ function mapStateToProps(state) {
     }
 }
 
-
+ExportSummary.contextTypes = {
+    config: React.PropTypes.object
+}
 
 ExportSummary.propTypes = {
     geojson:         React.PropTypes.object,
