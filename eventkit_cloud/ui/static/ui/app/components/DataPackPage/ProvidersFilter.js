@@ -1,7 +1,7 @@
 import React from 'react';
 import {Checkbox} from 'material-ui';
 
-export class SourcesFilter extends React.Component {
+export class ProvidersFilter extends React.Component {
 
     constructor(props) {
         super(props);
@@ -46,9 +46,9 @@ export class SourcesFilter extends React.Component {
 
 }
 
-SourcesFilter.propTypes = {
+ProvidersFilter.propTypes = {
     providers: React.PropTypes.array.isRequired,
     selected: React.PropTypes.object.isRequired,
 }
 
-export default SourcesFilter;
+export default ProvidersFilter;

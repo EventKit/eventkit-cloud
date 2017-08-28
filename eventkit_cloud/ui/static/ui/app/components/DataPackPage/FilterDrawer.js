@@ -5,7 +5,7 @@ import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
 import CustomScrollbar from '../CustomScrollbar';
-import {SourcesFilter} from './SourcesFilter';
+import {ProvidersFilter} from './ProvidersFilter';
 
 export class FilterDrawer extends React.Component {
 
@@ -111,7 +111,7 @@ export class FilterDrawer extends React.Component {
                         minDate={this.state.minDate}
                         maxDate={this.state.maxDate}
                     />
-                    <SourcesFilter
+                    <ProvidersFilter
                         onChange={this.handleProvidersChange}
                         providers={this.props.providers}
                         selected={this.state.providers}

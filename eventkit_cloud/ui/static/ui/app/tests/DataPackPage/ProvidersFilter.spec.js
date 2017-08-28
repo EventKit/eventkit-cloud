@@ -5,9 +5,9 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import Checkbox from 'material-ui/Checkbox';
 import isEqual from 'lodash/isEqual';
-import {SourcesFilter} from "../../components/DataPackPage/SourcesFilter";
+import {ProvidersFilter} from "../../components/DataPackPage/ProvidersFilter";
 
-describe('SourcesFilter component', () => {
+describe('ProvidersFilter component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
@@ -42,7 +42,7 @@ describe('SourcesFilter component', () => {
 
     it('should have checkboxes', () => {
         const props = getProps();
-        const wrapper = mount(<SourcesFilter {...props}/>, {
+        const wrapper = mount(<ProvidersFilter {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -54,7 +54,7 @@ describe('SourcesFilter component', () => {
     it('should call onChange with ("[slug]", true)', () => {
         const props = getProps();
         props.onChange = new sinon.spy();
-        const wrapper = mount(<SourcesFilter {...props}/>, {
+        const wrapper = mount(<ProvidersFilter {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
@@ -68,7 +68,7 @@ describe('SourcesFilter component', () => {
 
     it('should set source as checked', () => {
         const props = getProps();
-        const wrapper = mount(<SourcesFilter {...props}/>, {
+        const wrapper = mount(<ProvidersFilter {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });

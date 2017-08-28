@@ -10,7 +10,7 @@ import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import SourcesFilter from "../../components/DataPackPage/SourcesFilter";
+import ProvidersFilter from "../../components/DataPackPage/ProvidersFilter";
 
 describe('FilterDrawer component', () => {
     injectTapEventPlugin();
@@ -62,7 +62,7 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find(PermissionFilter)).toHaveLength(1);
         expect(wrapper.find(StatusFilter)).toHaveLength(1);
         expect(wrapper.find(DateFilter)).toHaveLength(1);
-        expect(wrapper.find(SourcesFilter)).toHaveLength(1);
+        expect(wrapper.find(ProvidersFilter)).toHaveLength(1);
     });
 
     it('handleFilterApply should just call props.onFilterApply with current state', () => {
