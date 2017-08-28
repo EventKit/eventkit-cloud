@@ -215,6 +215,21 @@ def get_table_gpkg_contents_information(gpkg, table_name):
                 "srs_id": table_information[9]}
 
 
+def set_gpkg_contents_bounds(gpkg, table_name, bbox):
+    """
+
+    :param gpkg: Path to geopackage file.
+    :param table_name: A table name to set the bounds.
+    :param bbox: An iterable with doubles representing the bounds [w,s,e,n]
+    :return: A dict with the column names as the key.
+    """
+    with sqlite3.connect(gpkg) as conn:
+        if not conn.execute(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name)).rowcount:
+            raise Exception("Unable to set bounds for {1} in {2}".format(table_name, gpkg))
+
+
 def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
@@ -271,10 +286,10 @@ def remove_zoom_level(gpkg, table, zoom_level):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
-            conn.execute("DELETE FROM gpkg_tile_matrix "
-                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level))
-            return True
-    return False
+            if conn.execute("DELETE FROM gpkg_tile_matrix "
+                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level)).rowcount:
+                return True
+        raise Exception("Unable to remove zoom level {0} for {1} from {2}".format(zoom_level, table, gpkg))
 
 
 def get_tile_matrix_table_zoom_levels(gpkg, table_name):
