@@ -60,9 +60,10 @@ class ExportRunFilter(django_filters.FilterSet):
     max_date = django_filters.DateFilter(name="started_at", lookup_expr="lte")
     started_at = django_filters.DateTimeFilter(name="started_at", lookup_expr="exact")
     published = django_filters.BooleanFilter(name="job__published", lookup_expr="exact")
+    providers = ListFilter(name="job__provider_tasks__provider__slug")
 
     class Meta:
         model = ExportRun
         fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
-                  'started_at', 'published')
+                  'started_at', 'published', 'providers')
 

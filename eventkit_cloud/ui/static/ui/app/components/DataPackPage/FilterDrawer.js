@@ -5,6 +5,7 @@ import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
 import CustomScrollbar from '../CustomScrollbar';
+import {SourcesFilter} from './SourcesFilter';
 
 export class FilterDrawer extends React.Component {
 
@@ -16,16 +17,21 @@ export class FilterDrawer extends React.Component {
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
-        this.state = {
+        this.state = this.getDefaultState();
+    }
+
+    getDefaultState() {
+        return {
             published: null,
             minDate: null,
             maxDate: null,
             status: {
                 completed: false,
-                submitted: false,
                 incomplete: false,
+                submitted: false,
             },
-        }
+            providers: {},
+        };
     }
 
     handleFilterApply = () => {
@@ -33,16 +39,7 @@ export class FilterDrawer extends React.Component {
     }
 
     handleFilterClear = () => {
-        this.setState({
-            published: null,
-            minDate: null,
-            maxDate: null,
-            status: {
-                completed: false,
-                incomplete: false,
-                submitted: false,
-            },
-        });
+        this.setState(this.getDefaultState());
         this.props.onFilterClear();
     }
 
@@ -54,6 +51,17 @@ export class FilterDrawer extends React.Component {
         let status = this.state.status;
         status = Object.assign(status, stateChange)
         this.setState({status: status});
+    }
+
+    handleProvidersChange = (slug, isSelected) => {
+        let providers = this.state.providers;
+        if (isSelected) {
+            providers[slug] = true;
+        } else {
+            delete providers[slug];
+        }
+
+        this.setState({providers: providers});
     }
 
     handleMinDate = (e, date) => {
@@ -77,7 +85,7 @@ export class FilterDrawer extends React.Component {
 
         return (
             <Drawer 
-                width={200} 
+                width={200}
                 openSecondary={true} 
                 open={this.props.open}
                 containerStyle={styles.containerStyle}
@@ -102,6 +110,11 @@ export class FilterDrawer extends React.Component {
                         onMaxChange={this.handleMaxDate}
                         minDate={this.state.minDate}
                         maxDate={this.state.maxDate}
+                    />
+                    <SourcesFilter
+                        onChange={this.handleProvidersChange}
+                        providers={this.props.providers}
+                        selected={this.state.providers}
                     />
                 </CustomScrollbar>
             </Drawer>

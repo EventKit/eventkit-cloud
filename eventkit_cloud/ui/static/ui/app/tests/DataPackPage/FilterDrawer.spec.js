@@ -53,7 +53,7 @@ describe('FilterDrawer component', () => {
     it('handleFilterClear should reset the state and call props.onFilterClear', () => {
         let props = getProps();
         props.onFilterClear = new sinon.spy();
-        const initialState = {published: 'True', minDate: new Date(), maxDate: new Date(), status: {completed: true, incomplete: true, submitted: false}};
+        const initialState = {published: 'True', minDate: new Date(), maxDate: new Date(), status: {completed: true, incomplete: true, submitted: false}, providers: {osm: true}};
         const wrapper = getWrapper(props);
         wrapper.setState(initialState);
         const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
@@ -66,6 +66,7 @@ describe('FilterDrawer component', () => {
                 incomplete: false,
                 submitted: false,
             },
+            providers: {},
         }
         expect(wrapper.state()).toEqual(initialState);
         wrapper.instance().handleFilterClear();
