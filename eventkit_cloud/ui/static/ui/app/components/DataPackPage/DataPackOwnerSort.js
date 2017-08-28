@@ -74,7 +74,8 @@ export class DataPackOwnerSort extends React.Component {
             },
             underline: {
                 borderTopColor: '#4498c0', 
-                marginLeft: '0px'
+                marginLeft: '0px',
+                marginRight: '28px'
             },
             selected: {
                 color: '#4498c0'

@@ -8,52 +8,35 @@ export class DataPackSortDropDown extends React.Component {
         super(props);
     }
 
-    getPx(item) {
-        if(window.innerWidth <= 575) {
-            const values = { labelFontSize: '12px', itemFontSize: '10px', labelRightPadding: '24px'}
-            return values[item]
-        }
-        else if (window.innerWidth <= 767) {
-            const values = {labelFontSize: '13px', itemFontSize: '11px', labelRightPadding: '24px'}
-            return values[item]
-        }
-        else if (window.innerWidth <= 991) {
-            const values = {labelFontSize: '14px', itemFontSize: '12px', labelRightPadding: '26px'}
-            return values[item]
-        }
-        else if(window.innerWidth <= 1199) {
-            const values = {labelFontSize: '15px', itemFontSize: '13px', labelRightPadding: '28px'}
-            return values[item]
-        }
-        else {
-            const values = {labelFontSize: '16px', itemFontSize: '14px', labelRightPadding: '30px'}
-            return values[item]
-        }
-    }
-
     render() {
         const styles = {
             dropDown: {
                 height: '30px',
                 lineHeight: '30px',
-                float: 'right',
             },
             item: {
-                fontSize: this.getPx('itemFontSize'),
+                fontSize: '12px'
             },
             icon: {
-                height: '30px',
-                width: '30px',
-                padding: '0px',
+                padding: 0,
                 fill: '#4498c0',
-                right: '2px',
+                position: 'inline-block',
+                verticalAlign: 'top',
+                top: 0,
+                right: 0,
+                width: 20,
+                height: 24,
+                margin: 3
             },
             label: {
                 lineHeight: '30px', 
                 color: '#4498c0', 
                 paddingLeft: 0,
-                paddingRight: this.getPx('labelRightPadding'),
-                fontSize: this.getPx('labelFontSize')
+                paddingRight: 32,
+                height: '30px',
+                display: 'inline-block',
+                padding: 0,
+                fontSize: '14px'
             },
             list: {
                 paddingTop: '5px', 
@@ -63,7 +46,8 @@ export class DataPackSortDropDown extends React.Component {
                 color: '#4498c0'
             },
             underline: {
-                display: 'none'
+                margin: '0px',
+                borderTopColor: '#4498c0',
             }
         };
 

@@ -8,24 +8,6 @@ export class DataPackFilterButton extends React.Component {
     constructor(props) {
         super(props);
     }
-
-    getLabelFontSize() {
-        if(window.innerWidth <= 575) {
-            return '12px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '13px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '14px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '15px';
-        }
-        else {
-            return '16px';
-        }
-    }
     
     render() {
         const styles = {
@@ -40,7 +22,7 @@ export class DataPackFilterButton extends React.Component {
                 color: '#4498c0', 
                 textTransform: 'none', 
                 padding: '0px',
-                fontSize: this.getLabelFontSize(),
+                fontSize: '12px',
             },
             icon: {
                 fill: '#4498c0',
@@ -51,7 +33,7 @@ export class DataPackFilterButton extends React.Component {
         return (
             <FlatButton 
                 style={styles.button}
-                label={"Filter"}
+                label={this.props.active ? "HIDE FILTERS" : "SHOW FILTERS"}
                 labelPosition={"after"}
                 labelStyle={styles.label}
                 hoverColor={'#253447'}
@@ -65,7 +47,8 @@ export class DataPackFilterButton extends React.Component {
 
 
 DataPackFilterButton.propTypes = {
-    handleToggle: PropTypes.func.isRequired
+    handleToggle: PropTypes.func.isRequired,
+    active: PropTypes.bool.isRequired
 };
 
 
