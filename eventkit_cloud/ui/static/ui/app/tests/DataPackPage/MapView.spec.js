@@ -99,7 +99,7 @@ describe('MapView component', () => {
     it('should render all the basic components', () => {        
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
         expect(wrapper.find(GridList)).toHaveLength(1);
         expect(wrapper.find(LoadButtons)).toHaveLength(1);
         expect(wrapper.find(DataPackListItem)).toHaveLength(props.runs.length);
@@ -128,8 +128,8 @@ describe('MapView component', () => {
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
         expect(wrapper.find('#popup-content').find('a')).toHaveLength(2);
-        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual('1: 1');
-        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual('2: 2');
+        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual(' 1');
+        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual(' 2');
         wrapper.find('#popup-content').find('a').first().simulate('click');
         expect(wrapper.instance().handleClick.calledOnce).toBe(true);
         expect(wrapper.instance().handleClick.calledWith('1')).toBe(true);
@@ -478,6 +478,7 @@ describe('MapView component', () => {
         expect(overlaySpy.calledWith({
             element: div,
             autoPan: true,
+            autoPanMargin: 100,
             autoPanAnimation: {
                 duration: 250
             },
@@ -488,8 +489,9 @@ describe('MapView component', () => {
         stub.restore();
     });
 
-    it('handleOlPopupClose should call setPosition on overlay and blur on closer and setTimeout to update state', () => {
+    it('handleOlPopupClose should call setPosition on overlay, add scroll zoom, blur on closer, and setTimeout to update state', () => {
         jest.useFakeTimers();
+        const zoomSpy = new sinon.spy(ol.interaction, 'MouseWheelZoom');
         const props = getProps();
         const stateSpy = new sinon.spy(MapView.prototype, 'setState');        
         const wrapper = getWrapper(props);
@@ -497,13 +499,17 @@ describe('MapView component', () => {
         const blurSpy = new sinon.spy();
         wrapper.instance().overlay = {setPosition: setSpy};
         wrapper.instance().closer = {blur: blurSpy};
+        const addCount = ol.Map.prototype.addInteraction.callCount;
         wrapper.instance().handleOlPopupClose();
         expect(stateSpy.calledWith({disableMapClick: false})).toBe(false);
         jest.runAllTimers();
         expect(stateSpy.calledWith({disableMapClick:false})).toBe(true);
+        expect(ol.Map.prototype.addInteraction.callCount).toEqual(addCount + 1);
+        expect(zoomSpy.calledOnce).toBe(true);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith(undefined)).toBe(true);
         expect(blurSpy.calledOnce).toBe(true);
+        zoomSpy.restore();
         stateSpy.restore();
     });
 
@@ -759,6 +765,8 @@ describe('MapView component', () => {
         }
         ol.Map.prototype.forEachFeatureAtPixel = forEachMock;
         const forEachSpy = new sinon.spy(ol.Map.prototype, 'forEachFeatureAtPixel');
+        const getSpy = new sinon.spy(ol.Map.prototype, 'getInteractions');
+        const removeSpy = new sinon.spy(ol.Map.prototype, 'removeInteraction');
         const props = getProps();
         const wrapper = getWrapper(props);
         const event = {pixel: 'fake', coordinate: [0,0]}
@@ -766,6 +774,8 @@ describe('MapView component', () => {
         expect(wrapper.instance().onMapClick(event)).toBe(true);
         expect(forEachSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
+        expect(getSpy.calledOnce).toBe(true);
+        expect(removeSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({groupedFeatures: [feature1, feature2], disableMapClick: true})).toBe(true);
         expect(MapView.prototype.overlay.setPosition.calledOnce).toBe(true);
         expect(MapView.prototype.overlay.setPosition.calledWith(event.coordinate)).toBe(true);
