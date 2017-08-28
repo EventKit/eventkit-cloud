@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from celery import chain
 
-from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task, finalize_run_task_as_errback,
+from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
                                                osm_create_styles_task, bounds_export_task,
                                                prepare_for_export_zip_task, zip_file_task)
 
