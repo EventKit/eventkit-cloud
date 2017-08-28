@@ -260,7 +260,7 @@ export class ProviderRow extends React.Component {
         let licenseText = '';
         let licenseData;
         if (propsProvider.license != null) {
-            licenseText = <i>Use of this imagery is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
+            licenseText = <i>Use of this data is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
             licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
                     <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
 
