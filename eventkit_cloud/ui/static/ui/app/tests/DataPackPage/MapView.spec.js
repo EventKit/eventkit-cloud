@@ -128,8 +128,8 @@ describe('MapView component', () => {
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
         expect(wrapper.find('#popup-content').find('a')).toHaveLength(2);
-        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual('1: 1');
-        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual('2: 2');
+        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual(' 1');
+        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual(' 2');
         wrapper.find('#popup-content').find('a').first().simulate('click');
         expect(wrapper.instance().handleClick.calledOnce).toBe(true);
         expect(wrapper.instance().handleClick.calledWith('1')).toBe(true);
