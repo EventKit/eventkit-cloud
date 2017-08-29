@@ -51,7 +51,7 @@ export class DataPackPage extends React.Component {
             },
             view: 'map',
             pageLoading: true,
-            order: '-started_at',
+            order: '-job__featured,-started_at',
             ownerFilter: '',
             pageSize: 12,
             loading: false,
