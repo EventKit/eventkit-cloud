@@ -130,6 +130,9 @@ export class DataPackTableItem extends Component {
                 <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>
                     {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
                 </TableRowColumn>
+                <TableRowColumn style={{padding: '0px 0px 0px 10px', width: '80px', textAlign: 'center'}}>
+                    {this.props.run.job.featured ? <NavigationCheck style={{fill: '#4598bf'}}/> : null}
+                </TableRowColumn>
                 <TableRowColumn style={{paddingRight: '10px', paddingLeft: '0px', width: '30px'}}>
                     <IconMenu
                         iconButtonElement={
