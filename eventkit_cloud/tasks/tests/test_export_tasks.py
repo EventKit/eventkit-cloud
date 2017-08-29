@@ -232,7 +232,8 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('os.path.isfile')
-    @patch('eventkit_cloud.tasks.models.DataProviderTask')
+
+    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
     @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
     @patch('celery.app.task.Task.request')
     def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_data_provider_task, mock_isfile, mock_logger):
@@ -610,7 +611,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
-        data_provider_task.run(provider_task_uid=data_provider_task.uid,
+        cancel_export_provider_task.run(export_provider_task_uid=data_provider_task.uid,
                                         canceling_user=user)
         mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
                                                            queue="{0}.cancel".format(worker_name),
@@ -634,56 +635,6 @@ class TestExportTasks(ExportTaskBase):
         expected_result = True
         returned_result = parse_result(task_result, "test")
         self.assertEqual(expected_result, returned_result)
-
-    @patch('eventkit_cloud.tasks.export_tasks.finalize_export_provider_task')
-    def test_clean_up_failure_task(self, finalize_data_provider_task):
-        worker_name = "test_worker"
-        task_pid = 55
-        celery_uid = uuid.uuid4()
-        run_uid = self.run.uid
-        canceled_data_provider_task = DataProviderTaskRecord.objects.create(
-            run=self.run,
-            name='test_provider_task',
-            status=TaskStates.CANCELED.value,
-            slug='test_provider_task_slug'
-        )
-        ExportTask.objects.create(
-            data_provider_task=canceled_data_provider_task,
-            status=TaskStates.CANCELED.value,
-            name="test_task",
-            celery_uid=celery_uid,
-            pid=task_pid,
-            worker=worker_name
-        )
-        data_provider_task = DataProviderTaskRecord.objects.create(
-            run=self.run,
-            name='test_provider_task',
-            status=TaskStates.PENDING.value,
-            slug='test_provider_task_slug'
-        )
-        task = ExportTask.objects.create(
-            data_provider_task=data_provider_task,
-            status=TaskStates.PENDING.value,
-            name="test_task",
-            celery_uid=celery_uid,
-            pid=task_pid,
-            worker=worker_name
-        )
-        data_provider_task_uids = [canceled_data_provider_task.uid, data_provider_task.uid]
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-        run_dir = os.path.join(download_root, str(run_uid))
-        clean_up_failure_task.run(data_provider_task_uids=data_provider_task_uids, run_uid=run_uid,
-                                  run_dir=run_dir, worker=worker_name)
-        updated_task = ExportTask.objects.get(uid=task.uid)
-        self.assertEqual(updated_task.status, TaskStates.CANCELED.value)
-        finalize_data_provider_task.si.assert_any_call(data_provider_task_uid=canceled_data_provider_task.uid,
-                  run_uid=run_uid, worker=worker_name)
-        finalize_data_provider_task.si.assert_any_call(data_provider_task_uid=data_provider_task.uid,
-                                                             run_uid=run_uid, worker=worker_name)
-        finalize_data_provider_task.si().set.assert_any_call(queue=worker_name, routing_key=worker_name)
-        finalize_data_provider_task.si().set().apply_async.assert_any_call(interval=1, max_retries=10,
-                                                                             priority=TaskPriority.FINALIZE_PROVIDER.value,
-                                                                             queue=worker_name, routing_key=worker_name)
 
     def test_finalize_data_provider_task(self):
         worker_name = "test_worker"
