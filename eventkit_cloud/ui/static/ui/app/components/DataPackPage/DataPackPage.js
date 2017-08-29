@@ -314,13 +314,19 @@ export class DataPackPage extends React.Component {
 
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton handleToggle={this.handleToggle} />
+                        <DataPackFilterButton 
+                            handleToggle={this.handleToggle}
+                            active={this.state.open}
+                        />
                         {this.state.view == 'list' && window.innerWidth >= 768 ?
                             null
                             : 
                             <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
                         }
-                        <DataPackViewButtons handleViewChange={this.changeView}/>
+                        <DataPackViewButtons 
+                            handleViewChange={this.changeView}
+                            view={this.state.view}
+                        />
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>

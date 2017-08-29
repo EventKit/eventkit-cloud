@@ -10,24 +10,26 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 describe('DataPackFilterButton component', () => {
     const getProps = () => {
         return {
-            open: false,
+            active: false,
             handleToggle: () => {}
         }
     };
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
 
-    it('should render a flat button with proper lable', () => {
+    it('should render a flat button with proper label', () => {
         const props = getProps();
-        const getFontSizeSpy = new sinon.spy(DataPackFilterButton.prototype, 'getLabelFontSize');
         const wrapper = mount(<DataPackFilterButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         expect(wrapper.find(FlatButton)).toHaveLength(1);
-        expect(wrapper.text()).toEqual('Filter');
-        expect(getFontSizeSpy.calledOnce).toBe(true);
-        getFontSizeSpy.restore();
+        expect(wrapper.text()).toEqual('SHOW FILTERS');
+
+        let nextProps = getProps();
+        nextProps.active = true;
+        wrapper.setProps(nextProps);
+        expect(wrapper.text()).toEqual('HIDE FILTERS');
     });
 
     it('should call handleToggle', () => {
@@ -41,35 +43,21 @@ describe('DataPackFilterButton component', () => {
         expect(props.handleToggle.calledOnce).toBe(true);
     });
 
-    it('getLableFontSize should return font sizes from 12 to 16 depending on screenSize', () => {
-        let props = getProps();
+    it('should display differently on small vs large screens', () => {
+        window.resizeTo(1000, 900);
+        expect(window.innerWidth).toBe(1000);
+        const props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
+        expect(wrapper.find(FlatButton).props().style.maxWidth).toEqual('none');
+        expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('12px');
+
         window.resizeTo(400, 500);
-        expect(window.innerWidth).toEqual(400);
-        let size = wrapper.instance().getLabelFontSize();
-        expect(size).toEqual('12px');
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        size = wrapper.instance().getLabelFontSize();
-        expect(size).toEqual('13px');
-
-        window.resizeTo(900, 1000);
-        expect(window.innerWidth).toEqual(900);
-        size = wrapper.instance().getLabelFontSize();
-        expect(size).toEqual('14px');
-
-        window.resizeTo(1100, 1200);
-        expect(window.innerWidth).toEqual(1100);
-        size = wrapper.instance().getLabelFontSize();
-        expect(size).toEqual('15px');
-
-        window.resizeTo(1300, 1400);
-        expect(window.innerWidth).toEqual(1300);
-        size = wrapper.instance().getLabelFontSize();
-        expect(size).toEqual('16px');
+        expect(window.innerWidth).toBe(400);
+        wrapper.update();
+        expect(wrapper.find(FlatButton).props().style.maxWidth).toEqual('40px');
+        expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('10px');
     });
 });
