@@ -29,7 +29,7 @@ export class DataPackList extends Component {
     }
 
     isSameOrderType(unknown, known) {
-        return unknown.charAt(0) == '-' ? unknown.substring(1) == known : unknown == known;
+        return unknown.replace(/-/, '') == known.replace(/-/, '');
     }
 
     //If it is a 'reversed' order the arrow should be up, otherwise it should be down
@@ -120,7 +120,7 @@ export class DataPackList extends Component {
                                         </div>
                                     </TableHeaderColumn>
                                     <TableHeaderColumn style={styles.dateColumn}>
-                                        <div onClick={() => {this.handleOrder('started_at')}} style={styles.clickable}>
+                                        <div onClick={() => {this.handleOrder('-started_at')}} style={styles.clickable}>
                                             <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
                                             {this.getIcon('started_at')}
                                         </div>
@@ -144,12 +144,12 @@ export class DataPackList extends Component {
                                         </div>
                                     </TableHeaderColumn>
                                     <TableHeaderColumn style={styles.featuredColum}>
-                                        <div onClick={() => {this.handleOrder('job__featured')}} style={styles.clickable}>
+                                        <div onClick={() => {this.handleOrder('-job__featured')}} style={styles.clickable}>
                                             <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__featured'))}>Featured</span>
                                             {this.getIcon('job__featured')}
                                         </div>
                                     </TableHeaderColumn>
-                                    <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
+                                    <TableHeaderColumn style={{padding: '0px', width: '35px', height: 'inherit'}}/>
                                 </TableRow>
                             </TableHeader>
                         </Table>

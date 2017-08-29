@@ -91,7 +91,6 @@ export class DataPackListItem extends Component {
                 borderRadius: '0px',
                 borderTop: 'grey 1px solid',
                 paddingBottom: '0px',
-                // border: 'none',
                 position: 'relative'
             },
             cardTitle:{
