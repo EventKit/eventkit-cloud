@@ -59,9 +59,10 @@ class TestExportTaskFactory(TestCase):
 
     @patch('eventkit_cloud.tasks.task_factory.os')
     @patch('eventkit_cloud.tasks.task_factory.get_invalid_licenses')
+    @patch('eventkit_cloud.tasks.task_factory.get_zip_task_chain')
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, finalize_task, mock_invalid_licenses, mock_os):
+    def test_task_factory(self, task_factory_chain, finalize_task, get_zip_task_chain, mock_invalid_licenses, mock_os):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
@@ -81,6 +82,7 @@ class TestExportTaskFactory(TestCase):
         task_factory_chain.assert_called()
         finalize_task.s.assert_called()
         mock_os.makedirs.assert_called()
+        get_zip_task_chain.assert_called()
 
         # Test that run is prevented and deleted if the user has not agreed to the licenses.
         mock_invalid_licenses.return_value = ['invalid-licenses']
