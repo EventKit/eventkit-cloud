@@ -49,6 +49,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
+            providers: {},
             view: 'map',
             pageLoading: true,
             order: '-job__featured',
@@ -76,11 +77,9 @@ export class DataPackPage extends React.Component {
             }
         }
     }
-    componentDidMount() {
-        this.props.getProviders();
-    }
 
     componentDidMount() {
+        this.props.getProviders();
         this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -123,6 +122,8 @@ export class DataPackPage extends React.Component {
             maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
         }
 
+        const providers = Object.keys(this.state.providers);
+
         let params = '';
         params += `page_size=${this.state.pageSize}`;
         params += order ? `&ordering=${order}`: '';
@@ -132,6 +133,7 @@ export class DataPackPage extends React.Component {
         params += minDate;
         params += maxDate;
         params += this.state.search ? `&search_term=${this.state.search}` : '';
+        params += providers.length ? `&providers=${providers.join(',')}` : '';
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
@@ -316,20 +318,27 @@ export class DataPackPage extends React.Component {
 
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton handleToggle={this.handleToggle} />
+                        <DataPackFilterButton 
+                            handleToggle={this.handleToggle}
+                            active={this.state.open}
+                        />
                         {this.state.view == 'list' && window.innerWidth >= 768 ?
                             null
                             : 
                             <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
                         }
-                        <DataPackViewButtons handleViewChange={this.changeView}/>
+                        <DataPackViewButtons 
+                            handleViewChange={this.changeView}
+                            view={this.state.view}
+                        />
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>
                     <FilterDrawer 
                         onFilterApply={this.handleFilterApply} 
                         onFilterClear={this.handleFilterClear}
-                        open={this.state.open}/>
+                        open={this.state.open}
+                        providers={this.props.providers}/>
 
                     {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
