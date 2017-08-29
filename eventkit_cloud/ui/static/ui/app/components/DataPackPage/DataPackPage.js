@@ -49,6 +49,7 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
+            providers: {},
             view: 'map',
             pageLoading: true,
             order: '-started_at',
@@ -76,11 +77,9 @@ export class DataPackPage extends React.Component {
             }
         }
     }
-    componentDidMount() {
-        this.props.getProviders();
-    }
 
     componentDidMount() {
+        this.props.getProviders();
         this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -121,6 +120,8 @@ export class DataPackPage extends React.Component {
             maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
         }
 
+        const providers = Object.keys(this.state.providers);
+
         let params = '';
         params += `page_size=${this.state.pageSize}`;
         params += this.state.order ? `&ordering=${this.state.order}`: '';
@@ -130,6 +131,7 @@ export class DataPackPage extends React.Component {
         params += minDate;
         params += maxDate;
         params += this.state.search ? `&search_term=${this.state.search}` : '';
+        params += providers.length ? `&providers=${providers.join(',')}` : '';
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
@@ -333,7 +335,8 @@ export class DataPackPage extends React.Component {
                     <FilterDrawer 
                         onFilterApply={this.handleFilterApply} 
                         onFilterClear={this.handleFilterClear}
-                        open={this.state.open}/>
+                        open={this.state.open}
+                        providers={this.props.providers}/>
 
                     {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
