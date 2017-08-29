@@ -183,7 +183,7 @@ export class ProviderRow extends React.Component {
 
 
     getTaskLink(task) {
-        if(task.result == null){
+        if (!task.result.hasOwnProperty('url')) {
             return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{task.name}</span>
         }
         else {
@@ -192,7 +192,7 @@ export class ProviderRow extends React.Component {
     }
 
     getTaskDownloadIcon(task) {
-        if(task.result == null){
+        if (!task.result.hasOwnProperty('url')) {
             return <CloudDownload key={task.result == null ? '' : task.result.url} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {

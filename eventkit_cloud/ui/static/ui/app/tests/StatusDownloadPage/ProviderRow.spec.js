@@ -333,18 +333,18 @@ describe('ProviderRow component', () => {
         const props = getProps();
         const getTaskLink = new sinon.spy(ProviderRow.prototype, 'getTaskLink');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskLink(tasks);
+        wrapper.instance().getTaskLink(props.provider.tasks[0]);
         expect(getTaskLink.calledOnce).toBe(true);
-        expect(getTaskLink.calledWith(tasks)).toBe(true);
+        expect(getTaskLink.calledWith(props.provider.tasks[0])).toBe(true);
     });
 
     it('getTaskDownloadIcon should be called with correct data', () => {
         const props = getProps();
         const getTaskIcon = new sinon.spy(ProviderRow.prototype, 'getTaskDownloadIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskDownloadIcon(tasks);
+        wrapper.instance().getTaskDownloadIcon(props.provider.tasks[0]);
         expect(getTaskIcon.calledOnce).toBe(true);
-        expect(getTaskIcon.calledWith(tasks)).toBe(true);
+        expect(getTaskIcon.calledWith(props.provider.tasks[0])).toBe(true);
     });
 
     it('getProviderLink should be called with the icon from a given provider', () => {
@@ -406,6 +406,7 @@ const tasks = [
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         "result": {
+            "file":"osm.pkg",
             "size": "1.234 MB",
             "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         },
