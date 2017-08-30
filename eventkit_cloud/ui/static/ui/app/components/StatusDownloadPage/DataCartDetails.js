@@ -33,6 +33,8 @@ export class DataCartDetails extends React.Component {
             cloneDialogOpen: false,
             providerDesc: '',
             providerDialogOpen: false,
+            formatsDialogOpen: false,
+            projectionsDialogOpen: false,
         };
     }
 
@@ -163,6 +165,22 @@ export class DataCartDetails extends React.Component {
         let providerDesc = propsProvider.service_description.toString();
         let providerName = propsProvider.name.toString();
         this.setState({providerDesc, providerName, providerDialogOpen: true})
+    };
+
+    handleFormatsClose = () => {
+        this.setState({formatsDialogOpen: false});
+    };
+
+    handleFormatsOpen() {
+        this.setState({formatsDialogOpen: true})
+    };
+
+    handleProjectionsClose = () => {
+        this.setState({projectionsDialogOpen: false});
+    };
+
+    handleProjectionsOpen() {
+        this.setState({projectionsDialogOpen: true})
     };
 
     handleDelete = () => {
@@ -304,6 +322,30 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleProviderClose.bind(this)}
             />,
         ];
+
+        const formatsInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleFormatsClose.bind(this)}
+            />,
+        ];
+        const projectionsInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProjectionsClose.bind(this)}
+            />,
+        ];
+
         return (
             <div>
                 <div>
@@ -480,11 +522,35 @@ export class DataCartDetails extends React.Component {
                         </tr>
                         <tr>
                             <td style={styles.tdHeader}>File Formats</td>
-                            <td style={styles.tdData}>.gpkg</td>
+
+                            <td style={styles.tdData}>.gpkg<Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
+                            <Dialog
+                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                actions={formatsInfoActions}
+                                modal={false}
+                                open={this.state.formatsDialogOpen}
+                                onRequestClose={this.handleFormatsClose.bind(this)}
+                            >
+                                            <span><strong>Format Information</strong>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}><p>EventKit provides all geospatial data in the GeoPackage (.gpkg) format.  </p><p>Additional format support will be added in subsequent versions.</p></div>
+                                            </span>
+                            </Dialog>
                         </tr>
                         <tr>
                             <td style={styles.tdHeader}>Projection</td>
-                            <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)</td>
+                            <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)<Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
+                            <Dialog
+                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                actions={projectionsInfoActions}
+                                modal={false}
+                                open={this.state.projectionsDialogOpen}
+                                onRequestClose={this.handleProjectionsClose.bind(this)}
+                            >
+                                            <span><strong>Projection Information</strong>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}><p>All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. </p><p>This projection is also commonly known by its EPSG code: 4326. </p><p>Additional projection support will be added in subsequent versions. </p></div>
+                                            </span>
+                            </Dialog>
+
                         </tr>
                         </tbody>
                     </table>

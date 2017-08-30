@@ -18,6 +18,9 @@ import '../tap_events'
 import styles from '../../styles/ExportInfo.css'
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js'
+import Info from 'material-ui/svg-icons/action/info';
+import Dialog from 'material-ui/Dialog';
+import RaisedButton from 'material-ui/RaisedButton';
 
 
 export class ExportInfo extends React.Component {
@@ -33,6 +36,8 @@ export class ExportInfo extends React.Component {
             area_str: '',
             expanded: false,
             layers: 'Geopackage',
+            formatsDialogOpen: false,
+            projectionsDialogOpen: false,
         }
         this.onChange = this.onChange.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -207,8 +212,24 @@ export class ExportInfo extends React.Component {
 
         this._map.addLayer(layer)
         this._map.getView().fit(source.getExtent(), this._map.getSize())
-
     }
+
+    handleFormatsClose = () => {
+        this.setState({formatsDialogOpen: false});
+    };
+
+    handleFormatsOpen() {
+        this.setState({formatsDialogOpen: true})
+    };
+
+    handleProjectionsClose = () => {
+        this.setState({projectionsDialogOpen: false});
+    };
+
+    handleProjectionsOpen() {
+        this.setState({projectionsDialogOpen: true})
+    };
+
     render() {
         const style ={
             underlineStyle: {
@@ -222,6 +243,29 @@ export class ExportInfo extends React.Component {
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
+
+        const formatsInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleFormatsClose.bind(this)}
+            />,
+        ];
+        const projectionsInfoActions = [
+            <RaisedButton
+                style={{margin: '10px'}}
+                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
+                buttonStyle={{backgroundColor: '#4598bf'}}
+                disableTouchRipple={true}
+                label="Close"
+                primary={false}
+                onTouchTap={this.handleProjectionsClose.bind(this)}
+            />,
+        ];
 
         return (
             <div className={styles.root} style={style.window}>
@@ -327,7 +371,18 @@ export class ExportInfo extends React.Component {
                                         checked={true}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    />
+                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    <Dialog
+                                        contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                        actions={projectionsInfoActions}
+                                        modal={false}
+                                        open={this.state.projectionsDialogOpen}
+                                        onRequestClose={this.handleProjectionsClose.bind(this)}
+                                    >
+                                            <span><strong>Projection Information</strong>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}><p>All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. </p><p>This projection is also commonly known by its EPSG code: 4326. </p><p>Additional projection support will be added in subsequent versions. </p></div>
+                                            </span>
+                                    </Dialog>
                                 </div>
                             </div>
 
@@ -340,7 +395,18 @@ export class ExportInfo extends React.Component {
                                         checked={true}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    />
+                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    <Dialog
+                                        contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                                        actions={formatsInfoActions}
+                                        modal={false}
+                                        open={this.state.formatsDialogOpen}
+                                        onRequestClose={this.handleFormatsClose.bind(this)}
+                                    >
+                                            <span><strong>Format Information</strong>
+                                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}><p>EventKit provides all geospatial data in the GeoPackage (.gpkg) format.  </p><p>Additional format support will be added in subsequent versions.</p></div>
+                                            </span>
+                                    </Dialog>
                                 </div>
                             </div>
 
