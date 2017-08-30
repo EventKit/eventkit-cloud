@@ -23,14 +23,15 @@ export class DataPackGrid extends Component {
     }
 
     render() {
+        const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginLeft: '10px',
-                marginRight: '10px',
-                paddingBottom: '10px'
+                marginLeft: spacing,
+                marginRight: spacing,
+                paddingBottom: spacing
             },
             gridList: {
                 border: '1px',

@@ -12,9 +12,23 @@ export class DataPackViewButtons extends React.Component {
 
     render() {
         const styles = {
-            button: {height: '35px', width: '22px', padding: '0px', float: 'right'},
-            icon: {color: '#4498c0', height: '22px', width: '22px'},
-            selectedIcon: {color: '#253447', height: '22px', width: '22px', backgroundColor: '#4498c0'}
+            button: {
+                height: '35px', 
+                width: '22px', 
+                padding: '0px', 
+                float: 'right'
+            },
+            icon: {
+                color: '#4498c0', 
+                height: '22px', 
+                width: '22px'
+            },
+            selectedIcon: {
+                color: '#253447', 
+                height: '22px', 
+                width: '22px', 
+                backgroundColor: '#4498c0'
+            }
         }
         return (
             <div style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>

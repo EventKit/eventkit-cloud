@@ -97,14 +97,52 @@ export class DataPackListItem extends Component {
                 wordWrap: 'break-word',
                 padding: '15px',
             },
-            completeIcon: {height: '18px', float: 'right', color: '#bcdfbb', opacity: '0.6'},
-            errorIcon: {height: '18px', float: 'right', color: '#ce4427', opacity: '0.6'},
-            runningIcon: {height: '18px', float: 'right', color: '#f4D225'},
-            unpublishedIcon: {height: '18px', float: 'right', color: 'grey', marginRight: '5px'},
-            publishedIcon : {height: '18px', float: 'right', color: '#bcdfbb', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey'},
-            eventText: {height: '18px', lineHeight: '18px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'},
-            titleLink: {height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}
+            completeIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#bcdfbb', 
+                opacity: '0.6'
+            },
+            errorIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#ce4427', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#f4D225'
+            },
+            unpublishedIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: 'grey', 
+                marginRight: '5px'
+            },
+            publishedIcon : {
+                height: '18px', 
+                float: 'right', 
+                color: '#bcdfbb', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey'
+            },
+            eventText: {
+                height: '18px', 
+                lineHeight: '18px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap'
+            },
+            titleLink: {
+                height: '36px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap'
+            }
         };
 
         const onMouseEnter = this.props.onHoverStart ? () => {this.props.onHoverStart(this.props.run.uid)} : null;

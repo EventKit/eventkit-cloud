@@ -264,7 +264,7 @@ export class DataPackPage extends React.Component {
                 height: window.innerHeight - 231,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
-                marginTop: '10px',
+                marginTop: window.innerWidth > 575 ? '10px' : '2px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
