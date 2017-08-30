@@ -47,23 +47,59 @@ export class DataPackList extends Component {
     }
 
     render() {
+        const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginLeft: '10px',
-                marginRight: '10px',
-                paddingBottom: '10px'
+                marginLeft: spacing,
+                marginRight: spacing,
+                paddingBottom: spacing
             },
-            clickable: {cursor: 'pointer', width: 'min-content'},
-            tableRow: {marginLeft: '12px', paddingRight: '6px', color: '#fff', height: '50px'},
-            nameColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            eventColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            dateColumn: {width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            statusColumn: {width: '65px' ,padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
-            permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
-            ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
+            clickable: {
+                cursor: 'pointer', 
+                width: 'min-content'
+            },
+            tableRow: {
+                marginLeft: '12px', 
+                paddingRight: '6px', 
+                color: '#fff', 
+                height: '50px'
+            },
+            nameColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            eventColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            dateColumn: {
+                width: '98px', 
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            statusColumn: {
+                width: '65px',
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'center', 
+                height: 'inherit'
+            },
+            permissionsColumn: {
+                width: '100px', 
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'center', 
+                height: 'inherit'
+            },
+            ownerColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
         };
 
         const load = <LoadButtons
@@ -82,7 +118,7 @@ export class DataPackList extends Component {
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
-                            style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                            style={{width: '100%', minWidth: '360px'}}
                         >
                         {this.props.runs.map((run) => (
                             <DataPackListItem

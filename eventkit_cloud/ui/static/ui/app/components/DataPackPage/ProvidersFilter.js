@@ -16,10 +16,23 @@ export class ProvidersFilter extends React.Component {
         }
 
         const styles = {
-            drawerSection: {width: '100%', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
-            checkbox: {width: '100%', float: 'left'},
-            checkboxIcon: {fill: 'grey', marginRight: '5px'},
-            checkboxLabel: {color: 'grey'}
+            drawerSection: {
+                width: '100%', 
+                paddingLeft: '10px', 
+                paddingRight: '10px', 
+                lineHeight: '36px'
+            },
+            checkbox: {
+                width: '100%', 
+                float: 'left'
+            },
+            checkboxIcon: {
+                fill: 'grey',
+                marginRight: '5px'
+            },
+            checkboxLabel: {
+                color: 'grey'
+            }
         };
 
         return (

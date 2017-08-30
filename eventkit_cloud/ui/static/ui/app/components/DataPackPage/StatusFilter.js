@@ -12,7 +12,34 @@ export class StatusFilter extends Component {
 
     render () {
         const styles = {
-            drawerSection: {width: '100%', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
+            drawerSection: {
+                width: '100%', 
+                paddingLeft: '10px', 
+                paddingRight: '10px', 
+                lineHeight: '36px'
+            },
+            check: {
+                float: 'right', 
+                marginLeft: '20px', 
+                color: '#bcdfbb', 
+                marginBottom: '2px'
+            },
+            sync: {
+                float: 'right', 
+                marginLeft: '20px', 
+                fill: '#f4D225', 
+                height: '26px', 
+                marginBottom: '2px'
+            },
+            error: {
+                float: 'right', 
+                marginLeft: '20px', 
+                fill: '#ce4427', 
+                height: '21px', 
+                marginBottom: '4px', 
+                marginTop: '4px', 
+                opacity: '0.6'
+            }
         }
         return (
             <div style={styles.drawerSection}>
@@ -26,7 +53,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({completed: v})}}
                         checked={this.props.completed}
                     />
-                    <NavigationCheck style={{float: 'right', marginLeft: '20px', color: '#bcdfbb', marginBottom: '2px'}}/>
+                    <NavigationCheck style={styles.check}/>
                     
                     <Checkbox
                         label={'Running'}
@@ -36,7 +63,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({submitted: v})}}
                         checked={this.props.submitted}
                     />
-                    <NotificationSync style={{float: 'right', marginLeft: '20px', fill: '#f4D225', height: '26px', marginBottom: '2px'}}/>
+                    <NotificationSync style={styles.sync}/>
 
                     <Checkbox
                         label={'Error'}
@@ -46,7 +73,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({incomplete: v})}}
                         checked={this.props.incomplete}
                     />
-                    <AlertError style={{float: 'right', marginLeft: '20px', fill: '#ce4427', height: '21px', marginBottom: '4px', marginTop: '4px', opacity: '0.6'}}/>
+                    <AlertError style={styles.error}/>
                 </div>
             </div>
         )

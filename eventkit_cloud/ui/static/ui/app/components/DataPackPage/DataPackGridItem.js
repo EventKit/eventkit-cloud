@@ -140,14 +140,48 @@ export class DataPackGridItem extends Component {
                 wordWrap: 'break-word',
                 padding: '10px'
             },
-            cardTitle2: {fontSize: titleFontSize, height: '36px'},
-            cardSubtitle: {fontSize: cardTextFontSize},
-            completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
-            errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
-            runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
-            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
+            cardTitle2: {
+                fontSize: titleFontSize, 
+                height: '36px'
+            },
+            cardSubtitle: {
+                fontSize: cardTextFontSize
+            },
+            completeIcon: {
+                float: 'left', 
+                color: '#bcdfbb', 
+                fontSize: '20px'
+            },
+            errorIcon: {
+                float: 'left', 
+                color: '#ce4427', 
+                fontSize: '20px', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                float: 'left', 
+                color: '#f4D225', 
+                fontSize: '22px'
+            },
+            unpublishedIcon: {
+                float: 'right', 
+                color: 'grey', 
+                fontSize: '18px', 
+                marginRight: '5px'
+            },
+            publishedIcon: {
+                float: 'right', 
+                color: '#bcdfbb', 
+                fontSize: '20px', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey', 
+                padding: '0px, 10px', 
+                margin: '0px', 
+                fontSize: cardTextFontSize
+            },
             cardTextMinimized: {
                 position: 'absolute',
                 wordWrap: 'break-word',
