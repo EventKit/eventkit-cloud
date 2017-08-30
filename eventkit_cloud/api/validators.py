@@ -261,39 +261,6 @@ def validate_content_type(upload, config_type):
     return content_type
 
 
-def validate_preset(upload):
-    """
-    Validates a JOSM preset against tagging-preset.xsd.
-
-    Args:
-        upload: the uploaded preset.
-
-    Raises:
-        ValidationError: if the preset is invalid.
-    """
-    path = os.path.dirname(os.path.realpath(__file__))
-    schema = StringIO(open(path + '/presets/tagging-preset.xsd').read())
-    xmlschema_doc = etree.parse(schema)
-    xmlschema = etree.XMLSchema(xmlschema_doc)
-    upload.open()
-    xml = StringIO(upload.read())
-    try:
-        tree = etree.parse(xml)
-    except Exception as e:
-        logger.debug(e)
-        detail = OrderedDict()
-        detail['id'] = _('invalid_content')
-        detail['message'] = _('The uploaded preset file is invalid. %(error)s') % {'error': str(e)}
-        raise serializers.ValidationError(detail)
-    """Validate the uploaded preset."""
-    valid = xmlschema.validate(tree)
-    if not valid:
-        detail = OrderedDict()
-        detail['id'] = _('invalid_content')
-        detail['message'] = _('The uploaded preset file is an invalid JOSM preset.')
-        raise serializers.ValidationError(detail)
-
-
 def get_geodesic_area(geom):
     """
     Returns the geodesic area of the provided geometry.
