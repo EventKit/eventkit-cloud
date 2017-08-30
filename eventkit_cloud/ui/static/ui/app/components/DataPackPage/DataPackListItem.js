@@ -16,6 +16,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import { List, ListItem} from 'material-ui/List'
 import CustomScrollbar from '../CustomScrollbar';
+import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackListItem extends Component {
     constructor(props) {
@@ -90,10 +91,11 @@ export class DataPackListItem extends Component {
                 borderRadius: '0px',
                 borderTop: 'grey 1px solid',
                 paddingBottom: '0px',
+                position: 'relative'
             },
             cardTitle:{
                 wordWrap: 'break-word',
-                padding: '10px 15px',
+                padding: '15px',
             },
             completeIcon: {height: '18px', float: 'right', color: '#bcdfbb', opacity: '0.6'},
             errorIcon: {height: '18px', float: 'right', color: '#ce4427', opacity: '0.6'},
@@ -117,6 +119,7 @@ export class DataPackListItem extends Component {
                 onMouseLeave={onMouseLeave}
                 onClick={onClick}
             >
+                <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 

@@ -74,10 +74,11 @@ describe('DataPackSortDropDown component', () => {
         });
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
-        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Newest');
-        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Oldest ');
-        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).toEqual('Name (A-Z)');
-        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).toEqual('Name (Z-A)');
+        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Featured');        
+        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Newest');
+        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).toEqual('Oldest ');
+        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).toEqual('Name (A-Z)');
+        expect(menu.childAt(1).childAt(0).childAt(4).node.props.primaryText).toEqual('Name (Z-A)');
     });
     
     it('should call onChange when an item is selected', () => {
