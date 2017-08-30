@@ -228,12 +228,7 @@ export class ProviderRow extends React.Component {
     }
 
     getToggleCellWidth() {
-        if(window.innerWidth <= 767) {
-            return '30px';
-        }
-        else {
-            return '50px';
-        }
+        return '50px';
     }
 
     handleProviderClose = () => {

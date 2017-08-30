@@ -131,8 +131,8 @@ export class StatusDownload extends React.Component {
                 backgroundRepeat: 'repeat repeat'
             },
             content: {
-                paddingTop:'30px',
-                paddingBottom: '30px',
+                paddingTop: marginPadding,
+                paddingBottom: marginPadding,
                 paddingLeft: marginPadding,
                 paddingRight: marginPadding,
                 margin: 'auto',
