@@ -35,7 +35,7 @@ describe('DataPackTableItem component', () => {
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(7);
+        expect(wrapper.find(TableRowColumn)).toHaveLength(8);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual('/status/' + run.job.uid);
         expect(wrapper.find(IconMenu)).toHaveLength(1);

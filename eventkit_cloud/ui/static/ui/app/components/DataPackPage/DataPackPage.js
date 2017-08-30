@@ -52,7 +52,7 @@ export class DataPackPage extends React.Component {
             providers: {},
             view: 'map',
             pageLoading: true,
-            order: '-started_at',
+            order: '-job__featured',
             ownerFilter: '',
             pageSize: 12,
             loading: false,
@@ -112,6 +112,8 @@ export class DataPackPage extends React.Component {
             if(this.state.status[key]) {status.push(key.toUpperCase())};
         });
 
+        const order = this.state.order.includes('featured') ? this.state.order + ',-started_at' : this.state.order;
+
         const minDate = this.state.minDate ? `&min_date=${this.state.minDate.toISOString().substring(0, 10)}` : '';
         let maxDate = ''
         if(this.state.maxDate) {
@@ -124,7 +126,7 @@ export class DataPackPage extends React.Component {
 
         let params = '';
         params += `page_size=${this.state.pageSize}`;
-        params += this.state.order ? `&ordering=${this.state.order}`: '';
+        params += order ? `&ordering=${order}`: '';
         params += this.state.ownerFilter ? `&user=${this.state.ownerFilter}`: '';
         params += this.state.published ? `&published=${this.state.published}` : '';
         params += status.length ? `&status=${status.join(',')}` : '';
@@ -172,7 +174,7 @@ export class DataPackPage extends React.Component {
     }
 
     changeView(view) {
-        if (['started_at', '-started_at', 'job__name', '-job__name'].indexOf(this.state.order) < 0) {
+        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
             this.setState({order: '-started_at', loading: true}, () => {
                 let promise = this.makeRunRequest();
                 promise.then(() => this.setState({view: view}));
@@ -259,7 +261,7 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 236,
+                height: window.innerHeight - 231,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',

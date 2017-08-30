@@ -64,6 +64,7 @@ export class DataPackSortDropDown extends React.Component {
                 underlineStyle={styles.underline}
                 selectedMenuItemStyle={styles.selectedItem}
             >
+                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__featured'} primaryText={"Featured"}/>
                 <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-started_at'} primaryText={"Newest"}/>
                 <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'started_at'} primaryText={"Oldest "}/>
                 <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'job__name'} primaryText={"Name (A-Z)"}/>
