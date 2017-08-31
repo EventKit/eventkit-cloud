@@ -72,7 +72,7 @@ describe('DataCartDetails component', () => {
         table = wrapper.find('table').at(6);
         expect(table.find('tr').at(0).find('td').first().text()).toEqual('Description');
         expect(table.find('tr').at(0).find('td').last().text()).toEqual('test');
-        expect(table.find('tr').at(1).find('td').first().text()).toEqual('Project/Category');
+        expect(table.find('tr').at(1).find('td').first().text().replace(/\s/g, ' ')).toEqual('Project / Category');
         expect(table.find('tr').at(1).find('td').last().text()).toEqual('test');
         expect(table.find('tr').at(2).find('td').first().text()).toEqual('Data Sources');
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
