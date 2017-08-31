@@ -17,6 +17,7 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 import {browserHistory} from 'react-router';
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -134,19 +135,54 @@ export class DataPackGridItem extends Component {
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
+                position: 'relative'
             },
             cardTitle:{
                 wordWrap: 'break-word',
-                padding: '10px'
+                padding: '15px 10px 10px'
             },
-            cardTitle2: {fontSize: titleFontSize, height: '36px'},
-            cardSubtitle: {fontSize: cardTextFontSize},
-            completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
-            errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
-            runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
-            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
+            cardTitle2: {
+                fontSize: titleFontSize, 
+                height: '36px'
+            },
+            cardSubtitle: {
+                fontSize: cardTextFontSize
+            },
+            completeIcon: {
+                float: 'left', 
+                color: '#bcdfbb', 
+                fontSize: '20px'
+            },
+            errorIcon: {
+                float: 'left', 
+                color: '#ce4427', 
+                fontSize: '20px', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                float: 'left', 
+                color: '#f4D225', 
+                fontSize: '22px'
+            },
+            unpublishedIcon: {
+                float: 'right', 
+                color: 'grey', 
+                fontSize: '18px', 
+                marginRight: '5px'
+            },
+            publishedIcon: {
+                float: 'right', 
+                color: '#bcdfbb', 
+                fontSize: '20px', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey', 
+                padding: '0px, 10px', 
+                margin: '0px', 
+                fontSize: cardTextFontSize
+            },
             cardTextMinimized: {
                 position: 'absolute',
                 wordWrap: 'break-word',
@@ -191,6 +227,7 @@ export class DataPackGridItem extends Component {
 
         return (
             <Card style={styles.card} key={this.props.run.uid} expanded={this.state.expanded} onExpandChange={this.handleExpandChange}>
+                <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 

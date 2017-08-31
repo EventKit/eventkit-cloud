@@ -219,7 +219,7 @@ export class DataCartDetails extends React.Component {
                 backgroundColor: '#f8f8f8', 
                 padding: '10px', 
                 fontWeight: 'bold', 
-                width: '15%'
+                width: '140px'
             },
             tdData: {
                 backgroundColor: '#f8f8f8', 
@@ -236,7 +236,7 @@ export class DataCartDetails extends React.Component {
                 fontWeight: 'bold'
             },
             textField: {
-                ontSize: '14px', 
+                fontSize: '14px', 
                 height: '36px', 
                 width: '0px', 
                 display:'inlineBlock'
@@ -244,10 +244,10 @@ export class DataCartDetails extends React.Component {
             dropDown: {
                 height: '30px', 
                 lineHeight: '35px', 
-                float: 'left'
+                float: 'left',
             },
             item: {
-                fontSize: '14px'
+                fontSize: '14px',
             },
             icon: {
                 height: '30px', 
@@ -498,7 +498,7 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdData}>{this.props.cartDetails.job.description}</td>
                         </tr>
                         <tr>
-                            <td style={styles.tdHeader}>Project/Category</td>
+                            <td style={styles.tdHeader}>Project&nbsp;/ Category</td>
                             <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
                         </tr>
                         <tr>
