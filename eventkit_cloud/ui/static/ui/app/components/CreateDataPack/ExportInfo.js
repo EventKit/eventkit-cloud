@@ -239,6 +239,7 @@ export class ExportInfo extends React.Component {
                                 style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
                                 inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                maxLength={100}
                             />
                             <TextField
                                 underlineStyle={style.underlineStyle}
@@ -252,6 +253,7 @@ export class ExportInfo extends React.Component {
                                 style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
                                 textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                maxLength={1000}
                             />
                             <TextField
                                 underlineStyle={style.underlineStyle}
@@ -263,6 +265,7 @@ export class ExportInfo extends React.Component {
                                 style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
                                 inputStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
+                                maxLength={100}
                             />
                             <div className={styles.checkbox}>
                                 <Checkbox

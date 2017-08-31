@@ -337,6 +337,40 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
+    it('componentWillReceiveProps should fit to draw layer no features are added', () => {
+        const props = getProps();
+        const newSpy = new sinon.spy(MapView.prototype, 'hasNewRuns');
+        const wrapper = getWrapper(props);
+        const clearSpy = new sinon.spy(ol.source.Vector.prototype, 'clear');
+        const addRunSpy = new sinon.spy(wrapper.instance(), 'addRunFeatures');
+        const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Point([-10, 10])
+        });
+
+        wrapper.instance().drawLayer = {
+            getSource: () => {
+                return {
+                    getFeatures: () => {return [feature]},
+                    getExtent: () => {return [-10, -10, 10, 10]}
+                }
+            }
+        }
+        wrapper.instance().source.getExtent = () => {return [-8,-8,8,8]};
+        let nextProps = getProps();
+        nextProps.runs = [];
+        wrapper.setProps({...nextProps});
+        expect(newSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(addRunSpy.calledOnce).toBe(true);
+        expect(addRunSpy.calledWith(nextProps.runs, wrapper.instance().source)).toBe(true);
+        expect(zoomSpy.calledOnce).toBe(true);
+        newSpy.restore();
+        clearSpy.restore();
+        addRunSpy.restore();
+        zoomSpy.restore();
+    });
+
     it('componentWillReceiveProps should call handleGeoJSONUpload', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -1037,7 +1071,28 @@ describe('MapView component', () => {
         transformSpy.restore();
         addSpy.restore();
         createSpy.restore();
-    })
+    });
+
+    it('if there are no run features, handleSearch should call zoomToGeometry with the search geom', () => {
+        const result = {
+            geometry: {
+                type: "Polygon",
+                coordinates: [[[-77.479588, 38.802139], [-77.401989, 38.802139], [-77.401989, 38.873112], [-77.479588, 38.873112], [-77.479588, 38.802139]]]
+            },
+            type: "Feature",
+        }
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        props.runs = []
+        const getSpy = new sinon.spy(ol.source.Vector.prototype, 'getFeatures');
+        const wrapper = getWrapper(props);
+        const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');        
+        expect(wrapper.instance().handleSearch(result)).toBe(true);
+        expect(getSpy.calledOnce).toBe(true);
+        expect(zoomSpy.calledOnce).toBe(true);
+        getSpy.restore();
+        zoomSpy.restore();
+    });
 
     it('handleCancel should hide warning, set mode to normal, clearDraw, and call onMapFilter', () => {
         const props = getProps();
