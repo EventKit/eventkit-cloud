@@ -224,7 +224,7 @@ export class DataCartDetails extends React.Component {
         });
 
         const styles = {
-            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold', width: '15%'},
+            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold', width: '140px'},
             tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396', wordWrap: 'break-word'},
             subHeading: {fontSize: '16px', alignContent: 'flex-start', color: 'black', paddingBottom: '10px', paddingTop: '30px', fontWeight: 'bold'},
             textField: {fontSize: '14px', height: '36px', width: '0px', display:'inlineBlock'},
@@ -454,7 +454,7 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdData}>{this.props.cartDetails.job.description}</td>
                         </tr>
                         <tr>
-                            <td style={styles.tdHeader}>Project/Category</td>
+                            <td style={styles.tdHeader}>Project&nbsp;/ Category</td>
                             <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
                         </tr>
                         <tr>
