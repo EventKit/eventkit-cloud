@@ -423,4 +423,3 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(DataPackPage);
-
