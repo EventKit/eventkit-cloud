@@ -57,7 +57,7 @@ function checkAuth(store) {
   return (nextState, replace) => {
     let { user } = store.getState();
     if (!user.data){
-        store.dispatch(login())
+        store.dispatch(login(null, this.location.query))
     }
   }
 };
