@@ -19,7 +19,6 @@ INSTALLED_APPS += (
     'eventkit_cloud.ui',
     'eventkit_cloud.utils',
     'eventkit_cloud',
-    'django_classification_banner',
 )
 
 INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
@@ -35,13 +34,6 @@ EXPORT_TASKS = {
     'thematic': 'eventkit_cloud.tasks.export_tasks.ThematicLayersExportTask',
     'gpkg': 'eventkit_cloud.tasks.export_tasks.geopackage_export_task'
 }
-
-
-
-CLASSIFICATION_TEXT = os.getenv('CLASSIFICATION_TEXT', 'Unclassified//FOUO')
-CLASSIFICATION_TEXT_COLOR = os.getenv('CLASSIFICATION_TEXT_COLOR', 'black')
-CLASSIFICATION_BACKGROUND_COLOR = os.getenv('CLASSIFICATION_BACKGROUND_COLOR', 'green')
-# CLASSIFICATION_LINK = os.getenv('CLASSIFICATION_LINK', '/security')
 
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None

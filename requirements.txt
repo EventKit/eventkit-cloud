@@ -18,7 +18,6 @@ Django==1.10.6
 django-auth-ldap==1.2.12
 django-celery-beat==1.0.1
 django-celery-results==1.0.1
-django-classification-banner==0.1.5
 django-extensions==1.7.7
 django-filter==1.0.1
 django-rest-swagger==2.1.2
