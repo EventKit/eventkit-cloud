@@ -58,7 +58,7 @@ export class Form extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        this.props.handleLogin(this.state);
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.query : ""));
     }
 
     handleOAuth(event) {
@@ -165,8 +165,8 @@ export class Form extends React.Component {
 
 function mapDispatchToProps(dispatch) {
     return {
-        handleLogin: (params) => {
-            dispatch(login(params));
+        handleLogin: (params, query) => {
+            dispatch(login(params, query));
         },
     };
 }

@@ -67,7 +67,7 @@ export class LoginPage extends React.Component {
                     <div style={styles.container}>
                         <div style={styles.paperContainer}>
                             <Paper style={styles.paper} zDepth={2}>
-                                <LoginForm/>
+                                <LoginForm {...this.props}/>
                             </Paper>
                         </div>
 
