@@ -261,11 +261,11 @@ export class ProviderRow extends React.Component {
         let licenseData;
         if (propsProvider.license != null) {
             licenseText = <i>Use of this data is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
-            licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
-                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
+            licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={false}>
+                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '14px'}}>
 
                     </TableRowColumn>
-                    <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
+                    <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '0px', fontSize: '12px'}}>
                         {licenseText}
                     </TableRowColumn>
                     <TableRowColumn style={{
@@ -354,10 +354,10 @@ export class ProviderRow extends React.Component {
                 {tasks.map((task) => (
 
                     <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
-                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
+                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '12px'}}>
 
                     </TableRowColumn>
-                        <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', fontSize: textFontSize}}>
+                        <TableRowColumn style={{paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize}}>
                             {this.getTaskLink(task)}
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
@@ -390,19 +390,22 @@ export class ProviderRow extends React.Component {
                     enableSelectAll={false}
                     >
                     <TableRow displayBorder={true}>
-                        <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px'}}>
-                            <Checkbox
-                                disabled={this.props.provider.status != "COMPLETED"}
-                                checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}
-                                name={this.props.provider.uid}
-                                onCheck={this.onChangeCheck}
-                                checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
-                                uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
-                            />
-                        </TableHeaderColumn>
+                        {/*<TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'12px'}}>*/}
+                            {/*<Checkbox*/}
+                                {/*disabled={this.props.provider.status != "COMPLETED"}*/}
+                                {/*checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}*/}
+                                {/*name={this.props.provider.uid}*/}
+                                {/*onCheck={this.onChangeCheck}*/}
+                                {/*checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}*/}
+                                {/*uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}*/}
+                            {/*/>*/}
+                        {/*</TableHeaderColumn>*/}
+                        {/*<TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>*/}
+                            {/*{this.getProviderLink(this.props.provider)}*/}
+                            {/*{this.getProviderDownloadIcon(this.props.provider)}*/}
+                        {/*</TableHeaderColumn>*/}
                         <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
-                            {this.getProviderLink(this.props.provider)}
-                            {this.getProviderDownloadIcon(this.props.provider)}
+                            {this.props.provider.name}
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}

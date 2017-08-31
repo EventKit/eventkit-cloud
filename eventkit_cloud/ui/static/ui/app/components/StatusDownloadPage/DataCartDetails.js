@@ -33,6 +33,7 @@ export class DataCartDetails extends React.Component {
             cloneDialogOpen: false,
             providerDesc: '',
             providerDialogOpen: false,
+            zipFileUrl: null,
         };
     }
 
@@ -48,6 +49,9 @@ export class DataCartDetails extends React.Component {
                 default:
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
+        }
+        if(nextProps.cartDetails.zipfile_url != this.state.zipFileUrl){
+            this.setState({zipFileUrl: nextProps.cartDetails.zipfile_url})
         }
 
     }
@@ -376,7 +380,8 @@ export class DataCartDetails extends React.Component {
                 <div style={{paddingBottom:'10px'}}>
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
                                      onProviderCancel={this.props.onProviderCancel}
-                                     providers={this.props.providers}/>
+                                     providers={this.props.providers}
+                                     zipFileUrl={this.state.zipFileUrl}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                     <div style={styles.subHeading}>

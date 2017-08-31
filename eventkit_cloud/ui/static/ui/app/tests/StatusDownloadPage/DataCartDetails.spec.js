@@ -157,6 +157,22 @@ describe('DataCartDetails component', () => {
         propsSpy.restore();
     });
 
+    it('should handle setting state of zipFileUrl when component updates', () => {
+        let props = getProps();
+        props.cartDetails.zipfile_url = null;
+        console.log(props)
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getProps();
+        nextProps.cartDetails.zipfile_url = 'fakeFileUrl.zip';
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        stateSpy.restore();
+        propsSpy.restore();
+    });
+
     it('should call initializeOpenLayers, _setTableColors, _setPermission, _setExpirationDate and _setMaxDate set on mount', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataCartDetails.prototype, 'componentDidMount');
