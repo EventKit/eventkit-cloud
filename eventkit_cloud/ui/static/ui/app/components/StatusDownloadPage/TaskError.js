@@ -54,11 +54,13 @@ export class TaskError extends React.Component {
 
                 <BaseDialog
                     show={this.state.taskErrorDialogOpen}
-                    title={<strong>{task.name} has <strong style={{color: '#ce4427'}}>1 error. </strong></strong>}
+                    title={<strong id='error-title'>{task.name} has <strong style={{color: '#ce4427'}}>1 error. </strong></strong>}
                     onClose={this.handleTaskErrorClose}
                 >
-                    <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
-                    {error!= null ? error[0].exception : ''}
+                    <div id='error-data'>
+                        <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
+                        {error!= null ? error[0].exception : ''}
+                    </div>
                 </BaseDialog>
 
             </span>

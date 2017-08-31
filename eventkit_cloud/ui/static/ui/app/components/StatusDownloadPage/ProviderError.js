@@ -57,9 +57,9 @@ export class ProviderError extends React.Component {
         let errorTitle;
         let errorData;
         if(errors.length > 3){
-            errorTitle = <strong>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>;
+            errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>;
             errorData = errors.slice(0,3).map((error, index) => (
-                <div style={{marginTop:'15px', width:'100%'}} key={index} >
+                <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
                     <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                     {error}
                     <Divider style={{marginTop: '5px'}}/>
@@ -67,9 +67,9 @@ export class ProviderError extends React.Component {
             ))
         }
         else {
-            errorTitle = <strong>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
+            errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
             errorData = errors.map((error, index) => (
-                <div style={{marginTop:'15px', width:'100%'}} key={index} >
+                <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
                     <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                     {error}
                     <Divider style={{marginTop: '15px'}}/>

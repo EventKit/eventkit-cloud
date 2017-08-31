@@ -17,6 +17,7 @@ import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
+import BaseDialog from '../../components/BaseDialog';
 
 describe('ProviderRow component', () => {
 
@@ -220,9 +221,7 @@ describe('ProviderRow component', () => {
         console.log(props.provider)
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
-        expect(wrapper.find('span')).toHaveLength(1);
-        expect(wrapper.find('div')).toHaveLength(1);
-        expect(wrapper.find('div').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
     });
 
