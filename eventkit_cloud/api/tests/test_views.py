@@ -3,9 +3,7 @@ from __future__ import absolute_import
 import json
 import logging
 import os
-from datetime import datetime,timedelta,date
-from tempfile import NamedTemporaryFile
-from unittest import skip
+from datetime import datetime,timedelta
 import uuid
 
 from rest_framework import status
