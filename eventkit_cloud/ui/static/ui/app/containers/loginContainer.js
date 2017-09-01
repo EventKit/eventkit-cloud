@@ -108,6 +108,7 @@ export class Form extends React.Component {
                     placeholder="Username"
                     style={styles.input}
                     type="text"
+                    maxLength="150"
                 />
                 <input 
                     id="password"
@@ -116,6 +117,7 @@ export class Form extends React.Component {
                     onChange={this.onChange}
                     style={styles.input}
                     type="password"
+                    maxLength="256"
                 />
                 <RaisedButton 
                     style={{margin: '30px auto', width: '150px'}}
