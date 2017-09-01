@@ -13,10 +13,11 @@ from django.utils import timezone
 from celery import chain
 
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
-                                               osm_create_styles_task, bounds_export_task,
+                                               create_style_task, bounds_export_task,
                                                prepare_for_export_zip_task, zip_file_task)
 
 from ..jobs.models import Job
+from ..ui.helpers import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
                                   wait_for_providers_task, TaskStates)
 
@@ -243,8 +244,6 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
     return chain(
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
-                    task=osm_create_styles_task, job_name=job_name),
-        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=bounds_export_task, job_name=job_name),
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
@@ -288,7 +287,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None,
     apply_args = apply_args or dict()
 
     # These should be subclassed from FinalizeRunHookTask
-    hook_tasks = []
+    hook_tasks = [create_style_task]
     hook_task_sigs = []
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous
@@ -300,7 +299,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None,
 
     prepare_zip_sigature = prepare_for_export_zip_task.s(run_uid=run_uid).set(**apply_args)
 
-    zip_task_signature = zip_file_task.s(run_uid=run_uid).set(**apply_args)
+    zip_task_signature = zip_file_task.s(run_uid=run_uid, static_files=get_style_files()).set(**apply_args)
 
     # Use .si() to ignore the result of previous tasks, we just care that finalize_run_task runs last
     finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)

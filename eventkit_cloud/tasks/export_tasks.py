@@ -384,41 +384,6 @@ def osm_data_collection_task(
     return {'result': gpkg_filepath}
 
 
-@app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
-def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None,
-                           provider_slug=None, bbox=None, user_details=None, *args, **kwargs):
-    """
-    Task to create styles for osm.
-    """
-    from .task_runners import normalize_name
-    from audit_logging.file_logging import logging_open
-
-    result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
-    input_gpkg = parse_result(result, 'geopackage')
-
-    job_name = normalize_name(job_name)
-
-    gpkg_file = '{0}.gpkg'.format(job_name)
-    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
-
-    with logging_open(style_file, 'w', user_details=user_details) as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'bbox': bbox,
-                                                                      'job_name': job_name,
-                                                                      'provider_slug': provider_slug}))
-    result['result'] = style_file
-    result['geopackage'] = input_gpkg
-    return result
-
-
 @app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
 def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
     """
@@ -745,42 +710,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
 
 
-def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
-    """ Collects all export provider result files, combines them with @extra_files,
-        and runs a zip_file_task with the resulting set of files.
-    """
-    from eventkit_cloud.tasks.models import ExportRun
-    run = ExportRun.objects.get(uid=run_uid)
-
-    if run.job.include_zipfile:
-        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-        # deleted during cancellation.
-        include_files = []
-
-        for export_provider_task in provider_tasks:
-            if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in export_provider_task.tasks.all():
-                    try:
-                        filename = export_task.result.filename
-                    except Exception:
-                        continue
-                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  export_provider_task.slug, filename)
-                    if not os.path.isfile(full_file_path):
-                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                      export_task.name))
-                        continue
-                    include_files += [full_file_path]
-        # Need to remove duplicates from the list because
-        # some intermediate tasks produce files with the same name.
-        include_files.extend(extra_files)
-        include_files = list(set(include_files))
-        if include_files:
-            zip_file_task.run(run_uid=run_uid, include_files=include_files)
-        else:
-            logger.warn('No files to zip for run_uid/provider_tasks: {}/{}'.format(run_uid, provider_tasks))
-
-
 #This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=LockingTask)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
@@ -923,42 +852,68 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
     return created_files
 
 
+@app.task(name="QGIS Project file (.qgs)", base=FinalizeRunHookTask, bind=True, abort_on_error=False)
+def create_style_task(self, new_zip_filepaths=[], run_uid=None):
+    """
+    Task to create QGIS project file with styles for osm.
+    """
+    from eventkit_cloud.tasks.models import ExportRun
+    run = ExportRun.objects.get(uid=run_uid)
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
+
+    job_name = run.job.name.lower()
+    provider_name = run.provider_tasks.all()[0].name
+
+    gpkg_file = '{}.gpkg'.format(job_name)
+    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
+                                                                  timezone.now().strftime("%Y%m%d")))
+
+    with open(style_file, 'w') as open_file:
+        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
+                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
+                                                                                                              timezone.now().strftime(
+                                                                                                                  "%Y%m%d")),
+                                                                      'layer_id_date_time': '{0}'.format(
+                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
+                                                                          :-3]),
+                                                                      'bbox': [0,0,0,0],
+                                                                      'provider_name': provider_name}))
+    return [style_file]
+
+
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
     from eventkit_cloud.tasks.models import ExportRun
     run = ExportRun.objects.get(uid=run_uid)
 
-    if run.job.include_zipfile:
-        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-        # deleted during cancellation.
+    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+    # deleted during cancellation.
+    include_files = list([])
 
-        include_files = []
-        if extra_files:
-            include_files = list(extra_files)
+    provider_tasks = run.provider_tasks.all()
 
-        provider_tasks = run.provider_tasks.all()
-
-        for provider_task in provider_tasks:
-            if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in provider_task.tasks.all():
-                    try:
-                        filename = export_task.result.filename
-                    except Exception:
-                        continue
-                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  provider_task.slug, filename)
-                    if not os.path.isfile(full_file_path):
-                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                      export_task.name))
-                        continue
+    for provider_task in provider_tasks:
+        if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+            for export_task in provider_task.tasks.all():
+                try:
+                    filename = export_task.result.filename
+                except Exception:
+                    continue
+                full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                 provider_task.slug, filename)
+                if not os.path.isfile(full_file_path):
+                    logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                     export_task.name))
+                    continue
+                # Exclude zip files created by zip_export_provider
+                if full_file_path[:3] != 'zip':
                     include_files += [full_file_path]
-        # Need to remove duplicates from the list because
-        # some intermediate tasks produce files with the same name.
-        include_files = set(include_files)
-        if include_files:
-            zip_file_task.run(run_uid=run_uid, include_files=include_files)
-        else:
-            logger.warn('No files to zip for run_uid: {}'.format(run_uid))
+    # Need to remove duplicates from the list because
+    # some intermediate tasks produce files with the same name.
+    # and add the static resources
+    include_files = set(include_files)
+
+    return include_files
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
