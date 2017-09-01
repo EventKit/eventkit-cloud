@@ -906,7 +906,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
                                                                                      export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if full_file_path[:3] != 'zip':
+                if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
     # Need to remove duplicates from the list because
     # some intermediate tasks produce files with the same name.
