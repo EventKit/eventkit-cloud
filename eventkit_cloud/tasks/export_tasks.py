@@ -385,8 +385,8 @@ def osm_data_collection_task(
 
 
 @app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
-def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
-                           provider_name=None, bbox=None, user_details=None, *args, **kwargs):
+def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None,
+                           provider_slug=None, bbox=None, user_details=None, *args, **kwargs):
     """
     Task to create styles for osm.
     """
@@ -412,7 +412,8 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'bbox': bbox,
-                                                                      'provider_name': provider_name}))
+                                                                      'job_name': job_name,
+                                                                      'provider_slug': provider_slug}))
     result['result'] = style_file
     result['geopackage'] = input_gpkg
     return result

@@ -3,6 +3,7 @@
   <title></title>
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
+    <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }} - {{ provider_slug }}">
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" name="village">
       <customproperties/>
     </layer-tree-layer>
@@ -39,6 +40,7 @@
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ layer_id_date_time }}" name="OSM bounds">
       <customproperties/>
     </layer-tree-layer>
+  </layer-tree-group>
   </layer-tree-group>
   <relations/>
   <mapcanvas>

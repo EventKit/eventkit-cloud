@@ -236,7 +236,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     return task.s(
         run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
         provider_slug=export_provider_task.slug, export_provider_task_uid=export_provider_task_uid, job_name=job_name,
-        user_details=user_details
+        user_details=user_details, bbox=export_provider_task.run.job.extents
     ).set(queue=worker, routing_key=worker)
 
 
