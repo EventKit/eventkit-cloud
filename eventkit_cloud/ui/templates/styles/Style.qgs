@@ -36,6 +36,9 @@
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" name="water">
       <customproperties/>
     </layer-tree-layer>
+    <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ layer_id_date_time }}" name="OSM bounds">
+      <customproperties/>
+    </layer-tree-layer>
   </layer-tree-group>
   <relations/>
   <mapcanvas>
@@ -76,6 +79,7 @@
       <item>{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</item>
+      <item>osm_bounds_osm_{{ layer_id_date_time }}</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
@@ -132,6 +136,11 @@
     <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
       <filegroup open="true" hidden="false">
         <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" visible="1"/>
+      </filegroup>
+    </legendlayer>
+    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="osm_bounds-osm-20170901 bounds MultiPolygon" showFeatureCount="0">
+      <filegroup open="true" hidden="false">
+        <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_{{ layer_id_date_time }}" visible="1"/>
       </filegroup>
     </legendlayer>
   </legend>
