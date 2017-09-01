@@ -14,6 +14,7 @@ import DatePicker from 'material-ui/DatePicker';
 import Info from 'material-ui/svg-icons/action/info'
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -287,24 +288,6 @@ export class DataCartDetails extends React.Component {
             }
         };
 
-        const deleteActions = [
-            <RaisedButton
-                style={{marginRight: '10px'}}
-                labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: 'whitesmoke'}}
-                disableTouchRipple={true}
-                label="Cancel"
-                primary={false}
-                onTouchTap={this.handleDeleteClose.bind(this)}
-            />,<RaisedButton
-                labelStyle={{color: 'red', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: 'whitesmoke'}}
-                disableTouchRipple={true}
-                label="Delete"
-                primary={true}
-                onTouchTap={this.handleDelete.bind(this)}
-            />,
-        ];
         const rerunExportActions = [
             <RaisedButton
                 style={{marginRight: '10px'}}
@@ -340,17 +323,6 @@ export class DataCartDetails extends React.Component {
             />,
         ];
 
-        const providerInfoActions = [
-            <RaisedButton
-                style={{margin: '10px'}}
-                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: '#4598bf'}}
-                disableTouchRipple={true}
-                label="Close"
-                primary={false}
-                onTouchTap={this.handleProviderClose.bind(this)}
-            />,
-        ];
         return (
             <div>
                 <div>
@@ -474,15 +446,11 @@ export class DataCartDetails extends React.Component {
                             onTouchTap={this.handleDeleteOpen.bind(this)}
                             label="DELETE"
                         />
-
-                        <BaseDialog
+                        <DeleteDialog
                             show={this.state.deleteDialogOpen}
-                            title={'DELETE DATAPACK'}
-                            onClose={this.handleDeleteClose}
-                            actions={deleteActions}
-                        >
-                            <strong>Are you sure you want to delete this DataPack?</strong>
-                        </BaseDialog>
+                            handleCancel={this.handleDeleteClose}
+                            handleDelete={this.handleDelete}
+                        />
                     </div>
 
                 </div>
