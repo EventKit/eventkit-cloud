@@ -862,10 +862,9 @@ def create_style_task(self, new_zip_filepaths=[], run_uid=None):
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
     job_name = run.job.name.lower()
-    provider_name = run.provider_tasks.all()[0].name
 
     gpkg_file = '{}.gpkg'.format(job_name)
-    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
+    style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
     with open(style_file, 'w') as open_file:
@@ -876,8 +875,8 @@ def create_style_task(self, new_zip_filepaths=[], run_uid=None):
                                                                       'layer_id_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': [0,0,0,0],
-                                                                      'provider_name': provider_name}))
+                                                                      'bbox': run.job.extents,
+                                                                      'job_name' : job_name}))
     return [style_file]
 
 
@@ -969,9 +968,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     if file_name:
         zip_filename = file_name
     else:
-        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
+        zip_filename = "{0}-{1}-{2}.{3}".format(
             name,
-            project,
             "eventkit",
             date,
             'zip'
@@ -991,12 +989,22 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                date,
-                ext
-            )
+            if filepath.endswith(".qgs"):
+                # put the style file in the root of the zip
+                filename = '{0}{1}'.format(
+                    name,
+                    ext
+                    )
+            else:
+                # Put the files into directories based on their provider_slug
+                # prepend with `data`
+                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                    provider_slug,
+                    name,
+                    date,
+                    ext
+                    )
+
             zipfile.write(
                 filepath,
                 arcname=filename

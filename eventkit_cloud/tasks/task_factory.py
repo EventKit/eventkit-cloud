@@ -243,8 +243,8 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
 def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
     return chain(
-        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
-                    task=bounds_export_task, job_name=job_name),
+        #create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+        #            task=bounds_export_task, job_name=job_name),
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
     )

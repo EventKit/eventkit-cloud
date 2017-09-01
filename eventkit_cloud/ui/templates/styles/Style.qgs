@@ -3,7 +3,7 @@
   <title></title>
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
-    <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }} - {{ provider_slug }}">
+    <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }}">
     <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" name="village">
       <customproperties/>
     </layer-tree-layer>
@@ -155,7 +155,7 @@
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>osm_bounds_osm_{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=boundary</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -414,7 +414,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_amenities_points_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=amenities_points</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -2978,7 +2978,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_amenities_polygons_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3425,7 +3425,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=aviation_lines</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3789,7 +3789,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=aviation_polygons</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4220,7 +4220,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=buildings_polygons</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4599,7 +4599,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_landuse_polygons_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=landuse_polygons</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5409,7 +5409,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5788,7 +5788,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=places_points</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6345,7 +6345,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_rail_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=rail_lines</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=rail_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6663,7 +6663,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_roads_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=roads_lines</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8618,7 +8618,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}</id>
-      <datasource>./{{ layer_id_prefix }}.gpkg|layername=waterways_lines</datasource>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
