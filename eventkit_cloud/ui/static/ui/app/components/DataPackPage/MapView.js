@@ -606,10 +606,10 @@ export class MapView extends Component {
             :
                 {
                     width: '70%', 
-                    height: window.innerHeight - 236, 
+                    height: window.innerHeight - 241,
                     display: 'inline-block', 
                     overflow: 'hidden', 
-                    padding: '0px 10px 10px 3px', 
+                    padding: '0px 10px 0px 3px',
                     position: 'relative'
                 },
             list: window.innerWidth < 768 ?
@@ -618,7 +618,7 @@ export class MapView extends Component {
                 }
             :
                 {
-                    height: window.innerHeight - 236, 
+                    height: window.innerHeight - 241,
                     width: '30%', 
                     display: 'inline-block'
                 },
