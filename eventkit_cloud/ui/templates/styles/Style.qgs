@@ -4,52 +4,59 @@
   <layer-tree-group expanded="1" checked="Qt::Checked" name="">
     <customproperties/>
     <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }}">
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" name="village">
       <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_amenities_points_any{{ layer_id_date_time }}" name="points of interest">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_rail_lines_any{{ layer_id_date_time }}" name="railway">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_roads_lines_any{{ layer_id_date_time }}" name="roads">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}" name="building">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}" name="waterways">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_landuse_polygons_any{{ layer_id_date_time }}" name="landuses">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_amenities_polygons_any{{ layer_id_date_time }}" name="amenities">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}" name="airport lines">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}" name="airport polygons">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" name="water">
-      <customproperties/>
-    </layer-tree-layer>
-    <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ layer_id_date_time }}" name="OSM bounds">
-      <customproperties/>
-    </layer-tree-layer>
-  </layer-tree-group>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" name="place label">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_points_any{{ layer_id_date_time }}" name="airport">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_amenities_points_any{{ layer_id_date_time }}" name="points of interest">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_rail_lines_any{{ layer_id_date_time }}" name="railway">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_roads_lines_any{{ layer_id_date_time }}" name="roads">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}" name="building">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}" name="waterways">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" name="grassland">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="0" checked="Qt::Checked" id="{{ layer_id_prefix }}_landuse_polygons_any{{ layer_id_date_time }}" name="landuses">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_amenities_polygons_any{{ layer_id_date_time }}" name="amenities">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}" name="aviation lines">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}" name="aviation polygons">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" name="water">
+        <customproperties/>
+      </layer-tree-layer>
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ layer_id_date_time }}" name="boundary">
+        <customproperties/>
+      </layer-tree-layer>
+    </layer-tree-group>
   </layer-tree-group>
   <relations/>
   <mapcanvas>
     <units>degrees</units>
     <extent>
-      <xmin>{{ bbox.0 }}</xmin>
-      <ymin>{{ bbox.1 }}</ymin>
-      <xmax>{{ bbox.2 }}</xmax>
-      <ymax>{{ bbox.3 }}</ymax>
+    <xmin>{{ bbox.0 }}</xmin>
+    <ymin>{{ bbox.1 }}</ymin>
+    <xmax>{{ bbox.2 }}</xmax>
+    <ymax>{{ bbox.3 }}</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -81,331 +88,86 @@
       <item>{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}</item>
       <item>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_aviation_points_any{{ layer_id_date_time }}</item>
+      <item>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</item>
       <item>osm_bounds_osm_{{ layer_id_date_time }}</item>
     </custom-order>
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="village" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="points of interest" showFeatureCount="0">
-      <filegroup open="false" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_amenities_points_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="railway" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_rail_lines_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="roads" showFeatureCount="0">
-      <filegroup open="false" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_roads_lines_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="building" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="waterways" showFeatureCount="0">
-      <filegroup open="false" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="landuses" showFeatureCount="0">
-      <filegroup open="false" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_landuse_polygons_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="amenities" showFeatureCount="0">
-      <filegroup open="false" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_amenities_polygons_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport lines" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport polygons" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
-    <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="osm_bounds-osm" showFeatureCount="0">
-      <filegroup open="true" hidden="false">
-        <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_{{ layer_id_date_time }}" visible="1"/>
-      </filegroup>
-    </legendlayer>
+    <legendgroup open="true" checked="Qt::Checked" name="EventKit - {{ job_name }} - osm">
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_places_points_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_points_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="points of interest" showFeatureCount="0">
+        <filegroup open="false" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_amenities_points_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="railway" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_rail_lines_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="roads" showFeatureCount="0">
+        <filegroup open="false" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_roads_lines_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="building" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_buildings_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="waterways" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_waterways_lines_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="grassland" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="landuses" showFeatureCount="0">
+        <filegroup open="false" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_landuse_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="amenities" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_amenities_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation lines" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_lines_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation polygons" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_aviation_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
+        <filegroup open="true" hidden="false">
+          <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_{{ layer_id_date_time }}" visible="1"/>
+        </filegroup>
+      </legendlayer>
+    </legendgroup>
   </legend>
   <projectlayers>
-    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-      <extent>
-      <xmin>{{ bbox.0 }}</xmin>
-      <ymin>{{ bbox.1 }}</ymin>
-      <xmax>{{ bbox.2 }}</xmax>
-      <ymax>{{ bbox.3 }}</ymax>
-      </extent>
-      <id>osm_bounds_osm_{{ layer_id_date_time }}</id>
-      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=boundary</datasource>
-      <keywordList>
-        <value></value>
-      </keywordList>
-      <layername>bounds</layername>
-      <srs>
-        <spatialrefsys>
-          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
-          <srsid>3452</srsid>
-          <srid>4326</srid>
-          <authid>EPSG:4326</authid>
-          <description>WGS 84</description>
-          <projectionacronym>longlat</projectionacronym>
-          <ellipsoidacronym>WGS84</ellipsoidacronym>
-          <geographicflag>true</geographicflag>
-        </spatialrefsys>
-      </srs>
-      <provider encoding="UTF-8">ogr</provider>
-      <previewExpression></previewExpression>
-      <vectorjoins/>
-      <layerDependencies/>
-      <expressionfields/>
-      <map-layer-style-manager current="">
-        <map-layer-style name=""/>
-      </map-layer-style-manager>
-      <edittypes/>
-      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
-        <symbols>
-          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
-            <layer pass="0" class="SimpleFill" locked="0">
-              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="247,246,241,255"/>
-              <prop k="joinstyle" v="bevel"/>
-              <prop k="offset" v="0,0"/>
-              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
-              <prop k="outline_style" v="solid"/>
-              <prop k="outline_width" v="0.26"/>
-              <prop k="outline_width_unit" v="MM"/>
-              <prop k="style" v="solid"/>
-            </layer>
-          </symbol>
-        </symbols>
-        <rotation/>
-        <sizescale scalemethod="diameter"/>
-      </renderer-v2>
-      <labeling type="simple"/>
-      <customproperties>
-        <property key="labeling" value="pal"/>
-        <property key="labeling/addDirectionSymbol" value="false"/>
-        <property key="labeling/angleOffset" value="0"/>
-        <property key="labeling/blendMode" value="0"/>
-        <property key="labeling/bufferBlendMode" value="0"/>
-        <property key="labeling/bufferColorA" value="255"/>
-        <property key="labeling/bufferColorB" value="255"/>
-        <property key="labeling/bufferColorG" value="255"/>
-        <property key="labeling/bufferColorR" value="255"/>
-        <property key="labeling/bufferDraw" value="false"/>
-        <property key="labeling/bufferJoinStyle" value="64"/>
-        <property key="labeling/bufferNoFill" value="false"/>
-        <property key="labeling/bufferSize" value="1"/>
-        <property key="labeling/bufferSizeInMapUnits" value="false"/>
-        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/bufferTransp" value="0"/>
-        <property key="labeling/centroidInside" value="false"/>
-        <property key="labeling/centroidWhole" value="false"/>
-        <property key="labeling/decimals" value="3"/>
-        <property key="labeling/displayAll" value="false"/>
-        <property key="labeling/dist" value="0"/>
-        <property key="labeling/distInMapUnits" value="false"/>
-        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/drawLabels" value="false"/>
-        <property key="labeling/enabled" value="false"/>
-        <property key="labeling/fieldName" value="name"/>
-        <property key="labeling/fitInPolygonOnly" value="false"/>
-        <property key="labeling/fontCapitals" value="0"/>
-        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-        <property key="labeling/fontItalic" value="false"/>
-        <property key="labeling/fontLetterSpacing" value="0"/>
-        <property key="labeling/fontLimitPixelSize" value="false"/>
-        <property key="labeling/fontMaxPixelSize" value="10000"/>
-        <property key="labeling/fontMinPixelSize" value="3"/>
-        <property key="labeling/fontSize" value="8.25"/>
-        <property key="labeling/fontSizeInMapUnits" value="false"/>
-        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/fontStrikeout" value="false"/>
-        <property key="labeling/fontUnderline" value="false"/>
-        <property key="labeling/fontWeight" value="50"/>
-        <property key="labeling/fontWordSpacing" value="0"/>
-        <property key="labeling/formatNumbers" value="false"/>
-        <property key="labeling/isExpression" value="false"/>
-        <property key="labeling/labelOffsetInMapUnits" value="true"/>
-        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/labelPerPart" value="false"/>
-        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
-        <property key="labeling/limitNumLabels" value="false"/>
-        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
-        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
-        <property key="labeling/maxNumLabels" value="2000"/>
-        <property key="labeling/mergeLines" value="false"/>
-        <property key="labeling/minFeatureSize" value="0"/>
-        <property key="labeling/multilineAlign" value="0"/>
-        <property key="labeling/multilineHeight" value="1"/>
-        <property key="labeling/namedStyle" value="Normal"/>
-        <property key="labeling/obstacle" value="true"/>
-        <property key="labeling/obstacleFactor" value="1"/>
-        <property key="labeling/obstacleType" value="0"/>
-        <property key="labeling/offsetType" value="0"/>
-        <property key="labeling/placeDirectionSymbol" value="0"/>
-        <property key="labeling/placement" value="1"/>
-        <property key="labeling/placementFlags" value="10"/>
-        <property key="labeling/plussign" value="false"/>
-        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
-        <property key="labeling/preserveRotation" value="true"/>
-        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
-        <property key="labeling/priority" value="5"/>
-        <property key="labeling/quadOffset" value="4"/>
-        <property key="labeling/repeatDistance" value="0"/>
-        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/repeatDistanceUnit" value="1"/>
-        <property key="labeling/reverseDirectionSymbol" value="false"/>
-        <property key="labeling/rightDirectionSymbol" value=">"/>
-        <property key="labeling/scaleMax" value="10000000"/>
-        <property key="labeling/scaleMin" value="1"/>
-        <property key="labeling/scaleVisibility" value="false"/>
-        <property key="labeling/shadowBlendMode" value="6"/>
-        <property key="labeling/shadowColorB" value="0"/>
-        <property key="labeling/shadowColorG" value="0"/>
-        <property key="labeling/shadowColorR" value="0"/>
-        <property key="labeling/shadowDraw" value="false"/>
-        <property key="labeling/shadowOffsetAngle" value="135"/>
-        <property key="labeling/shadowOffsetDist" value="1"/>
-        <property key="labeling/shadowOffsetGlobal" value="true"/>
-        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowOffsetUnits" value="1"/>
-        <property key="labeling/shadowRadius" value="1.5"/>
-        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
-        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shadowRadiusUnits" value="1"/>
-        <property key="labeling/shadowScale" value="100"/>
-        <property key="labeling/shadowTransparency" value="30"/>
-        <property key="labeling/shadowUnder" value="0"/>
-        <property key="labeling/shapeBlendMode" value="0"/>
-        <property key="labeling/shapeBorderColorA" value="255"/>
-        <property key="labeling/shapeBorderColorB" value="128"/>
-        <property key="labeling/shapeBorderColorG" value="128"/>
-        <property key="labeling/shapeBorderColorR" value="128"/>
-        <property key="labeling/shapeBorderWidth" value="0"/>
-        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeBorderWidthUnits" value="1"/>
-        <property key="labeling/shapeDraw" value="false"/>
-        <property key="labeling/shapeFillColorA" value="255"/>
-        <property key="labeling/shapeFillColorB" value="255"/>
-        <property key="labeling/shapeFillColorG" value="255"/>
-        <property key="labeling/shapeFillColorR" value="255"/>
-        <property key="labeling/shapeJoinStyle" value="64"/>
-        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeOffsetUnits" value="1"/>
-        <property key="labeling/shapeOffsetX" value="0"/>
-        <property key="labeling/shapeOffsetY" value="0"/>
-        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeRadiiUnits" value="1"/>
-        <property key="labeling/shapeRadiiX" value="0"/>
-        <property key="labeling/shapeRadiiY" value="0"/>
-        <property key="labeling/shapeRotation" value="0"/>
-        <property key="labeling/shapeRotationType" value="0"/>
-        <property key="labeling/shapeSVGFile" value=""/>
-        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/shapeSizeType" value="0"/>
-        <property key="labeling/shapeSizeUnits" value="1"/>
-        <property key="labeling/shapeSizeX" value="0"/>
-        <property key="labeling/shapeSizeY" value="0"/>
-        <property key="labeling/shapeTransparency" value="0"/>
-        <property key="labeling/shapeType" value="0"/>
-        <property key="labeling/textColorA" value="255"/>
-        <property key="labeling/textColorB" value="0"/>
-        <property key="labeling/textColorG" value="0"/>
-        <property key="labeling/textColorR" value="0"/>
-        <property key="labeling/textTransp" value="0"/>
-        <property key="labeling/upsidedownLabels" value="0"/>
-        <property key="labeling/wrapChar" value=""/>
-        <property key="labeling/xOffset" value="0"/>
-        <property key="labeling/yOffset" value="0"/>
-        <property key="labeling/zIndex" value="0"/>
-      </customproperties>
-      <blendMode>0</blendMode>
-      <featureBlendMode>0</featureBlendMode>
-      <layerTransparency>0</layerTransparency>
-      <displayfield>name</displayfield>
-      <label>0</label>
-      <labelattributes>
-        <label fieldname="" text="Label"/>
-        <family fieldname="" name="MS Shell Dlg 2"/>
-        <size fieldname="" units="pt" value="12"/>
-        <bold fieldname="" on="0"/>
-        <italic fieldname="" on="0"/>
-        <underline fieldname="" on="0"/>
-        <strikeout fieldname="" on="0"/>
-        <color fieldname="" red="0" blue="0" green="0"/>
-        <x fieldname=""/>
-        <y fieldname=""/>
-        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
-        <angle fieldname="" value="0" auto="0"/>
-        <alignment fieldname="" value="center"/>
-        <buffercolor fieldname="" red="255" blue="255" green="255"/>
-        <buffersize fieldname="" units="pt" value="1"/>
-        <bufferenabled fieldname="" on=""/>
-        <multilineenabled fieldname="" on=""/>
-        <selectedonly on=""/>
-      </labelattributes>
-      <SingleCategoryDiagramRenderer diagramType="Pie">
-        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="-4.65661e-10">
-          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
-          <attribute field="" color="#000000" label=""/>
-        </DiagramCategory>
-      </SingleCategoryDiagramRenderer>
-      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
-      <annotationform>.</annotationform>
-      <excludeAttributesWMS/>
-      <excludeAttributesWFS/>
-      <attributeactions/>
-      <editform>.</editform>
-      <editforminit/>
-      <editforminitcodesource>0</editforminitcodesource>
-      <editforminitfilepath>.</editforminitfilepath>
-      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
-"""
-QGIS forms can have a Python function that is called when the form is
-opened.
-
-Use this function to add extra logic to your forms.
-
-Enter the name of the function in the "Python Init function"
-field.
-An example follows:
-"""
-from PyQt4.QtGui import QWidget
-
-def my_form_open(dialog, layer, feature):
-	geom = feature.geometry()
-	control = dialog.findChild(QWidget, "MyLineEdit")
-]]></editforminitcode>
-      <featformsuppress>0</featformsuppress>
-      <editorlayout>generatedlayout</editorlayout>
-      <widgets/>
-      <conditionalstyles>
-        <rowstyles/>
-        <fieldstyles/>
-      </conditionalstyles>
-    </maplayer>
     <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
@@ -443,43 +205,19 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="amenity">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
+        <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
+        <edittype widgetv2type="TextEdit" name="addr:housenumber">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
+        <edittype widgetv2type="TextEdit" name="addr:street">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="capital">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="craft">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="emergency">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="historic">
@@ -491,46 +229,13 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="leisure">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="name">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="office">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="place">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="tourism">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="traffic_calming">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="office">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -2909,34 +2614,16 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="1" name=""/>
-        <alias field="addr_street" index="2" name=""/>
-        <alias field="aeroway" index="3" name=""/>
-        <alias field="amenity" index="4" name=""/>
-        <alias field="barrier" index="5" name=""/>
-        <alias field="bladder" index="6" name=""/>
-        <alias field="borehole" index="7" name=""/>
-        <alias field="building" index="8" name=""/>
-        <alias field="craft" index="10" name=""/>
-        <alias field="emergency" index="11" name=""/>
-        <alias field="ford" index="12" name=""/>
-        <alias field="highway" index="13" name=""/>
-        <alias field="historic" index="14" name=""/>
-        <alias field="information" index="15" name=""/>
-        <alias field="leisure" index="16" name=""/>
-        <alias field="man_made" index="17" name=""/>
-        <alias field="name" index="18" name=""/>
-        <alias field="natural" index="19" name=""/>
-        <alias field="office" index="20" name=""/>
+        <alias field="amenity" index="1" name=""/>
+        <alias field="building" index="5" name=""/>
+        <alias field="historic" index="6" name=""/>
+        <alias field="information" index="7" name=""/>
+        <alias field="leisure" index="8" name=""/>
+        <alias field="name" index="2" name=""/>
+        <alias field="office" index="11" name=""/>
         <alias field="osm_id" index="0" name=""/>
-        <alias field="place" index="21" name=""/>
-        <alias field="power" index="22" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
-        <alias field="traffic_calming" index="28" name=""/>
-        <alias field="waterway" index="29" name=""/>
+        <alias field="shop" index="9" name=""/>
+        <alias field="tourism" index="10" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -2970,7 +2657,7 @@ def my_form_open(dialog, layer, feature):
         <fieldstyles/>
       </conditionalstyles>
     </maplayer>
-    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
@@ -3010,37 +2697,19 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_way_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="amenity">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="area">
+        <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
+        <edittype widgetv2type="TextEdit" name="addr:housenumber">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
+        <edittype widgetv2type="TextEdit" name="addr:street">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="historic">
@@ -3049,46 +2718,16 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="information">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="junction">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="landuse">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="name">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="shop">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="surface">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="tourism">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="office">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -3358,32 +2997,16 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="2" name=""/>
-        <alias field="addr_street" index="3" name=""/>
-        <alias field="aeroway" index="4" name=""/>
-        <alias field="amenity" index="5" name=""/>
-        <alias field="area" index="6" name=""/>
-        <alias field="barrier" index="7" name=""/>
-        <alias field="bladder" index="8" name=""/>
-        <alias field="borehole" index="9" name=""/>
-        <alias field="building" index="11" name=""/>
-        <alias field="highway" index="12" name=""/>
-        <alias field="historic" index="13" name=""/>
-        <alias field="information" index="14" name=""/>
-        <alias field="junction" index="15" name=""/>
-        <alias field="landuse" index="16" name=""/>
-        <alias field="leisure" index="17" name=""/>
-        <alias field="man_made" index="18" name=""/>
-        <alias field="name" index="19" name=""/>
-        <alias field="natural" index="20" name=""/>
+        <alias field="amenity" index="2" name=""/>
+        <alias field="building" index="6" name=""/>
+        <alias field="historic" index="7" name=""/>
+        <alias field="information" index="8" name=""/>
+        <alias field="leisure" index="9" name=""/>
+        <alias field="name" index="3" name=""/>
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
-        <alias field="power" index="21" name=""/>
-        <alias field="shop" index="23" name=""/>
-        <alias field="surface" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
+        <alias field="shop" index="10" name=""/>
+        <alias field="tourism" index="11" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -3429,7 +3052,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>airport lines</layername>
+      <layername>aviation lines</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
@@ -3457,52 +3080,25 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="aeroway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
+        <edittype widgetv2type="TextEdit" name="surface">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
+        <edittype widgetv2type="TextEdit" name="source">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
+        <edittype widgetv2type="TextEdit" name="building">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tunnel">
+        <edittype widgetv2type="TextEdit" name="icao">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
+        <edittype widgetv2type="TextEdit" name="iata">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="type">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -3793,7 +3389,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>airport polygons</layername>
+      <layername>aviation polygons</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
@@ -3821,85 +3417,28 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_way_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="area">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="historic">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="information">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="junction">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="landuse">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="surface">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
+        <edittype widgetv2type="TextEdit" name="source">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
+        <edittype widgetv2type="TextEdit" name="building">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
+        <edittype widgetv2type="TextEdit" name="icao">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="iata">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="type">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -4096,7 +3635,7 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/shapeRadiiY" value="0"/>
         <property key="labeling/shapeRotation" value="0"/>
         <property key="labeling/shapeRotationType" value="0"/>
-        <property key="labeling/shapeSVGFile" value="C:/RadiantBlue/HOT_OSM_QGIS/icons/icons/gray/airport.svg"/>
+        <property key="labeling/shapeSVGFile" value="icons/gray/airport.svg"/>
         <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
         <property key="labeling/shapeSizeType" value="0"/>
         <property key="labeling/shapeSizeUnits" value="1"/>
@@ -4153,32 +3692,12 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="2" name=""/>
-        <alias field="addr_street" index="3" name=""/>
-        <alias field="aeroway" index="4" name=""/>
-        <alias field="amenity" index="5" name=""/>
-        <alias field="area" index="6" name=""/>
-        <alias field="barrier" index="7" name=""/>
-        <alias field="bladder" index="8" name=""/>
-        <alias field="borehole" index="9" name=""/>
-        <alias field="building" index="11" name=""/>
-        <alias field="highway" index="12" name=""/>
-        <alias field="historic" index="13" name=""/>
-        <alias field="information" index="14" name=""/>
-        <alias field="junction" index="15" name=""/>
-        <alias field="landuse" index="16" name=""/>
-        <alias field="leisure" index="17" name=""/>
-        <alias field="man_made" index="18" name=""/>
-        <alias field="name" index="19" name=""/>
-        <alias field="natural" index="20" name=""/>
+        <alias field="aeroway" index="2" name=""/>
+        <alias field="building" index="6" name=""/>
+        <alias field="name" index="3" name=""/>
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
-        <alias field="power" index="21" name=""/>
-        <alias field="shop" index="23" name=""/>
-        <alias field="surface" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
+        <alias field="surface" index="4" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -4252,85 +3771,19 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_way_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="area">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="historic">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="information">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="junction">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="landuse">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
+        <edittype widgetv2type="TextEdit" name="addr:housenumber">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
+        <edittype widgetv2type="TextEdit" name="addr:street">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="surface">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="hazard_prone">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -4532,32 +3985,10 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="2" name=""/>
-        <alias field="addr_street" index="3" name=""/>
-        <alias field="aeroway" index="4" name=""/>
-        <alias field="amenity" index="5" name=""/>
-        <alias field="area" index="6" name=""/>
-        <alias field="barrier" index="7" name=""/>
-        <alias field="bladder" index="8" name=""/>
-        <alias field="borehole" index="9" name=""/>
-        <alias field="building" index="11" name=""/>
-        <alias field="highway" index="12" name=""/>
-        <alias field="historic" index="13" name=""/>
-        <alias field="information" index="14" name=""/>
-        <alias field="junction" index="15" name=""/>
-        <alias field="landuse" index="16" name=""/>
-        <alias field="leisure" index="17" name=""/>
-        <alias field="man_made" index="18" name=""/>
-        <alias field="name" index="19" name=""/>
-        <alias field="natural" index="20" name=""/>
+        <alias field="building" index="2" name=""/>
+        <alias field="name" index="3" name=""/>
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
-        <alias field="power" index="21" name=""/>
-        <alias field="shop" index="23" name=""/>
-        <alias field="surface" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -4591,7 +4022,7 @@ def my_form_open(dialog, layer, feature):
         <fieldstyles/>
       </conditionalstyles>
     </maplayer>
-    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
@@ -4631,111 +4062,37 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_way_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="area">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="historic">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="information">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="junction">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="landuse">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="name">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="surface">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
       <renderer-v2 forceraster="0" symbollevels="0" type="RuleRenderer" enableorderby="0">
         <rules key="{319674b0-0b21-4d1c-9f9d-6e173fd7709d}">
           <rule filter="&quot;landuse&quot; = 'forest'" key="{6e6194e8-282e-48ed-ac30-c1cdac6f614b}" symbol="0" label="forest"/>
-          <rule filter="&quot;landuse&quot; = 'military'" key="{441e8010-da1d-4efb-b3e0-0636dd353ee2}" symbol="1" label="military"/>
-          <rule filter="&quot;landuse&quot; = 'allotments'" key="{7eada343-8b3b-44f4-b0ce-3490d9175b19}" symbol="2" label="allotments"/>
-          <rule filter="&quot;landuse&quot; = 'cemetery'" key="{8a2488b4-ff3a-41dd-92b0-a847be3ab6ce}" symbol="3" label="cemetery"/>
-          <rule filter="&quot;landuse&quot; = 'commercial'" key="{815bd791-a009-4bb4-85c0-f1b8879431f8}" symbol="4" label="commercial"/>
-          <rule filter="&quot;landuse&quot; = 'farm'" key="{0557aca5-1dde-46ee-8537-46ca45244d13}" symbol="5" label="farm"/>
-          <rule filter="&quot;landuse&quot; = 'farmland'" key="{dc980f3c-6a22-43b8-aca9-82f709c98025}" symbol="6" label="farmland"/>
-          <rule filter="&quot;landuse&quot; = 'farmyard'" key="{a3f52723-1058-45d3-9306-b9ff27b09f71}" symbol="7" label="farmyard"/>
-          <rule filter="&quot;landuse&quot; = 'grass'" key="{62e4875e-726c-4cf7-870e-2a7c637865a7}" symbol="8" label="grass"/>
-          <rule filter="&quot;landuse&quot; = 'industrial'" key="{f1d759ba-146b-459c-b047-69be1c9b81dd}" symbol="9" label="industrial"/>
-          <rule filter="&quot;landuse&quot; = 'landfill'" key="{02772be0-7fdd-4123-a0ba-770e61c5493b}" symbol="10" label="landfill"/>
-          <rule filter="&quot;landuse&quot; = 'orchard'" key="{c59a0b72-8568-4f96-8257-e5a8458a8339}" symbol="11" label="orchard"/>
-          <rule filter="&quot;landuse&quot; = 'park'" key="{9fd4732d-728c-4239-a44f-eed298eb080e}" symbol="12" label="park"/>
-          <rule filter="&quot;landuse&quot; = 'plant_nursery'" key="{9f5aea32-a93d-4582-9699-e904d8a028b5}" symbol="13" label="plant_nursery"/>
-          <rule filter="&quot;landuse&quot; = 'quarry'" key="{25524a9a-3cca-48a2-9ee9-86ceaebc13cc}" symbol="14" label="quarry"/>
-          <rule filter="&quot;landuse&quot; = 'recreation_ground'" key="{6af55ba0-3f42-43ac-bdfe-4e41079e1b5b}" symbol="15" label="recreation_ground"/>
-          <rule filter="&quot;landuse&quot; = 'retail'" key="{416445f8-6b5c-4a72-bb55-9cdf8d6c3552}" symbol="16" label="retail"/>
-          <rule filter="&quot;landuse&quot; = 'school'" key="{7cb35215-b53d-4c59-bd4c-aee3d84aa3b3}" symbol="17" label="school"/>
-          <rule filter="&quot;landuse&quot; = 'village_green'" key="{9b4afe77-dbe3-4cfe-b3f9-0bfc507f590a}" symbol="18" label="village_green"/>
-          <rule filter="&quot;leisure&quot; = 'park'" key="{9e657f30-73d8-495f-94a2-c75c8b8cb94a}" symbol="19" label="park"/>
-          <rule filter="&quot;leisure&quot; = 'nature_reserve'" key="{1a1a9bcb-5ecf-4630-bcfa-605a076b0a37}" symbol="20" label="nature_reserve"/>
+          <rule scalemaxdenom="60000" filter="&quot;landuse&quot; = 'residential'" key="{61978749-d46a-4a57-ab3e-92e32962a5e7}" symbol="1" scalemindenom="1000" label="residential"/>
+          <rule filter="&quot;landuse&quot; = 'military'" key="{441e8010-da1d-4efb-b3e0-0636dd353ee2}" symbol="2" label="military"/>
+          <rule filter="&quot;landuse&quot; = 'allotments'" key="{7eada343-8b3b-44f4-b0ce-3490d9175b19}" symbol="3" label="allotments"/>
+          <rule filter="&quot;landuse&quot; = 'cemetery'" key="{8a2488b4-ff3a-41dd-92b0-a847be3ab6ce}" symbol="4" label="cemetery"/>
+          <rule filter="&quot;landuse&quot; = 'commercial'" key="{815bd791-a009-4bb4-85c0-f1b8879431f8}" symbol="5" label="commercial"/>
+          <rule filter="&quot;landuse&quot; = 'farm'" key="{0557aca5-1dde-46ee-8537-46ca45244d13}" symbol="6" label="farm"/>
+          <rule filter="&quot;landuse&quot; = 'farmland'" key="{dc980f3c-6a22-43b8-aca9-82f709c98025}" symbol="7" label="farmland"/>
+          <rule filter="&quot;landuse&quot; = 'farmyard'" key="{a3f52723-1058-45d3-9306-b9ff27b09f71}" symbol="8" label="farmyard"/>
+          <rule filter="&quot;landuse&quot; = 'grass'" key="{62e4875e-726c-4cf7-870e-2a7c637865a7}" symbol="9" label="grass"/>
+          <rule filter="&quot;landuse&quot; = 'industrial'" key="{f1d759ba-146b-459c-b047-69be1c9b81dd}" symbol="10" label="industrial"/>
+          <rule filter="&quot;landuse&quot; = 'landfill'" key="{02772be0-7fdd-4123-a0ba-770e61c5493b}" symbol="11" label="landfill"/>
+          <rule filter="&quot;landuse&quot; = 'orchard'" key="{c59a0b72-8568-4f96-8257-e5a8458a8339}" symbol="12" label="orchard"/>
+          <rule filter="&quot;landuse&quot; = 'park'" key="{9fd4732d-728c-4239-a44f-eed298eb080e}" symbol="13" label="park"/>
+          <rule filter="&quot;landuse&quot; = 'plant_nursery'" key="{9f5aea32-a93d-4582-9699-e904d8a028b5}" symbol="14" label="plant_nursery"/>
+          <rule filter="&quot;landuse&quot; = 'quarry'" key="{25524a9a-3cca-48a2-9ee9-86ceaebc13cc}" symbol="15" label="quarry"/>
+          <rule filter="&quot;landuse&quot; = 'recreation_ground'" key="{6af55ba0-3f42-43ac-bdfe-4e41079e1b5b}" symbol="16" label="recreation_ground"/>
+          <rule filter="&quot;landuse&quot; = 'retail'" key="{416445f8-6b5c-4a72-bb55-9cdf8d6c3552}" symbol="17" label="retail"/>
+          <rule filter="&quot;landuse&quot; = 'school'" key="{7cb35215-b53d-4c59-bd4c-aee3d84aa3b3}" symbol="18" label="school"/>
+          <rule filter="&quot;landuse&quot; = 'village_green'" key="{9b4afe77-dbe3-4cfe-b3f9-0bfc507f590a}" symbol="19" label="village_green"/>
+          <rule filter="&quot;leisure&quot; = 'park'" key="{9e657f30-73d8-495f-94a2-c75c8b8cb94a}" symbol="20" label="park"/>
+          <rule filter="&quot;leisure&quot; = 'nature_reserve'" key="{1a1a9bcb-5ecf-4630-bcfa-605a076b0a37}" symbol="21" label="nature_reserve"/>
         </rules>
         <symbols>
           <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
@@ -4756,12 +4113,12 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="1">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="209,191,170,255"/>
+              <prop k="color" v="214,210,191,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="64,64,63,255"/>
+              <prop k="outline_color" v="0,0,0,255"/>
               <prop k="outline_style" v="no"/>
               <prop k="outline_width" v="0.26"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -4771,7 +4128,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="10">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="190,175,178,255"/>
+              <prop k="color" v="215,200,203,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4786,7 +4143,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="11">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="222,221,190,255"/>
+              <prop k="color" v="190,175,178,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4801,7 +4158,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="12">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="208,220,174,255"/>
+              <prop k="color" v="222,221,190,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4831,7 +4188,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="14">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="215,200,203,255"/>
+              <prop k="color" v="208,220,174,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4846,7 +4203,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="15">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="208,220,174,255"/>
+              <prop k="color" v="215,200,203,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4861,7 +4218,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="16">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="237,236,231,255"/>
+              <prop k="color" v="208,220,174,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4876,7 +4233,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="17">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="226,214,205,255"/>
+              <prop k="color" v="237,236,231,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4891,7 +4248,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="18">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="208,220,174,255"/>
+              <prop k="color" v="226,214,205,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4911,7 +4268,7 @@ def my_form_open(dialog, layer, feature):
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="114,133,132,255"/>
+              <prop k="outline_color" v="0,0,0,255"/>
               <prop k="outline_style" v="no"/>
               <prop k="outline_width" v="0.26"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -4921,12 +4278,12 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="2">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="222,221,190,255"/>
+              <prop k="color" v="209,191,170,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="offset_unit" v="MM"/>
-              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_color" v="64,64,63,255"/>
               <prop k="outline_style" v="no"/>
               <prop k="outline_width" v="0.26"/>
               <prop k="outline_width_unit" v="MM"/>
@@ -4934,6 +4291,21 @@ def my_form_open(dialog, layer, feature):
             </layer>
           </symbol>
           <symbol alpha="1" clip_to_extent="1" type="fill" name="20">
+            <layer pass="0" class="SimpleFill" locked="0">
+              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="color" v="208,220,174,255"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="114,133,132,255"/>
+              <prop k="outline_style" v="no"/>
+              <prop k="outline_width" v="0.26"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="style" v="solid"/>
+            </layer>
+          </symbol>
+          <symbol alpha="1" clip_to_extent="1" type="fill" name="21">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
               <prop k="color" v="216,224,212,255"/>
@@ -4951,7 +4323,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="3">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="214,221,210,255"/>
+              <prop k="color" v="222,221,190,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4966,7 +4338,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="4">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="215,200,203,255"/>
+              <prop k="color" v="214,221,210,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -4981,7 +4353,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="5">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="222,221,190,255"/>
+              <prop k="color" v="215,200,203,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -5026,7 +4398,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="8">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="208,220,174,255"/>
+              <prop k="color" v="222,221,190,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -5041,7 +4413,7 @@ def my_form_open(dialog, layer, feature):
           <symbol alpha="1" clip_to_extent="1" type="fill" name="9">
             <layer pass="0" class="SimpleFill" locked="0">
               <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
-              <prop k="color" v="215,200,203,255"/>
+              <prop k="color" v="208,220,174,255"/>
               <prop k="joinstyle" v="bevel"/>
               <prop k="offset" v="0,0"/>
               <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -5342,32 +4714,10 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="2" name=""/>
-        <alias field="addr_street" index="3" name=""/>
-        <alias field="aeroway" index="4" name=""/>
-        <alias field="amenity" index="5" name=""/>
-        <alias field="area" index="6" name=""/>
-        <alias field="barrier" index="7" name=""/>
-        <alias field="bladder" index="8" name=""/>
-        <alias field="borehole" index="9" name=""/>
-        <alias field="building" index="11" name=""/>
-        <alias field="highway" index="12" name=""/>
-        <alias field="historic" index="13" name=""/>
-        <alias field="information" index="14" name=""/>
-        <alias field="junction" index="15" name=""/>
-        <alias field="landuse" index="16" name=""/>
-        <alias field="leisure" index="17" name=""/>
-        <alias field="man_made" index="18" name=""/>
-        <alias field="name" index="19" name=""/>
-        <alias field="natural" index="20" name=""/>
+        <alias field="landuse" index="2" name=""/>
+        <alias field="name" index="3" name=""/>
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
-        <alias field="power" index="21" name=""/>
-        <alias field="shop" index="23" name=""/>
-        <alias field="surface" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -5401,7 +4751,7 @@ def my_form_open(dialog, layer, feature):
         <fieldstyles/>
       </conditionalstyles>
     </maplayer>
-    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
@@ -5441,85 +4791,13 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_way_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="area">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="historic">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="information">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="junction">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="landuse">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
+        <edittype widgetv2type="TextEdit" name="natural">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="surface">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="hazard_prone">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -5555,13 +4833,13 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/bufferColorB" value="255"/>
         <property key="labeling/bufferColorG" value="255"/>
         <property key="labeling/bufferColorR" value="255"/>
-        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferDraw" value="true"/>
         <property key="labeling/bufferJoinStyle" value="128"/>
         <property key="labeling/bufferNoFill" value="false"/>
         <property key="labeling/bufferSize" value="1"/>
         <property key="labeling/bufferSizeInMapUnits" value="false"/>
         <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/bufferTransp" value="69"/>
         <property key="labeling/centroidInside" value="false"/>
         <property key="labeling/centroidWhole" value="false"/>
         <property key="labeling/decimals" value="3"/>
@@ -5569,13 +4847,13 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/dist" value="0"/>
         <property key="labeling/distInMapUnits" value="false"/>
         <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
-        <property key="labeling/drawLabels" value="false"/>
-        <property key="labeling/enabled" value="false"/>
-        <property key="labeling/fieldName" value=""/>
+        <property key="labeling/drawLabels" value="true"/>
+        <property key="labeling/enabled" value="true"/>
+        <property key="labeling/fieldName" value="name"/>
         <property key="labeling/fitInPolygonOnly" value="false"/>
         <property key="labeling/fontCapitals" value="0"/>
         <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
-        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontItalic" value="true"/>
         <property key="labeling/fontLetterSpacing" value="0"/>
         <property key="labeling/fontLimitPixelSize" value="false"/>
         <property key="labeling/fontMaxPixelSize" value="10000"/>
@@ -5588,7 +4866,7 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/fontWeight" value="50"/>
         <property key="labeling/fontWordSpacing" value="0"/>
         <property key="labeling/formatNumbers" value="false"/>
-        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/isExpression" value="false"/>
         <property key="labeling/labelOffsetInMapUnits" value="true"/>
         <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
         <property key="labeling/labelPerPart" value="false"/>
@@ -5601,7 +4879,7 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/minFeatureSize" value="0"/>
         <property key="labeling/multilineAlign" value="4294967295"/>
         <property key="labeling/multilineHeight" value="1"/>
-        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/namedStyle" value="Italic"/>
         <property key="labeling/obstacle" value="true"/>
         <property key="labeling/obstacleFactor" value="1"/>
         <property key="labeling/obstacleType" value="0"/>
@@ -5620,9 +4898,9 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/repeatDistanceUnit" value="1"/>
         <property key="labeling/reverseDirectionSymbol" value="false"/>
         <property key="labeling/rightDirectionSymbol" value=">"/>
-        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMax" value="300000"/>
         <property key="labeling/scaleMin" value="1"/>
-        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/scaleVisibility" value="true"/>
         <property key="labeling/shadowBlendMode" value="6"/>
         <property key="labeling/shadowColorB" value="0"/>
         <property key="labeling/shadowColorG" value="0"/>
@@ -5674,9 +4952,9 @@ def my_form_open(dialog, layer, feature):
         <property key="labeling/shapeType" value="0"/>
         <property key="labeling/substitutions" value="&lt;substitutions/>"/>
         <property key="labeling/textColorA" value="255"/>
-        <property key="labeling/textColorB" value="0"/>
-        <property key="labeling/textColorG" value="0"/>
-        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textColorB" value="111"/>
+        <property key="labeling/textColorG" value="109"/>
+        <property key="labeling/textColorR" value="79"/>
         <property key="labeling/textTransp" value="0"/>
         <property key="labeling/upsidedownLabels" value="0"/>
         <property key="labeling/useSubstitutions" value="false"/>
@@ -5721,32 +4999,10 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="2" name=""/>
-        <alias field="addr_street" index="3" name=""/>
-        <alias field="aeroway" index="4" name=""/>
-        <alias field="amenity" index="5" name=""/>
-        <alias field="area" index="6" name=""/>
-        <alias field="barrier" index="7" name=""/>
-        <alias field="bladder" index="8" name=""/>
-        <alias field="borehole" index="9" name=""/>
-        <alias field="building" index="11" name=""/>
-        <alias field="highway" index="12" name=""/>
-        <alias field="historic" index="13" name=""/>
-        <alias field="information" index="14" name=""/>
-        <alias field="junction" index="15" name=""/>
-        <alias field="landuse" index="16" name=""/>
-        <alias field="leisure" index="17" name=""/>
-        <alias field="man_made" index="18" name=""/>
-        <alias field="name" index="19" name=""/>
-        <alias field="natural" index="20" name=""/>
+        <alias field="name" index="3" name=""/>
+        <alias field="natural" index="2" name=""/>
         <alias field="osm_id" index="0" name=""/>
         <alias field="osm_way_id" index="1" name=""/>
-        <alias field="power" index="21" name=""/>
-        <alias field="shop" index="23" name=""/>
-        <alias field="surface" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -5792,7 +5048,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>village</layername>
+      <layername>place label</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
@@ -5817,94 +5073,13 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_housenumber">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="addr_street">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bladder">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="borehole">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="building">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="capital">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="craft">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="emergency">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="historic">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="information">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
+        <edittype widgetv2type="TextEdit" name="place">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="office">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="place">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="power">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="religion">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="shop">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tank">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tap">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="traffic_calming">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="is_in">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -6276,34 +5451,9 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="addr_housenumber" index="1" name=""/>
-        <alias field="addr_street" index="2" name=""/>
-        <alias field="aeroway" index="3" name=""/>
-        <alias field="amenity" index="4" name=""/>
-        <alias field="barrier" index="5" name=""/>
-        <alias field="bladder" index="6" name=""/>
-        <alias field="borehole" index="7" name=""/>
-        <alias field="building" index="8" name=""/>
-        <alias field="craft" index="10" name=""/>
-        <alias field="emergency" index="11" name=""/>
-        <alias field="ford" index="12" name=""/>
-        <alias field="highway" index="13" name=""/>
-        <alias field="historic" index="14" name=""/>
-        <alias field="information" index="15" name=""/>
-        <alias field="leisure" index="16" name=""/>
-        <alias field="man_made" index="17" name=""/>
-        <alias field="name" index="18" name=""/>
-        <alias field="natural" index="19" name=""/>
-        <alias field="office" index="20" name=""/>
+        <alias field="name" index="2" name=""/>
         <alias field="osm_id" index="0" name=""/>
-        <alias field="place" index="21" name=""/>
-        <alias field="power" index="22" name=""/>
-        <alias field="shop" index="24" name=""/>
-        <alias field="tank" index="25" name=""/>
-        <alias field="tap" index="26" name=""/>
-        <alias field="tourism" index="27" name=""/>
-        <alias field="traffic_calming" index="28" name=""/>
-        <alias field="waterway" index="29" name=""/>
+        <alias field="place" index="1" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -6374,52 +5524,46 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
+        <edittype widgetv2type="TextEdit" name="railway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
+        <edittype widgetv2type="TextEdit" name="bridge">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
+        <edittype widgetv2type="TextEdit" name="cutting">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
+        <edittype widgetv2type="TextEdit" name="embankment">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="frequency">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="service">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="tracks">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="tunnel">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
+        <edittype widgetv2type="TextEdit" name="usage">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="voltage">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="source">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="operator">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="layer">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="z_index">
@@ -6692,52 +5836,31 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
+        <edittype widgetv2type="TextEdit" name="highway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="barrier">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
         <edittype widgetv2type="TextEdit" name="ford">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
+        <edittype widgetv2type="TextEdit" name="hazard_prone">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
+        <edittype widgetv2type="TextEdit" name="traffic_calming">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="tunnel">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
+        <edittype widgetv2type="TextEdit" name="layer">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="bicycle_road">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="z_index">
@@ -8562,21 +7685,14 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="aeroway" index="1" name=""/>
-        <alias field="amenity" index="2" name=""/>
-        <alias field="barrier" index="3" name=""/>
-        <alias field="bicycle_road" index="4" name=""/>
-        <alias field="ford" index="6" name=""/>
-        <alias field="highway" index="7" name=""/>
+        <alias field="barrier" index="2" name=""/>
+        <alias field="bicycle_road" index="9" name=""/>
+        <alias field="ford" index="3" name=""/>
+        <alias field="highway" index="1" name=""/>
         <alias field="layer" index="8" name=""/>
-        <alias field="leisure" index="9" name=""/>
-        <alias field="man_made" index="10" name=""/>
-        <alias field="name" index="11" name=""/>
-        <alias field="natural" index="12" name=""/>
+        <alias field="name" index="5" name=""/>
         <alias field="osm_id" index="0" name=""/>
-        <alias field="tourism" index="14" name=""/>
-        <alias field="tunnel" index="15" name=""/>
-        <alias field="waterway" index="16" name=""/>
+        <alias field="tunnel" index="7" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -8610,7 +7726,7 @@ def my_form_open(dialog, layer, feature):
         <fieldstyles/>
       </conditionalstyles>
     </maplayer>
-    <maplayer minimumScale="-4.65661e-10" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Line" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
       <ymin>{{ bbox.1 }}</ymin>
@@ -8647,55 +7763,13 @@ def my_form_open(dialog, layer, feature):
         <edittype widgetv2type="TextEdit" name="osm_id">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="aeroway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="amenity">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="barrier">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bicycle_road">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="bridge">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="ford">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="highway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="layer">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="leisure">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="man_made">
+        <edittype widgetv2type="TextEdit" name="waterway">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
         <edittype widgetv2type="TextEdit" name="name">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
-        <edittype widgetv2type="TextEdit" name="natural">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="railway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tourism">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="tunnel">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="waterway">
-          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
-        </edittype>
-        <edittype widgetv2type="TextEdit" name="z_index">
+        <edittype widgetv2type="TextEdit" name="hazard_prone">
           <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
         </edittype>
       </edittypes>
@@ -9020,21 +8094,9 @@ def my_form_open(dialog, layer, feature):
       <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="2" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
       <annotationform>..</annotationform>
       <aliases>
-        <alias field="aeroway" index="1" name=""/>
-        <alias field="amenity" index="2" name=""/>
-        <alias field="barrier" index="3" name=""/>
-        <alias field="bicycle_road" index="4" name=""/>
-        <alias field="ford" index="6" name=""/>
-        <alias field="highway" index="7" name=""/>
-        <alias field="layer" index="8" name=""/>
-        <alias field="leisure" index="9" name=""/>
-        <alias field="man_made" index="10" name=""/>
-        <alias field="name" index="11" name=""/>
-        <alias field="natural" index="12" name=""/>
+        <alias field="name" index="2" name=""/>
         <alias field="osm_id" index="0" name=""/>
-        <alias field="tourism" index="14" name=""/>
-        <alias field="tunnel" index="15" name=""/>
-        <alias field="waterway" index="16" name=""/>
+        <alias field="waterway" index="1" name=""/>
       </aliases>
       <excludeAttributesWMS/>
       <excludeAttributesWFS/>
@@ -9055,6 +8117,778 @@ field.
 An example follows:
 """
 from qgis.PyQt.QtWidgets import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="5000" maximumScale="300000" geometry="No geometry" type="vector" hasScaleBasedVisibilityFlag="1">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>{{ layer_id_prefix }}_aviation_points_any{{ layer_id_date_time }}</id>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>airport</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value=""/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="0"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+        <property key="variableNames"/>
+        <property key="variableValues"/>
+      </customproperties>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes>
+        <edittype widgetv2type="TextEdit" name="osm_id">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="aeroway">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="name">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="surface">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="source">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="building">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="icao">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="iata">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="type">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+      </edittypes>
+      <annotationform></annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform></editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath></editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>{{ layer_id_prefix }}_natural_polygons_any{{ layer_id_date_time }}</id>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>grassland</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes>
+        <edittype widgetv2type="TextEdit" name="osm_id">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="osm_way_id">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="natural">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="name">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+        <edittype widgetv2type="TextEdit" name="hazard_prone">
+          <widgetv2config IsMultiline="0" fieldEditable="1" UseHtml="0" labelOnTop="0"/>
+        </edittype>
+      </edittypes>
+      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
+            <layer pass="0" class="SimpleFill" locked="0">
+              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="color" v="208,220,174,255"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="0,0,0,255"/>
+              <prop k="outline_style" v="no"/>
+              <prop k="outline_width" v="0.26"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="style" v="solid"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value=""/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="1"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+        <property key="variableNames"/>
+        <property key="variableValues"/>
+      </customproperties>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>name</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <SingleCategoryDiagramRenderer diagramType="Pie">
+        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+        </DiagramCategory>
+      </SingleCategoryDiagramRenderer>
+      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
+      <annotationform></annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform></editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath></editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>generatedlayout</editorlayout>
+      <widgets/>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+    </maplayer>
+    <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="1" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Polygon" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
+      <extent>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
+      </extent>
+      <id>osm_bounds_osm_{{ layer_id_date_time }}</id>
+      <datasource>./data/osm/{{ layer_id_prefix }}.gpkg|layername=boundary</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>boundary</layername>
+      <srs>
+        <spatialrefsys>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>WGS84</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <provider encoding="UTF-8">ogr</provider>
+      <previewExpression></previewExpression>
+      <vectorjoins/>
+      <layerDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="">
+        <map-layer-style name=""/>
+      </map-layer-style-manager>
+      <edittypes/>
+      <renderer-v2 forceraster="0" symbollevels="0" type="singleSymbol" enableorderby="0">
+        <symbols>
+          <symbol alpha="1" clip_to_extent="1" type="fill" name="0">
+            <layer pass="0" class="SimpleFill" locked="0">
+              <prop k="border_width_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="color" v="247,246,241,0"/>
+              <prop k="joinstyle" v="bevel"/>
+              <prop k="offset" v="0,0"/>
+              <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
+              <prop k="offset_unit" v="MM"/>
+              <prop k="outline_color" v="126,126,126,255"/>
+              <prop k="outline_style" v="solid"/>
+              <prop k="outline_width" v="0.26"/>
+              <prop k="outline_width_unit" v="MM"/>
+              <prop k="style" v="solid"/>
+            </layer>
+          </symbol>
+        </symbols>
+        <rotation/>
+        <sizescale scalemethod="diameter"/>
+      </renderer-v2>
+      <labeling type="simple"/>
+      <customproperties>
+        <property key="labeling" value="pal"/>
+        <property key="labeling/addDirectionSymbol" value="false"/>
+        <property key="labeling/angleOffset" value="0"/>
+        <property key="labeling/blendMode" value="0"/>
+        <property key="labeling/bufferBlendMode" value="0"/>
+        <property key="labeling/bufferColorA" value="255"/>
+        <property key="labeling/bufferColorB" value="255"/>
+        <property key="labeling/bufferColorG" value="255"/>
+        <property key="labeling/bufferColorR" value="255"/>
+        <property key="labeling/bufferDraw" value="false"/>
+        <property key="labeling/bufferJoinStyle" value="64"/>
+        <property key="labeling/bufferNoFill" value="false"/>
+        <property key="labeling/bufferSize" value="1"/>
+        <property key="labeling/bufferSizeInMapUnits" value="false"/>
+        <property key="labeling/bufferSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/bufferTransp" value="0"/>
+        <property key="labeling/centroidInside" value="false"/>
+        <property key="labeling/centroidWhole" value="false"/>
+        <property key="labeling/decimals" value="3"/>
+        <property key="labeling/displayAll" value="false"/>
+        <property key="labeling/dist" value="0"/>
+        <property key="labeling/distInMapUnits" value="false"/>
+        <property key="labeling/distMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/drawLabels" value="false"/>
+        <property key="labeling/enabled" value="false"/>
+        <property key="labeling/fieldName" value="name"/>
+        <property key="labeling/fitInPolygonOnly" value="false"/>
+        <property key="labeling/fontCapitals" value="0"/>
+        <property key="labeling/fontFamily" value="MS Shell Dlg 2"/>
+        <property key="labeling/fontItalic" value="false"/>
+        <property key="labeling/fontLetterSpacing" value="0"/>
+        <property key="labeling/fontLimitPixelSize" value="false"/>
+        <property key="labeling/fontMaxPixelSize" value="10000"/>
+        <property key="labeling/fontMinPixelSize" value="3"/>
+        <property key="labeling/fontSize" value="8.25"/>
+        <property key="labeling/fontSizeInMapUnits" value="false"/>
+        <property key="labeling/fontSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/fontStrikeout" value="false"/>
+        <property key="labeling/fontUnderline" value="false"/>
+        <property key="labeling/fontWeight" value="50"/>
+        <property key="labeling/fontWordSpacing" value="0"/>
+        <property key="labeling/formatNumbers" value="false"/>
+        <property key="labeling/isExpression" value="true"/>
+        <property key="labeling/labelOffsetInMapUnits" value="true"/>
+        <property key="labeling/labelOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/labelPerPart" value="false"/>
+        <property key="labeling/leftDirectionSymbol" value="&lt;"/>
+        <property key="labeling/limitNumLabels" value="false"/>
+        <property key="labeling/maxCurvedCharAngleIn" value="20"/>
+        <property key="labeling/maxCurvedCharAngleOut" value="-20"/>
+        <property key="labeling/maxNumLabels" value="2000"/>
+        <property key="labeling/mergeLines" value="false"/>
+        <property key="labeling/minFeatureSize" value="0"/>
+        <property key="labeling/multilineAlign" value="0"/>
+        <property key="labeling/multilineHeight" value="1"/>
+        <property key="labeling/namedStyle" value="Normal"/>
+        <property key="labeling/obstacle" value="true"/>
+        <property key="labeling/obstacleFactor" value="1"/>
+        <property key="labeling/obstacleType" value="0"/>
+        <property key="labeling/offsetType" value="0"/>
+        <property key="labeling/placeDirectionSymbol" value="0"/>
+        <property key="labeling/placement" value="1"/>
+        <property key="labeling/placementFlags" value="10"/>
+        <property key="labeling/plussign" value="false"/>
+        <property key="labeling/predefinedPositionOrder" value="TR,TL,BR,BL,R,L,TSR,BSR"/>
+        <property key="labeling/preserveRotation" value="true"/>
+        <property key="labeling/previewBkgrdColor" value="#ffffff"/>
+        <property key="labeling/priority" value="5"/>
+        <property key="labeling/quadOffset" value="4"/>
+        <property key="labeling/repeatDistance" value="0"/>
+        <property key="labeling/repeatDistanceMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/repeatDistanceUnit" value="1"/>
+        <property key="labeling/reverseDirectionSymbol" value="false"/>
+        <property key="labeling/rightDirectionSymbol" value=">"/>
+        <property key="labeling/scaleMax" value="10000000"/>
+        <property key="labeling/scaleMin" value="1"/>
+        <property key="labeling/scaleVisibility" value="false"/>
+        <property key="labeling/shadowBlendMode" value="6"/>
+        <property key="labeling/shadowColorB" value="0"/>
+        <property key="labeling/shadowColorG" value="0"/>
+        <property key="labeling/shadowColorR" value="0"/>
+        <property key="labeling/shadowDraw" value="false"/>
+        <property key="labeling/shadowOffsetAngle" value="135"/>
+        <property key="labeling/shadowOffsetDist" value="1"/>
+        <property key="labeling/shadowOffsetGlobal" value="true"/>
+        <property key="labeling/shadowOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowOffsetUnits" value="1"/>
+        <property key="labeling/shadowRadius" value="1.5"/>
+        <property key="labeling/shadowRadiusAlphaOnly" value="false"/>
+        <property key="labeling/shadowRadiusMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shadowRadiusUnits" value="1"/>
+        <property key="labeling/shadowScale" value="100"/>
+        <property key="labeling/shadowTransparency" value="30"/>
+        <property key="labeling/shadowUnder" value="0"/>
+        <property key="labeling/shapeBlendMode" value="0"/>
+        <property key="labeling/shapeBorderColorA" value="255"/>
+        <property key="labeling/shapeBorderColorB" value="128"/>
+        <property key="labeling/shapeBorderColorG" value="128"/>
+        <property key="labeling/shapeBorderColorR" value="128"/>
+        <property key="labeling/shapeBorderWidth" value="0"/>
+        <property key="labeling/shapeBorderWidthMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeBorderWidthUnits" value="1"/>
+        <property key="labeling/shapeDraw" value="false"/>
+        <property key="labeling/shapeFillColorA" value="255"/>
+        <property key="labeling/shapeFillColorB" value="255"/>
+        <property key="labeling/shapeFillColorG" value="255"/>
+        <property key="labeling/shapeFillColorR" value="255"/>
+        <property key="labeling/shapeJoinStyle" value="64"/>
+        <property key="labeling/shapeOffsetMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeOffsetUnits" value="1"/>
+        <property key="labeling/shapeOffsetX" value="0"/>
+        <property key="labeling/shapeOffsetY" value="0"/>
+        <property key="labeling/shapeRadiiMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeRadiiUnits" value="1"/>
+        <property key="labeling/shapeRadiiX" value="0"/>
+        <property key="labeling/shapeRadiiY" value="0"/>
+        <property key="labeling/shapeRotation" value="0"/>
+        <property key="labeling/shapeRotationType" value="0"/>
+        <property key="labeling/shapeSVGFile" value=""/>
+        <property key="labeling/shapeSizeMapUnitScale" value="0,0,0,0,0,0"/>
+        <property key="labeling/shapeSizeType" value="0"/>
+        <property key="labeling/shapeSizeUnits" value="1"/>
+        <property key="labeling/shapeSizeX" value="0"/>
+        <property key="labeling/shapeSizeY" value="0"/>
+        <property key="labeling/shapeTransparency" value="0"/>
+        <property key="labeling/shapeType" value="0"/>
+        <property key="labeling/textColorA" value="255"/>
+        <property key="labeling/textColorB" value="0"/>
+        <property key="labeling/textColorG" value="0"/>
+        <property key="labeling/textColorR" value="0"/>
+        <property key="labeling/textTransp" value="0"/>
+        <property key="labeling/upsidedownLabels" value="0"/>
+        <property key="labeling/wrapChar" value=""/>
+        <property key="labeling/xOffset" value="0"/>
+        <property key="labeling/yOffset" value="0"/>
+        <property key="labeling/zIndex" value="0"/>
+        <property key="variableNames"/>
+        <property key="variableValues"/>
+      </customproperties>
+      <blendMode>0</blendMode>
+      <featureBlendMode>0</featureBlendMode>
+      <layerTransparency>0</layerTransparency>
+      <displayfield>name</displayfield>
+      <label>0</label>
+      <labelattributes>
+        <label fieldname="" text="Label"/>
+        <family fieldname="" name="MS Shell Dlg 2"/>
+        <size fieldname="" units="pt" value="12"/>
+        <bold fieldname="" on="0"/>
+        <italic fieldname="" on="0"/>
+        <underline fieldname="" on="0"/>
+        <strikeout fieldname="" on="0"/>
+        <color fieldname="" red="0" blue="0" green="0"/>
+        <x fieldname=""/>
+        <y fieldname=""/>
+        <offset x="0" y="0" units="pt" yfieldname="" xfieldname=""/>
+        <angle fieldname="" value="0" auto="0"/>
+        <alignment fieldname="" value="center"/>
+        <buffercolor fieldname="" red="255" blue="255" green="255"/>
+        <buffersize fieldname="" units="pt" value="1"/>
+        <bufferenabled fieldname="" on=""/>
+        <multilineenabled fieldname="" on=""/>
+        <selectedonly on=""/>
+      </labelattributes>
+      <SingleCategoryDiagramRenderer diagramType="Pie">
+        <DiagramCategory penColor="#000000" labelPlacementMethod="XHeight" penWidth="0" diagramOrientation="Up" minimumSize="0" barWidth="5" penAlpha="255" maxScaleDenominator="1e+08" backgroundColor="#ffffff" transparency="0" width="15" scaleDependency="Area" backgroundAlpha="255" angleOffset="1440" scaleBasedVisibility="0" enabled="0" height="15" sizeType="MM" minScaleDenominator="0">
+          <fontProperties description="MS Shell Dlg 2,8.25,-1,5,50,0,0,0,0,0" style=""/>
+          <attribute field="" color="#000000" label=""/>
+        </DiagramCategory>
+      </SingleCategoryDiagramRenderer>
+      <DiagramLayerSettings yPosColumn="-1" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
+      <annotationform>.</annotationform>
+      <excludeAttributesWMS/>
+      <excludeAttributesWFS/>
+      <attributeactions/>
+      <editform>.</editform>
+      <editforminit/>
+      <editforminitcodesource>0</editforminitcodesource>
+      <editforminitfilepath>.</editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from PyQt4.QtGui import QWidget
 
 def my_form_open(dialog, layer, feature):
 	geom = feature.geometry()
