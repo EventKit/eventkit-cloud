@@ -82,7 +82,7 @@ export const submitJob = data => dispatch => {
             jobuid: response.data.uid
 
         });
-    }).catch((error) => {console.log(error)
+    }).catch((error) => {
         dispatch({
             type: types.JOB_SUBMITTED_ERROR, error: error
         });

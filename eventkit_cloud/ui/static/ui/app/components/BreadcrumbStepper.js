@@ -12,6 +12,7 @@ import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
+import BaseDialog from './BaseDialog';
 
 const isEqual = require('lodash/isEqual');
 
@@ -23,8 +24,12 @@ export class BreadcrumbStepper extends React.Component {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
         this.incrementStepper = this.incrementStepper.bind(this);
+        this.showError = this.showError.bind(this);
+        this.hideError = this.hideError.bind(this);
         this.state = {
             stepIndex: 0,
+            showError: false,
+            error: null
         };
     }
 
@@ -51,8 +56,35 @@ export class BreadcrumbStepper extends React.Component {
                 this.props.setDatacartDetailsReceived();
             }
         }
+        if(nextProps.jobError) {
+            this.showError(nextProps.jobError.response);
+        }
     }
 
+    showError(error) {
+        this.setState({showError: true, error: error});
+        this.props.clearJobInfo();
+    }
+
+    hideError() {
+        this.setState({showError: false});
+    }
+
+    getErrorMessage() {
+        const error = {...this.state.error};
+        console.log(error);
+        let message = '';
+        if(error.data) {
+            const data = error.data
+            for (const key in data) {
+                message += `${key}: ${data[key][0]}\n`;
+            }
+        }
+        if (!message) {
+            message += `Details:\nAn unknow error has occured`;
+        }
+        return message;
+    }
 
     handleSubmit() {
         let provider_tasks = [];
@@ -250,6 +282,7 @@ export class BreadcrumbStepper extends React.Component {
             },
         };
 
+        const message = this.getErrorMessage();
         return (
             <div style={{backgroundColor: '#161e2e'}}>
                 <div style={{width: '100%', height: '50px'}}>
@@ -260,6 +293,13 @@ export class BreadcrumbStepper extends React.Component {
                     </div>
                 </div>
                 {this.getStepContent(this.state.stepIndex)}
+                <BaseDialog
+                    show={this.state.showError}
+                    title={'ERROR'}
+                    onClose={this.hideError}
+                >
+                    {message}
+                </BaseDialog>
             </div>
         );
     }
@@ -292,6 +332,7 @@ function mapStateToProps(state) {
         datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
+        jobError: state.submitJob.error,
         jobuid: state.submitJob.jobuid
     };
 }
