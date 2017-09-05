@@ -968,8 +968,9 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     if file_name:
         zip_filename = file_name
     else:
-        zip_filename = "{0}-{1}-{2}.{3}".format(
+        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
             name,
+            project,
             "eventkit",
             date,
             'zip'
