@@ -129,7 +129,7 @@ class ExportSummary extends React.Component {
                                 <td className={styles.tdData}>{this.props.datapackDescription}</td>
                             </tr>
                             <tr>
-                                <td className={styles.tdHeading}>Project/Category</td>
+                                <td className={styles.tdHeading}>Project&nbsp;/ Category</td>
                                 <td className={styles.tdData}>{this.props.projectName}</td>
                             </tr>
                             <tr>

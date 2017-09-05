@@ -169,12 +169,7 @@ export class DataPackDetails extends React.Component {
     }
 
     getToggleCellWidth() {
-        if(window.innerWidth <= 767) {
-            return '50px';
-        }
-        else {
-            return '70px';
-        }
+        return '70px';
     }
 
     // getCheckboxStatus() {

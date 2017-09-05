@@ -288,7 +288,7 @@ describe('DataPackPage component', () => {
         const published = 'True';
         const search = 'search_text'
         const expectedString = 'page_size=12'
-            +'&ordering=-started_at'
+            +'&ordering=-job__featured,-started_at'
             +'&user=test_user'
             +'&published=True'
             +'&status=COMPLETED,INCOMPLETE'

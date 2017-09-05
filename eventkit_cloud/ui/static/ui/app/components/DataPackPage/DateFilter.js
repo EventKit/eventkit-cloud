@@ -9,8 +9,17 @@ export class DateFilter extends Component {
 
     render () {
         const styles = {
-            drawerSection: {width: '100%', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
-            textField: {fontSize: '14px', height: '36px', width: '180px'}
+            drawerSection: {
+                width: '100%', 
+                paddingLeft: '10px', 
+                paddingRight: '10px', 
+                lineHeight: '36px'
+            },
+            textField: {
+                fontSize: '14px', 
+                height: '36px', 
+                width: '180px'
+            }
         }
         return (
                 <div style={styles.drawerSection}>

@@ -9,7 +9,14 @@ export class DataPackDrawer extends Component {
 
     render () {
         const styles = {
-            drawerHeader: {width: '100%', paddingTop: '10px', paddingLeft: '10px', paddingRight: '10px', paddingBottom: '5px', lineHeight: '36px'},
+            drawerHeader: {
+                width: '100%', 
+                paddingTop: '10px', 
+                paddingLeft: '10px', 
+                paddingRight: '10px', 
+                paddingBottom: '5px', 
+                lineHeight: '36px'
+            },
         }
         return (
                 <div style={styles.drawerHeader}>

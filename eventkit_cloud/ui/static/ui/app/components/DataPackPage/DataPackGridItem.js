@@ -14,10 +14,10 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
 import {browserHistory} from 'react-router';
 import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
+import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -113,7 +113,7 @@ export class DataPackGridItem extends Component {
             return (
             <ListItem
                 key={key}
-                style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'95%'}}
+                style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
                 nestedListStyle={{padding: '0px'}}
                 primaryText={key}
                 initiallyOpen={false}
@@ -122,7 +122,7 @@ export class DataPackGridItem extends Component {
                     <ListItem
                         key={1}
                         primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white',  fontSize: '14px', width:'95%'}}
+                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white',  fontSize: '14px', width:'100%', zIndex: 0}}
                     />
                 ]}
             />
@@ -135,19 +135,54 @@ export class DataPackGridItem extends Component {
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
+                position: 'relative'
             },
             cardTitle:{
                 wordWrap: 'break-word',
-                padding: '10px'
+                padding: '15px 10px 10px'
             },
-            cardTitle2: {fontSize: titleFontSize, height: '36px'},
-            cardSubtitle: {fontSize: cardTextFontSize},
-            completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
-            errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
-            runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
-            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
+            cardTitle2: {
+                fontSize: titleFontSize, 
+                height: '36px'
+            },
+            cardSubtitle: {
+                fontSize: cardTextFontSize
+            },
+            completeIcon: {
+                float: 'left', 
+                color: '#bcdfbb', 
+                fontSize: '20px'
+            },
+            errorIcon: {
+                float: 'left', 
+                color: '#ce4427', 
+                fontSize: '20px', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                float: 'left', 
+                color: '#f4D225', 
+                fontSize: '22px'
+            },
+            unpublishedIcon: {
+                float: 'right', 
+                color: 'grey', 
+                fontSize: '18px', 
+                marginRight: '5px'
+            },
+            publishedIcon: {
+                float: 'right', 
+                color: '#bcdfbb', 
+                fontSize: '20px', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey', 
+                padding: '0px, 10px', 
+                margin: '0px', 
+                fontSize: cardTextFontSize
+            },
             cardTextMinimized: {
                 position: 'absolute',
                 wordWrap: 'break-word',
@@ -190,21 +225,9 @@ export class DataPackGridItem extends Component {
             }
         };
 
-        const providerInfoActions = [
-            <RaisedButton
-                style={{margin: '10px'}}
-                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: '#4598bf'}}
-                disableTouchRipple={true}
-                label="Close"
-                primary={false}
-                onTouchTap={this.handleProviderClose.bind(this)}
-            />,
-        ];
-
-
         return (
             <Card style={styles.card} key={this.props.run.uid} expanded={this.state.expanded} onExpandChange={this.handleExpandChange}>
+                <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
@@ -251,19 +274,13 @@ export class DataPackGridItem extends Component {
                                     onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
                             </IconMenu>
-                            <Dialog
-                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                                actions={providerInfoActions}
-                                modal={false}
-                                open={this.state.providerDialogOpen}
-                                onRequestClose={this.handleProviderClose.bind(this)}
+                            <BaseDialog
+                                show={this.state.providerDialogOpen}
+                                title={'DATA SOURCES'}
+                                onClose={this.handleProviderClose.bind(this)}
                             >
-                                <span><strong>DATA SOURCES</strong>
-                                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
-                                        <List style={{marginTop:'10px'}}>{providersList}</List>
-                                    </CustomScrollbar>
-                                </span>
-                            </Dialog>
+                                <List>{providersList}</List>
+                            </BaseDialog>
                         </div>
                     } 
                     subtitle={

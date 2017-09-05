@@ -41,6 +41,8 @@ export class SearchAOIToolbar extends Component {
     }
 
     handleChange(e) {
+        e = e.slice(0, 1000);
+
         // If 2 or more characters are entered then make request for suggested names.
         if(e.length >= 2) {
             this.props.getGeocode(e);
@@ -55,6 +57,8 @@ export class SearchAOIToolbar extends Component {
     }
 
     handleEnter(e) {
+        e = e.slice(0, 1000);
+
         this.setState({suggestions: []});
         if (e.length > 0) {
             if(this.props.handleSearch(e[0])){
