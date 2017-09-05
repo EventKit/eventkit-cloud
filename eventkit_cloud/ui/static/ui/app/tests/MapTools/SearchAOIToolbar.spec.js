@@ -70,13 +70,13 @@ describe('SearchAOIToolbar button', () => {
         expect(spy.calledWith({suggestions: []})).toBe(true);
     });
 
-    it('handleChange should reset the suggestions', () => {
+    it('handleInputChange should reset the suggestions', () => {
         const suggestions = ['one', 'two'];
         let props = getProps();
         const wrapper = shallow(<SearchAOIToolbar  {...props}/>);
         wrapper.setState({suggestions: suggestions});
         expect(wrapper.state().suggestions).toEqual(suggestions);
-        wrapper.instance().handleChange('e');
+        wrapper.instance().handleInputChange('e');
         expect(wrapper.state().suggestions.length).toEqual(0);
 
     });
