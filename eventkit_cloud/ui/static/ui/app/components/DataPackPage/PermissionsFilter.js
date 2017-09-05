@@ -10,7 +10,27 @@ export class PermissionsFilter extends Component {
 
     render () {
         const styles = {
-            drawerSection: {width: '100%', height: '94px', paddingLeft: '10px', paddingRight: '10px', lineHeight: '36px'},
+            drawerSection: {
+                width: '100%', 
+                height: '94px', 
+                paddingLeft: '10px', 
+                paddingRight: '10px', 
+                lineHeight: '36px'
+            },
+            person: {
+                float: 'right', 
+                marginLeft: '20px', 
+                fill: 'grey', 
+                height: '26px', 
+                marginBottom: '2px'
+            },
+            group: {
+                float: 'right', 
+                marginLeft: '20px', 
+                fill: '#bcdfbb', 
+                height: '26px',
+                marginBottom: '2px'
+            }
         }
         return (
             <div style={styles.drawerSection}>
@@ -37,8 +57,8 @@ export class PermissionsFilter extends Component {
                     </RadioButtonGroup>
                 </div>
                 <div style={{width: '60px', height: '58px', display: 'inline-block', float: 'right'}}>
-                    <SocialPerson style={{float: 'right', marginLeft: '20px', fill: 'grey', height: '26px', marginBottom: '2px'}}/>
-                    <SocialGroup style={{float: 'right', marginLeft: '20px', fill: '#bcdfbb', height: '26px', marginBottom: '2px'}}/>
+                    <SocialPerson style={styles.person}/>
+                    <SocialGroup style={styles.group}/>
                 </div>
             </div>
         )

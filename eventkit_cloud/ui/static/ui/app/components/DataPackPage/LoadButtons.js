@@ -28,14 +28,32 @@ export class LoadButtons extends React.Component {
     render() {
         const range = this.props.range ? this.props.range.split('/') : null;
         const styles = {
+            container: {
+                textAlign: 'center', 
+                paddingBottom: '10px', 
+                margin: '0px 10px', 
+                position: 'relative', 
+                height: '46px'
+            },
             range: this.state.width < 768 ?
-                {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
+                {
+                    color: '#a59c9c', 
+                    lineHeight: '36px', 
+                    fontSize: '12px'
+                }
                 :
-                {display: 'inline-block', position: 'absolute', color: '#a59c9c', lineHeight: '36px', right: '10px', fontSize: '12px'}
+                {
+                    display: 'inline-block', 
+                    position: 'absolute', 
+                    color: '#a59c9c', 
+                    lineHeight: '36px', 
+                    right: '10px', 
+                    fontSize: '12px'
+                }
         };
 
         return (
-            <div style={{textAlign: 'center', paddingBottom: '10px', margin: '0px 10px', position: 'relative', height: '46px'}}>
+            <div style={styles.container}>
                 <div style={{display: 'inline-block'}}>
                     <RaisedButton 
                         backgroundColor={'#e5e5e5'}

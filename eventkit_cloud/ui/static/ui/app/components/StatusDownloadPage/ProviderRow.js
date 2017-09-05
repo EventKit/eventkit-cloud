@@ -4,8 +4,6 @@ import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
-import Dialog from 'material-ui/Dialog';
-import RaisedButton from 'material-ui/RaisedButton';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down'
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up'
@@ -20,8 +18,9 @@ import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
 import CustomScrollbar from '../CustomScrollbar';
-import TaskError from './TaskError'
-import ProviderError from './ProviderError'
+import TaskError from './TaskError';
+import ProviderError from './ProviderError';
+import BaseDialog from '../BaseDialog';
 
 export class ProviderRow extends React.Component {
     constructor(props) {
@@ -228,12 +227,7 @@ export class ProviderRow extends React.Component {
     }
 
     getToggleCellWidth() {
-        if(window.innerWidth <= 767) {
-            return '30px';
-        }
-        else {
-            return '50px';
-        }
+        return '50px';
     }
 
     handleProviderClose = () => {
@@ -327,18 +321,6 @@ export class ProviderRow extends React.Component {
         onClick={this.handleProviderOpen.bind(this, this.props.provider)}
     />);
 
-        const providerInfoActions = [
-            <RaisedButton
-                style={{margin: '10px'}}
-                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: '#4598bf'}}
-                disableTouchRipple={true}
-                label="Close"
-                primary={false}
-                onTouchTap={this.handleProviderClose.bind(this)}
-            />,
-        ];
-
         const tasks = provider.tasks.filter((task) => {
             return task.display != false;
         });
@@ -428,19 +410,13 @@ export class ProviderRow extends React.Component {
                             :
                                 null
                             }
-                            <Dialog
-                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                                actions={providerInfoActions}
-                                modal={false}
-                                open={this.state.providerDialogOpen}
-                                onRequestClose={this.handleProviderClose.bind(this)}
+                            <BaseDialog
+                                show={this.state.providerDialogOpen}
+                                title={this.props.provider.name}
+                                onClose={this.handleProviderClose.bind(this)}
                             >
-                            <span><strong>{this.props.provider.name}</strong>
-                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
-                                <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
-                                </CustomScrollbar>
-                            </span>
-                            </Dialog>
+                                {this.state.providerDesc}
+                            </BaseDialog>
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
