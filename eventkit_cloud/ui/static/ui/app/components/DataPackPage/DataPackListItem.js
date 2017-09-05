@@ -12,10 +12,9 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
 import { List, ListItem} from 'material-ui/List'
 import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
 import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackListItem extends Component {
@@ -51,7 +50,7 @@ export class DataPackListItem extends Component {
             return (
                 <ListItem
                     key={key}
-                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'95%'}}
+                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
                     nestedListStyle={{padding: '0px'}}
                     primaryText={key}
                     initiallyOpen={false}
@@ -60,25 +59,13 @@ export class DataPackListItem extends Component {
                         <ListItem
                             key={1}
                             primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
-                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'95%'}}
+                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'100%', zIndex: 0}}
                         />
                     ]}
                 />
 
             );
         })
-
-        const providerInfoActions = [
-            <RaisedButton
-                style={{margin: '10px'}}
-                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: '#4598bf'}}
-                disableTouchRipple={true}
-                label="Close"
-                primary={false}
-                onTouchTap={this.handleProviderClose.bind(this)}
-            />,
-        ];
 
         const width = window.innerWidth;
         const titleFontSize = width < 576 ? '19px' : '23px';
@@ -202,19 +189,13 @@ export class DataPackListItem extends Component {
                                     onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
                                 : null}
                             </IconMenu>
-                            <Dialog
-                                contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                                actions={providerInfoActions}
-                                modal={false}
-                                open={this.state.providerDialogOpen}
-                                onRequestClose={this.handleProviderClose.bind(this)}
+                            <BaseDialog
+                                show={this.state.providerDialogOpen}
+                                title={'DATA SOURCES'}
+                                onClose={this.handleProviderClose.bind(this)}
                             >
-                                <span><strong>DATA SOURCES</strong>
-                                    <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
-                                        <List style={{marginTop:'10px'}}>{providersList}</List>
-                                    </CustomScrollbar>
-                                </span>
-                            </Dialog>
+                                <List>{providersList}</List>
+                            </BaseDialog>
                         </div>
                     } 
                     subtitle={
