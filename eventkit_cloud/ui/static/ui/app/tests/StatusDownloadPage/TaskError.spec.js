@@ -3,9 +3,9 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import '../../components/tap_events';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Dialog from 'material-ui/Dialog';;
 import Warning from 'material-ui/svg-icons/alert/warning';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
+import BaseDialog from '../../components/BaseDialog';
 
 describe('TaskError component', () => {
     const getProps = () => {
@@ -45,7 +45,7 @@ describe('TaskError component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
-        expect(wrapper.find(Dialog)).toHaveLength(1);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
     it('handleTaskErrorOpen should set task error dialog to open', () => {
@@ -57,8 +57,7 @@ describe('TaskError component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({taskErrorDialogOpen: true})).toBe(true);
         expect(wrapper.find(Warning)).toHaveLength(1);
-        expect(wrapper.find('div').at(0).text()).toEqual('OSM Data (.gpkg) has 1 error(s). <CustomScrollbar />');
-        expect(wrapper.find('div').at(2).text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
+        expect(wrapper.find('#error-data').text()).toEqual('<AlertWarning />OpenStreetMap Data (Themes) was canceled by admin.');
         stateSpy.restore();
         stateSpy.restore();
     });
