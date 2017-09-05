@@ -138,7 +138,8 @@ export class SearchAOIToolbar extends Component {
                     ?
                         <CircularProgress
                             size={25}
-                            style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1', color: '#4598bf'}}
+                            style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1'}}
+                            color={'#4598bf'}
                         />
                     : null}
                 </div>
