@@ -13,6 +13,8 @@ import { createExportRequest, getProviders, stepperNextDisabled,
     stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 import BaseDialog from './BaseDialog';
+import Divider from 'material-ui/Divider';
+import Warning from 'material-ui/svg-icons/alert/warning';
 
 const isEqual = require('lodash/isEqual');
 
@@ -71,17 +73,63 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     getErrorMessage() {
+        if (!this.state.showError) {return ''}
         const error = {...this.state.error};
-        console.log(error);
-        let message = '';
-        if(error.data) {
-            const data = error.data
-            for (const key in data) {
-                message += `${key}: ${data[key][0]}\n`;
-            }
+        let message = [];
+        if(error.data) { // && error.data.errors
+            // const errors = error.data.errors;
+            const fakeErrors = [
+                {
+                  "source": { "pointer": "/data/attributes/first-name" },
+                  "title": "Invalid Attribute",
+                  "detail": "First name must contain at least three characters."
+                },
+                {
+                  "source": { "pointer": "/data/attributes/first-name" },
+                  "title": "Invalid Attribute",
+                  "detail": "First name must contain an emoji."
+                },
+                {
+                    "source": { "pointer": "/data/attributes/first-name" },
+                    "title": "Invalid Attribute",
+                    "detail": "First name must contain at least three characters."
+                },
+                {
+                    "source": { "pointer": "/data/attributes/first-name" },
+                    "title": "Invalid Attribute",
+                    "detail": "First name must contain an emoji."
+                }
+              ]
+            message = fakeErrors.map((error, ix) => {
+                console.log(error);
+                return <div id='error-container' key={ix}>
+                            <p id='error-title'>
+                                <Warning style={{fill:'#ce4427', verticalAlign: 'bottom', marginRight: '10px'}}/>
+                                <strong>
+                                    {error.title}
+                                </strong>
+                            </p>
+                            <p id='error-detail'>
+                                {error.detail}
+                            </p>
+                            <Divider style={{marginBottom: '10px'}}/>
+                        </div>
+            });
         }
-        if (!message) {
-            message += `Details:\nAn unknow error has occured`;
+        if (!message.length) {
+            message.push(<div id='error-container'>
+                            <p id='error-title'>
+                                <Warning style={{fill:'#ce4427', verticalAlign: 'bottom', marginRight: '10px'}}/>
+                                <strong>
+                                    Error
+                                </strong>
+                            </p>
+                            <p id='error-detail'>
+                                An unknown error has occured
+                            </p>
+                            <Divider style={{marginBottom: '10px'}}/>
+                        </div>
+            );
         }
         return message;
     }
@@ -298,7 +346,7 @@ export class BreadcrumbStepper extends React.Component {
                     title={'ERROR'}
                     onClose={this.hideError}
                 >
-                    {message}
+                    <div>{message}</div>
                 </BaseDialog>
             </div>
         );
