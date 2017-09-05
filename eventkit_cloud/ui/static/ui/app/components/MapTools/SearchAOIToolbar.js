@@ -126,7 +126,9 @@ export class SearchAOIToolbar extends Component {
                                                 <TypeaheadMenuItem result={result} index={index} key={index}/>
                                             ))
                                         :
-                                            <div style={{padding: '16px', userSelect: 'none', cursor: 'default'}}>No results</div>
+                                            <div style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
+                                                No results
+                                            </div>
                                     : null}
                                 </Menu>
                             );
@@ -136,7 +138,7 @@ export class SearchAOIToolbar extends Component {
                     ?
                         <CircularProgress
                             size={25}
-                            style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1'}}
+                            style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1', color: '#4598bf'}}
                         />
                     : null}
                 </div>
