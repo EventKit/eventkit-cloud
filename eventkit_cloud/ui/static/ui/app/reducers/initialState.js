@@ -36,6 +36,8 @@ export default {
         error: null,
         nextPage: false,
         range: '',
+        order: '',
+        view: '',
     },
     runsDeletion: {
         deleting: false,
