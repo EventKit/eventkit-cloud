@@ -1,24 +1,24 @@
-import React, {PropTypes} from 'react'
-import {connect} from 'react-redux'
-import 'openlayers/dist/ol.css'
-import numeral from 'numeral'
-import ol from 'openlayers'
-import { reduxForm, Field } from 'redux-form'
-import { RadioButton } from 'material-ui/RadioButton'
-import { List, ListItem} from 'material-ui/List'
-import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card'
-import TextField from 'material-ui/TextField'
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle'
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked'
-import Paper from 'material-ui/Paper'
-import Checkbox from 'material-ui/Checkbox'
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
-import '../tap_events'
-import styles from '../../styles/ExportInfo.css'
+import React, {PropTypes} from 'react';
+import {connect} from 'react-redux';
+import 'openlayers/dist/ol.css';
+import numeral from 'numeral';
+import ol from 'openlayers';
+import { reduxForm, Field } from 'redux-form';
+import { RadioButton } from 'material-ui/RadioButton';
+import { List, ListItem} from 'material-ui/List';
+import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
+import TextField from 'material-ui/TextField';
+import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
+import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
+import Paper from 'material-ui/Paper';
+import Checkbox from 'material-ui/Checkbox';
+import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import '../tap_events';
+import styles from '../../styles/ExportInfo.css';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js'
-
+import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js';
+import debounce from 'lodash/debounce';
 
 export class ExportInfo extends React.Component {
     constructor(props) {
@@ -36,6 +36,7 @@ export class ExportInfo extends React.Component {
         }
         this.onChange = this.onChange.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
+        this.hasRequiredFields = this.hasRequiredFields.bind(this);
     }
 
     screenSizeUpdate() {
@@ -43,17 +44,8 @@ export class ExportInfo extends React.Component {
     }
 
     onChange(event) {
-
-        console.log(this.state);
-        this.setState({[event.target.name]: event.target.value}, function () {
-            if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
-                this.props.setNextDisabled()
-            }
-            else {
-                this.props.setNextEnabled()
-            }
-        })
-
+        event.persist();
+        this.debouncedHandler(event);
     }
 
     onChangeCheck(e){
@@ -86,7 +78,7 @@ export class ExportInfo extends React.Component {
             // update the state with the new array of options
 
             this.setState({ providers: providers } ,function (){
-            if (!this.state.exportName || !this.state.datapackDescription || !this.state.projectName || !this.state.providers.length > 0) {
+            if (!this.hasRequiredFields()) {
                 this.props.setNextDisabled()
             }
             else {
@@ -96,7 +88,6 @@ export class ExportInfo extends React.Component {
 
     }
     toggleCheckbox(event, checked) {
-
         this.setState({makePublic: checked})
     }
 
@@ -108,7 +99,22 @@ export class ExportInfo extends React.Component {
     getChildContext() {
         return {muiTheme: getMuiTheme(baseTheme)}
     }
+
     componentDidMount() {
+        this.screenSizeUpdate();
+        window.addEventListener('resize', this.screenSizeUpdate);
+
+        this.debouncedHandler = debounce(event => {
+            this.setState({[event.target.name]: event.target.value}, function () {
+                if (!this.hasRequiredFields()) {
+                    this.props.setNextDisabled()
+                }
+                else {
+                    this.props.setNextEnabled()
+                }
+            })
+        }, 500);
+
         this.props.setExportInfoNotDone();
         if (this.props.exportInfo.exportName == ''){
             this.props.setNextDisabled()
@@ -135,11 +141,6 @@ export class ExportInfo extends React.Component {
 
     }
 
-    componentWillMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
     componentWillUnmount() {
         window.removeEventListener('resize', this.screenSizeUpdate);
     }
@@ -149,6 +150,10 @@ export class ExportInfo extends React.Component {
             this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
             this.props.incrementStepper();
         }
+    }
+
+    hasRequiredFields() {
+        return this.state.exportName && this.state.datapackDescription && this.state.projectName && this.state.providers.length > 0
     }
 
     setArea() {
