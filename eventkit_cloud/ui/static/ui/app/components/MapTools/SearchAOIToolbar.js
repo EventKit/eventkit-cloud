@@ -5,16 +5,20 @@ import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
 import {getGeocode} from '../../actions/searchToolbarActions';
 import debounce from 'lodash/debounce';
+import {CircularProgress} from "material-ui";
 
 export class SearchAOIToolbar extends Component {
 
     constructor(props) {
         super(props)
+        this.handleInputChange = this.handleInputChange.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleEnter = this.handleEnter.bind(this);
         this.state = {
             value: '',
             suggestions: [],
+            fetched: false,
+            fetching: false,
         }
     }
 
@@ -25,6 +29,9 @@ export class SearchAOIToolbar extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        this.state.fetching = nextProps.geocode.fetching;
+        this.state.fetched = nextProps.geocode.fetched;
+
         if(nextProps.geocode.fetched == true) {
             this.setState({suggestions: nextProps.geocode.data});
         }
@@ -40,21 +47,28 @@ export class SearchAOIToolbar extends Component {
         }
     }
 
+    handleInputChange(e) {
+        this.setState({
+            fetching: (e.length >= 2),
+            fetched: false,
+            suggestions: [],
+        });
+
+        this.debouncer(e);
+    }
+
     handleChange(e) {
+        e = e.slice(0, 1000);
+
         // If 2 or more characters are entered then make request for suggested names.
         if(e.length >= 2) {
             this.props.getGeocode(e);
         }
-        // If one or zero characters are entered then dont provide suggestions
-        else {
-            // If there are suggestions remove them
-            if(this.state.suggestions.length > 0) {
-                this.setState({suggestions: []});
-            }
-        }
     }
 
     handleEnter(e) {
+        e = e.slice(0, 1000);
+
         this.setState({suggestions: []});
         if (e.length > 0) {
             if(this.props.handleSearch(e[0])){
@@ -96,7 +110,7 @@ export class SearchAOIToolbar extends Component {
                         options={this.state.suggestions}
                         onChange={this.handleEnter}
                         placeholder={'Search admin boundary or location...'}
-                        onInputChange={this.debouncer}
+                        onInputChange={this.handleInputChange}
                         labelKey={'name'}
                         paginate={false}
                         emptyLabel={''}
@@ -104,14 +118,30 @@ export class SearchAOIToolbar extends Component {
                         renderMenu={(results, menuProps) => {
                             return(
                                 <Menu {...menuProps}>
-                                    {results.map((result, index) => (
-                                        <TypeaheadMenuItem result={result} index={index} key={index}/>
-                                    ))
-                                    }
-                                </Menu>        
-                            )
+                                    {(this.state.fetched)
+                                    ?
+                                        (results.length)
+                                        ?
+                                            results.map((result, index) => (
+                                                <TypeaheadMenuItem result={result} index={index} key={index}/>
+                                            ))
+                                        :
+                                            <div style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
+                                                No results
+                                            </div>
+                                    : null}
+                                </Menu>
+                            );
                         }}
                     />
+                    {(this.state.fetching)
+                    ?
+                        <CircularProgress
+                            size={25}
+                            style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1'}}
+                            color={'#4598bf'}
+                        />
+                    : null}
                 </div>
                 <div style={styles.buttonContainer}>
                     <SearchAOIButton

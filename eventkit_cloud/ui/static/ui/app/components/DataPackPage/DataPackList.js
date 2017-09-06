@@ -29,7 +29,7 @@ export class DataPackList extends Component {
     }
 
     isSameOrderType(unknown, known) {
-        return unknown.charAt(0) == '-' ? unknown.substring(1) == known : unknown == known;
+        return unknown.replace(/-/, '') == known.replace(/-/, '');
     }
 
     //If it is a 'reversed' order the arrow should be up, otherwise it should be down
@@ -47,23 +47,65 @@ export class DataPackList extends Component {
     }
 
     render() {
+        const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'space-around',
-                marginLeft: '10px',
-                marginRight: '10px',
-                paddingBottom: '10px'
+                marginLeft: spacing,
+                marginRight: spacing,
+                paddingBottom: spacing
             },
-            clickable: {cursor: 'pointer', width: 'min-content'},
-            tableRow: {marginLeft: '12px', paddingRight: '6px', color: '#fff', height: '50px'},
-            nameColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            eventColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            dateColumn: {width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
-            statusColumn: {width: '65px' ,padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
-            permissionsColumn: {width: '100px', padding: '0px 0px 0px 10px', textAlign: 'center', height: 'inherit'},
-            ownerColumn: {padding: '0px 0px 0px 10px', textAlign: 'left', height: 'inherit'},
+            clickable: {
+                cursor: 'pointer', 
+                width: 'min-content'
+            },
+            tableRow: {
+                marginLeft: '12px', 
+                paddingRight: '6px', 
+                color: '#fff', 
+                height: '50px'
+            },
+            nameColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            eventColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            dateColumn: {
+                width: '98px', 
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            statusColumn: {
+                width: '65px',
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'center', 
+                height: 'inherit'
+            },
+            permissionsColumn: {
+                width: '100px', 
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'center', 
+                height: 'inherit'
+            },
+            ownerColumn: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit'
+            },
+            featuredColum: {
+                padding: '0px 0px 0px 10px', 
+                textAlign: 'left', 
+                height: 'inherit', 
+                width: '80px'
+            }
         };
 
         const load = <LoadButtons
@@ -82,7 +124,7 @@ export class DataPackList extends Component {
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
-                            style={{width: window.innerWidth - 10, minWidth: '360px'}}
+                            style={{width: '100%', minWidth: '360px'}}
                         >
                         {this.props.runs.map((run) => (
                             <DataPackListItem
@@ -119,7 +161,7 @@ export class DataPackList extends Component {
                                         </div>
                                     </TableHeaderColumn>
                                     <TableHeaderColumn style={styles.dateColumn}>
-                                        <div onClick={() => {this.handleOrder('started_at')}} style={styles.clickable}>
+                                        <div onClick={() => {this.handleOrder('-started_at')}} style={styles.clickable}>
                                             <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
                                             {this.getIcon('started_at')}
                                         </div>
@@ -142,7 +184,13 @@ export class DataPackList extends Component {
                                             {this.getIcon('-user__username')}
                                         </div>
                                     </TableHeaderColumn>
-                                    <TableHeaderColumn style={{padding: '0px', width: '30px', height: 'inherit'}}/>
+                                    <TableHeaderColumn style={styles.featuredColum}>
+                                        <div onClick={() => {this.handleOrder('-job__featured')}} style={styles.clickable}>
+                                            <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__featured'))}>Featured</span>
+                                            {this.getIcon('job__featured')}
+                                        </div>
+                                    </TableHeaderColumn>
+                                    <TableHeaderColumn style={{padding: '0px', width: '35px', height: 'inherit'}}/>
                                 </TableRow>
                             </TableHeader>
                         </Table>

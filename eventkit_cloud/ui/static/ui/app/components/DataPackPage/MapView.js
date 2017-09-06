@@ -112,16 +112,22 @@ export class MapView extends Component {
         if (this.hasNewRuns(this.props.runs, nextProps.runs)) {
             this.source.clear();
             const added = this.addRunFeatures(nextProps.runs, this.source);
+            const drawExtent = this.drawLayer.getSource().getExtent();
+            const runsExtent = this.source.getExtent();
+            // if any features were added to the source
             if (added) {
-                const drawExtent = this.drawLayer.getSource().getExtent();
-                const runsExtent = this.source.getExtent();
-                if (this.drawLayer.getSource().getFeatures().length) {
-                    if (ol.extent.containsExtent(drawExtent, runsExtent)) {
+                // if there is a draw feature and it contains all the runs: fit to draw feature
+                if (this.drawLayer.getSource().getFeatures().length && ol.extent.containsExtent(drawExtent, runsExtent)) {
                         this.map.getView().fit(drawExtent);
-                    }
-                    else {this.map.getView().fit(runsExtent);}
                 }
-                else {this.map.getView().fit(runsExtent);}
+                // if no draw feature or it does not contain all runs: just fit the runs
+                else {
+                    this.map.getView().fit(runsExtent);
+                }
+            }
+            // if no features added but there is a draw feature: zoom to draw feature
+            else if (this.drawLayer.getSource().getFeatures().length) {
+                zoomToGeometry(this.drawLayer.getSource().getFeatures()[0].getGeometry(), this.map);
             }
         }
 
@@ -445,9 +451,12 @@ export class MapView extends Component {
         const feature = (new ol.format.GeoJSON()).readFeature(result);
         feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
         this.drawLayer.getSource().addFeature(feature);
-            const geojson_geometry = createGeoJSONGeometry(feature.getGeometry());
-            this.props.onMapFilter(geojson_geometry);
-            return true;
+        const geojson_geometry = createGeoJSONGeometry(feature.getGeometry());
+        this.props.onMapFilter(geojson_geometry);
+        if (this.source.getFeatures().length == 0) {
+            zoomToGeometry(feature.getGeometry(), this.map);
+        }
+        return true;
     }
 
     handleCancel() {
@@ -575,6 +584,7 @@ export class MapView extends Component {
     }
 
     render() {
+        const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -585,14 +595,41 @@ export class MapView extends Component {
                 paddingBottom: '10px'
             },
             map: window.innerWidth < 768 ? 
-            {width: '100%', height: '100%', display: 'block', overflow: 'hidden', padding: '0px 10px 10px', position: 'relative'} 
+                {
+                    width: '100%', 
+                    height: '100%', 
+                    display: 'block', 
+                    overflow: 'hidden', 
+                    padding: `0px ${spacing} ${spacing}`, 
+                    position: 'relative'
+                } 
             :
-            {width: '70%', height: window.innerHeight - 236, display: 'inline-block', overflow: 'hidden', padding: '0px 10px 10px 3px', position: 'relative'},
+                {
+                    width: '70%', 
+                    height: window.innerHeight - 241,
+                    display: 'inline-block', 
+                    overflow: 'hidden', 
+                    padding: '0px 10px 0px 3px',
+                    position: 'relative'
+                },
             list: window.innerWidth < 768 ?
-            {display: 'none'}
+                {
+                    display: 'none'
+                }
             :
-            {height: window.innerHeight - 236, width: '30%', display: 'inline-block'},
-            popupContainer: {position: 'absolute', width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`, bottom: '50px', textAlign: 'center', display: 'relative', zIndex: 1}
+                {
+                    height: window.innerHeight - 241,
+                    width: '30%', 
+                    display: 'inline-block'
+                },
+            popupContainer: {
+                position: 'absolute',
+                width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`, 
+                bottom: '50px', 
+                textAlign: 'center', 
+                display: 'relative', 
+                zIndex: 1
+            }
         };
 
         const load = <LoadButtons

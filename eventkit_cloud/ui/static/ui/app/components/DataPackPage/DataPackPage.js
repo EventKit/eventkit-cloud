@@ -49,9 +49,10 @@ export class DataPackPage extends React.Component {
                 submitted: false,
                 incomplete: false,
             },
+            providers: {},
             view: 'map',
             pageLoading: true,
-            order: '-started_at',
+            order: '-job__featured',
             ownerFilter: '',
             pageSize: 12,
             loading: false,
@@ -76,11 +77,9 @@ export class DataPackPage extends React.Component {
             }
         }
     }
-    componentDidMount() {
-        this.props.getProviders();
-    }
 
     componentDidMount() {
+        this.props.getProviders();
         this.makeRunRequest();
         window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -113,6 +112,8 @@ export class DataPackPage extends React.Component {
             if(this.state.status[key]) {status.push(key.toUpperCase())};
         });
 
+        const order = this.state.order.includes('featured') ? this.state.order + ',-started_at' : this.state.order;
+
         const minDate = this.state.minDate ? `&min_date=${this.state.minDate.toISOString().substring(0, 10)}` : '';
         let maxDate = ''
         if(this.state.maxDate) {
@@ -121,15 +122,18 @@ export class DataPackPage extends React.Component {
             maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
         }
 
+        const providers = Object.keys(this.state.providers);
+
         let params = '';
         params += `page_size=${this.state.pageSize}`;
-        params += this.state.order ? `&ordering=${this.state.order}`: '';
+        params += order ? `&ordering=${order}`: '';
         params += this.state.ownerFilter ? `&user=${this.state.ownerFilter}`: '';
         params += this.state.published ? `&published=${this.state.published}` : '';
         params += status.length ? `&status=${status.join(',')}` : '';
         params += minDate;
         params += maxDate;
-        params += this.state.search ? `&search_term=${this.state.search}` : '';
+        params += this.state.search ? `&search_term=${this.state.search.slice(0, 1000)}` : '';
+        params += providers.length ? `&providers=${providers.join(',')}` : '';
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
@@ -170,7 +174,7 @@ export class DataPackPage extends React.Component {
     }
 
     changeView(view) {
-        if (['started_at', '-started_at', 'job__name', '-job__name'].indexOf(this.state.order) < 0) {
+        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
             this.setState({order: '-started_at', loading: true}, () => {
                 let promise = this.makeRunRequest();
                 promise.then(() => this.setState({view: view}));
@@ -257,10 +261,10 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 236,
+                height: window.innerHeight - 231,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
-                marginTop: '10px',
+                marginTop: window.innerWidth > 575 ? '10px' : '2px',
             },
             appBar: {
                 backgroundColor: '#161e2e',
@@ -314,20 +318,27 @@ export class DataPackPage extends React.Component {
 
                 <Toolbar style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton handleToggle={this.handleToggle} />
+                        <DataPackFilterButton 
+                            handleToggle={this.handleToggle}
+                            active={this.state.open}
+                        />
                         {this.state.view == 'list' && window.innerWidth >= 768 ?
                             null
                             : 
                             <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
                         }
-                        <DataPackViewButtons handleViewChange={this.changeView}/>
+                        <DataPackViewButtons 
+                            handleViewChange={this.changeView}
+                            view={this.state.view}
+                        />
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>
                     <FilterDrawer 
                         onFilterApply={this.handleFilterApply} 
                         onFilterClear={this.handleFilterClear}
-                        open={this.state.open}/>
+                        open={this.state.open}
+                        providers={this.props.providers}/>
 
                     {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
@@ -414,4 +425,3 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(DataPackPage);
-

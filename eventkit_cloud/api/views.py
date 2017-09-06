@@ -582,7 +582,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     lookup_field = 'uid'
     search_fields = ('user__username', 'status', 'job__uid', 'min_date',
                      'max_date', 'started_at', 'job__published')
-    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event')
+    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event', 'job__featured')
     ordering = ('-started_at',)
 
     def get_queryset(self):

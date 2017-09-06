@@ -17,6 +17,7 @@ import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
+import BaseDialog from '../../components/BaseDialog';
 
 describe('ProviderRow component', () => {
 
@@ -178,28 +179,6 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
-    it('getToggleCellWidth should return the pixel string for table width based on window width', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('30px');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
-    });
-
-
     it('should call componentWillMount and set the row and count state', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(ProviderRow.prototype, 'componentWillMount');
@@ -220,9 +199,7 @@ describe('ProviderRow component', () => {
         console.log(props.provider)
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
-        expect(wrapper.find('span')).toHaveLength(1);
-        expect(wrapper.find('div')).toHaveLength(1);
-        expect(wrapper.find('div').at(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
     });
 
@@ -333,18 +310,18 @@ describe('ProviderRow component', () => {
         const props = getProps();
         const getTaskLink = new sinon.spy(ProviderRow.prototype, 'getTaskLink');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskLink(tasks);
+        wrapper.instance().getTaskLink(props.provider.tasks[0]);
         expect(getTaskLink.calledOnce).toBe(true);
-        expect(getTaskLink.calledWith(tasks)).toBe(true);
+        expect(getTaskLink.calledWith(props.provider.tasks[0])).toBe(true);
     });
 
     it('getTaskDownloadIcon should be called with correct data', () => {
         const props = getProps();
         const getTaskIcon = new sinon.spy(ProviderRow.prototype, 'getTaskDownloadIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskDownloadIcon(tasks);
+        wrapper.instance().getTaskDownloadIcon(props.provider.tasks[0]);
         expect(getTaskIcon.calledOnce).toBe(true);
-        expect(getTaskIcon.calledWith(tasks)).toBe(true);
+        expect(getTaskIcon.calledWith(props.provider.tasks[0])).toBe(true);
     });
 
     it('getProviderLink should be called with the icon from a given provider', () => {
@@ -406,6 +383,7 @@ const tasks = [
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         "result": {
+            "file":"osm.pkg",
             "size": "1.234 MB",
             "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         },
