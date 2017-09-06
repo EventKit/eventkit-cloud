@@ -357,7 +357,7 @@ export class ExportInfo extends React.Component {
                                         show={this.state.projectionsDialogOpen}
                                         title='Projection Information'
                                         onClose={this.handleProjectionsClose.bind(this)}
-                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
+                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}}>
                                         All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
                                     </div>
                                     </BaseDialog>
