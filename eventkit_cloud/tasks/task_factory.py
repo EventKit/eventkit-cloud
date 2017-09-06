@@ -13,8 +13,8 @@ from django.utils import timezone
 from celery import chain
 
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
-                                               create_style_task, bounds_export_task,
-                                               prepare_for_export_zip_task, zip_file_task)
+                                               bounds_export_task, prepare_for_export_zip_task,
+                                               zip_file_task)
 
 from ..jobs.models import Job
 from ..ui.helpers import get_style_files
@@ -287,7 +287,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None,
     apply_args = apply_args or dict()
 
     # These should be subclassed from FinalizeRunHookTask
-    hook_tasks = [create_style_task]
+    hook_tasks = []
     hook_task_sigs = []
     if len(hook_tasks) > 0:
         # When the resulting chain is made part of a bigger chain, we don't want the result of the previous

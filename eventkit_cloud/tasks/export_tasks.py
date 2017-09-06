@@ -25,7 +25,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files
+from ..ui.helpers import get_style_files, generate_qgs_style
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -620,6 +620,8 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # Need to remove duplicates from the list because
     # some intermediate tasks produce files with the same name.
     # sorted while adding time allows comparisons in tests.
+    qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
+    include_files += [qgs_style_file]
     include_files = sorted(list(set(include_files)))
     if include_files:
         logger.debug("Zipping files: {0}".format(include_files))
@@ -851,35 +853,6 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
 
     return created_files
 
-
-@app.task(name="QGIS Project file (.qgs)", base=FinalizeRunHookTask, bind=True, abort_on_error=False)
-def create_style_task(self, new_zip_filepaths=[], run_uid=None):
-    """
-    Task to create QGIS project file with styles for osm.
-    """
-    from eventkit_cloud.tasks.models import ExportRun
-    run = ExportRun.objects.get(uid=run_uid)
-    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
-
-    job_name = run.job.name.lower()
-
-    gpkg_file = '{}.gpkg'.format(job_name)
-    style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
-
-    with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'bbox': run.job.extents,
-                                                                      'job_name' : job_name}))
-    return [style_file]
-
-
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
     from eventkit_cloud.tasks.models import ExportRun
@@ -907,6 +880,9 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
                 # Exclude zip files created by zip_export_provider
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
+
+    qgs_style_file = generate_qgs_style(run_uid=run_uid)
+    include_files += [qgs_style_file]
     # Need to remove duplicates from the list because
     # some intermediate tasks produce files with the same name.
     # and add the static resources
