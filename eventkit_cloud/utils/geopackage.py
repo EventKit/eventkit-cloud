@@ -349,7 +349,7 @@ def get_table_info(gpkg, table):
 
 def create_table_from_existing(gpkg, old_table, new_table):
     """
-    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such as a primary key column.
+    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such has a primary key column.
     
     :param gpkg: 
     :param old_table: 
@@ -367,6 +367,96 @@ def create_table_from_existing(gpkg, old_table, new_table):
             ["{0} {1}".format(column[0], column[1]) for column in columns])))
         conn.execute("CREATE TABLE {0} ({1});".format(new_table, ','.join(
             ["{0} {1}".format(column[0], column[1]) for column in columns])))
+
+
+def create_metadata_tables(gpkg):
+    """
+    Creates tables needed to add metadata.
+
+    :param gpkg: A geopackage to create the metadata tables.
+    :return:
+    """
+    create_extension_table(gpkg)
+    commands = [
+        """
+        CREATE TABLE IF NOT EXISTS gpkg_metadata (
+          id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
+          md_scope TEXT NOT NULL DEFAULT 'dataset',
+          md_standard_uri TEXT NOT NULL,
+          mime_type TEXT NOT NULL DEFAULT 'text/xml',
+          metadata TEXT NOT NULL DEFAULT ''
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS gpkg_metadata_reference (
+          reference_scope TEXT NOT NULL,
+          table_name TEXT,
+          column_name TEXT,
+          row_id_value INTEGER,
+          timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          md_file_id INTEGER NOT NULL,
+          md_parent_id INTEGER,
+          CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
+          CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id)
+        );
+        """,
+        """
+        INSERT OR IGNORE INTO gpkg_extensions(table_name, column_name, extension_name, definition, scope)
+            VALUES (NULL, NULL, "gpkg_metadata", "http://www.geopackage.org/spec/#extension_metadata", "read-write");
+        """
+    ]
+    with sqlite3.connect(gpkg) as conn:
+        for command in commands:
+            logger.debug(command)
+            if not conn.execute(command).rowcount:
+                raise Exception("Unable to create the gpkg_extensions tables.")
+
+
+def create_extension_table(gpkg):
+    """
+
+    :param gpkg: A geopackage to create the gpkg_extensions table.
+    :return:
+    """
+    command = """
+CREATE TABLE IF NOT EXISTS gpkg_extensions (
+  table_name TEXT,
+  column_name TEXT,
+  extension_name TEXT NOT NULL,
+  definition TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
+);
+"""
+
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug(command)
+        if not conn.execute(command).rowcount:
+            raise Exception("Unable to create the gpkg_extensions table.")
+
+
+def add_file_metadata(gpkg, metadata):
+    """
+    :param gpkg: A geopackage to add metadata.
+    :param metadata: The xml metadata to add as a string.
+    :return:
+    """
+    create_metadata_tables(gpkg)
+
+    with sqlite3.connect(gpkg) as conn:
+        command = "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)" \
+                  "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
+        logger.debug(command)
+        if not conn.execute(command, (metadata,)):
+            raise Exception("Unable to add file metadata.")
+
+        command = """
+INSERT OR IGNORE INTO gpkg_metadata_reference (reference_scope, table_name, column_name, row_id_value, timestamp, md_file_id, md_parent_id)
+VALUES ('geopackage', NULL, NULL, NULL, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 1, null);
+                 """
+        logger.debug(command)
+        if not conn.execute(command).rowcount:
+            raise Exception("Unable to add file metadata.")
 
 
 if __name__ == '__main__':

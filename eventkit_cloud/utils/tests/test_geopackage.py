@@ -10,7 +10,8 @@ from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_na
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
                           add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info,
-                          get_table_gpkg_contents_information, set_gpkg_contents_bounds)
+                          get_table_gpkg_contents_information, set_gpkg_contents_bounds, create_extension_table,
+                          create_metadata_tables, add_file_metadata)
 
 
 logger = logging.getLogger(__name__)
@@ -310,3 +311,35 @@ class TestGeopackage(TransactionTestCase):
         mock_sqlite3.connect().__enter__().execute.assert_called_with("SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
             table))
         self.assertEqual(expected_response, response)
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_create_extension_table(self, mock_sqlite3):
+        gpkg = "test.gpkg"
+        create_extension_table(gpkg)
+        mock_sqlite3.connect().__enter__().execute.assert_called_once()
+        with self.assertRaises(Exception):
+            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            create_extension_table(gpkg)
+
+    @patch('eventkit_cloud.utils.geopackage.create_extension_table')
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_create_extension_table(self, mock_sqlite3, mock_create_extension_table):
+        gpkg = "test.gpkg"
+        create_metadata_tables(gpkg)
+        mock_sqlite3.connect().__enter__().execute.assert_called()
+        mock_create_extension_table.assert_called_once_with(gpkg)
+        with self.assertRaises(Exception):
+            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            create_extension_table(gpkg)
+
+    @patch('eventkit_cloud.utils.geopackage.create_metadata_tables')
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_add_file_metadata(self, mock_sqlite3, mock_create_metadata_tables):
+        gpkg = "test.gpkg"
+        metadata = "sample data"
+        add_file_metadata(gpkg, metadata)
+        mock_sqlite3.connect().__enter__().execute.assert_called()
+        mock_create_metadata_tables.assert_called_once_with(gpkg)
+        with self.assertRaises(Exception):
+            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            create_extension_table(gpkg)

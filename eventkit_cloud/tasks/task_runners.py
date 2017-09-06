@@ -124,7 +124,8 @@ class ExportOSMTaskRunner(TaskRunner):
         )
 
         osm_gpkg_task = osm_data_collection_task.si(
-            stage_dir=stage_dir, export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
+            run_uid=run.uid, provider_slug=provider_task.provider.slug, stage_dir=stage_dir,
+            export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
             config=provider_task.provider.config
         )
@@ -177,10 +178,8 @@ class ExportWFSTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
+            bbox = job.extents
 
-            # swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
@@ -227,6 +226,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                      export_tasks.iteritems() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
+
             return export_provider_task.uid, task_chain
         else:
             return None, None
@@ -277,10 +277,8 @@ class ExportWCSTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
+            bbox = job.extents
 
-            # swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
@@ -329,6 +327,7 @@ class ExportWCSTaskRunner(TaskRunner):
                                      export_tasks.iteritems() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
+
             return export_provider_task.uid, task_chain
         else:
             return None, None
@@ -384,10 +383,8 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            # swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
+            bbox = job.extents
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
@@ -434,6 +431,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                      export_tasks.iteritems() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
+
             return export_provider_task.uid, task_chain
         else:
             return None, None
@@ -489,10 +487,8 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
         # run the tasks
         if len(export_tasks) > 0:
-            bbox = json.loads("[{}]".format(job.overpass_extents))
 
-            # swap xy
-            bbox = [bbox[1], bbox[0], bbox[3], bbox[2]]
+            bbox = job.extents
             export_provider_task = ExportProviderTask.objects.create(run=run,
                                                                      name=provider_task.provider.name,
                                                                      slug=provider_task.provider.slug,
@@ -519,6 +515,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                                  service_type=service_type,
                                                                  user_details=user_details).set(queue=worker,
                                                                                                 routing_key=worker)
+
             return export_provider_task.uid, service_task
         else:
             return None, None
