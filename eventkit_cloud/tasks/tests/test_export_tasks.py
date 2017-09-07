@@ -161,26 +161,30 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('eventkit_cloud.utils.gdalutils.convert')
     @patch('eventkit_cloud.utils.gdalutils.clip_dataset')
     @patch('celery.app.task.Task.request')
-    def test_run_gpkg_export_task(self, mock_request, mock_clip, mock_convert):
+    def test_run_gpkg_export_task(self, mock_request, mock_clip, mock_convert, mock_add_metadata_task):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.gpkg'.format(job_name))
+        expected_provider_slug = "slug"
         mock_convert.return_value = expected_output_path
 
         previous_task_result = {'result': expected_output_path}
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run,
-                                                                 status=TaskStates.PENDING.value)
+                                                                 status=TaskStates.PENDING.value,
+                                                                 slug=expected_provider_slug)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=geopackage_export_task.name)
-        result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid),
+        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
+        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=expected_provider_slug)
         mock_clip.assert_not_called()
         mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
                                              task_uid=str(saved_export_task.uid))
@@ -194,7 +198,7 @@ class TestExportTasks(ExportTaskBase):
         mock_clip.return_value = expected_output_path
         expected_geojson = "test.geojson"
         previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
-        result = geopackage_export_task.run(result=previous_task_result, task_uid=str(saved_export_task.uid),
+        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
         mock_clip.assert_called_once_with(geojson_file=expected_geojson, dataset=expected_output_path,
                                           fmt=None)
@@ -314,11 +318,12 @@ class TestExportTasks(ExportTaskBase):
         mock_logger.error.assert_called_once()
 
 
-
+    @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
-    def test_run_external_raster_service_export_task(self, mock_service, mock_request):
+    def test_run_external_raster_service_export_task(self, mock_service, mock_request, mock_add_metadata_task):
         celery_uid = str(uuid.uuid4())
+        expected_provider_slug = "slug"
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         service_to_gpkg = mock_service.return_value
         job_name = self.job.name.lower()
@@ -327,13 +332,15 @@ class TestExportTasks(ExportTaskBase):
         service_to_gpkg.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = ExportProviderTask.objects.create(run=self.run,
-                                                                 status=TaskStates.PENDING.value)
+                                                                 status=TaskStates.PENDING.value,
+                                                                 slug=expected_provider_slug)
         saved_export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
                                                       name=external_raster_service_export_task.name)
-        result = external_raster_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+        result = external_raster_service_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                                          job_name=job_name)
         service_to_gpkg.convert.assert_called_once()
+        mock_add_metadata_task.assert_called_once_with(result=result, job_uid=self.run.job.uid, provider_slug=expected_provider_slug)
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTask.objects.get(celery_uid=celery_uid)
@@ -341,7 +348,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
         service_to_gpkg.convert.side_effect = Exception("Task Failed")
         with self.assertRaises(Exception):
-            external_raster_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
+            external_raster_service_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                                     job_name=job_name)
 
     @patch('eventkit_cloud.tasks.export_tasks.timezone')

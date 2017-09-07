@@ -51,6 +51,10 @@
 .checkboxLabel > div > div > label {
    font-weight:normal!important;
     font-size:16px!important;
+    width:90%!important;
+}
+.checkboxLabel {
+    display:inline-flex;
 }
 .list {
    width: 100%;
