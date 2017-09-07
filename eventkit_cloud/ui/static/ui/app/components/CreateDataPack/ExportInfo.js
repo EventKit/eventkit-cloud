@@ -18,6 +18,8 @@ import '../tap_events'
 import styles from '../../styles/ExportInfo.css'
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js'
+import Info from 'material-ui/svg-icons/action/info';
+import BaseDialog from '../BaseDialog';
 
 
 export class ExportInfo extends React.Component {
@@ -33,6 +35,8 @@ export class ExportInfo extends React.Component {
             area_str: '',
             expanded: false,
             layers: 'Geopackage',
+            formatsDialogOpen: false,
+            projectionsDialogOpen: false,
         }
         this.onChange = this.onChange.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -207,8 +211,24 @@ export class ExportInfo extends React.Component {
 
         this._map.addLayer(layer)
         this._map.getView().fit(source.getExtent(), this._map.getSize())
-
     }
+
+    handleFormatsClose = () => {
+        this.setState({formatsDialogOpen: false});
+    };
+
+    handleFormatsOpen() {
+        this.setState({formatsDialogOpen: true})
+    };
+
+    handleProjectionsClose = () => {
+        this.setState({projectionsDialogOpen: false});
+    };
+
+    handleProjectionsOpen() {
+        this.setState({projectionsDialogOpen: true})
+    };
+
     render() {
         const style ={
             underlineStyle: {
@@ -321,29 +341,46 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div className={styles.heading}>Select Projection</div>
+                            <div id='projectionsHeader' className={styles.heading}>Select Projection</div>
                             <div className={styles.sectionBottom}>
                                 <div className={styles.checkboxLabel}>
                                     <Checkbox
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
                                         checked={true}
+                                        style={{display:'inlineBlock'}}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    />
+                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    <BaseDialog
+                                        show={this.state.projectionsDialogOpen}
+                                        title='Projection Information'
+                                        onClose={this.handleProjectionsClose.bind(this)}
+                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}}>
+                                        All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
+                                    </div>
+                                    </BaseDialog>
                                 </div>
                             </div>
 
-                            <div className={styles.heading}>Select Export File Formats</div>
+                            <div id='formatsHeader' className={styles.heading}>Select Export File Formats</div>
                             <div className={styles.sectionBottom}>
                                 <div className={styles.checkboxLabel}>
                                     <Checkbox
                                         label="Geopackage (.gpkg)"
+                                        style={{display:'inlineBlock'}}
                                         name="Geopackage"
                                         checked={true}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    />
+                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    <BaseDialog
+                                        show={this.state.formatsDialogOpen}
+                                        title='Format Information'
+                                        onClose={this.handleFormatsClose.bind(this)}
+                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
+                                        EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
+                                    </BaseDialog>
                                 </div>
                             </div>
 
