@@ -27,6 +27,7 @@ export class ExportInfo extends React.Component {
         this.onProjectChange = this.onProjectChange.bind(this);        
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
+        this._initializeOpenLayers = this._initializeOpenLayers.bind(this);
     }
 
     componentDidMount() {        
@@ -132,7 +133,6 @@ export class ExportInfo extends React.Component {
                 }
             }
         }
-        console.log(providers);
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
@@ -184,7 +184,7 @@ export class ExportInfo extends React.Component {
                 url: this.context.config.BASEMAP_URL,
                 wrapX: false
             })
-        })
+        });
 
         this._map = new ol.Map({
             interactions: ol.interaction.defaults({
@@ -202,24 +202,22 @@ export class ExportInfo extends React.Component {
                 minZoom: 2,
                 maxZoom: 22,
             })
-        })
-        const source = new ol.source.Vector()
-        const geojson = new ol.format.GeoJSON()
+        });
+        const source = new ol.source.Vector();
+        const geojson = new ol.format.GeoJSON();
         const feature = geojson.readFeature(this.props.geojson.features[0], {
             'featureProjection': 'EPSG:3857',
             'dataProjection': 'EPSG:4326'
-        })
+        });
         source.addFeature(feature)
         const layer = new ol.layer.Vector({
             source: source,
-        })
-        const area = feature.getGeometry().getArea() / 1000000
-        const area_str = numeral(area).format('0,0')
+        });
 
-        this._map.addLayer(layer)
-        this._map.getView().fit(source.getExtent(), this._map.getSize())
-
+        this._map.addLayer(layer);
+        this._map.getView().fit(source.getExtent(), this._map.getSize());
     }
+
     render() {
         const style ={
             underlineStyle: {
@@ -422,10 +420,6 @@ ExportInfo.propTypes = {
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired
-}
-
-ExportInfo.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
 }
 
 export default connect(

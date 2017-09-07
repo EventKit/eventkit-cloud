@@ -1,8 +1,6 @@
 import React from 'react'
 import sinon from 'sinon';
 import {mount} from 'enzyme'
-import {fakeStore} from '../../__mocks__/fakeStore'
-import {Provider} from 'react-redux'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import {ExportInfo} from '../../components/CreateDataPack/ExportInfo'
@@ -17,6 +15,10 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import debounce from 'lodash/debounce';
+
+// this polyfills requestAnimationFrame in the test browser, required for ol3
+import raf from 'raf';
+raf.polyfill();
 
 
 describe('ExportInfo component', () => {
@@ -51,10 +53,13 @@ describe('ExportInfo component', () => {
     }
 
     const getWrapper = (props) => {
-        const store = fakeStore({});        
+        const config = {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};
         return mount(<ExportInfo {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+            context: {muiTheme, config},
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+                config: React.PropTypes.object
+            }
         });
     }
 
@@ -82,10 +87,6 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(CardText)).toHaveLength(0);
     });
 
-    it('card should expand and show a map', () => {
-
-    });
-
     it('componentDidMount should setNextDisabled, setArea, create deboucers, and add eventlistener', () => {
         const props = getProps();
         props.setNextDisabled = new sinon.spy();
@@ -93,14 +94,12 @@ describe('ExportInfo component', () => {
         const areaSpy = new sinon.spy(ExportInfo.prototype, 'setArea');
         const hasFieldsSpy = new sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const listenerSpy = new sinon.spy(window, 'addEventListener');
-        // const debounceSpy = new sinon.spy(debounce.prototype);
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(areaSpy.calledOnce).toBe(true);
-        // expect(debounceSpy.called).toBe(true);
         expect(listenerSpy.called).toBe(true);
         expect(listenerSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
         mountSpy.restore();
@@ -215,13 +214,97 @@ describe('ExportInfo component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().onChangeCheck(event);
         expect(props.updateExportInfo.called).toBe(true);
-        // expect(props.updateExportInfo.calledWith({
-        //     ...props.exportInfo,
-        //     providers: [{name: 'one', name: 'two'}]
-        // })).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            providers: [{name: 'one'}, {name: 'two'}]
+        })).toBe(true);
     });
 
     it('onChangeCheck should remove a provider', () => {
+        const appProviders = [{name: 'one'}, {name: 'two'}];
+        const exportProviders = [{name: 'one'}, {name: 'two'}];
+        const event = {target: {name: 'two', checked: false}};
+        const props = getProps();
+        props.updateExportInfo = new sinon.spy();
+        props.exportInfo.providers = exportProviders;
+        props.providers = appProviders;
+        const wrapper = getWrapper(props);
+        wrapper.instance().onChangeCheck(event);
+        expect(props.updateExportInfo.called).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            providers: [{name: 'one'}]
+        })).toBe(true);
+    });
 
+    it('toggleCheckbox should update exportInfo with new makePublic state', () => {
+        const props = getProps();
+        props.updateExportInfo = new sinon.spy();
+        const wrapper = getWrapper(props);
+        const newState =  !props.exportInfo.makePublic;
+        wrapper.instance().toggleCheckbox({}, newState);
+        expect(props.updateExportInfo.called).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            makePublic: newState
+        })).toBe(true);
+    });
+
+    it('expandedChange should setState', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ExportInfo.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(stateSpy.called).toBe(false);
+        // dont actually create a map when expanded
+        wrapper.instance()._initializeOpenLayers = new sinon.spy();
+        wrapper.instance().expandedChange(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expanded: true})).toBe(true);
+    });
+
+    it('hasRequiredFields should return whether the exportInfo required fields are filled', () => {
+        const invalid = {exportName: 'name', datapackDescription: 'stuff', projectName: 'name', providers: []};
+        const valid = {exportName: 'name', datapackDescription: 'stuff', projectName: 'name', providers: [{}]};
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().hasRequiredFields(invalid)).toBe(false);
+        expect(wrapper.instance().hasRequiredFields(valid)).toBe(true);
+    });
+
+    it('setArea should construct an area string and update exportInfo', () => {
+        const expectedString = '12,393 sq km';
+        const props = getProps();
+        props.updateExportInfo = new sinon.spy();
+        // dont run component did mount so setArea is not called yet
+        const mountFunc = ExportInfo.prototype.componentDidMount;
+        ExportInfo.prototype.componentDidMount = () => {};
+        const wrapper = getWrapper(props);
+        wrapper.instance().setArea();
+        expect(props.updateExportInfo.called).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            area_str: expectedString
+        })).toBe(true);
+        ExportInfo.prototype.componentDidMount = mountFunc;
+    });
+
+    it('initializeOpenLayers should create a map and add layer', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const xyzSpy = new sinon.spy(ol.source, 'XYZ');
+        const tileSpy = new sinon.spy(ol.layer, 'Tile');
+        const mapSpy = new sinon.spy(ol, 'Map');
+        const viewSpy = new sinon.spy(ol, 'View');
+        const sourceSpy = new sinon.spy(ol.source, 'Vector');
+        const geoSpy = new sinon.spy(ol.format, 'GeoJSON');
+        const readSpy = new sinon.spy(ol.format.GeoJSON.prototype, 'readFeature');
+        wrapper.instance()._initializeOpenLayers();
+        expect(xyzSpy.calledOnce).toBe(true);
+        expect(tileSpy.calledOnce).toBe(true);
+        expect(mapSpy.calledOnce).toBe(true);
+        expect(viewSpy.calledOnce).toBe(true);
+        expect(sourceSpy.calledOnce).toBe(true);
+        expect(geoSpy.calledOnce).toBe(true);
+        expect(readSpy.calledOnce).toBe(true);
     });
 });
