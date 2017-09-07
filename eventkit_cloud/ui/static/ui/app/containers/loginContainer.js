@@ -58,7 +58,7 @@ export class Form extends React.Component {
 
     handleSubmit(event) {
         event.preventDefault();
-        this.props.handleLogin(this.state);
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.query : ""));
     }
 
     handleOAuth(event) {
@@ -108,6 +108,7 @@ export class Form extends React.Component {
                     placeholder="Username"
                     style={styles.input}
                     type="text"
+                    maxLength="150"
                 />
                 <input 
                     id="password"
@@ -116,6 +117,7 @@ export class Form extends React.Component {
                     onChange={this.onChange}
                     style={styles.input}
                     type="password"
+                    maxLength="256"
                 />
                 <RaisedButton 
                     style={{margin: '30px auto', width: '150px'}}
@@ -165,8 +167,8 @@ export class Form extends React.Component {
 
 function mapDispatchToProps(dispatch) {
     return {
-        handleLogin: (params) => {
-            dispatch(login(params));
+        handleLogin: (params, query) => {
+            dispatch(login(params, query));
         },
     };
 }

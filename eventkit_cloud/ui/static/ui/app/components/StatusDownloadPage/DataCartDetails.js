@@ -5,7 +5,6 @@ import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
-import Dialog from 'material-ui/Dialog';
 import moment from 'moment';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
@@ -14,6 +13,7 @@ import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
 import Info from 'material-ui/svg-icons/action/info'
 import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -209,37 +209,87 @@ export class DataCartDetails extends React.Component {
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     };
 
-    getDialogWidth() {
-        if(window.innerWidth <= 767) {
-            return '70%';
-        }
-        else {
-            return '530px';
-        }
-    }
-
     render() {
         const providers = this.props.cartDetails.provider_tasks.filter((provider) => {
             return provider.display != false;
         });
 
         const styles = {
-            tdHeader: {backgroundColor: '#f8f8f8', padding: '10px', fontWeight: 'bold', width: '140px'},
-            tdData: {backgroundColor: '#f8f8f8', padding: '10px', color: '#8b9396', wordWrap: 'break-word'},
-            subHeading: {fontSize: '16px', alignContent: 'flex-start', color: 'black', paddingBottom: '10px', paddingTop: '30px', fontWeight: 'bold'},
-            textField: {fontSize: '14px', height: '36px', width: '0px', display:'inlineBlock'},
-            dropDown: {height: '30px', lineHeight: '35px', float: 'left',},
-            item: {fontSize: '14px',},
-            icon: {height: '30px', width: '30px', padding: '0px', marginRight: '5px', fill: '#4498c0' },
-            label: {lineHeight: '30px', color: '#8b9396', paddingLeft: '0px', fontSize: '14px', fontWeight: 'normal' },
-            list: { paddingTop: '5px', paddingBottom: '0px', display:'inlineBlock'},
-            underline: {display:'none', marginLeft: '0px'},
-            selected: {color: '#4498c0', fontWeight: 'bold'},
+            tdHeader: {
+                backgroundColor: '#f8f8f8', 
+                padding: '10px', 
+                fontWeight: 'bold', 
+                width: '140px'
+            },
+            tdData: {
+                backgroundColor: '#f8f8f8', 
+                padding: '10px', 
+                color: '#8b9396', 
+                wordWrap: 'break-word'
+            },
+            subHeading: {
+                fontSize: '16px', 
+                alignContent: 'flex-start', 
+                color: 'black', 
+                paddingBottom: '10px', 
+                paddingTop: '30px', 
+                fontWeight: 'bold'
+            },
+            textField: {
+                fontSize: '14px', 
+                height: '36px', 
+                width: '0px', 
+                display:'inlineBlock'
+            },
+            dropDown: {
+                height: '30px', 
+                lineHeight: '35px', 
+                float: 'left',
+            },
+            item: {
+                fontSize: '14px',
+            },
+            icon: {
+                height: '30px', 
+                width: '30px', 
+                padding: '0px', 
+                marginRight: '5px', 
+                fill: '#4498c0'
+            },
+            label: {
+                lineHeight: '30px', 
+                color: '#8b9396', 
+                paddingLeft: '0px', 
+                fontSize: '14px', 
+                fontWeight: 'normal'
+            },
+            list: {
+                paddingTop: '5px', 
+                paddingBottom: '0px', 
+                display:'inlineBlock'
+            },
+            underline: {
+                display:'none', 
+                marginLeft: '0px'
+            },
+            selected: {
+                color: '#4498c0', 
+                fontWeight: 'bold'
+            },
+            dataSource: {
+                marginLeft:'10px',
+                height:'18px', 
+                width:'18px', 
+                cursor: 'pointer', 
+                display:'inlineBlock', 
+                fill:'#4598bf', 
+                verticalAlign: 'middle'
+            }
         };
 
         const deleteActions = [
             <RaisedButton
-                style={{margin: '10px'}}
+                style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
@@ -247,7 +297,6 @@ export class DataCartDetails extends React.Component {
                 primary={false}
                 onTouchTap={this.handleDeleteClose.bind(this)}
             />,<RaisedButton
-                style={{margin: '10px'}}
                 labelStyle={{color: 'red', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
@@ -258,7 +307,7 @@ export class DataCartDetails extends React.Component {
         ];
         const rerunExportActions = [
             <RaisedButton
-                style={{margin: '10px'}}
+                style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
@@ -267,7 +316,6 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleRerunClose.bind(this)}
             />,
             <RaisedButton
-                style={{margin: '10px'}}
                 buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Rerun"
                 primary={true}
@@ -276,7 +324,7 @@ export class DataCartDetails extends React.Component {
         ];
         const cloneExportActions = [
             <RaisedButton
-                style={{margin: '10px'}}
+                style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
@@ -285,7 +333,6 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleCloneClose.bind(this)}
             />,
             <RaisedButton
-                style={{margin: '10px'}}
                 buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Clone"
                 primary={true}
@@ -393,15 +440,14 @@ export class DataCartDetails extends React.Component {
                             onTouchTap={this.handleRerunOpen.bind(this)}
                             label="RUN EXPORT AGAIN"
                         />
-                        <Dialog
-                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                        <BaseDialog
+                            show={this.state.rerunDialogOpen}
+                            title={'RERUN DATAPACK'}
+                            onClose={this.handleRerunClose.bind(this)}
                             actions={rerunExportActions}
-                            modal={false}
-                            open={this.state.rerunDialogOpen}
-                            onRequestClose={this.handleRerunClose.bind(this)}
                         >
-                            <strong>Are you sure you want to run this export again?</strong>
-                        </Dialog>
+                            <strong>Are you sure you want to run this DataPack again?</strong>
+                        </BaseDialog>
                         <RaisedButton
                             style={{margin: '10px'}}
                             backgroundColor={'rgba(226,226,226,0.5)'}
@@ -411,15 +457,14 @@ export class DataCartDetails extends React.Component {
                             onTouchTap={this.handleCloneOpen.bind(this)}
                             label="CLONE"
                         />
-                        <Dialog
-                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                        <BaseDialog
+                            show={this.state.cloneDialogOpen}
+                            title={'CLONE DATAPACK'}
+                            onClose={this.handleCloneClose}
                             actions={cloneExportActions}
-                            modal={false}
-                            open={this.state.cloneDialogOpen}
-                            onRequestClose={this.handleCloneClose.bind(this)}
                         >
-                            <strong>Are you sure you want to Clone this DataPack?</strong>
-                        </Dialog>
+                            <strong>Are you sure you want to clone this DataPack?</strong>
+                        </BaseDialog>
                         <RaisedButton
                             style={{margin: '10px'}}
                             backgroundColor={'rgba(226,226,226,0.5)'}
@@ -430,15 +475,14 @@ export class DataCartDetails extends React.Component {
                             label="DELETE"
                         />
 
-                        <Dialog
-                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
+                        <BaseDialog
+                            show={this.state.deleteDialogOpen}
+                            title={'DELETE DATAPACK'}
+                            onClose={this.handleDeleteClose}
                             actions={deleteActions}
-                            modal={false}
-                            open={this.state.deleteDialogOpen}
-                            onRequestClose={this.handleDeleteClose.bind(this)}
                         >
-                            <strong>Are you sure you want to delete the DataPack?</strong>
-                        </Dialog>
+                            <strong>Are you sure you want to delete this DataPack?</strong>
+                        </BaseDialog>
                     </div>
 
                 </div>
@@ -461,20 +505,15 @@ export class DataCartDetails extends React.Component {
                             <td style={styles.tdHeader}>Data Sources</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
-                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider)} key={provider.description} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
-                                        <Dialog
-                                            contentStyle={{width:'70%', minWidth:'300px', maxWidth:'610px'}}
-                                            actions={providerInfoActions}
-                                            modal={false}
-                                            open={this.state.providerDialogOpen}
-                                            onRequestClose={this.handleProviderClose.bind(this)}
-                                        >
-                                            <span><strong>{this.state.providerName}</strong>
-                                                <CustomScrollbar style={{height: '200px', overflowX: 'hidden', width:'100%'}}>
+                                    return <p key={provider.name}>{provider.name}<Info onTouchTap={this.handleProviderOpen.bind(this, provider)} key={provider.description} style={styles.dataSource}/>
+                                            <BaseDialog
+                                                show={this.state.providerDialogOpen}
+                                                title={this.state.providerName}
+                                                onClose={this.handleProviderClose.bind(this)}
+                                            >
                                                 <div style={{paddingTop:'20px', wordWrap: 'break-word'}}>{this.state.providerDesc}</div>
-                                            </CustomScrollbar></span>
-
-                                        </Dialog></p>
+                                            </BaseDialog>
+                                        </p>
                                 })}
                             </td>
                         </tr>

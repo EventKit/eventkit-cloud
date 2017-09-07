@@ -3,10 +3,10 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {DataCartDetails} from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
+import BaseDialog from '../../components/BaseDialog';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
@@ -51,7 +51,7 @@ describe('DataCartDetails component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(Dialog)).toHaveLength(6);
+        expect(wrapper.find(BaseDialog)).toHaveLength(5);
         let table = wrapper.find('table').at(0);
         expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
         expect(table.find('tr').first().find('td').last().text()).toEqual('test');
@@ -300,7 +300,6 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleProviderOpen(run.provider_tasks[0]);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerName: "OpenStreetMap Data (Themes)", providerDialogOpen: true})).toBe(true);
-        expect(wrapper.find('span')).toHaveLength(1)
         expect(wrapper.find('div').at(10).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
         stateSpy.restore();
     });

@@ -132,7 +132,7 @@ export class DataPackPage extends React.Component {
         params += status.length ? `&status=${status.join(',')}` : '';
         params += minDate;
         params += maxDate;
-        params += this.state.search ? `&search_term=${this.state.search}` : '';
+        params += this.state.search ? `&search_term=${this.state.search.slice(0, 1000)}` : '';
         params += providers.length ? `&providers=${providers.join(',')}` : '';
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
@@ -425,4 +425,3 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(DataPackPage);
-
