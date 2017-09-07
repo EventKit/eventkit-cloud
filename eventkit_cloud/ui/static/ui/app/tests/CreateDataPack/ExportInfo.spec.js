@@ -20,7 +20,6 @@ describe('ExportInfo component', () => {
                         ]
                     },}]
             },
-            setExportPackageFlag: false,
             exportInfo: {
                 exportName: '',
                 datapackDescription: '',

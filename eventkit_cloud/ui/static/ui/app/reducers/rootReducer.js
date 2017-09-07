@@ -29,7 +29,6 @@ const rootReducer = combineReducers({
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,
-    setExportPackageFlag: startExportPackageReducer,
     runsDeletion: DeleteRunsReducer,
     datacartDetails: getDatacartDetailsReducer,
     datacartDetailsReceived: setDatacartDetailsReducer,

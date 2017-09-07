@@ -12,9 +12,6 @@ import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import '../tap_events';
 import styles from '../../styles/ExportInfo.css';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js';
@@ -24,115 +21,51 @@ export class ExportInfo extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            exportName: '',
-            datapackDescription: '',
-            projectName: '',
-            makePublic: false,
-            providers: [],
             area: 0,
-            area_str: '',
             expanded: false,
-            layers: 'Geopackage',
         }
-        this.onChange = this.onChange.bind(this);
+        this.onNameChange = this.onNameChange.bind(this);
+        this.onDescriptionChange = this.onDescriptionChange.bind(this);
+        this.onProjectChange = this.onProjectChange.bind(this);        
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
     }
 
-    screenSizeUpdate() {
-        this.forceUpdate();
-    }
+    componentDidMount() {        
+        // if the state does not have required data disable next
+        if (!this.hasRequiredFields(this.props.exportInfo)) {
+            this.props.setNextDisabled();
+        }
 
-    onChange(event) {
-        event.persist();
-        this.debouncedHandler(event);
-    }
+        // calculate the area of the AOI
+        this.setArea();
 
-    onChangeCheck(e){
-            // current array of providers
-            let providers = this.state.providers;
-            const propsProviders = this.props.providers;
-            let index;
-
-            // check if the check box is checked or unchecked
-            if (e.target.checked) {
-                // add the provider to the array
-                //providers.push(e.target.name)
-                for (let i=0; i <propsProviders.length; i++) {
-                    if (propsProviders[i].name === e.target.name) {
-                        providers.push(propsProviders[i]);
-                    }
-                }
-
-            } else {
-                // or remove the value from the unchecked checkbox from the array
-                //index = providers.indexOf(e.target.name)
-                index = providers.map(x => x.name).indexOf(e.target.name);
-
-                for (let i=0; i <propsProviders.length; i++) {
-                    if (propsProviders[i].name === e.target.name) {
-                        providers.splice(index,1);
-                    }
-                }
-            }
-            // update the state with the new array of options
-
-            this.setState({ providers: providers } ,function (){
-            if (!this.hasRequiredFields()) {
-                this.props.setNextDisabled()
-            }
-            else {
-                this.props.setNextEnabled()
-            }
-        })
-
-    }
-    toggleCheckbox(event, checked) {
-        this.setState({makePublic: checked})
-    }
-
-    expandedChange(expanded) {
-        this.setState({expanded: expanded})
-    }
-
-
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)}
-    }
-
-    componentDidMount() {
-        this.screenSizeUpdate();
-        window.addEventListener('resize', this.screenSizeUpdate);
-
-        this.debouncedHandler = debounce(event => {
-            this.setState({[event.target.name]: event.target.value}, function () {
-                if (!this.hasRequiredFields()) {
-                    this.props.setNextDisabled()
-                }
-                else {
-                    this.props.setNextEnabled()
-                }
-            })
+        // set up debounce functions for user text input
+        this.nameHandler = debounce(event => {
+            this.props.updateExportInfo({
+                ...this.props.exportInfo, 
+                exportName: event.target.value
+            });
+        }, 500);
+        this.descriptionHandler = debounce(event => {
+            this.props.updateExportInfo({
+                ...this.props.exportInfo,
+                datapackDescription: event.target.value
+            });
+        }, 500);
+        this.projectHandler = debounce(event => {
+            this.props.updateExportInfo({
+                ...this.props.exportInfo,
+                projectName: event.target.value
+            });
         }, 500);
 
-        this.props.setExportInfoNotDone();
-        if (this.props.exportInfo.exportName == ''){
-            this.props.setNextDisabled()
-        }
-        this.setArea();
-        if (this.state.exportName == "" && this.props.exportInfo.exportName != ""){
-            this.setState({
-                exportName : this.props.exportInfo.exportName,
-                datapackDescription: this.props.exportInfo.datapackDescription,
-                projectName: this.props.exportInfo.projectName,
-                makePublic: this.props.exportInfo.makePublic,
-                providers: this.props.exportInfo.providers,
-            })
-        }
-
+        // listen for screensize updates
+        window.addEventListener('resize', this.screenSizeUpdate);
     }
 
     componentDidUpdate(prevProps, prevState) {
+        // if the user expaned the AOI section mount the map
         if(prevState.expanded != this.state.expanded) {
             if(this.state.expanded) {
                 this._initializeOpenLayers()
@@ -142,18 +75,89 @@ export class ExportInfo extends React.Component {
     }
 
     componentWillUnmount() {
+        // clean up listener
         window.removeEventListener('resize', this.screenSizeUpdate);
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.setExportPackageFlag != false) {
-            this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
-            this.props.incrementStepper();
+        // if required fields are fulfilled enable next
+        if (this.hasRequiredFields(nextProps.exportInfo)) {
+            if (!nextProps.nextEnabled) {
+                this.props.setNextEnabled();
+            }
+        }
+        // if not and next is enabled it should be disabled
+        else if (nextProps.nextEnabled) {
+            this.props.setNextDisabled();
         }
     }
 
-    hasRequiredFields() {
-        return this.state.exportName && this.state.datapackDescription && this.state.projectName && this.state.providers.length > 0
+    screenSizeUpdate() {
+        this.forceUpdate();
+    }
+
+    onNameChange(e) {
+        e.persist();
+        this.nameHandler(e);
+    }
+
+    onDescriptionChange(e) {
+        e.persist();
+        this.descriptionHandler(e);
+    }
+
+    onProjectChange(e) {
+        e.persist();
+        this.projectHandler(e);
+    }
+
+    onChangeCheck(e){
+        // current array of providers
+        // let providers = this.state.providers;
+        let providers = [...this.props.exportInfo.providers];
+        const propsProviders = this.props.providers;
+        let index;
+        // check if the check box is checked or unchecked
+        if (e.target.checked) {
+            // add the provider to the array
+            for (let i=0; i <propsProviders.length; i++) {
+                if (propsProviders[i].name === e.target.name) {
+                    providers.push(propsProviders[i]);
+                }
+            }
+        } else {
+            // or remove the value from the unchecked checkbox from the array
+            index = providers.map(x => x.name).indexOf(e.target.name);
+            for (let i=0; i <propsProviders.length; i++) {
+                if (propsProviders[i].name === e.target.name) {
+                    providers.splice(index,1);
+                }
+            }
+        }
+        // update the state with the new array of options
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            providers: providers
+        });
+    }
+
+    toggleCheckbox(event, checked) {
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            makePublic: checked
+        });
+    }
+
+    expandedChange(expanded) {
+        this.setState({expanded: expanded})
+    }
+
+    hasRequiredFields(exportInfo) {
+        // if the required fields are populated return true, else return false
+        return exportInfo.exportName
+            && exportInfo.datapackDescription 
+            && exportInfo.projectName 
+            && exportInfo.providers.length > 0;
     }
 
     setArea() {
@@ -170,10 +174,10 @@ export class ExportInfo extends React.Component {
         const area = feature.getGeometry().getArea() / 1000000
         const area_str = numeral(area).format('0,0')
         this.setState({area: area, area_str: area_str + ' sq km'})
-
     }
+
     _initializeOpenLayers() {
-        var base = new ol.layer.Tile({
+        const base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
                 wrapX: false
@@ -238,7 +242,7 @@ export class ExportInfo extends React.Component {
                                 ref="exportName"
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
-                                onChange={this.onChange}
+                                onChange={this.onNameChange}
                                 defaultValue={this.props.exportInfo.exportName}
                                 hintText="Datapack Name"
                                 style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
@@ -250,7 +254,7 @@ export class ExportInfo extends React.Component {
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
                                 name="datapackDescription"
-                                onChange={this.onChange}
+                                onChange={this.onDescriptionChange}
                                 defaultValue={this.props.exportInfo.datapackDescription}
                                 hintText="Description"
                                 multiLine={true}
@@ -264,7 +268,7 @@ export class ExportInfo extends React.Component {
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
                                 name="projectName"
-                                onChange={this.onChange}
+                                onChange={this.onProjectChange}
                                 defaultValue={this.props.exportInfo.projectName}
                                 hintText="Project Name"
                                 style={{backgroundColor: 'whitesmoke', width: '100%',  marginTop: '15px'}}
@@ -276,7 +280,6 @@ export class ExportInfo extends React.Component {
                                 <Checkbox
                                     name="makePublic"
                                     onCheck={this.toggleCheckbox.bind(this)}
-                                    //checked={!!this.state.makePublic}
                                     defaultChecked={this.props.exportInfo.makePublic}
                                     style={{left: '0px', paddingLeft: '5px'}}
                                     label="Make Public"
@@ -284,7 +287,7 @@ export class ExportInfo extends React.Component {
                                     uncheckedIcon={<UncheckedCircle style={{fill: '4598bf'}}/>}
                                 />
                             </div>
-
+                            
                             <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
                             <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                             <div className={styles.sectionBottom}>
@@ -299,7 +302,6 @@ export class ExportInfo extends React.Component {
                                                 name={provider.name}
                                                 style={{left: '0px', paddingLeft: '5px'}}
                                                 defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) == -1 ? false : true}
-                                                //defaultChecked={this.props.exportInfo.providers.indexOf(provider.name) == -1 ? false : true}
                                                 onCheck={this.onChangeCheck.bind(this)}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -380,31 +382,16 @@ export class ExportInfo extends React.Component {
 function mapStateToProps(state) {
     return {
         geojson: state.aoiInfo.geojson,
-        setExportPackageFlag: state.setExportPackageFlag,
         exportInfo: state.exportInfo,
         providers: state.providers,
+        nextEnabled: state.stepperNextEnabled,
     }
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        updateExportInfo: (exportName,
-                           datapackDescription,
-                           projectName,
-                           makePublic,
-                           providers,
-                           area_str,
-                           layers
-
-                           ) => {
-            dispatch(updateExportInfo(exportName,
-                datapackDescription,
-                projectName,
-                makePublic,
-                providers,
-                area_str,
-                layers
-                ))
+        updateExportInfo: (exportInfo) => {
+            dispatch(updateExportInfo(exportInfo))
         },
         setNextDisabled: () => {
             dispatch(stepperNextDisabled())
@@ -429,6 +416,7 @@ ExportInfo.propTypes = {
     exportInfo:     React.PropTypes.object,
     incrementStepper: React.PropTypes.func,
     handlePrev:       React.PropTypes.func,
+    nextEnabled: React.PropTypes.bool.isRequired
 }
 
 ExportInfo.childContextTypes = {

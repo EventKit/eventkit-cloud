@@ -10,7 +10,7 @@ import ExportAOI from './CreateDataPack/ExportAOI'
 import ExportInfo from './CreateDataPack/ExportInfo'
 import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 
 const isEqual = require('lodash/isEqual');
@@ -79,12 +79,7 @@ export class BreadcrumbStepper extends React.Component {
 
     handleNext() {
         const {stepIndex} = this.state;
-        if (stepIndex == 1) {
-            this.props.setExportInfoDone();
-        }
-        else {
-            this.setState({stepIndex: stepIndex + 1});
-        }
+        this.setState({stepIndex: stepIndex + 1});
     };
 
     incrementStepper() {
@@ -276,7 +271,6 @@ BreadcrumbStepper.propTypes = {
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
     setDatacartDetailsReceived: React.PropTypes.func,
-    setExportInfoDone: React.PropTypes.func,
     clearAoiInfo: React.PropTypes.func,
     clearExportInfo: React.PropTypes.func,
     clearJobInfo: React.PropTypes.func,
@@ -311,9 +305,6 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
-        },
-        setExportInfoDone: () => {
-            dispatch(exportInfoDone());
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());

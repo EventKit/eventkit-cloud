@@ -106,13 +106,6 @@ describe('export actions', () => {
         });
     });
 
-    it('exportInfoDone should return EXPORT_INFO_DONE and setExportPackageFlag to true', () => {
-        expect(actions.exportInfoDone()).toEqual({
-            type: 'EXPORT_INFO_DONE',
-            setExportPackageFlag: true
-        });
-    });
-
     it('stepperNextDisabled should return MAKE_STEPPER_INACTIVE and false', () => {
         expect(actions.stepperNextDisabled()).toEqual({
             type: 'MAKE_STEPPER_INACTIVE',
