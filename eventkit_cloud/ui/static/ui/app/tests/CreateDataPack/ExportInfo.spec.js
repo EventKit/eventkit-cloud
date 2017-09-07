@@ -4,6 +4,8 @@ import {mount, shallow} from 'enzyme'
 import {fakeStore} from '../../__mocks__/fakeStore'
 import { Provider } from 'react-redux'
 import CustomScrollbar from '../../components/CustomScrollbar';
+import BaseDialog from '../../components/BaseDialog';
+import Checkbox from 'material-ui/Checkbox'
 
 describe('ExportInfo component', () => {
     const getProps = () => {
@@ -40,6 +42,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('.root')).toHaveLength(1);
         expect(wrapper.find('.form')).toHaveLength(1);
         expect(wrapper.find('.paper')).toHaveLength(1);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
     })
 
     it('should render a CustomScrollbar component', () => {
@@ -73,6 +76,20 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('.list')).toHaveLength(1);
         // expect(wrapper.find('.checkboxColor')).toHaveLength(5)
 
+    })
+
+    it('should render a File Formats Div', () => {
+        const store = fakeStore({});
+        const props = getProps();
+        const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
+        expect(wrapper.find('#formatsHeader').text()).toEqual('Select Export File Formats');
+    })
+
+    it('should render a projections Div', () => {
+        const store = fakeStore({});
+        const props = getProps();
+        const wrapper = mount(<Provider store={store}><ExportInfo {...props}/></Provider>);
+        expect(wrapper.find('#projectionsHeader').text()).toEqual('Select Projection');
     })
 
 });
