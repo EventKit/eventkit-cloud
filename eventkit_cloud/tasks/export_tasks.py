@@ -436,8 +436,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {"fileIdentifier": '{0}-osm-{1}'.format(job.name,
-                                                                  date_time.strftime("%Y%m%d")),
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
                        "abstract": job.description,
                        "title": job.name,
                        "westBoundLongitude": bbox[0],
