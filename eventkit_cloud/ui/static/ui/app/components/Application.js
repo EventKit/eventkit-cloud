@@ -141,7 +141,11 @@ export class Application extends Component {
                 <div style={{backgroundColor: '#000'}}>
                     <Banner />
                     <header className="header" style={{height: '95px'}}>
-                        <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
+                        <AppBar
+                            style={styles.appBar}
+                            title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)}
+                            showMenuIconButton={!!this.props.userData}
+                        />
                     </header>
                     <Drawer
                         containerStyle={styles.drawer}

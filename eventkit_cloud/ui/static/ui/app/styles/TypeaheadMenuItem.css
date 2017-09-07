@@ -16,11 +16,19 @@
 
 .menuItemIconDiv {
     width: 45px;
-    float: left;
 }
 
 .menuItemText {
-    left: 30px;
     color: #707274;
     min-height: 20px;
+    white-space: normal;
 }
+
+.menuItemSource {
+    color: #707274;
+    background: #e1e1e1;
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+
