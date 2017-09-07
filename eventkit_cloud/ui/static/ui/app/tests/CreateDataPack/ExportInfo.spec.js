@@ -6,15 +6,11 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import {ExportInfo} from '../../components/CreateDataPack/ExportInfo'
 import CustomScrollbar from '../../components/CustomScrollbar';
 import ol from 'openlayers';
-import { RadioButton } from 'material-ui/RadioButton';
 import { List, ListItem} from 'material-ui/List';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
-import debounce from 'lodash/debounce';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 import raf from 'raf';
@@ -102,6 +98,9 @@ describe('ExportInfo component', () => {
         expect(areaSpy.calledOnce).toBe(true);
         expect(listenerSpy.called).toBe(true);
         expect(listenerSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
+        expect(wrapper.instance().nameHandler).not.toBe(undefined);
+        expect(wrapper.instance().descriptionHandler).not.toBe(undefined);
+        expect(wrapper.instance().projectHandler).not.toBe(undefined);
         mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
@@ -125,7 +124,7 @@ describe('ExportInfo component', () => {
     it('componentWillUnmount should remove the event listener', () => {
         const props = getProps();
         const unmountSpy = new sinon.spy(ExportInfo.prototype, 'componentWillUnmount');
-        const listenerSpy = new sinon.spy(window, 'removeEventListener');1
+        const listenerSpy = new sinon.spy(window, 'removeEventListener');
         const wrapper = getWrapper(props);
         const func = wrapper.instance().screenSizeUpdate;
         wrapper.unmount();
