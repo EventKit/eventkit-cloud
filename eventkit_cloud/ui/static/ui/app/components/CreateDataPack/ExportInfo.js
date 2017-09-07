@@ -32,7 +32,7 @@ export class ExportInfo extends React.Component {
             area: 0,
             area_str: '',
             expanded: false,
-            layers: 'Geopackage',
+            layers: [],
         }
         this.onChange = this.onChange.bind(this);
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -121,6 +121,7 @@ export class ExportInfo extends React.Component {
                 projectName: this.props.exportInfo.projectName,
                 makePublic: this.props.exportInfo.makePublic,
                 providers: this.props.exportInfo.providers,
+                layers: this.props.exportInfo.layers
             })
         }
 
@@ -146,7 +147,7 @@ export class ExportInfo extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.setExportPackageFlag != false) {
-            this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layers)
+            this.props.updateExportInfo(this.state.exportName, this.state.datapackDescription, this.state.projectName, this.state.makePublic, this.state.providers, this.state.area_str, this.state.layername)
             this.props.incrementStepper();
         }
     }
@@ -222,6 +223,11 @@ export class ExportInfo extends React.Component {
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
+
+        //We only display geopackage as a format option for right now.
+        const formats = this.props.formats.filter((format) => {
+            return format.slug == 'gpkg'
+        })
 
         return (
             <div className={styles.root} style={style.window}>
@@ -336,15 +342,20 @@ export class ExportInfo extends React.Component {
 
                             <div className={styles.heading}>Select Export File Formats</div>
                             <div className={styles.sectionBottom}>
-                                <div className={styles.checkboxLabel}>
-                                    <Checkbox
-                                        label="Geopackage (.gpkg)"
-                                        name="Geopackage"
-                                        checked={true}
-                                        disabled={true}
-                                        checkedIcon={<ActionCheckCircle />}
-                                    />
-                                </div>
+                                {formats.map((format, ix) => {
+                                    return <div key={format.slug} className={styles.checkboxLabel}>
+
+                                        <Checkbox
+                                            key={format.slug}
+                                            ref={format.slug}
+                                            label={format.description}
+                                            name={format.name}
+                                            defaultChecked={this.state.layers}
+                                            disabled={true}
+                                            checkedIcon={<ActionCheckCircle />}
+                                        />
+                                    </div> })}
+
                             </div>
 
                             <div className={styles.mapCard}>
@@ -378,6 +389,7 @@ function mapStateToProps(state) {
         setExportPackageFlag: state.setExportPackageFlag,
         exportInfo: state.exportInfo,
         providers: state.providers,
+        formats: state.formats,
     }
 }
 
@@ -424,6 +436,7 @@ ExportInfo.propTypes = {
     exportInfo:     React.PropTypes.object,
     incrementStepper: React.PropTypes.func,
     handlePrev:       React.PropTypes.func,
+    formats:        React.PropTypes.array,
 }
 
 ExportInfo.childContextTypes = {

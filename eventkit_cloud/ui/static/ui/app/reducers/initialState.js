@@ -55,7 +55,7 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: '',
+        layers: [],
     },
     providers: [],
     stepperNextEnabled: false,
@@ -98,5 +98,6 @@ export default {
         updating: false,
         updated: false,
         error: null,
-    }
+    },
+    formats: [],
 }

@@ -2,7 +2,7 @@ import {combineReducers} from 'redux'
 import { reducer as reduxFormReducer } from 'redux-form'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
-import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
+import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer, getFormatsReducer} from './exportsReducer';
 import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackListReducer, DeleteRunsReducer} from './DataPackListReducer';
@@ -38,6 +38,7 @@ const rootReducer = combineReducers({
     licenses: licenseReducer,
     updateExpiration: updateExpirationReducer,
     updatePermission: updatePermissionReducer,
+    formats: getFormatsReducer,
 });
 
 export default rootReducer;

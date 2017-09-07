@@ -10,7 +10,7 @@ import ExportAOI from './CreateDataPack/ExportAOI'
 import ExportInfo from './CreateDataPack/ExportInfo'
 import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 
 const isEqual = require('lodash/isEqual');
@@ -34,6 +34,7 @@ export class BreadcrumbStepper extends React.Component {
             this.props.setNextDisabled();
         }
         this.props.getProviders();
+        this.props.getFormats();
     }
 
     componentWillUnmount() {
@@ -135,6 +136,7 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
+                                   formats={this.props.formats}
                                    incrementStepper={this.incrementStepper}
                                    handlePrev={this.handlePrev}/>
             case 2:
@@ -282,6 +284,7 @@ BreadcrumbStepper.propTypes = {
     clearJobInfo: React.PropTypes.func,
     jobFetched: React.PropTypes.bool,
     jobuid: React.PropTypes.string,
+    formats: React.PropTypes.array,
 };
 
 function mapStateToProps(state) {
@@ -292,7 +295,8 @@ function mapStateToProps(state) {
         datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
-        jobuid: state.submitJob.jobuid
+        jobuid: state.submitJob.jobuid,
+        formats: state.formats,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -329,6 +333,9 @@ function mapDispatchToProps(dispatch) {
         },
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid))
+        },
+        getFormats: () => {
+            dispatch(getFormats())
         },
     }
 }
