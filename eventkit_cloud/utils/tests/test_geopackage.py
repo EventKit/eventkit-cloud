@@ -317,9 +317,6 @@ class TestGeopackage(TransactionTestCase):
         gpkg = "test.gpkg"
         create_extension_table(gpkg)
         mock_sqlite3.connect().__enter__().execute.assert_called_once()
-        with self.assertRaises(Exception):
-            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
-            create_extension_table(gpkg)
 
     @patch('eventkit_cloud.utils.geopackage.create_extension_table')
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
@@ -328,9 +325,6 @@ class TestGeopackage(TransactionTestCase):
         create_metadata_tables(gpkg)
         mock_sqlite3.connect().__enter__().execute.assert_called()
         mock_create_extension_table.assert_called_once_with(gpkg)
-        with self.assertRaises(Exception):
-            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
-            create_extension_table(gpkg)
 
     @patch('eventkit_cloud.utils.geopackage.create_metadata_tables')
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
@@ -340,6 +334,3 @@ class TestGeopackage(TransactionTestCase):
         add_file_metadata(gpkg, metadata)
         mock_sqlite3.connect().__enter__().execute.assert_called()
         mock_create_metadata_tables.assert_called_once_with(gpkg)
-        with self.assertRaises(Exception):
-            mock_sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
-            create_extension_table(gpkg)

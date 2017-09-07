@@ -408,8 +408,7 @@ def create_metadata_tables(gpkg):
     with sqlite3.connect(gpkg) as conn:
         for command in commands:
             logger.debug(command)
-            if not conn.execute(command).rowcount:
-                raise Exception("Unable to create the gpkg_extensions tables.")
+            conn.execute(command)
 
 
 def create_extension_table(gpkg):
@@ -431,8 +430,7 @@ CREATE TABLE IF NOT EXISTS gpkg_extensions (
 
     with sqlite3.connect(gpkg) as conn:
         logger.debug(command)
-        if not conn.execute(command).rowcount:
-            raise Exception("Unable to create the gpkg_extensions table.")
+        conn.execute(command)
 
 
 def add_file_metadata(gpkg, metadata):
@@ -447,16 +445,14 @@ def add_file_metadata(gpkg, metadata):
         command = "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)" \
                   "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
         logger.debug(command)
-        if not conn.execute(command, (metadata,)):
-            raise Exception("Unable to add file metadata.")
+        conn.execute(command, (metadata,))
 
         command = """
 INSERT OR IGNORE INTO gpkg_metadata_reference (reference_scope, table_name, column_name, row_id_value, timestamp, md_file_id, md_parent_id)
 VALUES ('geopackage', NULL, NULL, NULL, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 1, null);
                  """
         logger.debug(command)
-        if not conn.execute(command).rowcount:
-            raise Exception("Unable to add file metadata.")
+        conn.execute(command)
 
 
 if __name__ == '__main__':
