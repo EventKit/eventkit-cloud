@@ -95,16 +95,6 @@ describe('BreadcrumbStepper component', () => {
         stateSpy.restore();
     });
 
-    it('handleNext should call setExportInfoDone', () => {
-        let props = getProps();
-        props.setExportInfoDone = new sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({stepIndex: 1});
-        expect(props.setExportInfoDone.called).toBe(false);
-        wrapper.instance().handleNext();
-        expect(props.setExportInfoDone.calledOnce).toBe(true); 
-    });
-
     it('incrementStepper should increment the stepIndex', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');

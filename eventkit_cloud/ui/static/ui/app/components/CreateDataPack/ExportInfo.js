@@ -3,7 +3,6 @@ import {connect} from 'react-redux';
 import 'openlayers/dist/ol.css';
 import numeral from 'numeral';
 import ol from 'openlayers';
-import { reduxForm, Field } from 'redux-form';
 import { RadioButton } from 'material-ui/RadioButton';
 import { List, ListItem} from 'material-ui/List';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
@@ -21,7 +20,6 @@ export class ExportInfo extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            area: 0,
             expanded: false,
         }
         this.onNameChange = this.onNameChange.bind(this);
@@ -46,19 +44,19 @@ export class ExportInfo extends React.Component {
                 ...this.props.exportInfo, 
                 exportName: event.target.value
             });
-        }, 500);
+        }, 250);
         this.descriptionHandler = debounce(event => {
             this.props.updateExportInfo({
                 ...this.props.exportInfo,
                 datapackDescription: event.target.value
             });
-        }, 500);
+        }, 250);
         this.projectHandler = debounce(event => {
             this.props.updateExportInfo({
                 ...this.props.exportInfo,
                 projectName: event.target.value
             });
-        }, 500);
+        }, 250);
 
         // listen for screensize updates
         window.addEventListener('resize', this.screenSizeUpdate);
@@ -113,16 +111,16 @@ export class ExportInfo extends React.Component {
 
     onChangeCheck(e){
         // current array of providers
-        // let providers = this.state.providers;
         let providers = [...this.props.exportInfo.providers];
         const propsProviders = this.props.providers;
         let index;
         // check if the check box is checked or unchecked
         if (e.target.checked) {
             // add the provider to the array
-            for (let i=0; i <propsProviders.length; i++) {
+            for (let i=0; i < propsProviders.length; i++) {
                 if (propsProviders[i].name === e.target.name) {
                     providers.push(propsProviders[i]);
+                    break;
                 }
             }
         } else {
@@ -134,6 +132,7 @@ export class ExportInfo extends React.Component {
                 }
             }
         }
+        console.log(providers);
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
@@ -173,7 +172,10 @@ export class ExportInfo extends React.Component {
         })
         const area = feature.getGeometry().getArea() / 1000000
         const area_str = numeral(area).format('0,0')
-        this.setState({area: area, area_str: area_str + ' sq km'})
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            area_str: area_str + ' sq km'
+        });
     }
 
     _initializeOpenLayers() {
@@ -238,7 +240,9 @@ export class ExportInfo extends React.Component {
                     <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
                         <Paper className={styles.paper} zDepth={2} rounded>
                             <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                            <TextField name="exportName"
+                            <TextField
+                                id='nameField' 
+                                name="exportName"
                                 ref="exportName"
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -251,6 +255,7 @@ export class ExportInfo extends React.Component {
                                 maxLength={100}
                             />
                             <TextField
+                                id='descriptionField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
                                 name="datapackDescription"
@@ -265,6 +270,7 @@ export class ExportInfo extends React.Component {
                                 maxLength={1000}
                             />
                             <TextField
+                                id='projectField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
                                 name="projectName"
@@ -289,7 +295,7 @@ export class ExportInfo extends React.Component {
                             </div>
                             
                             <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
-                            <div className={styles.subHeading}>You must choose <strong>at least one</strong></div>
+                            <div id='layersSubheader' className={styles.subHeading}>You must choose <strong>at least one</strong></div>
                             <div className={styles.sectionBottom}>
                                 <List className={styles.list}>
                                     {providers.map((provider, ix) => {
@@ -328,9 +334,9 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div className={styles.heading}>Select Projection</div>
+                            <div id='projectionHeader' className={styles.heading}>Select Projection</div>
                             <div className={styles.sectionBottom}>
-                                <div className={styles.checkboxLabel}>
+                                <div id='projectionCheckbox' className={styles.checkboxLabel}>
                                     <Checkbox
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
@@ -341,9 +347,9 @@ export class ExportInfo extends React.Component {
                                 </div>
                             </div>
 
-                            <div className={styles.heading}>Select Export File Formats</div>
+                            <div id='formatsHeader' className={styles.heading}>Select Export File Formats</div>
                             <div className={styles.sectionBottom}>
-                                <div className={styles.checkboxLabel}>
+                                <div id='formatsCheckbox' className={styles.checkboxLabel}>
                                     <Checkbox
                                         label="Geopackage (.gpkg)"
                                         name="Geopackage"
@@ -379,6 +385,7 @@ export class ExportInfo extends React.Component {
         )
     }
 }
+
 function mapStateToProps(state) {
     return {
         geojson: state.aoiInfo.geojson,
@@ -398,11 +405,7 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled())
-        },
-        setExportInfoNotDone: () => {
-            dispatch(exportInfoNotDone());
         }
-
     }
 }
 
@@ -411,24 +414,19 @@ ExportInfo.contextTypes = {
 }
 
 ExportInfo.propTypes = {
-    geojson:         React.PropTypes.object,
-    providers:       PropTypes.array.isRequired,
-    exportInfo:     React.PropTypes.object,
-    incrementStepper: React.PropTypes.func,
-    handlePrev:       React.PropTypes.func,
-    nextEnabled: React.PropTypes.bool.isRequired
+    geojson: PropTypes.object.isRequired,
+    exportInfo: PropTypes.object.isRequired,
+    providers: PropTypes.array.isRequired,
+    nextEnabled: PropTypes.bool.isRequired,
+    handlePrev: PropTypes.func.isRequired,
+    updateExportInfo: PropTypes.func.isRequired,
+    setNextDisabled: PropTypes.func.isRequired,
+    setNextEnabled: PropTypes.func.isRequired
 }
 
 ExportInfo.childContextTypes = {
     muiTheme: React.PropTypes.object.isRequired,
 }
-
-ExportInfo =  reduxForm({
-    form: 'exportInfo',
-    destroyOnUnmount: false,
-    initialValues: {
-    }
-})(ExportInfo)
 
 export default connect(
     mapStateToProps, 

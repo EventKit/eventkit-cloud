@@ -56,15 +56,25 @@ describe('export actions', () => {
     });
 
     it('updateExportInfo should return passed in json', () => {
-        expect(actions.updateExportInfo('exportName', 'datapackDescription', 'projectName', true, ['provider1'], 'area_str', ['layer1'])).toEqual({
+        expect(actions.updateExportInfo({
+            exportName: 'exportName', 
+            datapackDescription: 'datapackDescription', 
+            projectName: 'projectName', 
+            makePublic: true, 
+            providers: ['provider1'], 
+            area_str: 'area_str', 
+            layers: ['layer1']
+        })).toEqual({
             type: 'UPDATE_EXPORT_INFO',
-            exportName: 'exportName',
-            datapackDescription: 'datapackDescription',
-            projectName: 'projectName',
-            makePublic: true,
-            providers: ['provider1'],
-            area_str: 'area_str',
-            layers: ['layer1'],
+            exportInfo: {
+                exportName: 'exportName', 
+                datapackDescription: 'datapackDescription', 
+                projectName: 'projectName', 
+                makePublic: true, 
+                providers: ['provider1'], 
+                area_str: 'area_str', 
+                layers: ['layer1']
+            }
         });
     });
 

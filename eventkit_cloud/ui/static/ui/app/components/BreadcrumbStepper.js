@@ -22,7 +22,6 @@ export class BreadcrumbStepper extends React.Component {
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
-        this.incrementStepper = this.incrementStepper.bind(this);
         this.state = {
             stepIndex: 0,
         };
@@ -82,11 +81,6 @@ export class BreadcrumbStepper extends React.Component {
         this.setState({stepIndex: stepIndex + 1});
     };
 
-    incrementStepper() {
-        const {stepIndex} = this.state;
-        this.setState({stepIndex: stepIndex + 1});
-    }
-
     handlePrev() {
         const {stepIndex} = this.state;
         if (stepIndex > 0) {
@@ -130,7 +124,6 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
-                                   incrementStepper={this.incrementStepper}
                                    handlePrev={this.handlePrev}/>
             case 2:
                 return <ExportSummary/>
