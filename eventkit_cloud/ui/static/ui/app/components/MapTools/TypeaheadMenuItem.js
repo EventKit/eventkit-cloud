@@ -28,11 +28,22 @@ export class TypeaheadMenuItem extends Component {
         }
         return (
             <MenuItem option={this.props.result} position={this.props.index} className={styles.menuItem}>
-                <div className={styles.menuItemIconDiv}>
-                    {icon}
+                <div className="row">
+                    <div className={styles.menuItemIconDiv}>
+                        {icon}
+                    </div>
+                    <div style={{flex: '1'}}>
+                        <div className={styles.menuItemText}>
+                            <strong>{this.props.result.name}</strong>
+                        </div>
+                        <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>
+                    </div>
+                    <div style={{paddingLeft: '6px'}}>
+                        <strong className={styles.menuItemSource}>
+                            {this.props.result.source}
+                        </strong>
+                    </div>
                 </div>
-                <div className={styles.menuItemText}><strong>{this.props.result.name}</strong></div>
-                <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>
             </MenuItem>
         )
     }

@@ -51,7 +51,7 @@ describe('DataCartDetails component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(BaseDialog)).toHaveLength(5);
+        expect(wrapper.find(BaseDialog)).toHaveLength(7);
         let table = wrapper.find('table').at(0);
         expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
         expect(table.find('tr').first().find('td').last().text()).toEqual('test');
@@ -304,6 +304,28 @@ describe('DataCartDetails component', () => {
         stateSpy.restore();
     });
 
+    it('handleFormatsOpen should set format dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionOpen should set projection dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
     it('handleRerunClose should set the rerun dialog to closed', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
@@ -344,6 +366,28 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleFormatClose should set the format dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionsClose should set the projections dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -410,6 +454,8 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         stateSpy.restore();
     });
+
+
 });
 
 const providerArray = [

@@ -11,6 +11,7 @@ import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
+import BaseDialog from '../../components/BaseDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 import raf from 'raf';
@@ -81,6 +82,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardText)).toHaveLength(0);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
     });
 
     it('componentDidMount should setNextDisabled, setArea, create deboucers, and add eventlistener', () => {
