@@ -19,8 +19,6 @@ import styles from '../../styles/ExportInfo.css'
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js'
 import Info from 'material-ui/svg-icons/action/info';
-import Dialog from 'material-ui/Dialog';
-import RaisedButton from 'material-ui/RaisedButton';
 import BaseDialog from '../BaseDialog';
 
 
@@ -350,9 +348,10 @@ export class ExportInfo extends React.Component {
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
                                         checked={true}
+                                        style={{display:'inlineBlock'}}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'0px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title='Projection Information'
@@ -369,11 +368,12 @@ export class ExportInfo extends React.Component {
                                 <div className={styles.checkboxLabel}>
                                     <Checkbox
                                         label="Geopackage (.gpkg)"
+                                        style={{display:'inlineBlock'}}
                                         name="Geopackage"
                                         checked={true}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
-                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'0px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.formatsDialogOpen}
                                         title='Format Information'
