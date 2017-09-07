@@ -7,6 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.template.loader import get_template, render_to_string
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
 
 @contextmanager
 def cd(newdir):
@@ -35,20 +37,44 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
 
     job_name = run.job.name.lower()
 
-    gpkg_file = '{}.gpkg'.format(job_name)
+    provider_tasks = run.provider_tasks.all()
+
+    provider_details = []
+    if export_provider_task:
+        provider_slug = export_provider_task.slug
+        provider_detail = {'provider_slug': provider_slug, 'file_path': ''}
+        provider_details += [provider_detail]
+    else:
+        for provider_task in provider_tasks:
+            from ..tasks.export_tasks import TaskStates
+            if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+                provider_slug = provider_task.slug
+                for export_task in provider_task.tasks.all():
+                    try:
+                        filename = export_task.result.filename
+                    except Exception:
+                        continue
+                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                     provider_task.slug, filename)
+                    if not os.path.isfile(full_file_path):
+                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                         export_task.name))
+                        continue
+                    # Exclude zip files created by zip_export_provider
+                    if full_file_path.endswith(".zip") == False:
+                        provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
+                        provider_details += [provider_detail]
+
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(job_name,
                                                                   timezone.now().strftime("%Y%m%d")))
 
     with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
+        open_file.write(render_to_string('styles/Style.qgs', context={'job_name' : job_name,
+                                                                      'job_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
-                                                                      'bbox': run.job.extents,
-                                                                      'job_name' : job_name}))
+                                                                      'provider_details': provider_details,
+                                                                      'bbox': run.job.extents}))
     return style_file
 
 def get_file_paths(directory):
