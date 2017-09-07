@@ -10,8 +10,11 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 
-from celery import chain, group, chord
-from eventkit_cloud.tasks.export_tasks import finalize_run_task, example_finalize_run_hook_task, prepare_for_export_zip_task, zip_file_task
+from celery import chain
+
+from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
+                                               osm_create_styles_task, bounds_export_task,
+                                               prepare_for_export_zip_task, zip_file_task)
 
 from ..jobs.models import Job
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
@@ -91,9 +94,6 @@ class TaskFactory:
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
 
-            # Contains one chain per item in provider_task_records
-            provider_task_chains = []
-
             finalize_task_settings = {
                 'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
                 'priority': TaskPriority.FINALIZE_RUN.value}
@@ -147,11 +147,21 @@ class TaskFactory:
                         else:
                             provider_subtask_chain.on_error(clean_up_task_chain)
 
+                        # create signature to close out the provider tasks
                         finalize_export_provider_signature = finalize_export_provider_task.s(
                             export_provider_task_uid=provider_task_uid,
                             status=TaskStates.COMPLETED.value,
                             locking_task_key=run_uid
                         )
+
+                        # add zip if required
+                        if provider_task_record.provider.zip:
+                            zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
+                                                                         stage_dir=stage_dir, worker=worker,
+                                                                         job_name=run.job.name)
+                            provider_subtask_chain = chain(
+                                provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_signature
+                            )
 
                         finalized_provider_task_chain = chain(
                             provider_subtask_chain,
@@ -226,13 +236,23 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     return task.s(
         run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
         provider_slug=export_provider_task.slug, export_provider_task_uid=export_provider_task_uid, job_name=job_name,
-        user_details=user_details
+        user_details=user_details, bbox=export_provider_task.run.job.extents
     ).set(queue=worker, routing_key=worker)
 
 
+def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
+    return chain(
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=osm_create_styles_task, job_name=job_name),
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=bounds_export_task, job_name=job_name),
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+                    task=zip_export_provider, job_name=job_name)
+    )
+
 def get_invalid_licenses(job):
     """
-    :param user: A user to verify licenses against. 
+    :param user: A user to verify licenses against.
     :param job: The job containing the licensed datasets.
     :return: A list of invalid licenses.
     """
@@ -286,6 +306,7 @@ def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None,
     finalize_signature = finalize_run_task.si(run_uid=run_uid, stage_dir=run_dir).set(**apply_args)
 
     all_task_sigs = itertools.chain(hook_task_sigs, [prepare_zip_sigature, zip_task_signature, finalize_signature])
+
     finalize_chain = chain(*all_task_sigs)
 
     return finalize_chain
