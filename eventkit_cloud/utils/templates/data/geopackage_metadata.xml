@@ -24,7 +24,7 @@
         </gmd:MD_ScopeCode>
     </gmd:hierarchyLevel>
     <gmd:dateStamp>
-        <gco:DateTime>{{ DateTime }}</gco:DateTime>
+        <gco:DateTime>{{ dateStamp }}</gco:DateTime>
     </gmd:dateStamp>
     <gmd:metadataStandardName>
         <gco:CharacterString>ISO 19115 Geographic Information - Metadata</gco:CharacterString>
@@ -37,13 +37,13 @@
             <gmd:citation>
                 <gmd:CI_Citation>
                     <gmd:title>
-                        <gco:CharacterString>{{  identificationInfo.MD_DataIdentification.citation.CI_Citation.title }}</gco:CharacterString>
+                        <gco:CharacterString>{{  title }}</gco:CharacterString>
                     </gmd:title>
                     <gmd:identifier>
                         <gmd:MD_Identifier>
                             <gmd:code>
                                 <gco:CharacterString>
-                                    http://www.geoplatform.gov/id/dataset/da8d733684cf725f905cec56a226fc59
+                                    {{  code }}
                                 </gco:CharacterString>
                             </gmd:code>
                         </gmd:MD_Identifier>
@@ -52,7 +52,7 @@
             </gmd:citation>
             <gmd:abstract>
                 <gco:CharacterString>
-                    {{ identificationInfo.MD_DataIdentification.citation.CI_Citation.abstract }}
+                    {{ abstract }}
                 </gco:CharacterString>
             </gmd:abstract>
             <gmd:language>
@@ -72,16 +72,16 @@
                                 <gco:Boolean>true</gco:Boolean>
                             </gmd:extentTypeCode>
                             <gmd:westBoundLongitude>
-                                <gco:Decimal>{{ identificationInfo.MD_DataIdentification.citation.CI_Citation.extent.geographicElement.EX_GeographicBoundingBox.westBoundLongitude }}</gco:Decimal>
+                                <gco:Decimal>{{ westBoundLongitude }}</gco:Decimal>
                             </gmd:westBoundLongitude>
                             <gmd:eastBoundLongitude>
-                                <gco:Decimal>{{ identificationInfo.MD_DataIdentification.citation.CI_Citation.extent.geographicElement.EX_GeographicBoundingBox.eastBoundLongitude }}</gco:Decimal>
+                                <gco:Decimal>{{ eastBoundLongitude }}</gco:Decimal>
                             </gmd:eastBoundLongitude>
                             <gmd:southBoundLatitude>
-                                <gco:Decimal>{{ identificationInfo.MD_DataIdentification.citation.CI_Citation.extent.geographicElement.EX_GeographicBoundingBox.southBoundLatitude }}</gco:Decimal>
+                                <gco:Decimal>{{ southBoundLatitude }}</gco:Decimal>
                             </gmd:southBoundLatitude>
                             <gmd:northBoundLatitude>
-                                <gco:Decimal>{{ identificationInfo.MD_DataIdentification.citation.CI_Citation.extent.geographicElement.EX_GeographicBoundingBox.northBoundLatitude }}</gco:Decimal>
+                                <gco:Decimal>{{ northBoundLatitude }}</gco:Decimal>
                             </gmd:northBoundLatitude>
                         </gmd:EX_GeographicBoundingBox>
                     </gmd:geographicElement>
@@ -96,19 +96,19 @@
                     <gmd:onLine>
                         <gmd:CI_OnlineResource>
                             <gmd:linkage>
-                                <gmd:URL>{{ distributionInfo.MD_Distribution.transferOptions.MD_DigitalTransferOptions.onLine.CI_OnlineResource.linkage.URL }}</gmd:URL>
+                                <gmd:URL>{{ URL }}</gmd:URL>
                             </gmd:linkage>
                             <gmd:protocol>
                                 <gco:CharacterString>HTTP</gco:CharacterString>
                             </gmd:protocol>
                             <gmd:applicationProfile>
-                                <gco:CharacterString>{{ distributionInfo.MD_Distribution.transferOptions.MD_DigitalTransferOptions.onLine.CI_OnlineResource.applicationProfile }}</gco:CharacterString>
+                                <gco:CharacterString>{{ applicationProfile }}</gco:CharacterString>
                             </gmd:applicationProfile>
                             <gmd:name>
-                                <gco:CharacterString>{{ distributionInfo.MD_Distribution.transferOptions.MD_DigitalTransferOptions.onLine.CI_OnlineResource.name }}</gco:CharacterString>
+                                <gco:CharacterString>{{ name }}</gco:CharacterString>
                             </gmd:name>
                             <gmd:description>
-                                <gco:CharacterString>{{ distributionInfo.MD_Distribution.transferOptions.MD_DigitalTransferOptions.onLine.CI_OnlineResource.description }}
+                                <gco:CharacterString>{{ description }}
                                 </gco:CharacterString>
                             </gmd:description>
                             <gmd:function>

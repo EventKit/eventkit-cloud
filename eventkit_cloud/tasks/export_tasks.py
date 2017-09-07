@@ -422,8 +422,8 @@ def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job
     return result
 
 
-# @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
-def add_metadata_task(result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
+@app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
+def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
     Task to create styles for osm.
     """
@@ -436,25 +436,19 @@ def add_metadata_task(result=None, job_uid=None, provider_slug=None, user_detail
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {"fileIdentifier": '{0}-osm-{1}.qgs'.format(job.name,
+    metadata_values = {"fileIdentifier": '{0}-osm-{1}'.format(job.name,
                                                                   date_time.strftime("%Y%m%d")),
-                       "identificationInfo": {
-                           "MD_DataIdentification": {"abstract": job.description,
-                                                     "citation": {"CI_Citation": {"title": job.name}},
-                                                     "extent": {"EX_Extent": {
-                                                         "geographicElement": {
-                                                             "EX_GeographicBoundingBox": {"westBoundLongitude": bbox[0],
-                                                                                          "southBoundLatitude": bbox[1],
-                                                                                          "eastBoundLongitude": bbox[2],
-                                                                                          "northBoundLatitude": bbox[3]}
-                                                         }
-                                                     }}}
-                       },
-                       "distributionInfo": {"MD_Distribution": {"transferOptions": {"MD_DigitalTransferOptions": {
-                           "onLine": {"CI_OnlineResource": {"linkage": {"URL": provider.preview_url},
-                                                            "applicationProfile": None,
-                                                            "name": provider.name,
-                                                            "description": provider.service_description}}}}}},
+                       "abstract": job.description,
+                       "title": job.name,
+                       "westBoundLongitude": bbox[0],
+                       "southBoundLatitude": bbox[1],
+                       "eastBoundLongitude": bbox[2],
+                       "northBoundLatitude": bbox[3],
+                       "URL": provider.preview_url,
+                       "applicationProfile": None,
+                       "code": None,
+                       "name": provider.name,
+                       "description": provider.service_description,
                        "dateStamp": date_time.isoformat()
                        }
 
