@@ -409,7 +409,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(10);
+        expect(setTimeout.mock.calls.length).toBe(12);
         expect(setTimeout.mock.calls[3][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
@@ -433,7 +433,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(9);
+        expect(setTimeout.mock.calls.length).toBe(11);
         console.log(setTimeout.mock.calls);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
