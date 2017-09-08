@@ -225,7 +225,14 @@ function mapDispatchToProps(dispatch) {
         },
         cloneExport: (cartDetails, providerArray) => {
             dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
-            dispatch(updateExportInfo(cartDetails.job.name, cartDetails.job.description, cartDetails.job.event, cartDetails.job.published, providerArray, 'Geopackage'))
+            dispatch(updateExportInfo({
+                exportName: cartDetails.job.name, 
+                datapackDescription: cartDetails.job.description, 
+                projectName: cartDetails.job.event, 
+                makePublic: cartDetails.job.published, 
+                providers: providerArray, 
+                layers: 'Geopackage'
+            }))
             browserHistory.push('/create/')
         },
         cancelProviderTask:(providerUid) => {

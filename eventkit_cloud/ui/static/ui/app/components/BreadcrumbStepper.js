@@ -10,7 +10,7 @@ import ExportAOI from './CreateDataPack/ExportAOI'
 import ExportInfo from './CreateDataPack/ExportInfo'
 import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 
 const isEqual = require('lodash/isEqual');
@@ -22,7 +22,6 @@ export class BreadcrumbStepper extends React.Component {
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
-        this.incrementStepper = this.incrementStepper.bind(this);
         this.state = {
             stepIndex: 0,
         };
@@ -79,18 +78,8 @@ export class BreadcrumbStepper extends React.Component {
 
     handleNext() {
         const {stepIndex} = this.state;
-        if (stepIndex == 1) {
-            this.props.setExportInfoDone();
-        }
-        else {
-            this.setState({stepIndex: stepIndex + 1});
-        }
-    };
-
-    incrementStepper() {
-        const {stepIndex} = this.state;
         this.setState({stepIndex: stepIndex + 1});
-    }
+    };
 
     handlePrev() {
         const {stepIndex} = this.state;
@@ -135,7 +124,6 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
-                                   incrementStepper={this.incrementStepper}
                                    handlePrev={this.handlePrev}/>
             case 2:
                 return <ExportSummary/>
@@ -276,7 +264,6 @@ BreadcrumbStepper.propTypes = {
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
     setDatacartDetailsReceived: React.PropTypes.func,
-    setExportInfoDone: React.PropTypes.func,
     clearAoiInfo: React.PropTypes.func,
     clearExportInfo: React.PropTypes.func,
     clearJobInfo: React.PropTypes.func,
@@ -311,9 +298,6 @@ function mapDispatchToProps(dispatch) {
         },
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
-        },
-        setExportInfoDone: () => {
-            dispatch(exportInfoDone());
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
