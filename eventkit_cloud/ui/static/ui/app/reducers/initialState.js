@@ -57,11 +57,10 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: '',
+        layers: 'Geopackage',
     },
     providers: [],
     stepperNextEnabled: false,
-    setExportPackageFlag: false,
     datacartDetailsReceived:false,
     datacartDetails: {
         fetching: false,

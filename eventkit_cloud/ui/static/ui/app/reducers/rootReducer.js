@@ -1,5 +1,4 @@
 import {combineReducers} from 'redux'
-import { reducer as reduxFormReducer } from 'redux-form'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
 import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
@@ -21,7 +20,6 @@ const rootReducer = combineReducers({
     resetMap: resetMapReducer,
     geocode: getGeocodeReducer,
     importGeom: importGeomReducer,
-    form: reduxFormReducer,
     user: userReducer,
     routing: routerReducer,
     drawerOpen: drawerMenuReducer,
@@ -29,7 +27,6 @@ const rootReducer = combineReducers({
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,
-    setExportPackageFlag: startExportPackageReducer,
     runsDeletion: DeleteRunsReducer,
     datacartDetails: getDatacartDetailsReducer,
     datacartDetailsReceived: setDatacartDetailsReducer,
