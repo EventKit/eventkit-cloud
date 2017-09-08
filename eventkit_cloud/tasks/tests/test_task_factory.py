@@ -12,7 +12,7 @@ from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
     get_invalid_licenses)
-from mock import patch, Mock, MagicMock
+from mock import patch, Mock, MagicMock, ANY
 
 
 logger = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         finalize_chain = create_finalize_run_task_collection(run_uid=run_uid, run_dir=run_dir, worker=worker,
                                                              apply_args=expected_task_settings)
 
-        zip_file_task.s.assert_called_once_with(run_uid=run_uid)
+        zip_file_task.s.assert_called_once_with(run_uid=run_uid, static_files=ANY)
         zip_file_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
 
         finalize_run_task.si.assert_called_once_with(run_uid=run_uid, stage_dir=run_dir)
