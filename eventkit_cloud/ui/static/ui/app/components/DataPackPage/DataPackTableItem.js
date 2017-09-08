@@ -15,13 +15,18 @@ import { List, ListItem} from 'material-ui/List'
 import moment from 'moment';
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
         super(props);
+        this.showDeleteDialog =  this.showDeleteDialog.bind(this);
+        this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
+            deleteDialogOpen: false
         };
     }
 
@@ -60,6 +65,18 @@ export class DataPackTableItem extends Component {
 
     };
 
+    showDeleteDialog() {
+        this.setState({deleteDialogOpen: true});
+    }
+
+    hideDeleteDialog() {
+        this.setState({deleteDialogOpen: false});
+    }
+
+    handleDelete() {
+        this.hideDeleteDialog();
+        this.props.onRunDelete(this.props.run.uid);
+    }
 
     render() {
         const runProviders = this.props.run.provider_tasks.filter((provider) => {
@@ -145,7 +162,7 @@ export class DataPackTableItem extends Component {
                         <MenuItem
                             style={{fontSize: '12px'}}
                             primaryText={'Delete Export'}
-                            onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                            onClick={this.showDeleteDialog}/>
                         : null}
                     </IconMenu>
                     <BaseDialog
@@ -155,6 +172,11 @@ export class DataPackTableItem extends Component {
                     >
                         <List>{providersList}</List>
                     </BaseDialog>
+                    <DeleteDialog
+                        show={this.state.deleteDialogOpen}
+                        handleCancel={this.hideDeleteDialog}
+                        handleDelete={this.handleDelete}
+                    />
                 </TableRowColumn>
             </TableRow>
         )

@@ -9,19 +9,6 @@ export function createExportRequest(exportData) {
     }
 }
 
-export function exportInfoDone() {
-    return {
-        type: types.EXPORT_INFO_DONE,
-        setExportPackageFlag: true
-    }
-}
-export function exportInfoNotDone() {
-    return {
-        type: types.EXPORT_INFO_NOTDONE,
-        setExportPackageFlag: false
-    }
-}
-
 export function updateAoiInfo(geojson, geomType, title, description,) {
     return {
         type: types.UPDATE_AOI_INFO,
@@ -31,16 +18,10 @@ export function updateAoiInfo(geojson, geomType, title, description,) {
         description,
     }
 }
-export function updateExportInfo(exportName, datapackDescription, projectName, makePublic, providers, area_str, layers) {
+export function updateExportInfo(exportInfo) {
     return {
         type: types.UPDATE_EXPORT_INFO,
-        exportName : exportName,
-        datapackDescription,
-        projectName,
-        makePublic,
-        providers,
-        area_str,
-        layers,
+        exportInfo: exportInfo
     }
 }
 

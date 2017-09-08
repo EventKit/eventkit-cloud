@@ -15,14 +15,19 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 import { List, ListItem} from 'material-ui/List'
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
 import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.showDeleteDialog =  this.showDeleteDialog.bind(this);
+        this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
+            deleteDialogOpen: false
         };
     }
     handleProviderClose = () => {
@@ -42,6 +47,19 @@ export class DataPackListItem extends Component {
 
     handleMenuButtonClick(e) {
         e.stopPropagation();
+    }
+
+    showDeleteDialog() {
+        this.setState({deleteDialogOpen: true});
+    }
+
+    hideDeleteDialog() {
+        this.setState({deleteDialogOpen: false});
+    }
+
+    handleDelete() {
+        this.hideDeleteDialog();
+        this.props.onRunDelete(this.props.run.uid);
     }
 
     render() {
@@ -189,9 +207,9 @@ export class DataPackListItem extends Component {
 
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
-                                    style={{fontSize: '12px'}}
+                                    style={{fontSize: subtitleFontSize}}
                                     primaryText={'Delete Export'}
-                                    onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                                    onClick={this.showDeleteDialog}/>
                                 : null}
                             </IconMenu>
                             <BaseDialog
@@ -201,6 +219,11 @@ export class DataPackListItem extends Component {
                             >
                                 <List>{providersList}</List>
                             </BaseDialog>
+                            <DeleteDialog
+                                show={this.state.deleteDialogOpen}
+                                handleCancel={this.hideDeleteDialog}
+                                handleDelete={this.handleDelete}
+                            />
                         </div>
                     } 
                     subtitle={

@@ -17,6 +17,7 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 import {browserHistory} from 'react-router';
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
 import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackGridItem extends Component {
@@ -25,11 +26,15 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
+        this.showDeleteDialog =  this.showDeleteDialog.bind(this);
+        this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.state = { 
             expanded: false,
             overflow: false,
             providerDescs: {},
             providerDialogOpen: false,
+            deleteDialogOpen: false
         };
     }
 
@@ -101,6 +106,19 @@ export class DataPackGridItem extends Component {
     };
     toggleExpanded() {
         this.setState({expanded: !this.state.expanded});
+    }
+
+    showDeleteDialog() {
+        this.setState({deleteDialogOpen: true});
+    }
+
+    hideDeleteDialog() {
+        this.setState({deleteDialogOpen: false});
+    }
+
+    handleDelete() {
+        this.hideDeleteDialog();
+        this.props.onRunDelete(this.props.run.uid);
     }
 
     render() {
@@ -271,7 +289,8 @@ export class DataPackGridItem extends Component {
                                 <MenuItem
                                     style={{fontSize: cardTextFontSize}}
                                     primaryText={'Delete Export'}
-                                    onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                                    onClick={this.showDeleteDialog}
+                                />
                                 : null}
                             </IconMenu>
                             <BaseDialog
@@ -281,6 +300,11 @@ export class DataPackGridItem extends Component {
                             >
                                 <List>{providersList}</List>
                             </BaseDialog>
+                            <DeleteDialog
+                                show={this.state.deleteDialogOpen}
+                                handleCancel={this.hideDeleteDialog}
+                                handleDelete={this.handleDelete}
+                            />
                         </div>
                     } 
                     subtitle={
