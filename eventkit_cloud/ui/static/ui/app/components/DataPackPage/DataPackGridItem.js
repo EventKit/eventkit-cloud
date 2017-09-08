@@ -1,13 +1,13 @@
 import React, {PropTypes, Component} from 'react'
 import {Link} from 'react-router';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card'
-import FlatButton from 'material-ui/FlatButton'
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import style from '../../styles/DataPackPage.css';
 import ol from 'openlayers';
+import { List, ListItem} from 'material-ui/List'
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPerson from 'material-ui/svg-icons/social/person';
@@ -15,6 +15,10 @@ import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import {browserHistory} from 'react-router';
+import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
+import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -22,9 +26,15 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
+        this.showDeleteDialog =  this.showDeleteDialog.bind(this);
+        this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
         this.state = { 
             expanded: false,
             overflow: false,
+            providerDescs: {},
+            providerDialogOpen: false,
+            deleteDialogOpen: false
         };
     }
 
@@ -45,7 +55,10 @@ export class DataPackGridItem extends Component {
             target: this.props.run.uid + '_map',
             layers: [
                 new ol.layer.Tile({
-                    source: new ol.source.OSM()
+                    source: new ol.source.XYZ({
+                        url: this.context.config.BASEMAP_URL,
+                        wrapX: false
+                    })
                 }),
             ],
             view: new ol.View({
@@ -77,29 +90,117 @@ export class DataPackGridItem extends Component {
         this.setState({expanded: expanded});
     }
 
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+
+    };
+
+    handleProviderOpen(runProviders) {
+        let providerDesc = {};
+        runProviders.forEach((runProvider) => {
+            let a = this.props.providers.find(x => x.slug === runProvider.slug)
+            providerDesc[a.name] = a.service_description;
+        })
+        this.setState({providerDescs:providerDesc, providerDialogOpen: true});
+
+    };
     toggleExpanded() {
         this.setState({expanded: !this.state.expanded});
     }
 
+    showDeleteDialog() {
+        this.setState({deleteDialogOpen: true});
+    }
+
+    hideDeleteDialog() {
+        this.setState({deleteDialogOpen: false});
+    }
+
+    handleDelete() {
+        this.hideDeleteDialog();
+        this.props.onRunDelete(this.props.run.uid);
+    }
+
     render() {
+
+        const runProviders = this.props.run.provider_tasks.filter((provider) => {
+            return provider.display != false;
+        });
+
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
+            return (
+            <ListItem
+                key={key}
+                style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
+                nestedListStyle={{padding: '0px'}}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        key={1}
+                        primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
+                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white',  fontSize: '14px', width:'100%', zIndex: 0}}
+                    />
+                ]}
+            />
+
+            );
+        })
+
         const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
         const titleFontSize = 22;
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
+                position: 'relative'
             },
             cardTitle:{
                 wordWrap: 'break-word',
-                padding: '10px'
+                padding: '15px 10px 10px'
             },
-            cardTitle2: {fontSize: titleFontSize, height: '36px'},
-            cardSubtitle: {fontSize: cardTextFontSize},
-            completeIcon: {float: 'left', color: '#bcdfbb', fontSize: '20px'},
-            errorIcon: {float: 'left', color: '#ce4427', fontSize: '20px', opacity: '0.6'},
-            runningIcon: {float: 'left', color: '#f4D225', fontSize: '22px'},
-            unpublishedIcon: {float: 'right', color: 'grey', fontSize: '18px', marginRight: '5px'},
-            publishedIcon: {float: 'right', color: '#bcdfbb', fontSize: '20px', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey', padding: '0px, 10px', margin: '0px', fontSize: cardTextFontSize},
+            cardTitle2: {
+                fontSize: titleFontSize, 
+                height: '36px'
+            },
+            cardSubtitle: {
+                fontSize: cardTextFontSize
+            },
+            completeIcon: {
+                float: 'left', 
+                color: '#bcdfbb', 
+                fontSize: '20px'
+            },
+            errorIcon: {
+                float: 'left', 
+                color: '#ce4427', 
+                fontSize: '20px', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                float: 'left', 
+                color: '#f4D225', 
+                fontSize: '22px'
+            },
+            unpublishedIcon: {
+                float: 'right', 
+                color: 'grey', 
+                fontSize: '18px', 
+                marginRight: '5px'
+            },
+            publishedIcon: {
+                float: 'right', 
+                color: '#bcdfbb', 
+                fontSize: '20px', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey', 
+                padding: '0px, 10px', 
+                margin: '0px', 
+                fontSize: cardTextFontSize
+            },
             cardTextMinimized: {
                 position: 'absolute',
                 wordWrap: 'break-word',
@@ -144,6 +245,7 @@ export class DataPackGridItem extends Component {
 
         return (
             <Card style={styles.card} key={this.props.run.uid} expanded={this.state.expanded} onExpandChange={this.handleExpandChange}>
+                <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
@@ -172,18 +274,37 @@ export class DataPackGridItem extends Component {
                                     style={{fontSize: cardTextFontSize}}
                                     primaryText={this.state.expanded ? "Hide Map" : "Show Map"}
                                     onClick={this.toggleExpanded}/>
-                                <MenuItem 
+                                <MenuItem
+                                style={{fontSize: cardTextFontSize}}
+                                primaryText="Go to Status & Download"
+                                onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
+
+                                <MenuItem
                                     style={{fontSize: cardTextFontSize}}
-                                    primaryText="Go to Export Detail"
-                                    onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
-                               
+                                    primaryText="View Data Sources"
+                                    onClick={this.handleProviderOpen.bind(this, runProviders)}
+                                    />
+
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
                                     style={{fontSize: cardTextFontSize}}
                                     primaryText={'Delete Export'}
-                                    onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                                    onClick={this.showDeleteDialog}
+                                />
                                 : null}
                             </IconMenu>
+                            <BaseDialog
+                                show={this.state.providerDialogOpen}
+                                title={'DATA SOURCES'}
+                                onClose={this.handleProviderClose.bind(this)}
+                            >
+                                <List>{providersList}</List>
+                            </BaseDialog>
+                            <DeleteDialog
+                                show={this.state.deleteDialogOpen}
+                                handleCancel={this.hideDeleteDialog}
+                                handleDelete={this.handleDelete}
+                            />
                         </div>
                     } 
                     subtitle={
@@ -237,10 +358,15 @@ export class DataPackGridItem extends Component {
     }
 }
 
+DataPackGridItem.contextTypes = {
+    config: React.PropTypes.object
+}
+
 DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired
+    onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired,
 };
 
 export default DataPackGridItem;

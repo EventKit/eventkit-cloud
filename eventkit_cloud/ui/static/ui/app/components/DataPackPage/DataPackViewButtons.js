@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import ActionViewModule from 'material-ui/svg-icons/action/view-module';
 import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
+import MapsMap from 'material-ui/svg-icons/maps/map';
 import IconButton from 'material-ui/IconButton';
 
 export class DataPackViewButtons extends React.Component {
@@ -9,44 +10,46 @@ export class DataPackViewButtons extends React.Component {
         super(props);
     }
 
-    getDimension() {
-        if(window.innerWidth <= 575) {
-            return '21px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '22px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '23px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '24px';
-        }
-        else {
-            return '25px';
-        }
-    }
-
     render() {
-        const dimension = this.getDimension();
         const styles = {
-            button: {height: '35px', width: dimension, padding: '0px', float: 'right'},
-            icon: {color: '#4498c0', height: dimension, width: dimension}
+            button: {
+                height: '35px', 
+                width: '22px', 
+                padding: '0px', 
+                float: 'right'
+            },
+            icon: {
+                color: '#4498c0', 
+                height: '22px', 
+                width: '22px'
+            },
+            selectedIcon: {
+                color: '#253447', 
+                height: '22px', 
+                width: '22px', 
+                backgroundColor: '#4498c0'
+            }
         }
-
         return (
             <div style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
                 <IconButton
-                    onClick={this.props.handleGridSelect}
+                    onClick={() => {this.props.handleViewChange('map')}}
                     style={styles.button}
-                    iconStyle={styles.icon}
+                    iconStyle={this.props.view == 'map' ? styles.selectedIcon : styles.icon}
+                >
+                    <MapsMap/>
+                </IconButton>
+                <IconButton
+                    onClick={() => {this.props.handleViewChange('grid')}}
+                    style={styles.button}
+                    iconStyle={this.props.view == 'grid' ? styles.selectedIcon : styles.icon}
                 >
                     <ActionViewModule />
                 </IconButton>
                 <IconButton
-                    onClick={this.props.handleListSelect}
+                    onClick={() => {this.props.handleViewChange('list')}}
                     style={styles.button}
-                    iconStyle={styles.icon}
+                    iconStyle={this.props.view == 'list' ? styles.selectedIcon : styles.icon}
                 >
                     <ActionViewStream />
                 </IconButton>
@@ -57,8 +60,8 @@ export class DataPackViewButtons extends React.Component {
 
 
 DataPackViewButtons.propTypes = {
-    handleGridSelect: React.PropTypes.func.isRequired,
-    handleListSelect: React.PropTypes.func.isRequired,
+    handleViewChange: PropTypes.func.isRequired,
+    view: PropTypes.string
 };
 
 export default DataPackViewButtons;

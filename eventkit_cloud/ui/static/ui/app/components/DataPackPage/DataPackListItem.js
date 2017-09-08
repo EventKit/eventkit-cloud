@@ -12,13 +12,79 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import { List, ListItem} from 'material-ui/List'
+import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
+import FeaturedFlag from './FeaturedFlag';
 
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.showDeleteDialog =  this.showDeleteDialog.bind(this);
+        this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        this.state = {
+            providerDescs: {},
+            providerDialogOpen: false,
+            deleteDialogOpen: false
+        };
+    }
+    handleProviderClose = () => {
+        this.setState({providerDialogOpen: false});
+
+    };
+
+    handleProviderOpen(runProviders) {
+        let providerDesc = {};
+        runProviders.forEach((runProvider) => {
+            let a = this.props.providers.find(x => x.slug === runProvider.slug)
+            providerDesc[a.name] = a.service_description;
+        })
+        this.setState({providerDescs:providerDesc, providerDialogOpen: true});
+
+    };
+
+    showDeleteDialog() {
+        this.setState({deleteDialogOpen: true});
+    }
+
+    hideDeleteDialog() {
+        this.setState({deleteDialogOpen: false});
+    }
+
+    handleDelete() {
+        this.hideDeleteDialog();
+        this.props.onRunDelete(this.props.run.uid);
     }
 
     render() {
+
+        const runProviders = this.props.run.provider_tasks.filter((provider) => {
+            return provider.display != false;
+        });
+
+        const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
+            return (
+                <ListItem
+                    key={key}
+                    style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
+                    nestedListStyle={{padding: '0px'}}
+                    primaryText={key}
+                    initiallyOpen={false}
+                    primaryTogglesNestedList={false}
+                    nestedItems={[
+                        <ListItem
+                            key={1}
+                            primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
+                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'100%', zIndex: 0}}
+                        />
+                    ]}
+                />
+
+            );
+        })
+
         const width = window.innerWidth;
         const titleFontSize = width < 576 ? '19px' : '23px';
         const subtitleFontSize = width < 576 ? '10px': '14px';
@@ -26,40 +92,92 @@ export class DataPackListItem extends Component {
 
         const styles = {
             card: {
-                backgroundColor: '#f7f8f8',
+                backgroundColor: this.props.backgroundColor || '#f7f8f8',
                 borderRadius: '0px',
                 borderTop: 'grey 1px solid',
                 paddingBottom: '0px',
+                position: 'relative'
             },
             cardTitle:{
                 wordWrap: 'break-word',
-                padding: '10px 15px',
+                padding: '15px',
             },
-            completeIcon: {height: subtitleHeight, float: 'right', color: '#bcdfbb', opacity: '0.6'},
-            errorIcon: {height: subtitleHeight, float: 'right', color: '#ce4427', opacity: '0.6'},
-            runningIcon: {height: subtitleHeight, float: 'right', color: '#f4D225'},
-            unpublishedIcon: {height: subtitleHeight, float: 'right', color: 'grey', marginRight: '5px'},
-            publishedIcon : {height: subtitleHeight, float: 'right', color: '#bcdfbb', marginRight: '5px'},
-            ownerLabel: {float: 'right', color: 'grey'},
-            eventText: {height: subtitleHeight, lineHeight: subtitleHeight, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'},
-            titleLink: {color: 'inherit', display: 'block', width: '100%', height: '36px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}
+            completeIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#bcdfbb', 
+                opacity: '0.6'
+            },
+            errorIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#ce4427', 
+                opacity: '0.6'
+            },
+            runningIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: '#f4D225'
+            },
+            unpublishedIcon: {
+                height: '18px', 
+                float: 'right', 
+                color: 'grey', 
+                marginRight: '5px'
+            },
+            publishedIcon : {
+                height: '18px', 
+                float: 'right', 
+                color: '#bcdfbb', 
+                marginRight: '5px'
+            },
+            ownerLabel: {
+                float: 'right', 
+                color: 'grey'
+            },
+            eventText: {
+                height: '18px', 
+                lineHeight: '18px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap'
+            },
+            titleLink: {
+                height: '36px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap'
+            }
         };
 
+        const onMouseEnter = this.props.onHoverStart ? () => {this.props.onHoverStart(this.props.run.uid)} : null;
+        const onMouseLeave = this.props.onHoverEnd ? () => {this.props.onHoverEnd(this.props.run.uid)} : null;
+        const onClick = this.props.onClick ? () => {this.props.onClick(this.props.run.uid)} : null;
         return (
-            <Card style={styles.card} key={this.props.run.uid} containerStyle={{padding: '0px'}}>
+            <Card
+                style={styles.card}
+                key={this.props.run.uid}
+                containerStyle={{padding: '0px'}}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+                onClick={onClick}
+            >
+                <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
                     style={styles.cardTitle} 
-                    titleStyle={{fontSize: titleFontSize, height: '36px'}}
-                    subtitleStyle={{fontSize: subtitleFontSize}}
+                    titleStyle={{fontSize: '21px', height: '36px'}}
+                    subtitleStyle={{fontSize: '12px'}}
                     title={
                         <div>
                             <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
-                                <Link 
-                                    to={'/status/' + this.props.run.job.uid} 
-                                    style={styles.titleLink}>
-                                    {this.props.run.job.name}
-                                </Link>
+                                <div style={styles.titleLink}>
+                                    <Link
+                                        to={'/status/' + this.props.run.job.uid}
+                                        style={{color: 'inherit'}}>
+                                        {this.props.run.job.name}
+                                    </Link>
+                                </div>
                             </div>
                             <IconMenu
                                 style={{float: 'right', width: '24px', height: '100%'}}
@@ -74,16 +192,33 @@ export class DataPackListItem extends Component {
                             >
                                 <MenuItem 
                                     style={{fontSize: subtitleFontSize}}
-                                    primaryText="Go to Export Detail"
+                                    primaryText="Go to Status & Download"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
-                               
+                                <MenuItem
+                                    style={{fontSize: subtitleFontSize}}
+                                    primaryText="View Data Sources"
+                                    onClick={this.handleProviderOpen.bind(this, runProviders)}
+                                />
+
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText={'Delete Export'}
-                                    onClick={() => {this.props.onRunDelete(this.props.run.uid)}}/>
+                                    onClick={this.showDeleteDialog}/>
                                 : null}
                             </IconMenu>
+                            <BaseDialog
+                                show={this.state.providerDialogOpen}
+                                title={'DATA SOURCES'}
+                                onClose={this.handleProviderClose.bind(this)}
+                            >
+                                <List>{providersList}</List>
+                            </BaseDialog>
+                            <DeleteDialog
+                                show={this.state.deleteDialogOpen}
+                                handleCancel={this.hideDeleteDialog}
+                                handleDelete={this.handleDelete}
+                            />
                         </div>
                     } 
                     subtitle={
@@ -91,14 +226,15 @@ export class DataPackListItem extends Component {
                             <div style={styles.eventText}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
-                            <div style={{height: subtitleHeight, lineHeight: subtitleHeight}}>
+                            <div style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}>
                                 {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
                                 {this.props.run.user == this.props.user.data.user.username ?
-                                    <p style={styles.ownerLabel}>My DataPack</p>
+                                    <div style={styles.ownerLabel}>My DataPack</div>
                                     :
-                                    <p style={styles.ownerLabel}>{this.props.run.user}</p>
+                                    <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
-                                {this.props.run.job.published ? 
+                                <div style={{display: 'inline-block', float: 'right'}}>
+                                {this.props.run.job.published ?
                                     <SocialGroup style={styles.publishedIcon}/>
                                     :
                                     
@@ -112,6 +248,7 @@ export class DataPackListItem extends Component {
                                         :
                                         <NavigationCheck style={styles.completeIcon}/>
                                 }
+                                </div>
                             </div>
                         </div>
                     }
@@ -124,7 +261,12 @@ export class DataPackListItem extends Component {
 DataPackListItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired
+    onRunDelete: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired,
+    onHoverStart: PropTypes.func,
+    onHoverEnd: PropTypes.func,
+    onClick: PropTypes.func,
+    backgroundColor: PropTypes.string
 };
 
 export default DataPackListItem;

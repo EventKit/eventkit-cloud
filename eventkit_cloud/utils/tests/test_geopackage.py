@@ -10,7 +10,8 @@ from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_na
                           get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
                           remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
                           add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info,
-                          get_table_gpkg_contents_information)
+                          get_table_gpkg_contents_information, set_gpkg_contents_bounds, create_extension_table,
+                          create_metadata_tables, add_file_metadata)
 
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,22 @@ class TestGeopackage(TransactionTestCase):
         self.assertEqual(expected_table_names, return_table_names)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_set_gpkg_contents_bounds(self, sqlite3):
+        table_name = "test1"
+        gpkg = "/test/file.gpkg"
+        bbox = [-1, 0, 2, 1]
+
+        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
+        set_gpkg_contents_bounds(gpkg, table_name, bbox)
+        sqlite3.connect().__enter__().execute.assert_called_once_with(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name))
+
+        with self.assertRaises(Exception):
+            sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            set_gpkg_contents_bounds(gpkg, table_name, bbox)
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_zoom_levels_table(self, sqlite3):
         expected_zoom_levels = [0, 1, 2]
         mock_zoom_levels = [(expected_zoom_levels[0],), (expected_zoom_levels[1],), (expected_zoom_levels[2],)]
@@ -107,16 +124,20 @@ class TestGeopackage(TransactionTestCase):
         zoom_level = 1
         gpkg = "/test/file.gpkg"
 
-        bad_table_name = "test;this"
-        returned_value = remove_zoom_level(gpkg, bad_table_name, zoom_level)
-        sqlite3.connect().__enter__().execute.assert_not_called()
-        self.assertFalse(returned_value)
+        with self.assertRaises(Exception):
+            bad_table_name = "test;this"
+            remove_zoom_level(gpkg, bad_table_name, zoom_level)
 
         table_name = "test"
-        returned_value = remove_zoom_level(gpkg, table_name, zoom_level)
+        with self.assertRaises(Exception):
+            sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=0)
+            remove_zoom_level(gpkg, table_name, zoom_level)
+
+        sqlite3.reset_mock()
+        sqlite3.connect().__enter__().execute.return_value = Mock(rowcount=1)
+        remove_zoom_level(gpkg, table_name, zoom_level)
         sqlite3.connect().__enter__().execute.assert_called_once_with(
             "DELETE FROM gpkg_tile_matrix WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table_name, int(zoom_level)))
-        self.assertTrue(returned_value)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_tile_matrix_table_zoom_levels(self, sqlite3):
@@ -213,8 +234,9 @@ class TestGeopackage(TransactionTestCase):
         with self.assertRaises(Exception):
             add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
 
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
     @patch('os.rename')
-    def test_clip_geopackage(self, rename):
+    def test_clip_geopackage(self, rename, sqlite3):
         geojson = "{}"
         gpkg = None
         with self.assertRaises(Exception):
@@ -223,12 +245,24 @@ class TestGeopackage(TransactionTestCase):
         geojson_file = "test.geojson"
         in_gpkg = "old_test.gpkg"
         gpkg = "test.gpkg"
-        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {1} {2}".format(geojson_file, gpkg, in_gpkg)
+        expected_tables_no_tiles = ()
+        expected_tables_with_tiles = (("",),)  # contents don't matter, just checks length
+
+        sqlite3.connect().__enter__().execute.return_value = expected_tables_no_tiles
+        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {2} {1}".format(geojson_file, in_gpkg, gpkg)
         self.task_process.return_value = Mock(exitcode=0)
         clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
+        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True,
+                                                                  stderr=-1, stdout=-1)
         rename.assert_called_once_with(gpkg, in_gpkg)
+
+        sqlite3.connect().__enter__().execute.return_value = expected_tables_with_tiles
+        expected_call = "gdalwarp -cutline {0} -crop_to_cutline -dstalpha {1} {2}".format(geojson_file, in_gpkg, gpkg)
+        self.task_process.return_value = Mock(exitcode=0)
+        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
+        self.task_process().start_process.assert_called_with(expected_call, executable='/bin/bash', shell=True,
+                                                                  stderr=-1, stdout=-1)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -277,3 +311,26 @@ class TestGeopackage(TransactionTestCase):
         mock_sqlite3.connect().__enter__().execute.assert_called_with("SELECT table_name, data_type, identifier, description, last_change, min_x, min_y, max_x, max_y, srs_id FROM gpkg_contents WHERE table_name = '{0}';".format(
             table))
         self.assertEqual(expected_response, response)
+
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_create_extension_table(self, mock_sqlite3):
+        gpkg = "test.gpkg"
+        create_extension_table(gpkg)
+        mock_sqlite3.connect().__enter__().execute.assert_called_once()
+
+    @patch('eventkit_cloud.utils.geopackage.create_extension_table')
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_create_extension_table(self, mock_sqlite3, mock_create_extension_table):
+        gpkg = "test.gpkg"
+        create_metadata_tables(gpkg)
+        mock_sqlite3.connect().__enter__().execute.assert_called()
+        mock_create_extension_table.assert_called_once_with(gpkg)
+
+    @patch('eventkit_cloud.utils.geopackage.create_metadata_tables')
+    @patch('eventkit_cloud.utils.geopackage.sqlite3')
+    def test_add_file_metadata(self, mock_sqlite3, mock_create_metadata_tables):
+        gpkg = "test.gpkg"
+        metadata = "sample data"
+        add_file_metadata(gpkg, metadata)
+        mock_sqlite3.connect().__enter__().execute.assert_called()
+        mock_create_metadata_tables.assert_called_once_with(gpkg)

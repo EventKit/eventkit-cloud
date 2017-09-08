@@ -1,12 +1,16 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime,timedelta
+from dateutil import parser
 import logging
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django.contrib.gis.geos import Polygon, GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User
 
@@ -16,7 +20,7 @@ from eventkit_cloud.jobs.models import (
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from rest_framework import filters, permissions, status, views, viewsets
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -84,6 +88,10 @@ class JobViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
     search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
+
+
+    def dispatch(self, request, *args, **kwargs):
+        return viewsets.ModelViewSet.dispatch(self, request, *args, **kwargs)
 
     def get_queryset(self):
         """Return all objects user can view."""
@@ -394,6 +402,52 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
 
+    def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+           Update one or more attributes for the given job
+
+           * request: the HTTP request in JSON.
+
+               Examples:
+
+                   { "published" : false, "featured" : true }
+                   { "featured" : false }
+
+           * Returns: a copy of the new  values on success
+
+               Example:
+
+                   {
+                       "published": false,
+                       "featured" : true,
+                       "success": true
+                   }
+
+           ** returns: 400 on error
+
+           """
+
+        job = Job.objects.get(uid=uid)
+        if job.user != request.user and not request.user.is_superuser:
+            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
+        response = {}
+        payload = request.data
+
+        for attribute, value in payload.iteritems():
+            if hasattr(job, attribute):
+                setattr(job, attribute, value)
+                response[attribute] = value
+            else:
+                msg = "unidentified job attribute - %s" % attribute
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
+        job.save()
+        response['success'] = True
+        return Response(response, status=status.HTTP_200_OK)
+
+
+
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -443,7 +497,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
-    lookup_field = 'id'
+    lookup_field = 'slug'
     ordering = ['name']
 
     def get_queryset(self):
@@ -476,33 +530,49 @@ class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ExportRunViewSet(viewsets.ModelViewSet):
     """
-    **Provides an endpoint for querying export runs**.
+    **retrieve:**
+    
+    Returns the exact run as specified by the run UID in the url `/runs/{uid}`
+    
+    **list:**
+    
+    Returns a list of all the runs.
+    
+    Export runs can be filtered and ordered by adding optional parameters to the url:
 
-    **Export runs can be filtered and ordered by adding optional parameters to the url**:
-    
     * `user`: The user who created the job.
-    
+
     * `status`: The current run status (can include any number of the following: COMPLETED, SUBMITTED, INCOMPLETE, or FAILED).
         * Example = `/api/runs?status=SUBMITTED,INCOMPLETE,FAILED`
-        
+
     * `job_uid`: The uid of a particular job.
-    
+
     * `min_date`: Minimum date (YYYY-MM-DD) for the `started_at` field.
-    
+
     * `max_date`: Maximum date (YYYY-MM-DD) for the `started_at` field.
-    
+
     * `started_at`: The DateTime a run was started at in ISO date-time format.
-    
+
     * `published`: True or False for whether the owning job is published or not.
+
+    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
+        * Order can be reversed by adding `-` to the front of the order parameter.
+
+    An example request using some of the parameters.
+
+    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&ordering=-job__name`
+    
+    **filter:**
+    
+    Accessed at `/runs/filter`.
+    
+    Accepts GET and POST. Support all the url params of 'list' with the addition of advanced features like `search_term`, `bbox`, and `geojson`.
     
     * `search_term`: A value to search the job name, description and event text for.
     
-    * `ordering`: Possible values are `started_at, status, user__username, job__name, job__event, and job__published`.
-        * Order can be reversed by adding `-` to the front of the order parameter.
-        
-    **Putting it all together: An example request using some of the parameters**.
+    * `bbox`: Bounding box in the form of `xmin,ymin,xmax,ymax`. 
     
-    `/api/runs?user=test_user&status=FAILED,COMPLETED&min_date=2017-05-20&max_date=2017-12-21&published=True&search_term=test&ordering=-job__name`
+    To filter by geojson send the geojson geometry in the body of a POST request under the key `geojson`.
     """
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -512,7 +582,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     lookup_field = 'uid'
     search_fields = ('user__username', 'status', 'job__uid', 'min_date',
                      'max_date', 'started_at', 'job__published')
-    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event')
+    ordering_fields = ('job__name', 'started_at', 'user__username', 'job__published', 'status', 'job__event', 'job__featured')
     ordering = ('-started_at',)
 
     def get_queryset(self):
@@ -547,23 +617,73 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """
             Destroy a model instance.
-            """
+        """
         instance = self.get_object()
         instance.soft_delete(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
         """
-        List the ExportRuns for a single Job.
-
-        Gets the job_uid from the request and returns run data for the
-        associated Job.
-
-        * request: the http request.
-
-        * Returns: the serialized run data.
+        List the ExportRuns
+        :param request: the http request
+        :param args: 
+        :param kwargs: 
+        :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
+        try:
+            self.validate_licenses(queryset)
+        except InvalidLicense as il:
+            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    @list_route(methods=['post', 'get'])
+    def filter(self, request, *args, **kwargs):
+        """
+        Lists the ExportRuns and provides advanced filtering options like search_term, bbox, and geojson geometry.
+        Accepts GET and POST request. POST is required if you want to filter by a geojson geometry contained in the request data
+        :param request: the http request
+        :param args: 
+        :param kwargs: 
+        :return: the serialized runs
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        search_geojson = self.request.data.get('geojson', None)
+        if search_geojson is not None:
+            try:
+                geom = geojson_to_geos(search_geojson, 4326)
+                queryset = queryset.filter(job__the_geom__intersects=geom)
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
+        search_bbox = self.request.query_params.get('bbox', None)
+        if search_bbox is not None and len(search_bbox.split(',')) == 4:
+            extents = search_bbox.split(',')
+            data = {
+                'xmin': extents[0],
+                'ymin': extents[1],
+                'xmax': extents[2],
+                'ymax': extents[3]
+            }
+
+            try:
+                bbox_extents = validate_bbox_params(data)
+                bbox = validate_search_bbox(bbox_extents)
+                queryset = queryset.filter(job__the_geom__within=bbox)
+
+            except ValidationError as e:
+                logger.debug(e.detail)
+                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+
 
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
@@ -618,12 +738,58 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         payload = request.data
         run = ExportRun.objects.get(uid=uid)
 
-        if "expiration" in payload :
-            run.expiration = payload["expiration"]
-            run.save()
-            return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
-        else:
+    @transaction.atomic
+    def partial_update(self, request, uid=None, *args, **kwargs):
+
+        """
+        Update the expiration date for an export run. If the user is a superuser,
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
+        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
+
+        * request: the HTTP request in JSON.
+
+            Example:
+
+                {
+                    "expiration" : "2019-12-31"
+                }
+
+        * Returns: a copy of the new expiration value on success
+
+            Example:
+
+                {
+                    "expiration": "2019-12-31",
+                    "success": true
+                }
+
+        ** returns: 400 on error
+
+        """
+
+        payload = request.data
+        if not "expiration" in payload:
             return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+
+        expiration = payload["expiration"]
+        target_date = parser.parse(expiration).replace(tzinfo=None)
+        run = ExportRun.objects.get(uid=uid)
+
+        if not request.user.is_superuser:
+            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
+            now = datetime.today()
+            max_date  = now + timedelta(max_days)
+            if target_date > max_date.replace(tzinfo=None):
+                message = 'expiration date must be before ' + max_date.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+            if ( target_date < run.expiration.replace(tzinfo=None) ):
+                message = 'expiration date must be after ' + run.expiration.isoformat()
+                return Response({'success': False, 'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        run.expiration = target_date
+        run.save()
+        return Response({'success': True, 'expiration': run.expiration }, status=status.HTTP_200_OK)
+
 
     @staticmethod
     def validate_licenses(queryset):
@@ -702,7 +868,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_user=request.user)
+        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
 
@@ -838,6 +1004,30 @@ def get_user_details(request):
         'is_superuser': logged_in_user.is_superuser,
         'is_staff': logged_in_user.is_staff
     }
+
+def geojson_to_geos(geojson_geom, srid=None):
+    """
+    :param geojson_geom: A stringified geojson geometry
+    :param srid: The ESPG code of the input data
+    :return: A GEOSGeometry object
+    """
+    if not geojson_geom:
+        raise exceptions.ValidationError(
+            'No geojson geometry string supplied'
+        )
+    if not srid:
+        srid = 4326
+    try:
+        geom = GEOSGeometry(geojson_geom, srid=srid)
+    except GEOSException:
+        raise exceptions.ValidationError(
+            'Could not convert geojson geometry, check that your geometry is valid'
+        )
+    if not geom.valid:
+        raise exceptions.ValidationError(
+            'GEOSGeometry invalid, check that your geojson geometry is valid'
+        )
+    return geom
 
 
 class SwaggerSchemaView(views.APIView):

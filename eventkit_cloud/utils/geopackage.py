@@ -66,7 +66,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
             layer_name: A DB table.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully uploaded.
         """
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
@@ -99,20 +99,23 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
 
 
 def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
-    """Uses an ogr2ogr script to upload a geojson file.
+    """Uses an ogr2ogr and/or gdalwarp script to clip a geopackage.
         Args:
-            geojson: A geojson string.
-            gpkg: Database dict from the django settings.
-            layer_name: A DB table.
+            geojson_file: A geojson file to serve as a cutline.
+            gpkg: Geopackage to clip.
             task_uid: A task uid to update.
         Returns:
-            True if the file is succesfully uploaded.
+            True if the file is successfully clipped.
         """
 
     if not geojson_file or not gpkg:
         raise Exception("A geojson_file: {0} \nor a geopackage: {1} was not accessible.".format(geojson_file, gpkg))
 
-    cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
+    # set cmd to gdalwarp if tiled gpkg, otherwise ogr2ogr
+    if get_tile_table_names(gpkg):
+        cmd = Template("gdalwarp -cutline $geojson_file -crop_to_cutline -dstalpha $in_gpkg $out_gpkg")
+    else:
+        cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
 
     in_gpkg = os.path.join(os.path.dirname(gpkg), "old_{0}".format(os.path.basename(gpkg)))
     os.rename(gpkg, in_gpkg)
@@ -121,13 +124,13 @@ def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
                                       'in_gpkg': in_gpkg,
                                       'out_gpkg': gpkg})
 
-    logger.error(append_cmd)
+    logger.info(append_cmd)
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if task_process.exitcode != 0:
         logger.error('{0}'.format(task_process.stderr))
-        raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
+        raise Exception("{} process failed with returncode: {0}".format(append_cmd.split()[0], task_process.exitcode))
     return gpkg
 
 
@@ -212,6 +215,21 @@ def get_table_gpkg_contents_information(gpkg, table_name):
                 "srs_id": table_information[9]}
 
 
+def set_gpkg_contents_bounds(gpkg, table_name, bbox):
+    """
+
+    :param gpkg: Path to geopackage file.
+    :param table_name: A table name to set the bounds.
+    :param bbox: An iterable with doubles representing the bounds [w,s,e,n]
+    :return: A dict with the column names as the key.
+    """
+    with sqlite3.connect(gpkg) as conn:
+        if not conn.execute(
+            "UPDATE gpkg_contents SET min_x = {0}, min_y = {1}, max_x = {2}, max_y = {3} WHERE table_name = '{4}';".format(
+                bbox[0], bbox[1], bbox[2], bbox[3], table_name)).rowcount:
+            raise Exception("Unable to set bounds for {1} in {2}".format(table_name, gpkg))
+
+
 def get_table_tile_matrix_information(gpkg, table_name):
     with sqlite3.connect(gpkg) as conn:
         result = conn.execute(
@@ -268,10 +286,10 @@ def remove_zoom_level(gpkg, table, zoom_level):
     """
     with sqlite3.connect(gpkg) as conn:
         if is_alnum(table):
-            conn.execute("DELETE FROM gpkg_tile_matrix "
-                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level))
-            return True
-    return False
+            if conn.execute("DELETE FROM gpkg_tile_matrix "
+                         "WHERE table_name = '{0}' AND zoom_level = '{1}';".format(table, zoom_level)).rowcount:
+                return True
+        raise Exception("Unable to remove zoom level {0} for {1} from {2}".format(zoom_level, table, gpkg))
 
 
 def get_tile_matrix_table_zoom_levels(gpkg, table_name):
@@ -331,7 +349,7 @@ def get_table_info(gpkg, table):
 
 def create_table_from_existing(gpkg, old_table, new_table):
     """
-    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such as a primary key column.
+    Creates a new gpkg table, from an existing table.  This assumed the original table is from a gpkg and as such has a primary key column.
     
     :param gpkg: 
     :param old_table: 
@@ -349,6 +367,92 @@ def create_table_from_existing(gpkg, old_table, new_table):
             ["{0} {1}".format(column[0], column[1]) for column in columns])))
         conn.execute("CREATE TABLE {0} ({1});".format(new_table, ','.join(
             ["{0} {1}".format(column[0], column[1]) for column in columns])))
+
+
+def create_metadata_tables(gpkg):
+    """
+    Creates tables needed to add metadata.
+
+    :param gpkg: A geopackage to create the metadata tables.
+    :return:
+    """
+    create_extension_table(gpkg)
+    commands = [
+        """
+        CREATE TABLE IF NOT EXISTS gpkg_metadata (
+          id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
+          md_scope TEXT NOT NULL DEFAULT 'dataset',
+          md_standard_uri TEXT NOT NULL,
+          mime_type TEXT NOT NULL DEFAULT 'text/xml',
+          metadata TEXT NOT NULL DEFAULT ''
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS gpkg_metadata_reference (
+          reference_scope TEXT NOT NULL,
+          table_name TEXT,
+          column_name TEXT,
+          row_id_value INTEGER,
+          timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+          md_file_id INTEGER NOT NULL,
+          md_parent_id INTEGER,
+          CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
+          CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id)
+        );
+        """,
+        """
+        INSERT OR IGNORE INTO gpkg_extensions(table_name, column_name, extension_name, definition, scope)
+            VALUES (NULL, NULL, "gpkg_metadata", "http://www.geopackage.org/spec/#extension_metadata", "read-write");
+        """
+    ]
+    with sqlite3.connect(gpkg) as conn:
+        for command in commands:
+            logger.debug(command)
+            conn.execute(command)
+
+
+def create_extension_table(gpkg):
+    """
+
+    :param gpkg: A geopackage to create the gpkg_extensions table.
+    :return:
+    """
+    command = """
+CREATE TABLE IF NOT EXISTS gpkg_extensions (
+  table_name TEXT,
+  column_name TEXT,
+  extension_name TEXT NOT NULL,
+  definition TEXT NOT NULL,
+  scope TEXT NOT NULL,
+  CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name)
+);
+"""
+
+    with sqlite3.connect(gpkg) as conn:
+        logger.debug(command)
+        conn.execute(command)
+
+
+def add_file_metadata(gpkg, metadata):
+    """
+    :param gpkg: A geopackage to add metadata.
+    :param metadata: The xml metadata to add as a string.
+    :return:
+    """
+    create_metadata_tables(gpkg)
+
+    with sqlite3.connect(gpkg) as conn:
+        command = "INSERT OR IGNORE INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata)" \
+                  "VALUES ('dataset', 'http://schemas.opengis.net/iso/19139/20070417/resources/Codelist/gmxCodelists.xml#MD_ScopeCode', 'text/xml', ?);"
+        logger.debug(command)
+        conn.execute(command, (metadata,))
+
+        command = """
+INSERT OR IGNORE INTO gpkg_metadata_reference (reference_scope, table_name, column_name, row_id_value, timestamp, md_file_id, md_parent_id)
+VALUES ('geopackage', NULL, NULL, NULL, strftime('%Y-%m-%dT%H:%M:%fZ','now'), 1, null);
+                 """
+        logger.debug(command)
+        conn.execute(command)
 
 
 if __name__ == '__main__':

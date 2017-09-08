@@ -131,17 +131,12 @@ export class DataPackDetails extends React.Component {
             return '80px';
         }
         else {
-            return '128px';
+            return '120px';
         }
     }
 
     getToggleCellWidth() {
-        if(window.innerWidth <= 767) {
-            return '50px';
-        }
-        else {
-            return '70px';
-        }
+        return '70px';
     }
 
     getCheckboxStatus() {
@@ -218,14 +213,16 @@ export class DataPackDetails extends React.Component {
                     </TableHeader>
                     </Table>
 
-                {providers.map((provider) => (
-                    <ProviderRow 
+                {providers.map((provider, ix) => (
+                    <ProviderRow
+                        backgroundColor={ix % 2 == 0 ? 'whitesmoke': 'white'}
                         key={provider.uid} 
                         onSelectionToggle={this.onSelectionToggle}
                         onProviderCancel={this.props.onProviderCancel}
                         updateSelectionNumber={this.updateSelectionNumber} 
                         provider={provider} 
-                        selectedProviders={this.state.selectedProviders}/>
+                        selectedProviders={this.state.selectedProviders}
+                        providers={this.props.providers}/>
                 ))}
            </div>
         )
@@ -235,6 +232,7 @@ export class DataPackDetails extends React.Component {
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
+    providers: PropTypes.array.isRequired
 }
 
 

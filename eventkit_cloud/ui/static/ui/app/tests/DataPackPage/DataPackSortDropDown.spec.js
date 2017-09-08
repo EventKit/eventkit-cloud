@@ -74,10 +74,11 @@ describe('DataPackSortDropDown component', () => {
         });
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
-        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Newest');
-        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Oldest ');
-        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).toEqual('Name (A-Z)');
-        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).toEqual('Name (Z-A)');
+        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Featured');        
+        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Newest');
+        expect(menu.childAt(1).childAt(0).childAt(2).node.props.primaryText).toEqual('Oldest ');
+        expect(menu.childAt(1).childAt(0).childAt(3).node.props.primaryText).toEqual('Name (A-Z)');
+        expect(menu.childAt(1).childAt(0).childAt(4).node.props.primaryText).toEqual('Name (Z-A)');
     });
     
     it('should call onChange when an item is selected', () => {
@@ -104,38 +105,19 @@ describe('DataPackSortDropDown component', () => {
         expect(props.handleChange.calledWith(event, 2, 'started_at')).toEqual(true);
     });
 
-    it('getPx should return the size string for the specified item based on window width', () => {
+    it('should adjust styles for small screens', () => {
+        window.resizeTo(1000, 900);        
+        expect(window.innerWidth).toBe(1000);
         const props = getProps();
-        const wrapper = shallow(<DataPackSortDropDown {...props}/>);
+        const wrapper = mount(<DataPackSortDropDown {...props}/> , {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(wrapper.find(DropDownMenu).props().labelStyle.fontSize).toEqual('14px');
 
         window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
-        expect(wrapper.instance().getPx('labelFontSize')).toEqual('12px');
-        expect(wrapper.instance().getPx('itemFontSize')).toEqual('10px');
-        expect(wrapper.instance().getPx('labelRightPadding')).toEqual('24px');
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getPx('labelFontSize')).toEqual('13px');
-        expect(wrapper.instance().getPx('itemFontSize')).toEqual('11px');
-        expect(wrapper.instance().getPx('labelRightPadding')).toEqual('24px');
-
-        window.resizeTo(900, 1000);
-        expect(window.innerWidth).toEqual(900);
-        expect(wrapper.instance().getPx('labelFontSize')).toEqual('14px');
-        expect(wrapper.instance().getPx('itemFontSize')).toEqual('12px');
-        expect(wrapper.instance().getPx('labelRightPadding')).toEqual('26px');
-
-        window.resizeTo(1000, 1100);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getPx('labelFontSize')).toEqual('15px');
-        expect(wrapper.instance().getPx('itemFontSize')).toEqual('13px');
-        expect(wrapper.instance().getPx('labelRightPadding')).toEqual('28px');
-
-        window.resizeTo(1200, 1300);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getPx('labelFontSize')).toEqual('16px');
-        expect(wrapper.instance().getPx('itemFontSize')).toEqual('14px');
-        expect(wrapper.instance().getPx('labelRightPadding')).toEqual('30px');
+        expect(window.innerWidth).toBe(500);
+        wrapper.update();
+        expect(wrapper.find(DropDownMenu).props().labelStyle.fontSize).toEqual('12px');
     });
 });

@@ -15,13 +15,36 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 describe('DataPackList component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return {
             runs: getRuns(),
             user: {data: {user: {username: 'admin'}}},
             onRunDelete: () => {},
             onSort: () => {},
-            order: '-started_at'
+            order: '-started_at',
+            providers: providers,
         }
     };
 
@@ -57,7 +80,7 @@ describe('DataPackList component', () => {
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn)).toHaveLength(7);
+        expect(wrapper.find(TableHeaderColumn)).toHaveLength(8);
         const headerColumns = wrapper.find(TableHeaderColumn);
         expect(headerColumns.at(0).text()).toEqual('Name');
         expect(headerColumns.at(0).find(NavigationArrowDropDown)).toHaveLength(1);
@@ -71,7 +94,9 @@ describe('DataPackList component', () => {
         expect(headerColumns.at(4).find(NavigationArrowDropDown)).toHaveLength(1);
         expect(headerColumns.at(5).text()).toEqual('Owner');
         expect(headerColumns.at(5).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(6).text()).toEqual('');
+        expect(headerColumns.at(6).text()).toEqual('Featured');
+        expect(headerColumns.at(6).find(NavigationArrowDropDown)).toHaveLength(1);
+        expect(headerColumns.at(7).text()).toEqual('');
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(DataPackTableItem)).toHaveLength(3);
     });
@@ -83,7 +108,7 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(0).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('job__name'));
+        expect(orderSpy.calledWith('job__name')).toBe(true);
         orderSpy.restore();
     });
 
@@ -94,7 +119,7 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(1).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('job__event'));
+        expect(orderSpy.calledWith('job__event')).toBe(true);
         orderSpy.restore();
     });
 
@@ -105,7 +130,7 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(2).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('started_at')).toBe(true);
+        expect(orderSpy.calledWith('-started_at')).toBe(true);
         orderSpy.restore();
     });
 
@@ -116,7 +141,7 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(3).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('status'));
+        expect(orderSpy.calledWith('status')).toBe(true);
         orderSpy.restore();
     });
 
@@ -127,7 +152,7 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(4).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('job__published'));
+        expect(orderSpy.calledWith('job__published')).toBe(true);
         orderSpy.restore();
     });
 
@@ -138,9 +163,19 @@ describe('DataPackList component', () => {
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(5).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
-        expect(orderSpy.calledWith('user__username'));
+        expect(orderSpy.calledWith('user__username')).toBe(true);
         orderSpy.restore();
     });
+
+    it('featured colum header should call handleOrder onClick', () => {
+        const props = getProps();
+        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const wrapper = getWrapper(props);
+        expect(orderSpy.called).toBe(false);
+        wrapper.find(TableHeaderColumn).at(6).find('div').simulate('click');
+        expect(orderSpy.called).toBe(true);
+        expect(orderSpy.calledWith('-job__featured')).toBe(true);
+    })
 
     it('handleOrder should call isSameOrderType and props.onSort', () => {
         let props = getProps();

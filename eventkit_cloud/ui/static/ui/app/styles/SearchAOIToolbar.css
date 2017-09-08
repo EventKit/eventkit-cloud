@@ -1,26 +1,8 @@
-.searchbarDiv {
-    z-index: 2;
-    position: absolute;
-    width: 90%;
-    min-width: 320px;
-    height: 50px;
-    top: 1em;
-    right: 10px;
-    background-color: white;
-}
-
-.searchAOIButtonContainer {
-    position: absolute;
-    right: 0px;
-    width: 50px;
-    height: 50px;
-}
-
 .typeahead {
     left: 0px;
     top: 0px;
     height: 50px;
-    width: calc(100% - 70px);
+    width: calc(100% - 50px);
     position: absolute;
 }
 
@@ -41,8 +23,8 @@
     --webkit-box-shadow: none;
     box-shadow: none;
     color: #707274;
+    padding-right: 48px;
     background-color: #fff !important;
-    padding-left: 25px;
 }
 
 .typeahead > div > div > input:focus {
@@ -55,17 +37,4 @@
     border: none;
     margin: 0px;
     padding: 0px;
-}
-
-@media only screen and (min-width: 768px) {
-    .searchbarDiv {
-        max-width: 691px;
-    }
-}
-
-@media screen and (min-width: 576px) {
-    .searchAOIButtonContainer {
-        width: 60px;
-        height: 50px;
-    }
 }

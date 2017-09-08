@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import logging
 import shutil
-import uuid
 import os
 
 from django.conf import settings
@@ -13,37 +12,15 @@ from django.db.models.signals import pre_delete, post_delete
 from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 
-from ..jobs.models import Job, ExportProvider, LowerCaseCharField
+from ..jobs.models import Job, LowerCaseCharField
 from ..utils.s3 import delete_from_s3
-from ..tasks.export_tasks import TaskStates
+from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+import uuid
 
 logger = logging.getLogger(__name__)
 
 
-class TimeStampedModelMixin(models.Model):
-    """
-    Mixin for timestamped models.
-    """
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    started_at = models.DateTimeField(default=timezone.now, editable=False)
-    finished_at = models.DateTimeField(editable=False, null=True)
-
-    class Meta:
-        abstract = True
-
-
-class RunModelMixin(TimeStampedModelMixin):
-    """
-    Mixin for task runs.
-    """
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-
-    class Meta:
-        abstract = True
-
-
-class ExportRun(RunModelMixin):
+class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     ExportRun is the main structure for storing export information.
 
@@ -77,19 +54,20 @@ class ExportRun(RunModelMixin):
     def soft_delete(self, user=None, *args, **kwargs):
         from .export_tasks import cancel_run
         exportrun_delete_exports(self.__class__, self)
-        self.delete_user = user
+        username = None
+        if user:
+            self.delete_user = user
+            username = user.username
         self.deleted = True
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
-        cancel_run.run(export_run_uid=self.uid, canceling_user=user, delete=True)
+        cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
 
 
-class ExportProviderTask(models.Model):
+class ExportProviderTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     The ExportProviderTask stores the task information for a specific provider.
     """
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, blank=True)
     slug = LowerCaseCharField(max_length=40, default='')
     run = models.ForeignKey(ExportRun, related_name='provider_tasks')
@@ -105,21 +83,16 @@ class ExportProviderTask(models.Model):
         return 'ExportProviderTask uid: {0}'.format(self.uid)
 
 
-class ExportTask(models.Model):
+class ExportTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
      An ExportTask holds the information about the process doing the actual work for a task.
     """
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
     export_provider_task = models.ForeignKey(ExportProviderTask, related_name='tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
     progress = models.IntegerField(default=0, editable=False, null=True)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    started_at = models.DateTimeField(editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
-    finished_at = models.DateTimeField(editable=False, null=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
@@ -135,14 +108,10 @@ class ExportTask(models.Model):
         return 'ExportTask uid: {0}'.format(self.uid)
 
 
-class FinalizeRunHookTaskRecord(models.Model):
-    id = models.AutoField(primary_key=True, editable=False)
+class FinalizeRunHookTaskRecord(UIDMixin, TimeStampedModelMixin):
     run = models.ForeignKey(ExportRun)
     celery_uid = models.UUIDField()
     task_name = models.CharField(max_length=50)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    started_at = models.DateTimeField(editable=False, null=True)
-    finished_at = models.DateTimeField(editable=False, null=True)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
@@ -199,13 +168,12 @@ class FileProducingTaskResult(models.Model):
         return 'FileProducingTaskResult ({}), {}'.format(self.id, self.filename)
 
 
-class ExportTaskException(models.Model):
+class ExportTaskException(TimeStampedModelMixin):
     """
     Model to store ExportTask exceptions for auditing.
     """
     id = models.AutoField(primary_key=True, editable=False)
     task = models.ForeignKey(ExportTask, related_name='exceptions')
-    timestamp = models.DateTimeField(default=timezone.now, editable=False)
     exception = models.TextField(editable=False)
 
     class Meta:
@@ -224,7 +192,7 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     try:
         shutil.rmtree(run_dir, ignore_errors=True)
         logger.info("The directory {0} was deleted.".format(run_dir))
-    except OSError as os_error:
+    except OSError:
         logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
 
 

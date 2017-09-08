@@ -9,9 +9,6 @@ export default {
         title: null,
         description: null,
     },
-    mode: 'DRAW_NORMAL',
-    showInvalidDrawWarning: false,
-    showImportModal: false,
     zoomToSelection: {
         click: false
     },
@@ -30,13 +27,6 @@ export default {
         processed: false,
         geom: {},
         error: null,
-    },
-    toolbarIcons: {
-        box: "DEFAULT",
-        free: "DEFAULT",
-        mapView: "DEFAULT",
-        import: "DEFAULT",
-        search: "DEFAULT",
     },
     drawerOpen: false,
     runsList: {
@@ -65,11 +55,10 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: '',
+        layers: 'Geopackage',
     },
     providers: [],
     stepperNextEnabled: false,
-    setExportPackageFlag: false,
     datacartDetailsReceived:false,
     datacartDetails: {
         fetching: false,
@@ -99,4 +88,14 @@ export default {
         canceled: false,
         error: null,
     },
+    updateExpiration: {
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    updatePermission: {
+        updating: false,
+        updated: false,
+        error: null,
+    }
 }

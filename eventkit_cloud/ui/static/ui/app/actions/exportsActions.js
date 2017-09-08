@@ -1,4 +1,3 @@
-import {Config} from '../config';
 import types from './actionTypes';
 import axios from 'axios'
 import cookie from 'react-cookie'
@@ -7,19 +6,6 @@ export function createExportRequest(exportData) {
     return {
         type: types.CREATE_EXPORT_SUCCESS,
         exportInfo: exportData
-    }
-}
-
-export function exportInfoDone() {
-    return {
-        type: types.EXPORT_INFO_DONE,
-        setExportPackageFlag: true
-    }
-}
-export function exportInfoNotDone() {
-    return {
-        type: types.EXPORT_INFO_NOTDONE,
-        setExportPackageFlag: false
     }
 }
 
@@ -32,16 +18,10 @@ export function updateAoiInfo(geojson, geomType, title, description,) {
         description,
     }
 }
-export function updateExportInfo(exportName, datapackDescription, projectName, makePublic, providers, area_str, layers) {
+export function updateExportInfo(exportInfo) {
     return {
         type: types.UPDATE_EXPORT_INFO,
-        exportName : exportName,
-        datapackDescription,
-        projectName,
-        makePublic,
-        providers,
-        area_str,
-        layers,
+        exportInfo: exportInfo
     }
 }
 
@@ -121,13 +101,6 @@ export function clearAoiInfo() {
 export function clearJobInfo() {
     return {
         type: types.CLEAR_JOB_INFO,
-    }
-}
-
-export function updateMode(mode) {
-    return {
-        type: types.SET_MODE,
-        mode: mode
     }
 }
 

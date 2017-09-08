@@ -11,13 +11,15 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
-import Warning from 'material-ui/svg-icons/alert/warning'
-import Check from 'material-ui/svg-icons/navigation/check'
+import Warning from 'material-ui/svg-icons/alert/warning';
+import Check from 'material-ui/svg-icons/navigation/check';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
+import ProviderError from '../../components/StatusDownloadPage/ProviderError';
+import TaskError from '../../components/StatusDownloadPage/TaskError';
+import BaseDialog from '../../components/BaseDialog';
+import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('ProviderRow component', () => {
 
@@ -28,6 +30,32 @@ describe('ProviderRow component', () => {
         '81909b77-a6cd-403f-9e62-9662c9e2cdf3': false,
     }
 
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": {
+                "slug": "osm",
+                "name": "Open Database License (ODbL) v1.0",
+                "text": "ODC Open Database License (ODbL)."
+            },
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return  {
             provider: {
@@ -37,8 +65,11 @@ describe('ProviderRow component', () => {
                 uid: "e261d619-2a02-4ba5-a58c-be0908f97d04",
                 url: "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
                 display: true,
+                slug: 'osm',
             },
             selectedProviders: selectedProviders,
+            providers: providers,
+            backgroundColor:'white',
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
         }
@@ -62,10 +93,11 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(6);
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(IconMenu)).toHaveLength(0);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
     it('should render the cancel menu item if the task is pending/running and the cancel menu item should call onProviderCancel', () => {
@@ -84,10 +116,11 @@ describe('ProviderRow component', () => {
         wrapper.setState({openTable: true});
         expect(wrapper.find(Table)).toHaveLength(1);
         expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(2);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(6);
+        expect(wrapper.find(TableRow)).toHaveLength(3);
+        expect(wrapper.find(TableRowColumn)).toHaveLength(12);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(TableBody)).toHaveLength(1);
+        expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
 
     it('should handle summing up the file sizes', () => {
@@ -139,36 +172,15 @@ describe('ProviderRow component', () => {
 
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1000, 600);
         expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
 
         window.resizeTo(1200, 600);
         expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('128px');
-    });
-
-    it('getToggleCellWidth should return the pixel string for table width based on window width', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('30px');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getToggleCellWidth()).toEqual('50px');
+        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
     it('should call componentWillMount and set the row and count state', () => {
@@ -183,16 +195,27 @@ describe('ProviderRow component', () => {
         mountSpy.restore();
     });
 
-    // it('should call onChangeCheck with the task box is checked', () => {
-    //     const props = getProps();
-    //     const onChangeSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({openTable: true});
-    //     wrapper.find(TableBody).find(Checkbox).find('input').simulate('change');
-    //     expect(onChangeSpy.calledOnce).toBe(true);
-    //     onChangeSpy.restore();
-    // });
+    it('handleProviderOpen should set provider dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = shallow(<ProviderRow {...props}/>);
+        wrapper.instance().handleProviderOpen(props.provider);
+        console.log(props.provider)
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
+        expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        stateSpy.restore();
+    });
 
+    it('handleProviderClose should set the provider dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
+        const wrapper = shallow(<ProviderRow {...props}/>);
+        wrapper.instance().handleProviderClose();
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
     it('should call onAllCheck when the provider box is checked', () => {
         const props = getProps();
         const onChangeCheckSpy = new sinon.spy(ProviderRow.prototype, 'onChangeCheck');
@@ -238,21 +261,17 @@ describe('ProviderRow component', () => {
     it('getTaskStatus should be called with the correct status from a given task', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTaskStatus({status: 'SUCCESS'})).toEqual(
+        props.provider.tasks[0].status = 'SUCCESS';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
             <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
-        expect(wrapper.instance().getTaskStatus({status: 'INCOMPLETE'})).toEqual(
-            <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'}}
-            >
-                ERROR
-            </span>
-        )
-        expect(wrapper.instance().getTaskStatus({status: 'PENDING'})).toEqual('WAITING');
+        props.provider.tasks[0].status = 'INCOMPLETE';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
+            <TaskError task={props.provider.tasks[0]}/>
+        );
+        props.provider.tasks[0].status = 'PENDING';
+        expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual('WAITING');
+        props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
             <span><LinearProgress mode="determinate" value={100}/>{''}</span>
         );
@@ -262,80 +281,80 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getTaskStatus({status: ''})).toEqual('');
     });
 
-    it('getTaskStatusIcon should be called with the correct icon from a given task', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getTaskStatusIcon('SUCCESS')).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
-        );
-        expect(wrapper.instance().getTaskStatusIcon('PENDING')).toEqual('WAITING');
-        expect(wrapper.instance().getTaskStatusIcon('CANCELED')).toEqual('CANCELED');
-        expect(wrapper.instance().getTaskStatusIcon('FAILED')).toEqual(
-            <span style={{color: 'red'}}>Error</span>
-        );
-        expect(wrapper.instance().getTaskStatusIcon('')).toEqual('');
-    });
-
-    it('getProviderStatusIcon should be called with the icon from a given provider status', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        expect(wrapper.instance().getProviderStatusIcon('COMPLETED')).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('INCOMPLETE')).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#ce4427', verticalAlign: 'bottom'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('SUBMITTED')).toEqual(null);
-        expect(wrapper.instance().getProviderStatusIcon('CANCELED')).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
-        );
-        expect(wrapper.instance().getProviderStatusIcon('')).toEqual(null);
-    });
-
     it('getProviderStatus should be called with the correct icon from a given provider status', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().getProviderStatus('COMPLETED')).toEqual(null);
-        expect(wrapper.instance().getProviderStatus('INCOMPLETE')).toEqual(
-            <span style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#ce4427'
-                }}>ERROR</span>
+        props.provider.status = 'COMPLETED';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
+            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
-        expect(wrapper.instance().getProviderStatus('PENDING')).toEqual('WAITING');
-        expect(wrapper.instance().getProviderStatus('RUNNING')).toEqual('IN PROGRESS');
-        expect(wrapper.instance().getProviderStatus('CANCELED')).toEqual(
+        props.provider.status = 'INCOMPLETE';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
+            <ProviderError provider={props.provider} key={props.provider.uid}/>
+        );
+        props.provider.status = 'PENDING';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('WAITING');
+        props.provider.status = 'RUNNING';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('IN PROGRESS');
+        props.provider.status = 'CANCELED';
+        expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
             <span style={{
-                    fontWeight: 'bold',
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#f4d225'
-                }}>CANCELED</span>
+                fontWeight: 'bold',
+                display: 'inlineBlock',
+                borderTopWidth: '10px',
+                borderBottomWidth: '10px',
+                borderLeftWidth: '10px',
+                color: '#f4d225'
+            }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
         );
         expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });
 
-    it('getTaskLink should get called with correct data', () => {
+    it('getTaskLink should return a "span" element', () => {
         const props = getProps();
-        const getTaskLink = new sinon.spy(ProviderRow.prototype, 'getTaskLink');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskLink(tasks);
-        expect(getTaskLink.calledOnce).toBe(true);
-        expect(getTaskLink.calledWith(tasks)).toBe(true);
+        const task = {result: {}, name: 'test name'};
+        const link = wrapper.instance().getTaskLink(task);
+        const elem = shallow(link);
+        expect(elem.is('span')).toBe(true);
+        expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskDownloadIcon should be called with correct data', () => {
+    it('getTaskLink should return a "a" element', () => {
         const props = getProps();
-        const getTaskIcon = new sinon.spy(ProviderRow.prototype, 'getTaskDownloadIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskDownloadIcon(tasks);
-        expect(getTaskIcon.calledOnce).toBe(true);
-        expect(getTaskIcon.calledWith(tasks)).toBe(true);
+        const task = {result: {url: 'test-url.io'}, name: 'test name'};
+        const link = wrapper.instance().getTaskLink(task);
+        const elem = shallow(link);
+        expect(elem.is('a')).toBe(true);
+        expect(elem.props().href).toEqual('test-url.io');
+        expect(elem.text()).toEqual('test name')
+    });
+
+    it('getTaskDownloadIcon should return a disabled icon', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const task = {result: {}};
+        const icon = wrapper.instance().getTaskDownloadIcon(task);
+        const elem = mount(icon, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(elem.is(CloudDownload)).toBe(true);
+        expect(elem.props().onClick).toBe(undefined);
+    });
+
+    it('getTaskDownloadIcon should return a icon with click handler', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const task = {result: {url: 'test-url.io'}};
+        const icon = wrapper.instance().getTaskDownloadIcon(task);
+        const elem = mount(icon, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(elem.is(CloudDownload)).toBe(true);
+        expect(elem.props().onClick).not.toBe(undefined);
     });
 
     it('getProviderLink should be called with the icon from a given provider', () => {
@@ -397,6 +416,7 @@ const tasks = [
         "status": "SUCCESS",
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         "result": {
+            "file":"osm.pkg",
             "size": "1.234 MB",
             "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         },

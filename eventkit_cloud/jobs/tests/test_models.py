@@ -198,7 +198,7 @@ class TestJobRegionIntersection(TestCase):
         bbox = Polygon.from_bbox((36.90, 13.54, 48.52, 20.24))  # overlaps africa / central asia
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom, feature_save=True, feature_pub=True)
+                                      the_geom=the_geom )
         self.uid = self.job.uid
         # add the formats to the job
         self.job.formats = self.formats

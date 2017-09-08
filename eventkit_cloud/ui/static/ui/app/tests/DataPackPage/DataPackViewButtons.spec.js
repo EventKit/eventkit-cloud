@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import ActionViewModule from 'material-ui/svg-icons/action/view-module';
 import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
+import MapsMap from 'material-ui/svg-icons/maps/map';
 import IconButton from 'material-ui/IconButton';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -11,68 +12,67 @@ import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButto
 describe('DataPackViewButtons component', () => {
     const getProps = () => {
         return {
-            handleGridSelect: () => {},
-            handleListSelect: () => {}
+            handleViewChange: () => {},
+            view: 'map',
         }
     };
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
     
-    it('should render two icon buttons', () => {
+    it('should render three icon buttons', () => {
         const props = getProps();
         const wrapper = mount(<DataPackViewButtons {...props} />, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(IconButton)).toHaveLength(2);
+        expect(wrapper.find(IconButton)).toHaveLength(3);
         expect(wrapper.find(ActionViewModule)).toHaveLength(1);
         expect(wrapper.find(ActionViewStream)).toHaveLength(1);
+        expect(wrapper.find(MapsMap)).toHaveLength(1);
     });
 
-    it('should call handleGridSelect', () => {
+    it('should call handleViewChange with the text of which view was selected', () => {
         let props = getProps();
-        props.handleGridSelect = new sinon.spy();
+        props.handleViewChange = new sinon.spy();
         const wrapper = mount(<DataPackViewButtons {...props} />, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        wrapper.find(IconButton).first().simulate('click');
-        expect(props.handleGridSelect.calledOnce).toBe(true);
+        expect(props.handleViewChange.notCalled).toBe(true);
+        wrapper.find(IconButton).at(1).simulate('click');
+        expect(props.handleViewChange.calledWith('grid')).toBe(true);
+        wrapper.find(IconButton).at(2).simulate('click');
+        expect(props.handleViewChange.calledWith('list')).toBe(true);
+        wrapper.find(IconButton).at(0).simulate('click');
+        expect(props.handleViewChange.calledWith('map')).toBe(true);
     });
 
-    it('should call handleListSelect', () => {
-        let props = getProps();
-        props.handleListSelect = new sinon.spy();
-        const wrapper = mount(<DataPackViewButtons {...props} />, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        wrapper.find(IconButton).last().simulate('click');
-        expect(props.handleListSelect.calledOnce).toBe(true);
-    });
-
-    it('getDimension should return the size string based on window width', () => {
+    it('the icon should indicate if the view is active', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackViewButtons {...props}/>);
+        const wrapper = mount(<DataPackViewButtons {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
 
-        window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
-        expect(wrapper.instance().getDimension()).toEqual('21px');
+        const styles = {
+            icon: {color: '#4498c0', height: '22px', width: '22px'},
+            selectedIcon: {color: '#253447', height: '22px', width: '22px', backgroundColor: '#4498c0'}
+        }
 
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getDimension()).toEqual('22px');
-
-        window.resizeTo(900, 1000);
-        expect(window.innerWidth).toEqual(900);
-        expect(wrapper.instance().getDimension()).toEqual('23px');
-
-        window.resizeTo(1000, 1100);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getDimension()).toEqual('24px');
-
-        window.resizeTo(1200, 1300);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getDimension()).toEqual('25px');
+        expect(wrapper.find(IconButton).at(0).props().iconStyle).toEqual(styles.selectedIcon);
+        expect(wrapper.find(IconButton).at(1).props().iconStyle).toEqual(styles.icon);
+        expect(wrapper.find(IconButton).at(2).props().iconStyle).toEqual(styles.icon);
+        let  nextProps = getProps();
+        nextProps.view = 'grid';
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(IconButton).at(0).props().iconStyle).toEqual(styles.icon);
+        expect(wrapper.find(IconButton).at(1).props().iconStyle).toEqual(styles.selectedIcon);
+        expect(wrapper.find(IconButton).at(2).props().iconStyle).toEqual(styles.icon);
+        nextProps = getProps();
+        nextProps.view = 'list';
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(IconButton).at(0).props().iconStyle).toEqual(styles.icon);
+        expect(wrapper.find(IconButton).at(1).props().iconStyle).toEqual(styles.icon);
+        expect(wrapper.find(IconButton).at(2).props().iconStyle).toEqual(styles.selectedIcon);
     });
 });

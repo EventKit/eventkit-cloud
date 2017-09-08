@@ -8,10 +8,10 @@ import AppBar from 'material-ui/AppBar';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Drawer from 'material-ui/Drawer';
-import RaisedButton from 'material-ui/RaisedButton';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackList from '../../components/DataPackPage/DataPackList';
+import MapView from '../../components/DataPackPage/MapView';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
@@ -20,12 +20,39 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import isEqual from 'lodash/isEqual';
-import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import * as utils from '../../utils/mapUtils';
+import ol from 'openlayers';
+
+// this polyfills requestAnimationFrame in the test browser, required for ol3
+import raf from 'raf';
+raf.polyfill();
+jest.mock('../../components/DataPackPage/MapView')
 
 describe('DataPackPage component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": null,
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const getProps = () => {
         return {
             runsList: {
@@ -39,12 +66,19 @@ describe('DataPackPage component', () => {
             user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
             deleteRuns: () => {},
+            getProviders: () => {},
             runsDeletion: {
                 deleting: false,
                 deleted: false,
                 error: null
             },
             drawerOpen: true,
+            providers: providers,
+            importGeom: {},
+            geocode: {},
+            getGeocode: () => {},
+            processGeoJSONFile: () => {},
+            resetGeoJSONFile: () => {},
         }
     };
 
@@ -72,12 +106,9 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
         expect(wrapper.find(DataPackList)).toHaveLength(0);
-        expect(wrapper.find(RaisedButton)).toHaveLength(2);
-        expect(wrapper.find(KeyboardArrowDown)).toHaveLength(0);
-        expect(wrapper.find(KeyboardArrowUp)).toHaveLength(0);
     });
 
-    it('should show DataPackGrid instead of progress circle when runs are received', () => {
+    it('should show MapView instead of progress circle when runs are received', () => {
         const props = getProps();
         const wrapper = mount(<DataPackPage {...props}/>, {
             context: {muiTheme},
@@ -91,13 +122,8 @@ describe('DataPackPage component', () => {
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({pageLoading: false})).toBe(true);
-        expect(wrapper.find(DataPackGrid)).toHaveLength(1);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
-        expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
-        expect(wrapper.find('#range')).toHaveLength(1);
-        expect(wrapper.find('#range').text()).toEqual('12 of 24')
+        expect(wrapper.find(MapView)).toHaveLength(1);
+        expect(wrapper.find(CircularProgress)).toHaveLength(0);;
         stateSpy.restore();
     });
 
@@ -120,11 +146,14 @@ describe('DataPackPage component', () => {
 
     it('should call makeRunRequest, add eventlistener, and setInterval when mounting', () => {
         const props = getProps();
-        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillMount');
+        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
         const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const eventSpy = new sinon.spy(window, 'addEventListener');
         const intervalSpy = new sinon.spy(global, 'setInterval');
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(mountSpy.calledOnce).toBe(true);
         expect(requestSpy.calledOnce).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
@@ -159,7 +188,10 @@ describe('DataPackPage component', () => {
         jest.useFakeTimers();
         let props = getProps();
         props.getRuns = new sinon.spy();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -220,7 +252,10 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const makeRequestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = mount(<DataPackPage {...props}/>, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
         expect(makeRequestSpy.calledOnce).toBe(true);
         let nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
@@ -253,7 +288,7 @@ describe('DataPackPage component', () => {
         const published = 'True';
         const search = 'search_text'
         const expectedString = 'page_size=12'
-            +'&ordering=-started_at'
+            +'&ordering=-job__featured,-started_at'
             +'&user=test_user'
             +'&published=True'
             +'&status=COMPLETED,INCOMPLETE'
@@ -269,8 +304,8 @@ describe('DataPackPage component', () => {
             search: search
         });
         wrapper.instance().makeRunRequest();
-        expect(props.getRuns.calledTwice).toBe(true);
-        expect(props.getRuns.calledWith(expectedString)).toBe(true);
+        expect(props.getRuns.calledOnce).toBe(true);
+        expect(props.getRuns.calledWith(expectedString, null)).toBe(true);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -308,24 +343,6 @@ describe('DataPackPage component', () => {
         stateSpy.restore();
     });
 
-    // it('handleTableSort should use the passed in function on displayed runs then update the state', () => {
-    //     const sortFunc = (runs) => {
-    //         return runs.reverse();
-    //     }
-    //     const props = getProps();
-    //     const wrapper = shallow(<DataPackPage {...props}/>);
-    //     const runs =[
-    //         {job: {name: 'one', description: 'test', event: 'test', published: true}, user: 'admin', started_at: '2017-03-21', status: 'COMPLETED'},
-    //         {job: {name: 'two', description: 'test', event: 'test', published: true}, user: 'notadmin', started_at: '2017-03-20', status:'SUBMITTED'},
-    //         {job: {name: 'three', description: 'test', event: 'test', published: false}, user: 'admin', started_at: '2017-03-19', status: 'SUBMITTED'},
-    //     ];
-    //     wrapper.setState({displayedRuns: runs, runs: runs});
-    //     const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-    //     wrapper.instance().handleTableSort(sortFunc);
-    //     expect(stateSpy.calledWith({displayedRuns: runs.reverse(), tableSort: sortFunc})).toBe(true);
-    //     stateSpy.restore();
-    // });
-
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
@@ -349,47 +366,26 @@ describe('DataPackPage component', () => {
         stateSpy.restore();
     });
 
-    // it('handlePermissionsChange should set state', () => {
-    //     const props = getProps();
-    //     const wrapper = shallow(<DataPackPage {...props}/>);
-    //     const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-    //     wrapper.instance().handlePermissionsChange(null, 'value');
-    //     expect(stateSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledWith({permissions: 'value'}));
-    //     stateSpy.restore();
-    // });
-
-    // it('handleStatusChange should set state', () => {
-    //     const props = getProps();
-    //     const wrapper = shallow(<DataPackPage {...props}/>);
-    //     const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-    //     wrapper.instance().handleStatusChange({completed: true});
-    //     expect(stateSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledWith({status: {completed: true, incomplete: false, running: false}})).toBe(true);
-    //     stateSpy.restore();
-    // });
-
-    // it('handleMinDate should set state', () => {
-    //     const props = getProps();
-    //     const date = new Date(2017,2,30);
-    //     const wrapper = shallow(<DataPackPage {...props}/>);
-    //     const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-    //     wrapper.instance().handleMinDate(null, date);
-    //     expect(stateSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledWith({minDate: date}));
-    //     stateSpy.restore();
-    // });
-
-    // it('handleMaxDate should set state', () => {
-    //     const props = getProps();
-    //     const date = new Date(2017,2,30);
-    //     const wrapper = shallow(<DataPackPage {...props}/>);
-    //     const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-    //     wrapper.instance().handleMaxDate(null, date);
-    //     expect(stateSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledWith({maxDate: date}));
-    //     stateSpy.restore();
-    // });
+    it('handleSpatialFilter should setstate then call make run request', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const geojson = {
+            "type": "LineString",
+            "coordinates": [
+                [69.60937499999999, 60.23981116999893],
+                [46.40625, 55.178867663281984],
+                [26.3671875, 55.97379820507658]
+            ]
+        }
+        wrapper.instance().handleSpatialFilter(geojson);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith(
+            {geojson_geometry: geojson, loading: true},
+            wrapper.instance().makeRunRequest
+        )).toBe(true);
+        stateSpy.restore();
+    })
 
     it('screenSizeUpdate should force the component to update', () => {
         const props = getProps();
@@ -400,20 +396,20 @@ describe('DataPackPage component', () => {
         updateSpy.restore();
     });
 
-    it('toggleView should makeRunRequest if its not a shared order, otherwise just set grid state', () => {
+    it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
         let props = getProps();
         const promise = {then: (func) => {func()}};
         props.getRuns = (params) => {return promise};
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.instance().toggleView();
+        wrapper.instance().changeView('list');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({grid: false})).toBe(true);
+        expect(stateSpy.calledWith({view: 'list'})).toBe(true);
         wrapper.setState({order: 'some_other_order'});
-        wrapper.instance().toggleView();
+        wrapper.instance().changeView('map');
         expect(stateSpy.callCount).toEqual(4);
         expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
-        expect(stateSpy.calledWith({grid: true})).toBe(true);
+        expect(stateSpy.calledWith({view: 'map'})).toBe(true);
         stateSpy.restore();
     });
 
@@ -447,6 +443,59 @@ describe('DataPackPage component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({pageSize: 12, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
+    });
+
+    it('getView should return null, list, grid, or map component', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        expect(wrapper.instance().getView('list')).toEqual(
+            <DataPackList
+                runs={props.runsList.runs}
+                user={props.user}
+                onRunDelete={props.deleteRuns}
+                onSort={wrapper.instance().handleSortChange}
+                order={wrapper.state().order}
+                range={props.runsList.range}
+                handleLoadLess={wrapper.instance().loadLess}
+                handleLoadMore={wrapper.instance().loadMore}
+                loadLessDisabled={props.runsList.runs.length <= 12}
+                loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
+            />
+        );
+        expect(wrapper.instance().getView('grid')).toEqual(
+            <DataPackGrid
+                runs={props.runsList.runs}
+                user={props.user}
+                onRunDelete={props.deleteRuns}
+                range={props.runsList.range}
+                handleLoadLess={wrapper.instance().loadLess}
+                handleLoadMore={wrapper.instance().loadMore}
+                loadLessDisabled={props.runsList.runs.length <= 12}
+                loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
+            />
+        );
+        expect(wrapper.instance().getView('map')).toEqual(
+            <MapView
+                runs={props.runsList.runs}
+                user={props.user}
+                onRunDelete={props.deleteRuns}
+                range={props.runsList.range}
+                handleLoadLess={wrapper.instance().loadLess}
+                handleLoadMore={wrapper.instance().loadMore}
+                loadLessDisabled={props.runsList.runs.length <= 12}
+                loadMoreDisabled={!props.runsList.nextPage}
+                providers={providers}
+                geocode={props.geocode}
+                getGeocode={props.getGeocode}
+                importGeom={props.importGeom}
+                processGeoJSONFile={props.processGeoJSONFile}
+                resetGeoJSONFile={props.resetGeoJSONFile}
+                onMapFilter={wrapper.instance().handleSpatialFilter}
+            />
+        );
+        expect(wrapper.instance().getView('bad case')).toEqual(null);
     });
 });
 

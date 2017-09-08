@@ -13,10 +13,10 @@ import About from './components/About/About'
 import Account from './components/AccountPage/Account'
 import DataPackPage from './components/DataPackPage/DataPackPage'
 import Export from './components/Export'
-import CreateExport from './components/CreateExport'
-import ExportAOI from './components/ExportAOI'
-import ExportInfo from './components/ExportInfo'
-import ExportSummary from './components/ExportSummary'
+import CreateExport from './components/CreateDataPack/CreateExport'
+import ExportAOI from './components/CreateDataPack/ExportAOI'
+import ExportInfo from './components/CreateDataPack/ExportInfo'
+import ExportSummary from './components/CreateDataPack/ExportSummary'
 import StatusDownload from './components/StatusDownloadPage/StatusDownload'
 import { UserAuthWrapper } from 'redux-auth-wrapper'
 import { applyMiddleware } from 'redux'
@@ -57,7 +57,7 @@ function checkAuth(store) {
   return (nextState, replace) => {
     let { user } = store.getState();
     if (!user.data){
-        store.dispatch(login())
+        store.dispatch(login(null, (nextState.location ? nextState.location.query : "")));
     }
   }
 };

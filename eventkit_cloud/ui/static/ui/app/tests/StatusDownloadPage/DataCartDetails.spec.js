@@ -3,11 +3,15 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {DataCartDetails} from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
+import BaseDialog from '../../components/BaseDialog';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
-import '../../components/tap_events'
+import DropDownMenu from 'material-ui/DropDownMenu';
+import Edit from 'material-ui/svg-icons/image/edit';
+import DatePicker from 'material-ui/DatePicker';
+import '../../components/tap_events';
+import moment from 'moment';
 
 describe('DataCartDetails component', () => {
 
@@ -23,9 +27,14 @@ describe('DataCartDetails component', () => {
     const getProps = () => {
         return  {
             cartDetails: {...run},
+            providers: providers,
+            maxResetExpirationDays: '30',
+            onUpdateExpiration: () => {},
+            onUpdatePermission: () => {},
             onRunDelete: () => {},
             onRunRerun: () => {},
             onClone: () => {},
+            onProviderCancel: () => {},
         }
     };
 
@@ -42,31 +51,37 @@ describe('DataCartDetails component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(Dialog)).toHaveLength(3);
+        expect(wrapper.find(BaseDialog)).toHaveLength(7);
         let table = wrapper.find('table').at(0);
         expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
         expect(table.find('tr').first().find('td').last().text()).toEqual('test');
-        expect(table.find('tr').last().find('td').first().text()).toEqual('Status');
-        expect(table.find('tr').last().find('td').last().text()).toEqual('COMPLETED');
+        table = wrapper.find('table').at(1);
+        expect(table.find('tr').at(0).find('td').first().text()).toEqual('Export');
+        expect(table.find('tr').at(0).find('td').last().text()).toEqual('COMPLETED');
+        expect(table.find('tr').at(1).find('td').first().text()).toEqual('Expiration');
+        expect(wrapper.find(DatePicker)).toHaveLength(1);
+        expect(wrapper.find(Edit)).toHaveLength(1);
+        expect(table.find('tr').at(1).find('td').last().text()).toEqual('2017-08-01');
+        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Permission');
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
+        expect(table.find('tr').at(2).find('td').last().text()).toEqual('Public');
         expect(wrapper.find(DataPackDetails)).toHaveLength(1);
         expect(wrapper.find(RaisedButton).at(1).text()).toEqual('RUN EXPORT AGAIN');
         expect(wrapper.find(RaisedButton).at(2).text()).toEqual('CLONE');
         expect(wrapper.find(RaisedButton).at(3).text()).toEqual('DELETE');
-        table = wrapper.find('table').at(5);
+        table = wrapper.find('table').at(6);
         expect(table.find('tr').at(0).find('td').first().text()).toEqual('Description');
         expect(table.find('tr').at(0).find('td').last().text()).toEqual('test');
-        expect(table.find('tr').at(1).find('td').first().text()).toEqual('Project/Category');
+        expect(table.find('tr').at(1).find('td').first().text().replace(/\s/g, ' ')).toEqual('Project / Category');
         expect(table.find('tr').at(1).find('td').last().text()).toEqual('test');
-        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Published');
-        expect(table.find('tr').at(2).find('td').last().text()).toEqual('true');
-        expect(table.find('tr').at(3).find('td').first().text()).toEqual('Layer Data');
-        expect(table.find('tr').at(3).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
-        expect(table.find('tr').at(4).find('td').first().text()).toEqual('File Formats');
-        expect(table.find('tr').at(4).find('td').last().text()).toEqual('.gpkg');
-        expect(table.find('tr').at(5).find('td').first().text()).toEqual('Projection');
-        expect(table.find('tr').at(5).find('td').last().text()).toEqual('EPSG:4326 - World Geodetic System 1984 (WGS84)');
+        expect(table.find('tr').at(2).find('td').first().text()).toEqual('Data Sources');
+        expect(table.find('tr').at(2).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
+        expect(table.find('tr').at(3).find('td').first().text()).toEqual('File Formats');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('.gpkg');
+        expect(table.find('tr').at(4).find('td').first().text()).toEqual('Projection');
+        expect(table.find('tr').at(4).find('td').last().text()).toEqual('EPSG:4326 - World Geodetic System 1984 (WGS84)');
         expect(wrapper.find('#summaryMap')).toHaveLength(1);
-        table = wrapper.find('table').at(6);
+        table = wrapper.find('table').at(7);
         expect(table.find('tr').at(0).find('td').first().text()).toEqual('Run By');
         expect(table.find('tr').at(0).find('td').last().text()).toEqual('admin');
         expect(table.find('tr').at(1).find('td').first().text()).toEqual('Run Id');
@@ -77,19 +92,32 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
     });
 
+    it('should have the correct menu item labels', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props} />, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
+        const menu = shallow(wrapper.find(DropDownMenu).node, {context: {muiTheme}});
+        expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Public');
+        expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Private');
+    });
+
     it('should only render "Finished" table data if run has finished', () => {
         let props = getProps();
         props.cartDetails.finished_at = "";
         const wrapper = getWrapper(props);
-        let table = wrapper.find('table').at(6);
+        let table = wrapper.find('table').at(7);
         expect(table.find('tr')).toHaveLength(3);
         const nextProps = getProps();
         wrapper.setProps(nextProps);
-        table = wrapper.find('table').at(6);
+        table = wrapper.find('table').at(7);
         expect(table.find('tr')).toHaveLength(4);
         expect(table.find('tr').at(3).find('td').first().text()).toEqual('Finished');
         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
     });
+
 
     it('should handle setting state of datacartDetails when component updates', () => {
         let props = getProps();
@@ -129,17 +157,42 @@ describe('DataCartDetails component', () => {
         propsSpy.restore();
     });
 
-    it('should call initializeOpenLayers and _setTableColors on mount', () => {
+    it('should call initializeOpenLayers, _setTableColors, _setPermission, _setExpirationDate and _setMaxDate set on mount', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataCartDetails.prototype, 'componentDidMount');
         const colorsSpy = new sinon.spy(DataCartDetails.prototype, '_setTableColors');
+        const permissionSpy = new sinon.spy(DataCartDetails.prototype, '_setPermission');
+        const expirationSpy = new sinon.spy(DataCartDetails.prototype, '_setExpirationDate');
+        const maxDateSpy = new sinon.spy(DataCartDetails.prototype, '_setMaxDate');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(colorsSpy.calledOnce).toBe(true);
+        expect(permissionSpy.calledOnce).toBe(true);
+        expect(expirationSpy.calledOnce).toBe(true);
+        expect(maxDateSpy.calledOnce).toBe(true);
         expect(DataCartDetails.prototype._initializeOpenLayers.called).toBe(true);
         mountSpy.restore();
         colorsSpy.restore();
+        maxDateSpy.restore();
+
     });
+
+    it('should call setState in _setMaxDate', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const minDate = new Date();
+        let maxDate;
+        let d = new Date();
+        let m = moment(d);
+        m.add(props.maxResetExpirationDays, 'days');
+        maxDate = m.toDate();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setMaxDate();
+        expect(stateSpy.calledOnce).toBe(true);
+        stateSpy.restore();
+    });
+
 
     it('_setTableColors should set the state for table color ', () => {
         const props = getProps();
@@ -168,6 +221,40 @@ describe('DataCartDetails component', () => {
         wrapper.instance()._setTableColors();
         expect(stateSpy.calledWith({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'})).toBe(true);
 
+        stateSpy.restore();
+    });
+
+    it('_setExpirationDate should set the state for expiration date ', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setExpirationDate();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({expirationDate: '2017-08-01T00:00:00Z'})).toBe(true);
+
+        let nextProps = getProps();
+        nextProps.cartDetails.expiration = '2017-08-08T18:35:01.400407Z';
+        wrapper.setProps(nextProps);
+        wrapper.instance()._setExpirationDate();
+        expect(stateSpy.calledWith({expirationDate: '2017-08-08T18:35:01.400407Z'})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('_setPermission should set the state for published permission', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance()._setPermission();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({permission: true})).toBe(true);
+
+        let nextProps = getProps();
+        nextProps.cartDetails.job.published = false;
+        wrapper.setProps(nextProps);
+        wrapper.instance()._setPermission();
+        expect(stateSpy.calledWith({permission: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -204,6 +291,41 @@ describe('DataCartDetails component', () => {
         stateSpy.restore();
     });
 
+    it('handleProviderOpen should set provider dialog to open', () => {
+        const props = getProps();
+        props.providers = providers;
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProviderOpen(run.provider_tasks[0]);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerName: "OpenStreetMap Data (Themes)", providerDialogOpen: true})).toBe(true);
+        expect(wrapper.find('div').at(10).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
+        stateSpy.restore();
+    });
+
+    it('handleFormatsOpen should set format dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionOpen should set projection dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
     it('handleRerunClose should set the rerun dialog to closed', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
@@ -234,6 +356,38 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleDeleteClose();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({deleteDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+    it('handleProviderClose should set the provider dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProviderClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleFormatClose should set the format dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionsClose should set the projections dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -275,11 +429,39 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledWith({deleteDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
+
+    it('handlePublishedChange should setState of new published value', () => {
+        let props = getProps();
+        props.onUpdatePermission = new sinon.spy();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.instance().handlePublishedChange("7838d3b3-160a-4e7d-89cb-91fdcd6eab43", false);
+        expect(props.onUpdatePermission.calledOnce).toBe(true);
+        expect(props.onUpdatePermission.calledWith("7838d3b3-160a-4e7d-89cb-91fdcd6eab43", false)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({permission: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleExpirationChange should setState of new expiration date', () => {
+        let props = getProps();
+        props.onUpdateExpiration = new sinon.spy();
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const event = {persist: () => {},};
+        wrapper.instance().handleExpirationChange();
+        expect(props.onUpdateExpiration.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        stateSpy.restore();
+    });
+
+
 });
 
 const providerArray = [
     {
         "display": true,
+        "slug": "osm",
         "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
         "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
         "name": "OpenStreetMap Data (Themes)",
@@ -416,6 +598,7 @@ const run = {
     "provider_tasks": [
         {
             "display": true,
+            "slug": "osm",
             "uid": "ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "url": "http://cloud.eventkit.dev/api/provider_tasks/ac7fc0d4-45e3-4575-8b1e-a74256dc003e",
             "name": "OpenStreetMap Data (Themes)",
@@ -497,5 +680,32 @@ const run = {
         }
     ],
     "zipfile_url": null,
-    "expiration": "2017-06-05T18:35:01.400407Z"
+    "expiration": "2017-08-01T00:00:00Z"
 }
+const providers = [
+    {
+        "id": 2,
+        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+        "type": "osm",
+        "license":  {
+            "slug": "osm",
+            "name": "Open Database License (ODbL) v1.0",
+            "text": "ODC Open Database License (ODbL)."
+        } ,
+        "created_at": "2017-08-15T19:25:10.844911Z",
+        "updated_at": "2017-08-15T19:25:10.844919Z",
+        "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+        "name": "OpenStreetMap Data (Themes)",
+        "slug": "osm",
+        "preview_url": "",
+        "service_copyright": "",
+        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+        "layer": null,
+        "level_from": 0,
+        "level_to": 10,
+        "zip": false,
+        "display": true,
+        "export_provider_type": 2
+    },
+]
+

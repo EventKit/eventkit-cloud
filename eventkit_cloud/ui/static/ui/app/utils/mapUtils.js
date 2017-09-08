@@ -3,6 +3,14 @@ import reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
+import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
+
+export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
+export const MODE_NORMAL = 'MODE_NORMAL';
+export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
+
+export const WGS84 = 'EPSG:4326';
+export const WEB_MERCATOR = 'EPSG:3857';
 
 /**
  * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
@@ -66,4 +74,192 @@ export function convertGeoJSONtoJSTS(geojson) {
         geometry = bufferGeometry(jstsGeoJSON);
     }
     return geometry;
+}
+
+export function zoomToExtent(opt_option) {
+    let options = opt_option ? opt_option : {};
+    options.className = options.className != undefined ? options.className : ''
+
+    let button = document.createElement('button');
+    let icon = document.createElement('i');
+    icon.className = 'fa fa-globe';
+    button.appendChild(icon);
+    let this_ = this;
+
+    this.zoomer = () => {
+        const map = this_.getMap();
+        const view = map.getView();
+        const size = map.getSize();
+        const extent = !options.extent ? view.getProjection().getExtent() : options.extent;        
+        view.fit(extent, size);
+    }
+
+    button.addEventListener('click', this_.zoomer, false);
+    button.addEventListener('touchstart', this_.zoomer, false);
+    let element = document.createElement('div');
+    element.className = options.className + ' ol-unselectable ol-control';
+    element.appendChild(button);
+
+    ol.control.Control.call(this, {
+        element: element,
+        target: options.target
+    });
+}
+
+export function generateDrawLayer() {
+    return new ol.layer.Vector({
+        source: new ol.source.Vector({
+            wrapX: false
+        }),
+        style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#ce4427',
+                width: 3,
+            }),
+            image: new ol.style.Icon({
+                src: require("../../images/ic_room_black_24px.svg"),
+            })
+
+        })
+    })
+}
+
+export function generateDrawBoxInteraction(drawLayer) {
+    const draw = new ol.interaction.Draw({
+        source: drawLayer.getSource(),
+        type: 'Circle',
+        geometryFunction: ol.interaction.Draw.createBox(),
+        style: new ol.style.Style({
+            image: new ol.style.RegularShape({
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 1
+                }),
+                points: 4,
+                radius: 15,
+                radius2: 0,
+                angle: 0
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#ce4427',
+                width: 2,
+                lineDash: [5, 5]
+            })
+        })
+    })
+    draw.setActive(false)
+    return draw
+}
+
+export function generateDrawFreeInteraction(drawLayer) {
+    const draw = new ol.interaction.Draw({
+        source: drawLayer.getSource(),
+        type: 'Polygon',
+        freehand: true,
+        style: new ol.style.Style({
+            image: new ol.style.RegularShape({
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 1
+                }),
+                points: 4,
+                radius: 15,
+                radius2: 0,
+                angle: 0
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#ce4427',
+                width: 2,
+                lineDash: [5, 5]
+            })
+        })
+    })
+    draw.setActive(false)
+    return draw
+}
+
+
+
+export function truncate(number) {
+    return Math.round(number * 100000) / 100000
+}
+
+export function unwrapPoint([x, y]) {
+    return [
+        x > 0 ? Math.min(180, x) : Math.max(-180, x),
+        y
+    ]
+}
+
+export function featureToBbox(feature) {
+    const reader = new ol.format.GeoJSON()
+    const geometry = reader.readGeometry(feature.geometry, {featureProjection: WEB_MERCATOR})
+    return geometry.getExtent()
+}
+
+export function deserialize(serialized) {
+    if (serialized && serialized.length === 4) {
+        return ol.proj.transformExtent(serialized, WGS84, WEB_MERCATOR)
+    }
+    return null
+}
+
+export function serialize(extent) {
+    const bbox = ol.proj.transformExtent(extent, WEB_MERCATOR, WGS84)
+    const p1 = unwrapPoint(bbox.slice(0, 2))
+    const p2 = unwrapPoint(bbox.slice(2, 4))
+    return p1.concat(p2).map(truncate)
+}
+
+export function isGeoJSONValid(geojson) {
+    // creates a jsts GeoJSONReader
+    const parser = new reader();
+    // reads in geojson geometry and returns a jsts geometry
+    const geom = parser.read(geojson.features[0].geometry);
+    // return whether the geom is valid
+    return isValidOp.isValid(geom);
+}
+
+export function createGeoJSON(ol3Geometry) {
+    const bbox = serialize(ol3Geometry.getExtent());
+    const geojson = {"type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "bbox": bbox,
+                            "geometry": createGeoJSONGeometry(ol3Geometry)
+                        }
+                    ]}
+    return geojson;
+}
+
+export function createGeoJSONGeometry(ol3Geometry) {
+    const geom = ol3Geometry.clone();
+    geom.transform(WEB_MERCATOR, WGS84);
+    const coords = geom.getCoordinates();
+    const geojson_geom = {
+        "type": geom.getType(),
+        "coordinates": coords
+    }
+    return geojson_geom;
+}
+
+export function clearDraw(drawLayer) {
+    drawLayer.getSource().clear();
+}
+
+export function zoomToGeometry(geom, map) {
+    if(geom.getType() != 'Point') {
+        map.getView().fit(
+            geom
+        );
+    } else {
+        map.getView().setCenter(geom.getCoordinates())
+    }
+}
+
+export function featureToPoint(feature) {
+    if (!feature) {return null}
+    const center = ol.extent.getCenter(feature.getGeometry().getExtent());
+    return new ol.geom.Point(center);
 }

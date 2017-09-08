@@ -22,6 +22,33 @@ describe('StatusDownload component', () => {
     });
     const muiTheme = getMuiTheme();
 
+    const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: '30'};
+    const providers = [
+        {
+            "id": 2,
+            "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+            "type": "osm",
+            "license": {
+                "slug": "osm",
+                "name": "Open Database License (ODbL) v1.0",
+                "text": "ODC Open Database License (ODbL)."
+            },
+            "created_at": "2017-08-15T19:25:10.844911Z",
+            "updated_at": "2017-08-15T19:25:10.844919Z",
+            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
+            "name": "OpenStreetMap Data (Themes)",
+            "slug": "osm",
+            "preview_url": "",
+            "service_copyright": "",
+            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
+            "layer": null,
+            "level_from": 0,
+            "level_to": 10,
+            "zip": false,
+            "display": true,
+            "export_provider_type": 2
+        },
+    ]
     const tasks = [
         {
             "duration": "0:00:15.317672",
@@ -30,7 +57,6 @@ describe('StatusDownload component', () => {
             "finished_at": "2017-05-15T15:29:04.356182Z",
             "name": "OverpassQuery",
             "progress": 100,
-            "result": {},
             "started_at": "2017-05-15T15:28:49.038510Z",
             "status": "SUCCESS",
             "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
@@ -49,7 +75,6 @@ describe('StatusDownload component', () => {
             "finished_at": "2017-05-15T15:29:04.356182Z",
             "name": "OverpassQuery",
             "progress": 100,
-            "result": {},
             "started_at": "2017-05-15T15:28:49.038510Z",
             "status": "PENDING",
             "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
@@ -65,14 +90,16 @@ describe('StatusDownload component', () => {
         "status": "COMPLETED",
         "tasks": tasks,
         "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+        "slug":"osm"
     }];
     const providerTasksRunning = [{
         "name": "OpenStreetMap Data (Themes)",
         "status": "COMPLETED",
         "tasks": tasksRunning,
         "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+        "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04",
+        "slug":"osm"
     }];
     const exampleRun = [
         {
@@ -200,7 +227,7 @@ describe('StatusDownload component', () => {
                 error: null,
             },
             runDeletion: {
-            deleting: false,
+                deleting: false,
                 deleted: false,
                 error: null,
             },
@@ -210,23 +237,37 @@ describe('StatusDownload component', () => {
                 data: [],
                 error: null,
             },
+            updateExpiration: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            updatePermission: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            providers:providers,
             getDatacartDetails: (jobuid) => {},
             deleteRun: (jobuid) => {},
             rerunExport: (jobuid) => {},
             clearReRunInfo: () => {},
+            updateExpirationDate: (uid, expiration) => {},
+            updatePermission: (jobuid, value) => {},
             cloneExport: (cartDetails, providerArray) => {},
             cancelProviderTask: (providerUid) => {},
+            getProviders: () => {},
         }
     };
 
     const getWrapper = (props) => {
         return mount(<StatusDownload {...props}/>, {
-            context: {muiTheme},
+            context: {muiTheme, config: config},
             childContextTypes: {
                 muiTheme: React.PropTypes.object
             }
         });
-    }
+    };
 
     it('should render all the basic components', () => {
         let props = getProps();
@@ -299,22 +340,28 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, startTimer, and addEventListener when mounted', () => {
+    it('should call getDatacartDetails, getProviders, startTimer, setMaxDays state and addEventListener when mounted', () => {
         let props = getProps();
         props.getDatacartDetails = new sinon.spy();
+        props.getProviders = new sinon.spy();
         let startTimerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
         const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
+        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
         const eventSpy = new sinon.spy(window, 'addEventListener');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
+        expect(props.getProviders.calledOnce).toBe(true);
         expect(startTimerSpy.calledOnce).toBe(true);
         expect(eventSpy.calledOnce).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({maxDays: '30'})).toBe(true);
         startTimerSpy.restore();
         mountSpy.restore();
         eventSpy.restore();
+        stateSpy.restore();
     });
 
     it('should remove timer and eventlistener before unmounting', () => {
@@ -357,12 +404,12 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(7);
+        expect(setTimeout.mock.calls.length).toBe(12);
         expect(setTimeout.mock.calls[3][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
@@ -382,11 +429,11 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(6);
+        expect(setTimeout.mock.calls.length).toBe(11);
         console.log(setTimeout.mock.calls);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
@@ -406,7 +453,7 @@ describe('StatusDownload component', () => {
         const timerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(timerSpy.calledOnce).toBe(true);
         StatusDownload.prototype.setState.restore();
@@ -431,6 +478,29 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         const updateSpy = new sinon.spy(StatusDownload.prototype, 'forceUpdate');
         wrapper.instance().handleResize();
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
+    });
+
+    it('should call componentWillReceiveProps when Expiration is updated', () => {
+        const props = getProps();
+        const nextProps = getProps();
+        nextProps.updateExpiration.updated = true;
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        props.getDatacartDetails = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.setProps(nextProps);
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
+    });
+
+    it('should call componentWillReceiveProps when Permission is updated', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const nextProps = getProps();
+        nextProps.updatePermission.updated = true;
+        wrapper.setProps(nextProps);
         expect(updateSpy.calledOnce).toBe(true);
         updateSpy.restore();
     });

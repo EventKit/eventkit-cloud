@@ -4,20 +4,20 @@ import axios from 'axios'
 import cookie from 'react-cookie'
 
 
-export const logout = () => dispatch => {
+export const logout = query => dispatch => {
 
     return axios('/logout', {method: 'GET'}).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_OUT,
         })
-        dispatch(push('/login'));
+        dispatch(push({ pathname: '/login', search: query }));
     }).catch((error) => {
         console.log(error);
     });
 }
 
 
-export const login = data => (dispatch) => {
+export const login = (data, query) => (dispatch) => {
 
     const csrftoken = cookie.load('csrftoken');
 
@@ -45,10 +45,10 @@ export const login = data => (dispatch) => {
                     payload: response.data
                 });
             } else {
-                dispatch(logout());
+                dispatch(logout(query));
             }
         }).catch((error) => {
-        dispatch(logout());
+        dispatch(logout(query));
     });
 }
 

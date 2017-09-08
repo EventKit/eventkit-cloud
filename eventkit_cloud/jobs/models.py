@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import json
 import logging
@@ -14,16 +14,14 @@ from django.db.models.signals import (
     post_save,
 )
 from django.dispatch.dispatcher import receiver
-from django.utils import timezone
 from django.contrib.postgres.fields.jsonb import JSONField
+from ..core.models import TimeStampedModelMixin, UIDMixin
 
 
 logger = logging.getLogger(__name__)
 
 
 # construct the upload path for export config files..
-
-
 def get_upload_path(instance, *args):
     """
     Construct the path to where the uploaded config file is to be stored.
@@ -50,17 +48,6 @@ class LowerCaseCharField(CharField):
         return getattr(model_instance, self.attname)
 
 
-class TimeStampedModelMixin(models.Model):
-    """
-    Mixin for timestamped models.
-    """
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now, editable=False)
-
-    class Meta:  # pragma: no cover
-        abstract = True
-
-
 class DatamodelPreset(TimeStampedModelMixin):
     """
     Model provides admin interface to presets.
@@ -79,7 +66,7 @@ class DatamodelPreset(TimeStampedModelMixin):
         return {"name": self.name, "json_tags": self.json_tags}
 
 
-class License(models.Model):
+class License(TimeStampedModelMixin):
     """
     Model to hold license information to be used with ExportProviders.
     """
@@ -94,7 +81,7 @@ class License(models.Model):
         return '{0}'.format(self.slug)
 
 
-class UserLicense(models.Model):
+class UserLicense(TimeStampedModelMixin):
     """
     Model to hold which licenses a User acknowledges. 
     """
@@ -107,12 +94,10 @@ class UserLicense(models.Model):
     def __unicode__(self):
         return '{0}: {1}'.format(self.user.username, self.license.slug)
 
-class ExportFormat(TimeStampedModelMixin):
+class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
     """
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     name = models.CharField(max_length=100)
     slug = LowerCaseCharField(max_length=20, unique=True, default='')
     description = models.CharField(max_length=255)
@@ -147,12 +132,10 @@ class ExportProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
-class ExportProvider(TimeStampedModelMixin):
+class ExportProvider(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportProvider.
     """
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True)
@@ -194,7 +177,7 @@ class ExportProvider(TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
 
-class Region(TimeStampedModelMixin):
+class Region(UIDMixin, TimeStampedModelMixin):
     """
     Model for a HOT Export Region.
     """
@@ -204,8 +187,6 @@ class Region(TimeStampedModelMixin):
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Region, self).__init__(*args, **kwargs)
 
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
     the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
@@ -243,7 +224,7 @@ class ProviderTask(models.Model):
         return '{0} - {1}'.format(self.uid, self.provider)
 
 
-class Job(TimeStampedModelMixin):
+class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
@@ -253,8 +234,6 @@ class Job(TimeStampedModelMixin):
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
 
-    id = models.AutoField(primary_key=True, editable=False)
-    uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
@@ -263,8 +242,7 @@ class Job(TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
-    feature_save = models.BooleanField(default=False, db_index=True)  # save feature selections
-    feature_pub = models.BooleanField(default=False, db_index=True)  # publish feature selections
+    featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')

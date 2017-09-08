@@ -116,7 +116,7 @@ export class Application extends Component {
                 width: '200px',
                 marginTop: '95px',
                 backgroundColor: '#010101',
-                marginLeft: '0px',
+                
                 padding: '0px'
             },
             mainMenu: {
@@ -141,13 +141,17 @@ export class Application extends Component {
                 <div style={{backgroundColor: '#000'}}>
                     <Banner />
                     <header className="header" style={{height: '95px'}}>
-                        <AppBar style={styles.appBar} title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)} />
+                        <AppBar
+                            style={styles.appBar}
+                            title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)}
+                            showMenuIconButton={!!this.props.userData}
+                        />
                     </header>
-                    <Drawer className={css.drawer}
-                            containerStyle={styles.drawer}
-                            overlayStyle={styles.drawer}
-                            docked={true}
-                            open={this.props.drawerOpen}
+                    <Drawer
+                        containerStyle={styles.drawer}
+                        overlayStyle={styles.drawer}
+                        docked={true}
+                        open={this.props.drawerOpen}
                     >
                         <Subheader inset={false}>
                             <span style={{width:'100%'}}>

@@ -8,9 +8,9 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
-import ExportAOI, {MODE_DRAW_BBOX, MODE_NORMAL} from '../components/ExportAOI';
-import ExportInfo from '../components/ExportInfo';
-import ExportSummary from '../components/ExportSummary';
+import ExportAOI from '../components/CreateDataPack/ExportAOI';
+import ExportInfo from '../components/CreateDataPack/ExportInfo';
+import ExportSummary from '../components/CreateDataPack/ExportSummary';
 import isEqual from 'lodash/isEqual';
 import {browserHistory} from 'react-router';
 
@@ -95,27 +95,6 @@ describe('BreadcrumbStepper component', () => {
         stateSpy.restore();
     });
 
-    it('handleNext should call setExportInfoDone', () => {
-        let props = getProps();
-        props.setExportInfoDone = new sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({stepIndex: 1});
-        expect(props.setExportInfoDone.called).toBe(false);
-        wrapper.instance().handleNext();
-        expect(props.setExportInfoDone.calledOnce).toBe(true); 
-    });
-
-    it('incrementStepper should increment the stepIndex', () => {
-        const props = getProps();
-        const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance().incrementStepper();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({stepIndex: 1})).toBe(true);
-        stateSpy.restore();
-    });
-
     it('handlePrev should decrement the stepIndex only when index is > 0', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
@@ -157,8 +136,8 @@ describe('BreadcrumbStepper component', () => {
         content = wrapper.instance().getStepContent(1);
         expect(isEqual(content, <ExportInfo 
             providers={props.providers} 
-            incrementStepper={wrapper.instance().incrementStepper}/>)).toBe(true);
-        
+            handlePrev={wrapper.instance().handlePrev}/>)).toBe(true);
+
         content = wrapper.instance().getStepContent(2);
         expect(isEqual(content, <ExportSummary/>)).toBe(true);
 
