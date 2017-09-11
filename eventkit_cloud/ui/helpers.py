@@ -32,6 +32,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     Task to create QGIS project file with styles for osm.
     """
     from eventkit_cloud.tasks.models import ExportRun
+    from ..tasks.export_tasks import TaskStates
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -46,7 +47,6 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
         provider_details += [provider_detail]
     else:
         for provider_task in provider_tasks:
-            from ..tasks.export_tasks import TaskStates
             if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
                 provider_slug = provider_task.slug
                 for export_task in provider_task.tasks.all():
