@@ -1,21 +1,8 @@
-import * as reducers from '../../reducers/DataPackListReducer';
+import * as reducers from '../../reducers/DataPackPageReducer';
 
 describe('DataPackList reducer', () => {
     it('it should return the initial state', () => {
-        expect(reducers.DataPackListReducer(undefined, {})).toEqual(
-            {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: ''
-            }
-        );
-    });
-
-    it('should handle FETCHING RUNS', () => {
-        expect(reducers.DataPackListReducer(
+        expect(reducers.DataPackPageReducer(undefined, {})).toEqual(
             {
                 fetching: false,
                 fetched: false,
@@ -23,6 +10,23 @@ describe('DataPackList reducer', () => {
                 error: null,
                 nextPage: false,
                 range: '',
+                order: '',
+                view: '',
+            }
+        );
+    });
+
+    it('should handle FETCHING RUNS', () => {
+        expect(reducers.DataPackPageReducer(
+            {
+                fetching: false,
+                fetched: false,
+                runs: [],
+                error: null,
+                nextPage: false,
+                range: '',
+                order: '',
+                view: '',
             },
             {
                 type: 'FETCHING_RUNS'
@@ -34,20 +38,24 @@ describe('DataPackList reducer', () => {
                 runs: [],
                 error: null,
                 nextPage: false,
-                range: ''
+                range: '',
+                order: '',
+                view: '',
             }
         );
     });
 
     it('should handle RECEIVED_RUNS', () => {
-        expect(reducers.DataPackListReducer(
+        expect(reducers.DataPackPageReducer(
             {
                 fetching: true,
                 fetched: false,
                 runs: [],
                 error: null,
                 nextPage: false,
-                range: ''
+                range: '',
+                order: '',
+                view: '',
             },
             {
                 type: 'RECEIVED_RUNS', runs: [{thisIs: 'a fake run'}], nextPage: true, range: '12/24'
@@ -59,19 +67,24 @@ describe('DataPackList reducer', () => {
                 runs: [{thisIs: 'a fake run'}],
                 error: null,
                 nextPage: true,
-                range: '12/24'
+                range: '12/24',
+                order: '',
+                view: '',
             }
         );
     });
+
     it('should handle FETCH_RUNS_ERROR', () => {
-        expect(reducers.DataPackListReducer(
+        expect(reducers.DataPackPageReducer(
             {
                 fetching: true,
                 fetched: false,
                 runs: [],
                 error: null,
                 nextPage: false,
-                range: ''
+                range: '',
+                order: '',
+                view: '',
             },
             {
                 type: 'FETCH_RUNS_ERROR', error: 'This is an error message'
@@ -83,10 +96,70 @@ describe('DataPackList reducer', () => {
                 runs: [],
                 error: 'This is an error message',
                 nextPage: false,
-                range: ''
+                range: '',
+                order: '',
+                view: '',
             }
         );
-    })
+    });
+
+    it('should handle SET_PAGE_ORDER', () => {
+        expect(reducers.DataPackPageReducer(
+            {
+                fetching: false,
+                fetched: false,
+                runs: [],
+                error: null,
+                nextPage: false,
+                range: '',
+                order: '',
+                view: '',
+            },
+            {
+                type: 'SET_PAGE_ORDER', order: 'featured'
+            }
+        )).toEqual(
+            {
+                fetching: false,
+                fetched: false,
+                runs: [],
+                error: null,
+                nextPage: false,
+                range: '',
+                order: 'featured',
+                view: '',
+            }
+        );
+    });
+
+    it('should handle SET_PAGE_VIEW', () => {
+        expect(reducers.DataPackPageReducer(
+            {
+                fetching: false,
+                fetched: false,
+                runs: [],
+                error: null,
+                nextPage: false,
+                range: '',
+                order: '',
+                view: '',
+            },
+            {
+                type: 'SET_PAGE_VIEW', view: 'map'
+            }
+        )).toEqual(
+            {
+                fetching: false,
+                fetched: false,
+                runs: [],
+                error: null,
+                nextPage: false,
+                range: '',
+                order: '',
+                view: 'map',
+            }
+        );
+    });
 });
 
 describe('DeleteRuns Reducer', () => {
