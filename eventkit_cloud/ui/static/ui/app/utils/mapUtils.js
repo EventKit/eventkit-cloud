@@ -129,6 +129,7 @@ export function generateDrawBoxInteraction(drawLayer) {
         source: drawLayer.getSource(),
         type: 'Circle',
         geometryFunction: ol.interaction.Draw.createBox(),
+        freehand: true,
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
