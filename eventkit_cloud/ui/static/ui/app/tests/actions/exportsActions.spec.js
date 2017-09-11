@@ -56,15 +56,25 @@ describe('export actions', () => {
     });
 
     it('updateExportInfo should return passed in json', () => {
-        expect(actions.updateExportInfo('exportName', 'datapackDescription', 'projectName', true, ['provider1'], 'area_str', ['layer1'])).toEqual({
+        expect(actions.updateExportInfo({
+            exportName: 'exportName', 
+            datapackDescription: 'datapackDescription', 
+            projectName: 'projectName', 
+            makePublic: true, 
+            providers: ['provider1'], 
+            area_str: 'area_str', 
+            layers: ['layer1']
+        })).toEqual({
             type: 'UPDATE_EXPORT_INFO',
-            exportName: 'exportName',
-            datapackDescription: 'datapackDescription',
-            projectName: 'projectName',
-            makePublic: true,
-            providers: ['provider1'],
-            area_str: 'area_str',
-            layers: ['layer1'],
+            exportInfo: {
+                exportName: 'exportName', 
+                datapackDescription: 'datapackDescription', 
+                projectName: 'projectName', 
+                makePublic: true, 
+                providers: ['provider1'], 
+                area_str: 'area_str', 
+                layers: ['layer1']
+            }
         });
     });
 
@@ -103,13 +113,6 @@ describe('export actions', () => {
     it('openDrawer should return type OPEN_DRAWER', () => {
         expect(actions.openDrawer()).toEqual({
             type: 'OPEN_DRAWER'
-        });
-    });
-
-    it('exportInfoDone should return EXPORT_INFO_DONE and setExportPackageFlag to true', () => {
-        expect(actions.exportInfoDone()).toEqual({
-            type: 'EXPORT_INFO_DONE',
-            setExportPackageFlag: true
         });
     });
 

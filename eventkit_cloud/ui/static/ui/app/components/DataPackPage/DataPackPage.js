@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
-import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
+import {getRuns, deleteRuns, setPageOrder, setPageView} from '../../actions/DataPackPageActions';
 import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -50,9 +50,9 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            view: 'map',
+            view: props.runsList.view || 'map',
             pageLoading: true,
-            order: '-job__featured',
+            order: props.runsList.order || '-job__featured',
             ownerFilter: '',
             pageSize: 12,
             loading: false,
@@ -90,6 +90,9 @@ export class DataPackPage extends React.Component {
     componentWillUnmount() {
         window.removeEventListener('resize', this.screenSizeUpdate);
         clearInterval(this.fetch);
+        // save view and order to redux state so it can be set next time the page is visited
+        if (this.props.runsList.order != this.state.order) {this.props.setOrder(this.state.order)};
+        if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
     }
 
     onSearch(searchText, ix) { 
@@ -383,7 +386,9 @@ DataPackPage.propTypes = {
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
-    resetGeoJSONFile: PropTypes.func.isRequired
+    resetGeoJSONFile: PropTypes.func.isRequired,
+    setOrder: PropTypes.func.isRequired,
+    setView: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -418,6 +423,12 @@ function mapDispatchToProps(dispatch) {
         resetGeoJSONFile: (file) => {
             dispatch(resetGeoJSONFile());
         },
+        setOrder: (order) => {
+            dispatch(setPageOrder(order));
+        },
+        setView: (view) => {
+            dispatch(setPageView(view));
+        }
     }
 }
 

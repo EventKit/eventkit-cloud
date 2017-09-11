@@ -1,6 +1,6 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import * as actions from '../../actions/DataPackListActions';
+import * as actions from '../../actions/DataPackPageActions';
 import types from '../../actions/actionTypes';
 import React from 'react';
 import axios from 'axios';
@@ -11,7 +11,6 @@ const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 describe('DataPackList actions', () => {
-
     
     it('getRuns should return runs from "api/runs/filter"', () => {
         var mock = new MockAdapter(axios, {delayResponse: 1000});
@@ -44,6 +43,26 @@ describe('DataPackList actions', () => {
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
+    });
+
+    it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
+        const order = 'featured';
+        expect(actions.setPageOrder(order)).toEqual(
+            {
+                type: types.SET_PAGE_ORDER,
+                order: order
+            }
+        );
+    });
+
+    it('setPageView should return type SET_PAGE_VIEW and the view', () => {
+        const view = 'map';
+        expect(actions.setPageView(view)).toEqual(
+            {
+                type: types.SET_PAGE_VIEW,
+                view: view
+            }
+        );
     });
 });
 

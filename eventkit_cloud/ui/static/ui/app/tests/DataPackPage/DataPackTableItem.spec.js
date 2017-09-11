@@ -118,6 +118,41 @@ describe('DataPackTableItem component', () => {
         expect(stateSpy.calledWith({providerDescs:{"OpenStreetMap Data (Themes)":"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...)."}, providerDialogOpen: true})).toBe(true);
         stateSpy.restore();
     });
+
+    it('showDeleteDialog should set deleteDialogOpen to true', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().showDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: true}));
+        stateSpy.restore();
+    });
+
+    it('hideDeleteDialog should set deleteDialogOpen to false', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().hideDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: false}));
+        stateSpy.restore();
+    });
+
+    it('handleDelete should call hideDelete and onRunDelete', () => {
+        const props = getProps();
+        props.onRunDelete = new sinon.spy();
+        const hideSpy = new sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        expect(props.onRunDelete.called).toBe(false);
+        expect(hideSpy.called).toBe(false);
+        wrapper.instance().handleDelete();
+        expect(hideSpy.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
+    });
 });
 const providers = [
     {
