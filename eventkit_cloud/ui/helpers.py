@@ -8,7 +8,9 @@ from django.utils import timezone
 from django.template.loader import get_template, render_to_string
 
 from celery.utils.log import get_task_logger
+
 logger = get_task_logger(__name__)
+
 
 @contextmanager
 def cd(newdir):
@@ -19,6 +21,7 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
+
 def get_style_files():
     """
 
@@ -26,6 +29,7 @@ def get_style_files():
     """
     style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
     return get_file_paths(style_dir)
+
 
 def generate_qgs_style(run_uid=None, export_provider_task=None):
     """
@@ -55,21 +59,21 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                     except Exception:
                         continue
                     full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                     provider_task.slug, filename)
+                                                  provider_task.slug, filename)
                     if not os.path.isfile(full_file_path):
                         logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                         export_task.name))
+                                                                                      export_task.name))
                         continue
                     # Exclude zip files created by zip_export_provider
-                    if full_file_path.endswith(".zip") == False:
+                    if not full_file_path.endswith(".zip"):
                         provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
                         provider_details += [provider_detail]
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
+                                                              timezone.now().strftime("%Y%m%d")))
 
     with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'job_name' : job_name,
+        open_file.write(render_to_string('styles/Style.qgs', context={'job_name': job_name,
                                                                       'job_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
@@ -77,11 +81,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                       'bbox': run.job.extents}))
     return style_file
 
-def get_file_paths(directory):
 
-   paths = {}
-   with cd(directory):
-       for dirpath,_,filenames in os.walk('./'):
-           for f in filenames:
-               paths[os.path.abspath(os.path.join(dirpath, f))] =  os.path.join(dirpath, f)
-   return paths
+def get_file_paths(directory):
+    paths = {}
+    with cd(directory):
+        for dirpath, _, filenames in os.walk('./'):
+            for f in filenames:
+                paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
+    return paths

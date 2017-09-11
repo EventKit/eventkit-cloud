@@ -982,6 +982,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     rolls up runs into a zip file
     """
     from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
+    from .task_runners import normalize_name
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
 
@@ -1004,8 +1005,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         zip_filename = file_name
     else:
         zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-            name,
-            project,
+            normalize_name(name),
+            normalize_name(project),
             "eventkit",
             date,
             'zip'
