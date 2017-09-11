@@ -80,7 +80,7 @@ export class MapView extends Component {
     componentDidMount() {
         this.map = this.initMap();
         this.initOverlay();
-        this.source = new ol.source.Vector({wrapX: false});
+        this.source = new ol.source.Vector({wrapX: true});
         this.layer = new ol.layer.Vector({
             source: this.source,
             style: this.defaultStyleFunction
@@ -206,7 +206,7 @@ export class MapView extends Component {
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
-                        wrapX: false
+                        wrapX: true
                     })
                 }),
             ],
@@ -217,7 +217,6 @@ export class MapView extends Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-                extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
             })
         });
     }

@@ -15,7 +15,8 @@ import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
+    isViewOutsideValidExtent, goToValidExtent} from '../../utils/mapUtils'
 
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
@@ -198,6 +199,12 @@ export class ExportAOI extends Component {
         // make sure interactions are deactivated
         this._drawBoxInteraction.setActive(false);
         this._drawFreeInteraction.setActive(false);
+        if (isViewOutsideValidExtent(this._map.getView())) {
+            // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
+            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // avoid that issue we go back to the valid extent but maintain the same view
+            goToValidExtent(this._map.getView());
+        };
         // if box or draw activate the respective interaction
         if (mode == MODE_DRAW_BBOX) {
             this._drawBoxInteraction.setActive(true);
@@ -212,6 +219,9 @@ export class ExportAOI extends Component {
     _handleDrawEnd(event) {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
+        const coords = geometry.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this._map.getView().getProjection());
+        geometry.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geometry);
         const bbox = geojson.features[0].bbox;
         //make sure the user didnt create a polygon with no area
@@ -289,7 +299,7 @@ export class ExportAOI extends Component {
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
-                        wrapX: false
+                        wrapX: true
                     })
                 }),
             ],
