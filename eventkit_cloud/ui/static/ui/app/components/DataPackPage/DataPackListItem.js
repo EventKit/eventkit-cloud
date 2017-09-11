@@ -100,6 +100,10 @@ export class DataPackListItem extends Component {
             },
             cardTitle:{
                 wordWrap: 'break-word',
+                padding: '8px 15px 15px',
+            },
+            cardTitleFeatured: {
+                wordWrap: 'break-word',
                 padding: '15px',
             },
             completeIcon: {
@@ -150,6 +154,8 @@ export class DataPackListItem extends Component {
             }
         };
 
+        const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
+
         const onMouseEnter = this.props.onHoverStart ? () => {this.props.onHoverStart(this.props.run.uid)} : null;
         const onMouseLeave = this.props.onHoverEnd ? () => {this.props.onHoverEnd(this.props.run.uid)} : null;
         const onClick = this.props.onClick ? () => {this.props.onClick(this.props.run.uid)} : null;
@@ -165,7 +171,7 @@ export class DataPackListItem extends Component {
                 <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
-                    style={styles.cardTitle} 
+                    style={cardTitleStyle}
                     titleStyle={{fontSize: '21px', height: '36px'}}
                     subtitleStyle={{fontSize: '12px'}}
                     title={
