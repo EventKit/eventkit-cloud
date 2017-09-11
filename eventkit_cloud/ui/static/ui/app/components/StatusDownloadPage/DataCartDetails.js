@@ -14,6 +14,7 @@ import DatePicker from 'material-ui/DatePicker';
 import Info from 'material-ui/svg-icons/action/info'
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
+import DeleteDialog from '../DeleteDialog';
 
 export class DataCartDetails extends React.Component {
     constructor(props) {
@@ -33,6 +34,8 @@ export class DataCartDetails extends React.Component {
             cloneDialogOpen: false,
             providerDesc: '',
             providerDialogOpen: false,
+            formatsDialogOpen: false,
+            projectionsDialogOpen: false,
         };
     }
 
@@ -165,6 +168,22 @@ export class DataCartDetails extends React.Component {
         this.setState({providerDesc, providerName, providerDialogOpen: true})
     };
 
+    handleFormatsClose = () => {
+        this.setState({formatsDialogOpen: false});
+    };
+
+    handleFormatsOpen() {
+        this.setState({formatsDialogOpen: true})
+    };
+
+    handleProjectionsClose = () => {
+        this.setState({projectionsDialogOpen: false});
+    };
+
+    handleProjectionsOpen() {
+        this.setState({projectionsDialogOpen: true})
+    };
+
     handleDelete = () => {
         this.props.onRunDelete(this.props.cartDetails.uid)
         this.setState({deleteDialogOpen: false});
@@ -287,24 +306,6 @@ export class DataCartDetails extends React.Component {
             }
         };
 
-        const deleteActions = [
-            <RaisedButton
-                style={{marginRight: '10px'}}
-                labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: 'whitesmoke'}}
-                disableTouchRipple={true}
-                label="Cancel"
-                primary={false}
-                onTouchTap={this.handleDeleteClose.bind(this)}
-            />,<RaisedButton
-                labelStyle={{color: 'red', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: 'whitesmoke'}}
-                disableTouchRipple={true}
-                label="Delete"
-                primary={true}
-                onTouchTap={this.handleDelete.bind(this)}
-            />,
-        ];
         const rerunExportActions = [
             <RaisedButton
                 style={{marginRight: '10px'}}
@@ -337,20 +338,8 @@ export class DataCartDetails extends React.Component {
                 label="Clone"
                 primary={true}
                 onTouchTap={this.handleClone.bind(this)}
-            />,
-        ];
+            />]
 
-        const providerInfoActions = [
-            <RaisedButton
-                style={{margin: '10px'}}
-                labelStyle={{color: 'whitesmoke', fontWeight: 'bold'}}
-                buttonStyle={{backgroundColor: '#4598bf'}}
-                disableTouchRipple={true}
-                label="Close"
-                primary={false}
-                onTouchTap={this.handleProviderClose.bind(this)}
-            />,
-        ];
         return (
             <div>
                 <div>
@@ -474,15 +463,11 @@ export class DataCartDetails extends React.Component {
                             onTouchTap={this.handleDeleteOpen.bind(this)}
                             label="DELETE"
                         />
-
-                        <BaseDialog
+                        <DeleteDialog
                             show={this.state.deleteDialogOpen}
-                            title={'DELETE DATAPACK'}
-                            onClose={this.handleDeleteClose}
-                            actions={deleteActions}
-                        >
-                            <strong>Are you sure you want to delete this DataPack?</strong>
-                        </BaseDialog>
+                            handleCancel={this.handleDeleteClose}
+                            handleDelete={this.handleDelete}
+                        />
                     </div>
 
                 </div>
@@ -519,11 +504,28 @@ export class DataCartDetails extends React.Component {
                         </tr>
                         <tr>
                             <td style={styles.tdHeader}>File Formats</td>
-                            <td style={styles.tdData}>.gpkg</td>
+
+                            <td style={styles.tdData}>.gpkg<Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
+                            <BaseDialog
+                                show={this.state.formatsDialogOpen}
+                                title='Format Information'
+                                onClose={this.handleFormatsClose.bind(this)}
+                            ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
+                                EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
+                            </BaseDialog>
+
                         </tr>
                         <tr>
                             <td style={styles.tdHeader}>Projection</td>
-                            <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)</td>
+                            <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)<Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
+                            <BaseDialog
+                                show={this.state.projectionsDialogOpen}
+                                title='Projection Information'
+                                onClose={this.handleProjectionsClose.bind(this)}
+                            ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}}>
+                                All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
+                            </div>
+                            </BaseDialog>
                         </tr>
                         </tbody>
                     </table>

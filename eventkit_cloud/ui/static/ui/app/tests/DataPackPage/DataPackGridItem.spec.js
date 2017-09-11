@@ -237,6 +237,40 @@ describe('DataPackGridItem component', () => {
         stateSpy.restore();
     });
 
+    it('showDeleteDialog should set deleteDialogOpen to true', () => {
+        const props = {run: getRuns()[0], user: user, providers: providers, onRunDelete: () => {}};
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().showDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: true}));
+        stateSpy.restore();
+    });
+
+    it('hideDeleteDialog should set deleteDialogOpen to false', () => {
+        const props = {run: getRuns()[0], user: user, providers: providers, onRunDelete: () => {}};
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackGridItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().hideDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: false}));
+        stateSpy.restore();
+    });
+
+    it('handleDelete should call hideDelete and onRunDelete', () => {
+        const props = {run: getRuns()[0], user: user, providers: providers, onRunDelete: () => {}};
+        props.onRunDelete = new sinon.spy();
+        const hideSpy = new sinon.spy(DataPackGridItem.prototype, 'hideDeleteDialog');
+        const wrapper = getWrapper(props);
+        expect(props.onRunDelete.called).toBe(false);
+        expect(hideSpy.called).toBe(false);
+        wrapper.instance().handleDelete();
+        expect(hideSpy.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
+    });
 });
 
 function getRuns() {

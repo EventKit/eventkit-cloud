@@ -31,6 +31,7 @@ from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
 )
 from ..utils.hotosm_geopackage import Geopackage
+from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
 
@@ -359,17 +360,19 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM Data Collection", bind=True, base=FormatTask)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask)
 def osm_data_collection_task(
-        self, result=None, stage_dir=None, provider_slug=None, task_uid=None,
+        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
         config=None, *args, **kwargs):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from eventkit_cloud.tasks.models import ExportProviderTask
-    from eventkit_cloud.tasks.task_runners import create_export_task_record
+    from .models import ExportRun, ExportTask
+
+    result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -381,7 +384,49 @@ def osm_data_collection_task(
         config=config
     )
 
-    return {'result': gpkg_filepath}
+    result = {'result': gpkg_filepath, 'geopackage': gpkg_filepath}
+
+    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+
+    return result
+
+
+@app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
+def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
+    """
+    Task to create styles for osm.
+    """
+    from ..jobs.models import Job, ExportProvider
+
+    job = Job.objects.get(uid=job_uid)
+
+    provider = ExportProvider.objects.get(slug=provider_slug)
+    result = result or {}
+    input_gpkg = parse_result(result, 'geopackage')
+    date_time = timezone.now()
+    bbox = job.extents
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
+                       "abstract": job.description,
+                       "title": job.name,
+                       "westBoundLongitude": bbox[0],
+                       "southBoundLatitude": bbox[1],
+                       "eastBoundLongitude": bbox[2],
+                       "northBoundLatitude": bbox[3],
+                       "URL": provider.preview_url,
+                       "applicationProfile": None,
+                       "code": None,
+                       "name": provider.name,
+                       "description": provider.service_description,
+                       "dateStamp": date_time.isoformat()
+                       }
+
+    metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
+
+    add_file_metadata(input_gpkg, metadata)
+
+    result['result'] = input_gpkg
+    result['geopackage'] = input_gpkg
+    return result
 
 
 @app.task(name='ESRI Shapefile Format', bind=True, base=FormatTask)
@@ -449,14 +494,17 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
-def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-        user_details=None):
+def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
+        user_details=None, *args, **kwargs):
 
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun
+    from .models import ExportRun, ExportTask
+
     result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
+    task = ExportTask.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -464,6 +512,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_d
     if selection:
         clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
 
+    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
     gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
 
@@ -537,7 +586,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         result['geopackage'] = out
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in wfs export, %s', str(e))
         raise Exception(e)
 
 
@@ -583,7 +632,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
         result['geopackage'] = out
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in arcgis feature service export, %s', str(e))
         raise Exception(e)
 
 
@@ -671,12 +720,17 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     """
     Class defining geopackage export for external raster service.
     """
-    logger.info('Doing nothing in external_raster_service_export_task ({})'.format(self.name))
+
+    from .models import ExportRun, ExportTask
+
     result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
+    task = ExportTask.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
     selection = parse_result(result, 'selection')
+
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
         w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
@@ -687,9 +741,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
         gpkg = w2g.convert()
         result['result'] = gpkg
         result['geopackage'] = gpkg
+        add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
+
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in raster service export, %s', str(e))
         raise Exception(e)
 
 
