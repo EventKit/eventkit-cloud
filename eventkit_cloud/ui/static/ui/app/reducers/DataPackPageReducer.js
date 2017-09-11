@@ -1,7 +1,7 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
-export function DataPackListReducer(state = initialState.runsList, action) {
+export function DataPackPageReducer(state = initialState.runsList, action) {
     switch(action.type) {
         case types.FETCHING_RUNS:
             return {...state, fetching: true, fetched: false, error: null}
@@ -9,6 +9,10 @@ export function DataPackListReducer(state = initialState.runsList, action) {
             return {...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage, range: action.range}
         case types.FETCH_RUNS_ERROR:
             return {...state, fetching: false, fetched: false, runs: [], error: action.error};
+        case types.SET_PAGE_ORDER:
+            return {...state, order: action.order}
+        case types.SET_PAGE_VIEW:
+            return {...state, view: action.view}
         default:
             return state;
     }
