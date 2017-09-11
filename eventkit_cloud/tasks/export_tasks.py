@@ -620,10 +620,10 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # Need to remove duplicates from the list because
     # some intermediate tasks produce files with the same name.
     # sorted while adding time allows comparisons in tests.
-    qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
-    include_files += [qgs_style_file]
     include_files = sorted(list(set(include_files)))
     if include_files:
+        qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
+        include_files += [qgs_style_file]
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
                                      file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
@@ -791,9 +791,9 @@ class FinalizeRunHookTask(LockingTask):
                 size = os.path.getsize(file_path)
                 url = make_file_downloadable(file_path, run_uid)
 
-                fptr = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
+                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
-                task_record.result = fptr
+                task_record.result = result
                 task_record.save()
 
     def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
@@ -853,6 +853,7 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None):
 
     return created_files
 
+
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
     from eventkit_cloud.tasks.models import ExportRun
@@ -881,12 +882,14 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
 
-    qgs_style_file = generate_qgs_style(run_uid=run_uid)
-    include_files += [qgs_style_file]
-    # Need to remove duplicates from the list because
-    # some intermediate tasks produce files with the same name.
-    # and add the static resources
-    include_files = set(include_files)
+    if include_files:
+        # No need to add QGIS file if there aren't any files to be zipped.
+        qgs_style_file = generate_qgs_style(run_uid=run_uid)
+        include_files += [qgs_style_file]
+        # Need to remove duplicates from the list because
+        # some intermediate tasks produce files with the same name.
+        # and add the static resources
+        include_files = set(include_files)
 
     return include_files
 
@@ -1186,7 +1189,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     Cancels an ExportProviderTask and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
-    from ..tasks.models import ExportProviderTask, ExportTaskException, FileProducingTaskResult
+    from ..tasks.models import ExportProviderTask, ExportTaskException
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from django.contrib.auth.models import User
