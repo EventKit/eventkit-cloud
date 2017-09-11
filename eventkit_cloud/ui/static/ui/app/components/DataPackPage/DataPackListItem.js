@@ -45,6 +45,10 @@ export class DataPackListItem extends Component {
 
     };
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
     showDeleteDialog() {
         this.setState({deleteDialogOpen: true});
     }
@@ -188,15 +192,16 @@ export class DataPackListItem extends Component {
                             <IconMenu
                                 style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
-                                    <IconButton 
+                                    <IconButton
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
-                                        iconStyle={{color: '#4598bf'}}>
+                                        iconStyle={{color: '#4598bf'}}
+                                        onClick={this.handleMenuButtonClick}>
                                         <NavigationMoreVert />
                                     </IconButton>}
-                                anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
-                                <MenuItem 
+                                <MenuItem
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText="Go to Status & Download"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
