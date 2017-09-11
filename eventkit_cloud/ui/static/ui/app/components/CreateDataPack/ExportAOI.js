@@ -185,6 +185,9 @@ export class ExportAOI extends Component {
         clearDraw(this._drawLayer);
         const extent = this._map.getView().calculateExtent(this._map.getSize());
         const geom = new ol.geom.Polygon.fromExtent(extent);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this._map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geom);
         const bboxFeature = new ol.Feature({
             geometry: geom

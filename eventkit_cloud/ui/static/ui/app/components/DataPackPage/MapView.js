@@ -14,7 +14,8 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
+    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -515,6 +516,9 @@ export class MapView extends Component {
     onDrawEnd(event) {
         // get the drawn geometry
         const geom = event.feature.getGeometry();
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geom);
         const bbox = geojson.features[0].bbox;
         //make sure the user didnt create a polygon with no area
@@ -547,6 +551,9 @@ export class MapView extends Component {
         clearDraw(this.drawLayer);
         const extent = this.map.getView().calculateExtent(this.map.getSize());
         const geom = new ol.geom.Polygon.fromExtent(extent);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const feature = new ol.Feature({
             geometry: geom
         });
@@ -559,6 +566,12 @@ export class MapView extends Component {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
+        if (isViewOutsideValidExtent(this.map.getView())) {
+            // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
+            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // avoid that issue we go back to the valid extent but maintain the same view
+            goToValidExtent(this.map.getView());
+        };
         // if box or draw activate the respective interaction
         if(mode == MODE_DRAW_BBOX) {
             this.drawBoxInteraction.setActive(true);
