@@ -24,17 +24,6 @@ export function stepperReducer(state = initialState.stepperNextEnabled, action) 
     }
 }
 
-export function startExportPackageReducer(state = initialState.setExportPackageFlag, action) {
-    switch(action.type) {
-        case types.EXPORT_INFO_DONE:
-            return true;
-        case types.EXPORT_INFO_NOTDONE:
-            return false;
-        default:
-            return state;
-    }
-}
-
 export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
         case types.UPDATE_AOI_INFO:
@@ -60,13 +49,8 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
     switch(action.type) {
         case types.UPDATE_EXPORT_INFO:
             return {
-                exportName: action.exportName,
-                datapackDescription: action.datapackDescription,
-                projectName: action.projectName,
-                makePublic: action.makePublic,
-                providers: action.providers,
-                area_str: action.area_str,
-                layers: action.layers,
+                ...state,
+                ...action.exportInfo
             };
         case types.CLEAR_EXPORT_INFO:
             return {

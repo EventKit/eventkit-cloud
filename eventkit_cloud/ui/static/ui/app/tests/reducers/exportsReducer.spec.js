@@ -35,7 +35,7 @@ describe('exportInfo reducer', () => {
             makePublic: false,
             providers: [],
             area_str: '',
-            layers: ''
+            layers: 'Geopackage'
         });
     });
 
@@ -52,13 +52,15 @@ describe('exportInfo reducer', () => {
             },
             {
                 type: 'UPDATE_EXPORT_INFO',
-                exportName: 'name',
-                datapackDescription: 'description',
-                projectName: 'project',
-                makePublic: true,
-                providers: ['provider'],
-                area_str: 'string',
-                layers: 'layer'
+                exportInfo: {
+                    exportName: 'name',
+                    datapackDescription: 'description',
+                    projectName: 'project',
+                    makePublic: true,
+                    providers: ['provider'],
+                    area_str: 'string',
+                    layers: 'layer'
+                }
             }
         )).toEqual({
             exportName: 'name',

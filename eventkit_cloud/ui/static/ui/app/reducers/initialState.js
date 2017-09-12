@@ -36,6 +36,8 @@ export default {
         error: null,
         nextPage: false,
         range: '',
+        order: '',
+        view: '',
     },
     runsDeletion: {
         deleting: false,
@@ -59,7 +61,6 @@ export default {
     },
     providers: [],
     stepperNextEnabled: false,
-    setExportPackageFlag: false,
     datacartDetailsReceived:false,
     datacartDetails: {
         fetching: false,

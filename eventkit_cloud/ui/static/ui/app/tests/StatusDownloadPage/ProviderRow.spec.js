@@ -11,13 +11,15 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Warning from 'material-ui/svg-icons/alert/warning'
-import Check from 'material-ui/svg-icons/navigation/check'
+import Warning from 'material-ui/svg-icons/alert/warning';
+import Check from 'material-ui/svg-icons/navigation/check';
+import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
 import '../../components/tap_events';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/BaseDialog';
+import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('ProviderRow component', () => {
 
@@ -95,6 +97,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(IconButton)).toHaveLength(2);
         expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
     it('should render the cancel menu item if the task is pending/running and the cancel menu item should call onProviderCancel', () => {
@@ -117,6 +120,7 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableRowColumn)).toHaveLength(12);
         expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(TableBody)).toHaveLength(1);
+        expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
 
     it('should handle summing up the file sizes', () => {
@@ -306,22 +310,51 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });
 
-    it('getTaskLink should get called with correct data', () => {
+    it('getTaskLink should return a "span" element', () => {
         const props = getProps();
-        const getTaskLink = new sinon.spy(ProviderRow.prototype, 'getTaskLink');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskLink(props.provider.tasks[0]);
-        expect(getTaskLink.calledOnce).toBe(true);
-        expect(getTaskLink.calledWith(props.provider.tasks[0])).toBe(true);
+        const task = {result: {}, name: 'test name'};
+        const link = wrapper.instance().getTaskLink(task);
+        const elem = shallow(link);
+        expect(elem.is('span')).toBe(true);
+        expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskDownloadIcon should be called with correct data', () => {
+    it('getTaskLink should return a "a" element', () => {
         const props = getProps();
-        const getTaskIcon = new sinon.spy(ProviderRow.prototype, 'getTaskDownloadIcon');
         const wrapper = getWrapper(props);
-        wrapper.instance().getTaskDownloadIcon(props.provider.tasks[0]);
-        expect(getTaskIcon.calledOnce).toBe(true);
-        expect(getTaskIcon.calledWith(props.provider.tasks[0])).toBe(true);
+        const task = {result: {url: 'test-url.io'}, name: 'test name'};
+        const link = wrapper.instance().getTaskLink(task);
+        const elem = shallow(link);
+        expect(elem.is('a')).toBe(true);
+        expect(elem.props().href).toEqual('test-url.io');
+        expect(elem.text()).toEqual('test name')
+    });
+
+    it('getTaskDownloadIcon should return a disabled icon', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const task = {result: {}};
+        const icon = wrapper.instance().getTaskDownloadIcon(task);
+        const elem = mount(icon, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(elem.is(CloudDownload)).toBe(true);
+        expect(elem.props().onClick).toBe(undefined);
+    });
+
+    it('getTaskDownloadIcon should return a icon with click handler', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const task = {result: {url: 'test-url.io'}};
+        const icon = wrapper.instance().getTaskDownloadIcon(task);
+        const elem = mount(icon, {
+            context: {muiTheme},
+            childContextTypes: {muiTheme: React.PropTypes.object}
+        });
+        expect(elem.is(CloudDownload)).toBe(true);
+        expect(elem.props().onClick).not.toBe(undefined);
     });
 
     it('getProviderLink should be called with the icon from a given provider', () => {
