@@ -353,6 +353,12 @@ def osm_data_collection_pipeline(
     geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
     g.run()
+
+    # --- Add the Land Boundaries polygon layer
+    # TODO: Pull from settings
+    in_dataset = "PG: host=postgis port=5432 user=eventkit password=eventkit_exports dbname=base_data"
+    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
+
     ret_geopackage_filepath = g.results[0].parts[0]
     assert(ret_geopackage_filepath == geopackage_filepath)
     update_progress(export_task_record_uid, progress=100)
@@ -593,7 +599,7 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
-    dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
+    dataset = gdalutils.clip_dataset(boundary=selection, dataset=dataset, fmt=None)
 
     result['result'] = dataset
     return result
