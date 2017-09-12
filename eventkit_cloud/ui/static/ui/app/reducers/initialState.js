@@ -57,7 +57,7 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: [],
+        layers: 'Geopackage',
     },
     providers: [],
     stepperNextEnabled: false,

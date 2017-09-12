@@ -41,6 +41,7 @@ describe('ExportInfo component', () => {
                 makePublic: false,
             },
             providers: [],
+            formats:[],
             nextEnabled: true,
             handlePrev: () => {},
             updateExportInfo: () => {},

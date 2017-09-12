@@ -391,7 +391,8 @@ export class ExportInfo extends React.Component {
                                             ref={format.slug}
                                             label={format.description}
                                             name={format.name}
-                                            defaultChecked={this.state.layers}
+                                            style={{width:'70%'}}
+                                            defaultChecked={true}
                                             disabled={true}
                                             checkedIcon={<ActionCheckCircle />}
                                         /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
