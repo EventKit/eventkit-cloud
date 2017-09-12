@@ -1,19 +1,19 @@
-import create_img from '../images/AboutPage/3_stage_create.png';
-import manage_img from '../images/AboutPage/3_stage_manage.png';
-import use_img from '../images/AboutPage/3_stage_use.png';
-import manage_1 from '../images/AboutPage/manage_slide_1.png';
-import manage_2 from '../images/AboutPage/manage_slide_2.png';
-import manage_3 from '../images/AboutPage/manage_slide_3.png';
-import create_1_1 from '../images/AboutPage/create_slide_1.png';
-import create_1_2 from '../images/AboutPage/create_slide_2.png';
-import create_1_3 from '../images/AboutPage/create_slide_3.png';
-import create_2_1 from '../images/AboutPage/create_step_2_slide_1.png';
-import create_2_2 from '../images/AboutPage/create_step_2_slide_2.png';
-import create_2_3 from '../images/AboutPage/create_step_2_slide_3.png';
-import create_3_1 from '../images/AboutPage/create_step_3_slide_1.png';
-import create_3_2 from '../images/AboutPage/create_step_3_slide_2.png';
-import create_4_1 from '../images/AboutPage/create_status_download_slide_1.png';
-import create_4_2 from '../images/AboutPage/create_status_download_slide_2.png';
+import create_img from '../images/AboutPage/three_step_1.png';
+import manage_img from '../images/AboutPage/three_step_2.png';
+import use_img from '../images/AboutPage/three_step_3.png';
+import manage_1 from '../images/AboutPage/manage_1.png';
+import manage_2 from '../images/AboutPage/manage_2.png';
+import manage_3 from '../images/AboutPage/manage_3.png';
+import create_1_1 from '../images/AboutPage/create_step_one_1.png';
+import create_1_2 from '../images/AboutPage/create_step_one_2.png';
+import create_1_3 from '../images/AboutPage/create_step_one_3.png';
+import create_2_1 from '../images/AboutPage/create_step_two_1.png';
+import create_2_2 from '../images/AboutPage/create_step_two_2.png';
+import create_2_3 from '../images/AboutPage/create_step_two_3.png';
+import create_3_1 from '../images/AboutPage/create_step_three_1.png';
+import create_3_2 from '../images/AboutPage/create_step_three_2.png';
+import download_1 from '../images/AboutPage/download_1.png';
+import download_2 from '../images/AboutPage/download_2.png';
 
 export const Config = {
     REGIONS_URL : '/api/regions.json',
@@ -33,8 +33,8 @@ export const Config = {
     AUTH_URL : '/login',
     ABOUT_PAGE: {
         textParagraphs: [
-            {header: 'Overview', body: 'EventKit is blah blah blah'},
-            {header: 'What is a DataPack?', body: 'DataPacks are blah blah blah'},
+            {header: 'Overview', body: 'EventKit\'s mission is to save user\'s time and frustration by simplifying the process for getting deployment-ready geospatial information. EventKit works by configuring geospatial data web services in the application, and then exporting that data into a portable data format based on a custom, user-provided extent.  The results are downloadable and ready-to-use datasets called datapacks.'},
+            {header: 'What is a DataPack?', body: 'Datapacks are zipped archives of geospatial data, cartography, and metadata. Each dataset is already processed.  Raster data is tiled for quick rendering and feature data, such as OSM, has been converted into various schemas designed to make viewing and visual analysis easier. The provided QGIS project file includes styling with icons and neatly groups raster data.'},
         ],
         threeStep: [
             {img: create_img, caption: 'Create DataPacks'},
@@ -48,7 +48,7 @@ export const Config = {
                     {
                         sectionTitle: 'DataPack Library',
                         steps: [
-                            {img: manage_1, caption: 'Here you can create or search, sort, and filter all private an public DataPacks.'}, 
+                            {img: manage_1, caption: 'Here you can create or search, sort, and filter all private and public DataPacks.'}, 
                             {img: manage_2, caption: 'Check the status of previously created DataPacks.'},
                             {img: manage_3, caption: 'Make other actions like "Go to Export Detail" to check export statuses and make downloads.'}
                         ]
@@ -84,8 +84,8 @@ export const Config = {
                     {
                         sectionTitle: 'Get Your Files: Export Status & Download',
                         steps: [
-                            {img: create_4_1, caption: 'You\'ll get an e-mail when your files are ready. Use the table to download.'}, 
-                            {img: create_4_2, caption: 'You can alse edit your DataPack expiration date an viewing permisions.'},
+                            {img: download_1, caption: 'You\'ll get an e-mail when your files are ready. Use the table to download.'}, 
+                            {img: download_2, caption: 'You can alse edit your DataPack expiration date an viewing permisions.'},
                         ]
                     }
                 ]
