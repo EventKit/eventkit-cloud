@@ -460,7 +460,7 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
-        zipfile_name = os.path.join('{0}'.format(run_uid),'TestJob-test-eventkit-{0}.zip'.format(date))
+        zipfile_name = os.path.join('{0}'.format(run_uid),'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[
             os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
