@@ -9,12 +9,11 @@ import os
 import shutil
 import socket
 import traceback
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
 
-from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
@@ -27,12 +26,13 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files
+from ..ui.helpers import get_style_files, generate_qgs_style
 from ..celery import app, TaskPriority
 from ..utils import (
-    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, gdalutils
+    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
 )
 from ..utils.hotosm_geopackage import Geopackage
+from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
 
@@ -361,17 +361,19 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM Data Collection", bind=True, base=FormatTask)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask)
 def osm_data_collection_task(
-        self, result=None, stage_dir=None, provider_slug=None, task_uid=None,
+        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
         config=None, *args, **kwargs):
     """ Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from eventkit_cloud.tasks.models import ExportProviderTask
-    from eventkit_cloud.tasks.task_runners import create_export_task_record
+    from .models import ExportRun, ExportTask
+
+    result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -383,36 +385,47 @@ def osm_data_collection_task(
         config=config
     )
 
-    return {'result': gpkg_filepath}
+    result = {'result': gpkg_filepath, 'geopackage': gpkg_filepath}
+
+    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+
+    return result
 
 
-@app.task(name="QGIS Project file (.qgs)", bind=True, base=FormatTask, abort_on_error=False)
-def osm_create_styles_task(self, result=None, task_uid=None, stage_dir=None, job_name=None, provider_slug=None,
-                           provider_name=None, bbox=None, user_details=None
-                           ):
+@app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
+def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
     Task to create styles for osm.
     """
+    from ..jobs.models import Job, ExportProvider
+
+    job = Job.objects.get(uid=job_uid)
+
+    provider = ExportProvider.objects.get(slug=provider_slug)
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
     input_gpkg = parse_result(result, 'geopackage')
+    date_time = timezone.now()
+    bbox = job.extents
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
+                       "abstract": job.description,
+                       "title": job.name,
+                       "westBoundLongitude": bbox[0],
+                       "southBoundLatitude": bbox[1],
+                       "eastBoundLongitude": bbox[2],
+                       "northBoundLatitude": bbox[3],
+                       "URL": provider.preview_url,
+                       "applicationProfile": None,
+                       "code": None,
+                       "name": provider.name,
+                       "description": provider.service_description,
+                       "dateStamp": date_time.isoformat()
+                       }
 
-    gpkg_file = '{}.gpkg'.format(job_name)
-    style_file = os.path.join(stage_dir, '{0}-osm-{1}.qgs'.format(job_name,
-                                                                  timezone.now().strftime("%Y%m%d")))
+    metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
 
-    from audit_logging.file_logging import logging_open
-    with logging_open(style_file, 'w', user_details=user_details) as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'gpkg_filename': os.path.basename(gpkg_file),
-                                                                      'layer_id_prefix': '{0}-osm-{1}'.format(job_name,
-                                                                                                              timezone.now().strftime(
-                                                                                                                  "%Y%m%d")),
-                                                                      'layer_id_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'bbox': bbox,
-                                                                      'provider_name': provider_name}))
-    result['result'] = style_file
+    add_file_metadata(input_gpkg, metadata)
+
+    result['result'] = input_gpkg
     result['geopackage'] = input_gpkg
     return result
 
@@ -510,14 +523,17 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
-def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, job_name=None,
-        user_details=None):
+def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
+        user_details=None, *args, **kwargs):
 
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun
+    from .models import ExportRun, ExportTask
+
     result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
+    task = ExportTask.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -525,6 +541,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None, stage_d
     if selection:
         clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
 
+    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
     gpkg = gdalutils.convert(dataset=gpkg, fmt='gpkg', task_uid=task_uid)
 
@@ -598,7 +615,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         result['geopackage'] = out
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in wfs export, %s', str(e))
         raise Exception(e)
 
 
@@ -644,16 +661,16 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
         result['geopackage'] = out
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in arcgis feature service export, %s', str(e))
         raise Exception(e)
 
 
 @app.task(name='Project file (.zip)', bind=True, base=FormatTask)
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
-                        stage_dir=None,
-                        *args, **kwargs):
+                        stage_dir=None, *args, **kwargs):
     from .models import ExportProviderTask
-    from .task_runners import normalize_job_name
+    from .task_runners import normalize_name
+
     result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -683,15 +700,45 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # sorted while adding time allows comparisons in tests.
     include_files = sorted(list(set(include_files)))
     if include_files:
+        qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
+        include_files += [qgs_style_file]
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_job_name(job_name))),
+                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
                                      adhoc=True, static_files=get_style_files()).get('result')
     else:
         raise Exception("There are no files in this provider available to zip.")
     if not zip_file:
         raise Exception("A zipfile could not be created, please contact an administrator.")
     result['result'] = zip_file
+    return result
+
+
+@app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
+def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None, *args, **kwargs):
+    """
+    Class defining geopackage export function.
+    """
+    user_details = kwargs.get('user_details')
+    # This is just to make it easier to trace when user_details haven't been sent
+    if user_details is None:
+        user_details = {'username': 'unknown-bounds_export_task'}
+
+    from .models import ExportRun
+
+    self.update_task_state(result=result, task_uid=task_uid)
+    run = ExportRun.objects.get(uid=run_uid)
+
+    result_gpkg = parse_result(result, 'geopackage')
+    bounds = run.job.the_geom.geojson or run.job.bounds_geojson
+
+    gpkg = os.path.join(stage_dir, '{0}_bounds.gpkg'.format(provider_slug))
+    gpkg = geopackage.add_geojson_to_geopackage(
+        geojson=bounds, gpkg=gpkg, layer_name='bounds', task_uid=task_uid, user_details=user_details
+    )
+
+    result['result'] = gpkg
+    result['geopackage'] = result_gpkg
     return result
 
 
@@ -702,13 +749,17 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     """
     Class defining geopackage export for external raster service.
     """
-    logger.info('Doing nothing in external_raster_service_export_task ({})'.format(self.name))
-    from .models import ExportRun
+
+    from .models import ExportRun, ExportTask
+
     result = result or {}
+    run = ExportRun.objects.get(uid=run_uid)
+    task = ExportTask.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
     selection = parse_result(result, 'selection')
+
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
         w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
@@ -719,9 +770,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
         gpkg = w2g.convert()
         result['result'] = gpkg
         result['geopackage'] = gpkg
+        add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
+
         return result
     except Exception as e:
-        logger.error('Raised exception in external service export, %s', str(e))
+        logger.error('Raised exception in raster service export, %s', str(e))
         raise Exception(e)
 
 
@@ -730,7 +783,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
     """
-    result = result or {}
     # This is just to make it easier to trace when user_details haven't been sent
     if user_details is None:
         user_details = {'username': 'unknown-pick_up_run_task'}
@@ -743,42 +795,6 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None):
     run.worker = worker
     run.save()
     TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
-
-
-def include_zipfile(run_uid=None, provider_tasks=[], extra_files=[]):
-    """ Collects all export provider result files, combines them with @extra_files,
-        and runs a zip_file_task with the resulting set of files.
-    """
-    from eventkit_cloud.tasks.models import ExportRun
-    run = ExportRun.objects.get(uid=run_uid)
-
-    if run.job.include_zipfile:
-        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-        # deleted during cancellation.
-        include_files = []
-
-        for export_provider_task in provider_tasks:
-            if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in export_provider_task.tasks.all():
-                    try:
-                        filename = export_task.result.filename
-                    except Exception:
-                        continue
-                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  export_provider_task.slug, filename)
-                    if not os.path.isfile(full_file_path):
-                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                      export_task.name))
-                        continue
-                    include_files += [full_file_path]
-        # Need to remove duplicates from the list because
-        # some intermediate tasks produce files with the same name.
-        include_files.extend(extra_files)
-        include_files = list(set(include_files))
-        if include_files:
-            zip_file_task.run(run_uid=run_uid, include_files=include_files)
-        else:
-            logger.warn('No files to zip for run_uid/provider_tasks: {}/{}'.format(run_uid, provider_tasks))
 
 
 #This could be improved by using Redis or Memcached to help manage state.
@@ -860,9 +876,9 @@ class FinalizeRunHookTask(LockingTask):
                 size = os.path.getsize(file_path)
                 url = make_file_downloadable(file_path, run_uid)
 
-                fptr = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
+                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
-                task_record.result = fptr
+                task_record.result = result
                 task_record.save()
 
     def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
@@ -928,37 +944,39 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None):
     from eventkit_cloud.tasks.models import ExportRun
     run = ExportRun.objects.get(uid=run_uid)
 
-    if run.job.include_zipfile:
-        # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-        # deleted during cancellation.
+    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
+    # deleted during cancellation.
+    include_files = list([])
 
-        include_files = []
-        if extra_files:
-            include_files = list(extra_files)
+    provider_tasks = run.provider_tasks.all()
 
-        provider_tasks = run.provider_tasks.all()
-
-        for provider_task in provider_tasks:
-            if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in provider_task.tasks.all():
-                    try:
-                        filename = export_task.result.filename
-                    except Exception:
-                        continue
-                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  provider_task.slug, filename)
-                    if not os.path.isfile(full_file_path):
-                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                      export_task.name))
-                        continue
+    for provider_task in provider_tasks:
+        if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+            for export_task in provider_task.tasks.all():
+                try:
+                    filename = export_task.result.filename
+                except Exception:
+                    continue
+                full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                                 provider_task.slug, filename)
+                if not os.path.isfile(full_file_path):
+                    logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                     export_task.name))
+                    continue
+                # Exclude zip files created by zip_export_provider
+                if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
+
+    if include_files:
+        # No need to add QGIS file if there aren't any files to be zipped.
+        qgs_style_file = generate_qgs_style(run_uid=run_uid)
+        include_files += [qgs_style_file]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
+        # and add the static resources
         include_files = set(include_files)
-        if include_files:
-            zip_file_task.run(run_uid=run_uid, include_files=include_files)
-        else:
-            logger.warn('No files to zip for run_uid: {}'.format(run_uid))
+
+    return include_files
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
@@ -993,6 +1011,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     rolls up runs into a zip file
     """
     from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
+    from .task_runners import normalize_name
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
 
@@ -1015,8 +1034,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         zip_filename = file_name
     else:
         zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-            name,
-            project,
+            normalize_name(name),
+            normalize_name(project),
             "eventkit",
             date,
             'zip'
@@ -1024,24 +1043,34 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
-    with ZipFile(zip_st_filepath, 'w', allowZip64=True) as zipfile:
+    with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
                 zipfile.write(
                     absolute_file_path,
-                    relative_file_path
+                    arcname=relative_file_path
                 )
         for filepath in files:
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                date,
-                ext
-            )
+            if filepath.endswith(".qgs"):
+                # put the style file in the root of the zip
+                filename = '{0}{1}'.format(
+                    name,
+                    ext
+                    )
+            else:
+                # Put the files into directories based on their provider_slug
+                # prepend with `data`
+                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                    provider_slug,
+                    name,
+                    date,
+                    ext
+                    )
+
             zipfile.write(
                 filepath,
                 arcname=filename
@@ -1246,7 +1275,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     Cancels an ExportProviderTask and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
-    from ..tasks.models import ExportProviderTask, ExportTaskException, FileProducingTaskResult
+    from ..tasks.models import ExportProviderTask, ExportTaskException
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from django.contrib.auth.models import User

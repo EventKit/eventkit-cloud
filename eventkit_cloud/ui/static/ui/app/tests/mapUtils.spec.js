@@ -502,4 +502,24 @@ describe('mapUtils', () => {
         geomSpy.restore();
         extentSpy.restore();
     });
+
+    it('unwrapCoordinates should adjust x coords to be in valid extent', () => {
+        const proj = ol.proj.get('EPSG:4326');
+        const coords = [[[-380,20], [-160,20], [-160,-20], [-380,-20]]];
+        const expected = [[[-20, 20], [-160,20], [-160, -20], [-20, -20]]];
+        expect(utils.unwrapCoordinates(coords, proj)).toEqual(expected);
+    });
+
+    it('isViewOutsideValidExtent should return true or false', () => {
+        const view = new ol.View({center: [-190, 40], projection: 'EPSG:4326'});
+        expect(utils.isViewOutsideValidExtent(view)).toBe(true);
+        const view2 = new ol.View({center: [-20, 20], projection: 'EPSG:4326'});
+        expect(utils.isViewOutsideValidExtent(view2)).toBe(false);
+    });
+
+    it('goToValidExtent should set the center of view to be inside the valid map extent', () => {
+        const view = new ol.View({center: [-190, 20], projection: 'EPSG:4326'});
+        expect(utils.goToValidExtent(view)).toEqual([170, 20]);
+        expect(view.getCenter()).toEqual([170, 20]);
+    });
 });

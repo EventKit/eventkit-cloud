@@ -21,6 +21,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
 import BaseDialog from '../BaseDialog';
+import LicenseRow from './LicenseRow';
 
 export class ProviderRow extends React.Component {
     constructor(props) {
@@ -85,9 +86,6 @@ export class ProviderRow extends React.Component {
             downloadUrls.push(a.result.url);
         })
         downloadUrls.forEach((value, idx) => {
-            // setTimeout(() => {
-            //     window.location.href = value;
-            // }, idx * 1000);
             window.open(value, '_blank');
         });
     }
@@ -226,10 +224,6 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    getToggleCellWidth() {
-        return '50px';
-    }
-
     handleProviderClose = () => {
         this.setState({providerDialogOpen: false});
     };
@@ -240,66 +234,19 @@ export class ProviderRow extends React.Component {
         this.setState({providerDesc, providerDialogOpen: true});
     };
 
-
     render() {
         const style = {
             textDecoration: 'underline'
         }
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
-        const toggleCellWidth = this.getToggleCellWidth();
+        const toggleCellWidth = '50px';
         const {provider, ...rowProps} = this.props;
-
         let propsProvider = this.props.providers.find(x => x.slug === this.props.provider.slug);
-        let licenseText = '';
-        let licenseData;
-        if (propsProvider.license != null) {
-            licenseText = <i>Use of this data is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
-            licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
-                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
-
-                    </TableRowColumn>
-                    <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
-                        {licenseText}
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        width: tableCellWidth,
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}>
-
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        width: tableCellWidth,
-                        paddingRight: '10px',
-                        paddingLeft: '10px',
-                        textAlign: 'center',
-                        fontSize: textFontSize,
-                        fontWeight: 'bold'
-                    }}>
-
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        width: '20px',
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}></TableRowColumn>
-                    <TableRowColumn style={{
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        width: toggleCellWidth,
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}></TableRowColumn>
-                </TableRow>
-        }
-
-
-
+        const licenseData = propsProvider.license ? 
+            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
+            : 
+            null;
         let menuItems = [];
         let cancelMenuDisabled;
         if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
@@ -352,14 +299,11 @@ export class ProviderRow extends React.Component {
                 ))}
 
             </TableBody>
-
         }
         else{
             tableData = <TableBody/>
         }
 
-
-        
         return (
             <Table key={this.props.provider.uid}
                    style={{width:'100%', backgroundColor:this.props.backgroundColor}}
@@ -402,7 +346,7 @@ export class ProviderRow extends React.Component {
                                             iconStyle={{color: '#4598bf'}}>
                                             <NavigationMoreVert />
                                         </IconButton>}
-                                    anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                    anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                     targetOrigin={{horizontal: 'right', vertical: 'top'}}
                                 >
                                     {menuItems}
@@ -424,7 +368,6 @@ export class ProviderRow extends React.Component {
                             </IconButton>
                         </TableHeaderColumn>
                     </TableRow>
-
                 </TableHeader>
                             {tableData}
             </Table>

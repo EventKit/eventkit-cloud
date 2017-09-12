@@ -29,12 +29,16 @@ describe('DataPackListItem component', () => {
         }
     }
 
-    it('should render a list item with complete and private icons and owner text', () => {
-        const props = getProps();
-        const wrapper = mount(<DataPackListItem {...props}/>, {
+    const getWrapper = (props) => {
+        return mount(<DataPackListItem {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
+    }
+
+    it('should render a list item with complete and private icons and owner text', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual('/status/' + props.run.job.uid);
@@ -53,10 +57,7 @@ describe('DataPackListItem component', () => {
 
     it('should update when the run properties change', () => {
         let props = getProps();
-        const wrapper = mount(<DataPackListItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         props.run.started_at = "2017-04-11T15:52:35.637331Z";
         wrapper.setProps(props);
         expect(wrapper.find(CardTitle).text()).toContain('Added: 2017-04-11');
@@ -83,10 +84,7 @@ describe('DataPackListItem component', () => {
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         let props = getProps();
-        const wrapper = mount(<DataPackListItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
@@ -97,16 +95,48 @@ describe('DataPackListItem component', () => {
 
     it('handleProviderOpen should set provider dialog to open', () => {
         let props = getProps();
-        const wrapper = mount(<DataPackListItem {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDescs:{"OpenStreetMap Data (Themes)":"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...)."}, providerDialogOpen: true})).toBe(true);
         stateSpy.restore();
+    });
+
+    it('showDeleteDialog should set deleteDialogOpen to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().showDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: true}));
+        stateSpy.restore();
+    });
+
+    it('hideDeleteDialog should set deleteDialogOpen to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().hideDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: false}));
+        stateSpy.restore();
+    });
+
+    it('handleDelete should call hideDelete and onRunDelete', () => {
+        const props = getProps();
+        props.onRunDelete = new sinon.spy();
+        const hideSpy = new sinon.spy(DataPackListItem.prototype, 'hideDeleteDialog');
+        const wrapper = getWrapper(props);
+        expect(props.onRunDelete.called).toBe(false);
+        expect(hideSpy.called).toBe(false);
+        wrapper.instance().handleDelete();
+        expect(hideSpy.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 });
 
