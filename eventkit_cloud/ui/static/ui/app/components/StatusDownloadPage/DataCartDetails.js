@@ -65,6 +65,7 @@ export class DataCartDetails extends React.Component {
         this._setMaxDate();
         this._setExpirationDate();
         this._setPermission();
+        this._setZipUrl();
     }
 
     _setExpirationDate(){
@@ -73,6 +74,9 @@ export class DataCartDetails extends React.Component {
 
     _setPermission(){
         this.setState({permission : this.props.cartDetails.job.published})
+    }
+    _setZipUrl(){
+        this.setState({zipFileUrl : this.props.zipFileProp})
     }
 
     _setMaxDate() {
@@ -417,7 +421,8 @@ export class DataCartDetails extends React.Component {
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
                                      onProviderCancel={this.props.onProviderCancel}
                                      providers={this.props.providers}
-                                     zipFileUrl={this.state.zipFileUrl}/>
+                                     zipFileUrl={this.state.zipFileUrl}
+                                     zipFileProp={this.props.zipFileProp}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                     <div style={styles.subHeading}>
@@ -592,7 +597,8 @@ DataCartDetails.propTypes = {
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
-    providers: PropTypes.array.isRequired
+    providers: PropTypes.array.isRequired,
+    zipFileProp: PropTypes.string,
 }
 
 export default DataCartDetails;

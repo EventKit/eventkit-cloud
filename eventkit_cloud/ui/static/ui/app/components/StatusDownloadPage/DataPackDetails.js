@@ -21,7 +21,7 @@ export class DataPackDetails extends React.Component {
         //this.isDownloadAllDisabled = this.isDownloadAllDisabled.bind(this);
         this.state = {
             selectedProviders: {},
-            zipButtonText: '',
+            zipButtonText: 'CREATING DATAPACK ZIP',
         }
     }
 
@@ -35,12 +35,14 @@ export class DataPackDetails extends React.Component {
         this.setState({selectedProviders: selectedProviders});
     }
 
-    componentWillMount() {
-        if(this.props.zipFileUrl == null){
-            this.setState({zipButtonText: 'CREATING DATAPACK ZIP'})
-        } else {
-            this.setState({zipButtonText: 'DOWNLOAD DATAPACK (.ZIP)'})
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.zipFileUrl != null){
+            this.setState({zipFileUrl: nextProps.zipFileUrl, zipButtonText:'DOWNLOAD DATAPACK (.ZIP)'})
         }
+        else {
+            this.setState({zipButtonText: 'CREATING DATAPACK ZIP'})
+        }
+
     }
 
     // checkAll(e, checked) {
