@@ -325,3 +325,5 @@ LOGGING = {
 DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
 
 MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 30)
+
+LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")

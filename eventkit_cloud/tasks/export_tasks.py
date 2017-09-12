@@ -356,7 +356,12 @@ def osm_data_collection_pipeline(
 
     # --- Add the Land Boundaries polygon layer
     # TODO: Pull from settings
-    in_dataset = "PG: host=postgis port=5432 user=eventkit password=eventkit_exports dbname=base_data"
+    database = settings.DATABASES['default']
+
+    in_dataset = 'PG:"host={host} user={user} password={password} dbname={name}"'.format(host=database['HOST'],
+                                        user=database['USER'],
+                                        password=database['PASSWORD'],
+                                        name=database['NAME'])
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
 
     ret_geopackage_filepath = g.results[0].parts[0]
