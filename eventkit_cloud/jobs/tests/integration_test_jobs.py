@@ -10,6 +10,8 @@ from datetime import timedelta, datetime
 
 from ...tasks.models import ExportTask, ExportProviderTask
 from ...tasks.export_tasks import TaskStates
+from ...tasks.task_runners import normalize_name
+from ...core.helpers import download_file
 from ..models import ExportProvider, ExportProviderType, Job
 from ...utils.geopackage import check_content_exists, check_zoom_levels
 
@@ -474,19 +476,6 @@ class TestJob(TestCase):
                 raise Exception('Run timeout ({}s) exceeded'.format(run_timeout))
 
         return response[0]
-
-    def download_file(self, url, download_dir=None):
-        download_dir = download_dir or self.download_dir
-        file_location = os.path.join(download_dir, os.path.basename(url))
-        r = requests.get(url, stream=True)
-        if r.status_code == 200:
-            with open(file_location, 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
-            return file_location
-        else:
-            print("Failed to download GPKG, STATUS_CODE: {0}".format(r.status_code))
-        return None
 
     @staticmethod
     def get_gpkg_url(run, provider_task_name):
