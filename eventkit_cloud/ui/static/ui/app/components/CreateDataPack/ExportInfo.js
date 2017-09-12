@@ -165,7 +165,7 @@ export class ExportInfo extends React.Component {
     }
 
     setArea() {
-        const source = new ol.source.Vector()
+        const source = new ol.source.Vector({wrapX: true})
         const geojson = new ol.format.GeoJSON()
         const feature = geojson.readFeature(this.props.geojson.features[0], {
             'featureProjection': 'EPSG:3857',
@@ -187,7 +187,7 @@ export class ExportInfo extends React.Component {
         const base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: false
+                wrapX: true
             })
         });
 
