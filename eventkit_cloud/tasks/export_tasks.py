@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import cPickle
 from collections import Sequence
+import json
 import logging
 import os
 import shutil
@@ -478,6 +479,34 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     except Exception as e:
         logger.error('Raised exception in sqlite export, %s', str(e))
         raise Exception(e)
+
+
+@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
+def output_selection_geojson_task(self, result=None, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
+                                  *args, **kwargs):
+    """
+    Class defining geopackage export function.
+    """
+    result = result or {}
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    geojson_file = os.path.join(stage_dir,
+                                "{0}_selection.geojson".format(provider_slug))
+
+    if selection and not os.path.isfile(geojson_file):
+        # Test if json.
+        json.loads(selection)
+        from audit_logging.file_logging import logging_open
+        user_details = kwargs.get('user_details')
+        with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
+            open_file.write(selection)
+        result['selection'] = geojson_file
+        result['result'] = geojson_file
+    else:
+        result['result'] = None
+
+    return result
 
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
