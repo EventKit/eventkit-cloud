@@ -267,7 +267,7 @@ export class DataPackGridItem extends Component {
                                         iconStyle={{color: '#4598bf'}}>
                                         <NavigationMoreVert />
                                     </IconButton>}
-                                anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
                                 <MenuItem 
