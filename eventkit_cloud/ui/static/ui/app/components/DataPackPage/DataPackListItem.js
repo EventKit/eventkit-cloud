@@ -45,6 +45,10 @@ export class DataPackListItem extends Component {
 
     };
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
     showDeleteDialog() {
         this.setState({deleteDialogOpen: true});
     }
@@ -100,6 +104,10 @@ export class DataPackListItem extends Component {
             },
             cardTitle:{
                 wordWrap: 'break-word',
+                padding: '8px 15px 15px',
+            },
+            cardTitleFeatured: {
+                wordWrap: 'break-word',
                 padding: '15px',
             },
             completeIcon: {
@@ -150,6 +158,8 @@ export class DataPackListItem extends Component {
             }
         };
 
+        const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
+
         const onMouseEnter = this.props.onHoverStart ? () => {this.props.onHoverStart(this.props.run.uid)} : null;
         const onMouseLeave = this.props.onHoverEnd ? () => {this.props.onHoverEnd(this.props.run.uid)} : null;
         const onClick = this.props.onClick ? () => {this.props.onClick(this.props.run.uid)} : null;
@@ -165,7 +175,7 @@ export class DataPackListItem extends Component {
                 <FeaturedFlag show={this.props.run.job.featured}/>
                 <CardTitle 
                     titleColor={'#4598bf'}
-                    style={styles.cardTitle} 
+                    style={cardTitleStyle}
                     titleStyle={{fontSize: '21px', height: '36px'}}
                     subtitleStyle={{fontSize: '12px'}}
                     title={
@@ -182,15 +192,16 @@ export class DataPackListItem extends Component {
                             <IconMenu
                                 style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
-                                    <IconButton 
+                                    <IconButton
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
-                                        iconStyle={{color: '#4598bf'}}>
+                                        iconStyle={{color: '#4598bf'}}
+                                        onClick={this.handleMenuButtonClick}>
                                         <NavigationMoreVert />
                                     </IconButton>}
-                                anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
-                                <MenuItem 
+                                <MenuItem
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText="Go to Status & Download"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>

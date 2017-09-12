@@ -68,3 +68,17 @@ export function deleteRuns(uid) {
         });
     }
 }
+
+export function setPageOrder(order) {
+    return {
+        type: types.SET_PAGE_ORDER,
+        order: order
+    }
+}
+
+export function setPageView(view) {
+    return {
+        type: types.SET_PAGE_VIEW,
+        view: view
+    }
+}
