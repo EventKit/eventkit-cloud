@@ -162,8 +162,8 @@ export class ExportAOI extends Component {
         zoomToGeometry(feature.getGeometry(), this._map);
         if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
             this.props.setNextEnabled();
-            return true;
         }
+        return true;
     }
 
     handleGeoJSONUpload(geom) {
@@ -329,8 +329,8 @@ export class ExportAOI extends Component {
                 <div id="map" className={css.map}  style={mapStyle} ref="olmap">
                     <AoiInfobar />
                     <SearchAOIToolbar
-                        handleSearch={(result) => this.handleSearch(result)}
-                        handleCancel={(sender) => this.handleCancel(sender)}
+                        handleSearch={this.handleSearch}
+                        handleCancel={this.handleCancel}
                         geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
