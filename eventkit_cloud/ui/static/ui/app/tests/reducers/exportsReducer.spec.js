@@ -2,7 +2,7 @@ import * as reducers from '../../reducers/exportsReducer'
 
 describe('exportAoiInfo reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null})
+        expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null, selectionType: null})
     });
 
     it('should handle UPDATE_AOI_INFO', () => {
@@ -21,8 +21,8 @@ describe('exportAoiInfo reducer', () => {
                     }
         expect(reducers.exportAoiInfoReducer(
             {},
-            {type: 'UPDATE_AOI_INFO', geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'}
-        )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description'});
+            {type: 'UPDATE_AOI_INFO', geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description', selectionType: 'type'}
+        )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description', selectionType: 'type'});
     });
 });
 

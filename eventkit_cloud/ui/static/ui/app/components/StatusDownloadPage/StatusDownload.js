@@ -224,7 +224,7 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         },
         cloneExport: (cartDetails, providerArray) => {
-            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
+            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box', 'box'));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name, 
                 datapackDescription: cartDetails.job.description, 

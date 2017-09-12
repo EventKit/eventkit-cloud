@@ -28,6 +28,10 @@ export class AoiInfobar extends Component {
         }
     }
 
+    componentDidMount() {
+        this.handleAoiInfo(this.props.aoiInfo);
+    }
+
     componentWillReceiveProps(nextProps) {
         if(!isEqual(nextProps.aoiInfo.geojson, this.props.aoiInfo.geojson)) {
             this.handleAoiInfo(nextProps.aoiInfo);

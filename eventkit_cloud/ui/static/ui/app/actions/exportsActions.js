@@ -9,13 +9,14 @@ export function createExportRequest(exportData) {
     }
 }
 
-export function updateAoiInfo(geojson, geomType, title, description,) {
+export function updateAoiInfo(geojson, geomType, title, description, selectionType) {
     return {
         type: types.UPDATE_AOI_INFO,
         geojson: geojson,
         geomType,
         title,
         description,
+        selectionType,
     }
 }
 export function updateExportInfo(exportInfo) {

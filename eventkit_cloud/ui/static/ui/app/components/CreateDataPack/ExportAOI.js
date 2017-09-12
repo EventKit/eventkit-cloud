@@ -64,6 +64,7 @@ export class ExportAOI extends Component {
             //zoomToGeometry(bbox);
             this._map.getView().fit(this._drawLayer.getSource().getExtent())
             this.props.setNextEnabled();
+            this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
     }
 
@@ -159,7 +160,7 @@ export class ExportAOI extends Component {
         description = description + (result.province ? ', ' + result.province : '');
         description = description + (result.region ? ', ' + result.region : '');
 
-        this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description);
+        this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description, 'search');
         zoomToGeometry(feature.getGeometry(), this._map);
         if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
             this.props.setNextEnabled();
@@ -176,7 +177,7 @@ export class ExportAOI extends Component {
         )
         const geojson = createGeoJSON(geom);
         zoomToGeometry(geom, this._map);
-        this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import');
+        this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import', 'import');
         this.props.setNextEnabled();
 
     }
@@ -194,7 +195,7 @@ export class ExportAOI extends Component {
         });
         const bbox = serialize(extent)
         this._drawLayer.getSource().addFeature(bboxFeature);
-        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View');
+        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View', 'mapView');
         this.props.setNextEnabled();
     }
 
@@ -236,7 +237,7 @@ export class ExportAOI extends Component {
                 this._drawLayer.getSource().addFeature(drawFeature);
 
                 if(isGeoJSONValid(geojson)) {
-                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
+                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw', 'free');
                     this.props.setNextEnabled();
                 }
                 else {
@@ -245,7 +246,7 @@ export class ExportAOI extends Component {
             }
             else if (this.state.mode == MODE_DRAW_BBOX) {
                 const bbox = serialize(geometry.getExtent());
-                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
+                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box');
                 this.props.setNextEnabled();
             }
             // exit drawing mode
@@ -413,8 +414,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        updateAoiInfo: (geojson, geomType, title, description) => {
-            dispatch(updateAoiInfo(geojson, geomType, title, description));
+        updateAoiInfo: (geojson, geomType, title, description, selectionType) => {
+            dispatch(updateAoiInfo(geojson, geomType, title, description, selectionType));
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
