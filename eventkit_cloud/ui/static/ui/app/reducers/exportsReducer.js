@@ -32,6 +32,7 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
                 geomType: action.geomType,
                 title: action.title,
                 description: action.description,
+                selectionType: action.selectionType,
             };
         case types.CLEAR_AOI_INFO:
             return {
