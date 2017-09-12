@@ -109,7 +109,7 @@ export function zoomToExtent(opt_option) {
 export function generateDrawLayer() {
     return new ol.layer.Vector({
         source: new ol.source.Vector({
-            wrapX: false
+            wrapX: true
         }),
         style: new ol.style.Style({
             stroke: new ol.style.Stroke({
@@ -128,6 +128,7 @@ export function generateDrawBoxInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
+        wrapX: true,
         geometryFunction: ol.interaction.Draw.createBox(),
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
@@ -155,6 +156,7 @@ export function generateDrawFreeInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
         type: 'Polygon',
+        wrapX: true,
         freehand: true,
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
@@ -262,4 +264,39 @@ export function featureToPoint(feature) {
     if (!feature) {return null}
     const center = ol.extent.getCenter(feature.getGeometry().getExtent());
     return new ol.geom.Point(center);
+}
+
+// if any coordinates are wrapped adjust them to be within the projection extent
+export function unwrapCoordinates(coords, projection) {
+    // based on:
+    // https://github.com/openlayers/openlayers/blob/2bff72122757b8eeb3f3dda6191d1301ff296948/src/ol/renderer/maprenderer.js#L155
+    const projectionExtent = projection.getExtent();
+    const worldWidth = ol.extent.getWidth(projectionExtent);
+    return coords.map((coord) => {
+        return coord.map((xy) => {
+            const x = xy[0];
+            if (x < projectionExtent[0] || x > projectionExtent[2]) {
+                const worldsAway = Math.ceil((projectionExtent[0] - x)/ worldWidth);
+                return [x + worldWidth * worldsAway, xy[1]];
+            }
+            return xy;
+        });
+    });
+}
+
+// check if the view center is outside of the 'valid' extent
+export function isViewOutsideValidExtent(view) {
+    const projectionExtent = view.getProjection().getExtent();
+    const center = view.getCenter();
+    return center[0] < projectionExtent[0] || center[0] > projectionExtent[2];
+}
+
+// calculate what the 'valid' view center should be and set it
+export function goToValidExtent(view) {
+    const projectionExtent = view.getProjection().getExtent();
+    const worldWidth = ol.extent.getWidth(projectionExtent);
+    const center = view.getCenter();
+    const worldsAway = Math.ceil((projectionExtent[0] - center[0])/ worldWidth);
+    view.setCenter([center[0] + worldWidth * worldsAway, center[1]]);
+    return view.getCenter();
 }

@@ -102,7 +102,7 @@ export class DataCartDetails extends React.Component {
         var base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: false
+                wrapX: true
             })
         });
 
@@ -123,7 +123,7 @@ export class DataCartDetails extends React.Component {
                 maxZoom: 22,
             })
         });
-        const source = new ol.source.Vector();
+        const source = new ol.source.Vector({wrapX: true});
         const geojson = new ol.format.GeoJSON();
         const feature = geojson.readFeatures(this.props.cartDetails.job.extent, {
             'featureProjection': 'EPSG:3857',
