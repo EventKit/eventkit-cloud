@@ -61,10 +61,14 @@ export class StatusDownload extends React.Component {
                      providerTasks.forEach((tasks) => {
                         tasks.tasks.forEach((task) => {
                             if((task.status != 'SUCCESS') && (task.status != 'CANCELED') && (task.status != 'FAILED')){
-                                clearTimer++
+                                clearTimer++;
                             }
                         });
                     });
+
+                    if (nextProps.datacartDetails.data[0].zipfile_url == null){
+                        clearTimer++;
+                    }
 
                     if (clearTimer == 0 ){
                         TimerMixin.clearInterval(this.timer);
