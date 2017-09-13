@@ -65,7 +65,7 @@ export class ExportSummary extends Component {
                 maxZoom: 22,
             })
         });
-        const source = new ol.source.Vector();
+        const source = new ol.source.Vector({wrapX: true});
         const geojson = new ol.format.GeoJSON();
         const feature = geojson.readFeatures(this.props.geojson, {
             'featureProjection': 'EPSG:3857',

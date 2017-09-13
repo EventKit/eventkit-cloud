@@ -191,7 +191,7 @@ describe('MapView component', () => {
         expect(mapSpy.calledOnce).toBe(true);
         expect(MapView.prototype.initOverlay.calledOnce).toBe(true);
         expect(sourceSpy.calledTwice).toBe(true);
-        expect(sourceSpy.calledWith({wrapX: false})).toBe(true);
+        expect(sourceSpy.calledWith({wrapX: true})).toBe(true);
         expect(layerSpy.calledTwice).toBe(true);
         expect(layerSpy.calledWith(
             {source: wrapper.instance().source, style: wrapper.instance().defaultStyleFunction}
@@ -421,7 +421,7 @@ describe('MapView component', () => {
         const idSpy = new sinon.spy(ol.Feature.prototype, 'setId');
         const propSpy = new sinon.spy(ol.Feature.prototype, 'setProperties');
         const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeatures');
-        const source = new ol.source.Vector({wrapX: false});
+        const source = new ol.source.Vector({wrapX: true});
         wrapper.instance().addRunFeatures(props.runs, source);
         expect(readerSpy.callCount).toEqual(props.runs.length);
         expect(idSpy.callCount).toEqual(props.runs.length);
@@ -448,7 +448,7 @@ describe('MapView component', () => {
         const idSpy = new sinon.spy(ol.Feature.prototype, 'setId');
         const propSpy = new sinon.spy(ol.Feature.prototype, 'setProperties');
         const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeatures');
-        const source = new ol.source.Vector({wrapX: false});
+        const source = new ol.source.Vector({wrapX: true});
         expect(wrapper.instance().addRunFeatures([], source)).toBe(false);
         expect(readerSpy.callCount).toEqual(0);
         expect(idSpy.callCount).toEqual(0);
