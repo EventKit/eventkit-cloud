@@ -35,7 +35,7 @@ def download_file(url, download_dir=None):
 def extract_zip(zipfile_path, extract_dir=None):
     extract_dir = extract_dir or settings.EXPORT_STAGING_ROOT
 
-    logger.info("Extracting {0} to {1}...").format(zipfile_path, extract_dir)
+    logger.info("Extracting {0} to {1}...".format(zipfile_path, extract_dir))
 
     zip_ref = zipfile.ZipFile(zipfile_path, 'r')
     zip_ref.extractall(extract_dir)
@@ -47,7 +47,7 @@ def extract_zip(zipfile_path, extract_dir=None):
 def get_vector_file(directory):
     for file in os.listdir(directory):
         if file.endswith((".shp", ".geojson", ".gpkg")):
-            logger.info("Found: {0}").format(file)
+            logger.info("Found: {0}".format(file))
             return os.path.join(directory, file)
 
 
@@ -59,11 +59,11 @@ def load_land_vectors(db_conn=None, url=None):
     if db_conn:
         database = dj_database_url.config(default=db_conn)
     else:
-        database = settings.DATABASES['default']
+        database = settings.DATABASES['feature_data']
 
-    logger.info("Downloading land data: {0}").format(url)
+    logger.info("Downloading land data: {0}".format(url))
     download_filename = download_file(url)
-    logger.info("Finished downloading land data: {0}").format(url)
+    logger.info("Finished downloading land data: {0}".format(url))
 
     file_dir = None
     if os.path.splitext(download_filename)[1] == ".zip":
