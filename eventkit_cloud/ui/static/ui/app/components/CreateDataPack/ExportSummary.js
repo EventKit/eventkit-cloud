@@ -1,16 +1,13 @@
 import 'openlayers/dist/ol.css';
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
-import '../../components/tap_events'
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import CustomScrollbar from '../CustomScrollbar'
-import Paper from 'material-ui/Paper'
-import styles from '../../styles/ExportSummary.css'
+import CustomScrollbar from '../CustomScrollbar';
+import Paper from 'material-ui/Paper';
+import styles from '../../styles/ExportSummary.css';
 
-class ExportSummary extends React.Component {
+export class ExportSummary extends Component {
     constructor(props) {
         super(props)
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -19,15 +16,11 @@ class ExportSummary extends React.Component {
         }
     }
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
-
     expandedChange(expanded) {
         this.setState({expanded: expanded});
     }
 
-    componentWillMount() {
+    componentDidMount() {
         window.addEventListener('resize', this.screenSizeUpdate);
     }
 
@@ -48,11 +41,10 @@ class ExportSummary extends React.Component {
     }
 
     _initializeOpenLayers() {
-
-        var base = new ol.layer.Tile({
+        const base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: false
+                wrapX: true
             })
         });
 
@@ -86,9 +78,7 @@ class ExportSummary extends React.Component {
 
         this._map.addLayer(layer);
         this._map.getView().fit(source.getExtent(), this._map.getSize());
-
     }
-
 
     render() {
         const providers = this.props.providers.filter((provider) => {
@@ -97,92 +87,73 @@ class ExportSummary extends React.Component {
         return (
             <div className={styles.root} style={{height: window.innerHeight - 191}}>
                 <CustomScrollbar>
-                <form className={styles.form} >
-                    <Paper className={styles.paper} zDepth={2} rounded>
-                        <div id='mainHeading' className={styles.heading}>Preview and Run Export</div>
-                        <div className={styles.subHeading}>
-                        Please make sure all the information below is correct.
-                        </div>
-
-                        <div>
-                            {/*<table className={styles.table}><tbody>
-                            <tr>
-                                    <td className={styles.tdHeading}>User</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
-                                </tr>
-                                <tr>
-                                    <td className={styles.tdHeading}>Job Id</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
-                                </tr>
-                            </tbody>
-                            </table>*/}
-                            <div className={styles.exportHeading}>
-                                Export Information
+                    <form className={styles.form} >
+                        <Paper className={styles.paper} zDepth={2} rounded>
+                            <div id='mainheading' className={styles.heading}>Preview and Run Export</div>
+                            <div id='subheading' className={styles.subHeading}>
+                                Please make sure all the information below is correct.
                             </div>
-                            <table><tbody>
-                            <tr>
-                                <td className={styles.tdHeading}>Name</td>
-                                <td className={styles.tdData}>{this.props.exportName}</td>
-                            </tr>
-                            <tr>
-                                <td className={styles.tdHeading}>Description</td>
-                                <td className={styles.tdData}>{this.props.datapackDescription}</td>
-                            </tr>
-                            <tr>
-                                <td className={styles.tdHeading}>Project&nbsp;/ Category</td>
-                                <td className={styles.tdData}>{this.props.projectName}</td>
-                            </tr>
-                            <tr>
-                                <td className={styles.tdHeading}>Published</td>
-                                <td className={styles.tdData}>{this.props.makePublic.toString()}</td>
-                            </tr>
-                            <tr>
-                                <td className={styles.tdHeading}>Layer Data</td>
-                                <td className={styles.tdData}>{this.props.layers}</td>
-                            </tr>
-                            <tr >
-                                <td className={styles.tdHeading} rowSpan={providers.length}>File Formats</td>
-
-                                <td className={styles.tdData}>{providers.map((provider) => <p key={provider.uid}>{provider.name}</p>)}</td>
-
-                            </tr>
-                            </tbody>
-                            </table>
-                            <div className={styles.exportHeading}>
-                                Area of Interest (AOI)
-                            </div>
-                            <table><tbody>
-                            {/*<tr>
-                                <td className={styles.tdHeading}>Region</td>
-                                <td className={styles.tdData}>Table Cell Data</td>
-                            </tr>
-                            */}
-                            <tr>
-                                <td className={styles.tdHeading}>Area</td>
-                                <td className={styles.tdData}>{this.props.area_str}</td>
-                            </tr>
-                            </tbody>
-                            </table>
-                        </div>
-                        <div className={styles.mapCard}>
-                            <Card expandable={true}
-                                    onExpandChange={this.expandedChange.bind(this)}>
-                                <CardHeader
-                                    title="Selected Area of Interest"
-                                    actAsExpander={true}
-                                    showExpandableButton={true}
-                                />
-                                <CardText expandable={true}> <div id="summaryMap" className={styles.map} >
-
+                            <div>
+                                <div id='export-information-heading' className={styles.exportHeading}>
+                                    Export Information
                                 </div>
-
-
-                                </CardText>
-                            </Card>
-
-                        </div>
-                    </Paper>
-                </form>
+                                <table id='export-information'>
+                                    <tbody>
+                                        <tr id='name'>
+                                            <td className={styles.tdHeading}>Name</td>
+                                            <td className={styles.tdData}>{this.props.exportName}</td>
+                                        </tr>
+                                        <tr id='description'>
+                                            <td className={styles.tdHeading}>Description</td>
+                                            <td className={styles.tdData}>{this.props.datapackDescription}</td>
+                                        </tr>
+                                        <tr id='project'>
+                                            <td className={styles.tdHeading}>Project/Category</td>
+                                            <td className={styles.tdData}>{this.props.projectName}</td>
+                                        </tr>
+                                        <tr id='published'>
+                                            <td className={styles.tdHeading}>Published</td>
+                                            <td className={styles.tdData}>{this.props.makePublic.toString()}</td>
+                                        </tr>
+                                        <tr id='formats'>
+                                            <td className={styles.tdHeading}>File Formats</td>
+                                            <td className={styles.tdData}>{this.props.layers}</td>
+                                        </tr>
+                                        <tr id='layers'>
+                                            <td className={styles.tdHeading} rowSpan={providers.length}>Layer Data</td>
+                                            <td className={styles.tdData}>{providers.map((provider) => <p key={provider.uid}>{provider.name}</p>)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div id='aoi-heading' className={styles.exportHeading}>
+                                    Area of Interest (AOI)
+                                </div>
+                                <table id='aoi-area'>
+                                    <tbody>
+                                        <tr>
+                                            <td className={styles.tdHeading}>Area</td>
+                                            <td className={styles.tdData}>{this.props.area_str}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id='aoi-map' className={styles.mapCard}>
+                                <Card 
+                                    expandable={true}
+                                    onExpandChange={this.expandedChange.bind(this)}
+                                >
+                                    <CardHeader
+                                        title="Selected Area of Interest"
+                                        actAsExpander={true}
+                                        showExpandableButton={true}
+                                    />
+                                    <CardText expandable={true}> 
+                                        <div id="summaryMap" className={styles.map}/>
+                                    </CardText>
+                                </Card>
+                            </div>
+                        </Paper>
+                    </form>
                 </CustomScrollbar>
             </div>
         )
@@ -203,17 +174,22 @@ function mapStateToProps(state) {
 }
 
 ExportSummary.contextTypes = {
-    config: React.PropTypes.object
+    config: PropTypes.object
 }
 
 ExportSummary.propTypes = {
-    geojson:         React.PropTypes.object,
+    geojson: PropTypes.object,
+    exportName: PropTypes.string,
+    datapackDescription: PropTypes.string,
+    projectName: PropTypes.string,
+    makePublic: PropTypes.bool,
+    providers: PropTypes.array,
+    area_str: PropTypes.string,
+    layers: PropTypes.string,
 }
-ExportSummary.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
 export default connect(
     mapStateToProps,
+    null
 )(ExportSummary);
 
