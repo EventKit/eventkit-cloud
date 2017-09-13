@@ -37,6 +37,7 @@ export class ExportAOI extends Component {
         this.setMapView = this.setMapView.bind(this);
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
+        this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
         this.state = {
             toolbarIcons: {
                 box: "DEFAULT",
@@ -61,7 +62,6 @@ export class ExportAOI extends Component {
                 featureProjection: WEB_MERCATOR
             });
             this._drawLayer.getSource().addFeature(feature[0]);
-            //zoomToGeometry(bbox);
             this._map.getView().fit(this._drawLayer.getSource().getExtent())
             this.props.setNextEnabled();
             this.setButtonSelected(this.props.aoiInfo.selectionType);
@@ -73,19 +73,6 @@ export class ExportAOI extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(this.props.zoomToSelection.click != nextProps.zoomToSelection.click) {
-            const ol3GeoJSON = new ol.format.GeoJSON();
-            const geom = ol3GeoJSON.readGeometry(nextProps.aoiInfo.geojson.features[0].geometry, {
-                dataProjection: 'EPSG:4326',
-                featureProjection: 'EPSG:3857'
-            });
-
-            zoomToGeometry(geom, this._map);
-        }
-        // Check if the reset map button has been clicked
-        if(this.props.resetMap.click != nextProps.resetMap.click) {
-            this.handleResetMap();
-        }
         if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
             this.handleGeoJSONUpload(nextProps.importGeom.geom);
         }
@@ -258,7 +245,6 @@ export class ExportAOI extends Component {
         clearDraw(this._drawLayer);
     }
 
-
     _initializeOpenLayers() {
         const scaleStyle = {
             background: 'white',
@@ -322,9 +308,16 @@ export class ExportAOI extends Component {
         this._map.addLayer(this._drawLayer);
     }
 
+    handleZoomToSelection() {
+        const ol3GeoJSON = new ol.format.GeoJSON();
+        const geom = ol3GeoJSON.readGeometry(this.props.aoiInfo.geojson.features[0].geometry, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857'
+        });
+        zoomToGeometry(geom, this._map);
+    }
 
     render() {
-
         const mapStyle = {
                 right: '0px',
         }
@@ -341,7 +334,11 @@ export class ExportAOI extends Component {
         return (
             <div>
                 <div id="map" className={css.map}  style={mapStyle} ref="olmap">
-                    <AoiInfobar />
+                    <AoiInfobar 
+                        aoiInfo={this.props.aoiInfo}
+                        disabled={false}
+                        clickZoomToSelection={this.handleZoomToSelection}
+                    />
                     <SearchAOIToolbar
                         handleSearch={this.handleSearch}
                         handleCancel={this.handleCancel}
@@ -386,8 +383,6 @@ ExportAOI.contextTypes = {
 
 ExportAOI.propTypes = {
     aoiInfo: PropTypes.object,
-    zoomToSelection: PropTypes.object,
-    resetMap: PropTypes.object,
     importGeom: PropTypes.object,
     drawerOpen: PropTypes.bool,
     geocode: PropTypes.object,
@@ -400,12 +395,9 @@ ExportAOI.propTypes = {
     resetGeoJSONFile: PropTypes.func,
 }
 
-
 function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
-        zoomToSelection: state.zoomToSelection,
-        resetMap: state.resetMap,
         importGeom: state.importGeom,
         drawerOpen: state.drawerOpen,
         geocode: state.geocode,
