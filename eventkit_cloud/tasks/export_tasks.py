@@ -355,7 +355,7 @@ def osm_data_collection_pipeline(
     g.run()
 
     # --- Add the Land Boundaries polygon layer
-    database = settings.DATABASES['default']
+    database = settings.DATABASES['feature_data']
 
     in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}'\"".format(host=database['HOST'],
                                         user=database['USER'],
