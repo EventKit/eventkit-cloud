@@ -25,21 +25,13 @@ def open_ds(ds_path):
     use_exceptions = gdal.GetUseExceptions()
     gdal.UseExceptions()
 
-    gdal_dataset = None
     try:
         gdal_dataset = gdal.Open(ds_path)
         return gdal_dataset
     except RuntimeError as ex:
-        # ignore only errors corresponding to unrecognized format
-        if 'Error browsing database for PostGIS Raster tables' in ex.message:
-            try:
-                gdal_dataset = ogr.Open(ds_path)
-                return gdal_dataset
-            except:
-                raise ex
-        elif 'not recognized as a supported file format' not in ex.message:
+        if ('not recognized as a supported file format' not in ex.message) or \
+                ('Error browsing database for PostGIS Raster tables' in ex.message):
             raise ex
-
     finally:
         if not use_exceptions:
             gdal.DontUseExceptions()
@@ -144,9 +136,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             band_type = "-ot byte"
     else:
         cmd_template = Template("ogr2ogr -f $fmt -clipsrc $boundary $out_ds $in_ds")
-
-    if in_dataset[:2] == 'PG':
-        in_dataset = "'%s'" % in_dataset
 
     if isinstance(boundary, list):
         boundary = " ".join(str(i) for i in boundary)

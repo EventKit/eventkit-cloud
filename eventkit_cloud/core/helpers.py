@@ -6,6 +6,9 @@ import subprocess
 import dj_database_url
 import zipfile
 import shutil
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_id(user):
@@ -25,18 +28,18 @@ def download_file(url, download_dir=None):
                 f.write(chunk)
         return file_location
     else:
-        print("Failed to download file, STATUS_CODE: {0}".format(r.status_code))
+        logger.error("Failed to download file, STATUS_CODE: {0}".format(r.status_code))
     return None
 
 
 def extract_zip(zipfile_path, extract_dir=None):
     extract_dir = extract_dir or settings.EXPORT_STAGING_ROOT
 
-    print("Extracting {0} to {1}...").format(zipfile_path, extract_dir)
+    logger.info("Extracting {0} to {1}...").format(zipfile_path, extract_dir)
 
     zip_ref = zipfile.ZipFile(zipfile_path, 'r')
     zip_ref.extractall(extract_dir)
-    print("Finished Extracting.")
+    logger.info("Finished Extracting.")
     zip_ref.close()
     return extract_dir
 
@@ -44,7 +47,7 @@ def extract_zip(zipfile_path, extract_dir=None):
 def get_vector_file(directory):
     for file in os.listdir(directory):
         if file.endswith((".shp", ".geojson", ".gpkg")):
-            print("Found: {0}").format(file)
+            logger.info("Found: {0}").format(file)
             return os.path.join(directory, file)
 
 
@@ -58,9 +61,9 @@ def load_land_vectors(db_conn=None, url=None):
     else:
         database = settings.DATABASES['default']
 
-    print("Downloading land data: {0}").format(url)
+    logger.info("Downloading land data: {0}").format(url)
     download_filename = download_file(url)
-    print("Finished downloading land data: {0}").format(url)
+    logger.info("Finished downloading land data: {0}").format(url)
 
     file_dir = None
     if os.path.splitext(download_filename)[1] == ".zip":
@@ -77,8 +80,11 @@ def load_land_vectors(db_conn=None, url=None):
                                         password=database['PASSWORD'],
                                         name=database['NAME'],
                                         file=file_name)
-    print("Loading land data...")
-    print(subprocess.call(cmd, shell=True))
+    logger.info("Loading land data...")
+    exit_code = subprocess.call(cmd, shell=True)
+
+    if exit_code:
+        logger.error("There was an error importing the land data.")
 
     if file_dir:
         shutil.rmtree(file_dir)
@@ -88,4 +94,4 @@ def load_land_vectors(db_conn=None, url=None):
     except OSError:
         pass
     finally:
-        print("Finished loading land data.")
+        logger.info("Finished loading land data.")

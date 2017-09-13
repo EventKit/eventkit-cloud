@@ -96,8 +96,6 @@ services:
       - POSTGRES_USER=eventkit
       - POSTGRES_PASSWORD=eventkit_exports
       - POSTGRES_DB=eventkit_exports
-    ports:
-       - "5432:5432"
     expose:
       - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.

@@ -355,13 +355,13 @@ def osm_data_collection_pipeline(
     g.run()
 
     # --- Add the Land Boundaries polygon layer
-    # TODO: Pull from settings
     database = settings.DATABASES['default']
 
-    in_dataset = 'PG:"host={host} user={user} password={password} dbname={name}"'.format(host=database['HOST'],
+    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}'\"".format(host=database['HOST'],
                                         user=database['USER'],
                                         password=database['PASSWORD'],
                                         name=database['NAME'])
+
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
 
     ret_geopackage_filepath = g.results[0].parts[0]
@@ -380,7 +380,7 @@ def osm_data_collection_task(
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from .models import ExportRun, ExportTask
+    from .models import ExportRun
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
