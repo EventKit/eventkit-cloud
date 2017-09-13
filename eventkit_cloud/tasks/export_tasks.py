@@ -1067,7 +1067,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
             # TODO open up a stream directly to the s3 file so no local
             #      persistence is required
-            zipfile_url = s3.upload_to_s3(run_uid, zip_filename, zip_filename)
+            zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
             os.remove(zip_st_filepath)
         else:
             if zip_st_filepath != zip_dl_filepath:
