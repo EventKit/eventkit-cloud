@@ -26,7 +26,7 @@ describe('DataPackDetails component', () => {
         return  {
             providerTasks: providerTasks,
             providers: providers,
-            zipFileUrl: null,
+            zipFileProp: null,
             onProviderCancel: () => {},
         }
     };
@@ -195,11 +195,11 @@ describe('DataPackDetails component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const zipSpy = new sinon.spy(DataPackDetails.prototype, 'isZipFileCompleted');
-        props.zipFileUrl = null;
+        props.zipFileProp = null;
         wrapper.instance().isZipFileCompleted();
         expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
         let nextProps = {...props};
-        nextProps.zipFileUrl = 'TESTING.zip';
+        nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().isZipFileCompleted();
         expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
@@ -209,11 +209,11 @@ describe('DataPackDetails component', () => {
         const props = getProps();
         const getCloudIcon = new sinon.spy(DataPackDetails.prototype, 'getCloudDownloadIcon');
         const wrapper = getWrapper(props);
-        props.zipFileUrl = null;
+        props.zipFileProp = null;
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload style={{fill:'gray', verticalAlign: 'middle'}}/>);
         let nextProps = {...props};
-        nextProps.zipFileUrl = 'TESTING.zip';
+        nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>);

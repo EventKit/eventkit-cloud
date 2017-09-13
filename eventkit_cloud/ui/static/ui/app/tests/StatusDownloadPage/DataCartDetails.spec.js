@@ -29,6 +29,7 @@ describe('DataCartDetails component', () => {
             cartDetails: {...run},
             providers: providers,
             maxResetExpirationDays: '30',
+            zipFileProp: null,
             onUpdateExpiration: () => {},
             onUpdatePermission: () => {},
             onRunDelete: () => {},

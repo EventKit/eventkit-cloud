@@ -222,17 +222,18 @@ export class DataPackDetails extends React.Component {
                                 {/*/>*/}
                             {/*</TableHeaderColumn>*/}
                             <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize, whiteSpace: 'normal',}}>
-                                <RaisedButton
+                                <a href={this.props.zipFileProp}><RaisedButton
                                     backgroundColor={'rgba(179,205,224,0.5)'}
                                     //disabled={this.isDownloadAllDisabled()}
                                     disabled={this.isZipFileCompleted()}
                                     disableTouchRipple={true}
                                     labelColor={'#4598bf'}
                                     labelStyle={{fontWeight:'bold', fontSize:textFontSize}}
-                                    onTouchTap={this.handleDownload}
+                                    //onTouchTap={this.handleDownload}
                                     label={this.state.zipButtonText}
                                     icon={this.getCloudDownloadIcon()}
                                 />
+                                </a>
                             </TableHeaderColumn>
 
                             <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth, textAlign: 'center', fontSize: textFontSize}}>
