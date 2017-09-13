@@ -48,7 +48,7 @@
       <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}_natural_polygons_water{{ job_date_time }}" name="water">
         <customproperties/>
       </layer-tree-layer>
-      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}_land_polygons{{ job_date_time }}" name="water">
+      <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}_land_polygons{{ job_date_time }}" name="land">
         <customproperties/>
       </layer-tree-layer>
       <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ job_date_time }}" name="boundary">
@@ -197,7 +197,7 @@
           <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}_natural_polygons_water{{ job_date_time }}" visible="1"/>
         </filegroup>
       </legendlayer>
-      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
+      <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="land" showFeatureCount="0">
         <filegroup open="true" hidden="false">
           <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}_land_polygons{{ job_date_time }}" visible="1"/>
         </filegroup>
@@ -5557,7 +5557,7 @@ def my_form_open(dialog, layer, feature):
       <keywordList>
         <value></value>
       </keywordList>
-      <layername>water</layername>
+      <layername>land</layername>
       <srs>
         <spatialrefsys>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>

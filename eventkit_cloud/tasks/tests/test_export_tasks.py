@@ -200,7 +200,7 @@ class TestExportTasks(ExportTaskBase):
         previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
         result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
                                             stage_dir=stage_dir, job_name=job_name)
-        mock_clip.assert_called_once_with(geojson_file=expected_geojson, dataset=expected_output_path,
+        mock_clip.assert_called_once_with(boundary=expected_geojson, dataset=expected_output_path,
                                           fmt=None)
         mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
                                              task_uid=str(saved_export_task.uid))

@@ -122,10 +122,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     if not fmt:
         fmt = driver or 'gpkg'
 
-    # TODO: Can be a DB connection
-    #in_dataset = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
-    #os.rename(dataset, in_dataset)
-
     band_type = ""
     if table:
         cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
