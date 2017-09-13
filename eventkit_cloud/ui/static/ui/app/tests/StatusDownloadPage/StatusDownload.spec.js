@@ -407,10 +407,10 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({datacartDetails: exampleRun, zipFileProp: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
         expect(stateSpy.calledThrice).toBe(true);
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
-        //expect(clearSpy.calledOnce).toBe(true);
-        //expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        //expect(setTimeout.mock.calls.length).toBe(12);
-        //expect(setTimeout.mock.calls[3][1]).toBe(270000);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
+        expect(setTimeout.mock.calls.length).toBe(12);
+        expect(setTimeout.mock.calls[3][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
         clearSpy.restore();

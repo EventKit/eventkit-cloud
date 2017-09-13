@@ -36,8 +36,8 @@ export class DataPackDetails extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.zipFileUrl != null){
-            this.setState({zipFileUrl: nextProps.zipFileUrl, zipButtonText:'DOWNLOAD DATAPACK (.ZIP)'})
+        if(nextProps.zipFileProp != null){
+            this.setState({zipButtonText:'DOWNLOAD DATAPACK (.ZIP)'})
         }
         else {
             this.setState({zipButtonText: 'CREATING DATAPACK ZIP'})
@@ -82,7 +82,7 @@ export class DataPackDetails extends React.Component {
     // }
 
     getCloudDownloadIcon() {
-        if(this.props.zipFileUrl == null){
+        if(this.props.zipFileProp == null){
             return <CloudDownload style={{fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
@@ -91,7 +91,7 @@ export class DataPackDetails extends React.Component {
     }
 
     isZipFileCompleted() {
-        if(this.props.zipFileUrl == null){
+        if(this.props.zipFileProp== null){
             return true;
         }
         else {
@@ -140,7 +140,7 @@ export class DataPackDetails extends React.Component {
         //For now we are using a zip file that contains all provider data sources until we figure out the zip capability
 
 
-        window.open(this.props.zipFileUrl, '_blank');
+        window.open(this.props.zipFileProp, '_blank');
     }
 
     getTextFontSize() {
@@ -269,7 +269,7 @@ DataPackDetails.propTypes = {
     providerTasks: PropTypes.array.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
-    zipFileUrl: PropTypes.string,
+    zipFileProp: PropTypes.string,
 }
 
 

@@ -54,9 +54,10 @@ export class StatusDownload extends React.Component {
                 this.setState({datacartDetails: datacartDetails, zipFileProp: nextProps.datacartDetails.data[0].zipfile_url});
 
                 let clearTimer = 0;
-                if (this.state.zipFileProp == null){
+                if (nextProps.datacartDetails.data[0].zipfile_url == null){
                     clearTimer++;
                 }
+
 
                 //If the status of the job is completed, check the provider tasks to ensure they are all completed as well
                 //If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
@@ -83,6 +84,7 @@ export class StatusDownload extends React.Component {
                 if(this.state.isLoading) {
                     this.setState({isLoading: false});
                 }
+
             }
         }
     }

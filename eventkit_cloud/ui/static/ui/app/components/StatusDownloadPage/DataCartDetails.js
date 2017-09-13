@@ -34,7 +34,6 @@ export class DataCartDetails extends React.Component {
             cloneDialogOpen: false,
             providerDesc: '',
             providerDialogOpen: false,
-            zipFileUrl: null,
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
         };
@@ -53,9 +52,6 @@ export class DataCartDetails extends React.Component {
                     return this.setState({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'});
             }
         }
-        if(nextProps.cartDetails.zipfile_url != this.state.zipFileUrl){
-            this.setState({zipFileUrl: nextProps.cartDetails.zipfile_url})
-        }
 
     }
 
@@ -65,7 +61,7 @@ export class DataCartDetails extends React.Component {
         this._setMaxDate();
         this._setExpirationDate();
         this._setPermission();
-        this._setZipUrl();
+
     }
 
     _setExpirationDate(){
@@ -74,9 +70,6 @@ export class DataCartDetails extends React.Component {
 
     _setPermission(){
         this.setState({permission : this.props.cartDetails.job.published})
-    }
-    _setZipUrl(){
-        this.setState({zipFileUrl : this.props.zipFileProp})
     }
 
     _setMaxDate() {
@@ -421,7 +414,6 @@ export class DataCartDetails extends React.Component {
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
                                      onProviderCancel={this.props.onProviderCancel}
                                      providers={this.props.providers}
-                                     zipFileUrl={this.state.zipFileUrl}
                                      zipFileProp={this.props.zipFileProp}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
