@@ -4,11 +4,10 @@ import logging
 import os
 import requests
 import shutil
-from pysqlite2 import dbapi2 as sqlite3
 from time import sleep
 from datetime import timedelta, datetime
 
-from ...tasks.models import ExportTask, ExportProviderTask
+from ...tasks.models import ExportProviderTask
 from ...tasks.export_tasks import TaskStates
 from ...tasks.task_runners import normalize_name
 from ...core.helpers import download_file
@@ -17,10 +16,8 @@ from ...utils.geopackage import check_content_exists, check_zoom_levels
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.db import IntegrityError
 from django.test import TestCase
 from django.utils import timezone
-from django.core.cache import cache
 
 
 logger = logging.getLogger(__name__)
@@ -394,13 +391,14 @@ class TestJob(TestCase):
         self.orm_job = orm_job = Job.objects.get(uid=job.get('uid'))
         self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
+
         test_zip_url = '%s%s%s/%s' % (
             self.base_url,
             settings.EXPORT_MEDIA_ROOT,
             run.get('uid'),
             '%s-%s-%s-%s.zip' % (
-                orm_run.job.name,
-                orm_run.job.event,
+                normalize_name(orm_run.job.name),
+                normalize_name(orm_run.job.event),
                 'eventkit',
                 date
             ))

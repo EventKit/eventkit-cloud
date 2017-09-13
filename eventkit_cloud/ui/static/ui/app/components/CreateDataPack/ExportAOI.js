@@ -15,7 +15,8 @@ import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
+    isViewOutsideValidExtent, goToValidExtent} from '../../utils/mapUtils'
 
 const WGS84 = 'EPSG:4326';
 const WEB_MERCATOR = 'EPSG:3857';
@@ -63,6 +64,7 @@ export class ExportAOI extends Component {
             //zoomToGeometry(bbox);
             this._map.getView().fit(this._drawLayer.getSource().getExtent())
             this.props.setNextEnabled();
+            this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
     }
 
@@ -158,12 +160,12 @@ export class ExportAOI extends Component {
         description = description + (result.province ? ', ' + result.province : '');
         description = description + (result.region ? ', ' + result.region : '');
 
-        this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description);
+        this.props.updateAoiInfo(geojson, result.geometry.type, result.name, description, 'search');
         zoomToGeometry(feature.getGeometry(), this._map);
         if(feature.getGeometry().getType()=='Polygon' || feature.getGeometry().getType()=='MultiPolygon') {
             this.props.setNextEnabled();
-            return true;
         }
+        return true;
     }
 
     handleGeoJSONUpload(geom) {
@@ -175,7 +177,7 @@ export class ExportAOI extends Component {
         )
         const geojson = createGeoJSON(geom);
         zoomToGeometry(geom, this._map);
-        this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import');
+        this.props.updateAoiInfo(geojson, geom.getType(), 'Custom Area', 'Import', 'import');
         this.props.setNextEnabled();
 
     }
@@ -184,13 +186,16 @@ export class ExportAOI extends Component {
         clearDraw(this._drawLayer);
         const extent = this._map.getView().calculateExtent(this._map.getSize());
         const geom = new ol.geom.Polygon.fromExtent(extent);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this._map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geom);
         const bboxFeature = new ol.Feature({
             geometry: geom
         });
         const bbox = serialize(extent)
         this._drawLayer.getSource().addFeature(bboxFeature);
-        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View');
+        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Map View', 'mapView');
         this.props.setNextEnabled();
     }
 
@@ -198,6 +203,12 @@ export class ExportAOI extends Component {
         // make sure interactions are deactivated
         this._drawBoxInteraction.setActive(false);
         this._drawFreeInteraction.setActive(false);
+        if (isViewOutsideValidExtent(this._map.getView())) {
+            // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
+            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // avoid that issue we go back to the valid extent but maintain the same view
+            goToValidExtent(this._map.getView());
+        };
         // if box or draw activate the respective interaction
         if (mode == MODE_DRAW_BBOX) {
             this._drawBoxInteraction.setActive(true);
@@ -212,6 +223,9 @@ export class ExportAOI extends Component {
     _handleDrawEnd(event) {
         // get the drawn bounding box
         const geometry = event.feature.getGeometry();
+        const coords = geometry.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this._map.getView().getProjection());
+        geometry.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geometry);
         const bbox = geojson.features[0].bbox;
         //make sure the user didnt create a polygon with no area
@@ -223,7 +237,7 @@ export class ExportAOI extends Component {
                 this._drawLayer.getSource().addFeature(drawFeature);
 
                 if(isGeoJSONValid(geojson)) {
-                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw');
+                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw', 'free');
                     this.props.setNextEnabled();
                 }
                 else {
@@ -232,7 +246,7 @@ export class ExportAOI extends Component {
             }
             else if (this.state.mode == MODE_DRAW_BBOX) {
                 const bbox = serialize(geometry.getExtent());
-                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box');
+                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box');
                 this.props.setNextEnabled();
             }
             // exit drawing mode
@@ -289,7 +303,7 @@ export class ExportAOI extends Component {
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
-                        wrapX: false
+                        wrapX: true
                     })
                 }),
             ],
@@ -329,8 +343,8 @@ export class ExportAOI extends Component {
                 <div id="map" className={css.map}  style={mapStyle} ref="olmap">
                     <AoiInfobar />
                     <SearchAOIToolbar
-                        handleSearch={(result) => this.handleSearch(result)}
-                        handleCancel={(sender) => this.handleCancel(sender)}
+                        handleSearch={this.handleSearch}
+                        handleCancel={this.handleCancel}
                         geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
@@ -400,8 +414,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        updateAoiInfo: (geojson, geomType, title, description) => {
-            dispatch(updateAoiInfo(geojson, geomType, title, description));
+        updateAoiInfo: (geojson, geomType, title, description, selectionType) => {
+            dispatch(updateAoiInfo(geojson, geomType, title, description, selectionType));
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
