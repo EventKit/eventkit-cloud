@@ -86,7 +86,7 @@ render(
                     <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
                 </Route>
                 <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
-                <Route path="/about" component={About}/>
+                <Route path="/about" component={UserIsAuthenticated(About)}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
             </Route>
         </Router>
