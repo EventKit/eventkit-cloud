@@ -844,8 +844,9 @@ class FinalizeRunHookTask(LockingTask):
 
             for file_path in new_files:
                 filename = os.path.split(file_path)[-1]
+                provider_slug = os.path.split(file_path)[-2]
                 size = os.path.getsize(file_path)
-                url = make_file_downloadable(file_path, run_uid)
+                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug)
 
                 result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
