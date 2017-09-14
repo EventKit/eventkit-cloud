@@ -104,7 +104,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
     :param boundary: A geojson file or bbox to serve as a cutline
     :param in_dataset: A raster or vector file to be clipped
-    :param in_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
+    :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
     :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update

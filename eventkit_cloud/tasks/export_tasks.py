@@ -608,7 +608,7 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
+        dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=dataset, fmt=None)
 
     result['result'] = dataset
     return result

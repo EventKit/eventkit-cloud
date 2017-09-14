@@ -130,7 +130,10 @@ class ExportOSMTaskRunner(TaskRunner):
             config=provider_task.provider.config
         )
 
-        tasks = chain(osm_gpkg_task, format_tasks) if format_tasks else osm_gpkg_task
+        if format_tasks:
+            tasks = chain(osm_gpkg_task, format_tasks)
+        else:
+            tasks = osm_gpkg_task
 
         return export_provider_task_record.uid, tasks
 
