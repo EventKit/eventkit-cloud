@@ -23,7 +23,7 @@ export default {
         geom: {},
         error: null,
     },
-    drawerOpen: false,
+    drawer: 'closed',
     runsList: {
         fetching: false,
         fetched: false,
