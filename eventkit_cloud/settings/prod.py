@@ -232,6 +232,11 @@ DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
 
+if os.getenv("FEATURE_DATABASE_URL"):
+    DATABASES['feature_data'] = dj_database_url.config(default=os.getenv("FEATURE_DATABASE_URL"))
+else:
+    DATABASES['feature_data'] = DATABASES['default']
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -325,3 +330,5 @@ LOGGING = {
 DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
 
 MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 30)
+
+LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")

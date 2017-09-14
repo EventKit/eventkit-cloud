@@ -51,13 +51,12 @@ class TestGdalUtils(TestCase):
 
     @patch('eventkit_cloud.utils.gdalutils.driver_for')
     @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')
-    @patch('eventkit_cloud.utils.gdalutils.os.rename')
-    def test_clip_dataset(self, rename, isfile, driver_for_mock):
+    def test_clip_dataset(self, isfile, driver_for_mock):
 
         isfile.return_value = True
 
         with self.assertRaises(Exception):
-            clip_dataset(geojson_file=None, dataset=None)
+            clip_dataset(boundary=None, dataset=None)
 
         # Raster geopackage
         geojson_file = "/path/to/geojson"
@@ -74,11 +73,10 @@ class TestGdalUtils(TestCase):
         )
         driver_for_mock.return_value = ('gpkg', True)
         self.task_process.return_value = Mock(exitcode=0)
-        clip_dataset(geojson_file=geojson_file, dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
-        rename.assert_called_once_with(dataset, in_dataset)
-        rename.reset_mock()
+
 
         # Geotiff
         fmt = "gtiff"
@@ -91,11 +89,9 @@ class TestGdalUtils(TestCase):
             dataset
         )
         driver_for_mock.return_value = ('gtiff', True)
-        clip_dataset(geojson_file=geojson_file, dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
-        rename.assert_called_once_with(dataset, in_dataset)
-        rename.reset_mock()
 
         # Vector
         fmt = "gpkg"
@@ -106,10 +102,9 @@ class TestGdalUtils(TestCase):
             in_dataset
         )
         driver_for_mock.return_value = ('gpkg', False)
-        clip_dataset(geojson_file=geojson_file, dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
-        rename.assert_called_once_with(dataset, in_dataset)
 
     @patch('eventkit_cloud.utils.gdalutils.driver_for')
     @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')

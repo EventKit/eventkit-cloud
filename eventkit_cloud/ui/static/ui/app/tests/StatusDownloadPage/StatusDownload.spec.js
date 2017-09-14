@@ -404,8 +404,8 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
         expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({datacartDetails: exampleRun, zipFileProp: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
         expect(stateSpy.calledThrice).toBe(true);
-        expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
@@ -430,7 +430,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledThrice).toBe(true);
-        expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning})).toBe(true);
+        expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning, zipFileProp:"http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
         expect(setTimeout.mock.calls.length).toBe(11);
