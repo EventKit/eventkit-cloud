@@ -9,7 +9,7 @@ import Application from './components/Application'
 import LoginPage from './components/auth/LoginPage'
 import Loading from './components/auth/Loading'
 import Logout from './containers/logoutContainer'
-import About from './components/About'
+import About from './components/About/About'
 import Account from './components/AccountPage/Account'
 import DataPackPage from './components/DataPackPage/DataPackPage'
 import Export from './components/Export'
@@ -86,7 +86,7 @@ render(
                     <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
                 </Route>
                 <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
-                <Route path="/about" component={About}/>
+                <Route path="/about" component={UserIsAuthenticated(About)}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
             </Route>
         </Router>

@@ -8,6 +8,7 @@ export default {
         geomType: null,
         title: null,
         description: null,
+        selectionType: null,
     },
     zoomToSelection: {
         click: false

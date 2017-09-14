@@ -20,6 +20,7 @@ export class StatusDownload extends React.Component {
             datacartDetails: [],
             isLoading: true,
             maxDays: null,
+            zipFileProp: null,
         }
     }
 
@@ -50,18 +51,24 @@ export class StatusDownload extends React.Component {
         if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
             if (nextProps.datacartDetails.fetched == true) {
                 let datacartDetails = nextProps.datacartDetails.data;
-                this.setState({datacartDetails: datacartDetails});
+                this.setState({datacartDetails: datacartDetails, zipFileProp: nextProps.datacartDetails.data[0].zipfile_url});
+
+                let clearTimer = 0;
+                if (nextProps.datacartDetails.data[0].zipfile_url == null){
+                    clearTimer++;
+                }
+
 
                 //If the status of the job is completed, check the provider tasks to ensure they are all completed as well
                 //If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
                 // means that at least one task is not completed, so do not stop the timer
                 if (datacartDetails[0].status == "COMPLETED" || datacartDetails[0].status == "INCOMPLETE") {
                     let providerTasks = datacartDetails[0].provider_tasks;
-                    let clearTimer = 0;
+
                      providerTasks.forEach((tasks) => {
                         tasks.tasks.forEach((task) => {
                             if((task.status != 'SUCCESS') && (task.status != 'CANCELED') && (task.status != 'FAILED')){
-                                clearTimer++
+                                clearTimer++;
                             }
                         });
                     });
@@ -77,6 +84,7 @@ export class StatusDownload extends React.Component {
                 if(this.state.isLoading) {
                     this.setState({isLoading: false});
                 }
+
             }
         }
     }
@@ -176,7 +184,8 @@ export class StatusDownload extends React.Component {
                                                      onClone={this.props.cloneExport}
                                                      onProviderCancel={this.props.cancelProviderTask}
                                                      providers={this.props.providers}
-                                                     maxResetExpirationDays={this.state.maxDays}/>
+                                                     maxResetExpirationDays={this.state.maxDays}
+                                                     zipFileProp={this.state.zipFileProp}/>
                                 ))}
 
                             </Paper>
@@ -224,7 +233,7 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo())
         },
         cloneExport: (cartDetails, providerArray) => {
-            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
+            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box', 'box'));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name, 
                 datapackDescription: cartDetails.job.description, 
