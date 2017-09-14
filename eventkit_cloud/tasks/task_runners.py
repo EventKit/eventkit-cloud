@@ -123,7 +123,7 @@ class ExportOSMTaskRunner(TaskRunner):
             display=getattr(osm_data_collection_task, "display", False)
         )
 
-        osm_gpkg_task = osm_data_collection_task.si(
+        osm_gpkg_task = osm_data_collection_task.s(
             run_uid=run.uid, provider_slug=provider_task.provider.slug, stage_dir=stage_dir,
             export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,

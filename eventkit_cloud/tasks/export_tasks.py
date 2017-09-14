@@ -385,7 +385,12 @@ def osm_data_collection_task(
         config=config
     )
 
-    result = {'result': gpkg_filepath, 'geopackage': gpkg_filepath}
+    result['result'] = gpkg_filepath
+    result['geopackage'] = gpkg_filepath
+
+    selection = parse_result(result, 'selection')
+    if selection:
+        result = clip_export_task(result=result, task_uid=task_uid)
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
 
@@ -539,7 +544,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
 
     selection = parse_result(result, 'selection')
     if selection:
-        clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+        result = clip_export_task(result=result, task_uid=task_uid)
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
@@ -563,7 +568,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
 
     selection = parse_result(result, 'selection')
     if selection:
-        clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+        result = clip_export_task(result=result, task_uid=task_uid)
 
     gtiff = parse_result(result, 'result')
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
@@ -574,7 +579,8 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
 
 
 @app.task(name='Clip Export', bind=True, base=LockingTask)
-def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None):
+def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
+                     *args, **kwargs):
     """
     Clips a dataset to a vector cutline and returns a dataset of the same format.
     :param self:
@@ -591,7 +597,8 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
-    dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
+    if selection:
+        dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
 
     result['result'] = dataset
     return result
