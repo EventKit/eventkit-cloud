@@ -61,6 +61,7 @@ export class DataCartDetails extends React.Component {
         this._setMaxDate();
         this._setExpirationDate();
         this._setPermission();
+
     }
 
     _setExpirationDate(){
@@ -412,7 +413,8 @@ export class DataCartDetails extends React.Component {
                 <div style={{paddingBottom:'10px'}}>
                     <DataPackDetails providerTasks={this.props.cartDetails.provider_tasks}
                                      onProviderCancel={this.props.onProviderCancel}
-                                     providers={this.props.providers}/>
+                                     providers={this.props.providers}
+                                     zipFileProp={this.props.zipFileProp}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
                     <div style={styles.subHeading}>
@@ -587,7 +589,8 @@ DataCartDetails.propTypes = {
     onClone:     PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
-    providers: PropTypes.array.isRequired
+    providers: PropTypes.array.isRequired,
+    zipFileProp: PropTypes.string,
 }
 
 export default DataCartDetails;

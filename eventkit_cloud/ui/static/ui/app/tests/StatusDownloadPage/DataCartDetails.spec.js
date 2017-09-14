@@ -29,6 +29,7 @@ describe('DataCartDetails component', () => {
             cartDetails: {...run},
             providers: providers,
             maxResetExpirationDays: '30',
+            zipFileProp: null,
             onUpdateExpiration: () => {},
             onUpdatePermission: () => {},
             onRunDelete: () => {},
@@ -153,6 +154,22 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.callCount).toEqual(4);
         expect(stateSpy.calledWith({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'})).toBe(true);
 
+        stateSpy.restore();
+        propsSpy.restore();
+    });
+
+    it('should handle setting state of zipFileUrl when component updates', () => {
+        let props = getProps();
+        props.cartDetails.zipfile_url = null;
+        console.log(props)
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getProps();
+        nextProps.cartDetails.zipfile_url = 'fakeFileUrl.zip';
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
         stateSpy.restore();
         propsSpy.restore();
     });
