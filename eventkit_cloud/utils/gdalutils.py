@@ -138,17 +138,17 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
     if table:
         cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                        'fmt': fmt,
-                                        'type': band_type,
-                                        'in_ds': in_dataset,
-                                        'out_ds': out_dataset,
-                                        'table': table})
+                                            'fmt': fmt,
+                                            'type': band_type,
+                                            'in_ds': in_dataset,
+                                            'out_ds': out_dataset,
+                                            'table': table})
     else:
         cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                        'fmt': fmt,
-                                        'type': band_type,
-                                        'in_ds': in_dataset,
-                                        'out_ds': out_dataset})
+                                            'fmt': fmt,
+                                            'type': band_type,
+                                            'in_ds': in_dataset,
+                                            'out_ds': out_dataset})
 
     logger.debug(cmd)
 

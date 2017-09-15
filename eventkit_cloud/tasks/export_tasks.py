@@ -555,7 +555,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
 
     selection = parse_result(result, 'selection')
     if selection:
-        result = clip_export_task(result=result, task_uid=task_uid)
+        clip_export_task(result=result, task_uid=task_uid)
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
@@ -579,7 +579,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
 
     selection = parse_result(result, 'selection')
     if selection:
-        result = clip_export_task(result=result, task_uid=task_uid)
+        clip_export_task(result=result, task_uid=task_uid)
 
     gtiff = parse_result(result, 'result')
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
