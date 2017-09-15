@@ -45,9 +45,6 @@ describe('Application component', () => {
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
-        expect(wrapper.find(Subheader)).toHaveLength(1);
-        expect(wrapper.find(Subheader).text()).toEqual('MAIN MENU');
-        expect(wrapper.find(Subheader).find(NavigationArrowBack)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(5);
         expect(wrapper.find(MenuItem).at(0).text()).toEqual('DataPack Library');
         expect(wrapper.find(MenuItem).at(0).find(AVLibraryBooks)).toHaveLength(1);
