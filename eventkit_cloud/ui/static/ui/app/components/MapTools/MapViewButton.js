@@ -25,10 +25,13 @@ export class MapViewButton extends Component {
         const styles = {
             buttonName: {
                 fontSize: '.5em',
-                width: '50px',
+                width: '100%',
                 height: '12px',
                 color: '#4498c0',
-                bottom: '0',
+                position: 'relative',
+                bottom: '5px',
+                padding: '0 4px',
+                lineHeight: '1.3em'
             },
             drawButtonGeneral: {
                 height: '50px',
