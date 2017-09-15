@@ -28,7 +28,12 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
         run_uuid,
         source_path
     )
+
+    if not os.path.isfile(asset_path):
+        raise Exception("Bad file path given to upload to S3.")
+
     asset_remote_path = os.path.join(run_uuid, destination_filename)
+
     from audit_logging.file_logging import logging_open
     with logging_open(asset_path, 'rb', user_details=user_details) as asset_file:
         client.upload_fileobj(

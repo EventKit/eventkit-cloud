@@ -106,9 +106,13 @@ class LockingTask(UserDetailsBase):
         retry=False
 
         lock_key = kwargs.get('locking_task_key')
+        worker = kwargs.get('worker')
+        task_settings = {
+            'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+            'priority': TaskPriority.TASK_RUNNER.value}
 
         if lock_key:
-            self.lock_expiration=5
+            self.lock_expiration = 5
             self.lock_key = lock_key
             retry = True
         else:
@@ -120,7 +124,10 @@ class LockingTask(UserDetailsBase):
         else:
             if retry:
                 logger.info('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
-                self.delay(*args, **kwargs)
+                if worker:
+                    self.apply_async(args=args, kwargs=kwargs).set(**task_settings)
+                else:
+                    self.delay(*args, **kwargs)
             else:
                 logger.info('Task {0} skipped due to lock'.format(self.request.id))
 
@@ -1054,9 +1061,6 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     if not adhoc:
         run_uid = str(run_uid)
         if getattr(settings, "USE_S3", False):
-
-            # TODO open up a stream directly to the s3 file so no local
-            #      persistence is required
             zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
             os.remove(zip_st_filepath)
         else:
