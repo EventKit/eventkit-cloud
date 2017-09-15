@@ -137,16 +137,14 @@ export const closeDrawer = () => dispatch => {
         type: types.CLOSING_DRAWER
     });
 
-    return new Promise((resolveA) => {
-        return new Promise((resolveB) => {
-            closeDrawerTimeout = setTimeout(resolveB, 450);
-        }).then(() => {
+    return new Promise((resolve) => {
+        closeDrawerTimeout = setTimeout(() => {
             closeDrawerTimeout = null;
             dispatch({
                 type: types.CLOSED_DRAWER
             });
-            resolveA();
-        });
+            resolve();
+        }, 450);
     });
 }
 
@@ -160,16 +158,14 @@ export const openDrawer = () => dispatch => {
         type: types.OPENING_DRAWER
     });
 
-    return new Promise((resolveA) => {
-        return new Promise((resolveB) => {
-            openDrawerTimeout = setTimeout(resolveB, 450);
-        }).then(() => {
+    return new Promise((resolve) => {
+        openDrawerTimeout = setTimeout(() => {
             openDrawerTimeout = null;
             dispatch({
                 type: types.OPENED_DRAWER
             });
-            resolveA();
-        });
+            resolve();
+        }, 450);
     });
 }
 
