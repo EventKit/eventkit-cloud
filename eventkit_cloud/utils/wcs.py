@@ -82,7 +82,7 @@ class WCSConverter(object):
             'coverage': self.layer,
             'params': self.params
         })
-        logger.debug("Creating temporary WCS XML at {}:\n{}".format(self.wcs_xml_path, wcs_xml_string))
+        logger.info("Creating temporary WCS XML at {}:\n{}".format(self.wcs_xml_path, wcs_xml_string))
         os.write(wcs_xml_fd, wcs_xml_string)
         os.close(wcs_xml_fd)
 
@@ -96,6 +96,8 @@ class WCSConverter(object):
 
         if self.debug:
             logger.debug('Running: %s' % convert_cmd)
+        logger.info('WCS command: %s' % convert_cmd)
+
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
