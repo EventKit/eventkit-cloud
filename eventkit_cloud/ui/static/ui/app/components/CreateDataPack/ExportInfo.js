@@ -283,7 +283,6 @@ export class ExportInfo extends React.Component {
                                 defaultValue={this.props.exportInfo.datapackDescription}
                                 hintText="Description"
                                 multiLine={true}
-                                rows={2}
                                 style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
                                 textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
