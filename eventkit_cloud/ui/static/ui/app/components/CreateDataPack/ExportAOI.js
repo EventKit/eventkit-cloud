@@ -327,7 +327,7 @@ export class ExportAOI extends Component {
             mapStyle.left = '0px';
         }
 
-        let buttonClass = `${css.draw || ''} ol-unselectable ol-control`
+        let buttonClass = `${css.draw} ol-unselectable ol-control`
 
         return (
             <div>
@@ -432,7 +432,3 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps
 )(ExportAOI);
-
-
-
-

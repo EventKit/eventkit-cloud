@@ -99,6 +99,45 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(DropZone)).toHaveLength(1);
     });
 
+    it('the left position should be 200px if drawer is open, otherwise 0px', () => {
+        const props = getProps();
+        props.drawerOpen = true;
+        const wrapper = getWrapper(props);
+        window.resizeTo(1300, 800);
+        expect(window.innerWidth).toBe(1300);
+        wrapper.update();
+        expect(wrapper.find('#map').props().style.left).toEqual('200px');
+        const nextProps = getProps();
+        nextProps.drawerOpen = false;
+        wrapper.setProps(nextProps);
+        expect(wrapper.find('#map').props().style.left).toEqual('0px');
+    });
+
+    it('the functions passed to DrawAOIToolbar and SearchAOIToolbar should call setButtonSelected with the correct values', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const drawToolbar = wrapper.find(DrawAOIToolbar);
+        const setSpy = wrapper.instance().setButtonSelected = new sinon.spy();
+        expect(setSpy.called).toBe(false);
+        drawToolbar.props().setBoxButtonSelected();
+        expect(setSpy.callCount).toBe(1);
+        expect(setSpy.calledWith('box')).toBe(true);
+        drawToolbar.props().setFreeButtonSelected();
+        expect(setSpy.callCount).toBe(2);
+        expect(setSpy.calledWith('free')).toBe(true);
+        drawToolbar.props().setMapViewButtonSelected();
+        expect(setSpy.callCount).toBe(3);
+        expect(setSpy.calledWith('mapView')).toBe(true);
+        drawToolbar.props().setImportButtonSelected();
+        expect(setSpy.callCount).toBe(4);
+        expect(setSpy.calledWith('import')).toBe(true);
+
+        const searchToolbar = wrapper.find(SearchAOIToolbar);
+        searchToolbar.props().setSearchAOIButtonSelected();
+        expect(setSpy.callCount).toBe(5);
+        expect(setSpy.calledWith('search')).toBe(true);
+    });
+
     it('componentDidMount should initialize the map and handle aoiInfo if present', () => {
         const props = getProps();
         props.aoiInfo.geojson = geojson;
@@ -274,7 +313,7 @@ describe('ExportAOI component', () => {
         expect(stateSpy.calledWith({showInvalidDrawWarning: true})).toBe(true);
     });
 
-    it('handleCancel should hide invalid drawWarning, updateMode, clear draw and aoiInfo, and set next disabled', () => {
+    it('handleCancel should hide invalid drawWarning, clear draw and aoiInfo, and set next disabled', () => {
         const props = getProps();
         props.clearAoiInfo = new sinon.spy();
         props.setNextDisabled = new sinon.spy();
@@ -285,6 +324,24 @@ describe('ExportAOI component', () => {
         wrapper.instance().handleCancel();
         expect(wrapper.instance().showInvalidDrawWarning.calledOnce).toBe(true);
         expect(wrapper.instance().updateMode.called).toBe(false);
+        expect(clearSpy.calledOnce).toBe(true);
+        expect(props.clearAoiInfo.calledOnce).toBe(true);
+        expect(props.setNextDisabled.calledOnce).toBe(true);
+        clearSpy.restore();
+    });
+
+    it('handleCancel  should call updateMode', () => {
+        const props = getProps();
+        props.clearAoiInfo = new sinon.spy();
+        props.setNextDisabled = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.setState({mode: 'NOT_NORMAL'})
+        const clearSpy = new sinon.spy(utils, 'clearDraw');
+        wrapper.instance().showInvalidDrawWarning = new sinon.spy();
+        wrapper.instance().updateMode = new sinon.spy();
+        wrapper.instance().handleCancel();
+        expect(wrapper.instance().showInvalidDrawWarning.calledOnce).toBe(true);
+        expect(wrapper.instance().updateMode.calledOnce).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(props.clearAoiInfo.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
@@ -646,6 +703,40 @@ describe('ExportAOI component', () => {
     });
 
     it('initializeOpenLayers should create the map and necessary interactions', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const layerSpy = new sinon.spy(utils, 'generateDrawLayer');
+        const boxSpy = new sinon.spy(utils, 'generateDrawBoxInteraction');
+        const freeSpy = new sinon.spy(utils, 'generateDrawFreeInteraction');
+        const mapSpy = new sinon.spy(ol, 'Map');
+        const addInteractionSpy = new sinon.spy(ol.Map.prototype, 'addInteraction');
+        const addLayerSpy = new sinon.spy(ol.Map.prototype, 'addLayer');
+        wrapper.instance().initializeOpenLayers();
+        expect(layerSpy.calledOnce).toBe(true);
+        expect(boxSpy.calledOnce).toBe(true);
+        expect(freeSpy.calledOnce).toBe(true);
+        expect(mapSpy.calledOnce).toBe(true);
+        expect(addInteractionSpy.calledTwice).toBe(true);
+        expect(addLayerSpy.calledOnce).toBe(true);
+        layerSpy.restore();
+        boxSpy.restore();
+        freeSpy.restore();
+        mapSpy.restore();
+        addInteractionSpy.restore();
+        addLayerSpy.restore();
+    });
 
+    it('handleZoomToSelection should read in a geojson then zoom to the geom', () => {
+        const props = getProps();
+        props.aoiInfo.geojson = geojson;
+        const wrapper = getWrapper(props);
+        const readSpy = new sinon.spy(ol.format.GeoJSON.prototype, 'readGeometry');
+        const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');
+        wrapper.instance().handleZoomToSelection();
+        expect(readSpy.calledOnce).toBe(true);
+        expect(readSpy.calledWith(geojson.features[0].geometry)).toBe(true);
+        expect(zoomSpy.calledOnce).toBe(true);
+        readSpy.restore();
+        zoomSpy.restore();
     });
 });
