@@ -17,6 +17,7 @@ import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNot
 import debounce from 'lodash/debounce';
 import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
+import CustomTextField from "../CustomTextField";
 
 
 export class ExportInfo extends React.Component {
@@ -259,7 +260,7 @@ export class ExportInfo extends React.Component {
                     <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
                         <Paper className={styles.paper} zDepth={2} rounded>
                             <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                            <TextField
+                            <CustomTextField
                                 id='nameField' 
                                 name="exportName"
                                 ref="exportName"
@@ -273,7 +274,7 @@ export class ExportInfo extends React.Component {
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={100}
                             />
-                            <TextField
+                            <CustomTextField
                                 id='descriptionField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -282,13 +283,12 @@ export class ExportInfo extends React.Component {
                                 defaultValue={this.props.exportInfo.datapackDescription}
                                 hintText="Description"
                                 multiLine={true}
-                                rows={2}
                                 style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
                                 textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={1000}
                             />
-                            <TextField
+                            <CustomTextField
                                 id='projectField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
