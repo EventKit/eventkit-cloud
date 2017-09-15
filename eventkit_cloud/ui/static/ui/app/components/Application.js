@@ -153,16 +153,6 @@ export class Application extends Component {
                         docked={true}
                         open={this.props.drawerOpen}
                     >
-                        <Subheader inset={false}>
-                            <span style={{width:'100%'}}>
-                                <div style={styles.mainMenu}>MAIN MENU</div>
-                                <div style={{display:'inline-block'}}>
-                                    <a href="#">
-                                        <NavigationArrowBack style={{fill: '4498c0', verticalAlign: 'middle', paddingBottom: '3px'}} onClick={this.handleClose.bind(this)}/>
-                                    </a>
-                                </div>
-                            </span>
-                        </Subheader>
                         <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
                                 <AVLibraryBooks style={{height: '22px', width: '22px', marginRight: '11px'}}/>
