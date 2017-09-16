@@ -360,6 +360,17 @@ def osm_data_collection_pipeline(
     geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
     g.run()
+
+    # --- Add the Land Boundaries polygon layer
+    database = settings.DATABASES['feature_data']
+
+    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}'\"".format(host=database['HOST'],
+                                        user=database['USER'],
+                                        password=database['PASSWORD'],
+                                        name=database['NAME'])
+
+    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
+
     ret_geopackage_filepath = g.results[0].parts[0]
     assert(ret_geopackage_filepath == geopackage_filepath)
     update_progress(export_task_record_uid, progress=100)
@@ -376,7 +387,7 @@ def osm_data_collection_task(
         export_provider_task_id.
         bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from .models import ExportRun, ExportTask
+    from .models import ExportRun
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -569,7 +580,7 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
-    dataset = gdalutils.clip_dataset(geojson_file=selection, dataset=dataset, fmt=None)
+    dataset = gdalutils.clip_dataset(boundary=selection, dataset=dataset, fmt=None)
 
     result['result'] = dataset
     return result

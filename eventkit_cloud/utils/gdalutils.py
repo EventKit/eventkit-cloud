@@ -17,23 +17,21 @@ def open_ds(ds_path):
     :return: Handle to open dataset
     """
 
-    if not os.path.isfile(ds_path):
-        raise Exception("Could not find file {}".format(ds_path))
+    # TODO: Can be a DB Connection
+    #if not os.path.isfile(ds_path):
+    #    raise Exception("Could not find file {}".format(ds_path))
 
     # Attempt to open as gdal dataset (raster)
     use_exceptions = gdal.GetUseExceptions()
     gdal.UseExceptions()
 
-    gdal_dataset = None
     try:
         gdal_dataset = gdal.Open(ds_path)
         return gdal_dataset
-
     except RuntimeError as ex:
-        # ignore only errors corresponding to unrecognized format
-        if 'not recognized as a supported file format' not in ex.message:
+        if ('not recognized as a supported file format' not in ex.message) or \
+                ('Error browsing database for PostGIS Raster tables' in ex.message):
             raise ex
-
     finally:
         if not use_exceptions:
             gdal.DontUseExceptions()
@@ -101,44 +99,56 @@ def is_raster(ds_path):
     return raster
 
 
-def clip_dataset(geojson_file=None, dataset=None, fmt=None, task_uid=None):
+def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
     """
-    Uses gdalwarp or ogr2ogr to clip a supported dataset file to a geojson mask.
-    :param geojson_file: A geojson file to serve as a cutline
-    :param dataset: A raster or vector file to be clipped
+    Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
+    :param boundary: A geojson file or bbox to serve as a cutline
+    :param in_dataset: A raster or vector file to be clipped
+    :param in_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
+    :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update
     :return: Filename of clipped dataset
     """
 
-    if not geojson_file:
-        raise Exception("Could not open geojson mask file: {0}".format(geojson_file))
+    if not boundary:
+        raise Exception("Could not open boundary mask file: {0}".format(boundary))
 
-    if not dataset:
-        raise Exception("Could not open input dataset: {0}".format(dataset))
+    if not in_dataset:
+        raise Exception("Could not open input dataset: {0}".format(in_dataset))
 
-    (driver, raster) = driver_for(dataset)
+    (driver, raster) = driver_for(in_dataset)
 
     if not fmt:
         fmt = driver or 'gpkg'
 
-    in_dataset = os.path.join(os.path.dirname(dataset), "old_{0}".format(os.path.basename(dataset)))
-    os.rename(dataset, in_dataset)
-
     band_type = ""
-    if raster:
-        cmd_template = Template("gdalwarp -cutline $geojson -crop_to_cutline -dstalpha -of $fmt $type $in_ds $out_ds")
+    if table:
+        cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+    elif raster:
+        cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline -dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -f $fmt -clipsrc $geojson $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
-    cmd = cmd_template.safe_substitute({'geojson': geojson_file,
+    if isinstance(boundary, list):
+        boundary = " ".join(str(i) for i in boundary)
+
+    if table:
+        cmd = cmd_template.safe_substitute({'boundary': boundary,
                                         'fmt': fmt,
                                         'type': band_type,
                                         'in_ds': in_dataset,
-                                        'out_ds': dataset})
+                                        'out_ds': out_dataset,
+                                        'table': table})
+    else:
+        cmd = cmd_template.safe_substitute({'boundary': boundary,
+                                        'fmt': fmt,
+                                        'type': band_type,
+                                        'in_ds': in_dataset,
+                                        'out_ds': out_dataset})
 
     logger.debug(cmd)
 
@@ -150,7 +160,7 @@ def clip_dataset(geojson_file=None, dataset=None, fmt=None, task_uid=None):
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
 
-    return dataset
+    return out_dataset
 
 
 def convert(dataset=None, fmt=None, task_uid=None):
