@@ -90,7 +90,7 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
     },
-    "modulePathIgnorePatterns": ["staticfiles/", "rootReducer.js", "store/"],
+    "modulePathIgnorePatterns": ["staticfiles/", "rootReducer.js", "index.js", "store/"],
     "setupFiles": ["./setupFile.js"],
     "transformIgnorePatterns": ["/node_modules/(?!jsts)"]
   },

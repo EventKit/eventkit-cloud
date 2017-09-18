@@ -87,4 +87,22 @@ describe('mapTool actions', () => {
                 expect(store.getActions()).toEqual(expectedPayload)
             })
     });
+
+    it('processGeoJSONFile should dispatch error onerror', () => {
+        // Initialize mockstore with empty state
+        const initialState = {}
+        const store = mockStore(initialState)
+        const file = new File(['not a file'],
+            "test.geojson",
+            {"type": "application/json"}
+        )
+
+        // Test if your store dispatched the expected actions
+        const expectedPayload = [{type: types.FILE_PROCESSING},
+            {type: types.FILE_ERROR, error: 'There was an error processing the geojson file.'}]
+        store.dispatch(actions.processGeoJSONFile(file))
+            .catch(() => {
+                expect(store.getActions()).toEqual(expectedPayload)
+            })
+    });
 });
