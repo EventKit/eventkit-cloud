@@ -99,7 +99,8 @@ export class DataCartDetails extends React.Component {
         var base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: true
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT
             })
         });
 
