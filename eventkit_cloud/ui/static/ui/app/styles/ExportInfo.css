@@ -88,7 +88,9 @@
 .mapCard > div > div > div {
     font-weight: bold!important;
     font-size: 18px!important;
-    padding: 5px!important;
+}
+.mapCard > div > div {
+    padding-bottom: 0 !important;
 }
 .mapCard > div {
     background-color: rgba(179, 205, 224, .2)!important;
@@ -98,5 +100,4 @@
 }
 .map {
     width:100%;
-    padding-top:15px;
 }
