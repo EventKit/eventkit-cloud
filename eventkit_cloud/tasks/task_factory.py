@@ -169,6 +169,8 @@ class TaskFactory:
                             wait_for_providers_signature
                         )
 
+                        logger.error(finalized_provider_task_chain.tasks)
+
                         finalized_provider_task_chain.apply_async(**finalize_task_settings)
 
 

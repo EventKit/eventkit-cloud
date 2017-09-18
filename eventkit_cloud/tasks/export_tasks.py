@@ -88,22 +88,28 @@ class LockingTask(UserDetailsBase):
         """
         return 'TaskLock_%s_%s_%s' % (self.__class__.__name__, self.request.id, self.request.retries)
 
-    def acquire_lock(self):
+    def acquire_lock(self, lock_key=None, value="True"):
         """
-        Set lock
+        Set lock.
+        :param lock_key: Location to store lock.
+        :param value: Some value to store for audit.
+        :return:
         """
-        result = None
+        result = False
+        lock_key = lock_key or self.get_lock_key()
         try:
-            result = self.cache.add(self.lock_key, True, self.lock_expiration)
-            logger.debug('Acquiring {0} key: {1}'.format(self.lock_key, 'succeed' if result else 'failed'))
+            result = self.cache.add(lock_key, value, self.lock_expiration)
+            # result = self.cache.add(str(self.lock_key), value, self.lock_expiration)
+            logger.error('Acquiring {0} key: {1}'.format(lock_key, 'succeed' if result else 'failed'))
         finally:
             return result
 
     def __call__(self, *args, **kwargs):
         """
-        Checking for lock existence
+        Checking for lock existence then call otherwise re-queue
         """
-        retry=False
+        retry = False
+        logger.error("enter __call__ for {0}".format(self.request.id))
 
         lock_key = kwargs.get('locking_task_key')
         worker = kwargs.get('worker')
@@ -118,12 +124,13 @@ class LockingTask(UserDetailsBase):
         else:
             self.lock_key = self.get_lock_key()
 
-        if self.acquire_lock():
+        if self.acquire_lock(lock_key=lock_key, value=self.request.id):
             logger.debug('Task {0} started.'.format(self.request.id))
+            logger.error("exit __call__ for {0}".format(self.request.id))
             return super(LockingTask, self).__call__(*args, **kwargs)
         else:
             if retry:
-                logger.info('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
+                logger.error('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
                 if worker:
                     self.apply_async(args=args, kwargs=kwargs).set(**task_settings)
                 else:
@@ -132,7 +139,7 @@ class LockingTask(UserDetailsBase):
                 logger.info('Task {0} skipped due to lock'.format(self.request.id))
 
     def after_return(self, *args, **kwargs):
-        logger.info('Task {0} releasing lock'.format(self.request.id))
+        logger.error('Task {0} releasing lock'.format(self.request.id))
         self.cache.delete(self.lock_key)
         super(LockingTask, self).after_return(*args, **kwargs)
 
@@ -254,6 +261,7 @@ class ExportTask(LockingTask):
             einfo = ExceptionInfo()
             einfo.exception = e
             self.on_failure(e, task_id, args, kwargs, einfo)
+        logger.error("exit on_success for {0}".format(task.name))
 
     @transaction.atomic
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -389,6 +397,9 @@ def osm_data_collection_task(
     """
     from .models import ExportRun
 
+    logger.error("enter run for {0}".format(self.name))
+
+
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -405,6 +416,8 @@ def osm_data_collection_task(
     result = {'result': gpkg_filepath, 'geopackage': gpkg_filepath}
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+
+    logger.error("exit run for {0}".format(self.name))
 
     return result
 
@@ -660,6 +673,8 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     from .models import ExportProviderTask
     from .task_runners import normalize_name
 
+    logger.error("enter run for {0}".format(self.name))
+
     result = result or {}
 
     self.update_task_state(result=result, task_uid=task_uid)
@@ -700,6 +715,8 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     if not zip_file:
         raise Exception("A zipfile could not be created, please contact an administrator.")
     result['result'] = zip_file
+    logger.error("exit run for {0}".format(self.name))
+
     return result
 
 
