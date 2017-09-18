@@ -146,8 +146,12 @@ export class ExportSummary extends Component {
                                         title="Selected Area of Interest"
                                         actAsExpander={true}
                                         showExpandableButton={true}
+                                        style={{padding: '12px 10px 10px'}}
                                     />
-                                    <CardText expandable={true}> 
+                                    <CardText 
+                                        expandable={true}
+                                        style={{padding: '5px'}}
+                                    > 
                                         <div id="summaryMap" className={styles.map}/>
                                     </CardText>
                                 </Card>
