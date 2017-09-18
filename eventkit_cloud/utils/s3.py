@@ -30,7 +30,7 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
     )
 
     if not os.path.isfile(asset_path):
-        raise Exception("Bad file path given to upload to S3.")
+        raise Exception("The file path given to upload to S3: {0}\n Does not exist.".format(asset_path))
 
     asset_remote_path = os.path.join(run_uuid, destination_filename)
 
