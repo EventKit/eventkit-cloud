@@ -119,6 +119,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
     if not out_dataset:
         out_dataset = in_dataset
+
+    if out_dataset == in_dataset:
         in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
         logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
         os.rename(out_dataset, in_dataset)
@@ -157,7 +159,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                                             'out_ds': out_dataset})
 
     logger.debug(cmd)
-    logger.info("clip command: '{}'".format(cmd))
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",
@@ -167,7 +168,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.error('{0}'.format(task_process.stderr))
         raise Exception("Cutline process failed with return code {0}".format(task_process.exitcode))
 
-    logger.info("Returning out_dataset={}".format(out_dataset))
     return out_dataset
 
 
@@ -199,7 +199,6 @@ def convert(dataset=None, fmt=None, task_uid=None):
                                         'out_ds': dataset})
 
     logger.debug(cmd)
-    logger.info("convert command: '{}'".format(cmd))
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",

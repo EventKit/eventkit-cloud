@@ -383,7 +383,6 @@ def osm_data_collection_task(
     """
     from .models import ExportRun
 
-    logger.info("Input result = {}".format(result))
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -399,7 +398,7 @@ def osm_data_collection_task(
 
     selection = parse_result(result, 'selection')
     if selection:
-        logger.info("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
+        logger.debug("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
         gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
     result['result'] = gpkg_filepath
@@ -420,9 +419,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     job = Job.objects.get(uid=job_uid)
 
     provider = ExportProvider.objects.get(slug=provider_slug)
-    logger.info("Input result = {}".format(result))
     result = result or {}
-    logger.info("Result = {}".format(result))
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
@@ -443,7 +440,6 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
 
-    logger.info("Input gpkg: {}".format(input_gpkg))
     add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
@@ -580,15 +576,17 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     from .models import ExportRun
     result = result or {}
-    logger.info("Geotiff export task called with result={}".format(result))
 
     self.update_task_state(result=result, task_uid=task_uid)
 
     gtiff = parse_result(result, 'result')
-    logger.info("gtiff = {}".format(gtiff))
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
+        # gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
+        # TODO: find a way to make in-place clipping work, instead of using a prefix
+        gtiff_clip = os.path.join(os.path.dirname(gtiff), "clip_{0}".format(os.path.basename(gtiff)))
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, out_dataset=gtiff_clip, fmt=None)
+        gtiff = gtiff_clip
 
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
