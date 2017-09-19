@@ -52,7 +52,8 @@ class ExportSummary extends React.Component {
         var base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: true
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT
             })
         });
 
@@ -171,12 +172,12 @@ class ExportSummary extends React.Component {
                                     title="Selected Area of Interest"
                                     actAsExpander={true}
                                     showExpandableButton={true}
+                                    style={{padding: '12px 10px 10px'}}
                                 />
-                                <CardText expandable={true}> <div id="summaryMap" className={styles.map} >
-
-                                </div>
-
-
+                                <CardText
+                                    expandable={true}
+                                    style={{padding: '5px'}}>
+                                    <div id="summaryMap" className={styles.map}></div>
                                 </CardText>
                             </Card>
 
