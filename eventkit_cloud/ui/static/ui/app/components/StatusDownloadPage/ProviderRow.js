@@ -367,7 +367,7 @@ export class ProviderRow extends React.Component {
                         </TableHeaderColumn>
                         <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
-                                {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
+                                {this.state.openTable ? <ArrowUp/> : <ArrowDown/>}
                             </IconButton>
                         </TableHeaderColumn>
                     </TableRow>
