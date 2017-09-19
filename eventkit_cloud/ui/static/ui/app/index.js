@@ -80,12 +80,12 @@ render(
                 <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}>
                     <Route path="/export/:uid" component={UserIsAuthenticated(UserHasAgreed(Export))}/>
                 </Route>
-                <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
-                    <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
-                    <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
-                    <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
+                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}>
+                    <Route path="/exportAOI" component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}/>
+                    <Route path="/exportInfo" component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}/>
+                    <Route path="/exportSummary" component={UserIsAuthenticated(UserHasAgreed(ExportSummary))}/>
                 </Route>
-                <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
+                <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}/>
                 <Route path="/about" component={UserIsAuthenticated(About)}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
             </Route>
