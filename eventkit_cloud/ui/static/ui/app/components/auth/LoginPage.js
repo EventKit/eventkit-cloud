@@ -66,7 +66,7 @@ export class LoginPage extends React.Component {
                 <CustomScrollbar style={{height: window.innerHeight - 95}}>
                     <div style={styles.container}>
                         <div style={styles.paperContainer}>
-                            <Paper style={styles.paper} zDepth={2}>
+                            <Paper className={'qa-LoginPage-Paper'} style={styles.paper} zDepth={2}>
                                 <LoginForm {...this.props}/>
                             </Paper>
                         </div>

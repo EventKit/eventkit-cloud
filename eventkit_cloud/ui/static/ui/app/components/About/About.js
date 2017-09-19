@@ -73,6 +73,7 @@ export class About extends Component {
         return (
             <div style={{backgroundColor: 'white'}}>
                 <AppBar
+                    className={'qa-About-AppBar'}
                     title={'About EventKit'}
                     style={styles.header}
                     titleStyle={styles.headerTitle}

@@ -101,6 +101,7 @@ export class Account extends Component {
         return (
             <div style={{backgroundColor: 'white'}}>
                 <AppBar
+                    className={'qa-Account-AppBar'}
                     title={'Account'}
                     style={styles.header}
                     titleStyle={styles.headerTitle}

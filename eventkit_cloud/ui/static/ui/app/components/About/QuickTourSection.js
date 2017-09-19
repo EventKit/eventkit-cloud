@@ -94,14 +94,15 @@ export class QuickTourSection extends Component {
         
         return (
             <div style={{margin: '10px 0px'}}>
-                <Card initiallyExpanded={true} style={{backgroundColor: '#dcdcdc'}}>
+                <Card className={'qa-QuickTourSection-Card'} initiallyExpanded={true} style={{backgroundColor: '#dcdcdc'}}>
                     <CardHeader
+                        className={'qa-QuickTourSection-CardHeader'}
                         showExpandableButton={true}
                         title={<strong>{this.props.sectionTitle}</strong>}
-                        openIcon={<NavigationArrowDropUp style={{fill: 'red'}}/>}
-                        closeIcon={<NavigationArrowDropDown style={{fill: 'green'}}/>}
+                        openIcon={<NavigationArrowDropUp className={'qa-QuickTourSection-NavigationArrowDropUp'} style={{fill: 'red'}}/>}
+                        closeIcon={<NavigationArrowDropDown className={'qa-QuickTourSection-NavigationArrowDropDown'} style={{fill: 'green'}}/>}
                     />
-                    <CardMedia expandable={true} style={{padding: '0px 10px 10px 10px'}}>
+                    <CardMedia className={'qa-QuickTourSection-CardMedia'} expandable={true} style={{padding: '0px 10px 10px 10px'}}>
                         <div id='mediaContainer' style={{width: '100%', height: '100%', position: 'relative'}}
                             onMouseEnter={() => {this.setArrowVisibility(true)}}
                             onMouseLeave={() => {this.setArrowVisibility(false)}}
@@ -113,10 +114,10 @@ export class QuickTourSection extends Component {
                                 <img src={this.props.steps[this.state.step].img} style={{width: '100%'}}/>
                             </Swipeable>
                             <div style={{...styles.nextImgDiv, left: '20px', opacity: arrowOpacity}}>
-                                <ChevronLeft style={styles.nextImgArrow} onClick={this.previousStep}/>
+                                <ChevronLeft className={'qa-QuickTourSection-ChevronLeft'} style={styles.nextImgArrow} onClick={this.previousStep}/>
                             </div>
                             <div style={{...styles.nextImgDiv, right: '20px', opacity: arrowOpacity}}>
-                                <ChevronRight style={styles.nextImgArrow} onClick={this.nextStep}/>
+                                <ChevronRight className={'qa-QuickTourSection-ChevronRight'} style={styles.nextImgArrow} onClick={this.nextStep}/>
                             </div>
                         </div>
                         <div id='captionContainer' style={{width: '100%', backgroundColor: '#4598bf', color: '#fff', padding: '7px 10px'}}>
