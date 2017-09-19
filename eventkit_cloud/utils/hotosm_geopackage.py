@@ -316,6 +316,14 @@ class Geopackage(object):
         for query in index_sqls:
             LOG.debug(query)
             cur.executescript(query)
+
+        """
+        Remove points/lines/multipolygons tables
+        """
+        cur.execute("DROP TABLE points")
+        cur.execute("DROP TABLE lines")
+        cur.execute("DROP TABLE multipolygons")
+
         conn.commit()
         conn.close()
 
