@@ -10,7 +10,7 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
     from 'material-ui/Table';
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import Check from 'material-ui/svg-icons/navigation/check';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
@@ -91,11 +91,11 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(5);
-        expect(wrapper.find(ArrowUp)).toHaveLength(1);
+        expect(wrapper.find(ArrowDown)).toHaveLength(1);
         //expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(2);
-        expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
+        expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
