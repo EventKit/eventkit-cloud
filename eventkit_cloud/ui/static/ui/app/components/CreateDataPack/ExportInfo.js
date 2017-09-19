@@ -250,6 +250,7 @@ export class ExportInfo extends React.Component {
             },
             root: {
                 width:'100%',
+                height: window.innerHeight - 180,
                 backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
@@ -292,7 +293,7 @@ export class ExportInfo extends React.Component {
         });
 
         return (
-            <div className={style.root} style={style.window}>
+            <div style={style.root}>
                 <CustomScrollbar>
                     <form onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
                         <Paper className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>

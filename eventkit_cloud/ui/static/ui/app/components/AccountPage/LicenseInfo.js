@@ -33,10 +33,10 @@ export class LicenseInfo extends Component {
         const allAgreedSaved = this.allTrue(this.props.user.data.accepted_licenses);
         const allAgreedUnsaved = this.allTrue(this.props.acceptedLicenses);
         return (
-            <div>
+            <div className={'qa-LicenseInfo-body'}>
                 <h4><strong>Licenses and Terms of Use</strong></h4>
-                <div style={{color: 'grey'}}>Usage of this product and all assets requires agreement to the following legalities:</div>
-                {allAgreedSaved ? null: <Warning text={USAGE_STATEMENT}/>}
+                <div  className={'qa-LicenseInfo-usage'} style={{color: 'grey'}}>Usage of this product and all assets requires agreement to the following legalities:</div>
+                {allAgreedSaved ? null: <Warning  className={'qa-LicenseInfo-Warning'} text={USAGE_STATEMENT}/>}
                 
                 <div style={styles.checkboxContainer}>
                     <Checkbox

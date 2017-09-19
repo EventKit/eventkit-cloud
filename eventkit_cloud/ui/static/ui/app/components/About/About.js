@@ -82,7 +82,7 @@ export class About extends Component {
                 </AppBar>
                 <div style={styles.body}>
                     <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
-                        <div style={styles.bodyContent}>
+                        <div style={styles.bodyContent} className={'qa-About-bodyContent'}>
                             {this.state.pageInfo.textParagraphs.map((paragraph, ix) => {
                                 return (
                                     <InfoParagraph key={ix} header={paragraph.header} body={paragraph.body} bodyStyle={{marginBottom: '30px'}}/>

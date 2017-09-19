@@ -9,7 +9,7 @@ export class QuickTour extends Component {
 
     render() {
         return (
-            <div style={{...this.props.containerStyle}}>
+            <div style={{...this.props.containerStyle}} className={'qa-QuickTour-header'}>
                 <h4><strong>{this.props.header}</strong></h4>
                 {this.props.tourSections.map((section, ix) => {
                     return (

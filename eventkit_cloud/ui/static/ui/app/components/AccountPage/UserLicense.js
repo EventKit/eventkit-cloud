@@ -41,19 +41,19 @@ export class UserLicense extends Component {
                                 uncheckedIcon={<ToggleCheckBoxOutlineBlank className={'qa-UserLicense-ToggleCheckBoxOutlineBlank'} style={{fill: '#4498c0'}}/>}
                                 disabled={this.props.disabled}
                             />
-                            <span style={{lineHeight: '24px'}}>
+                            <span className={'qa-UserLicense-agreement'} style={{lineHeight: '24px'}}>
                                 {'I agree to the '}<strong>{this.props.license.name}</strong>
                             </span>
                         </div>
                     }
                     actAsExpander={false}
                     showExpandableButton={true}
-                    openIcon={<HardwareKeyboardArrowUp style={{fill: '#4498c0'}}/>}
-                    closeIcon={<HardwareKeyboardArrowDown style={{fill: '#4498c0'}}/>}
+                    openIcon={<HardwareKeyboardArrowUp className={'qa-UserLicense-ArrowUp'} style={{fill: '#4498c0'}}/>}
+                    closeIcon={<HardwareKeyboardArrowDown className={'qa-UserLicense-ArrowDown'} style={{fill: '#4498c0'}}/>}
                 />
                 <CardText className={'qa-UserLicense-CardText'} expandable={true} style={styles.cardText}>
                     <CustomScrollbar style={{height: '200px', width: '100%'}}>
-                        <div style={{padding: '16px', whiteSpace: 'pre-wrap'}}>
+                        <div className={'qa-UserLicense-licenseText'} style={{padding: '16px', whiteSpace: 'pre-wrap'}}>
                             <a href={`/api/licenses/${this.props.license.slug}/download`}>- Download this license text -</a><br/><br/>
                             {this.props.license.text}
                         </div>

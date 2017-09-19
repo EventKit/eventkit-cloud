@@ -121,17 +121,17 @@ export class QuickTourSection extends Component {
                             </div>
                         </div>
                         <div id='captionContainer' style={{width: '100%', backgroundColor: '#4598bf', color: '#fff', padding: '7px 10px'}}>
-                            <div id='captionText' style={{display: 'inline-block', width: `calc(100% - ${stepTotal * numberWidth}px)`, fontSize: captionFontSize}}>
+                            <div id='captionText' className={'qa-QuickTourSection-caption'} style={{display: 'inline-block', width: `calc(100% - ${stepTotal * numberWidth}px)`, fontSize: captionFontSize}}>
                                 {this.props.steps[this.state.step].caption}
                             </div>
-                            <div id='stepsContainer' style={{display: 'inline-block', width: `${stepTotal * numberWidth}px`, verticalAlign: 'top'}}>
+                            <div id='stepsContainer' className={'qa-QuickTourSection-stepsContainer'} style={{display: 'inline-block', width: `${stepTotal * numberWidth}px`, verticalAlign: 'top'}}>
                                 {this.props.steps.map((item, ix) => {
                                     const style = {
                                         ...styles.numberStyle, 
                                         backgroundColor: this.state.step == ix ? '#fff': 'inherit', 
                                         color: this.state.step == ix ? '#4598bf': 'inherit'
                                     } 
-                                    return <div key={ix} id='stepNumber' style={style} onClick={() => {this.goToStep(ix)}}>{ix + 1}</div>
+                                    return <div className={'qa-QuickTourSection-steps'} key={ix} id='stepNumber' style={style} onClick={() => {this.goToStep(ix)}}>{ix + 1}</div>
                                 })}
                             </div>
                         </div>
