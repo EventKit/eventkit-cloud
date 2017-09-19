@@ -27,6 +27,7 @@ export class ExportInfo extends React.Component {
             expanded: false,
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
+            licenseDialogOpen: false,
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -241,6 +242,14 @@ export class ExportInfo extends React.Component {
         this.setState({projectionsDialogOpen: true})
     };
 
+    setLicenseOpen = () => {
+        this.setState({licenseDialogOpen: true});
+    }
+
+    handleLicenseClose = () => {
+        this.setState({licenseDialogOpen: false});
+    }
+
     render() {
         const style ={
             underlineStyle: {
@@ -319,10 +328,51 @@ export class ExportInfo extends React.Component {
                             <div className={styles.sectionBottom}>
                                 <List className={styles.list}>
                                     {providers.map((provider, ix) => {
+                                        // Show license if one exists.
+                                        const nestedItems = [];
+                                        if (provider.license) {
+                                            nestedItems.push(
+                                                <ListItem
+                                                    key={nestedItems.length}
+                                                    disabled={true}
+                                                    primaryText={
+                                                        <div style={{whiteSpace: 'pre-wrap'}}>
+                                                            <i>
+                                                                Use of this data is governed by <a
+                                                                                                    onClick={this.setLicenseOpen}
+                                                                                                    style={{cursor: 'pointer', color: '#4598bf'}}
+                                                                                                >
+                                                                                                    {provider.license.name}
+                                                                                                </a>
+                                                            </i>
+                                                            <BaseDialog
+                                                                show={this.state.licenseDialogOpen}
+                                                                title={provider.license.name}
+                                                                onClose={this.handleLicenseClose}
+                                                            >
+                                                                <div style={{whiteSpace: 'pre-wrap'}}>{provider.license.text}</div>
+                                                            </BaseDialog>
+                                                        </div>
+                                                    }
+                                                    style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0'}}
+                                                />
+                                            );
+                                        }
+                                        nestedItems.push(
+                                            <ListItem
+                                                key={nestedItems.length}
+                                                primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
+                                                disabled={true}
+                                                style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0'}}
+                                            />
+                                        );
+
+                                        const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
+
                                         return <ListItem
                                             key={provider.uid}
-                                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white'}}
-                                            nestedListStyle={{padding: '0px'}}
+                                            style={{backgroundColor: backgroundColor}}
+                                            nestedListStyle={{padding: '0px', backgroundColor: backgroundColor}}
                                             primaryText={provider.name}
                                             leftCheckbox={<Checkbox
                                                 name={provider.name}
@@ -342,13 +392,7 @@ export class ExportInfo extends React.Component {
                                             />}
                                             initiallyOpen={false}
                                             primaryTogglesNestedList={false}
-                                            nestedItems={[
-                                                    <ListItem
-                                                        key={1}
-                                                        primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
-                                                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '16px'}}
-                                                    />
-                                                ]}
+                                            nestedItems={nestedItems}
                                             />
                                     })}
                                 </List>
