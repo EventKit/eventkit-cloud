@@ -99,7 +99,6 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).hasClass('sectionTitle')).toBe(true);
         expect(wrapper.find(AppBar).find('h1').text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
