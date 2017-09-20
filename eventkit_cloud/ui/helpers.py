@@ -37,6 +37,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     """
     from eventkit_cloud.tasks.models import ExportRun
     from ..tasks.export_tasks import TaskStates
+    from ..tasks.task_runners import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -69,11 +70,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                         provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
                         provider_details += [provider_detail]
 
-    style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(job_name,
+    style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
 
     with open(style_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'job_name': job_name,
+        open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
                                                                       'job_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),

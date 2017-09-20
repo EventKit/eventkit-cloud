@@ -88,7 +88,7 @@ export function submitJobReducer(state = initialState.submitJob, action) {
         case types.JOB_SUBMITTED_ERROR:
             return {fetching: false, fetched: false, jobuid: '', error: action.error};
         case types.CLEAR_JOB_INFO:
-            return {fectching: false, fetched: false, jobuid: '', error: null};
+            return {fetching: false, fetched: false, jobuid: '', error: null};
         default:
             return state;
     }

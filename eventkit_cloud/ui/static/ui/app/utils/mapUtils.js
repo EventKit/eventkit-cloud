@@ -285,6 +285,22 @@ export function unwrapCoordinates(coords, projection) {
     });
 }
 
+export function unwrapExtent(extent, projection) {
+    const projectionExtent = projection.getExtent();
+    const worldWidth = ol.extent.getWidth(projectionExtent);
+    let minX = extent[0];
+    if(minX < projectionExtent[0] || minX > projectionExtent[2]) {
+        const worldsAway = Math.ceil((projectionExtent[0] - minX)/ worldWidth);
+        minX = minX + worldWidth * worldsAway;
+    }
+    let maxX = extent[2];
+    if(maxX < projectionExtent[0] || maxX > projectionExtent[2]) {
+        const worldsAway = Math.ceil((projectionExtent[0] - maxX)/ worldWidth);
+        maxX = maxX + worldWidth * worldsAway;
+    }
+    return [minX, extent[1], maxX, extent[3]];
+}
+
 // check if the view center is outside of the 'valid' extent
 export function isViewOutsideValidExtent(view) {
     const projectionExtent = view.getProjection().getExtent();
