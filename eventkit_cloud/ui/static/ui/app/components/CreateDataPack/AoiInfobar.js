@@ -1,21 +1,18 @@
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import styles from '../../styles/AoiInfobar.css';
-import {toggleZoomToSelection, clickZoomToSelection, toggleResetMap, clickResetMap} from '../../actions/AoiInfobarActions.js';
-import {PopupBox} from '../PopupBox';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
 import ActionSearch from 'material-ui/svg-icons/action/search';
+import isEqual from 'lodash/isEqual';
 
 export const NO_SELECTION_ICON = <AlertWarning className={styles.geometryIcon}/>;
 export const MULTIPOLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POLYGON_ICON = <ImageCropSquare className={styles.geometryIcon}/>;
 export const POINT_ICON = <ActionRoom className={styles.geometryIcon}/>;
-import isEqual from 'lodash/isEqual';
 
 export class AoiInfobar extends Component {
-
     constructor(props) {
         super(props)
         this.dispatchZoomToSelection = this.dispatchZoomToSelection.bind(this);
@@ -40,30 +37,36 @@ export class AoiInfobar extends Component {
 
     handleAoiInfo(aoiInfo) {
         if(!isEqual(aoiInfo.geojson, {})) {
+            let icon = null
             if(aoiInfo.geomType == 'Point') {
-            this.setState({geometryIcon: POINT_ICON});
+                icon = POINT_ICON;
             }
             else if(aoiInfo.geomType == 'Polygon') {
-                this.setState({geometryIcon: POLYGON_ICON});
+                icon = POLYGON_ICON;
             }
             else if(aoiInfo.geomType == 'MultiPolygon') {
-                this.setState({geometryIcon: MULTIPOLYGON_ICON});
+                icon = MULTIPOLYGON_ICON;
             }
-            this.setState({aoiTitle: aoiInfo.title});
-            this.setState({aoiDescription: aoiInfo.description});
-            this.setState({showAoiInfobar: true});
+            this.setState({
+                geometryIcon: icon,
+                aoiTitle: aoiInfo.title,
+                aoiDescription: aoiInfo.description,
+                showAoiInfobar: true
+            });
         }
         else {
-            this.setState({showAoiInfobar: false});
-            this.setState({geometryIcon: NO_SELECTION_ICON});
-            this.setState({aoiTitle: ''});
-            this.setState({aoiDescription: 'No AOI Set'});    
+            this.setState({
+                showAoiInfobar: false,
+                geometryIcon: NO_SELECTION_ICON,
+                aoiTitle: '',
+                aoiDescription: 'No AOI Set'
+            });
         }
     }
 
     dispatchZoomToSelection() {
         //If the zoom button is active dispatch the click
-        if(!this.props.zoomToSelection.disabled){
+        if(!this.props.disabled){
             this.props.clickZoomToSelection();
         }
     }
@@ -73,7 +76,6 @@ export class AoiInfobar extends Component {
             <div>
                 {this.state.showAoiInfobar ? 
                 <div className={styles.aoiInfoWrapper}>
-                    
                     <div className={styles.aoiInfobar}>
                         <div className={styles.topBar}>
                             <span className={styles.aoiInfoTitle}><strong>Area Of Interest (AOI)</strong></span>
@@ -102,28 +104,9 @@ export class AoiInfobar extends Component {
 }
 
 AoiInfobar.propTypes = {
-    aoiInfo: React.PropTypes.object,
-    zoomToSelection: React.PropTypes.object,
-    clickZoomToSelection: React.PropTypes.func,
+    aoiInfo: PropTypes.object,
+    disabled: PropTypes.bool,
+    clickZoomToSelection: PropTypes.func,
 }
 
-function mapStateToProps(state) {
-    return {
-        aoiInfo: state.aoiInfo,
-        zoomToSelection: state.zoomToSelection,
-    }
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        
-        clickZoomToSelection: () => {
-            dispatch(clickZoomToSelection());
-        },
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(AoiInfobar)
+export default AoiInfobar;
