@@ -238,16 +238,6 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    // it('handleDownload should set timeout to open window with download url', () => {
-    //     const openSpy = new sinon.spy();
-    //     window.open = openSpy;
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
-    //     wrapper.instance().handleDownload();
-    //     expect(openSpy.calledOnce).toBe(true);
-    // });
-
     it('handleSingleDownload should open a url in a different window', () => {
         const openSpy = new sinon.spy();
         window.open = openSpy;
