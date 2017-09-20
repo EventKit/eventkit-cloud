@@ -547,7 +547,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     geojson_file = os.path.join(stage_dir,
                                 "{0}_selection.geojson".format(provider_slug))
 
-    if selection and not os.path.isfile(geojson_file):
+    if selection:
         # Test if json.
         json.loads(selection)
         from audit_logging.file_logging import logging_open
@@ -556,8 +556,6 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
             open_file.write(selection)
         result['selection'] = geojson_file
         result['result'] = geojson_file
-    else:
-        result['result'] = None
 
     return result
 
