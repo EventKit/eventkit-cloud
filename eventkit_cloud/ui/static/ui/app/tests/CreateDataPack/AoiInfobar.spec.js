@@ -66,16 +66,14 @@ describe('AoiInfobar component', () => {
         wrapper.setProps(nextProps);
 
         expect(wrapper.find('div')).toHaveLength(8);
-        expect(wrapper.find('.aoiInfoWrapper')).toHaveLength(1);
-        expect(wrapper.find('.topBar')).toHaveLength(1);
-        expect(wrapper.find('.aoiInfoTitle').text()).toEqual('Area Of Interest (AOI)');
-        expect(wrapper.find('.simpleButton .activeButton')).toHaveLength(1);
-        expect(wrapper.find('.simpleButton').first().text()).toEqual(' ZOOM TO SELECTION');
+        expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('Area Of Interest (AOI)');
+        expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toEqual(' ZOOM TO SELECTION');
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
-        expect(wrapper.find('.aoiTitle').text()).toEqual('fake title');
-        expect(wrapper.find('.aoiDescription').text()).toEqual('fake description');
+        expect(wrapper.find('.qa-AoiInfobar-name').text()).toEqual('fake title');
+        expect(wrapper.find('.qa-AoiInfobar-description').text()).toEqual('fake description');
         expect(wrapper.find(ImageCropSquare)).toHaveLength(1);
-        expect(wrapper.find(ImageCropSquare).hasClass('geometryIcon')).toBe(true);
+        expect(wrapper.find(ImageCropSquare).hasClass('qa-AoiInfobar-icon-polygon')).toBe(true);
     });
 
     it('clicking on active buttons should execute click functions', () => {
@@ -92,7 +90,7 @@ describe('AoiInfobar component', () => {
         nextProps.aoiInfo.geomType = 'Polygon';
         nextProps.aoiInfo.title = 'fake title';
         wrapper.setProps(nextProps);
-        wrapper.find('.activeButton').simulate('click');
+        wrapper.find('.qa-AoiInfobar-button-zoom').simulate('click');
         expect(nextProps.clickZoomToSelection.calledOnce).toEqual(true);
     })
 });
