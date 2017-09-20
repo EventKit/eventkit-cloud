@@ -655,7 +655,7 @@ export class MapView extends Component {
         
         const feature = this.state.selectedFeature ? this.source.getFeatureById(this.state.selectedFeature): null;
         return (
-            <div style={{height: window.innerHeight - 236}}>
+            <div style={{height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223}}>
                 <CustomScrollbar style={styles.list}>
                     <div style={styles.root}>
                         <GridList
