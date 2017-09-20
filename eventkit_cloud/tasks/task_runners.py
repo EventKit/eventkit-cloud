@@ -108,7 +108,7 @@ class ExportOSMTaskRunner(TaskRunner):
             format_tasks = chain(
                 task.get('obj').s(
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
-                    user_details=user_details
+                    user_details=user_details, locking_task_key=export_provider_task_record.uid
                 ).set(queue=worker, routing_key=worker)
                 for format_ignored, task in export_tasks.iteritems()
             )
@@ -127,7 +127,7 @@ class ExportOSMTaskRunner(TaskRunner):
             run_uid=run.uid, provider_slug=provider_task.provider.slug, stage_dir=stage_dir,
             export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
-            config=provider_task.provider.config
+            config=provider_task.provider.config, locking_task_key=export_provider_task_record.uid
         )
 
         if format_tasks:
@@ -207,7 +207,8 @@ class ExportWFSTaskRunner(TaskRunner):
                                          layer=provider_task.provider.layer,
                                          bbox=bbox,
                                          service_url=provider_task.provider.url,
-                                         user_details=user_details).set(queue=worker, routing_key=worker))
+                                         user_details=user_details,
+                                         locking_task_key=export_provider_task.uid).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('gpkg'):
                 gpkg_export_task = export_tasks.pop('gpkg')
@@ -215,7 +216,8 @@ class ExportWFSTaskRunner(TaskRunner):
                                                                          stage_dir=stage_dir,
                                                                          job_name=job_name,
                                                                          task_uid=gpkg_export_task.get('task_uid'),
-                                                                         user_details=user_details) \
+                                                                         user_details=user_details,
+                                                                         locking_task_key=export_provider_task.uid) \
                               .set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
@@ -308,7 +310,8 @@ class ExportWCSTaskRunner(TaskRunner):
                                          layer=provider_task.provider.layer,
                                          bbox=bbox,
                                          service_url=provider_task.provider.url,
-                                         user_details=user_details).set(queue=worker, routing_key=worker))
+                                         user_details=user_details,
+                                         locking_task_key=export_provider_task.uid).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('geotiff'):
                 gtiff_export_task = export_tasks.pop('geotiff')
@@ -316,7 +319,8 @@ class ExportWCSTaskRunner(TaskRunner):
                                                                           stage_dir=stage_dir,
                                                                           job_name=job_name,
                                                                           task_uid=gtiff_export_task.get('task_uid'),
-                                                                          user_details=user_details)
+                                                                          user_details=user_details,
+                                                                          locking_task_key=export_provider_task.uid)
                               .set(queue=worker, routing_key=worker))
 
             if len(export_tasks) > 0:
@@ -412,7 +416,8 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                          layer=provider_task.provider.layer,
                                          bbox=bbox,
                                          service_url=provider_task.provider.url,
-                                         user_details=user_details).set(queue=worker, routing_key=worker))
+                                         user_details=user_details,
+                                         locking_task_key=export_provider_task.uid).set(queue=worker, routing_key=worker))
 
             if export_tasks.get('gpkg'):
                 gpkg_export_task = export_tasks.pop('gpkg')
@@ -428,7 +433,8 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                                        stage_dir=stage_dir,
                                                        job_name=job_name,
                                                        task_uid=task.get('task_uid'),
-                                                       user_details=user_details).set(queue=worker, routing_key=worker)
+                                                       user_details=user_details,
+                                                       locking_task_key=export_provider_task.uid).set(queue=worker, routing_key=worker)
                                      for task_name, task
                                      in
                                      export_tasks.iteritems() if task is not None)
@@ -516,7 +522,8 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
                                                                  level_from=provider_task.provider.level_from,
                                                                  level_to=provider_task.provider.level_to,
                                                                  service_type=service_type,
-                                                                 user_details=user_details).set(queue=worker,
+                                                                 user_details=user_details,
+                                                                 locking_task_key=export_provider_task.uid).set(queue=worker,
                                                                                                 routing_key=worker)
 
             return export_provider_task.uid, service_task

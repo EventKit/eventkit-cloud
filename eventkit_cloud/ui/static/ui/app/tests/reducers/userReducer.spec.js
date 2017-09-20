@@ -25,6 +25,16 @@ describe('userReducer', () => {
         )).toEqual({...initialState, data: {user: {username: 'admin'}, accepted_licenses: {one: true}}});
     });
 
+    it('USER_LOGGED_IN should set loading to false an data to null if no payload', () => {
+        expect(userReducer(
+            {...initialState, isLoading: true},
+            {
+                type: types.USER_LOGGED_IN,
+                payload: null
+            }
+        )).toEqual({...initialState});
+    });
+
     it('USER_LOGGED_OUT should set isLoading false and userdata null', () =>{
         expect(userReducer(
             {...initialState, isLoading: true, data: {user: {some: 'data'}}},

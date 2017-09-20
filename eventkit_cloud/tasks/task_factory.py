@@ -127,8 +127,7 @@ class TaskFactory:
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker, apply_args=finalize_task_settings),
-                        apply_args=finalize_task_settings)
-
+                        apply_args=finalize_task_settings).set(**finalize_task_settings)
 
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
@@ -147,7 +146,7 @@ class TaskFactory:
                             finalize_export_provider_task.si(
                                 export_provider_task_uid=provider_task_uid,
                                 status=TaskStates.INCOMPLETE.value,
-                                locking_task_key=run_uid),
+                                locking_task_key=run_uid).set(**finalize_task_settings),
                             wait_for_providers_signature
                         )
 
@@ -171,7 +170,7 @@ class TaskFactory:
                                                                          stage_dir=stage_dir, worker=worker,
                                                                          job_name=run.job.name)
                             provider_subtask_chain = chain(
-                                provider_subtask_chain, zip_export_provider_sig, finalize_export_provider_signature
+                                provider_subtask_chain, zip_export_provider_sig
                             )
 
                         finalized_provider_task_chain = chain(
@@ -248,7 +247,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     return task.s(
         run_uid=export_provider_task.run.uid, task_uid=export_task.uid, selection=selection, stage_dir=stage_dir,
         provider_slug=export_provider_task.slug, export_provider_task_uid=export_provider_task_uid, job_name=job_name,
-        user_details=user_details, bbox=export_provider_task.run.job.extents
+        user_details=user_details, bbox=export_provider_task.run.job.extents, locking_task_key=export_provider_task_uid
     ).set(queue=worker, routing_key=worker)
 
 
