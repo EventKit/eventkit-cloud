@@ -74,11 +74,12 @@ def load_land_vectors(db_conn=None, url=None):
         file_name = download_filename
 
     cmd = 'ogr2ogr -s_srs EPSG:3857 -t_srs EPSG:4326 -f "PostgreSQL" ' \
-          'PG:"host={host} user={user} password={password} dbname={name}" ' \
+          'PG:"host={host} user={user} password={password} dbname={name} port={port}" ' \
           '{file} land_polygons'.format(host=database['HOST'],
                                         user=database['USER'],
                                         password=database['PASSWORD'],
                                         name=database['NAME'],
+                                        port=database['PORT'],
                                         file=file_name)
     logger.info("Loading land data...")
     exit_code = subprocess.call(cmd, shell=True)
