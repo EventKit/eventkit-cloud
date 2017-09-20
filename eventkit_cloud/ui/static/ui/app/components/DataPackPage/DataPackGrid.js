@@ -42,7 +42,7 @@ export class DataPackGrid extends Component {
         };
 
         return ( 
-            <CustomScrollbar style={{height: window.innerHeight - 236, width: '100%'}}>
+            <CustomScrollbar style={{height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%'}}>
                 <div style={styles.root}>
                     <GridList
                         cellHeight={'auto'}
