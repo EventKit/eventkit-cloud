@@ -374,9 +374,10 @@ def osm_data_collection_pipeline(
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
 
-    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}'\"".format(host=database['HOST'],
+    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}' port='{port}'\"".format(host=database['HOST'],
                                         user=database['USER'],
                                         password=database['PASSWORD'],
+                                        port=database['PORT'],
                                         name=database['NAME'])
 
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
@@ -546,7 +547,6 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
     geojson_file = os.path.join(stage_dir,
                                 "{0}_selection.geojson".format(provider_slug))
-
     if selection:
         # Test if json.
         json.loads(selection)
