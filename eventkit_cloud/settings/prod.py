@@ -284,7 +284,8 @@ UI_CONFIG = {
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
     'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
-    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png')
+    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+    'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', 'Map data © OpenStreetMap contributors'),
 }
 
 if os.environ.get('USE_S3'):
