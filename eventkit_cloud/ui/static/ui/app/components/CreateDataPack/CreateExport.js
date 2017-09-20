@@ -2,7 +2,6 @@ import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import AppBar from 'material-ui/AppBar'
 import BreadcrumbStepper from '../BreadcrumbStepper'
-import primaryStyles from '../../styles/constants.css'
 
 export class CreateExport extends React.Component {
 
@@ -19,13 +18,22 @@ export class CreateExport extends React.Component {
                 color: 'white',
                 fontSize: '14px',
             },
+            pageTitle: {
+                fontSize: '18px', 
+                lineHeight: '35px', 
+                paddingLeft: '10px',
+                height: '35px'
+            }
         }
 
         return (
             <div>
-                <AppBar className={primaryStyles.sectionTitle} style={styles.appBar} title={pageTitle}
-                        iconStyleRight={{marginTop: '2px'}}
-                        iconElementLeft={<p style={{display: 'none'}}/>}
+                <AppBar 
+                    style={styles.appBar} 
+                    title={pageTitle}
+                    titleStyle={styles.pageTitle}
+                    iconStyleRight={{marginTop: '2px'}}
+                    iconElementLeft={<p style={{display: 'none'}}/>}
                 />
                 <BreadcrumbStepper/>
                 <div >
