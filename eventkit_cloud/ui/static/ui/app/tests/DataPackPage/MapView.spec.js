@@ -586,6 +586,7 @@ describe('MapView component', () => {
         const deselectSpy = new sinon.spy(MapView.prototype, 'setFeatureNotSelected');
         const selectSpy = new sinon.spy(MapView.prototype, 'setFeatureSelected');
         const setCenterSpy = new sinon.spy(ol.View.prototype, 'setCenter');
+        const unwrapSpy = new sinon.spy(utils, 'unwrapExtent');
         const newFeature = new ol.Feature({
             geometry: new ol.geom.Point([-10, 10])
         });
@@ -610,10 +611,12 @@ describe('MapView component', () => {
         expect(selectSpy.calledWith(newFeature)).toBe(true);
         expect(stateSpy.calledWith({selectedFeature: newFeature.getId(), showPopup: true})).toBe(true);
         expect(setCenterSpy.calledOnce).toBe(true);
+        expect(unwrapSpy.calledTwice).toBe(true);
         stateSpy.restore();
         deselectSpy.restore();
         selectSpy.restore();
         setCenterSpy.restore();
+        unwrapSpy.restore();
     });
 
     it('handleClick should trigger an animation', () => {
