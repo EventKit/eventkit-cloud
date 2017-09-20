@@ -161,7 +161,6 @@ describe('DataCartDetails component', () => {
     it('should handle setting state of zipFileUrl when component updates', () => {
         let props = getProps();
         props.cartDetails.zipfile_url = null;
-        console.log(props)
         const wrapper = shallow(<DataCartDetails {...props}/>);
         let nextProps = getProps();
         nextProps.cartDetails.zipfile_url = 'fakeFileUrl.zip';

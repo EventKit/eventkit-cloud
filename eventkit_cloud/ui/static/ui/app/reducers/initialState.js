@@ -10,12 +10,6 @@ export default {
         description: null,
         selectionType: null,
     },
-    zoomToSelection: {
-        click: false
-    },
-    resetMap: {
-        click: false
-    },
     geocode: {
         fetching: false,
         fetched: false,
