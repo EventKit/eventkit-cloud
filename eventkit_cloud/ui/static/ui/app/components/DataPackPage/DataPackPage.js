@@ -9,7 +9,6 @@ import Drawer from 'material-ui/Drawer';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
-import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
 import DataPackViewButtons from './DataPackViewButtons';
 import DataPackSortDropDown from './DataPackSortDropDown';
@@ -275,6 +274,12 @@ export class DataPackPage extends React.Component {
                 color: 'white',
                 fontSize: '14px',
             },
+            pageTitle: {
+                fontSize: '18px', 
+                lineHeight: '35px', 
+                paddingLeft: '10px',
+                height: '35px'
+            },
             toolbarSearch: {
                 backgroundColor: '#253447',
             },
@@ -303,8 +308,9 @@ export class DataPackPage extends React.Component {
         return (
             <div style={styles.backgroundStyle}>
                 <AppBar 
-                    className={primaryStyles.sectionTitle} 
-                    style={styles.appBar} title={pageTitle}
+                    style={styles.appBar} 
+                    title={pageTitle}
+                    titleStyle={styles.pageTitle}
                     iconElementLeft={<p></p>}
                 >
                     <DataPackLinkButton />
