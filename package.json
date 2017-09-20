@@ -58,7 +58,7 @@
     "axios-mock-adapter": "~1.7.1",
     "enzyme": "~2.7.1",
     "identity-obj-proxy": "~3.0.0",
-    "jest-cli": "~19.0.2",
+    "jest-cli": "~21.1.0",
     "jsdom": "~9.12.0",
     "nock": "~9.0.2",
     "webpack-dev-server": "~2.4.5",
@@ -90,7 +90,7 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
     },
-    "modulePathIgnorePatterns": ["staticfiles/"],
+    "modulePathIgnorePatterns": ["staticfiles/", "rootReducer.js", "index.js", "store/"],
     "setupFiles": ["./setupFile.js"],
     "transformIgnorePatterns": ["/node_modules/(?!jsts)"]
   },
