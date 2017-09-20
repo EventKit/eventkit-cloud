@@ -73,7 +73,7 @@ services:
         - postgis
         - rabbitmq
       environment:
-        - CONCURRENCY=4
+        - CONCURRENCY=1
         - MAPPROXY_CONCURRENCY=4
       command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
