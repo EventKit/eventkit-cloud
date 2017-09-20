@@ -15,7 +15,7 @@ import DropZone from '../MapTools/DropZone.js';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
-    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates} from '../../utils/mapUtils'
+    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -272,9 +272,12 @@ export class MapView extends Component {
                     this.setState({selectedFeature: feature.getId(), showPopup: true});
 
                     // if the feature in not in current view, center the view on selected feature
-                    const mapExtent = this.map.getView().calculateExtent();
-                    if(!ol.extent.containsExtent(mapExtent, feature.getGeometry().getExtent())) {
-                        this.map.getView().setCenter(ol.extent.getCenter(feature.getGeometry().getExtent()));
+                    // make sure we are comparing only unwrapped extents to avoid uneeded centering when map is wrapped
+                    const mapExtent = unwrapExtent(this.map.getView().calculateExtent(), this.map.getView().getProjection());
+                    const featureExtent = unwrapExtent(feature.getGeometry().getExtent(), this.map.getView().getProjection());
+
+                    if(!ol.extent.containsExtent(mapExtent, featureExtent)) {
+                        this.map.getView().setCenter(ol.extent.getCenter(featureExtent));
                     }
                     // if it is in view and not a polygon, trigger an animation
                     else {
