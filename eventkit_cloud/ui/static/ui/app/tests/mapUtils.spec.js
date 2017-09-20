@@ -510,6 +510,27 @@ describe('mapUtils', () => {
         expect(utils.unwrapCoordinates(coords, proj)).toEqual(expected);
     });
 
+    it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
+        const proj = ol.proj.get('EPSG:4326');
+        const extent = [700, -90, 740, 90];
+        const expected = [-20, -90, 20, 90];
+        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+    });
+
+    it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
+        const proj = ol.proj.get('EPSG:4326');
+        const extent = [-540, -90, -185, 90];
+        const expected = [-180, -90, 175, 90];
+        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+    });
+
+    it('unwrapExtent should return the extent unmodified', () => {
+        const proj = ol.proj.get('EPSG:4326');
+        const extent = [-120, -90, 180, 90];
+        const expected = [-120, -90, 180, 90];
+        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+    });
+
     it('isViewOutsideValidExtent should return true or false', () => {
         const view = new ol.View({center: [-190, 40], projection: 'EPSG:4326'});
         expect(utils.isViewOutsideValidExtent(view)).toBe(true);
