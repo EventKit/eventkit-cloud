@@ -28,8 +28,9 @@ class TestS3Util(TestCase):
         )
         self._path = '%s/%s' % (self._uuid, self._filename)
 
+    @patch('eventkit_cloud.utils.s3.os.path.isfile')
     @patch('eventkit_cloud.utils.s3.get_s3_client')
-    def test_upload_to_s3(self, mock_get_s3_client):
+    def test_upload_to_s3(self, mock_get_s3_client, mock_isfile):
         mock_client = MagicMock()
         mock_get_s3_client.return_value = mock_client
 
@@ -37,6 +38,7 @@ class TestS3Util(TestCase):
             upload_to_s3(self._uuid, self._filename, self._filename)
 
         mock_client.upload_fileobj.assert_called_once()
+        mock_isfile.assert_called_once_with(os.path.join(settings.EXPORT_STAGING_ROOT, self._uuid, self._filename))
         mock_client.generate_presigned_url.assert_called_once_with('get_object', Params={'Bucket': 'test-bucket', 'Key': 'd34db33f/cool.pbf'})
 
 
