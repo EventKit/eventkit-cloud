@@ -36,18 +36,18 @@ export class DataPackTableItem extends Component {
 
     getPermissionsIcon(published) {
         return published ? <SocialGroup style={{color: 'bcdfbb'}}/> 
-        : <SocialPerson style={{color: 'grey'}}/>;
+        : <SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>;
     }
 
     getStatusIcon(status) {
         if(status == 'SUBMITTED') {
-            return <NotificationSync style={{color: '#f4d225'}}/>
+            return <NotificationSync className={'qa-DataPackTableItem-NotificationSync'} style={{color: '#f4d225'}}/>
         }
         else if(status == 'INCOMPLETE') {
-            return <AlertError style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>
+            return <AlertError className={'qa-DataPackTableItem-AlertError'} style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>
         }
         else {
-            return <NavigationCheck style={{color: '#bcdfbb', height: '22px'}}/>
+            return <NavigationCheck className={'qa-DataPackTableItem-NavigationCheck'} style={{color: '#bcdfbb', height: '22px'}}/>
         }
     }
     handleProviderClose = () => {
@@ -86,6 +86,7 @@ export class DataPackTableItem extends Component {
         const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
             return (
                 <ListItem
+                    className={'qa-DataPackTableItem-ListItem-providerDescs'}
                     key={key}
                     style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
                     nestedListStyle={{padding: '0px'}}
@@ -115,44 +116,47 @@ export class DataPackTableItem extends Component {
         };
 
         return (
-            <TableRow>
-                <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: '#4598bf'}}>
+            <TableRow className={'qa-DataPackTableItem-TableRow'}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-jobLink'} style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: '#4598bf'}}>
                     <Link to={'/status/' + this.props.run.job.uid} style={{color: 'inherit'}}>{this.props.run.job.name}</Link>
                 </TableRowColumn>
-                <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: 'grey'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-event'} style={{padding: '0px 0px 0px 10px', textAlign: 'left', color: 'grey'}}>
                     {this.props.run.job.event}
                 </TableRowColumn>
-                <TableRowColumn style={{width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', color: 'grey'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-started'} style={{width: '98px', padding: '0px 0px 0px 10px', textAlign: 'left', color: 'grey'}}>
                     {moment(this.props.run.started_at).format('YYYY-MM-DD')}
                 </TableRowColumn>
-                <TableRowColumn style={{width: '65px', padding: '0px 0px 0px 0px', textAlign: 'center'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-status'} style={{width: '65px', padding: '0px 0px 0px 0px', textAlign: 'center'}}>
                     {this.getStatusIcon(this.props.run.status)}
                 </TableRowColumn>
-                <TableRowColumn style={{width: '100px' ,padding: '0px 0px 0px 0px',textAlign: 'center'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-published'} style={{width: '100px' ,padding: '0px 0px 0px 0px',textAlign: 'center'}}>
                     {this.getPermissionsIcon(this.props.run.job.published)}
                 </TableRowColumn>
-                <TableRowColumn style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-owner'} style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>
                     {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
                 </TableRowColumn>
-                <TableRowColumn style={{padding: '0px 0px 0px 10px', width: '80px', textAlign: 'center'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-featured'} style={{padding: '0px 0px 0px 10px', width: '80px', textAlign: 'center'}}>
                     {this.props.run.job.featured ? <NavigationCheck style={{fill: '#4598bf'}}/> : null}
                 </TableRowColumn>
-                <TableRowColumn style={{paddingRight: '10px', padding: '0px', width: '35px'}}>
+                <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-iconMenu'} style={{paddingRight: '10px', padding: '0px', width: '35px'}}>
                     <IconMenu
                         iconButtonElement={
-                            <IconButton 
+                            <IconButton
+                                className={'qa-DataPackTableItem-IconMenu'}
                                 style={{padding: '0px', width: '20px', verticalAlign: 'middle'}}
                                 iconStyle={{color: '#4598bf'}}>
-                                <NavigationMoreVert />
+                                <NavigationMoreVert className={'qa-DataPackTableItem-NavigationMoreVert'} />
                             </IconButton>}
                         anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                         targetOrigin={{horizontal: 'right', vertical: 'top'}}
                     >
-                        <MenuItem 
+                        <MenuItem
+                            className={'qa-DataPackTableItem-MenuItem-statusDownloadLink'}
                             style={{fontSize: '12px'}}
                             primaryText="Go to Status & Download"
                             onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                         <MenuItem
+                            className={'qa-DataPackTableItem-MenuItem-viewDataSources'}
                             style={{fontSize: '12px'}}
                             primaryText="View Data Sources"
                             onClick={this.handleProviderOpen.bind(this, runProviders)}
@@ -160,19 +164,22 @@ export class DataPackTableItem extends Component {
                         
                         {this.props.run.user == this.props.user.data.user.username ?
                         <MenuItem
+                            className={'qa-DataPackTableItem-MenuItem-deleteExport'}
                             style={{fontSize: '12px'}}
                             primaryText={'Delete Export'}
                             onClick={this.showDeleteDialog}/>
                         : null}
                     </IconMenu>
                     <BaseDialog
+                        className={'qa-DataPackTableItem-BaseDialog'}
                         show={this.state.providerDialogOpen}
                         title={'DATA SOURCES'}
                         onClose={this.handleProviderClose.bind(this)}
                     >
-                        <List>{providersList}</List>
+                        <List className={'qa-DataPackTableItem-List-dataSources'} >{providersList}</List>
                     </BaseDialog>
                     <DeleteDialog
+                        className={'qa-DataPackTableItem-DeleteDialog'}
                         show={this.state.deleteDialogOpen}
                         handleCancel={this.hideDeleteDialog}
                         handleDelete={this.handleDelete}

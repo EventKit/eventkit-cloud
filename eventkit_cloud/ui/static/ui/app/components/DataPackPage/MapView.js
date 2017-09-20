@@ -659,6 +659,7 @@ export class MapView extends Component {
                 <CustomScrollbar style={styles.list}>
                     <div style={styles.root}>
                         <GridList
+                            className={'qa-MapView-GridList'}
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
@@ -679,8 +680,8 @@ export class MapView extends Component {
                     </div>
                     {load}
                 </CustomScrollbar>
-                <div style={styles.map}>
-                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
+                <div  style={styles.map}>
+                    <div className={'qa-MapView-div-map'} style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
                     <SearchAOIToolbar
                         handleSearch={this.handleSearch}
                         handleCancel={this.handleCancel}
@@ -716,7 +717,7 @@ export class MapView extends Component {
                     </div>
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}/>
-                        <div id="popup-content">
+                        <div className={'qa-MapView-div-popupContent'} id="popup-content">
                             <p style={{color: 'grey'}}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                             {this.state.groupedFeatures.map((feature, ix) => {

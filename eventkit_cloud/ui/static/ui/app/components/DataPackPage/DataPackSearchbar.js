@@ -26,7 +26,7 @@ class DataPackSearchbar extends React.Component {
 
         return (
             <AutoComplete
-                className={searchStyles.autoComplete}
+                className={'qa-DataPackSearchBar-AutoComplete'}
                 dataSource={[]}
                 hintText={"Search DataPacks"}
                 onNewRequest={this.props.onSearchSubmit}

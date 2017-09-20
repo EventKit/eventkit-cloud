@@ -84,7 +84,8 @@ export class FilterDrawer extends React.Component {
         };
 
         return (
-            <Drawer 
+            <Drawer
+                className={'qa-FilterDrawer-Drawer'}
                 width={200}
                 openSecondary={true} 
                 open={this.props.open}
