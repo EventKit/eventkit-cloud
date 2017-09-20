@@ -25,6 +25,7 @@ export class ExportInfo extends React.Component {
             expanded: false,
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
+            licenseDialogOpen: false,
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -239,6 +240,14 @@ export class ExportInfo extends React.Component {
         this.setState({projectionsDialogOpen: true})
     };
 
+    setLicenseOpen = () => {
+        this.setState({licenseDialogOpen: true});
+    }
+
+    handleLicenseClose = () => {
+        this.setState({licenseDialogOpen: false});
+    }
+
     render() {
         const style ={
             underlineStyle: {
@@ -300,7 +309,7 @@ export class ExportInfo extends React.Component {
                             <div id='mainHeading' className={'qa-ExportInfo-mainHeading'} style={style.heading}>Enter General Information</div>
                             <CustomTextField
                                 className={'qa-ExportInfo-input-name'}
-                                id='nameField' 
+                                id='nameField'
                                 name="exportName"
                                 ref="exportName"
                                 underlineStyle={style.underlineStyle}
@@ -361,11 +370,53 @@ export class ExportInfo extends React.Component {
                             <div style={style.sectionBottom}>
                                 <List className={'qa-ExportInfo-List'} style={{width: '100%', fontSize: '16px'}}>
                                     {providers.map((provider, ix) => {
+                                        // Show license if one exists.
+                                        const nestedItems = [];
+                                        if (provider.license) {
+                                            nestedItems.push(
+                                                <ListItem
+                                                    key={nestedItems.length}
+                                                    disabled={true}
+                                                    primaryText={
+                                                        <div style={{whiteSpace: 'pre-wrap'}}>
+                                                            <i>
+                                                                Use of this data is governed by <a
+                                                                                                    onClick={this.setLicenseOpen}
+                                                                                                    style={{cursor: 'pointer', color: '#4598bf'}}
+                                                                                                >
+                                                                                                    {provider.license.name}
+                                                                                                </a>
+                                                            </i>
+                                                            <BaseDialog
+                                                                show={this.state.licenseDialogOpen}
+                                                                title={provider.license.name}
+                                                                onClose={this.handleLicenseClose}
+                                                            >
+                                                                <div style={{whiteSpace: 'pre-wrap'}}>{provider.license.text}</div>
+                                                            </BaseDialog>
+                                                        </div>
+                                                    }
+                                                    style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0'}}
+                                                />
+                                            );
+                                        }
+                                        nestedItems.push(
+                                            <ListItem
+                                                className={'qa-ExportInfo-ListItem-provServDesc'}
+                                                key={nestedItems.length}
+                                                primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
+                                                disabled={true}
+                                                style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0'}}
+                                            />
+                                        );
+
+                                        const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
+
                                         return <ListItem
                                             className={'qa-ExportInfo-ListItem'}
                                             key={provider.uid}
-                                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight: 'normal', fontSize: '16px', padding: '16px 16px 16px 45px', marginBottom: '0px'}}
-                                            nestedListStyle={{padding: '0px'}}
+                                            style={{backgroundColor: backgroundColor}}
+                                            nestedListStyle={{padding: '0px', backgroundColor: backgroundColor}}
                                             primaryText={provider.name}
                                             leftCheckbox={<Checkbox
                                                 className={'qa-ExportInfo-CheckBox-provider'}
@@ -388,14 +439,7 @@ export class ExportInfo extends React.Component {
                                             />}
                                             initiallyOpen={false}
                                             primaryTogglesNestedList={false}
-                                            nestedItems={[
-                                                    <ListItem
-                                                        className={'qa-ExportInfo-ListItem-provServDesc'}
-                                                        key={1}
-                                                        primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
-                                                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '13px'}}
-                                                    />
-                                                ]}
+                                            nestedItems={nestedItems}
                                             />
                                     })}
                                 </List>
