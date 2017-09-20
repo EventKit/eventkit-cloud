@@ -264,7 +264,7 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 231,
+                height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
