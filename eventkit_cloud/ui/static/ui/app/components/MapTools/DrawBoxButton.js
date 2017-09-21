@@ -47,22 +47,22 @@ export class DrawBoxButton extends Component {
         }
 
         const DEFAULT_ICON = <div id='default_icon'>
-                <ImageCropSquare style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>BOX</div>
+                <ImageCropSquare className={'qa-DrawBoxButton-ImageCropSquare-default'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawBoxButton-div-default'} style={styles.buttonName}>BOX</div>
             </div>
 
         const INACTIVE_ICON = <div id='inactive_icon'>
-                <ImageCropSquare style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={{...styles.buttonName, opacity: 0.4}}>BOX</div>
+                <ImageCropSquare className={'qa-DrawBoxButton-ImageCropSquare-inactive'} style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawBoxButton-div-inactive'} style={{...styles.buttonName, opacity: 0.4}}>BOX</div>
             </div>
 
         const SELECTED_ICON = <div id='selected_icon'>
-                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>BOX</div>
+                <ContentClear className={'qa-DrawBoxButton-ContentClear'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawBoxButton-div-selected'} style={styles.buttonName}>BOX</div>
             </div>
 
         return (
-            <button style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button className={'qa-DrawBoxButton-button'} style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )

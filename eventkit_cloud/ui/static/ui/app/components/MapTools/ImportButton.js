@@ -46,22 +46,22 @@ export class ImportButton extends Component {
         }
 
         const DEFAULT_ICON = <div id='default_icon'>
-                <FileFileUpload style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>IMPORT</div>
+                <FileFileUpload  className={'qa-ImportButton-FileFileUpload-default'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-ImportButton-div-default'} style={styles.buttonName}>IMPORT</div>
             </div>
 
         const INACTIVE_ICON = <div id='inactive_icon'>
-                <FileFileUpload style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={{...styles.buttonName, opacity: 0.4}}>IMPORT</div>
+                <FileFileUpload  className={'qa-ImportButton-FileFileUpload-inactive'} style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-ImportButton-div-inactive'} style={{...styles.buttonName, opacity: 0.4}}>IMPORT</div>
             </div>
 
         const SELECTED_ICON =<div id='selected_icon'>
-                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>IMPORT</div>
+                <ContentClear className={'qa-ImportButton-ContentClear'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-ImportButton-div-selected'} style={styles.buttonName}>IMPORT</div>
             </div>
 
         return (
-            <button style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button className={'qa-ImportButton-button'} style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )

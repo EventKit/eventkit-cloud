@@ -72,10 +72,10 @@ export class DataPackDetails extends React.Component {
 
     getCloudDownloadIcon() {
         if(this.props.zipFileProp == null){
-            return <CloudDownload style={{fill:'gray', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-DataPackDetails-CloudDownload-disabled'} style={{fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
-            return <CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-DataPackDetails-CloudDownload-enabled'} style={{fill:'#4598bf', verticalAlign: 'middle'}}/>
         }
     }
 

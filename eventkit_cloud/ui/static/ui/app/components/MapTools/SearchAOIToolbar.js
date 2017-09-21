@@ -105,6 +105,7 @@ export class SearchAOIToolbar extends Component {
             <div style={styles.container}>
                 <div className={css.typeahead}>
                     <Typeahead
+                        className={'qa-SearchAOIToolbar-Typeahead'}
                         ref="typeahead"
                         disabled={this.props.toolbarIcons.search == 'INACTIVE'}
                         options={this.state.suggestions}
@@ -117,16 +118,16 @@ export class SearchAOIToolbar extends Component {
                         minLength={2}
                         renderMenu={(results, menuProps) => {
                             return(
-                                <Menu {...menuProps}>
+                                <Menu className={'qa-SearchAOIToolbar-Menu'} {...menuProps}>
                                     {(this.state.fetched)
                                     ?
                                         (results.length)
                                         ?
                                             results.map((result, index) => (
-                                                <TypeaheadMenuItem result={result} index={index} key={index}/>
+                                                <TypeaheadMenuItem className={'qa-SearchAOIToolbar-TypeaheadMenuItem'} result={result} index={index} key={index}/>
                                             ))
                                         :
-                                            <div style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
+                                            <div className={'qa-SearchAOIToolbar-div-noResults'} style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
                                                 No results
                                             </div>
                                     : null}
@@ -143,7 +144,7 @@ export class SearchAOIToolbar extends Component {
                         />
                     : null}
                 </div>
-                <div style={styles.buttonContainer}>
+                <div className={'qa-SearchAOIToolbar-div-buttons'} style={styles.buttonContainer}>
                     <SearchAOIButton
                         buttonState={this.props.toolbarIcons.search}
                         handleCancel={this.props.handleCancel}

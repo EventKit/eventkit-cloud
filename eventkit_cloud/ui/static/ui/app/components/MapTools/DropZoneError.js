@@ -34,7 +34,7 @@ export class DropZoneError extends Component {
                 show={this.state.showErrorMessage}
                 title="Error"
                 onExit={this.handleErrorClear}>
-                <div className={styles.fileError}>
+                <div  className={'qa-DropZoneError-div'}>
                     {this.state.errorMessage}
                 </div>
             </PopupBox>

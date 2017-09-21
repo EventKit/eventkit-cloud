@@ -8,7 +8,7 @@ export class InvalidDrawWarning extends Component {
 
     render() {
         return (
-            <div className={styles.invalidWarning} style={{display: this.props.show ? 'initial' : 'none'}}>
+            <div className={'qa-InvalidDrawWardning-div'} style={{display: this.props.show ? 'initial' : 'none'}}>
                 <span>You drew an invalid bounding box, please redraw.</span>
             </div>
         )
