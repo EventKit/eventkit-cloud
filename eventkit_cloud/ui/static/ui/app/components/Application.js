@@ -155,31 +155,31 @@ export class Application extends Component {
                         docked={true}
                         open={this.props.drawerOpen}
                     >
-                        <MenuItem className={'qa-Application-MenuItem-library'} style={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
                                 <AVLibraryBooks style={{height: '22px', width: '22px', marginRight: '11px'}}/>
                                 DataPack Library
                             </IndexLink>
                         </MenuItem>
-                        <MenuItem className={'qa-Application-MenuItem-create'} style={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/create" >
                                 <ContentAddBox style={{height: '22px', width: '22px', marginRight: '11px'}}/>
                                 Create DataPack
                             </Link>
                         </MenuItem>
-                        <MenuItem className={'qa-Application-MenuItem-about'} style={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/about" >
                                 <ActionInfoOutline style={{height: '22px', width: '22px', marginRight: '11px'}}/>
                                 About EventKit
                             </Link>
                         </MenuItem>
-                        <MenuItem className={'qa-Application-MenuItem-account'} style={css.menuItem} onClick={this.onMenuItemClick}>
+                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
                             <Link className={css.link} activeClassName={css.active} to="/account" >
                                 <SocialPerson style={{height: '22px', width: '22px', marginRight: '11px'}}/>
                                 Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={'qa-Application-MenuItem-logout'} style={css.menuItem} onClick={this.handleClose}>
+                        <MenuItem className={css.menuItem} onClick={this.handleClose}>
                             <Link className={css.link} activeClassName={css.active} to="/logout" >
                                 <ActionExitToApp style={{height: '22px', width: '22px', marginRight: '11px'}}/>
                                 Log Out

@@ -32,21 +32,21 @@ export class DropZoneDialog extends Component {
     render() {
 
         return (
-            <PopupBox 
+            <PopupBox
                 show={this.props.showImportModal}
                 title="Import AOI"
                 onExit={this.handleClear}>
-                <Dropzone onDrop={this.onDrop} 
-                            multiple={false} 
-                            className={styles.dropZone}
-                            ref={(node) => {this.dropzone = node;}} 
-                            disableClick={true}
-                            maxSize={2000000}>
-                        <div  className={'qa-DropZOne-div'}>
+                <Dropzone onDrop={this.onDrop}
+                          multiple={false}
+                          className={styles.dropZone}
+                          ref={(node) => {this.dropzone = node;}}
+                          disableClick={true}
+                          maxSize={2000000}>
+                    <div className={styles.dropZoneText}>
                         <span><strong>GeoJSON</strong> format only, <strong>2MB</strong> max,<br/>Drag and drop or<br/></span>
-                        <button className={'qa-DropZone-button-selectFile'} onClick={this.onOpenClick}><FileFileUpload />Select A File</button>
-                        </div>
-                    </Dropzone>
+                        <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><FileFileUpload />Select A File</button>
+                    </div>
+                </Dropzone>
             </PopupBox>
         )
     }

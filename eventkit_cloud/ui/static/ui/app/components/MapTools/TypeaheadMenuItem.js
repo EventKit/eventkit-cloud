@@ -27,23 +27,12 @@ export class TypeaheadMenuItem extends Component {
             icon = this.props.result.geometry.type == 'Point' ? <ActionRoom className={styles.menuItemIcon}/> : <ImageCropDin className={styles.menuItemIcon}/>;
         }
         return (
-            <MenuItem className={'qa-TypeaheadMenuItem-MenuItem'} option={this.props.result} position={this.props.index} >
-                <div className={'qa-TypeaheadMenuItem-div-row'} >
-                    <div className={'qa-TypeaheadMenuItem-div-icon'} >
-                        {icon}
-                    </div>
-                    <div style={{flex: '1'}}>
-                        <div className={'qa-TypeaheadMenuItem-div-name'} >
-                            <strong>{this.props.result.name}</strong>
-                        </div>
-                        <div  className={'qa-TypeaheadMenuItem-div-description'}>{this.createDescription(this.props.result)}</div>
-                    </div>
-                    <div  className={'qa-TypeaheadMenuItem-div-source'} style={{paddingLeft: '6px'}}>
-                        <strong className={styles.menuItemSource}>
-                            {this.props.result.source}
-                        </strong>
-                    </div>
+            <MenuItem option={this.props.result} position={this.props.index} className={styles.menuItem}>
+                <div className={styles.menuItemIconDiv}>
+                    {icon}
                 </div>
+                <div className={styles.menuItemText}><strong>{this.props.result.name}</strong></div>
+                <div className={styles.menuItemText}>{this.createDescription(this.props.result)}</div>
             </MenuItem>
         )
     }

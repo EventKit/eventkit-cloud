@@ -23,9 +23,9 @@ export class SearchAOIToolbar extends Component {
     }
 
     componentWillMount() {
-      this.debouncer = debounce(e => {
-        this.handleChange(e);
-      }, 500);
+        this.debouncer = debounce(e => {
+            this.handleChange(e);
+        }, 500);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -83,21 +83,21 @@ export class SearchAOIToolbar extends Component {
     render() {
         const styles = {
             container: {
-                zIndex: 2, 
-                position: 'absolute', 
-                width: 'calc(100% - 60px)', 
-                minWidth: '300px', 
-                maxWidth: '700px', 
-                height: '50px', 
-                top: '1em', 
-                right: '10px', 
+                zIndex: 2,
+                position: 'absolute',
+                width: 'calc(100% - 60px)',
+                minWidth: '300px',
+                maxWidth: '700px',
+                height: '50px',
+                top: '1em',
+                right: '10px',
                 backgroundColor: '#fff',
                 ...this.props.containerStyle
             },
             buttonContainer: {
-                position: 'absolute', 
-                right: '0px', 
-                width: '50px', 
+                position: 'absolute',
+                right: '0px',
+                width: '50px',
                 height: '50px'
             }
         }
@@ -105,7 +105,6 @@ export class SearchAOIToolbar extends Component {
             <div style={styles.container}>
                 <div className={css.typeahead}>
                     <Typeahead
-                        className={'qa-SearchAOIToolbar-Typeahead'}
                         ref="typeahead"
                         disabled={this.props.toolbarIcons.search == 'INACTIVE'}
                         options={this.state.suggestions}
@@ -118,33 +117,33 @@ export class SearchAOIToolbar extends Component {
                         minLength={2}
                         renderMenu={(results, menuProps) => {
                             return(
-                                <Menu className={'qa-SearchAOIToolbar-Menu'} {...menuProps}>
+                                <Menu {...menuProps}>
                                     {(this.state.fetched)
-                                    ?
-                                        (results.length)
                                         ?
+                                        (results.length)
+                                            ?
                                             results.map((result, index) => (
-                                                <TypeaheadMenuItem className={'qa-SearchAOIToolbar-TypeaheadMenuItem'} result={result} index={index} key={index}/>
+                                                <TypeaheadMenuItem result={result} index={index} key={index}/>
                                             ))
-                                        :
-                                            <div className={'qa-SearchAOIToolbar-div-noResults'} style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
+                                            :
+                                            <div style={{padding: '16px', userSelect: 'none', cursor: 'default', borderTop: '1px solid rgba(112, 114, 116, .4)', borderBottom: '1px solid rgba(112, 114, 116, .4)'}}>
                                                 No results
                                             </div>
-                                    : null}
+                                        : null}
                                 </Menu>
                             );
                         }}
                     />
                     {(this.state.fetching)
-                    ?
+                        ?
                         <CircularProgress
                             size={25}
                             style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', zIndex: '1'}}
                             color={'#4598bf'}
                         />
-                    : null}
+                        : null}
                 </div>
-                <div className={'qa-SearchAOIToolbar-div-buttons'} style={styles.buttonContainer}>
+                <div style={styles.buttonContainer}>
                     <SearchAOIButton
                         buttonState={this.props.toolbarIcons.search}
                         handleCancel={this.props.handleCancel}
