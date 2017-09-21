@@ -14,7 +14,6 @@ export class Account extends Component {
 
     constructor(props) {
         super(props);
-        this.handleResize = this.handleResize.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
         this.handleAll = this.handleAll.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -27,11 +26,6 @@ export class Account extends Component {
     componentWillMount() {
         this.setState({acceptedLicenses: {...this.props.user.data.accepted_licenses}});
         this.props.getLicenses();
-        window.addEventListener('resize', this.handleResize);
-    };
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.handleResize);
     };
     
     componentWillReceiveProps(nextProps) {
@@ -42,10 +36,6 @@ export class Account extends Component {
             }, 3000);
         }
     }
-
-    handleResize() {
-        this.forceUpdate();
-    };
 
     handleCheck(slug, checked) {
         const licenses = this.state.acceptedLicenses;

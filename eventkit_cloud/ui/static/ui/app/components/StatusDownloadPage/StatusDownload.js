@@ -14,7 +14,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props)
-        this.handleResize = this.handleResize.bind(this);
         this.state = {
             datacartDetails: [],
             isLoading: true,
@@ -98,22 +97,16 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
-        window.addEventListener('resize', this.handleResize);
         const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
         this.setState({maxDays});
     }
 
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
-        window.removeEventListener('resize', this.handleResize);
     }
 
     handleClone(cartDetails, providerArray) {
         this.props.cloneExport(cartDetails, providerArray)
-    }
-
-    handleResize() {
-        this.forceUpdate();
     }
 
     getMarginPadding() {

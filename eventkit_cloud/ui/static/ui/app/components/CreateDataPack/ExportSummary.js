@@ -10,7 +10,6 @@ import styles from '../../styles/ExportSummary.css';
 export class ExportSummary extends Component {
     constructor(props) {
         super(props)
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.state = {
             expanded: false,
         }
@@ -18,18 +17,6 @@ export class ExportSummary extends Component {
 
     expandedChange(expanded) {
         this.setState({expanded: expanded});
-    }
-
-    componentDidMount() {
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     componentDidUpdate(prevProps, prevState) {

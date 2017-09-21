@@ -7,19 +7,6 @@ import CustomScrollbar from '../CustomScrollbar';
 export class LoginPage extends React.Component {
     constructor(props) {
         super(props);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
-    }
-
-    componentDidMount() {
-        window.addEventListener('resize', this.screenSizeUpdate);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     render() {

@@ -7,7 +7,6 @@ import Drawer from 'material-ui/Drawer'
 import Subheader from 'material-ui/Subheader'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
-import css from '../styles/TitleBar.css'
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
 require ('../fonts/index.css');
 import Banner from './Banner'
@@ -39,8 +38,12 @@ export class Application extends Component {
         this.handleClose = this.handleClose.bind(this)
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.getConfig = this.getConfig.bind(this);
+        this.handleMouseOver =  this.handleMouseOver.bind(this);
+        this.handleMouseOut = this.handleMouseOut.bind(this);
+        this.handleResize = this.handleResize.bind(this);        
         this.state = {
-            config: {}
+            config: {},
+            hovered: ''
         }
     }
 
@@ -54,8 +57,17 @@ export class Application extends Component {
     }
 
     componentDidMount() {
-        this.getConfig()
+        this.getConfig();
+        window.addEventListener('resize', this.handleResize);        
     }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.handleResize);
+    };
+
+    handleResize() {
+        this.forceUpdate();
+    };
 
     handleToggle() {
         if(this.props.drawerOpen) {
@@ -94,8 +106,16 @@ export class Application extends Component {
         });
     }
 
+    handleMouseOver(route) {
+        this.setState({hovered: route});
+    }
+
+    handleMouseOut() {
+        this.setState({hovered: ''});
+    }
+
     render() {
-        const contentStyle = {transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)'};
+        const contentStyle = {};
         if (this.props.drawerOpen) {
             contentStyle.marginLeft = 200;
         }
@@ -126,6 +146,40 @@ export class Application extends Component {
                 fontSize: '20px',
                 align: 'left',
             },
+            menuItem: {
+                marginLeft: '0px', 
+                padding: '0px'
+            },
+            link: {
+                position: 'relative',
+                display: 'block',
+                padding: '5px',
+                textAlign: 'left',
+                textDecoration: 'none',
+                color: '#4498c0',
+                fill: '#4498c0'
+            },
+            activeLink: {
+                position: 'relative',
+                display: 'block',
+                padding: '5px',
+                textAlign: 'left',
+                textDecoration: 'none',
+                color: '#4498c0',
+                backgroundColor: '#161e2e',
+                fill: '#1675aa'
+            },
+            icon: {
+                height: '22px', 
+                width: '22px', 
+                marginRight: '11px',
+                verticalAlign: 'middle',
+                fill: 'inherit'
+            },
+            content: {
+                transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
+                marginLeft: this.props.drawerOpen && window.innerWidth >= 1200 ? 200 : 0
+            }
         };
 
         const img = <img style={styles.img} src={logo}/>
@@ -153,38 +207,73 @@ export class Application extends Component {
                         docked={true}
                         open={this.props.drawerOpen}
                     >
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
-                            <IndexLink className={css.link} activeClassName={css.active} onlyActiveOnIndex={true} to="/exports">
-                                <AVLibraryBooks style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <IndexLink 
+                                className={""} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'exports' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink} 
+                                to="/exports"
+                                onMouseEnter={() => this.handleMouseOver('exports')}
+                                onMouseLeave={this.handleMouseOut}
+                            >
+                                <AVLibraryBooks style={styles.icon}/>
                                 DataPack Library
                             </IndexLink>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
-                            <Link className={css.link} activeClassName={css.active} to="/create" >
-                                <ContentAddBox style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <Link 
+                                className={""} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'create' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('create')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/create" 
+                            >
+                                <ContentAddBox style={styles.icon}/>
                                 Create DataPack
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
-                            <Link className={css.link} activeClassName={css.active} to="/about" >
-                                <ActionInfoOutline style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <Link 
+                                className={""} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'about' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('about')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/about" 
+                            >
+                                <ActionInfoOutline style={styles.icon}/>
                                 About EventKit
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.onMenuItemClick}>
-                            <Link className={css.link} activeClassName={css.active} to="/account" >
-                                <SocialPerson style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <Link 
+                                className={""} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'account' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('account')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/account" 
+                            >
+                                <SocialPerson style={styles.icon}/>
                                 Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={css.menuItem} onClick={this.handleClose}>
-                            <Link className={css.link} activeClassName={css.active} to="/logout" >
-                                <ActionExitToApp style={{height: '22px', width: '22px', marginRight: '11px'}}/>
+                        <MenuItem className={""} onClick={this.handleClose} innerDivStyle={styles.menuItem}>
+                            <Link 
+                                className={""} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'logout' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('logout')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/logout" 
+                            >
+                                <ActionExitToApp style={styles.icon}/>
                                 Log Out
                             </Link>
                         </MenuItem>
                     </Drawer>
-                    <div style={contentStyle} className={css.contentStyle}>
+                    <div style={styles.content} className={""}>
                         <div>{childrenWithContext}</div>
                     </div>
                 </div>

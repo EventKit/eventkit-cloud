@@ -79,15 +79,42 @@ describe('Application component', () => {
         spy.restore();
     });
 
-    it('should call getConfig on mount', () => {
+    it('should call getConfig and addEventListener on mount', () => {
         const mountSpy = new sinon.spy(Application.prototype, 'componentDidMount');
         const getSpy = new sinon.spy(Application.prototype, 'getConfig');
+        const eventSpy = new sinon.spy(window, 'addEventListener');
         const props = getProps();
         const wrapper = getWrapper();
         expect(mountSpy.calledOnce).toBe(true);
         expect(getSpy.calledOnce).toBe(true);
+        expect(eventSpy.called).toBe(true);
+        expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
         mountSpy.restore();
         getSpy.restore();
+        eventSpy.restore();
+    });
+
+    it('should remove event listener on unmount', () => {
+        const unmountSpy = new sinon.spy(Application.prototype, 'componentWillUnmount');
+        const eventSpy = new sinon.spy(window, 'removeEventListener');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const resize = wrapper.instance().handleResize;
+        expect(eventSpy.called).toBe(false);
+        wrapper.unmount();
+        expect(eventSpy.called).toBe(true);
+        expect(eventSpy.calledWith('resize', resize)).toBe(true);
+        eventSpy.restore();
+    });
+
+    it('handleResize should call forceUpdate', () => {
+        const updateSpy = new sinon.spy(Application.prototype, 'forceUpdate');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(updateSpy.called).toBe(false);
+        wrapper.instance().handleResize();
+        expect(updateSpy.calledOnce).toBe(true);
+        updateSpy.restore();
     });
 
     it('handleToggle should open and close the drawer', () => {

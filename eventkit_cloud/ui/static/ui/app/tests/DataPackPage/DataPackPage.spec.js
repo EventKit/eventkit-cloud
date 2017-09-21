@@ -155,37 +155,30 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call makeRunRequest, add eventlistener, and setInterval when mounting', () => {
+    it('should call makeRunRequest  and setInterval when mounting', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
         const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
-        const eventSpy = new sinon.spy(window, 'addEventListener');
         const intervalSpy = new sinon.spy(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(requestSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
         expect(intervalSpy.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
         mountSpy.restore();
         requestSpy.restore();
-        eventSpy.restore();
         intervalSpy.restore();
     });
 
-    it('remove eventlister on unmount', () => {
+    it('componentWillUnmout should clear interval', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
-        const removeSpy = new sinon.spy(window, 'removeEventListener');
         const intervalSpy = new sinon.spy(global, 'clearInterval');
         const wrapper = getWrapper(props);
-        const update = wrapper.instance().screenSizeUpdate;
         const fetch = wrapper.instance().fetch;
         wrapper.unmount();
         expect(mountSpy.calledOnce).toBe(true);
-        expect(removeSpy.calledWith('resize', update)).toBe(true);
         expect(intervalSpy.calledWith(fetch)).toBe(true);
         mountSpy.restore();
-        removeSpy.restore();
         intervalSpy.restore();
     });
 
@@ -401,15 +394,6 @@ describe('DataPackPage component', () => {
         )).toBe(true);
         stateSpy.restore();
     })
-
-    it('screenSizeUpdate should force the component to update', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const updateSpy = new sinon.spy(DataPackPage.prototype, 'forceUpdate');
-        wrapper.instance().screenSizeUpdate();
-        expect(updateSpy.calledOnce).toBe(true);
-        updateSpy.restore();
-    });
 
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
         let props = getProps();
