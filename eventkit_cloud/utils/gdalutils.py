@@ -104,7 +104,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
     :param boundary: A geojson file or bbox to serve as a cutline
     :param in_dataset: A raster or vector file to be clipped
-    :param in_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
+    :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
     :param table: Table name in database for in_dataset
     :param task_uid: A task uid to update
@@ -116,6 +116,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
     if not in_dataset:
         raise Exception("Could not open input dataset: {0}".format(in_dataset))
+
+    if not out_dataset:
+        out_dataset = in_dataset
+
+    if out_dataset == in_dataset:
+        in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
+        logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
+        os.rename(out_dataset, in_dataset)
 
     (driver, raster) = driver_for(in_dataset)
 
@@ -138,17 +146,17 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
     if table:
         cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                        'fmt': fmt,
-                                        'type': band_type,
-                                        'in_ds': in_dataset,
-                                        'out_ds': out_dataset,
-                                        'table': table})
+                                            'fmt': fmt,
+                                            'type': band_type,
+                                            'in_ds': in_dataset,
+                                            'out_ds': out_dataset,
+                                            'table': table})
     else:
         cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                        'fmt': fmt,
-                                        'type': band_type,
-                                        'in_ds': in_dataset,
-                                        'out_ds': out_dataset})
+                                            'fmt': fmt,
+                                            'type': band_type,
+                                            'in_ds': in_dataset,
+                                            'out_ds': out_dataset})
 
     logger.debug(cmd)
 

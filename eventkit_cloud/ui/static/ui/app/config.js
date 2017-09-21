@@ -33,12 +33,12 @@ export const Config = {
     AUTH_URL : '/login',
     ABOUT_PAGE: {
         textParagraphs: [
-            {header: 'Overview', body: 'EventKit\'s mission is to save user\'s time and frustration by simplifying the process for getting deployment-ready geospatial information. EventKit works by configuring geospatial data web services in the application, and then exporting that data into a portable data format based on a custom, user-provided extent.  The results are downloadable and ready-to-use datasets called datapacks.'},
-            {header: 'What is a DataPack?', body: 'Datapacks are zipped archives of geospatial data, cartography, and metadata. Each dataset is already processed.  Raster data is tiled for quick rendering and feature data, such as OSM, has been converted into various schemas designed to make viewing and visual analysis easier. The provided QGIS project file includes styling with icons and neatly groups raster data.'},
+            {header: 'Overview', body: 'EventKit\'s mission is to save its users\' time and frustration by simplifying the process for getting deployment-ready geospatial information. EventKit works by configuring geospatial data web services in the application, and then exporting that data into a portable data format based on a custom, user-provided extent. The results are downloadable and ready-to-use datasets called DataPacks.'},
+            {header: 'What is a DataPack?', body: 'DataPacks are zipped archives of geospatial data, cartography, and metadata. Each dataset is already processed. Raster data is tiled for quick rendering, and feature data, such as OSM, has been converted into various schemas designed to make viewing and visual analysis easier. The provided QGIS project file includes styling with icons and neatly groups raster data.'},
         ],
         threeStep: [
-            {img: create_img, caption: 'Create DataPacks'},
             {img: manage_img, caption: 'Manage DataPacks'},
+            {img: create_img, caption: 'Create DataPacks'},
             {img: use_img, caption: 'Use with other open source geospatial software like QGIS'}
         ],
         quickTour: [
@@ -48,9 +48,9 @@ export const Config = {
                     {
                         sectionTitle: 'DataPack Library',
                         steps: [
-                            {img: manage_1, caption: 'Here you can create or search, sort, and filter all private and public DataPacks.'}, 
+                            {img: manage_1, caption: 'Here you can create a new DataPack or search, sort, and filter all private and public DataPacks.'},
                             {img: manage_2, caption: 'Check the status of previously created DataPacks.'},
-                            {img: manage_3, caption: 'Make other actions like "Go to Export Detail" to check export statuses and make downloads.'}
+                            {img: manage_3, caption: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.'}
                         ]
                     }
                 ]
@@ -61,8 +61,8 @@ export const Config = {
                     {
                         sectionTitle: 'Step 1: Define Area of Interest',
                         steps: [
-                            {img: create_1_1, caption: 'Use your tools to set your Area of Interest.'}, 
-                            {img: create_1_2, caption: 'You can cancel or clear your selection using the "X"'},
+                            {img: create_1_1, caption: 'Use the tools to set your Area of Interest.'},
+                            {img: create_1_2, caption: 'You can cancel or clear your selection using the "X".'},
                             {img: create_1_3, caption: 'Once your area of interest is set, move to the next step with the green right arrow button.'}
                         ]
                     },
@@ -78,14 +78,14 @@ export const Config = {
                         sectionTitle: 'Step 3: Review & Submit',
                         steps: [
                             {img: create_3_1, caption: 'Review your information to make sure it\'s correct.'}, 
-                            {img: create_3_2, caption: 'Click the green check mark to submit your DataPack or use the back arrow to edit previous pages.'},
+                            {img: create_3_2, caption: 'Click the green check mark to submit your DataPack, or use the back arrow to edit previous pages.'},
                         ]
                     },
                     {
                         sectionTitle: 'Get Your Files: Export Status & Download',
                         steps: [
-                            {img: download_1, caption: 'You\'ll get an e-mail when your files are ready. Use the table to download.'}, 
-                            {img: download_2, caption: 'You can alse edit your DataPack expiration date an viewing permisions.'},
+                            {img: download_1, caption: 'You\'ll get an e-mail when your files are ready. Download your data in the "Download Options" section.'},
+                            {img: download_2, caption: 'You can also edit your DataPack expiration date and viewing permissions.'},
                         ]
                     }
                 ]
