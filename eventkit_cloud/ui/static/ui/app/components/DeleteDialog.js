@@ -10,6 +10,7 @@ export class DeleteDialog extends Component {
     render() {
         const deleteActions = [
             <RaisedButton
+                className={'qa-DeleteDialog-RaisedButton-cancel'}
                 style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
@@ -19,6 +20,7 @@ export class DeleteDialog extends Component {
                 onClick={this.props.handleCancel}
             />,
             <RaisedButton
+                className={'qa-DeleteDialog-RaisedButton-delete'}
                 labelStyle={{color: 'red', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
                 disableTouchRipple={true}
@@ -30,6 +32,7 @@ export class DeleteDialog extends Component {
 
         return (
             <BaseDialog
+                className={'qa-DeleteDialog-BaseDialog'}
                 show={this.props.show}
                 title={'DELETE DATAPACK'}
                 actions={deleteActions}

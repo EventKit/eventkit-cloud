@@ -177,7 +177,7 @@ export class ExportSummary extends Component {
                                 <div className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
                                     Export Information
                                 </div>
-                                <table id='export-information'>
+                                <table style={style.table} id='export-information'>
                                     <tbody>
                                         <tr id='name'className={'qa-ExportSummary-tr-name'}>
                                             <td style={style.tdHeading}>Name</td>
@@ -211,8 +211,8 @@ export class ExportSummary extends Component {
                                 <table style={style.table} id='aoi-area' className={'qa-ExportSummary-tr-area'}>
                                     <tbody>
                                         <tr>
-                                            <td className={styles.tdHeading}>Area</td>
-                                            <td className={styles.tdData}>{this.props.area_str}</td>
+                                            <td style={style.tdHeading}>Area</td>
+                                            <td style={style.tdData}>{this.props.area_str}</td>
                                         </tr>
                                     </tbody>
                                 </table>

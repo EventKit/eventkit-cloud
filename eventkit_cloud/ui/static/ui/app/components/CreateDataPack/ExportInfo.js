@@ -415,7 +415,7 @@ export class ExportInfo extends React.Component {
                                         return <ListItem
                                             className={'qa-ExportInfo-ListItem'}
                                             key={provider.uid}
-                                            style={{backgroundColor: backgroundColor}}
+                                            style={{backgroundColor: backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom:'0'}}
                                             nestedListStyle={{padding: '0px', backgroundColor: backgroundColor}}
                                             primaryText={provider.name}
                                             leftCheckbox={<Checkbox
