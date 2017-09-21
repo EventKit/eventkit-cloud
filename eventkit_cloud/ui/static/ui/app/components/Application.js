@@ -194,7 +194,7 @@ export class Application extends Component {
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{backgroundColor: '#000'}}>
                     <Banner />
-                    <header className="header" style={{height: '95px'}}>
+                    <header className="qa-Application-header" style={{height: '95px'}}>
                         <AppBar
                             style={styles.appBar}
                             title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)}
@@ -207,9 +207,9 @@ export class Application extends Component {
                         docked={true}
                         open={this.props.drawerOpen}
                     >
-                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className={"qa-Application-MenuItem-exports"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <IndexLink 
-                                className={""} 
+                                className={"qa-Application-Link-exports"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'exports' ? '#161e2e': ''}} 
                                 activeStyle={styles.activeLink} 
                                 to="/exports"
@@ -220,9 +220,9 @@ export class Application extends Component {
                                 DataPack Library
                             </IndexLink>
                         </MenuItem>
-                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className={"qa-Application-MenuItem-create"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <Link 
-                                className={""} 
+                                className={"qa-Application-Link-create"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'create' ? '#161e2e': ''}} 
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('create')}
@@ -233,9 +233,9 @@ export class Application extends Component {
                                 Create DataPack
                             </Link>
                         </MenuItem>
-                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className={"qa-Application-MenuItem-about"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <Link 
-                                className={""} 
+                                className={"qa-Application-Link-about"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'about' ? '#161e2e': ''}} 
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('about')}
@@ -246,9 +246,9 @@ export class Application extends Component {
                                 About EventKit
                             </Link>
                         </MenuItem>
-                        <MenuItem className={""} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className={"qa-Application-MenuItem-account"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <Link 
-                                className={""} 
+                                className={"qa-Application-Link-account"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'account' ? '#161e2e': ''}} 
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('account')}
@@ -259,9 +259,9 @@ export class Application extends Component {
                                 Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={""} onClick={this.handleClose} innerDivStyle={styles.menuItem}>
+                        <MenuItem className={"qa-Application-MenuItem-logout"} onClick={this.handleClose} innerDivStyle={styles.menuItem}>
                             <Link 
-                                className={""} 
+                                className={"qa-Application-Link-logout"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'logout' ? '#161e2e': ''}} 
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('logout')}
@@ -273,7 +273,7 @@ export class Application extends Component {
                             </Link>
                         </MenuItem>
                     </Drawer>
-                    <div style={styles.content} className={""}>
+                    <div style={styles.content} className={"qa-Application-content"}>
                         <div>{childrenWithContext}</div>
                     </div>
                 </div>

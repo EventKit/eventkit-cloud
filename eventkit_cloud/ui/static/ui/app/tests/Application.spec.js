@@ -63,6 +63,33 @@ describe('Application component', () => {
         expect(wrapper.find(MenuItem).at(4).find(Link)).toHaveLength(1);
     });
 
+    it('the menu items should call handleMouseOver with the route name', () => {
+        const props = getProps();
+        const handleSpy = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleMouseOver = handleSpy;
+        expect(handleSpy.called).toBe(false);
+        wrapper.find('.qa-Application-Link-exports').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(1);
+        expect(handleSpy.calledWith('exports')).toBe(true);
+
+        wrapper.find('.qa-Application-Link-create').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(2);
+        expect(handleSpy.calledWith('create')).toBe(true);
+
+        wrapper.find('.qa-Application-Link-about').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(3);
+        expect(handleSpy.calledWith('about')).toBe(true);
+
+        wrapper.find('.qa-Application-Link-account').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(4);
+        expect(handleSpy.calledWith('account')).toBe(true);
+
+        wrapper.find('.qa-Application-Link-logout').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(5);
+        expect(handleSpy.calledWith('logout')).toBe(true);
+    });
+
     it('should call openDrawer when user data is added and window width is >= 1200', () => {
         let props = getProps();
         props.userData = null;
@@ -173,5 +200,27 @@ describe('Application component', () => {
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({config: {LOGIN_DISCLAIMER: 'Test string'}})).toBe(true);
         stateSpy.restore();
+    });
+
+    it('handleMouseOver should set the passed in route as the hovered state', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().setState = stateSpy;
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleMouseOver('test string');
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({hovered: 'test string'})).toBe(true);
+    });
+
+    it('handleMouseOut should set the hovered state to an empty string', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().setState = stateSpy;
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleMouseOut();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({hovered: ''})).toBe(true);
     });
 });
