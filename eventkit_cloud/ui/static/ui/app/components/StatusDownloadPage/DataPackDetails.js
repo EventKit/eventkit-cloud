@@ -4,7 +4,6 @@ import '../tap_events'
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
-import styles from '../../styles/StatusDownload.css'
 import ProviderRow from './ProviderRow'
 import RaisedButton from 'material-ui/RaisedButton';
 import Checkbox from 'material-ui/Checkbox';
@@ -182,9 +181,32 @@ export class DataPackDetails extends React.Component {
             return provider.display != false;
         });
 
+        const styles = {
+            subHeading: {
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: 'black',
+                alignContent: 'flex-start',
+                paddingBottom: '5px'
+            },
+            download: {
+                paddingRight: '12px', 
+                paddingLeft: '0px', 
+                fontSize: textFontSize, 
+                whiteSpace: 'normal'
+            },
+            genericColumn: {
+                paddingRight: '0px', 
+                paddingLeft: '0px', 
+                width: tableCellWidth, 
+                textAlign: 'center', 
+                fontSize: textFontSize
+            },
+        }
+
         return (
-            <div className={styles.downloadDiv}>
-                <div className={styles.subHeading}>
+            <div style={{paddingTop: '20px'}}>
+                <div className={"qa-DataPackDetails-heading"} style={styles.subHeading}>
                    Download Options
                 </div>
                 <Table
@@ -206,7 +228,7 @@ export class DataPackDetails extends React.Component {
                                     {/*uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}*/}
                                 {/*/>*/}
                             {/*</TableHeaderColumn>*/}
-                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize, whiteSpace: 'normal',}}>
+                            <TableHeaderColumn style={styles.download}>
                                 <a href={this.props.zipFileProp}>
                                     <RaisedButton
                                         backgroundColor={'rgba(179,205,224,0.5)'}
@@ -222,13 +244,13 @@ export class DataPackDetails extends React.Component {
                                 </a>
                             </TableHeaderColumn>
 
-                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth, textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={styles.genericColumn}>
                                 FILE SIZE
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: tableCellWidth,textAlign: 'center', fontSize: textFontSize}}>
+                            <TableHeaderColumn style={styles.genericColumn}>
                                 PROGRESS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize, paddingLeft: '0px', paddingRight: '0px' }}>
+                            <TableHeaderColumn style={{...styles.genericColumn, width: toggleCellWidth}}>
 
                             </TableHeaderColumn>
 
