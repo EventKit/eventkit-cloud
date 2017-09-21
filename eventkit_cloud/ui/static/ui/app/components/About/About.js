@@ -42,8 +42,8 @@ export class About extends Component {
             },
             headerTitle: {
                 fontSize: '18px',
-                lineHeight: '30px',
-                height: '25px',
+                lineHeight: '35px',
+                height: '35px',
             },
             body: {
                 height: window.innerHeight - 130,

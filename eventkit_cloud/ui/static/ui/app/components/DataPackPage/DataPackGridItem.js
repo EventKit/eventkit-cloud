@@ -5,7 +5,6 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import style from '../../styles/DataPackPage.css';
 import ol from 'openlayers';
 import { List, ListItem} from 'material-ui/List'
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
@@ -340,7 +339,7 @@ export class DataPackGridItem extends Component {
                     <span style={this.state.overflow ? styles.cardText : styles.cardTextMinimized}>{this.props.run.job.description}</span>
                 </CardText>
                 <CardMedia className={'qa-DataPackGridItem-CardMedia'} expandable={true}>
-                    <div id={this.props.run.uid + '_map'} className={style.map} style={{padding: '0px 2px'}}/>
+                    <div id={this.props.run.uid + '_map'} className={style.map} style={{padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px'}}/>
                 </CardMedia>
                 <CardActions className={'qa-DataPackGridItem-CardActions'} style={{height: '45px'}}>
                     <span>

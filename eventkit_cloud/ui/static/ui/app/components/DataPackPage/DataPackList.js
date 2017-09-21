@@ -118,7 +118,7 @@ export class DataPackList extends Component {
 
         if(window.innerWidth < 768) {
             return (
-                <CustomScrollbar style={{height: window.innerHeight - 236, width: '100%'}}>
+                <CustomScrollbar style={{height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%'}}>
                     <div style={styles.root}>
                         <GridList
                             className={'qa-DataPackList-GridList'}

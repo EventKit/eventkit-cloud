@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import cPickle
 from collections import Sequence
+import json
 import logging
 import os
 import shutil
@@ -373,9 +374,10 @@ def osm_data_collection_pipeline(
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
 
-    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}'\"".format(host=database['HOST'],
+    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}' port='{port}'\"".format(host=database['HOST'],
                                         user=database['USER'],
                                         password=database['PASSWORD'],
+                                        port=database['PORT'],
                                         name=database['NAME'])
 
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
@@ -414,9 +416,15 @@ def osm_data_collection_task(
         config=config
     )
 
-    result = {'result': gpkg_filepath, 'geopackage': gpkg_filepath}
+    selection = parse_result(result, 'selection')
+    if selection:
+        logger.debug("Calling clip_dataset with boundary={}, in_dataset={}".format(selection, gpkg_filepath))
+        gpkg_filepath = gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg_filepath, fmt=None)
 
-    add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
+    result['result'] = gpkg_filepath
+    result['geopackage'] = gpkg_filepath
+
+    result = add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=provider_slug)
 
     logger.debug("exit run for {0}".format(self.name))
 
@@ -527,6 +535,31 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
         raise Exception(e)
 
 
+@app.task(name='Area of Interest (.geojson)', bind=True, base=ExportTask)
+def output_selection_geojson_task(self, result=None, task_uid=None, selection=None, stage_dir=None, provider_slug=None,
+                                  *args, **kwargs):
+    """
+    Class defining geopackage export function.
+    """
+    result = result or {}
+
+    self.update_task_state(result=result, task_uid=task_uid)
+
+    geojson_file = os.path.join(stage_dir,
+                                "{0}_selection.geojson".format(provider_slug))
+    if selection:
+        # Test if json.
+        json.loads(selection)
+        from audit_logging.file_logging import logging_open
+        user_details = kwargs.get('user_details')
+        with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
+            open_file.write(selection)
+        result['selection'] = geojson_file
+        result['result'] = geojson_file
+
+    return result
+
+
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
 def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
         user_details=None, *args, **kwargs):
@@ -544,7 +577,8 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
 
     selection = parse_result(result, 'selection')
     if selection:
-        clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+        gpkg = parse_result(result, 'result')
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gpkg, fmt=None)
 
     add_metadata_task(result=result, job_uid=run.job.uid, provider_slug=task.export_provider_task.slug)
     gpkg = parse_result(result, 'result')
@@ -566,11 +600,15 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
 
     self.update_task_state(result=result, task_uid=task_uid)
 
+    gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        clip_export_task(result=result, task_uid=task_uid)  # TODO: remove this, should be separate in task chain
+        # gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
+        # TODO: find a way to make in-place clipping work, instead of using a prefix
+        gtiff_clip = os.path.join(os.path.dirname(gtiff), "clip_{0}".format(os.path.basename(gtiff)))
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, out_dataset=gtiff_clip, fmt=None)
+        gtiff = gtiff_clip
 
-    gtiff = parse_result(result, 'result')
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
     result['result'] = gtiff
@@ -597,7 +635,8 @@ def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=N
 
     dataset = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
-    dataset = gdalutils.clip_dataset(boundary=selection, dataset=dataset, fmt=None)
+    if selection:
+        dataset = gdalutils.clip_dataset(boundary=selection, in_dataset=dataset, fmt=None)
 
     result['result'] = dataset
     return result

@@ -13,7 +13,6 @@ import Warning from 'material-ui/svg-icons/alert/warning'
 import Check from 'material-ui/svg-icons/navigation/check'
 import IconButton from 'material-ui/IconButton';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
-import styles from '../../styles/StatusDownload.css'
 import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
@@ -26,7 +25,7 @@ import LicenseRow from './LicenseRow';
 export class ProviderRow extends React.Component {
     constructor(props) {
         super(props)
-        this.handleDownload = this.handleDownload.bind(this);
+        this.handleSingleDownload = this.handleSingleDownload.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.state = {
@@ -70,26 +69,6 @@ export class ProviderRow extends React.Component {
         this.setState({openTable: !this.state.openTable});
     }
 
-    handleDownload()  {
-        let downloadUids = [];
-        let selectedTasks = {...this.state.selectedRows};
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if (selectedTasks[keyName] == true) {
-                downloadUids.push(keyName);
-            }
-        });
-
-        let tasks = this.props.provider.tasks;
-        let downloadUrls = [];
-        downloadUids.forEach((uid) => {
-            let a = tasks.find(x => x.uid === uid)
-            downloadUrls.push(a.result.url);
-        })
-        downloadUrls.forEach((value, idx) => {
-            window.open(value, '_blank');
-        });
-    }
-
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
         selectedRows[e.target.name] = checked;
@@ -119,7 +98,7 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    handleCloudDownload(url) {
+    handleSingleDownload(url) {
         window.open(url, '_blank');
     }
 
@@ -181,10 +160,10 @@ export class ProviderRow extends React.Component {
 
     getTaskLink(task) {
         if (!task.result.hasOwnProperty('url')) {
-            return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{task.name}</span>
+            return <span style={{display:'inlineBlock', color:'gray'}}>{task.name}</span>
         }
         else {
-            return <a className={styles.taskLink} href={task.result.url} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{task.name}</a>
+            return <a onClick={() => {this.handleSingleDownload(task.result.url)}} style={{display:'inlineBlock', color:'#4598bf', cursor: 'pointer'}}>{task.name}</a>
         }
     }
 
@@ -193,7 +172,7 @@ export class ProviderRow extends React.Component {
             return <CloudDownload key={task.result == null ? '' : task.result.url} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
-            return <CloudDownload  onClick={() => {this.handleCloudDownload(task.result.url)}} key={task.result.url} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+            return <CloudDownload  onClick={() => {this.handleSingleDownload(task.result.url)}} key={task.result.url} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
         }
     }
 
@@ -235,9 +214,6 @@ export class ProviderRow extends React.Component {
     };
 
     render() {
-        const style = {
-            textDecoration: 'underline'
-        }
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = '50px';

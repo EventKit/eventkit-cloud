@@ -13,8 +13,9 @@ from django.utils import timezone
 from celery import chain
 
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
-                                               bounds_export_task, prepare_for_export_zip_task,
-                                               zip_file_task)
+                                               prepare_for_export_zip_task,
+                                               zip_file_task,
+                                               output_selection_geojson_task)
 
 from ..jobs.models import Job
 from ..ui.helpers import get_style_files
@@ -132,6 +133,15 @@ class TaskFactory:
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
 
+                        selection_task = create_task(
+                            export_provider_task_uid=provider_task_uid,
+                            stage_dir=stage_dir,
+                            worker=worker,
+                            task=output_selection_geojson_task,
+                            selection=job.the_geom.geojson,
+                            user_details=user_details
+                        )
+
                         clean_up_task_chain = chain(
                             finalize_export_provider_task.si(
                                 export_provider_task_uid=provider_task_uid,
@@ -164,6 +174,7 @@ class TaskFactory:
                             )
 
                         finalized_provider_task_chain = chain(
+                            selection_task,
                             provider_subtask_chain,
                             finalize_export_provider_signature,
                             wait_for_providers_signature

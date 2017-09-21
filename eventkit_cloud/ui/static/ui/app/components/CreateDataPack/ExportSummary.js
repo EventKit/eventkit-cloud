@@ -1,15 +1,12 @@
 import 'openlayers/dist/ol.css';
-import React, {Component} from 'react';
+import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
-import getMuiTheme from 'material-ui/styles/getMuiTheme'
-import '../../components/tap_events'
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar'
 import Paper from 'material-ui/Paper'
 
-class ExportSummary extends React.Component {
+export class ExportSummary extends Component {
     constructor(props) {
         super(props)
         this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
@@ -18,15 +15,11 @@ class ExportSummary extends React.Component {
         }
     }
 
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
-    }
-
     expandedChange(expanded) {
         this.setState({expanded: expanded});
     }
 
-    componentWillMount() {
+    componentDidMount() {
         window.addEventListener('resize', this.screenSizeUpdate);
     }
 
@@ -47,8 +40,7 @@ class ExportSummary extends React.Component {
     }
 
     _initializeOpenLayers() {
-
-        var base = new ol.layer.Tile({
+        const base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
                 wrapX: true,
@@ -86,9 +78,7 @@ class ExportSummary extends React.Component {
 
         this._map.addLayer(layer);
         this._map.getView().fit(source.getExtent(), this._map.getSize());
-
     }
-
 
     render() {
         const style ={
@@ -177,95 +167,77 @@ class ExportSummary extends React.Component {
         return (
             <div style={style.root}>
                 <CustomScrollbar>
-                <form style={style.form}  className={'qa-ExportSummary-form'}>
-                    <Paper className={'qa-ExportSummary-Paper'} style={style.paper} zDepth={2} rounded>
-                        <div id='mainHeading' className={'qa-ExportSummary-mainHeading'} style={style.heading}>Preview and Run Export</div>
-                        <div style={style.subHeading} className={'qa-ExportSummary-subHeading'}>
-                        Please make sure all the information below is correct.
-                        </div>
-
-                        <div>
-                            {/*<table className={styles.table}><tbody>
-                            <tr>
-                                    <td className={styles.tdHeading}>User</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
-                                </tr>
-                                <tr>
-                                    <td className={styles.tdHeading}>Job Id</td>
-                                    <td className={styles.tdData}>Table Cell Data</td>
-                                </tr>
-                            </tbody>
-                            </table>*/}
-                            <div className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
-                                Export Information
+                    <form style={style.form} className={'qa-ExportSummary-form'}>
+                        <Paper className={'qa-ExportSummary-Paper'}  style={style.paper} zDepth={2} rounded>
+                            <div id='mainHeading' className={'qa-ExportSummary-mainHeading'} style={style.heading}>Preview and Run Export</div>
+                            <div style={style.subHeading} className={'qa-ExportSummary-subHeading'}>
+                                Please make sure all the information below is correct.
                             </div>
-                            <table><tbody>
-                            <tr className={'qa-ExportSummary-tr-name'}>
-                                <td style={style.tdHeading}>Name</td>
-                                <td style={style.tdData}>{this.props.exportName}</td>
-                            </tr>
-                            <tr className={'qa-ExportSummary-tr-description'}>
-                                <td style={style.tdHeading}>Description</td>
-                                <td style={style.tdData}>{this.props.datapackDescription}</td>
-                            </tr>
-                            <tr  className={'qa-ExportSummary-tr-category'}>
-                                <td style={style.tdHeading}>Project&nbsp;/ Category</td>
-                                <td style={style.tdData}>{this.props.projectName}</td>
-                            </tr>
-                            <tr className={'qa-ExportSummary-tr-published'}>
-                                <td style={style.tdHeading}>Published</td>
-                                <td style={style.tdData}>{this.props.makePublic.toString()}</td>
-                            </tr>
-                            <tr className={'qa-ExportSummary-tr-layers'}>
-                                <td style={style.tdHeading}>Layer Data</td>
-                                <td style={style.tdData}>{this.props.layers}</td>
-                            </tr>
-                            <tr  className={'qa-ExportSummary-tr-formats'}>
-                                <td style={style.tdHeading} rowSpan={providers.length}>File Formats</td>
-
-                                <td style={style.tdData}>{providers.map((provider) => <p key={provider.uid}>{provider.name}</p>)}</td>
-
-                            </tr>
-                            </tbody>
-                            </table>
-                            <div  className={'qa-ExportSummary-aoiHeading'} style={style.exportHeading}>
-                                Area of Interest (AOI)
+                            <div>
+                                <div className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
+                                    Export Information
+                                </div>
+                                <table id='export-information'>
+                                    <tbody>
+                                        <tr id='name'className={'qa-ExportSummary-tr-name'}>
+                                            <td style={style.tdHeading}>Name</td>
+                                            <td style={style.tdData}>{this.props.exportName}</td>
+                                        </tr>
+                                        <tr id='description' className={'qa-ExportSummary-tr-description'}>
+                                            <td style={style.tdHeading}>Description</td>
+                                            <td style={style.tdData}>{this.props.datapackDescription}</td>
+                                        </tr>
+                                        <tr id='project'  className={'qa-ExportSummary-tr-category'}>
+                                            <td style={style.tdHeading}>Project&nbsp;/ Category</td>
+                                            <td style={style.tdData}>{this.props.projectName}</td>
+                                        </tr>
+                                        <tr id='published' className={'qa-ExportSummary-tr-published'}>
+                                            <td style={style.tdHeading}>Published</td>
+                                            <td style={style.tdData}>{this.props.makePublic.toString()}</td>
+                                        </tr>
+                                        <tr id='formats' className={'qa-ExportSummary-tr-formats'}>
+                                            <td style={style.tdHeading}>File Formats</td>
+                                            <td style={style.tdData}>{this.props.layers}</td>
+                                        </tr>
+                                        <tr id='layers'  className={'qa-ExportSummary-tr-layers'}>
+                                            <td style={style.tdHeading} rowSpan={providers.length}>Layer Data</td>
+                                            <td style={style.tdData}>{providers.map((provider) => <p key={provider.uid}>{provider.name}</p>)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div id='aoi-heading' className={'qa-ExportSummary-aoiHeading'} style={style.exportHeading}>
+                                    Area of Interest (AOI)
+                                </div>
+                                <table style={style.table} id='aoi-area' className={'qa-ExportSummary-tr-area'}>
+                                    <tbody>
+                                        <tr>
+                                            <td className={styles.tdHeading}>Area</td>
+                                            <td className={styles.tdData}>{this.props.area_str}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <table style={style.table}><tbody>
-                            {/*<tr>
-                                <td className={styles.tdHeading}>Region</td>
-                                <td className={styles.tdData}>Table Cell Data</td>
-                            </tr>
-                            */}
-                            <tr className={'qa-ExportSummary-tr-area'}>
-                                <td style={style.tdHeading}>Area</td>
-                                <td style={style.tdData}>{this.props.area_str}</td>
-                            </tr>
-                            </tbody>
-                            </table>
-                        </div>
-                        <div  className={'qa-ExportSummary-map'} style={style.mapCard}>
-                            <Card className={'qa-ExportSummary-Card'}expandable={true}
-                                    onExpandChange={this.expandedChange.bind(this)}>
-                                <CardHeader
-                                    className={'qa-ExportSummary-CardHeader'}
-                                    title="Selected Area of Interest"
-                                    actAsExpander={true}
-                                    showExpandableButton={true}
-                                    style={{padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)'}}
-                                    textStyle={{paddingRight: '6px', fontWeight: 'bold', fontSize: '18px'}}
-                                />
-                                <CardText
-                                    className={'qa-ExportSummary-CardText'}
-                                    expandable={true}
-                                    style={{padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)'}}>
-                                    <div id="summaryMap" className={styles.map}></div>
-                                </CardText>
-                            </Card>
-
-                        </div>
-                    </Paper>
-                </form>
+                            <div id='aoi-map' className={'qa-ExportSummary-map'} style={style.mapCard}>
+                                <Card className={'qa-ExportSummary-Card'}expandable={true}
+                                      onExpandChange={this.expandedChange.bind(this)}>
+                                    <CardHeader
+                                        className={'qa-ExportSummary-CardHeader'}
+                                        title="Selected Area of Interest"
+                                        actAsExpander={true}
+                                        showExpandableButton={true}
+                                        style={{padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)'}}
+                                        textStyle={{paddingRight: '6px', fontWeight: 'bold', fontSize: '18px'}}
+                                    />
+                                    <CardText
+                                        className={'qa-ExportSummary-CardText'}
+                                        expandable={true}
+                                        style={{padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)'}}>
+                                        <div id="summaryMap" style={style.map}></div>
+                                    </CardText>
+                                </Card>
+                            </div>
+                        </Paper>
+                    </form>
                 </CustomScrollbar>
             </div>
         )
@@ -286,17 +258,22 @@ function mapStateToProps(state) {
 }
 
 ExportSummary.contextTypes = {
-    config: React.PropTypes.object
+    config: PropTypes.object
 }
 
 ExportSummary.propTypes = {
-    geojson:         React.PropTypes.object,
+    geojson: PropTypes.object,
+    exportName: PropTypes.string,
+    datapackDescription: PropTypes.string,
+    projectName: PropTypes.string,
+    makePublic: PropTypes.bool,
+    providers: PropTypes.array,
+    area_str: PropTypes.string,
+    layers: PropTypes.string,
 }
-ExportSummary.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-};
 
 export default connect(
     mapStateToProps,
+    null
 )(ExportSummary);
 

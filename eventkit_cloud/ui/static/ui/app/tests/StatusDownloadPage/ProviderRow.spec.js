@@ -200,7 +200,6 @@ describe('ProviderRow component', () => {
         const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props}/>);
         wrapper.instance().handleProviderOpen(props.provider);
-        console.log(props.provider)
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
@@ -238,23 +237,12 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('handleDownload should set timeout to open window with download url', () => {
+    it('handleSingleDownload should open a url in a different window', () => {
         const openSpy = new sinon.spy();
         window.open = openSpy;
         const props = getProps();
         const wrapper = getWrapper(props);
-        wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
-        wrapper.instance().handleDownload();
-        expect(openSpy.calledOnce).toBe(true);
-
-    });
-
-    it('handleCloudDownload should open a url in a different window', () => {
-        const openSpy = new sinon.spy();
-        window.open = openSpy;
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleCloudDownload();
+        wrapper.instance().handleSingleDownload();
         expect(openSpy.calledOnce).toBe(true);
     });
 
@@ -320,15 +308,18 @@ describe('ProviderRow component', () => {
         expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskLink should return a "a" element', () => {
+    it('getTaskLink should return a "a" element with click handler', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const task = {result: {url: 'test-url.io'}, name: 'test name'};
         const link = wrapper.instance().getTaskLink(task);
+        wrapper.instance().handleSingleDownload = new sinon.spy();
         const elem = shallow(link);
         expect(elem.is('a')).toBe(true);
-        expect(elem.props().href).toEqual('test-url.io');
-        expect(elem.text()).toEqual('test name')
+        expect(elem.text()).toEqual('test name');
+        elem.simulate('click');
+        expect(wrapper.instance().handleSingleDownload.calledOnce).toBe(true);
+        expect(wrapper.instance().handleSingleDownload.calledWith('test-url.io')).toBe(true);
     });
 
     it('getTaskDownloadIcon should return a disabled icon', () => {

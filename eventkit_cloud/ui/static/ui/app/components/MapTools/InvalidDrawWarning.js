@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import styles from '../../styles/InvalidDrawWarning.css';
 
 export class InvalidDrawWarning extends Component {
     constructor(props) {
@@ -7,8 +6,24 @@ export class InvalidDrawWarning extends Component {
     }
 
     render() {
+        const style = {
+            display: this.props.show ? 'initial' : 'none',
+            position: 'absolute',
+            top: '70px',
+            right: '80px',
+            width: '200px',
+            border: '1px solid transparent',
+            padding: '5px 5px 5px 10px',
+            backgroundColor: '#d9534f',
+            borderColor: '#d43f3a',
+            color: '#fff',
+            zIndex: 2,
+            opacity: .7,
+            fontSize: '12px'
+        }
+
         return (
-            <div className={'qa-InvalidDrawWardning-div'} style={{display: this.props.show ? 'initial' : 'none'}}>
+            <div style={style} className={'qa-InvalidDrawWardning-div'} >
                 <span>You drew an invalid bounding box, please redraw.</span>
             </div>
         )

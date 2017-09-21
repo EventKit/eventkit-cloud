@@ -9,7 +9,6 @@ import Drawer from 'material-ui/Drawer';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
-import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
 import DataPackViewButtons from './DataPackViewButtons';
 import DataPackSortDropDown from './DataPackSortDropDown';
@@ -264,7 +263,7 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 231,
+                height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
@@ -274,6 +273,12 @@ export class DataPackPage extends React.Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
+            },
+            pageTitle: {
+                fontSize: '18px',
+                lineHeight: '35px',
+                paddingLeft: '10px',
+                height: '35px'
             },
             toolbarSearch: {
                 backgroundColor: '#253447',
@@ -304,7 +309,9 @@ export class DataPackPage extends React.Component {
             <div style={styles.backgroundStyle}>
                 <AppBar
                     className={'qa-DataPackPage-AppBar'}
-                    style={styles.appBar} title={pageTitle}
+                    style={styles.appBar}
+                    title={pageTitle}
+                    titleStyle={styles.pageTitle}
                     iconElementLeft={<p></p>}
                 >
                     <DataPackLinkButton />
