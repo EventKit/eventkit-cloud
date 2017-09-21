@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import styles from '../../styles/DropZone.css';
 import {PopupBox} from '../PopupBox.js';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
@@ -29,24 +28,66 @@ export class DropZoneDialog extends Component {
         this.props.setImportModalState(false);
         this.props.setAllButtonsDefault();
     }
+    
     render() {
+        const styles = {
+            drop: {
+                margin: 'auto',
+                width: '90%',
+                height: '200px',
+                textAlign: 'center',
+                border: '1px dashed',
+                fontSize: '1em',
+                color: '#4498c0'
+            },
+            text: {
+                verticalAlign: 'center',
+                color: 'grey',
+                height: '100px',
+                marginTop: '50px'
+            },
+            button: {
+                border: 'none',
+                backgroundColor: '#4498c0',
+                color: '#fff',
+                margin: '15px 5px 10px 5px',
+                height: '30px',
+                padding: '5p 10px',
+            },
+            icon: {
+              verticalAlign: 'middle',
+              fontSize: '20px',
+              marginRight: '5px',
+              color: '#fff'
+            }
+        }
 
         return (
             <PopupBox 
                 show={this.props.showImportModal}
                 title="Import AOI"
                 onExit={this.handleClear}>
-                <Dropzone onDrop={this.onDrop} 
-                            multiple={false} 
-                            className={styles.dropZone}
-                            ref={(node) => {this.dropzone = node;}} 
-                            disableClick={true}
-                            maxSize={2000000}>
-                        <div className={styles.dropZoneText}>
+                <Dropzone 
+                    onDrop={this.onDrop} 
+                    multiple={false} 
+                    style={styles.drop}
+                    ref={(node) => {this.dropzone = node;}} 
+                    disableClick={true}
+                    maxSize={2000000}
+                    className={'qa-DropZoneDialog-Dropzone'}
+                >
+                    <div style={styles.text} className={'qa-DropZoneDialog-text'}>
                         <span><strong>GeoJSON</strong> format only, <strong>2MB</strong> max,<br/>Drag and drop or<br/></span>
-                        <button onClick={this.onOpenClick} className={styles.dropZoneImportButton}><FileFileUpload />Select A File</button>
-                        </div>
-                    </Dropzone>
+                        <button 
+                            onClick={this.onOpenClick} 
+                            style={styles.button}
+                            className={'qa-DropZoneDialog-button'}
+                        >
+                            <FileFileUpload style={styles.icon} className={'qa-DropZoneDialog-icon-upload'}/>
+                            Select A File
+                        </button>
+                    </div>
+                </Dropzone>
             </PopupBox>
         )
     }

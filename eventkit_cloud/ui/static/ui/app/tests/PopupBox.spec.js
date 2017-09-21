@@ -31,15 +31,14 @@ describe('PopupBox component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.container')).toHaveLength(1);
-        expect(wrapper.find('.titlebar')).toHaveLength(1);
-        expect(wrapper.find('.title')).toHaveLength(1);
-        expect(wrapper.find('span').text()).toEqual('test title');
-        expect(wrapper.find('.exit')).toHaveLength(1);
-        expect(wrapper.find('button')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-container')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-titlebar')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-title')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-title').text()).toEqual('test title');
+        expect(wrapper.find('.qa-PopupBox-exit')).toHaveLength(1);
         expect(wrapper.find(ContentClear)).toHaveLength(1);
-        expect(wrapper.find('.body')).toHaveLength(1);
-        expect(wrapper.find('.footer')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-body')).toHaveLength(1);
+        expect(wrapper.find('.qa-PopupBox-footer')).toHaveLength(1);
     });
 
     it('should execute the passed in function when exit button is clicked', () =>{
