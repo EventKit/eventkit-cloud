@@ -19,15 +19,15 @@ describe('InvalidDrawWarning component', () => {
 
     it('should be hidden by default', () => {
         const wrapper = mount(<InvalidDrawWarning {...props}/>);
-        expect(wrapper.find('div').props().style).toEqual({display: 'none'});
+        expect(wrapper.find('div').props().style.display).toEqual('none');
     });
 
     it('should be visible when new props are passed in', () => {
         const wrapper = mount(<InvalidDrawWarning {...props}/>);
-        expect(wrapper.find('div').props().style).toEqual({display: 'none'});
+        expect(wrapper.find('div').props().style.display).toEqual('none');
         let newProps = props;
         newProps.show = true;
         wrapper.setProps(newProps);
-        expect(wrapper.find('div').props().style).toEqual({display: 'initial'});
+        expect(wrapper.find('div').props().style.display).toEqual('initial');
     });
 });
