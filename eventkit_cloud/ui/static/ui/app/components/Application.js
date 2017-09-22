@@ -115,10 +115,6 @@ export class Application extends Component {
     }
 
     render() {
-        const contentStyle = {};
-        if (this.props.drawerOpen) {
-            contentStyle.marginLeft = 200;
-        }
         const styles = {
             appBar: {
                 backgroundColor: 'black',
