@@ -71,9 +71,9 @@
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
-        {% endif %}
-        {% endfor %}
       </layer-tree-group>
+      {% endif %}
+      {% endfor %}
       <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
         <customproperties/>
         {% for provider in provider_details %}
