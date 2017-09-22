@@ -65,8 +65,8 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                         logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                                       export_task.name))
                         continue
-                    # Exclude zip files created by zip_export_provider
-                    if not full_file_path.endswith(".zip"):
+                    # Exclude zip files created by zip_export_provider and the selection geojson
+                    if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
                         provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
                         provider_details += [provider_detail]
 
