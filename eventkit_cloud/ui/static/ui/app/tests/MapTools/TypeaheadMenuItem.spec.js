@@ -44,11 +44,11 @@ describe('TypeaheadMenuItem component', () => {
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(6);
         expect(wrapper.find('.menuItem')).toHaveLength(1);
-        expect(wrapper.find('.menuItemIconDiv')).toHaveLength(1);
+        expect(wrapper.find('.qa-TypeaheadMenuItem-icon-div')).toHaveLength(1);
         expect(wrapper.find(ActionRoom)).toHaveLength(0);
-        expect(wrapper.find('.menuItemText')).toHaveLength(2);
-        expect(wrapper.find('.menuItemText').first().text()).toEqual('');
-        expect(wrapper.find('.menuItemSource')).toHaveLength(1);
+        expect(wrapper.find('.qa-TypeaheadMenuItem-name')).toHaveLength(1);
+        expect(wrapper.find('.qa-TypeaheadMenuItem-description')).toHaveLength(1);
+        expect(wrapper.find('.qa-TypeaheadMenuItem-source')).toHaveLength(1);
     });
 
     it('createDescription should return the proper description', () => {
@@ -92,7 +92,7 @@ describe('TypeaheadMenuItem component', () => {
             }
         );
         expect(wrapper.find(ImageCropDin)).toHaveLength(1);
-        expect(wrapper.find('.menuItemText').first().text()).toEqual('test name');
-        expect(wrapper.find('.menuItemText').last().text()).toEqual('province, region, country name');
+        expect(wrapper.find('.qa-TypeaheadMenuItem-name').text()).toEqual('test name');
+        expect(wrapper.find('.qa-TypeaheadMenuItem-description').text()).toEqual('province, region, country name');
     });
 });
