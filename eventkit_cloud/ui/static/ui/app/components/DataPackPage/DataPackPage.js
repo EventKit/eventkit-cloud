@@ -91,12 +91,12 @@ export class DataPackPage extends React.Component {
         if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
     }
 
-    onSearch(searchText, ix) { 
+    onSearch(searchText) { 
         this.setState({search: searchText, loading: true}, this.makeRunRequest);
     }
 
-    checkForEmptySearch(searchText, dataSource, params) {
-        if(searchText == '') {
+    checkForEmptySearch(searchText) {
+        if(searchText == '' && this.state.search) {
             this.setState({search: '', loading: true}, this.makeRunRequest);
         }
     }
@@ -309,11 +309,10 @@ export class DataPackPage extends React.Component {
                     <DataPackLinkButton />
                 </AppBar>
                 <Toolbar style={styles.toolbarSearch}>
-                    <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
+                    <ToolbarGroup style={{width: '100%'}}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
-                            searchbarWidth={'100%'} 
                         />
                     </ToolbarGroup>
                 </Toolbar>

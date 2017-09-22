@@ -252,8 +252,9 @@ describe('DataPackPage component', () => {
     it('checkForEmptySearch should update state and call makeRunRequest', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
+        wrapper.setState({search: 'some search term'});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.instance().checkForEmptySearch('', [], {});
+        wrapper.instance().checkForEmptySearch('');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
