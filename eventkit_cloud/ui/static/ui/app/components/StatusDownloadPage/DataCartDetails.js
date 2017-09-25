@@ -236,6 +236,14 @@ export class DataCartDetails extends React.Component {
         });
 
         const styles = {
+            table: {
+               width: '100%',
+                height: '100%',
+                border: '0px solid black',
+                borderSpacing: '5px',
+                borderCollapse: 'separate',
+                layout: 'fixed'
+            },
             tdHeader: {
                 backgroundColor: '#f8f8f8', 
                 padding: '10px', 
@@ -349,7 +357,7 @@ export class DataCartDetails extends React.Component {
         return (
             <div>
                 <div>
-                    <table className={'qa-DataCartDetails-table-name'}>
+                    <table style={styles.table} className={'qa-DataCartDetails-table-name'}>
                         <tbody>
                         <tr>
                             <td style={styles.tdHeader}>Name</td>
@@ -363,7 +371,7 @@ export class DataCartDetails extends React.Component {
                     Status
                 </div>
                 <div>
-                    <table className={'qa-DataCartDetails-table-export'}>
+                    <table style={styles.table} className={'qa-DataCartDetails-table-export'}>
                         <tbody>
 
                         <tr className={'qa-DataCartDetails-tr-exportStatus'}>
@@ -492,7 +500,7 @@ export class DataCartDetails extends React.Component {
                     <div className={'qa-DataCartDetails-div-generalInfo'} style={styles.subHeading}>
                         General Information
                     </div>
-                    <table className={'qa-DataCartDetails-table-generalInfo'} style={{tableLayout: 'fixed'}}>
+                    <table className={'qa-DataCartDetails-table-generalInfo'}  style={styles.table}>
                         <tbody>
                         <tr className={'qa-DataCartDetails-tr-description'}>
                             <td style={styles.tdHeader}>Description</td>
@@ -560,7 +568,7 @@ export class DataCartDetails extends React.Component {
                     <div className={'qa-DataCartDetails-div-exportInfo'} style={styles.subHeading}>
                         Export Information
                     </div>
-                    <table className={'qa-DataCartDetails-table-exportInfo'}>
+                    <table  style={styles.table} className={'qa-DataCartDetails-table-exportInfo'}>
                         <tbody>
                         <tr className={'qa-DataCartDetails-tr-user'}>
                             <td style={styles.tdHeader}>Run By</td>
