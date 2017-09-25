@@ -55,10 +55,14 @@ export class LicenseRow extends React.Component {
         const toggleCellWidth = '50px'
         
         return (
-            <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
-                <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
+            <TableRow
+                className={'qa-LicenseRow-TableRow'}
+                selectable={false}
+                style={{height: '20px'}}
+                displayBorder={true}>
+                <TableRowColumn className={'qa-LicenseRow-TableRowColumn-empty'} style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
                 </TableRowColumn>
-                <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
+                <TableRowColumn  className={'qa-LicenseRow-TableRowColumn-licenseText'} style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
                     <i>
                         Use of this data is governed by <a 
                                                             onClick={this.setLicenseOpen}
@@ -68,6 +72,7 @@ export class LicenseRow extends React.Component {
                                                         </a>
                     </i>
                     <BaseDialog
+                        className={'qa-LicenseRow-BaseDialog'}
                         show={this.state.licenseDialogOpen}
                         title={this.props.name}
                         onClose={this.handleLicenseClose}

@@ -54,6 +54,7 @@ export class BaseDialog extends Component {
         // the default is just a close button
         const defaultActions = [
             <RaisedButton
+                className={'qa-BaseDialog-RasiedButton'}
                 style={{margin: '0px'}}
                 labelStyle={styles.label}
                 buttonStyle={styles.button}
@@ -68,13 +69,14 @@ export class BaseDialog extends Component {
         const actions = this.props.actions ? this.props.actions : defaultActions;
 
         // display passed in title and a clear button which calls props.onClose
-        const title = <div>
+        const title = <div className={'qa-BaseDialog-div'}>
                 <strong>{this.props.title ? this.props.title : ''}</strong>
                 <Clear style={styles.clear} onClick={this.props.onClose}/>
             </div>;
 
         return (
             <Dialog
+                className={'qa-BaseDialog-Dialog'}
                 contentStyle={styles.dialog}
                 bodyStyle={styles.body}
                 actions={actions}

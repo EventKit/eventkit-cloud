@@ -19,7 +19,7 @@ class Banner extends React.Component {
         }
 
         return (
-            <div style={style}>
+            <div className={'qa-Banner-div'} style={style}>
                 {this.context.config.BANNER_TEXT ? this.context.config.BANNER_TEXT: ''}
             </div>
         )

@@ -63,10 +63,10 @@ describe('ExportInfo component', () => {
     it('should render a form', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.root')).toHaveLength(1);
+        expect(wrapper.find('#root')).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);        
-        expect(wrapper.find('.form')).toHaveLength(1);
-        expect(wrapper.find('.paper')).toHaveLength(1);
+        expect(wrapper.find('#form')).toHaveLength(1);
+        expect(wrapper.find('#paper')).toHaveLength(1);
         expect(wrapper.find('#mainHeading')).toHaveLength(1);
         expect(wrapper.find(TextField)).toHaveLength(3);
         expect(wrapper.find('#layersHeader')).toHaveLength(1);

@@ -8,7 +8,7 @@ export default function Loading() {
     width: window.innerWidth, 
     display: 'inline-flex'
   };
-  return <div 
+  return <div  className={'qa-loading-body'}
       style={constainerStyle}
     >
       <CircularProgress 

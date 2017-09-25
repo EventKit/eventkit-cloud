@@ -71,10 +71,10 @@ export class DataPackDetails extends React.Component {
 
     getCloudDownloadIcon() {
         if(this.props.zipFileProp == null){
-            return <CloudDownload style={{fill:'gray', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-DataPackDetails-CloudDownload-disabled'} style={{fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
-            return <CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-DataPackDetails-CloudDownload-enabled'} style={{fill:'#4598bf', verticalAlign: 'middle'}}/>
         }
     }
 
@@ -206,19 +206,22 @@ export class DataPackDetails extends React.Component {
 
         return (
             <div style={{paddingTop: '20px'}}>
-                <div className={"qa-DataPackDetails-heading"} style={styles.subHeading}>
+                <div className={'qa-DataPackDetails-heading'} style={styles.subHeading}>
                    Download Options
                 </div>
                 <Table
+                    className={'qa-DataPackDetails-Table'}
                     style={{width:'100%', tableLayout: 'fixed'}}
                     selectable={false}
                 >
                     <TableHeader
+                        className={'qa-DataPackDetails-TableHeader'}
                         displaySelectAll={false}
                         adjustForCheckbox={false}
                         enableSelectAll={false}
                     >
-                        <TableRow>
+                        <TableRow
+                            className={'qa-DataPackDetails-TableRow'}>
                             {/*<TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px', fontSize: '14px'}}>*/}
                                 {/*<Checkbox*/}
                                     {/*disabled={this.getCheckboxStatus()}*/}
@@ -228,9 +231,11 @@ export class DataPackDetails extends React.Component {
                                     {/*uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}*/}
                                 {/*/>*/}
                             {/*</TableHeaderColumn>*/}
-                            <TableHeaderColumn style={styles.download}>
+                            <TableHeaderColumn
+                                className={'qa-DataPackDetails-TableHeaderColumn-zipButton'} style={styles.download}>
                                 <a href={this.props.zipFileProp}>
                                     <RaisedButton
+                                        className={'qa-DataPackDetails-RaisedButton-zipButton'}
                                         backgroundColor={'rgba(179,205,224,0.5)'}
                                         //disabled={this.isDownloadAllDisabled()}
                                         disabled={this.isZipFileCompleted()}
@@ -244,13 +249,13 @@ export class DataPackDetails extends React.Component {
                                 </a>
                             </TableHeaderColumn>
 
-                            <TableHeaderColumn style={styles.genericColumn}>
+                            <TableHeaderColumn className={'qa-DataPackDetails-TableHeaderColumn-fileSize'} style={styles.genericColumn}>
                                 FILE SIZE
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={styles.genericColumn}>
+                            <TableHeaderColumn className={'qa-DataPackDetails-TableHeaderColumn-progress'} style={styles.genericColumn}>
                                 PROGRESS
                             </TableHeaderColumn>
-                            <TableHeaderColumn style={{...styles.genericColumn, width: toggleCellWidth}}>
+                            <TableHeaderColumn className={'qa-DataPackDetails-TableHeaderColumn-empty'} style={{...styles.genericColumn, width: toggleCellWidth}}>
 
                             </TableHeaderColumn>
 

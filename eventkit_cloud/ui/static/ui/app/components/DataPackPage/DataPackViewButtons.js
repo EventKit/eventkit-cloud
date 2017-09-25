@@ -31,27 +31,30 @@ export class DataPackViewButtons extends React.Component {
             }
         }
         return (
-            <div style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
+            <div className={'qa-DataPackViewButtons-Icons'}  style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
                 <IconButton
+                    className={'qa-DataPackViewButtons-IconButton-map'}
                     onClick={() => {this.props.handleViewChange('map')}}
                     style={styles.button}
                     iconStyle={this.props.view == 'map' ? styles.selectedIcon : styles.icon}
                 >
-                    <MapsMap/>
+                    <MapsMap  className={'qa-DataPackViewButtons-MapsMap'}/>
                 </IconButton>
                 <IconButton
+                    className={'qa-DataPackViewButtons-IconButton-grid'}
                     onClick={() => {this.props.handleViewChange('grid')}}
                     style={styles.button}
                     iconStyle={this.props.view == 'grid' ? styles.selectedIcon : styles.icon}
                 >
-                    <ActionViewModule />
+                    <ActionViewModule  className={'qa-DataPackViewButtons-ActionViewModule'}/>
                 </IconButton>
                 <IconButton
+                    className={'qa-DataPackViewButtons-IconButton-list'}
                     onClick={() => {this.props.handleViewChange('list')}}
                     style={styles.button}
                     iconStyle={this.props.view == 'list' ? styles.selectedIcon : styles.icon}
                 >
-                    <ActionViewStream />
+                    <ActionViewStream  className={'qa-DataPackViewButtons-ActionViewStream'}/>
                 </IconButton>
             </div> 
         );

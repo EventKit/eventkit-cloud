@@ -63,7 +63,7 @@ export class DropZoneDialog extends Component {
         }
 
         return (
-            <PopupBox 
+            <PopupBox
                 show={this.props.showImportModal}
                 title="Import AOI"
                 onExit={this.handleClear}>

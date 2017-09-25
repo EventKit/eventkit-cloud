@@ -53,7 +53,8 @@ export class DataPackOwnerSort extends React.Component {
         };
 
         return (
-            <DropDownMenu 
+            <DropDownMenu
+                className={'qa-DataPackOwnerSort-DropDownMenu'}
                 style={styles.dropDown}
                 labelStyle={styles.label} 
                 iconStyle={styles.icon}
@@ -62,8 +63,8 @@ export class DataPackOwnerSort extends React.Component {
                 underlineStyle={styles.underline}            
                 value={this.props.value}
                 onChange={this.props.handleChange}>
-                <MenuItem style={styles.item} value={''} primaryText={"All DataPacks"} />
-                <MenuItem style={styles.item} value={this.props.owner} primaryText={"My DataPacks"} />
+                <MenuItem className={'qa-DataPackOwnerSort-MenuItem-allDatapacks'} style={styles.item} value={''} primaryText={"All DataPacks"} />
+                <MenuItem className={'qa-DataPackOwnerSort-Menuitem-myDatapacks'} style={styles.item} value={this.props.owner} primaryText={"My DataPacks"} />
             </DropDownMenu>
         );
     }
