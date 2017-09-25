@@ -1,5 +1,7 @@
 import React, {Component, PropTypes} from 'react';
-import {PopupBox} from '../PopupBox.js';
+import PopupBox from '../PopupBox';
+import RaisedButton from 'material-ui/RaisedButton';
+import BaseDialog from '../BaseDialog';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
 
@@ -32,8 +34,8 @@ export class DropZoneDialog extends Component {
     render() {
         const styles = {
             drop: {
-                margin: 'auto',
-                width: '90%',
+                margin: '0px auto',
+                width: '100%',
                 height: '200px',
                 textAlign: 'center',
                 border: '1px dashed',
@@ -45,28 +47,18 @@ export class DropZoneDialog extends Component {
                 color: 'grey',
                 height: '100px',
                 marginTop: '50px'
-            },
-            button: {
-                border: 'none',
-                backgroundColor: '#4498c0',
-                color: '#fff',
-                margin: '15px 5px 10px 5px',
-                height: '30px',
-                padding: '5p 10px',
-            },
-            icon: {
-              verticalAlign: 'middle',
-              fontSize: '20px',
-              marginRight: '5px',
-              color: '#fff'
             }
         }
 
-        return (
-            <PopupBox 
+        return(
+            <BaseDialog
                 show={this.props.showImportModal}
-                title="Import AOI"
-                onExit={this.handleClear}>
+                onClose={this.handleClear}
+                title={'Import AOI'}
+                actions={[]}
+                bodyStyle={{paddingBottom: '50px'}}
+                className={'qa-DropZoneDialog-BaseDialog'}
+            >
                 <Dropzone 
                     onDrop={this.onDrop} 
                     multiple={false} 
@@ -78,17 +70,18 @@ export class DropZoneDialog extends Component {
                 >
                     <div style={styles.text} className={'qa-DropZoneDialog-text'}>
                         <span><strong>GeoJSON</strong> format only, <strong>2MB</strong> max,<br/>Drag and drop or<br/></span>
-                        <button 
-                            onClick={this.onOpenClick} 
-                            style={styles.button}
-                            className={'qa-DropZoneDialog-button'}
-                        >
-                            <FileFileUpload style={styles.icon} className={'qa-DropZoneDialog-icon-upload'}/>
-                            Select A File
-                        </button>
+                        <RaisedButton
+                            style={{margin: '15px 5px 10px'}}
+                            labelStyle={{color: 'whitesmoke'}}
+                            backgroundColor={'#4598bf'}
+                            label={'Select A File'}
+                            icon={<FileFileUpload/>}
+                            onClick={this.onOpenClick}
+                            className={'qa-DropZoneDialog-RaisedButton-select'}
+                        />
                     </div>
                 </Dropzone>
-            </PopupBox>
+            </BaseDialog>
         )
     }
 }
