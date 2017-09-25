@@ -251,7 +251,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         props.provider.tasks[0].status = 'SUCCESS';
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+            <Check className={'qa-ProviderRow-Check-taskStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
         props.provider.tasks[0].status = 'INCOMPLETE';
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
@@ -261,10 +261,10 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual('WAITING');
         props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
-            <span><LinearProgress mode="determinate" value={100}/>{''}</span>
+            <span className={'qa-ProviderRow-span-taskStatus'}><LinearProgress mode="determinate" value={100}/>{''}</span>
         );
         expect(wrapper.instance().getTaskStatus({status: 'CANCELED'})).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
+            <Warning className={'qa-ProviderRow-Warning-taskStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
         );
         expect(wrapper.instance().getTaskStatus({status: ''})).toEqual('');
     });
@@ -274,7 +274,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         props.provider.status = 'COMPLETED';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+            <Check className={'qa-ProviderRow-Check-providerStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
         props.provider.status = 'INCOMPLETE';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
@@ -286,14 +286,14 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('IN PROGRESS');
         props.provider.status = 'CANCELED';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
-            <span style={{
+            <span className={'qa-ProviderRow-span-providerStatus'} style={{
                 fontWeight: 'bold',
                 display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
                 color: '#f4d225'
-            }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
+            }}>CANCELED<Warning className={'qa-ProviderRow-Warning-providerStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
         );
         expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });

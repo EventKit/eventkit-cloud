@@ -165,16 +165,16 @@ export class ExportSummary extends Component {
             return provider.display != false;
         });
         return (
-            <div style={style.root}>
+            <div id="root" style={style.root}>
                 <CustomScrollbar>
-                    <form style={style.form} className={'qa-ExportSummary-form'}>
+                    <form id="form" style={style.form} className={'qa-ExportSummary-form'}>
                         <Paper className={'qa-ExportSummary-Paper'}  style={style.paper} zDepth={2} rounded>
                             <div id='mainHeading' className={'qa-ExportSummary-mainHeading'} style={style.heading}>Preview and Run Export</div>
-                            <div style={style.subHeading} className={'qa-ExportSummary-subHeading'}>
+                            <div id='subHeading' style={style.subHeading} className={'qa-ExportSummary-subHeading'}>
                                 Please make sure all the information below is correct.
                             </div>
                             <div>
-                                <div className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
+                                <div id="export-information-heading" className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
                                     Export Information
                                 </div>
                                 <table style={style.table} id='export-information'>

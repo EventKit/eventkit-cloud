@@ -302,10 +302,10 @@ export class ExportInfo extends React.Component {
         });
 
         return (
-            <div style={style.root}>
+            <div id='root' className={'qa-ExportInfo-root'} style={style.root}>
                 <CustomScrollbar>
-                    <form onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
-                        <Paper className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>
+                    <form id='form' onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
+                        <Paper id='paper' className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>
                             <div id='mainHeading' className={'qa-ExportInfo-mainHeading'} style={style.heading}>Enter General Information</div>
                             <CustomTextField
                                 className={'qa-ExportInfo-input-name'}

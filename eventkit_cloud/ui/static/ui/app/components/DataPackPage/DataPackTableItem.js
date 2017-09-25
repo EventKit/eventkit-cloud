@@ -35,7 +35,7 @@ export class DataPackTableItem extends Component {
     }
 
     getPermissionsIcon(published) {
-        return published ? <SocialGroup style={{color: 'bcdfbb'}}/> 
+        return published ? <SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>
         : <SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>;
     }
 
