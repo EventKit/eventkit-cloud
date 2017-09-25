@@ -6,12 +6,10 @@ import ol from 'openlayers';
 import { RadioButton } from 'material-ui/RadioButton';
 import { List, ListItem} from 'material-ui/List';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import TextField from 'material-ui/TextField';
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
-import styles from '../../styles/ExportInfo.css';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js';
 import debounce from 'lodash/debounce';
@@ -258,20 +256,60 @@ export class ExportInfo extends React.Component {
             },
             window: {
                 height: window.innerHeight - 180
+            },
+            root: {
+                width:'100%',
+                height: window.innerHeight - 180,
+                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundRepeat: 'repeat repeat',
+                justifyContent: 'space-around',
+                display: 'flex',
+                flexWrap: 'wrap'
+            },
+            form: {
+                margin: '0 auto',
+                width:  window.innerWidth < 800 ? '90%' : '60%',
+                height: window.innerHeight - 180
+            },
+            heading: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: 'black',
+                alignContent: 'flex-start',
+                paddingBottom: '10px'
+            },
+            subHeading : {
+                fontSize: '16px',
+                color: 'black',
+                alignContent: 'flex-start'
+            },
+            sectionBottom : {
+                paddingBottom: '50px'
+            },
+            checkboxLabel: {
+                display: 'inline-flex',
+            },
+            mapCard : {
+                paddingBottom: '20px'
+            },
+            map : {
+                width: '100%',
             }
         }
+
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
 
         return (
-            <div className={styles.root} style={style.window}>
+            <div id='root' className={'qa-ExportInfo-root'} style={style.root}>
                 <CustomScrollbar>
-                    <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
-                        <Paper className={styles.paper} zDepth={2} rounded>
-                            <div id='mainHeading' className={styles.heading}>Enter General Information</div>
+                    <form id='form' onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
+                        <Paper id='paper' className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>
+                            <div id='mainHeading' className={'qa-ExportInfo-mainHeading'} style={style.heading}>Enter General Information</div>
                             <CustomTextField
-                                id='nameField' 
+                                className={'qa-ExportInfo-input-name'}
+                                id='nameField'
                                 name="exportName"
                                 ref="exportName"
                                 underlineStyle={style.underlineStyle}
@@ -285,6 +323,7 @@ export class ExportInfo extends React.Component {
                                 maxLength={100}
                             />
                             <CustomTextField
+                                className={'qa-ExportInfo-input-description'}
                                 id='descriptionField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -299,6 +338,7 @@ export class ExportInfo extends React.Component {
                                 maxLength={1000}
                             />
                             <CustomTextField
+                                className={'qa-ExportInfo-input-project'}
                                 id='projectField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -311,22 +351,24 @@ export class ExportInfo extends React.Component {
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={100}
                             />
-                            <div className={styles.checkbox}>
+                            <div>
                                 <Checkbox
+                                    className={'qa-ExportInfo-CheckBox-publish'}
                                     name="makePublic"
                                     onCheck={this.toggleCheckbox.bind(this)}
                                     defaultChecked={this.props.exportInfo.makePublic}
-                                    style={{left: '0px', paddingLeft: '5px'}}
+                                    style={{left: '0px', paddingLeft: '5px', margin: '30px 0px'}}
                                     label="Make Public"
-                                    checkedIcon={<ActionCheckCircle style={{fill: '#55ba63'}} />}
-                                    uncheckedIcon={<UncheckedCircle style={{fill: '4598bf'}}/>}
+                                    labelStyle={{fontWeight: 'normal', fontSize:'16px'}}
+                                    checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle'} style={{fill: '#55ba63'}} />}
+                                    uncheckedIcon={<UncheckedCircle className={'qa-ExportInfo-UncheckedCircle'} style={{fill: '4598bf'}}/>}
                                 />
                             </div>
                             
-                            <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
-                            <div id='layersSubheader' className={styles.subHeading}>You must choose <strong>at least one</strong></div>
-                            <div className={styles.sectionBottom}>
-                                <List className={styles.list}>
+                            <div id="layersHeader" className={'qa-ExportInfo-layersHeader'} style={style.heading}>Select Data Sources</div>
+                            <div id='layersSubheader' style={style.subHeading}>You must choose <strong>at least one</strong></div>
+                            <div style={style.sectionBottom}>
+                                <List className={'qa-ExportInfo-List'} style={{width: '100%', fontSize: '16px'}}>
                                     {providers.map((provider, ix) => {
                                         // Show license if one exists.
                                         const nestedItems = [];
@@ -360,6 +402,7 @@ export class ExportInfo extends React.Component {
                                         }
                                         nestedItems.push(
                                             <ListItem
+                                                className={'qa-ExportInfo-ListItem-provServDesc'}
                                                 key={nestedItems.length}
                                                 primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
                                                 disabled={true}
@@ -370,22 +413,26 @@ export class ExportInfo extends React.Component {
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
 
                                         return <ListItem
+                                            className={'qa-ExportInfo-ListItem'}
                                             key={provider.uid}
-                                            style={{backgroundColor: backgroundColor}}
+                                            style={{backgroundColor: backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom:'0'}}
                                             nestedListStyle={{padding: '0px', backgroundColor: backgroundColor}}
                                             primaryText={provider.name}
                                             leftCheckbox={<Checkbox
+                                                className={'qa-ExportInfo-CheckBox-provider'}
                                                 name={provider.name}
                                                 style={{left: '0px', paddingLeft: '5px'}}
                                                 defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) == -1 ? false : true}
                                                 onCheck={this.onChangeCheck.bind(this)}
                                                 checkedIcon={
                                                     <ActionCheckCircle
+                                                        className={'qa-ExportInfo-ActionCheckCircle-provider'}
                                                         style={{fill: '#55ba63', paddingLeft: '5px'}}
                                                     />
                                                 }
                                                 uncheckedIcon={
                                                     <UncheckedCircle
+                                                        className={'qa-ExportInfo-UncheckedCircle-provider'}
                                                         style={{fill: '#4598bf', paddingLeft: '5px'}}
                                                     />
                                                 }
@@ -398,67 +445,74 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div id='projectionHeader' className={styles.heading}>Select Projection</div>
-                            <div className={styles.sectionBottom}>
-                                <div id='projectionCheckbox' className={styles.checkboxLabel}>
+                            <div id='projectionHeader' className={'qu-ExportInfo-projectionHeader'} style={style.heading}>Select Projection</div>
+                            <div style={style.sectionBottom}>
+                                <div id='projectionCheckbox' style={style.checkboxLabel}>
                                     <Checkbox
+                                        className={'qa-ExportInfo-CheckBox-projection'}
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
                                         checked={true}
+                                        labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
                                         style={{display:'inlineBlock'}}
                                         disabled={true}
-                                        checkedIcon={<ActionCheckCircle />}
-                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle-projection'}/>}
+                                    /><Info className={'qa-ExportInfo-Info-projection'} onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title='Projection Information'
                                         onClose={this.handleProjectionsClose.bind(this)}
-                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}}>
+                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}} className={'qa-ExportInfo-dialog-projection'}>
                                         All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
                                     </div>
                                     </BaseDialog>
                                 </div>
                             </div>
 
-                            <div id='formatsHeader' className={styles.heading}>Select Export File Formats</div>
-                            <div className={styles.sectionBottom}>
-                                <div id='formatsCheckbox' className={styles.checkboxLabel}>
+                            <div id='formatsHeader' className={'qu-ExportInfo-formatsHeader'} style={style.heading}>Select Export File Formats</div>
+                            <div style={style.sectionBottom}>
+                                <div id='formatsCheckbox' style={style.checkboxLabel}>
                                     <Checkbox
+                                        className={'qa-ExportInfo-CheckBox-formats'}
                                         label="Geopackage (.gpkg)"
+                                        labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
                                         style={{display:'inlineBlock'}}
                                         name="Geopackage"
                                         checked={true}
                                         disabled={true}
-                                        checkedIcon={<ActionCheckCircle />}
-                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle-formats'} />}
+                                    /><Info className={'qa-ExportInfo-Info-formats'} onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.formatsDialogOpen}
                                         title='Format Information'
                                         onClose={this.handleFormatsClose.bind(this)}
-                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
+                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}  className={'qa-ExportInfo-dialog-formats'}>
                                         EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
                                     </BaseDialog>
                                 </div>
                             </div>
 
-                            <div className={styles.mapCard}>
+                            <div style={style.mapCard}>
                                 <Card expandable={true}
+                                      className={'qa-ExportInfo-Card-map'}
                                     onExpandChange={this.expandedChange.bind(this)}>
                                     <CardHeader
+                                        className={'qa-ExportInfo-CardHeader-map'}
                                         title="Selected Area of Interest"
                                         actAsExpander={false}
                                         showExpandableButton={true}
-                                        style={{padding: '12px 10px 10px'}}
-                                        textStyle={{paddingRight: '6px'}}>
+                                        style={{padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)'}}
+                                        textStyle={{paddingRight: '6px', fontWeight: 'bold', fontSize: '18px'}}>
                                         <a onClick={this.props.handlePrev}
                                            style={{fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer'}}>
                                             Edit
                                         </a>
                                     </CardHeader>
                                     <CardText
+                                        className={'qa-ExportInfo-CardText-map'}
                                         expandable={true}
-                                        style={{padding: '5px'}}>
-                                        <div id="infoMap" className={styles.map}></div>
+                                        style={{padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)'}}>
+                                        <div id="infoMap" style={style.map}></div>
                                     </CardText>
                                 </Card>
                             </div>

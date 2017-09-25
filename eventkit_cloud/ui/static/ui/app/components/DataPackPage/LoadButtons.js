@@ -55,7 +55,8 @@ export class LoadButtons extends React.Component {
         return (
             <div style={styles.container}>
                 <div style={{display: 'inline-block'}}>
-                    <RaisedButton 
+                    <RaisedButton
+                        className={'qa-LoadButtons-RaisedButton-showLess'}
                         backgroundColor={'#e5e5e5'}
                         labelColor={'#4498c0'}
                         label={'Show Less'}
@@ -64,7 +65,8 @@ export class LoadButtons extends React.Component {
                         icon={<KeyboardArrowUp/>}
                         style={{minWidth: '145px', margin: '5px 2.5px'}}
                     />
-                    <RaisedButton 
+                    <RaisedButton
+                        className={'qa-LoadButtons-RaisedButton-showMore'}
                         backgroundColor={'#e5e5e5'}
                         labelColor={'#4498c0'}
                         label={'Show More'}
@@ -74,7 +76,7 @@ export class LoadButtons extends React.Component {
                         style={{minWidth: '145px', margin: '5px 2.5px'}}
                     />
                 </div>
-                <div id='range' style={styles.range}>
+                <div className={'qa-LoadButtons-range'} id='range' style={styles.range}>
                     {range ? `${range[0]} of ${range[1]}` : ''}
                 </div>
             </div>

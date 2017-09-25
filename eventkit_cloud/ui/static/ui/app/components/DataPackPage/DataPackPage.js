@@ -275,8 +275,8 @@ export class DataPackPage extends React.Component {
                 fontSize: '14px',
             },
             pageTitle: {
-                fontSize: '18px', 
-                lineHeight: '35px', 
+                fontSize: '18px',
+                lineHeight: '35px',
                 paddingLeft: '10px',
                 height: '35px'
             },
@@ -307,16 +307,17 @@ export class DataPackPage extends React.Component {
 
         return (
             <div style={styles.backgroundStyle}>
-                <AppBar 
-                    style={styles.appBar} 
+                <AppBar
+                    className={'qa-DataPackPage-AppBar'}
+                    style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p></p>}
                 >
                     <DataPackLinkButton />
                 </AppBar>
-                <Toolbar style={styles.toolbarSearch}>
-                    <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
+                <Toolbar className={'qa-DataPackPage-Toolbar-search'} style={styles.toolbarSearch}>
+                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{margin: 'auto', width: '100%'}}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
@@ -325,7 +326,7 @@ export class DataPackPage extends React.Component {
                     </ToolbarGroup>
                 </Toolbar>
 
-                <Toolbar style={styles.toolbarSort}>
+                <Toolbar className={'qa-DataPackPage-Toolbar-sort'} style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
                         <DataPackFilterButton 
                             handleToggle={this.handleToggle}
@@ -358,7 +359,7 @@ export class DataPackPage extends React.Component {
                             />
                         </div>
                         :
-                        <div style={{position: 'relative'}}>
+                        <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
                             {this.state.loading || this.props.runsDeletion.deleting ? 
                             <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
                                 <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>

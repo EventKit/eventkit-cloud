@@ -37,10 +37,11 @@ export class ProvidersFilter extends React.Component {
 
         return (
             <div style={styles.drawerSection}>
-                <p style={{width: '100%', margin: '0px'}}><strong>Sources</strong></p>
+                <p className={'qa-ProvidersFilter-p'} style={{width: '100%', margin: '0px'}}><strong>Sources</strong></p>
                 {providers.map((provider) => {
                     return (
                         <Checkbox
+                            className={'qa-ProvidersFilter-Checkbox'}
                             key={provider.slug}
                             label={provider.name}
                             style={styles.checkbox}

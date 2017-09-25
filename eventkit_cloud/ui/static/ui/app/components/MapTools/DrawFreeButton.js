@@ -46,22 +46,22 @@ export class DrawFreeButton extends Component {
         }
 
         const DEFAULT_ICON = <div id='default_icon'>
-                <ContentCreate style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>DRAW</div>
+                <ContentCreate className={'qa-DrawFreeButton-ContentCreate-default'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawFreeButton-div-default'} style={styles.buttonName}>DRAW</div>
             </div>
 
         const INACTIVE_ICON = <div id='inactive_icon'>
-                <ContentCreate className={styles.inactiveButton}style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={{...styles.buttonName, opacity: 0.4}}>DRAW</div>
+                <ContentCreate className={'qa-DrawFreeButton-ContentCreate-inactive'} style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawFreeButton-div-inactive'} style={{...styles.buttonName, opacity: 0.4}}>DRAW</div>
             </div>
 
         const SELECTED_ICON =<div id='selected_icon'>
-                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>DRAW</div>
+                <ContentClear className={'qa-DrawFreeButton-ContentCreate-selected'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-DrawFreeButton-div-selected'} style={styles.buttonName}>DRAW</div>
             </div>
 
         return (
-            <button style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+            <button  className={'qa-DrawFreeButton-button'} style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
                 {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )

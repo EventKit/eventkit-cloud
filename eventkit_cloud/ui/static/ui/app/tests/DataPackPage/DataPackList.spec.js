@@ -219,9 +219,9 @@ describe('DataPackList component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackList {...props}/>);
         let icon = wrapper.instance().getIcon('started_at');
-        expect(icon).toEqual(<NavigationArrowDropDown style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
+        expect(icon).toEqual(<NavigationArrowDropDown className={'qa-DataPackList-NavigationArrowDropDown'} style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
         icon = wrapper.instance().getIcon('-started_at');
-        expect(icon).toEqual(<NavigationArrowDropUp style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
+        expect(icon).toEqual(<NavigationArrowDropUp className={'qa-DataPackList-NavigationArrowDropUp'} style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
     });
 
     it('getHeaderStyle should return bold black style if true or inherit style if false', () => {

@@ -57,6 +57,7 @@ export class CustomTextField extends Component {
         return (
             <div style={{position: 'relative'}}>
                 <TextField
+                    className={'qa-CustomTextField-TextField'}
                     id={_.uniqueId()}
                     ref={(textField) => {
                         if (!textField) {
@@ -74,6 +75,7 @@ export class CustomTextField extends Component {
                 />
                 {(this.props.maxLength && this.props.showRemaining && this.state.focused) ?
                 <div
+                    className={'qa-CustomTextField-div-charsRemaining'}
                     style={{...this.styles.charsRemaining, color: charsRemainingColor}}>
                     {this.state.charsRemaining}
                 </div>
