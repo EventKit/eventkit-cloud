@@ -31,7 +31,8 @@ export class DataPackFilterButton extends React.Component {
         };
 
         return (
-            <FlatButton 
+            <FlatButton
+                className={'qa-DataPackFilterButton-FlatButton'}
                 style={styles.button}
                 label={this.props.active ? "HIDE FILTERS" : "SHOW FILTERS"}
                 labelPosition={"after"}

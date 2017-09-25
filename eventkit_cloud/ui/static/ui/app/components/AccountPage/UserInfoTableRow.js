@@ -19,7 +19,7 @@ export class UserInfoTableRow extends Component {
         }
 
         return (
-            <tr style={styles.tr}>
+            <tr className={'qa-UserInfoTableRow-tr'} style={styles.tr}>
                 <td style={{...styles.td, whiteSpace: 'nowrap'}}><strong>{this.props.title}</strong></td>
                 <td style={{...styles.td, color: 'grey', width: '99%'}}>{this.props.data}</td>
             </tr>

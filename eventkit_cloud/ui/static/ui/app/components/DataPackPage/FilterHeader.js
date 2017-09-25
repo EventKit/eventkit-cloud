@@ -19,8 +19,9 @@ export class DataPackDrawer extends Component {
             },
         }
         return (
-                <div style={styles.drawerHeader}>
+                <div className={'qa-FilterHeader-div'} style={styles.drawerHeader}>
                     <RaisedButton
+                        className={'qa-FilterHeader-RaisedButton-apply'}
                         style={{minWidth: 'none', borderRadius: '0px'}}
                         buttonStyle={{borderRadius: '0px'}}
                         backgroundColor={'#4598bf'}
@@ -28,6 +29,7 @@ export class DataPackDrawer extends Component {
                         labelStyle={{color: '#fff', textTransform: 'none'}}
                         onClick={this.props.onApply}/>
                     <FlatButton
+                        className={'qa-FilterHeader-FlatButton-clear'}
                         style={{float: 'right', minWidth: 'none'}}
                         hoverColor={'none'}
                         label={'Clear All'}

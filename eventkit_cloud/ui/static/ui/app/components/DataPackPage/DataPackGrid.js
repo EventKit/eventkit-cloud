@@ -45,6 +45,7 @@ export class DataPackGrid extends Component {
             <CustomScrollbar style={{height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%'}}>
                 <div style={styles.root}>
                     <GridList
+                        className={'qa-DataPackGrid-GridList'}
                         cellHeight={'auto'}
                         style={styles.gridList}
                         padding={window.innerWidth >= 768 ? 7: 2}
@@ -52,6 +53,7 @@ export class DataPackGrid extends Component {
                     >
                         {this.props.runs.map((run) => (
                             <DataPackGridItem
+                                className={'qa-DataPackGrid-GridListItem'}
                                 run={run}
                                 user={this.props.user}
                                 key={run.uid}

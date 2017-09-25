@@ -43,9 +43,10 @@ export class StatusFilter extends Component {
         }
         return (
             <div style={styles.drawerSection}>
-                <p style={{width: '100%', margin: '0px'}}><strong>Export Status</strong></p>
+                <p className={'qa-StatusFilter-p'} style={{width: '100%', margin: '0px'}}><strong>Export Status</strong></p>
                 <div style={{width: '180px', height: '87px'}}>
                     <Checkbox
+                        className={'qa-StatusFilter-Checkbox-complete'}
                         label={'Complete'}
                         style={{width: '100px', float: 'left'}}
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
@@ -53,9 +54,10 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({completed: v})}}
                         checked={this.props.completed}
                     />
-                    <NavigationCheck style={styles.check}/>
+                    <NavigationCheck className={'qa-StatusFilter-NavigationCheck'} style={styles.check}/>
                     
                     <Checkbox
+                        className={'qa-StatusFilter-Checkbox-running'}
                         label={'Running'}
                         style={{width: '100px', float: 'left'}}
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
@@ -63,9 +65,10 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({submitted: v})}}
                         checked={this.props.submitted}
                     />
-                    <NotificationSync style={styles.sync}/>
+                    <NotificationSync className={'qa-StatusFilter-NotificationSync'}style={styles.sync}/>
 
                     <Checkbox
+                        className={'qa-StatusFilter-Checkbox-error'}
                         label={'Error'}
                         style={{width: '100px', float: 'left'}}
                         iconStyle={{fill: 'grey', marginRight: '5px'}}
@@ -73,7 +76,7 @@ export class StatusFilter extends Component {
                         onCheck={(e, v)=> {this.props.onChange({incomplete: v})}}
                         checked={this.props.incomplete}
                     />
-                    <AlertError style={styles.error}/>
+                    <AlertError className={'qa-StatusFilter-AlertError'}style={styles.error}/>
                 </div>
             </div>
         )

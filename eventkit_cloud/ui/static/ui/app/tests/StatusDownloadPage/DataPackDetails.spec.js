@@ -211,12 +211,12 @@ describe('DataPackDetails component', () => {
         const wrapper = getWrapper(props);
         props.zipFileProp = null;
         wrapper.instance().getCloudDownloadIcon();
-        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload style={{fill:'gray', verticalAlign: 'middle'}}/>);
+        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload className={'qa-DataPackDetails-CloudDownload-disabled'} style={{fill:'gray', verticalAlign: 'middle'}}/>);
         let nextProps = {...props};
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().getCloudDownloadIcon();
-        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload style={{fill:'#4598bf', verticalAlign: 'middle'}}/>);
+        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload className={'qa-DataPackDetails-CloudDownload-enabled'} style={{fill:'#4598bf', verticalAlign: 'middle'}}/>);
     });
     // it('getCheckboxStatus should return true or false depending on providerTask prop', () => {
     //     let props = {...getProps()};

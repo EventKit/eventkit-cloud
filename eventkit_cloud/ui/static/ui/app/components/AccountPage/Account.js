@@ -91,6 +91,7 @@ export class Account extends Component {
         return (
             <div style={{backgroundColor: 'white'}}>
                 <AppBar
+                    className={'qa-Account-AppBar'}
                     title={'Account'}
                     style={styles.header}
                     titleStyle={styles.headerTitle}
@@ -105,9 +106,9 @@ export class Account extends Component {
                 
                 <div style={styles.body}>
                     <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
-                        <div style={styles.bodyContent}>
+                        <div style={styles.bodyContent}  className={'qa-Account-body'}>
                             {this.props.licenses.licenses.length > 0 ?
-                                <div style={{marginBottom: '34px'}}>
+                                <div style={{marginBottom: '34px'}} className={'qa-Account-licenses'}>
                                     <LicenseInfo
                                         user={this.props.user}
                                         licenses={this.props.licenses}
@@ -119,7 +120,7 @@ export class Account extends Component {
                             : null}
                             
                             {Object.keys(this.props.user.data.user).length > 0 ?
-                                <div style={{marginBottom: '34px'}}>
+                                <div style={{marginBottom: '34px'}}  className={'qa-Account-userInfo'}>
                                     <UserInfo user={this.props.user.data.user} updateLink={''}/>
                                 </div> 
                             : null}

@@ -34,13 +34,15 @@ export class PermissionsFilter extends Component {
         }
         return (
             <div style={styles.drawerSection}>
-                <p style={{width: '100%', margin: '0px'}}><strong >Permissions</strong></p>
+                <p  className={'qa-PermissionsFilter-p'}style={{width: '100%', margin: '0px'}}><strong >Permissions</strong></p>
                 <div style={{width: '100px', height: '58px', display: 'inline-block'}}>
-                    <RadioButtonGroup 
+                    <RadioButtonGroup
+                            className={'qa-PermissionsFilter-RadioButtonGroup'}
                             name={"permissions"} 
                             onChange={this.props.onChange}
                             valueSelected={this.props.valueSelected}>
                         <RadioButton
+                            className={'qa-PermissionsFilter-RadioButton-private'}
                             style={{width:'100px', float: 'left'}}
                             iconStyle={{fill: 'grey', marginRight: '5px'}}
                             labelStyle={{color: 'grey'}}
@@ -48,6 +50,7 @@ export class PermissionsFilter extends Component {
                             label={"Private"}
                         />
                         <RadioButton
+                            className={'qa-PermissionsFilter-RadioButton-public'}
                             style={{width:'100px', float: 'left'}}
                             iconStyle={{fill: 'grey', marginRight: '5px'}}
                             labelStyle={{color: 'grey'}}
@@ -57,8 +60,8 @@ export class PermissionsFilter extends Component {
                     </RadioButtonGroup>
                 </div>
                 <div style={{width: '60px', height: '58px', display: 'inline-block', float: 'right'}}>
-                    <SocialPerson style={styles.person}/>
-                    <SocialGroup style={styles.group}/>
+                    <SocialPerson className={'qa-PermissionsFilter-SocialPerson'} style={styles.person}/>
+                    <SocialGroup className={'qa-PermissionsFilter-SocialGroup'} style={styles.group}/>
                 </div>
             </div>
         )
