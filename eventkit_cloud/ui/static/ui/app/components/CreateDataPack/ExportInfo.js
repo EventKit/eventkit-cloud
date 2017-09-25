@@ -6,17 +6,16 @@ import ol from 'openlayers';
 import { RadioButton } from 'material-ui/RadioButton';
 import { List, ListItem} from 'material-ui/List';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
-import TextField from 'material-ui/TextField';
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
 import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
-import styles from '../../styles/ExportInfo.css';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js';
 import debounce from 'lodash/debounce';
 import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
+import CustomTextField from "../CustomTextField";
 
 
 export class ExportInfo extends React.Component {
@@ -26,6 +25,7 @@ export class ExportInfo extends React.Component {
             expanded: false,
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
+            licenseDialogOpen: false,
             layers: [],
         }
         this.onNameChange = this.onNameChange.bind(this);
@@ -48,7 +48,7 @@ export class ExportInfo extends React.Component {
         // set up debounce functions for user text input
         this.nameHandler = debounce(event => {
             this.props.updateExportInfo({
-                ...this.props.exportInfo,
+                ...this.props.exportInfo, 
                 exportName: event.target.value
             });
         }, 250);
@@ -160,8 +160,8 @@ export class ExportInfo extends React.Component {
     hasRequiredFields(exportInfo) {
         // if the required fields are populated return true, else return false
         return exportInfo.exportName
-            && exportInfo.datapackDescription
-            && exportInfo.projectName
+            && exportInfo.datapackDescription 
+            && exportInfo.projectName 
             && exportInfo.providers.length > 0;
     }
 
@@ -188,7 +188,8 @@ export class ExportInfo extends React.Component {
         const base = new ol.layer.Tile({
             source: new ol.source.XYZ({
                 url: this.context.config.BASEMAP_URL,
-                wrapX: true
+                wrapX: true,
+                attributions: this.context.config.BASEMAP_COPYRIGHT
             })
         });
 
@@ -240,6 +241,14 @@ export class ExportInfo extends React.Component {
         this.setState({projectionsDialogOpen: true})
     };
 
+    setLicenseOpen = () => {
+        this.setState({licenseDialogOpen: true});
+    }
+
+    handleLicenseClose = () => {
+        this.setState({licenseDialogOpen: false});
+    }
+
     render() {
         const style ={
             underlineStyle: {
@@ -248,8 +257,47 @@ export class ExportInfo extends React.Component {
             },
             window: {
                 height: window.innerHeight - 180
+            },
+            root: {
+                width:'100%',
+                height: window.innerHeight - 180,
+                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundRepeat: 'repeat repeat',
+                justifyContent: 'space-around',
+                display: 'flex',
+                flexWrap: 'wrap'
+            },
+            form: {
+                margin: '0 auto',
+                width:  window.innerWidth < 800 ? '90%' : '60%',
+                height: window.innerHeight - 180
+            },
+            heading: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: 'black',
+                alignContent: 'flex-start',
+                paddingBottom: '10px'
+            },
+            subHeading : {
+                fontSize: '16px',
+                color: 'black',
+                alignContent: 'flex-start'
+            },
+            sectionBottom : {
+                paddingBottom: '50px'
+            },
+            checkboxLabel: {
+                display: 'inline-flex',
+            },
+            mapCard : {
+                paddingBottom: '20px'
+            },
+            map : {
+                width: '100%',
             }
         }
+
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
@@ -260,12 +308,13 @@ export class ExportInfo extends React.Component {
         })
 
         return (
-            <div className={styles.root} style={style.window}>
+            <div id='root' className={'qa-ExportInfo-root'} style={style.root}>
                 <CustomScrollbar>
-                    <form className={styles.form} onSubmit={this.onSubmit} style={style.window}>
-                        <Paper className={styles.paper} zDepth={2} rounded>
-                            <div id='mainHeading' className={styles.heading}>Enter General Information</div>
-                            <TextField
+                    <form id='form' onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
+                        <Paper id='paper' className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>
+                            <div id='mainHeading' className={'qa-ExportInfo-mainHeading'} style={style.heading}>Enter General Information</div>
+                            <CustomTextField
+                                className={'qa-ExportInfo-input-name'}
                                 id='nameField'
                                 name="exportName"
                                 ref="exportName"
@@ -279,7 +328,8 @@ export class ExportInfo extends React.Component {
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={100}
                             />
-                            <TextField
+                            <CustomTextField
+                                className={'qa-ExportInfo-input-description'}
                                 id='descriptionField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -288,13 +338,13 @@ export class ExportInfo extends React.Component {
                                 defaultValue={this.props.exportInfo.datapackDescription}
                                 hintText="Description"
                                 multiLine={true}
-                                rows={2}
                                 style={{backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px'}}
                                 textareaStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={1000}
                             />
-                            <TextField
+                            <CustomTextField
+                                className={'qa-ExportInfo-input-project'}
                                 id='projectField'
                                 underlineStyle={style.underlineStyle}
                                 underlineFocusStyle={style.underlineStyle}
@@ -307,121 +357,169 @@ export class ExportInfo extends React.Component {
                                 hintStyle={{fontSize: '16px', paddingLeft: '5px'}}
                                 maxLength={100}
                             />
-                            <div className={styles.checkbox}>
+                            <div>
                                 <Checkbox
+                                    className={'qa-ExportInfo-CheckBox-publish'}
                                     name="makePublic"
                                     onCheck={this.toggleCheckbox.bind(this)}
                                     defaultChecked={this.props.exportInfo.makePublic}
-                                    style={{left: '0px', paddingLeft: '5px'}}
+                                    style={{left: '0px', paddingLeft: '5px', margin: '30px 0px'}}
                                     label="Make Public"
-                                    checkedIcon={<ActionCheckCircle style={{fill: '#55ba63'}} />}
-                                    uncheckedIcon={<UncheckedCircle style={{fill: '4598bf'}}/>}
+                                    labelStyle={{fontWeight: 'normal', fontSize:'16px'}}
+                                    checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle'} style={{fill: '#55ba63'}} />}
+                                    uncheckedIcon={<UncheckedCircle className={'qa-ExportInfo-UncheckedCircle'} style={{fill: '4598bf'}}/>}
                                 />
                             </div>
-
-                            <div id="layersHeader" className={styles.heading}>Select Data Sources</div>
-                            <div id='layersSubheader' className={styles.subHeading}>You must choose <strong>at least one</strong></div>
-                            <div className={styles.sectionBottom}>
-                                <List className={styles.list}>
+                            
+                            <div id="layersHeader" className={'qa-ExportInfo-layersHeader'} style={style.heading}>Select Data Sources</div>
+                            <div id='layersSubheader' style={style.subHeading}>You must choose <strong>at least one</strong></div>
+                            <div style={style.sectionBottom}>
+                                <List className={'qa-ExportInfo-List'} style={{width: '100%', fontSize: '16px'}}>
                                     {providers.map((provider, ix) => {
+                                        // Show license if one exists.
+                                        const nestedItems = [];
+                                        if (provider.license) {
+                                            nestedItems.push(
+                                                <ListItem
+                                                    key={nestedItems.length}
+                                                    disabled={true}
+                                                    primaryText={
+                                                        <div style={{whiteSpace: 'pre-wrap'}}>
+                                                            <i>
+                                                                Use of this data is governed by <a
+                                                                                                    onClick={this.setLicenseOpen}
+                                                                                                    style={{cursor: 'pointer', color: '#4598bf'}}
+                                                                                                >
+                                                                                                    {provider.license.name}
+                                                                                                </a>
+                                                            </i>
+                                                            <BaseDialog
+                                                                show={this.state.licenseDialogOpen}
+                                                                title={provider.license.name}
+                                                                onClose={this.handleLicenseClose}
+                                                            >
+                                                                <div style={{whiteSpace: 'pre-wrap'}}>{provider.license.text}</div>
+                                                            </BaseDialog>
+                                                        </div>
+                                                    }
+                                                    style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0'}}
+                                                />
+                                            );
+                                        }
+                                        nestedItems.push(
+                                            <ListItem
+                                                className={'qa-ExportInfo-ListItem-provServDesc'}
+                                                key={nestedItems.length}
+                                                primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
+                                                disabled={true}
+                                                style={{fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0'}}
+                                            />
+                                        );
+
+                                        const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
+
                                         return <ListItem
+                                            className={'qa-ExportInfo-ListItem'}
                                             key={provider.uid}
-                                            style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white'}}
-                                            nestedListStyle={{padding: '0px'}}
+                                            style={{backgroundColor: backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom:'0'}}
+                                            nestedListStyle={{padding: '0px', backgroundColor: backgroundColor}}
                                             primaryText={provider.name}
                                             leftCheckbox={<Checkbox
+                                                className={'qa-ExportInfo-CheckBox-provider'}
                                                 name={provider.name}
                                                 style={{left: '0px', paddingLeft: '5px'}}
                                                 defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) == -1 ? false : true}
                                                 onCheck={this.onChangeCheck.bind(this)}
                                                 checkedIcon={
                                                     <ActionCheckCircle
+                                                        className={'qa-ExportInfo-ActionCheckCircle-provider'}
                                                         style={{fill: '#55ba63', paddingLeft: '5px'}}
                                                     />
                                                 }
                                                 uncheckedIcon={
                                                     <UncheckedCircle
+                                                        className={'qa-ExportInfo-UncheckedCircle-provider'}
                                                         style={{fill: '#4598bf', paddingLeft: '5px'}}
                                                     />
                                                 }
                                             />}
                                             initiallyOpen={false}
                                             primaryTogglesNestedList={false}
-                                            nestedItems={[
-                                                    <ListItem
-                                                        key={1}
-                                                        primaryText={<div style={{whiteSpace: 'pre-wrap'}}>{provider.service_description}</div>}
-                                                        style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '16px'}}
-                                                    />
-                                                ]}
+                                            nestedItems={nestedItems}
                                             />
                                     })}
                                 </List>
                             </div>
 
-                            <div id='projectionHeader' className={styles.heading}>Select Projection</div>
-                            <div className={styles.sectionBottom}>
-                                <div id='projectionCheckbox' className={styles.checkboxLabel}>
+                            <div id='projectionHeader' className={'qu-ExportInfo-projectionHeader'} style={style.heading}>Select Projection</div>
+                            <div style={style.sectionBottom}>
+                                <div id='projectionCheckbox' style={style.checkboxLabel}>
                                     <Checkbox
+                                        className={'qa-ExportInfo-CheckBox-projection'}
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
                                         checked={true}
+                                        labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
                                         style={{display:'inlineBlock'}}
                                         disabled={true}
-                                        checkedIcon={<ActionCheckCircle />}
-                                    /><Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle-projection'}/>}
+                                    /><Info className={'qa-ExportInfo-Info-projection'} onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title='Projection Information'
                                         onClose={this.handleProjectionsClose.bind(this)}
-                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}}>
+                                    ><div style={{paddingBottom:'10px', wordWrap: 'break-word'}} className={'qa-ExportInfo-dialog-projection'}>
                                         All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
                                     </div>
                                     </BaseDialog>
                                 </div>
                             </div>
 
-                            <div id='formatsHeader' className={styles.heading}>Select Export File Formats</div>
-                            <div className={styles.sectionBottom}>
-                                {formats.map((format, ix) => {
-                                    return <div key={format.slug} className={styles.checkboxLabel}>
-
-                                        <Checkbox
-                                            key={format.slug}
-                                            ref={format.slug}
-                                            label={format.description}
-                                            name={format.name}
-                                            style={{width:'70%'}}
-                                            defaultChecked={true}
-                                            disabled={true}
-                                            checkedIcon={<ActionCheckCircle />}
-                                        /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
-                                        <BaseDialog
-                                            show={this.state.formatsDialogOpen}
-                                            title='Format Information'
-                                            onClose={this.handleFormatsClose.bind(this)}
-                                        ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
-                                            EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
-                                        </BaseDialog>
-                                    </div> })}
-
+                            <div id='formatsHeader' className={'qu-ExportInfo-formatsHeader'} style={style.heading}>Select Export File Formats</div>
+                            <div style={style.sectionBottom}>{formats.map((format, ix) => {
+                                return <div key={format.slug} style={style.checkboxLabel}>
+                                    <Checkbox
+                                        className={'qa-ExportInfo-CheckBox-formats'}
+                                        key={format.slug}
+                                        ref={format.slug}
+                                        label={format.description}
+                                        name={format.name}
+                                        style={{width:'70%'}}
+                                        defaultChecked={true}
+                                        disabled={true}
+                                        checkedIcon={<ActionCheckCircle />}
+                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                    <BaseDialog
+                                        show={this.state.formatsDialogOpen}
+                                        title='Format Information'
+                                        onClose={this.handleFormatsClose.bind(this)}
+                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
+                                        EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
+                                    </BaseDialog>
+                                </div> })}
                             </div>
 
-                            <div className={styles.mapCard}>
+                            <div style={style.mapCard}>
                                 <Card expandable={true}
+                                      className={'qa-ExportInfo-Card-map'}
                                     onExpandChange={this.expandedChange.bind(this)}>
                                     <CardHeader
+                                        className={'qa-ExportInfo-CardHeader-map'}
                                         title="Selected Area of Interest"
                                         actAsExpander={false}
                                         showExpandableButton={true}
-                                        textStyle={{paddingRight: '6px'}}>
+                                        style={{padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)'}}
+                                        textStyle={{paddingRight: '6px', fontWeight: 'bold', fontSize: '18px'}}>
                                         <a onClick={this.props.handlePrev}
                                            style={{fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer'}}>
                                             Edit
                                         </a>
                                     </CardHeader>
-                                    <CardText expandable={true}>
-                                        <div id="infoMap" className={styles.map}></div>
+                                    <CardText
+                                        className={'qa-ExportInfo-CardText-map'}
+                                        expandable={true}
+                                        style={{padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)'}}>
+                                        <div id="infoMap" style={style.map}></div>
                                     </CardText>
                                 </Card>
                             </div>

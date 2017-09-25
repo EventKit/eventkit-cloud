@@ -71,6 +71,7 @@ export class DataPackListItem extends Component {
         const providersList = Object.entries(this.state.providerDescs).map(([key,value], ix)=>{
             return (
                 <ListItem
+                    className={'qa-DataPackListItem-ListItem'}
                     key={key}
                     style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontWeight:'bold', width:'100%', zIndex: 0}}
                     nestedListStyle={{padding: '0px'}}
@@ -79,6 +80,7 @@ export class DataPackListItem extends Component {
                     primaryTogglesNestedList={false}
                     nestedItems={[
                         <ListItem
+                            className={'qa-DataPackListItem-NestedListItem'}
                             key={1}
                             primaryText={<div style={{whiteSpace: 'pre-wrap', fontWeight:'bold'}}>{value}</div>}
                             style={{backgroundColor: ix % 2 == 0 ? 'whitesmoke': 'white', fontSize: '14px', width:'100%', zIndex: 0}}
@@ -165,6 +167,7 @@ export class DataPackListItem extends Component {
         const onClick = this.props.onClick ? () => {this.props.onClick(this.props.run.uid)} : null;
         return (
             <Card
+                className={'qa-DataPackListItem-Card'}
                 style={styles.card}
                 key={this.props.run.uid}
                 containerStyle={{padding: '0px'}}
@@ -173,7 +176,8 @@ export class DataPackListItem extends Component {
                 onClick={onClick}
             >
                 <FeaturedFlag show={this.props.run.job.featured}/>
-                <CardTitle 
+                <CardTitle
+                    className={'qa-DataPackListItem-CardTitle'}
                     titleColor={'#4598bf'}
                     style={cardTitleStyle}
                     titleStyle={{fontSize: '21px', height: '36px'}}
@@ -181,7 +185,7 @@ export class DataPackListItem extends Component {
                     title={
                         <div>
                             <div style={{display: 'inline-block', width: 'calc(100% - 24px)', height: '36px'}}>
-                                <div style={styles.titleLink}>
+                                <div className={'qa-DataPackListItem-titleLink'} style={styles.titleLink}>
                                     <Link
                                         to={'/status/' + this.props.run.job.uid}
                                         style={{color: 'inherit'}}>
@@ -190,22 +194,26 @@ export class DataPackListItem extends Component {
                                 </div>
                             </div>
                             <IconMenu
+                                className={'qa-DataPackListItem-IconMenu'}
                                 style={{float: 'right', width: '24px', height: '100%'}}
                                 iconButtonElement={
                                     <IconButton
+                                        className={'qa-DataPackListItem-IconButton'}
                                         style={{padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle'}}
                                         iconStyle={{color: '#4598bf'}}
                                         onClick={this.handleMenuButtonClick}>
-                                        <NavigationMoreVert />
+                                        <NavigationMoreVert className={'qa-DataPackListItem-NavigationMoreVert'}/>
                                     </IconButton>}
                                 anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                 targetOrigin={{horizontal: 'right', vertical: 'top'}}
                             >
                                 <MenuItem
+                                    className={'qa-DataPackListItem-MenuItem-statusDownloadLink'}
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText="Go to Status & Download"
                                     onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}/>
                                 <MenuItem
+                                    className={'qa-DataPackListItem-MenuItem-viewDataSources'}
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen.bind(this, runProviders)}
@@ -213,12 +221,14 @@ export class DataPackListItem extends Component {
 
                                 {this.props.run.user == this.props.user.data.user.username ?
                                 <MenuItem
+                                    className={'qa-DataPackListItem-MenuItem-deleteExport'}
                                     style={{fontSize: subtitleFontSize}}
                                     primaryText={'Delete Export'}
                                     onClick={this.showDeleteDialog}/>
                                 : null}
                             </IconMenu>
                             <BaseDialog
+                                className={'qa-DataPackListItem-BaseDialog'}
                                 show={this.state.providerDialogOpen}
                                 title={'DATA SOURCES'}
                                 onClose={this.handleProviderClose.bind(this)}
@@ -226,6 +236,7 @@ export class DataPackListItem extends Component {
                                 <List>{providersList}</List>
                             </BaseDialog>
                             <DeleteDialog
+                                className={'qa-DataPackListItem-DeleteDialog'}
                                 show={this.state.deleteDialogOpen}
                                 handleCancel={this.hideDeleteDialog}
                                 handleDelete={this.handleDelete}
@@ -234,30 +245,30 @@ export class DataPackListItem extends Component {
                     } 
                     subtitle={
                         <div>
-                            <div style={styles.eventText}>
+                            <div className={'qa-DataPackListItem-subtitle-event'} style={styles.eventText}>
                                 {'Event: ' + this.props.run.job.event}
                             </div>
-                            <div style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}>
+                            <div className={'qa-DataPackListItem-subtitle-date'} style={{lineHeight: '18px', display: 'inline-block', width: '100%'}}>
                                 {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
                                 {this.props.run.user == this.props.user.data.user.username ?
                                     <div style={styles.ownerLabel}>My DataPack</div>
                                     :
                                     <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
-                                <div style={{display: 'inline-block', float: 'right'}}>
+                                <div className={'qa-DataPackListItem-subtitle-status'} style={{display: 'inline-block', float: 'right'}}>
                                 {this.props.run.job.published ?
-                                    <SocialGroup style={styles.publishedIcon}/>
+                                    <SocialGroup className={'qa-DataPackListItem-SocialGroup'} style={styles.publishedIcon}/>
                                     :
                                     
-                                    <SocialPerson style={styles.unpublishedIcon}/>
+                                    <SocialPerson className={'qa-DataPackListItem-SocialPerson'} style={styles.unpublishedIcon}/>
                                 }
                                 {this.props.run.status == "SUBMITTED" ?
-                                    <NotificationSync style={styles.runningIcon}/>
+                                    <NotificationSync className={'qa-DataPackListItem-NotificationSync'} style={styles.runningIcon}/>
                                     :
                                     this.props.run.status == "INCOMPLETE"  ?
-                                        <AlertError style={styles.errorIcon}/>
+                                        <AlertError className={'qa-DataPackListItem-AlertError'} style={styles.errorIcon}/>
                                         :
-                                        <NavigationCheck style={styles.completeIcon}/>
+                                        <NavigationCheck className={'qa-DataPackListItem-NavigationCheck'} style={styles.completeIcon}/>
                                 }
                                 </div>
                             </div>

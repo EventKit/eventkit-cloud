@@ -78,12 +78,12 @@ class TestLockingTask(TestCase):
         # ...call first task ensure it returns...
         result = lock_task.__call__()
         self.assertEqual(result, expected_result)
-        mock_cache.add.assert_called_with(expected_lock_key, True, lock_task.lock_expiration)
+        mock_cache.add.assert_called_with(expected_lock_key, task_id, lock_task.lock_expiration)
 
         # ...call a second task with duplicate id, ensure nothing returns.
         result = lock_task2.__call__()
         self.assertIsNone(result)
-        mock_cache.add.assert_called_with(expected_lock_key, True, lock_task.lock_expiration)
+        mock_cache.add.assert_called_with(expected_lock_key, task_id, lock_task.lock_expiration)
 
 
 class ExportTaskBase(TestCase):
@@ -198,9 +198,9 @@ class TestExportTasks(ExportTaskBase):
         mock_clip.return_value = expected_output_path
         expected_geojson = "test.geojson"
         previous_task_result = {'result': expected_output_path, "selection": expected_geojson}
-        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result, task_uid=str(saved_export_task.uid),
-                                            stage_dir=stage_dir, job_name=job_name)
-        mock_clip.assert_called_once_with(boundary=expected_geojson, dataset=expected_output_path,
+        result = geopackage_export_task.run(run_uid=self.run.uid, result=previous_task_result,
+                                            task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
+        mock_clip.assert_called_once_with(boundary=expected_geojson, in_dataset=expected_output_path,
                                           fmt=None)
         mock_convert.assert_called_once_with(dataset=expected_output_path, fmt='gpkg',
                                              task_uid=str(saved_export_task.uid))
@@ -352,53 +352,6 @@ class TestExportTasks(ExportTaskBase):
         with self.assertRaises(Exception):
             external_raster_service_export_task.run(run_uid=self.run.uid, task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                                     job_name=job_name)
-
-
-    @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    @patch('os.makedirs')
-    @patch('os.path.isdir')
-    @patch('shutil.copy')
-    @patch('os.stat')
-    @patch('django.utils.timezone')
-    def test_task_on_success(self, time, os_stat, shutil_copy, isdir, mkdirs, s3):
-        isdir.return_value = False  # download dir doesn't exist
-        real_time = real_timezone.now()
-        time.now.return_value = real_time
-        expected_time = real_time.strftime('%Y%m%d')
-        download_file = '{0}-{1}-{2}{3}'.format('file', 'osm-generic', expected_time, '.shp')
-        osstat = os_stat.return_value
-        s3_url = 'cloud.eventkit.dev/{0},{0},{0}'.format(str(self.run.uid), 'osm-generic', download_file)
-        s3.return_value = s3_url
-        type(osstat).st_size = PropertyMock(return_value=1234567890)
-        celery_uid = str(uuid.uuid4())
-        # assume task is running
-        export_provider_task = ExportProviderTask.objects.create(run=self.run, name='Shapefile Export')
-        ExportTask.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
-                                  status=TaskStates.RUNNING.value, name=shp_export_task.name)
-        expected_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid), download_file])
-        download_url = '/'.join([settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(self.run.uid),
-                                 'osm-generic', 'file.shp'])
-        download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-        run_dir = os.path.join(download_root, str(self.run.uid))
-        shp_export_task.on_success(retval={'result': download_url}, task_id=celery_uid,
-                                   args={}, kwargs={'run_uid': str(self.run.uid)})
-        os_stat.assert_has_calls([call(download_url)])
-        if not getattr(settings, "USE_S3", False):
-            isdir.assert_has_calls([call(run_dir)])
-            mkdirs.assert_has_calls([call(run_dir)])
-            shutil_copy.assert_called_once()
-        task = ExportTask.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(task)
-        result = task.result
-        self.assertIsNotNone(result)
-        self.assertEquals(TaskStates.SUCCESS.value, task.status)
-        self.assertEquals('ESRI Shapefile Format', task.name)
-        # pull out the result and test
-        self.assertIsNotNone(result)
-        if getattr(settings, "USE_S3", False):
-            self.assertEqual(s3_url, str(result.download_url))
-        else:
-            self.assertEquals(expected_url, str(result.download_url))
 
     def test_task_on_failure(self,):
         celery_uid = str(uuid.uuid4())

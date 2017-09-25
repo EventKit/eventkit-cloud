@@ -44,7 +44,7 @@ export class TaskError extends React.Component {
         }
 
         return (
-            <span>
+            <span  className={'qa-TaskError-errorLink'}>
                 <a 
                     onClick={() => {this.handleTaskErrorOpen()}} 
                     style={styles.errorText}
@@ -53,12 +53,13 @@ export class TaskError extends React.Component {
                 </a>
 
                 <BaseDialog
+                    className={'qa-TaskError-BaseDialog'}
                     show={this.state.taskErrorDialogOpen}
                     title={<strong id='error-title'>{task.name} has <strong style={{color: '#ce4427'}}>1 error. </strong></strong>}
                     onClose={this.handleTaskErrorClose}
                 >
-                    <div id='error-data'>
-                        <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
+                    <div className={'qa-TaskError-div-errorData'} id='error-data'>
+                        <Warning className={'qa-TaskError-Warning'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                         {error!= null ? error[0].exception : ''}
                     </div>
                 </BaseDialog>

@@ -5,7 +5,6 @@ import '../tap_events'
 import Paper from 'material-ui/Paper'
 import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails'
-import cssStyles from '../../styles/StatusDownload.css'
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration,updatePermission, getProviderDesc, clearProviderDesc} from '../../actions/statusDownloadActions'
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions'
 import TimerMixin from 'react-timer-mixin'
@@ -145,12 +144,19 @@ export class StatusDownload extends React.Component {
                 paddingRight: marginPadding,
                 margin: 'auto',
                 maxWidth: '1100px'
+            },
+            heading: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: 'black',
+                alignContent: 'flex-start',
+                paddingBottom: '5px',
             }
         }
 
         return (
 
-            <div style={styles.root}>
+            <div className={'qa-StatusDownload-div-root'} style={styles.root}>
                 {this.props.runDeletion.deleting ? 
                     <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%', display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
                         <CircularProgress 
@@ -163,10 +169,10 @@ export class StatusDownload extends React.Component {
                     null 
                 }
                 <CustomScrollbar style={{height: window.innerHeight - 95, width: '100%'}}>
-                    <div style={styles.content}>
+                    <div  className={'qa-StatusDownload-div-content'} style={styles.content}>
                         <form>
-                            <Paper style={{padding: '20px'}} zDepth={2} >
-                                <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
+                            <Paper className={'qa-Paper'} style={{padding: '20px'}} zDepth={2} >
+                                <div className={'qa-StatusDownload-heading'} style={styles.heading}>Status & Download</div>
                                 {this.state.isLoading ? 
                                     <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                                     <CircularProgress color={'#4598bf'} size={50} style={{margin: '30px auto', display: 'block'}}/>
@@ -187,7 +193,6 @@ export class StatusDownload extends React.Component {
                                                      maxResetExpirationDays={this.state.maxDays}
                                                      zipFileProp={this.state.zipFileProp}/>
                                 ))}
-
                             </Paper>
                         </form>
                     </div>

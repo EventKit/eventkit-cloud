@@ -22,9 +22,10 @@ export class DateFilter extends Component {
             }
         }
         return (
-                <div style={styles.drawerSection}>
+                <div  className={'qa-DateFilter-div'} style={styles.drawerSection}>
                     <p style={{width: '100%', margin: '0px'}}><strong>Date Added</strong></p>
                     <DatePicker
+                        className={'qa-DateFilter-DatePicker-from'}
                         autoOk={true}
                         hintText={"From"}
                         textFieldStyle={styles.textField}
@@ -32,6 +33,7 @@ export class DateFilter extends Component {
                         value={this.props.minDate}
                     />
                     <DatePicker
+                        className={'qa-DateFilter-DatePicker-to'}
                         autoOk={true}
                         hintText={"To"}
                         textFieldStyle={styles.textField}

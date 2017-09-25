@@ -10,7 +10,7 @@ import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColu
     from 'material-ui/Table';
 import Checkbox from 'material-ui/Checkbox';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import Check from 'material-ui/svg-icons/navigation/check';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
@@ -91,11 +91,11 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableHeader)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableHeaderColumn)).toHaveLength(5);
-        expect(wrapper.find(ArrowUp)).toHaveLength(1);
+        expect(wrapper.find(ArrowDown)).toHaveLength(1);
         //expect(wrapper.find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(2);
-        expect(wrapper.find(IconButton).find(ArrowUp)).toHaveLength(1);
+        expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
@@ -200,7 +200,6 @@ describe('ProviderRow component', () => {
         const stateSpy = new sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props}/>);
         wrapper.instance().handleProviderOpen(props.provider);
-        console.log(props.provider)
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({providerDesc:"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).", providerDialogOpen: true})).toBe(true);
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual("OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).");
@@ -238,23 +237,12 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('handleDownload should set timeout to open window with download url', () => {
+    it('handleSingleDownload should open a url in a different window', () => {
         const openSpy = new sinon.spy();
         window.open = openSpy;
         const props = getProps();
         const wrapper = getWrapper(props);
-        wrapper.setState({selectedRows: {'fcfcd526-8949-4c26-a669-a2cf6bae1e34': true}});
-        wrapper.instance().handleDownload();
-        expect(openSpy.calledOnce).toBe(true);
-
-    });
-
-    it('handleCloudDownload should open a url in a different window', () => {
-        const openSpy = new sinon.spy();
-        window.open = openSpy;
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleCloudDownload();
+        wrapper.instance().handleSingleDownload();
         expect(openSpy.calledOnce).toBe(true);
     });
 
@@ -263,7 +251,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         props.provider.tasks[0].status = 'SUCCESS';
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+            <Check className={'qa-ProviderRow-Check-taskStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
         props.provider.tasks[0].status = 'INCOMPLETE';
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual(
@@ -273,10 +261,10 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getTaskStatus(props.provider.tasks[0])).toEqual('WAITING');
         props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({status: 'RUNNING', progress: 100})).toEqual(
-            <span><LinearProgress mode="determinate" value={100}/>{''}</span>
+            <span className={'qa-ProviderRow-span-taskStatus'}><LinearProgress mode="determinate" value={100}/>{''}</span>
         );
         expect(wrapper.instance().getTaskStatus({status: 'CANCELED'})).toEqual(
-            <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
+            <Warning className={'qa-ProviderRow-Warning-taskStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>
         );
         expect(wrapper.instance().getTaskStatus({status: ''})).toEqual('');
     });
@@ -286,7 +274,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         props.provider.status = 'COMPLETED';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
-            <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
+            <Check className={'qa-ProviderRow-Check-providerStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>
         );
         props.provider.status = 'INCOMPLETE';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
@@ -298,14 +286,14 @@ describe('ProviderRow component', () => {
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual('IN PROGRESS');
         props.provider.status = 'CANCELED';
         expect(wrapper.instance().getProviderStatus(props.provider)).toEqual(
-            <span style={{
+            <span className={'qa-ProviderRow-span-providerStatus'} style={{
                 fontWeight: 'bold',
                 display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
                 color: '#f4d225'
-            }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
+            }}>CANCELED<Warning className={'qa-ProviderRow-Warning-providerStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
         );
         expect(wrapper.instance().getProviderStatus('')).toEqual('');
     });
@@ -320,15 +308,18 @@ describe('ProviderRow component', () => {
         expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskLink should return a "a" element', () => {
+    it('getTaskLink should return a "a" element with click handler', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const task = {result: {url: 'test-url.io'}, name: 'test name'};
         const link = wrapper.instance().getTaskLink(task);
+        wrapper.instance().handleSingleDownload = new sinon.spy();
         const elem = shallow(link);
         expect(elem.is('a')).toBe(true);
-        expect(elem.props().href).toEqual('test-url.io');
-        expect(elem.text()).toEqual('test name')
+        expect(elem.text()).toEqual('test name');
+        elem.simulate('click');
+        expect(wrapper.instance().handleSingleDownload.calledOnce).toBe(true);
+        expect(wrapper.instance().handleSingleDownload.calledWith('test-url.io')).toBe(true);
     });
 
     it('getTaskDownloadIcon should return a disabled icon', () => {

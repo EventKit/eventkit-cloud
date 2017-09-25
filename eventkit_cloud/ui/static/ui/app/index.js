@@ -12,7 +12,6 @@ import Logout from './containers/logoutContainer'
 import About from './components/About/About'
 import Account from './components/AccountPage/Account'
 import DataPackPage from './components/DataPackPage/DataPackPage'
-import Export from './components/Export'
 import CreateExport from './components/CreateDataPack/CreateExport'
 import ExportAOI from './components/CreateDataPack/ExportAOI'
 import ExportInfo from './components/CreateDataPack/ExportInfo'
@@ -77,15 +76,13 @@ render(
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
                 <Route path="/logout" component={Logout}/>
-                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}>
-                    <Route path="/export/:uid" component={UserIsAuthenticated(UserHasAgreed(Export))}/>
+                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
+                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}>
+                    <Route path="/exportAOI" component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}/>
+                    <Route path="/exportInfo" component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}/>
+                    <Route path="/exportSummary" component={UserIsAuthenticated(UserHasAgreed(ExportSummary))}/>
                 </Route>
-                <Route path="/create" component={UserIsAuthenticated(CreateExport)}>
-                    <Route path="/exportAOI" component={UserIsAuthenticated(ExportAOI)}/>
-                    <Route path="/exportInfo" component={UserIsAuthenticated(ExportInfo)}/>
-                    <Route path="/exportSummary" component={UserIsAuthenticated(ExportSummary)}/>
-                </Route>
-                <Route path="/status/:jobuid" component={UserIsAuthenticated(StatusDownload)}/>
+                <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}/>
                 <Route path="/about" component={UserIsAuthenticated(About)}/>
                 <Route path="/account" component={UserIsAuthenticated(Account)}/>
             </Route>

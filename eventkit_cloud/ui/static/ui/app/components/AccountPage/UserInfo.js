@@ -10,17 +10,17 @@ export class UserInfo extends Component {
 
     render() {
         return (
-            <div>
+            <div className={'qa-UserInfo-header'}>
                 <h4><strong>Personal Information</strong></h4>
                 {this.props.updateLink ? 
-                    <div style={{color: 'grey'}}>
+                    <div className={'qa-UserInfo-personalDetails'} style={{color: 'grey'}}>
                         <strong style={{color: '#000'}}>To update</strong> your personal details, please <strong style={{color: '#000'}}>visit</strong>
                         <a href={this.props.updateLink}> here</a>
                     </div>
                     :
                     null
                 }
-                <table style={{width: '100%', margin: '10px -5px -5px'}}>
+                <table className={'qa-UserInfo-table'} style={{width: '100%', margin: '10px -5px -5px'}}>
                     <tbody>
                         <UserInfoTableRow title={'Username'} data={this.props.user.username}/>
                         <UserInfoTableRow title={'First name'} data={this.props.user.first_name}/>

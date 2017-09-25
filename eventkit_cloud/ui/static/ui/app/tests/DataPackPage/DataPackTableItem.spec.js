@@ -81,20 +81,20 @@ describe('DataPackTableItem component', () => {
         let props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props}/>);
         let icon = wrapper.instance().getPermissionsIcon(true);
-        expect(icon).toEqual(<SocialGroup style={{color: 'bcdfbb'}}/>);
+        expect(icon).toEqual(<SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>);
         icon = wrapper.instance().getPermissionsIcon(false);
-        expect(icon).toEqual(<SocialPerson style={{color: 'grey'}}/>);
+        expect(icon).toEqual(<SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>);
     });
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
         let props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props}/>);
         let icon = wrapper.instance().getStatusIcon('SUBMITTED');
-        expect(icon).toEqual(<NotificationSync style={{color: '#f4d225'}}/>);
+        expect(icon).toEqual(<NotificationSync className={'qa-DataPackTableItem-NotificationSync'} style={{color: '#f4d225'}}/>);
         icon = wrapper.instance().getStatusIcon('INCOMPLETE');
-        expect(icon).toEqual(<AlertError style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>);
+        expect(icon).toEqual(<AlertError className={'qa-DataPackTableItem-AlertError'} style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>);
         icon = wrapper.instance().getStatusIcon('COMPLETED');
-        expect(icon).toEqual(<NavigationCheck style={{color: '#bcdfbb', height: '22px'}}/>)
+        expect(icon).toEqual(<NavigationCheck className={'qa-DataPackTableItem-NavigationCheck'} style={{color: '#bcdfbb', height: '22px'}}/>)
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {

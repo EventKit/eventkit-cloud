@@ -37,30 +37,30 @@ export class DrawAOIToolbar extends Component {
         return (
             <div>
                 <div id='container' style={styles.container}>
-                    <div id='title' style={styles.title}><strong>TOOLS</strong></div>
+                    <div className={'qa-DrawAOIToolbar-div-title'} id='title' style={styles.title}><strong>TOOLS</strong></div>
                     <DrawBoxButton 
-                        handleCancel={(sender) => this.props.handleCancel(sender)}
+                        handleCancel={this.props.handleCancel}
                         buttonState={this.props.toolbarIcons.box}
                         updateMode={this.props.updateMode}
                         setBoxButtonSelected={this.props.setBoxButtonSelected}
                         setAllButtonsDefault={this.props.setAllButtonsDefault}
                     />
                     <DrawFreeButton 
-                        handleCancel={(sender) => this.props.handleCancel(sender)}
+                        handleCancel={this.props.handleCancel}
                         buttonState={this.props.toolbarIcons.free}
                         updateMode={this.props.updateMode}
                         setFreeButtonSelected={this.props.setFreeButtonSelected}
                         setAllButtonsDefault={this.props.setAllButtonsDefault}
                     />
                     <MapViewButton 
-                        handleCancel={(sender) => this.props.handleCancel(sender)}
+                        handleCancel={this.props.handleCancel}
                         buttonState={this.props.toolbarIcons.mapView}
                         setMapView={this.props.setMapView}
                         setMapViewButtonSelected={this.props.setMapViewButtonSelected}
                         setAllButtonsDefault={this.props.setAllButtonsDefault}
                     />
                     <ImportButton 
-                        handleCancel={(sender) => this.props.handleCancel(sender)}
+                        handleCancel={this.props.handleCancel}
                         buttonState={this.props.toolbarIcons.import}
                         setImportButtonSelected={this.props.setImportButtonSelected}
                         setImportModalState={this.props.setImportModalState}

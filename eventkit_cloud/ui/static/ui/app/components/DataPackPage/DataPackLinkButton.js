@@ -44,7 +44,8 @@ export class DataPackLinkButton extends React.Component {
 
         return (
             <Link to={'/create'}>
-                <RaisedButton 
+                <RaisedButton
+                    className={'qa-DataPackLinkButton-RaisedButton'}
                     label={"Create DataPack"}
                     primary={true}
                     labelStyle={styles.label}

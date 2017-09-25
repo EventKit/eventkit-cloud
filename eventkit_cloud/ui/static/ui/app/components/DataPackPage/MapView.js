@@ -15,7 +15,7 @@ import DropZone from '../MapTools/DropZone.js';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
-    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates} from '../../utils/mapUtils'
+    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent} from '../../utils/mapUtils'
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -207,7 +207,8 @@ export class MapView extends Component {
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
-                        wrapX: true
+                        wrapX: true,
+                        attributions: this.context.config.BASEMAP_COPYRIGHT
                     })
                 }),
             ],
@@ -271,9 +272,12 @@ export class MapView extends Component {
                     this.setState({selectedFeature: feature.getId(), showPopup: true});
 
                     // if the feature in not in current view, center the view on selected feature
-                    const mapExtent = this.map.getView().calculateExtent();
-                    if(!ol.extent.containsExtent(mapExtent, feature.getGeometry().getExtent())) {
-                        this.map.getView().setCenter(ol.extent.getCenter(feature.getGeometry().getExtent()));
+                    // make sure we are comparing only unwrapped extents to avoid uneeded centering when map is wrapped
+                    const mapExtent = unwrapExtent(this.map.getView().calculateExtent(), this.map.getView().getProjection());
+                    const featureExtent = unwrapExtent(feature.getGeometry().getExtent(), this.map.getView().getProjection());
+
+                    if(!ol.extent.containsExtent(mapExtent, featureExtent)) {
+                        this.map.getView().setCenter(ol.extent.getCenter(featureExtent));
                     }
                     // if it is in view and not a polygon, trigger an animation
                     else {
@@ -654,10 +658,11 @@ export class MapView extends Component {
         
         const feature = this.state.selectedFeature ? this.source.getFeatureById(this.state.selectedFeature): null;
         return (
-            <div style={{height: window.innerHeight - 236}}>
+            <div style={{height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223}}>
                 <CustomScrollbar style={styles.list}>
                     <div style={styles.root}>
                         <GridList
+                            className={'qa-MapView-GridList'}
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
@@ -678,8 +683,8 @@ export class MapView extends Component {
                     </div>
                     {load}
                 </CustomScrollbar>
-                <div style={styles.map}>
-                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
+                <div  style={styles.map}>
+                    <div className={'qa-MapView-div-map'} style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
                     <SearchAOIToolbar
                         handleSearch={this.handleSearch}
                         handleCancel={this.handleCancel}
@@ -715,7 +720,7 @@ export class MapView extends Component {
                     </div>
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}/>
-                        <div id="popup-content">
+                        <div className={'qa-MapView-div-popupContent'} id="popup-content">
                             <p style={{color: 'grey'}}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                             {this.state.groupedFeatures.map((feature, ix) => {

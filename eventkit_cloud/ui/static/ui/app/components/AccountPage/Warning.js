@@ -17,7 +17,7 @@ export class Warning extends Component {
         }
 
         return (
-                <div style={bodyStyle}>
+                <div className={'qa-Warning-text'} style={bodyStyle}>
                     {this.props.text}
                 </div>
         )

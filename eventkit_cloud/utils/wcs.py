@@ -94,8 +94,8 @@ class WCSConverter(object):
             convert_cmd = self.cmd.safe_substitute({'out': self.out, 'wcs': self.wcs_xml_path, 'fmt': self.format,
                                                     'type': self.band_type})
 
-        if self.debug:
-            logger.debug('Running: %s' % convert_cmd)
+        logger.debug('WCS command: %s' % convert_cmd)
+
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)

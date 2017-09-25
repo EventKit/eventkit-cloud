@@ -2,7 +2,6 @@ import {combineReducers} from 'redux'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
 import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer, getFormatsReducer} from './exportsReducer';
-import {zoomToSelectionReducer, resetMapReducer} from './AoiInfobarReducer.js';
 import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackPageReducer, DeleteRunsReducer} from './DataPackPageReducer';
 import {importGeomReducer} from './mapToolReducer';
@@ -16,8 +15,6 @@ const rootReducer = combineReducers({
     auth: authReducer,
     aoiInfo: exportAoiInfoReducer,
     exportInfo: exportInfoReducer,
-    zoomToSelection: zoomToSelectionReducer,
-    resetMap: resetMapReducer,
     geocode: getGeocodeReducer,
     importGeom: importGeomReducer,
     user: userReducer,
