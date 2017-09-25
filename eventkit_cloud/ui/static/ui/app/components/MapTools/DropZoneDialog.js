@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import PopupBox from '../PopupBox';
 import RaisedButton from 'material-ui/RaisedButton';
 import BaseDialog from '../BaseDialog';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
