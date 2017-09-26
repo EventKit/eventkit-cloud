@@ -476,15 +476,17 @@ export class ExportInfo extends React.Component {
                             </div>
 
                             <div id='formatsHeader' className={'qu-ExportInfo-formatsHeader'} style={style.heading}>Select Export File Formats</div>
-                            <div style={style.sectionBottom}>{formats.map((format, ix) => {
+                            <div style={style.sectionBottom}>
+                                {formats.map((format, ix) => {
                                 return <div key={format.slug} style={style.checkboxLabel}>
                                     <Checkbox
                                         className={'qa-ExportInfo-CheckBox-formats'}
                                         key={format.slug}
                                         ref={format.slug}
                                         label={format.description}
+                                        labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
                                         name={format.name}
-                                        style={{width:'70%'}}
+                                        style={{display:'inlineBlock'}}
                                         defaultChecked={true}
                                         disabled={true}
                                         checkedIcon={<ActionCheckCircle />}
