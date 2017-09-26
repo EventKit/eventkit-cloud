@@ -78,33 +78,17 @@ describe('Account Component', () => {
         expect(wrapper.find(UserInfo)).toHaveLength(0);
     });
 
-    it('should setState, call getLicenses, and add eventlistener when mounting', () => {
+    it('should setState and call getLicenses when mounting', () => {
         let props = getProps();
         props.getLicenses = new sinon.spy();
         const mountSpy = new sinon.spy(Account.prototype, 'componentWillMount');
         const stateSpy = new sinon.spy(Account.prototype, 'setState');
-        const listenerSpy = new sinon.spy(window, 'addEventListener');
         const wrapper = getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({acceptedLicenses: props.user.data.accepted_licenses})).toBe(true);
         expect(props.getLicenses.calledOnce).toBe(true);
-        expect(listenerSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
         mountSpy.restore();
         stateSpy.restore();
-        listenerSpy.restore();
-    });
-
-    it('should remove eventlistener when un-mounting', () => {
-        let props = getProps();
-        const unmountSpy = new sinon.spy(Account.prototype, 'componentWillUnmount');
-        const listenerSpy = new sinon.spy(window, 'removeEventListener');
-        const wrapper = getMountedWrapper(props);
-        const handleResize = wrapper.instance().handleResize;
-        wrapper.unmount();
-        expect(listenerSpy.calledWith('resize', handleResize)).toBe(true);
-        expect(unmountSpy.calledOnce).toBe(true)
-        unmountSpy.restore();
-        listenerSpy.restore();
     });
 
     it('should update state and setTimeout when user has been patched', () => {
@@ -123,16 +107,6 @@ describe('Account Component', () => {
         expect(setTimeout.mock.calls.length).toBe(1);
         expect(setTimeout.mock.calls[0][1]).toBe(3000);
         stateSpy.restore();
-    });
-
-    it('on window size change it should call handleResize and force and update', () => {
-        const props = getProps();
-        const wrapper = getMountedWrapper(props);
-        const resizeSpy = new sinon.spy(Account.prototype, 'forceUpdate');
-        expect(resizeSpy.notCalled).toBe(true);
-        window.resizeTo(450, 550);
-        expect(resizeSpy.called).toBe(true);
-        resizeSpy.restore();
     });
 
     it('handleCheck should marked the license as checked/unchecked and update state', () => {

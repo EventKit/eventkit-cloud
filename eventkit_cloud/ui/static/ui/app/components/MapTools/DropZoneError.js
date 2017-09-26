@@ -1,5 +1,4 @@
 import React, {Component, PropTypes} from 'react';
-import styles from '../../styles/DropZone.css';
 import {PopupBox} from '../PopupBox';
 
 export class DropZoneError extends Component {
@@ -28,13 +27,23 @@ export class DropZoneError extends Component {
     }
 
     render() {
+        const style = {
+            margin: 'auto',
+            width: '90%',
+            height: 'auto',
+            textAlign: 'center',
+            border: '1px dashed',
+            fontSize: '1em',
+            color: '#707274',
+            padding: '20px'
+        }
 
         return (
             <PopupBox
                 show={this.state.showErrorMessage}
                 title="Error"
                 onExit={this.handleErrorClear}>
-                <div className={styles.fileError}>
+                <div style={style} className={'qa-DropZoneError-error'}>
                     {this.state.errorMessage}
                 </div>
             </PopupBox>

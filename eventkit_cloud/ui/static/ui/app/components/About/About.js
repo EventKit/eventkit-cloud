@@ -11,24 +11,14 @@ export class About extends Component {
 
     constructor(props) {
         super(props);
-        this.handleResize = this.handleResize.bind(this);
         this.state = {
             pageInfo: null
         }
     };
 
     componentDidMount() {
-        window.addEventListener('resize', this.handleResize);
         // later this could be api call --> set state
         this.setState({pageInfo: Config.ABOUT_PAGE});
-    };
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.handleResize);
-    };
-
-    handleResize() {
-        this.forceUpdate();
     };
 
     render() {

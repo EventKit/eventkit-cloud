@@ -42,37 +42,4 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
         expect(wrapper.find(CustomScrollbar).last().childAt(0).childAt(1).text()).toEqual('This is a disclaimer');
     });
-
-    it('should add event listener when mounting', () => {
-        const mountSpy = new sinon.spy(LoginPage.prototype, 'componentDidMount');
-        const eventSpy = new sinon.spy(window, 'addEventListener');
-        const wrapper = getWrapper(config);
-        const screenSizeUpdate = wrapper.instance().screenSizeUpdate;
-        expect(mountSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', screenSizeUpdate)).toBe(true);
-        mountSpy.restore();
-        eventSpy.restore();
-    });
-
-    it('should remove event listener on unmount', () => {
-        const unmountSpy = new sinon.spy(LoginPage.prototype, 'componentWillUnmount');
-        const eventSpy = new sinon.spy(window, 'removeEventListener');
-        const wrapper = getWrapper(config);
-        const screenSizeUpdate = wrapper.instance().screenSizeUpdate;
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', screenSizeUpdate)).toBe(true);
-        unmountSpy.restore();
-        eventSpy.restore();
-    });
-
-    it('screenSizeUpdate should forceUpdate', () => {
-        const spy = new sinon.spy(LoginPage.prototype, 'forceUpdate');
-        const wrapper = getWrapper(config);
-        wrapper.instance().screenSizeUpdate();
-        expect(spy.calledOnce).toBe(true);
-        spy.restore();
-    });
 });

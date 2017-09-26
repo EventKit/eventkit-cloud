@@ -31,12 +31,11 @@ export class ExportInfo extends React.Component {
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this._initializeOpenLayers = this._initializeOpenLayers.bind(this);
     }
 
-    componentDidMount() {
+    componentDidMount() {        
         // if the state does not have required data disable next
         if (!this.hasRequiredFields(this.props.exportInfo)) {
             this.props.setNextDisabled();
@@ -87,11 +86,6 @@ export class ExportInfo extends React.Component {
 
     }
 
-    componentWillUnmount() {
-        // clean up listener
-        window.removeEventListener('resize', this.screenSizeUpdate);
-    }
-
     componentWillReceiveProps(nextProps) {
         // if required fields are fulfilled enable next
         if (this.hasRequiredFields(nextProps.exportInfo)) {
@@ -103,10 +97,6 @@ export class ExportInfo extends React.Component {
         else if (nextProps.nextEnabled) {
             this.props.setNextDisabled();
         }
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     onNameChange(e) {

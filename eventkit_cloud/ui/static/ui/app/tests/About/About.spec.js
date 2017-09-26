@@ -41,38 +41,13 @@ describe('About component', () => {
         expect(wrapper.find('h3')).toHaveLength(0);
     });
 
-    it('should add event listener and set state on mount', () => {
+    it('should set state on mount', () => {
         const mountSpy = new sinon.spy(About.prototype, 'componentDidMount');
-        const eventSpy = new sinon.spy(window, 'addEventListener');
         const stateSpy = new sinon.spy(About.prototype, 'setState');
         const wrapper = getWrapper();
         expect(mountSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         mountSpy.restore();
-        eventSpy.restore();
         stateSpy.restore();
-    });
-
-    it('should remove event lister on unmount', () => {
-        const unmountSpy = new sinon.spy(About.prototype, 'componentWillUnmount');
-        const eventSpy = new sinon.spy(window, 'removeEventListener');
-        const wrapper = getWrapper();
-        const resize = wrapper.instance().handleResize;
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', resize)).toBe(true);
-        unmountSpy.restore();
-        eventSpy.restore();
-    });
-
-    it('handle resize should call forceUpdate', () => {
-        const updateSpy = new sinon.spy(About.prototype, 'forceUpdate');
-        const wrapper = getWrapper();
-        wrapper.instance().handleResize();
-        expect(updateSpy.calledOnce);
-        updateSpy.restore();
     });
 });

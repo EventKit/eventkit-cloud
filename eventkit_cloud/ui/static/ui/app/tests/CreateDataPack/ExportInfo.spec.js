@@ -101,28 +101,24 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
     });
 
-    it('componentDidMount should setNextDisabled, setArea, create deboucers, and add eventlistener', () => {
+    it('componentDidMount should setNextDisabled, setArea, and create deboucers', () => {
         const props = getProps();
         props.setNextDisabled = new sinon.spy();
         const mountSpy = new sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = new sinon.spy(ExportInfo.prototype, 'setArea');
         const hasFieldsSpy = new sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
-        const listenerSpy = new sinon.spy(window, 'addEventListener');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(areaSpy.calledOnce).toBe(true);
-        expect(listenerSpy.called).toBe(true);
-        expect(listenerSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
         expect(wrapper.instance().nameHandler).not.toBe(undefined);
         expect(wrapper.instance().descriptionHandler).not.toBe(undefined);
         expect(wrapper.instance().projectHandler).not.toBe(undefined);
         mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
-        listenerSpy.restore();
     });
 
     it('componentDidUpdate should initializeOpenLayers if expanded', () => {
@@ -137,18 +133,6 @@ describe('ExportInfo component', () => {
         expect(wrapper.state().expanded).toBe(true);
         expect(initSpy.calledOnce).toBe(true);
         updateSpy.restore();
-    });
-
-    it('componentWillUnmount should remove the event listener', () => {
-        const props = getProps();
-        const unmountSpy = new sinon.spy(ExportInfo.prototype, 'componentWillUnmount');
-        const listenerSpy = new sinon.spy(window, 'removeEventListener');
-        const wrapper = getWrapper(props);
-        const func = wrapper.instance().screenSizeUpdate;
-        wrapper.unmount();
-        expect(unmountSpy.calledOnce).toBe(true);
-        expect(listenerSpy.called).toBe(true);
-        expect(listenerSpy.calledWith('resize', func)).toBe(true);
     });
 
     it('componentWillReceiveProps should setNextEnabled', () => {
@@ -175,16 +159,6 @@ describe('ExportInfo component', () => {
         nextProps.nextEnabled = true;
         wrapper.setProps(nextProps);
         expect(props.setNextDisabled.calledTwice).toBe(true);
-    });
-
-    it('screenSizeUpdate should force an update', () => {
-        const props = getProps();
-        const forceSpy = new sinon.spy(ExportInfo.prototype, 'forceUpdate');
-        const wrapper = getWrapper(props);
-        expect(forceSpy.called).toBe(false);
-        wrapper.instance().screenSizeUpdate();
-        expect(forceSpy.calledOnce).toBe(true);
-        forceSpy.restore();
     });
 
     it('onNameChange should call persist and nameHandler', () => {

@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import css from '../../styles/SearchAOIToolbar.css';
+import css from '../../styles/typeahead.css';
 import {Typeahead, Menu, MenuItem} from 'react-bootstrap-typeahead';
 import {TypeaheadMenuItem} from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';

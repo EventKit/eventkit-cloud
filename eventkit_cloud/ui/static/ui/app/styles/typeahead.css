@@ -1,3 +1,8 @@
+/* 
+We still need this css file because the typeahead component 
+has no support for inline styles :(
+ */
+
 .typeahead {
     left: 0px;
     top: 0px;
@@ -37,4 +42,12 @@
     border: none;
     margin: 0px;
     padding: 0px;
+}
+
+.menuItem {
+    border-top: 1px solid rgba(112, 114, 116, .4);
+}
+
+.menuItem > a {
+    padding: 7px 10px !important;
 }
