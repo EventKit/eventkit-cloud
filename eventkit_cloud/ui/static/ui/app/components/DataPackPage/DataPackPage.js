@@ -28,7 +28,6 @@ export class DataPackPage extends React.Component {
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleOwnerFilter = this.handleOwnerFilter.bind(this);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.changeView = this.changeView.bind(this);
@@ -80,26 +79,24 @@ export class DataPackPage extends React.Component {
     componentDidMount() {
         this.props.getProviders();
         this.makeRunRequest();
-        window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
         if (this.props.runsList.order != this.state.order) {this.props.setOrder(this.state.order)};
         if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
     }
 
-    onSearch(searchText, ix) { 
+    onSearch(searchText) { 
         this.setState({search: searchText, loading: true}, this.makeRunRequest);
     }
 
-    checkForEmptySearch(searchText, dataSource, params) {
-        if(searchText == '') {
+    checkForEmptySearch(searchText) {
+        if(searchText == '' && this.state.search) {
             this.setState({search: '', loading: true}, this.makeRunRequest);
         }
     }
@@ -169,10 +166,6 @@ export class DataPackPage extends React.Component {
 
     handleSpatialFilter = (geojson) => {
         this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     changeView(view) {
@@ -316,12 +309,12 @@ export class DataPackPage extends React.Component {
                 >
                     <DataPackLinkButton />
                 </AppBar>
+                
                 <Toolbar className={'qa-DataPackPage-Toolbar-search'} style={styles.toolbarSearch}>
-                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{margin: 'auto', width: '100%'}}>
+                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{width: '100%'}}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
-                            searchbarWidth={'100%'} 
                         />
                     </ToolbarGroup>
                 </Toolbar>

@@ -1,48 +1,74 @@
 import React, {PropTypes} from 'react'
-import AutoComplete from 'material-ui/AutoComplete';
-import searchStyles from '../../styles/DataPackSearchbar.css';
+import TextField from 'material-ui/TextField';
 
 class DataPackSearchbar extends React.Component {
-
     constructor(props) {
         super(props);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleKeyDown(event) {
+        if(event.key == 'Enter') {
+            const text = event.target.value || '';
+            this.props.onSearchSubmit(text);
+        }
+    }
+
+    handleChange(event, value) {
+        const text = value || '';
+        this.props.onSearchChange(text);
     }
 
     render() {
         const styles = {
-            autoComplete: {
-                backgroundColor: '#16212f',
+            container: {
                 color: 'white',
-                width: this.props.searchbarWidth,
-                height: '36px',
-                borderBottom: '1px solid #e0e0e0',
+                height: '36px', 
+                width: '100%', 
+                backgroundColor: '#16212f',
+                lineHeight: '36px'
             },
-            autoCompleteText: {
-                width: this.props.searchbarWidth,
+            hint: {
+                color: '#5a5a5a',
                 height: '36px',
-                lineHeight: '16px',
+                lineHeight: 'inherit',
+                bottom: '0px',
+                paddingLeft: '5px'
             },
+            input: {
+                color: '#cacaca',
+                paddingLeft: '5px'
+            },
+            underline: {
+                borderBottom: '1px solid #5a5a5a', 
+                bottom: '0px'
+            },
+            underlineFocus: {
+                borderBottom: '2px solid #4498c0', 
+                bottom: '0px'
+            }
         };
 
         return (
-            <AutoComplete
-                className={searchStyles.autoComplete}
-                dataSource={[]}
-                hintText={"Search DataPacks"}
-                onNewRequest={this.props.onSearchSubmit}
-                onUpdateInput={this.props.onSearchChange}
-                style={styles.autoComplete}
-                textFieldStyle={styles.autoCompleteText}
+            <TextField
+                className={'qa-DataPackSearchBar-TextField'}
+                style={styles.container}
+                hintText={'Search DataPacks'}
+                hintStyle={styles.hint}
+                inputStyle={styles.input}
+                onChange={this.handleChange}
+                underlineStyle={styles.underline}
+                underlineFocusStyle={styles.underlineFocus}
+                onKeyDown={this.handleKeyDown}
             />
         );
     }
 }
 
-
 DataPackSearchbar.propTypes = {
     onSearchChange: React.PropTypes.func,
     onSearchSubmit: React.PropTypes.func,
-    searchbarWidth: React.PropTypes.string,
 };
 
 export default DataPackSearchbar;

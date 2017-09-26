@@ -41,13 +41,8 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(PopupBox)).toHaveLength(1);
-        expect(wrapper.find('.container')).toHaveLength(1);
-        expect(wrapper.find('.titlebar')).toHaveLength(1);
-        expect(wrapper.find('.title')).toHaveLength(1);
-        expect(wrapper.find('span').text()).toEqual('Error');
-        expect(wrapper.find('.exit')).toHaveLength(1);
-        expect(wrapper.find('.fileError')).toHaveLength(1);
-        expect(wrapper.find('.fileError').text()).toEqual('An error has occured');
+        expect(wrapper.find('.qa-DropZoneError-error')).toHaveLength(1);
+        expect(wrapper.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });
 
     it('should update state when new props are received', () => {

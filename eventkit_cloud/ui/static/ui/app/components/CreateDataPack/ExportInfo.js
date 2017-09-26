@@ -30,7 +30,6 @@ export class ExportInfo extends React.Component {
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);        
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this._initializeOpenLayers = this._initializeOpenLayers.bind(this);
     }
@@ -63,9 +62,6 @@ export class ExportInfo extends React.Component {
                 projectName: event.target.value
             });
         }, 250);
-
-        // listen for screensize updates
-        window.addEventListener('resize', this.screenSizeUpdate);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -76,11 +72,6 @@ export class ExportInfo extends React.Component {
             }
         }
 
-    }
-
-    componentWillUnmount() {
-        // clean up listener
-        window.removeEventListener('resize', this.screenSizeUpdate);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -94,10 +85,6 @@ export class ExportInfo extends React.Component {
         else if (nextProps.nextEnabled) {
             this.props.setNextDisabled();
         }
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     onNameChange(e) {
