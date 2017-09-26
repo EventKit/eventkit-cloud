@@ -54,6 +54,7 @@ export class DataPackSortDropDown extends React.Component {
 
         return (
             <DropDownMenu
+                className={'qa-DataPackSortDropDown-DropDownMenu'}
                 autoWidth={true}
                 style={styles.dropDown}
                 iconStyle={styles.icon}
@@ -64,11 +65,11 @@ export class DataPackSortDropDown extends React.Component {
                 underlineStyle={styles.underline}
                 selectedMenuItemStyle={styles.selectedItem}
             >
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__featured'} primaryText={"Featured"}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-started_at'} primaryText={"Newest"}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'started_at'} primaryText={"Oldest "}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'job__name'} primaryText={"Name (A-Z)"}/>
-                <MenuItem style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__name'} primaryText={"Name (Z-A)"}/>
+                <MenuItem className={'qa-DataPackSortDropDown-MenuItem-featured'} style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__featured'} primaryText={"Featured"}/>
+                <MenuItem className={'qa-DataPackSortDropDown-MenuItem-newest'} style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-started_at'} primaryText={"Newest"}/>
+                <MenuItem className={'qa-DataPackSortDropDown-MenuItem-oldest'} style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'started_at'} primaryText={"Oldest "}/>
+                <MenuItem className={'qa-DataPackSortDropDown-MenuItem-nameAZ'} style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'job__name'} primaryText={"Name (A-Z)"}/>
+                <MenuItem className={'qa-DataPackSortDropDown-MenuItem-nameZA'} style={styles.item} innerDivStyle={{padding: '0px 14px'}} value={'-job__name'} primaryText={"Name (Z-A)"}/>
             </DropDownMenu>
         );
     }

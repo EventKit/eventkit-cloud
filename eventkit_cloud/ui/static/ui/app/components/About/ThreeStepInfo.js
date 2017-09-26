@@ -25,21 +25,21 @@ export class ThreeStepInfo extends Component {
             <table style={{...this.props.tableStyle, borderCollapse: 'collapse', fontSize: window.innerWidth > 991 ? '16px': '14px'}}>
                 <tbody>
                     <tr>
-                        <td style={{verticalAlign: 'top'}}>
+                        <td style={{verticalAlign: 'top'}} className={'qa-ThreeStepInfo-step1'}>
                             <img 
                                 src={this.props.steps[0].img}
                                 style={{display: 'block', width: '95%', marginRight: '5%'}}
                             />
                             <div style={{...styles.threeStepCaption, marginRight: '5%'}}>{this.props.steps[0].caption}</div>
                         </td>
-                        <td style={{verticalAlign: 'top', margin: '0px 5px'}}>
+                        <td style={{verticalAlign: 'top', margin: '0px 5px'}} className={'qa-ThreeStepInfo-step2'}>
                             <img 
                                 src={this.props.steps[1].img}
                                 style={{display: 'block', width: '95%', margin: 'auto'}}
                             />
                             <div style={{...styles.threeStepCaption, margin: 'auto'}}>{this.props.steps[1].caption}</div>
                         </td>
-                        <td style={{verticalAlign: 'top'}}>
+                        <td style={{verticalAlign: 'top'}}  className={'qa-ThreeStepInfo-step3'}>
                             <img 
                                 src={this.props.steps[2].img}
                                 style={{display: 'block', width: '95%', marginLeft: '5%'}}

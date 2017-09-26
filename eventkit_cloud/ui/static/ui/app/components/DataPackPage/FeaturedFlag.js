@@ -22,7 +22,7 @@ export class FeaturedFlag extends Component {
         if (!this.props.show) {return null}
 
         return (
-            <div style={style}>FEATURED</div>
+            <div className={'qa-FeaturedFlag-div'} style={style}>FEATURED</div>
         )      
     }
 }

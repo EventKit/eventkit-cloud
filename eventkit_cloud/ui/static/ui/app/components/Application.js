@@ -142,12 +142,14 @@ export class Application extends Component {
                     <Banner />
                     <header className="header" style={{height: '95px'}}>
                         <AppBar
+                            className={'qa-Application-AppBar'}
                             style={styles.appBar}
                             title={img} onLeftIconButtonTouchTap={this.handleToggle.bind(this)}
                             showMenuIconButton={!!this.props.userData}
                         />
                     </header>
                     <Drawer
+                        className={'qa-Application-Drawer'}
                         containerStyle={styles.drawer}
                         overlayStyle={styles.drawer}
                         docked={true}

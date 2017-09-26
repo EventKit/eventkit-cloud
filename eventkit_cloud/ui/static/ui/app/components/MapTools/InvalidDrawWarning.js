@@ -21,9 +21,9 @@ export class InvalidDrawWarning extends Component {
             opacity: .7,
             fontSize: '12px'
         }
-        
+
         return (
-            <div style={style}>
+            <div style={style} className={'qa-InvalidDrawWardning-div'} >
                 <span>You drew an invalid bounding box, please redraw.</span>
             </div>
         )

@@ -236,6 +236,14 @@ export class DataCartDetails extends React.Component {
         });
 
         const styles = {
+            table: {
+               width: '100%',
+                height: '100%',
+                border: '0px solid black',
+                borderSpacing: '5px',
+                borderCollapse: 'separate',
+                layout: 'fixed'
+            },
             tdHeader: {
                 backgroundColor: '#f8f8f8', 
                 padding: '10px', 
@@ -310,6 +318,7 @@ export class DataCartDetails extends React.Component {
 
         const rerunExportActions = [
             <RaisedButton
+                className={'qa-DataCartDetails-RaistedButton-rerunCancel'}
                 style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
@@ -319,6 +328,7 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleRerunClose.bind(this)}
             />,
             <RaisedButton
+                className={'qa-DataCartDetails-RaistedButton-rerun'}
                 buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Rerun"
                 primary={true}
@@ -327,6 +337,7 @@ export class DataCartDetails extends React.Component {
         ];
         const cloneExportActions = [
             <RaisedButton
+                className={'qa-DataCartDetails-RaistedButton-cloneCancel'}
                 style={{marginRight: '10px'}}
                 labelStyle={{color: '#4598bf', fontWeight: 'bold'}}
                 buttonStyle={{backgroundColor: 'whitesmoke'}}
@@ -336,6 +347,7 @@ export class DataCartDetails extends React.Component {
                 onTouchTap={this.handleCloneClose.bind(this)}
             />,
             <RaisedButton
+                className={'qa-DataCartDetails-RaistedButton-clone'}
                 buttonStyle={{backgroundColor: '#4598bf'}}
                 label="Clone"
                 primary={true}
@@ -345,7 +357,7 @@ export class DataCartDetails extends React.Component {
         return (
             <div>
                 <div>
-                    <table>
+                    <table style={styles.table} className={'qa-DataCartDetails-table-name'}>
                         <tbody>
                         <tr>
                             <td style={styles.tdHeader}>Name</td>
@@ -355,20 +367,20 @@ export class DataCartDetails extends React.Component {
                         </tbody>
                     </table>
                 </div>
-                <div style={styles.subHeading}>
+                <div className={'qa-DataCartDetails-div-status'} style={styles.subHeading}>
                     Status
                 </div>
                 <div>
-                    <table>
+                    <table style={styles.table} className={'qa-DataCartDetails-table-export'}>
                         <tbody>
 
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-exportStatus'}>
                             <td style={{...styles.tdHeader, backgroundColor: this.state.statusBackgroundColor}}>Export</td>
                             <td style={{...styles.tdData, backgroundColor: this.state.statusBackgroundColor, color: this.state.statusFontColor}}>
                                 {this.props.cartDetails.status}
                             </td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-expiration'}>
                             <td style={styles.tdHeader}>Expiration</td>
                             <td style={{backgroundColor: '#f8f8f8', paddingRight: '10px',paddingLeft:'10px', paddingTop:'0px', display:'inlineBlock', paddingBottom:'0px', color: '#8b9396'}}>
                                 {moment(this.props.cartDetails.expiration).format('YYYY-MM-DD')}
@@ -385,9 +397,10 @@ export class DataCartDetails extends React.Component {
                                 />
                                 <Edit onClick={(e) => { this.refs.dp.focus() }}  key={this.props.cartDetails.uid} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-permission'}>
                             <td style={styles.tdHeader}>Permission</td>
                             <td style={{...styles.tdData, paddingTop: '0px', paddingBottom: '0px'}}><DropDownMenu
+                                className={'qa-DataCartDetails-DropDownMenu-published'}
                                 value={this.state.permission == true? 1 : 2}
                                 onChange={this.handlePublishedChange.bind(this)}
                                 style={styles.dropDown}
@@ -397,10 +410,12 @@ export class DataCartDetails extends React.Component {
                                 selectedMenuItemStyle={styles.selected}
                                 underlineStyle={styles.underline}>
                                 <MenuItem value={1}
+                                          className={'qa-DataCartDetails-MenuItem-permissionPublic'}
                                           leftIcon={<SocialGroup style={{fill: '#bcdfbb', height: '26px', marginBottom: '2px'}}/>}
                                           rightIcon={this.state.permission == true? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
                                           primaryText="Public"/>
                                 <MenuItem value={2}
+                                          className={'qa-DataCartDetails-MenuItem-permissionPrivate'}
                                           leftIcon={<SocialPerson style={{fill: 'grey', height: '26px', marginBottom: '2px'}} />}
                                           rightIcon={this.state.permission == false? <Check style={{fill: '#4598bf', height: '26px', marginBottom: '2px'}}/> : null}
                                           primaryText="Private" />
@@ -418,11 +433,12 @@ export class DataCartDetails extends React.Component {
                                      zipFileProp={this.props.zipFileProp}/>
                 </div>
                 <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
-                    <div style={styles.subHeading}>
+                    <div className={'qa-DataCartDetails-div-otherOptions'} style={styles.subHeading}>
                         Other Options
                     </div>
                     <div>
                         <RaisedButton
+                            className={'qa-DataCartDetails-RaistedButton-rerunExport'}
                             style={{margin: '10px'}}
                             disabled={this.state.status == "SUBMITTED"}
                             backgroundColor={'rgba(226,226,226,0.5)'}
@@ -433,6 +449,7 @@ export class DataCartDetails extends React.Component {
                             label="RUN EXPORT AGAIN"
                         />
                         <BaseDialog
+                            className={'qa-DataCartDetails-BaseDialog-rerunExport'}
                             show={this.state.rerunDialogOpen}
                             title={'RERUN DATAPACK'}
                             onClose={this.handleRerunClose.bind(this)}
@@ -441,6 +458,7 @@ export class DataCartDetails extends React.Component {
                             <strong>Are you sure you want to run this DataPack again?</strong>
                         </BaseDialog>
                         <RaisedButton
+                            className={'qa-DataCartDetails-RaistedButton-cloneExport'}
                             style={{margin: '10px'}}
                             backgroundColor={'rgba(226,226,226,0.5)'}
                             disableTouchRipple={true}
@@ -450,6 +468,7 @@ export class DataCartDetails extends React.Component {
                             label="CLONE"
                         />
                         <BaseDialog
+                            className={'qa-DataCartDetails-BaseDialog-cloneExport'}
                             show={this.state.cloneDialogOpen}
                             title={'CLONE DATAPACK'}
                             onClose={this.handleCloneClose}
@@ -458,6 +477,7 @@ export class DataCartDetails extends React.Component {
                             <strong>Are you sure you want to clone this DataPack?</strong>
                         </BaseDialog>
                         <RaisedButton
+                            className={'qa-DataCartDetails-RaistedButton-deleteExport'}
                             style={{margin: '10px'}}
                             backgroundColor={'rgba(226,226,226,0.5)'}
                             disableTouchRipple={true}
@@ -467,6 +487,7 @@ export class DataCartDetails extends React.Component {
                             label="DELETE"
                         />
                         <DeleteDialog
+                            className={'qa-DataCartDetails-DeleteDialog-deleteExport'}
                             show={this.state.deleteDialogOpen}
                             handleCancel={this.handleDeleteClose}
                             handleDelete={this.handleDelete}
@@ -476,20 +497,20 @@ export class DataCartDetails extends React.Component {
                 </div>
                 <div style={{width:'100%', paddingTop:'10px',paddingBottom:'20px'}}>
 
-                    <div style={styles.subHeading}>
+                    <div className={'qa-DataCartDetails-div-generalInfo'} style={styles.subHeading}>
                         General Information
                     </div>
-                    <table style={{tableLayout: 'fixed'}}>
+                    <table className={'qa-DataCartDetails-table-generalInfo'}  style={styles.table}>
                         <tbody>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-description'}>
                             <td style={styles.tdHeader}>Description</td>
                             <td style={styles.tdData}>{this.props.cartDetails.job.description}</td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-project'}>
                             <td style={styles.tdHeader}>Project&nbsp;/ Category</td>
                             <td style={styles.tdData}>{this.props.cartDetails.job.event}</td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-sources'}>
                             <td style={styles.tdHeader}>Data Sources</td>
                             <td style={styles.tdData} >{
                                 providers.map((provider) => {
@@ -505,11 +526,12 @@ export class DataCartDetails extends React.Component {
                                 })}
                             </td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-formats'}>
                             <td style={styles.tdHeader}>File Formats</td>
 
                             <td style={styles.tdData}>.gpkg<Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
                             <BaseDialog
+                                className={'qa-DataCartDetails-BaseDialog-formats'}
                                 show={this.state.formatsDialogOpen}
                                 title='Format Information'
                                 onClose={this.handleFormatsClose.bind(this)}
@@ -518,10 +540,11 @@ export class DataCartDetails extends React.Component {
                             </BaseDialog>
 
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-projection'}>
                             <td style={styles.tdHeader}>Projection</td>
                             <td style={styles.tdData}>EPSG:4326 - World Geodetic System 1984 (WGS84)<Info onTouchTap={this.handleProjectionsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
                             <BaseDialog
+                                className={'qa-DataCartDetails-BaseDialog-projection'}
                                 show={this.state.projectionsDialogOpen}
                                 title='Projection Information'
                                 onClose={this.handleProjectionsClose.bind(this)}
@@ -536,31 +559,31 @@ export class DataCartDetails extends React.Component {
 
 
                 <div style={{width:'100%', float:'left', paddingBottom:'30px'}}>
-                    <div style={styles.subHeading}>
+                    <div className={'qa-DataCartDetails-div-aoi'}style={styles.subHeading}>
                         Selected Area of Interest (AOI)
                     </div>
-                    <div id="summaryMap" style={{maxHeight: '400px'}}></div>
+                    <div className={'qa-DataCartDetails-div-map'} id="summaryMap" style={{maxHeight: '400px'}}></div>
                 </div>
                 <div style={{width:'100%', paddingTop:'30px'}}>
-                    <div style={styles.subHeading}>
+                    <div className={'qa-DataCartDetails-div-exportInfo'} style={styles.subHeading}>
                         Export Information
                     </div>
-                    <table>
+                    <table  style={styles.table} className={'qa-DataCartDetails-table-exportInfo'}>
                         <tbody>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-user'}>
                             <td style={styles.tdHeader}>Run By</td>
                             <td style={styles.tdData}>{this.props.cartDetails.user}</td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-uid'}>
                             <td style={styles.tdHeader}>Run Id</td>
                             <td style={styles.tdData}>{this.props.cartDetails.uid}</td>
                         </tr>
-                        <tr>
+                        <tr className={'qa-DataCartDetails-tr-started'}>
                             <td style={styles.tdHeader}>Started</td>
                             <td style={styles.tdData}>{moment(this.props.cartDetails.started_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                         </tr>
                         {this.props.cartDetails.finished_at ?
-                            <tr>
+                            <tr className={'qa-DataCartDetails-tr-finished'}>
                                 <td style={styles.tdHeader}>Finished</td>
                                 <td style={styles.tdData}>{moment(this.props.cartDetails.finished_at).format('h:mm:ss a, MMMM Do YYYY')}</td>
                             </tr>

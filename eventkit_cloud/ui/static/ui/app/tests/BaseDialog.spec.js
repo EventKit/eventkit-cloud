@@ -36,6 +36,7 @@ describe('BaseDialog component', () => {
     it('should give the dialog the passed in actions', () => {
         const actions = [
             <RaisedButton
+                className={'qa-BaseDialog-RasiedButton'}
                 style={{margin: '0px'}}
                 disableTouchRipple={true}
                 label={"One"}
@@ -43,6 +44,7 @@ describe('BaseDialog component', () => {
                 onClick={() => {}}
             />,,
             <RaisedButton
+                className={'qa-BaseDialog-RasiedButton'}
                 style={{margin: '0px'}}
                 disableTouchRipple={true}
                 label={"Two"}
