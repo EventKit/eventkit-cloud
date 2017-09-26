@@ -65,6 +65,14 @@ export class ExportInfo extends React.Component {
             });
         }, 250);
 
+        //HACK HACK HACK HACK since formats is checked and disabled we can't track user selection
+        let formats = [];
+        formats.push(this.refs.formatsCheckbox.props.name);
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            formats: formats
+        });
+
         // listen for screensize updates
         window.addEventListener('resize', this.screenSizeUpdate);
     }
@@ -139,6 +147,7 @@ export class ExportInfo extends React.Component {
                 }
             }
         }
+
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
@@ -476,16 +485,16 @@ export class ExportInfo extends React.Component {
                             </div>
 
                             <div id='formatsHeader' className={'qu-ExportInfo-formatsHeader'} style={style.heading}>Select Export File Formats</div>
-                            <div style={style.sectionBottom}>
+                            <div id='formatsCheckbox' style={style.sectionBottom}>
                                 {formats.map((format, ix) => {
                                 return <div key={format.slug} style={style.checkboxLabel}>
                                     <Checkbox
                                         className={'qa-ExportInfo-CheckBox-formats'}
                                         key={format.slug}
-                                        ref={format.slug}
-                                        label={format.description}
+                                        ref="formatsCheckbox"
+                                        label={format.name}
                                         labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
-                                        name={format.name}
+                                        name={format.slug}
                                         style={{display:'inlineBlock'}}
                                         defaultChecked={true}
                                         disabled={true}

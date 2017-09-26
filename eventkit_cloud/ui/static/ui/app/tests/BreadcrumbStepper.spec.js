@@ -28,7 +28,7 @@ describe('BreadcrumbStepper component', () => {
                 makePublic: false,
                 providers: providers,
                 area_str: '',
-                layers: '',
+                formats: ['gpkg']
             },
             formats: formats,
             createExportRequest: () => {},
@@ -141,7 +141,7 @@ describe('BreadcrumbStepper component', () => {
             handlePrev={wrapper.instance().handlePrev}/>)).toBe(true);
 
         content = wrapper.instance().getStepContent(2);
-        expect(isEqual(content, <ExportSummary/>)).toBe(true);
+        expect(isEqual(content, <ExportSummary allFormats={props.formats}/>)).toBe(true);
 
         content = wrapper.instance().getStepContent(3);
         expect(isEqual(content, <ExportAOI/>)).toBe(true);

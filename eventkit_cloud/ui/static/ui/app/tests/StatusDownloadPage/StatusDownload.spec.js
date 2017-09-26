@@ -151,7 +151,10 @@ describe('StatusDownload component', () => {
                     }
                 },
                 "selection": "",
-                "published": false
+                "published": false,
+                "formats": [
+                    "Geopackage"
+                ]
             },
             "provider_tasks": providerTasks,
             "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
@@ -207,7 +210,10 @@ describe('StatusDownload component', () => {
                     }
                 },
                 "selection": "",
-                "published": false
+                "published": false,
+                "formats": [
+                    "Geopackage"
+                ]
             },
             "provider_tasks": providerTasksRunning,
             "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",

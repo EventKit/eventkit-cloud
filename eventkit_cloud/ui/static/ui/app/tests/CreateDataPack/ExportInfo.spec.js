@@ -41,7 +41,7 @@ describe('ExportInfo component', () => {
                 makePublic: false,
             },
             providers: [],
-            formats:[],
+            formats:formats,
             nextEnabled: true,
             handlePrev: () => {},
             updateExportInfo: () => {},
@@ -49,6 +49,21 @@ describe('ExportInfo component', () => {
             setNextEnabled: () => {},
         }
     }
+    const formats = [
+        {
+            "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
+            "url": "http://cloud.eventkit.dev/api/formats/shp",
+            "slug": "shp",
+            "name": "ESRI Shapefile Format",
+            "description": "Esri Shapefile (OSM Schema)"
+        },
+        {
+            "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
+            "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+            "slug": "gpkg",
+            "name": "Geopackage",
+            "description": "GeoPackage"
+        },]
 
     const getWrapper = (props) => {
         const config = {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};

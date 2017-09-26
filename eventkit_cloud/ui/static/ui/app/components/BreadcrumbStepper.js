@@ -58,10 +58,11 @@ export class BreadcrumbStepper extends React.Component {
         let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
-        //TODO: Set formats up as an array for future need of other formats other than geopackage!
+        //formats only consists of geopackage right now
+        const formats = this.props.exportInfo.formats;
 
         providers.forEach((provider) => {
-            provider_tasks.push({'provider': provider.name, 'formats': ['gpkg']});
+            provider_tasks.push({'provider': provider.name, 'formats': [formats[0]]});
         });
 
         const data = {
@@ -128,7 +129,8 @@ export class BreadcrumbStepper extends React.Component {
                                    formats={this.props.formats}
                                    handlePrev={this.handlePrev}/>
             case 2:
-                return <ExportSummary/>
+                return <ExportSummary
+                                   allFormats={this.props.formats}/>
             default:
                 return <ExportAOI/>;
         }

@@ -52,7 +52,7 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: 'Geopackage',
+        formats: [],
     },
     providers: [],
     stepperNextEnabled: false,
