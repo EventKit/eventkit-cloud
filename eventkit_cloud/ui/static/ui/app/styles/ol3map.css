@@ -36,6 +36,13 @@ div.map {
     color: #66a3ff;
     background-color: white;
 }
+.olZoomMiniMap {
+    z-index: 3;
+    top: 10px;
+    left: 10px;
+    color: #66a3ff;
+    background-color: white;
+}
 
 .olZoomToExtent {
     z-index: 3;
@@ -61,11 +68,23 @@ div.map {
     width: 22px;
 }
 
+.olZoomMiniMap button {
+    color: #4498c0;
+    background-color: white;
+    outline: none;
+    height: 22px;
+    width: 22px;
+}
+
 .olZoomToExtent button i {
     font-size: 16px;
 }
 
 .olZoom button i {
+    font-size: 16px;
+}
+
+.olZoomMiniMap button i {
     font-size: 16px;
 }
 
@@ -77,11 +96,18 @@ div.map {
     background-color: white;
 }
 
+.olZoomMiniMap button:hover {
+    background-color: white;
+}
+
 .olZoomToExtent button:focus {
     background-color: white;
 }
 
 .olZoom button:focus {
+    background-color: white;
+}
+.olZoomMiniMap button:focus {
     background-color: white;
 }
 
