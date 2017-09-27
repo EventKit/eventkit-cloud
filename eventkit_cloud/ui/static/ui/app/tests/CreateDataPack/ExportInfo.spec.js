@@ -102,7 +102,10 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidMount should setNextDisabled, setArea, and create deboucers', () => {
+        const expectedString = '12,393 sq km';
+        const expectedFormat = ['gpkg'];
         const props = getProps();
+        props.updateExportInfo = new sinon.spy();
         props.setNextDisabled = new sinon.spy();
         const mountSpy = new sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = new sinon.spy(ExportInfo.prototype, 'setArea');
@@ -113,6 +116,12 @@ describe('ExportInfo component', () => {
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(areaSpy.calledOnce).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            area_str: expectedString,
+            formats: expectedFormat
+        })).toBe(true);
+        expect(props.updateExportInfo.called).toBe(true);
         expect(wrapper.instance().nameHandler).not.toBe(undefined);
         expect(wrapper.instance().descriptionHandler).not.toBe(undefined);
         expect(wrapper.instance().projectHandler).not.toBe(undefined);
@@ -271,11 +280,11 @@ describe('ExportInfo component', () => {
         ExportInfo.prototype.componentDidMount = () => {};
         const wrapper = getWrapper(props);
         wrapper.instance().setArea();
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
-            area_str: expectedString
-        })).toBe(true);
+        // expect(props.updateExportInfo.called).toBe(true);
+        // expect(props.updateExportInfo.calledWith({
+        //     ...props.exportInfo,
+        //     area_str: expectedString
+        // })).toBe(true);
         ExportInfo.prototype.componentDidMount = mountFunc;
     });
 

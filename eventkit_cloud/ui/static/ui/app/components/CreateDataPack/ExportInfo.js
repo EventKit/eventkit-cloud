@@ -42,7 +42,17 @@ export class ExportInfo extends React.Component {
         }
 
         // calculate the area of the AOI
-        this.setArea();
+        const area_str = this.setArea();
+
+        //Will need to change this once we are allowing other formats
+        // since formats is checked and disabled we can't track user selection
+        let formats = [];
+        formats.push(this.refs.formatsCheckbox.props.name);
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            area_str: area_str,
+            formats: formats
+        });
 
         // set up debounce functions for user text input
         this.nameHandler = debounce(event => {
@@ -63,14 +73,6 @@ export class ExportInfo extends React.Component {
                 projectName: event.target.value
             });
         }, 250);
-
-        //HACK HACK HACK HACK since formats is checked and disabled we can't track user selection
-        let formats = [];
-        formats.push(this.refs.formatsCheckbox.props.name);
-        this.props.updateExportInfo({
-            ...this.props.exportInfo,
-            formats: formats
-        });
 
         // listen for screensize updates
         window.addEventListener('resize', this.screenSizeUpdate);
@@ -164,6 +166,7 @@ export class ExportInfo extends React.Component {
             && exportInfo.providers.length > 0;
     }
 
+
     setArea() {
         const source = new ol.source.Vector({wrapX: true})
         const geojson = new ol.format.GeoJSON()
@@ -177,10 +180,7 @@ export class ExportInfo extends React.Component {
         })
         const area = feature.getGeometry().getArea() / 1000000
         const area_str = numeral(area).format('0,0')
-        this.props.updateExportInfo({
-            ...this.props.exportInfo,
-            area_str: area_str + ' sq km'
-        });
+        return area_str + ' sq km';
     }
 
     _initializeOpenLayers() {
