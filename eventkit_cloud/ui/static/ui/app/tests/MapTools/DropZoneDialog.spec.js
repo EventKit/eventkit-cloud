@@ -27,21 +27,6 @@ describe('DropZoneDialog component', () => {
         expect(wrapper.find('div')).toHaveLength(1);
     })
 
-    it('should have a titlebar', () => {
-        let props = getProps();
-        props.showImportModal = true;
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        expect(wrapper.find('.container')).toHaveLength(1);
-        expect(wrapper.find('.titlebar')).toHaveLength(1);
-        expect(wrapper.find('.title')).toHaveLength(1);
-        expect(wrapper.find('.title').text()).toEqual('Import AOI');
-        expect(wrapper.find('.exit')).toHaveLength(1);
-        expect(wrapper.find(ContentClear)).toHaveLength(1);
-    });
-
     it('should have a dropzone', () => {
         let props = getProps();
         props.showImportModal = true;
@@ -49,12 +34,11 @@ describe('DropZoneDialog component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('.container')).toHaveLength(1);
         expect(wrapper.find(Dropzone)).toHaveLength(1);
-        expect(wrapper.find('.dropZoneText')).toHaveLength(1);
-        expect(wrapper.find('.dropZoneText').find('span')).toHaveLength(1);
-        expect(wrapper.find('.dropZoneText').find('span').text()).toEqual('GeoJSON format only, 2MB max,Drag and drop or');
-        expect(wrapper.find('.dropZoneImportButton')).toHaveLength(1);
+        expect(wrapper.find('.qa-DropZoneDialog-text')).toHaveLength(1);
+        expect(wrapper.find('.qa-DropZoneDialog-text').find('span')).toHaveLength(1);
+        expect(wrapper.find('.qa-DropZoneDialog-text').find('span').text()).toEqual('GeoJSON format only, 2MB max,Drag and drop or');
+        expect(wrapper.find('.qa-DropZoneDialog-button')).toHaveLength(1);
         expect(wrapper.find(FileFileUpload)).toHaveLength(1);
     });
 
@@ -68,20 +52,6 @@ describe('DropZoneDialog component', () => {
         const openSpy = sinon.spy(wrapper.instance().dropzone, 'open');
         wrapper.find(Dropzone).find('button').simulate('click');
         expect(openSpy.calledOnce).toEqual(true);
-    });
-
-    it('should handle exit button click', () => {
-        let props = getProps();
-        props.showImportModal = true;
-        props.setImportModalState = sinon.spy();
-        props.setAllButtonsDefault = sinon.spy();
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        wrapper.find('.titlebar').find('button').simulate('click');
-        expect(props.setAllButtonsDefault.calledOnce).toEqual(true);
-        expect(props.setImportModalState.calledOnce).toEqual(true);
     });
 
     it('should handle onDrop', () => {
