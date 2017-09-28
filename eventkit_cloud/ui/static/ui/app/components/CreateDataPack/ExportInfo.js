@@ -74,8 +74,6 @@ export class ExportInfo extends React.Component {
             });
         }, 250);
 
-        // listen for screensize updates
-        window.addEventListener('resize', this.screenSizeUpdate);
     }
 
     componentDidUpdate(prevProps, prevState) {

@@ -98,10 +98,6 @@ export const getFormats = () => dispatch => {
         type: types.GETTING_FORMATS
     });
 
-    axios.get('/api/formats').catch((error) => {
-        console.log(error);
-    });
-
     return axios({
         url: '/api/formats',
         method: 'GET',

@@ -280,11 +280,6 @@ describe('ExportInfo component', () => {
         ExportInfo.prototype.componentDidMount = () => {};
         const wrapper = getWrapper(props);
         wrapper.instance().setArea();
-        // expect(props.updateExportInfo.called).toBe(true);
-        // expect(props.updateExportInfo.calledWith({
-        //     ...props.exportInfo,
-        //     area_str: expectedString
-        // })).toBe(true);
         ExportInfo.prototype.componentDidMount = mountFunc;
     });
 
