@@ -41,6 +41,7 @@ describe('ExportInfo component', () => {
                 makePublic: false,
             },
             providers: [],
+            formats:formats,
             nextEnabled: true,
             handlePrev: () => {},
             updateExportInfo: () => {},
@@ -48,6 +49,21 @@ describe('ExportInfo component', () => {
             setNextEnabled: () => {},
         }
     }
+    const formats = [
+        {
+            "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
+            "url": "http://cloud.eventkit.dev/api/formats/shp",
+            "slug": "shp",
+            "name": "ESRI Shapefile Format",
+            "description": "Esri Shapefile (OSM Schema)"
+        },
+        {
+            "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
+            "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+            "slug": "gpkg",
+            "name": "Geopackage",
+            "description": "GeoPackage"
+        },]
 
     const getWrapper = (props) => {
         const config = {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};
@@ -86,7 +102,10 @@ describe('ExportInfo component', () => {
     });
 
     it('componentDidMount should setNextDisabled, setArea, and create deboucers', () => {
+        const expectedString = '12,393 sq km';
+        const expectedFormat = ['gpkg'];
         const props = getProps();
+        props.updateExportInfo = new sinon.spy();
         props.setNextDisabled = new sinon.spy();
         const mountSpy = new sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = new sinon.spy(ExportInfo.prototype, 'setArea');
@@ -97,6 +116,12 @@ describe('ExportInfo component', () => {
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(areaSpy.calledOnce).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            area_str: expectedString,
+            formats: expectedFormat
+        })).toBe(true);
+        expect(props.updateExportInfo.called).toBe(true);
         expect(wrapper.instance().nameHandler).not.toBe(undefined);
         expect(wrapper.instance().descriptionHandler).not.toBe(undefined);
         expect(wrapper.instance().projectHandler).not.toBe(undefined);
@@ -255,11 +280,6 @@ describe('ExportInfo component', () => {
         ExportInfo.prototype.componentDidMount = () => {};
         const wrapper = getWrapper(props);
         wrapper.instance().setArea();
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
-            area_str: expectedString
-        })).toBe(true);
         ExportInfo.prototype.componentDidMount = mountFunc;
     });
 

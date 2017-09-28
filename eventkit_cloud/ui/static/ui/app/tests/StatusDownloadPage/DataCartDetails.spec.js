@@ -78,7 +78,7 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(2).find('td').first().text()).toEqual('Data Sources');
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
         expect(table.find('tr').at(3).find('td').first().text()).toEqual('File Formats');
-        expect(table.find('tr').at(3).find('td').last().text()).toEqual('.gpkg');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('Geopackage');
         expect(table.find('tr').at(4).find('td').first().text()).toEqual('Projection');
         expect(table.find('tr').at(4).find('td').last().text()).toEqual('EPSG:4326 - World Geodetic System 1984 (WGS84)');
         expect(wrapper.find('#summaryMap')).toHaveLength(1);
@@ -609,7 +609,10 @@ const run = {
                 ]
             }
         },
-        "published": true
+        "published": true,
+        "formats": [
+            "Geopackage"
+        ]
     },
     "provider_tasks": [
         {

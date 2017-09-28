@@ -10,7 +10,7 @@ import ExportAOI from './CreateDataPack/ExportAOI'
 import ExportInfo from './CreateDataPack/ExportInfo'
 import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 
 const isEqual = require('lodash/isEqual');
@@ -33,6 +33,7 @@ export class BreadcrumbStepper extends React.Component {
             this.props.setNextDisabled();
         }
         this.props.getProviders();
+        this.props.getFormats();
     }
 
     componentWillUnmount() {
@@ -57,10 +58,11 @@ export class BreadcrumbStepper extends React.Component {
         let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
-        //TODO: Set formats up as an array for future need of other formats other than geopackage!
+        //formats only consists of geopackage right now
+        const formats = this.props.exportInfo.formats;
 
         providers.forEach((provider) => {
-            provider_tasks.push({'provider': provider.name, 'formats': ['gpkg']});
+            provider_tasks.push({'provider': provider.name, 'formats': [formats[0]]});
         });
 
         const data = {
@@ -124,9 +126,11 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
+                                   formats={this.props.formats}
                                    handlePrev={this.handlePrev}/>
             case 2:
-                return <ExportSummary/>
+                return <ExportSummary
+                                   allFormats={this.props.formats}/>
             default:
                 return <ExportAOI/>;
         }
@@ -276,6 +280,7 @@ BreadcrumbStepper.propTypes = {
     clearJobInfo: React.PropTypes.func,
     jobFetched: React.PropTypes.bool,
     jobuid: React.PropTypes.string,
+    formats: React.PropTypes.array,
 };
 
 function mapStateToProps(state) {
@@ -286,7 +291,8 @@ function mapStateToProps(state) {
         datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
-        jobuid: state.submitJob.jobuid
+        jobuid: state.submitJob.jobuid,
+        formats: state.formats,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -320,6 +326,9 @@ function mapDispatchToProps(dispatch) {
         },
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid))
+        },
+        getFormats: () => {
+            dispatch(getFormats())
         },
     }
 }
