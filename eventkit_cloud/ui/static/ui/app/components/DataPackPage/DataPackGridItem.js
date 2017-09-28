@@ -6,6 +6,7 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import ol from 'openlayers';
+import css from '../../styles/ol3map.css';
 import { List, ListItem} from 'material-ui/List'
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
@@ -51,6 +52,15 @@ export class DataPackGridItem extends Component {
 
     initMap() {
         const map = new ol.Map({
+            controls: [
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: css.olZoomMiniMap
+                })
+            ],
             target: this.props.run.uid + '_map',
             layers: [
                 new ol.layer.Tile({

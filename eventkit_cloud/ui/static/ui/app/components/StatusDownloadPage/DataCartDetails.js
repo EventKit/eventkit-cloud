@@ -1,5 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import ol from 'openlayers';
+import css from '../../styles/ol3map.css';
 import '../tap_events'
 import DataPackDetails from './DataPackDetails'
 import RaisedButton from 'material-ui/RaisedButton';
@@ -105,6 +106,18 @@ export class DataCartDetails extends React.Component {
         });
 
         this._map = new ol.Map({
+            controls: [
+                new ol.control.ScaleLine({
+                    className: css.olScaleLine,
+                }),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: css.olZoomMiniMap
+                })
+            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,

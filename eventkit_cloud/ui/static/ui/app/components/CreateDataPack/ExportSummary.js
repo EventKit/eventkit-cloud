@@ -2,6 +2,7 @@ import 'openlayers/dist/ol.css';
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
 import ol from 'openlayers';
+import css from '../../styles/ol3map.css';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar'
 import Paper from 'material-ui/Paper'
@@ -36,6 +37,18 @@ export class ExportSummary extends Component {
         });
 
         this._map = new ol.Map({
+            controls: [
+                new ol.control.ScaleLine({
+                    className: css.olScaleLine,
+                }),
+                new ol.control.Attribution({
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: css.olZoomMiniMap
+                })
+            ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
