@@ -603,11 +603,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        # gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
-        # TODO: find a way to make in-place clipping work, instead of using a prefix
-        gtiff_clip = os.path.join(os.path.dirname(gtiff), "clip_{0}".format(os.path.basename(gtiff)))
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, out_dataset=gtiff_clip, fmt=None)
-        gtiff = gtiff_clip
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
 
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
