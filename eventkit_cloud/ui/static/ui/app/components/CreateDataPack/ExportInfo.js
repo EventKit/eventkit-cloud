@@ -16,6 +16,7 @@ import debounce from 'lodash/debounce';
 import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
 import CustomTextField from "../CustomTextField";
+import ol3mapCss from '../../styles/ol3map.css';
 
 
 export class ExportInfo extends React.Component {
@@ -194,7 +195,20 @@ export class ExportInfo extends React.Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-            })
+            }),
+            controls: [
+                new ol.control.ScaleLine({
+                    className: ol3mapCss.olScaleLine,
+                }),
+                new ol.control.Attribution({
+                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                }),
+            ],
         });
         const source = new ol.source.Vector();
         const geojson = new ol.format.GeoJSON();

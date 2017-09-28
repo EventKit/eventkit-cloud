@@ -5,6 +5,7 @@ import ol from 'openlayers';
 import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar'
 import Paper from 'material-ui/Paper'
+import ol3mapCss from '../../styles/ol3map.css';
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -50,7 +51,20 @@ export class ExportSummary extends Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-            })
+            }),
+            controls: [
+                new ol.control.ScaleLine({
+                    className: ol3mapCss.olScaleLine,
+                }),
+                new ol.control.Attribution({
+                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                }),
+            ],
         });
         const source = new ol.source.Vector({wrapX: true});
         const geojson = new ol.format.GeoJSON();
