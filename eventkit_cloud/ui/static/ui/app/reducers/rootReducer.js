@@ -1,7 +1,7 @@
 import {combineReducers} from 'redux'
 import userReducer from './userReducer'
 import { routerReducer } from 'react-router-redux'
-import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer} from './exportsReducer';
+import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer, getFormatsReducer} from './exportsReducer';
 import {getGeocodeReducer} from './searchToolbarReducer.js';
 import {DataPackPageReducer, DeleteRunsReducer} from './DataPackPageReducer';
 import {importGeomReducer} from './mapToolReducer';
@@ -32,6 +32,7 @@ const rootReducer = combineReducers({
     licenses: licenseReducer,
     updateExpiration: updateExpirationReducer,
     updatePermission: updatePermissionReducer,
+    formats: getFormatsReducer,
 });
 
 export default rootReducer;

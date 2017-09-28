@@ -12,7 +12,6 @@ import Check from 'material-ui/svg-icons/navigation/check'
 import Edit from 'material-ui/svg-icons/image/edit';
 import DatePicker from 'material-ui/DatePicker';
 import Info from 'material-ui/svg-icons/action/info'
-import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
 import DeleteDialog from '../DeleteDialog';
 import ol3mapCss from '../../styles/ol3map.css';
@@ -62,7 +61,6 @@ export class DataCartDetails extends React.Component {
         this._setMaxDate();
         this._setExpirationDate();
         this._setPermission();
-
     }
 
     _setExpirationDate(){
@@ -543,7 +541,9 @@ export class DataCartDetails extends React.Component {
                         <tr className={'qa-DataCartDetails-tr-formats'}>
                             <td style={styles.tdHeader}>File Formats</td>
 
-                            <td style={styles.tdData}>.gpkg<Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/></td>
+                            <td style={styles.tdData}>{
+                                this.props.cartDetails.job.formats.map((format) => {
+                                    return <p key={format}>{format}<Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'18px', width:'18px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                             <BaseDialog
                                 className={'qa-DataCartDetails-BaseDialog-formats'}
                                 show={this.state.formatsDialogOpen}
@@ -552,7 +552,9 @@ export class DataCartDetails extends React.Component {
                             ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
                                 EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
                             </BaseDialog>
-
+                                    </p>
+                                })}
+                            </td>
                         </tr>
                         <tr className={'qa-DataCartDetails-tr-projection'}>
                             <td style={styles.tdHeader}>Projection</td>

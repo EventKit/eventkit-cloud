@@ -162,6 +162,13 @@ export class ExportSummary extends Component {
 
         }
 
+        let formatDesc = '';
+        this.props.allFormats.forEach((format) => {
+            if(format.slug == this.props.formats) {
+                formatDesc = format.name;
+            };
+        });
+
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
@@ -198,7 +205,7 @@ export class ExportSummary extends Component {
                                         </tr>
                                         <tr id='formats' className={'qa-ExportSummary-tr-formats'}>
                                             <td style={style.tdHeading}>File Formats</td>
-                                            <td style={style.tdData}>{this.props.layers}</td>
+                                            <td style={style.tdData}>{formatDesc}</td>
                                         </tr>
                                         <tr id='layers'  className={'qa-ExportSummary-tr-layers'}>
                                             <td style={style.tdHeading} rowSpan={providers.length}>Layer Data</td>
@@ -254,7 +261,7 @@ function mapStateToProps(state) {
         makePublic: state.exportInfo.makePublic,
         providers: state.exportInfo.providers,
         area_str: state.exportInfo.area_str,
-        layers: state.exportInfo.layers,
+        formats: state.exportInfo.formats,
     }
 }
 
@@ -270,7 +277,8 @@ ExportSummary.propTypes = {
     makePublic: PropTypes.bool,
     providers: PropTypes.array,
     area_str: PropTypes.string,
-    layers: PropTypes.string,
+    formats: PropTypes.array,
+    allFormats: PropTypes.array,
 }
 
 export default connect(
