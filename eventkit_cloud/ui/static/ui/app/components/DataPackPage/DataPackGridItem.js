@@ -18,6 +18,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
 import DeleteDialog from '../DeleteDialog';
 import FeaturedFlag from './FeaturedFlag';
+import ol3mapCss from '../../styles/ol3map.css';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -69,6 +70,16 @@ export class DataPackGridItem extends Component {
                 maxZoom: 22,
             }),
             interactions: ol.interaction.defaults({mouseWheelZoom: false}),
+            controls: [
+                new ol.control.Attribution({
+                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                }),
+            ],
         });
 
         let source = new ol.source.Vector({wrapX: true});
