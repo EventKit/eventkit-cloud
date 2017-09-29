@@ -545,6 +545,7 @@ class TestExportRunViewSet(APITestCase):
     """
     Test cases for ExportRunViewSet
     """
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
 
     def __init__(self, *args, **kwargs):
         super(TestExportRunViewSet, self).__init__(*args, **kwargs)
@@ -568,6 +569,13 @@ class TestExportRunViewSet(APITestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
+        formats = ExportFormat.objects.all()
+        provider = ExportProvider.objects.first()
+        provider_task = ProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(*formats)
+
+        self.job.provider_tasks.add(provider_task)
+        self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.run_uid = str(self.export_run.uid)
@@ -857,6 +865,8 @@ class TestExportTaskViewSet(APITestCase):
     Test cases for ExportTaskViewSet
     """
 
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+
     def __init__(self, *args, **kwargs):
         super(TestExportTaskViewSet, self).__init__(*args, **kwargs)
         self.user = None
@@ -877,6 +887,15 @@ class TestExportTaskViewSet(APITestCase):
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
+
+        formats = ExportFormat.objects.all()
+        provider = ExportProvider.objects.first()
+        provider_task = ProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(*formats)
+
+        self.job.provider_tasks.add(provider_task)
+        self.job.save()
+
         # setup token authentication
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,

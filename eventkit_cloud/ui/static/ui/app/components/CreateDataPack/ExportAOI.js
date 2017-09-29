@@ -266,6 +266,7 @@ export class ExportAOI extends Component {
                     className: css.olScaleLine,
                 }),
                 new ol.control.Attribution({
+                    className: ['ol-attribution', css['ol-attribution']].join(' '),
                     collapsible: false,
                     collapsed: false,
                 }),

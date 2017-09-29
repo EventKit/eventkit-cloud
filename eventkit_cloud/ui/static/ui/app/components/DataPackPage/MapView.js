@@ -182,6 +182,7 @@ export class MapView extends Component {
         return new ol.Map({
             controls: [
                 new ol.control.Attribution({
+                    className: ['ol-attribution', css['ol-attribution']].join(' '),
                     collapsible: false,
                     collapsed: false,
                 }),
@@ -193,7 +194,7 @@ export class MapView extends Component {
                     extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958],
                 }),
                 new ol.control.OverviewMap({
-                    className: 'ol-overviewmap ' + css['ol-custom-overviewmap'],
+                    className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
                     collapsed: window.innerWidth < 768 ? true: false,
                 }),

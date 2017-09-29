@@ -79,6 +79,17 @@ export function getProvidersReducer(state = initialState.providers, action ) {
     }
 }
 
+export function getFormatsReducer(state = initialState.formats, action ) {
+    switch (action.type) {
+        case types.GETTING_FORMATS:
+            return  []
+        case types.FORMATS_RECEIVED:
+            return action.formats
+        default:
+            return state
+    }
+}
+
 export function submitJobReducer(state = initialState.submitJob, action) {
     switch(action.type) {
         case types.SUBMITTING_JOB:
