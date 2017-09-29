@@ -180,7 +180,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
 
         # test significant content
-        self.assertEquals(response.data, {'detail': 'Not found.'})
+        self.assertIsNotNone(response.data["errors"][0]["detail"])
 
     def test_delete_job(self,):
         url = reverse('api:jobs-detail', args=[self.job.uid])
@@ -346,7 +346,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['no geometry'], response.data['id'])
+        self.assertEquals('no geometry', response.data['errors'][0]['title'])
 
     def test_empty_string_param(self,):
         url = reverse('api:jobs-list')
@@ -362,7 +362,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['This field may not be blank.'], response.data['description'])
+        self.assertIsNotNone(response.data['errors'][0]['title'])
 
     def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
@@ -376,7 +376,7 @@ class TestJobViewSet(APITestCase):
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response.data['provider_tasks'][0]['formats'], ['This field is required.'])
+        self.assertIsNotNone(response.data['errors'][0]['title'])
 
     def test_invalid_format_param(self,):
         url = reverse('api:jobs-list')
@@ -391,7 +391,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertIsNotNone(response.data.get('provider_tasks')[0].get('formats'))
+        self.assertIsNotNone(response.data.get('errors')[0]['title'])
 
     def test_no_matching_format_slug(self,):
         url = reverse('api:jobs-list')
@@ -408,8 +408,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response.data['provider_tasks'][0]['formats'],
-                          ['Object with slug=broken-format-one does not exist.'])
+        self.assertIsNotNone(response.data["errors"][0]["detail"])
 
     def test_extents_too_large(self,):
         url = reverse('api:jobs-list')
@@ -429,7 +428,7 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(['invalid_extents'], response.data['id'])
+        self.assertEquals('invalid_extents', response.data['errors'][0]['title'])
 
 
     def test_patch(self):
@@ -525,7 +524,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['id'])
+        self.assertEquals('missing_bbox_parameter', response.data['errors'][0]['title'])
 
     def test_bbox_missing_coord(self,):
         url = reverse('api:jobs-list')
@@ -535,7 +534,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['id'])
+        self.assertEquals('missing_bbox_parameter', response.data['errors'][0]['title'])
 
 
 class TestPagination(APITestCase):
@@ -1118,6 +1117,7 @@ class TestUserDataViewSet(APITestCase):
         data = json.loads(patch_response.content)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
+
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):

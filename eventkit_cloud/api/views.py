@@ -129,8 +129,9 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data)
         if len(params.split(',')) < 4:
             errors = OrderedDict()
-            errors['id'] = _('missing_bbox_parameter')
-            errors['message'] = _('Missing bounding box parameter')
+            errors['errors'] = {}
+            errors['errors']['id'] = _('missing_bbox_parameter')
+            errors['errors']['message'] = _('Missing bounding box parameter')
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             extents = params.split(',')
@@ -304,13 +305,16 @@ class JobViewSet(viewsets.ModelViewSet):
                         try:
                             provider_serializer.is_valid(raise_exception=True)
                         except ValidationError:
-                            error_data = OrderedDict()
-                            error_data['errors'] = [_('A provider and an export format must be selected.')]
-                            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                            status_code = status.HTTP_400_BAD_REQUEST
+                            error_data = {"errors": [{"status": status_code,
+                                                      "title": _('Invalid provider task.'),
+                                                      "detail": _('A provider and an export format must be selected.')
+                                                      }]}
+                            return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
                         if preset:
                             """Get the tags from the uploaded preset."""
-                            logger.debug('Found preset with uid: %s' % preset)
+                            logger.debug('Found preset with uid: {0}'.format(preset))
                             job.json_tags = preset
                             job.save()
                         elif tags:
@@ -330,14 +334,19 @@ class JobViewSet(viewsets.ModelViewSet):
                             job.json_tags = hdm_default_tags
                             job.save()
                     except Exception as e:
-                        error_data = OrderedDict()
-                        error_data['id'] = _('server_error')
-                        error_data['message'] = _('Error creating export job: %(error)s') % {'error': e}
-                        return Response(error_data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                        error_data = {"errors": [{"status": status_code,
+                                                  "title": _('Server Error'),
+                                                  "detail": _('Error creating export job: {0}'.format(e))
+                        }]}
+                        return Response(error_data, status=status_code)
                 else:
-                    error_data = OrderedDict()
-                    error_data['provider_tasks'] = [_('Invalid provider task.')]
-                    return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+                    status_code = status.HTTP_400_BAD_REQUEST
+                    error_data = {"errors": [{"status": status_code,
+                                              "title": _('Invalid provider task'),
+                                              "detail": _('One or more: {0} are invalid'.format(provider_tasks))
+                                              }]}
+                    return Response(error_data, status=status_code)
 
             # run the tasks
             job_uid = str(job.uid)
@@ -347,10 +356,20 @@ class JobViewSet(viewsets.ModelViewSet):
                 # run needs to be created so that the UI can be updated with the task list.
                 run_uid = create_run(job_uid=job_uid, user=request.user)
             except InvalidLicense as il:
-                return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+                status_code = status.HTTP_400_BAD_REQUEST
+                error_data = {"errors": [{"status": status_code,
+                                          "title": _('Invalid License'),
+                                          "detail": _(il.message)
+                                          }]}
+                return Response(error_data, status=status_code)
                 # Run is passed to celery to start the tasks.
             except Unauthorized as ua:
-                return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
+                status_code = status.HTTP_403_FORBIDDEN
+                error_data = {"errors": [{"status": status_code,
+                                          "title": _('Invalid License'),
+                                          "detail": _(ua.message)
+                                          }]}
+                return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
 

@@ -458,6 +458,8 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         from eventkit_cloud.api.views import get_models
         """Creates an export ProviderTask."""
         format_names = validated_data.pop("formats")
+        if not format_names:
+            raise Exception("At least one format must be added.")
         format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
         provider_model = ExportProvider.objects.get(name=validated_data.get("provider"))
         provider_task = ProviderTask.objects.create(provider=provider_model)
