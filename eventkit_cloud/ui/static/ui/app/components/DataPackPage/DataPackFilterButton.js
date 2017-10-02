@@ -16,7 +16,7 @@ export class DataPackFilterButton extends React.Component {
                 height: '30px',
                 lineHeight: '15px',
                 minWidth: 'none',
-                maxWidth: window.innerWidth > 575 ? 'none': '40px'
+                width: window.innerWidth > 575 ? '90px' : '40px'
             },
             label: {
                 color: '#4498c0', 
