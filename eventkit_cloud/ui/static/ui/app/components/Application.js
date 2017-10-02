@@ -174,7 +174,7 @@ export class Application extends Component {
             },
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
-                marginLeft: this.props.drawerOpen && window.innerWidth >= 1200 ? 200 : 0
+                marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0
             }
         };
 
