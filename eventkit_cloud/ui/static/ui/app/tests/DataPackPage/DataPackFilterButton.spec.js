@@ -51,13 +51,13 @@ describe('DataPackFilterButton component', () => {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(FlatButton).props().style.maxWidth).toEqual('none');
+        expect(wrapper.find(FlatButton).props().style.width).toEqual('90px');
         expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('12px');
 
         window.resizeTo(400, 500);
         expect(window.innerWidth).toBe(400);
         wrapper.update();
-        expect(wrapper.find(FlatButton).props().style.maxWidth).toEqual('40px');
+        expect(wrapper.find(FlatButton).props().style.width).toEqual('40px');
         expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('10px');
     });
 });

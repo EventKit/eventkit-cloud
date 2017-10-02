@@ -145,7 +145,7 @@ export class MapPopup extends Component {
                         </div>
                         <div  className={'qa-MapPopup-div-showMore'} style={{display: 'inline-block', height: '22px', float: 'left'}}>
                             <div id='show-more' onClick={this.showMore} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
-                                Show More
+                                {this.state.showMore ? 'Show Less' : 'Show More' }
                                 {this.state.showMore ? <ArrowUp style={styles.showMoreIcon}/> : <ArrowDown style={styles.showMoreIcon}/>}
                             </div>
                         </div>
