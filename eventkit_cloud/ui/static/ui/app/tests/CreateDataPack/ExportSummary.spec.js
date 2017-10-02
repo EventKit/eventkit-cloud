@@ -39,7 +39,22 @@ describe('Export Summary Component', () => {
                 {name: 'three', uid: 3, display: false}
             ],
             area_str: '12 sq km',
-            layers: 'Geopackage'
+            formats: ['gpkg'],
+            allFormats: [
+                {
+                    "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
+                    "url": "http://cloud.eventkit.dev/api/formats/shp",
+                    "slug": "shp",
+                    "name": "ESRI Shapefile Format",
+                    "description": "Esri Shapefile (OSM Schema)"
+                },
+                {
+                    "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
+                    "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+                    "slug": "gpkg",
+                    "name": "Geopackage",
+                    "description": "GeoPackage"
+                },],
         }
     }
 

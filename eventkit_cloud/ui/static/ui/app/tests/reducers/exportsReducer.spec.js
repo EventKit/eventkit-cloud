@@ -93,7 +93,7 @@ describe('exportInfo reducer', () => {
             makePublic: false,
             providers: [],
             area_str: '',
-            layers: 'Geopackage'
+            formats: [],
         });
     });
 

@@ -37,6 +37,11 @@ div.map {
     background-color: white;
 }
 
+.olControlTopLeft {
+    top: 15px !important;
+    left: 10px !important;
+}
+
 .olZoomToExtent {
     z-index: 3;
     top: 15px;
@@ -134,3 +139,6 @@ div.map {
     height: 100px;
 }
 
+.ol-attribution > ul > li {
+    pointer-events: none !important;
+}
