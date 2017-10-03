@@ -19,6 +19,7 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
 
 const muiTheme = getMuiTheme({
     datePicker: {
@@ -43,7 +44,9 @@ export class Application extends Component {
         this.handleResize = this.handleResize.bind(this);        
         this.state = {
             config: {},
-            hovered: ''
+            hovered: '',
+            steps: [],
+            isRunning: false,
         }
     }
 
@@ -57,9 +60,91 @@ export class Application extends Component {
     }
 
     componentDidMount() {
+        const steps = [
+            {
+                title: 'First Step',
+                text: 'Start using the <strong>joyride</strong>',
+                selector: '.qa-Application-header',
+                position: 'inherit',
+                type: 'click',
+                isFixed: true,
+                style: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderRadius: '0',
+                    color: '#fff',
+                    mainColor: '#ff4456',
+                    textAlign: 'center',
+                    width: '29rem',
+                    arrow: {
+                        display: 'none'
+                    },
+                    beacon: {
+                        offsetX: 10,
+                        offsetY: 10,
+                        inner: '#000',
+                        outer: '#000'
+                    },
+                    header: {
+                        textAlign: 'right'
+                        // or any style attribute
+                    },
+                    main: {
+                        padding: '20px'
+                    },
+                    footer: {
+                        display: 'none'
+                    },
+                    skip: {
+                        color: '#f04'
+                    },
+                    hole: {
+                        backgroundColor: 'rgba(201, 23, 33, 0.2)',
+                    }
+                }
+            },
+            {
+                title: 'Advance customization',
+                text: 'You can set individual styling options for beacons and tooltips. <br/>To advance click `NEXT` inside the hole.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                allowClicksThruHole: true,
+                style: {
+                    backgroundColor: '#ccc',
+                    mainColor: '#000',
+                    header: {
+                        color: '#f04',
+                        fontSize: '3rem',
+                        textAlign: 'center',
+                    },
+                    footer: {
+                        display: 'none',
+                    },
+                    beacon: {
+                        inner: '#000',
+                        outer: '#000',
+                    },
+                },
+            },
+        ]
+
         this.getConfig();
-        window.addEventListener('resize', this.handleResize);        
+        window.addEventListener('resize', this.handleResize);
+
+        setTimeout(() => {
+            this.setState({
+                isReady: true,
+                isRunning: true,
+            });
+        }, 1000);
+
+        this.joyrideAddSteps(steps);
+
+
+        this.refs.joyride.addTooltip(steps[0]);
+
+
     }
+
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
@@ -114,7 +199,26 @@ export class Application extends Component {
         this.setState({hovered: ''});
     }
 
+    joyrideAddSteps(steps) {
+        let joyride = this.refs.joyride;
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState(currentState => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+
+
     render() {
+        const {steps, isRunning} = this.state;
+
         const styles = {
             appBar: {
                 backgroundColor: 'black',
@@ -189,7 +293,17 @@ export class Application extends Component {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{backgroundColor: '#000'}}>
+                    <Joyride
+                        ref={'joyride'}
+                        debug={false}
+                        steps={steps}
+                        type={'continuous'}
+                        showOverlay={true}
+                        showSkipButton={true}
+                        showStepsProgress={true}
+                        run={isRunning}/>
                     <Banner />
+
                     <header className="qa-Application-header" style={{height: '95px'}}>
                         <AppBar
                             className={'qa-Application-AppBar'}
