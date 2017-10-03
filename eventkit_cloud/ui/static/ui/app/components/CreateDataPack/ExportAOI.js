@@ -15,13 +15,12 @@ import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
-    isViewOutsideValidExtent, goToValidExtent} from '../../utils/mapUtils'
+    isViewOutsideValidExtent, goToValidExtent, generateModifyInteraction} from '../../utils/mapUtils'
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
 export class ExportAOI extends Component {
-
     constructor(props) {
         super(props)
         this.setButtonSelected = this.setButtonSelected.bind(this);
@@ -37,6 +36,9 @@ export class ExportAOI extends Component {
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.handleModifyStart = this.handleModifyStart.bind(this);
+        this.handleModifyEnd = this.handleModifyEnd.bind(this);
+        this.handleFeatureChange = this.handleFeatureChange.bind(this);
         this.state = {
             toolbarIcons: {
                 box: "DEFAULT",
@@ -243,6 +245,43 @@ export class ExportAOI extends Component {
         clearDraw(this.drawLayer);
     }
 
+    handleModifyStart() {
+        this.showInvalidDrawWarning(false);
+    }
+
+    handleModifyEnd(event) {
+        const feature = event.features.item(0);
+        if (feature) {
+            const geom = feature.getGeometry();
+            const coords = geom.getCoordinates();
+            const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+            geom.setCoordinates(unwrappedCoords);
+            const geojson = createGeoJSON(geom);
+            if (isGeoJSONValid(geojson)) {
+                this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Modified');
+                this.props.setNextEnabled();
+            }
+            else {
+                this.props.setNextDisabled();
+                this.showInvalidDrawWarning(true);
+            }
+        }
+    }
+
+    handleFeatureChange(event) {
+        if(this.props.aoiInfo.selectionType == 'box') {
+            const feature = event.feature;
+            if (feature) {
+                const extent = feature.getGeometry().getExtent();
+                const coords = feature.getGeometry().getCoordinates();
+                const transformedCoords = feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates();
+                console.log(coords);
+                console.log(transformedCoords);
+                // in progress
+            }
+        }
+    }
+
     initializeOpenLayers() {
         const scaleStyle = {
             background: 'white',
@@ -252,6 +291,12 @@ export class ExportAOI extends Component {
         ol.inherits(ol.control.ZoomExtent, ol.control.Control);
 
         this.drawLayer = generateDrawLayer();
+        this.drawLayer.getSource().on('changefeature', this.handleFeatureChange);
+
+        this.modifyInteraction = generateModifyInteraction(this.drawLayer);
+        this.modifyInteraction.on('modifystart', this.handleModifyStart);
+        this.modifyInteraction.on('modifyend', this.handleModifyEnd);
+
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
         this.drawBoxInteraction.on('drawstart', this.handleDrawStart);
         this.drawBoxInteraction.on('drawend', this.handleDrawEnd);
@@ -303,9 +348,13 @@ export class ExportAOI extends Component {
             })
         });
 
+        this.map.addInteraction(this.modifyInteraction);
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
         this.map.addLayer(this.drawLayer);
+
+        this.modifyInteraction.setActive(true);
+
     }
 
     handleZoomToSelection() {

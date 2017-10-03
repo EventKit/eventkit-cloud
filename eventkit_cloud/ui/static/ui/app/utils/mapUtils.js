@@ -124,6 +124,25 @@ export function generateDrawLayer() {
     })
 }
 
+export function generateModifyInteraction(drawLayer) {
+    const modify = new ol.interaction.Modify({
+        source: drawLayer.getSource(),
+        insertVertexCondition: ol.events.condition.never,
+        wrapX: true,
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+                stroke: new ol.style.Stroke({color: '#ce4427', width: 1.25}),
+                radius: 5
+            }),
+            fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+            stroke: new ol.style.Stroke({color: '#3399CC', width: 1.25})
+        })
+    });
+    modify.setActive(false);
+    return modify;
+}
+
 export function generateDrawBoxInteraction(drawLayer) {
     const draw = new ol.interaction.Draw({
         source: drawLayer.getSource(),
@@ -158,7 +177,7 @@ export function generateDrawFreeInteraction(drawLayer) {
         source: drawLayer.getSource(),
         type: 'Polygon',
         wrapX: true,
-        freehand: true,
+        freehand: false,
         style: new ol.style.Style({
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
