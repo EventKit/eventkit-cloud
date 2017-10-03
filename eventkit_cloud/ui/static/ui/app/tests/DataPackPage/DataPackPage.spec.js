@@ -74,7 +74,7 @@ describe('DataPackPage component', () => {
                 deleted: false,
                 error: null
             },
-            drawerOpen: true,
+            drawer: 'open',
             providers: providers,
             importGeom: {},
             geocode: {},

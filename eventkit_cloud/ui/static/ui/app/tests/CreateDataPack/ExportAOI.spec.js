@@ -51,7 +51,7 @@ describe('ExportAOI component', () => {
                 geom: {},
                 error: null,
             },
-            drawerOpen: true,
+            drawer: 'open',
             geocode: {
                 fetching: false,
                 fetched: false,
@@ -101,14 +101,14 @@ describe('ExportAOI component', () => {
 
     it('the left position should be 200px if drawer is open, otherwise 0px', () => {
         const props = getProps();
-        props.drawerOpen = true;
+        props.drawer = 'open';
         const wrapper = getWrapper(props);
         window.resizeTo(1300, 800);
         expect(window.innerWidth).toBe(1300);
         wrapper.update();
         expect(wrapper.find('#map').props().style.left).toEqual('200px');
         const nextProps = getProps();
-        nextProps.drawerOpen = false;
+        nextProps.drawer = 'closed';
         wrapper.setProps(nextProps);
         expect(wrapper.find('#map').props().style.left).toEqual('0px');
     });

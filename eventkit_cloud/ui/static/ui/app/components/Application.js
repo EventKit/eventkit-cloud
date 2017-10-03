@@ -70,7 +70,7 @@ export class Application extends Component {
     };
 
     handleToggle() {
-        if(this.props.drawerOpen) {
+        if(this.props.drawer === 'open' || this.props.drawer === 'opening') {
             this.props.closeDrawer();
         }
         else {
@@ -174,7 +174,7 @@ export class Application extends Component {
             },
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
-                marginLeft: this.props.drawerOpen && window.innerWidth >= 1200 ? 200 : 0
+                marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0
             }
         };
 
@@ -203,7 +203,7 @@ export class Application extends Component {
                         containerStyle={styles.drawer}
                         overlayStyle={styles.drawer}
                         docked={true}
-                        open={this.props.drawerOpen}
+                        open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
                         <MenuItem className={"qa-Application-MenuItem-exports"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <IndexLink 
@@ -284,7 +284,7 @@ Application.propTypes = {
     openDrawer: PropTypes.func,
     closeDrawer: PropTypes.func,
     userDate: PropTypes.object,
-    drawerOpen: PropTypes.bool,
+    drawer: PropTypes.string,
 };
 
 Application.childContextTypes = {
@@ -293,7 +293,7 @@ Application.childContextTypes = {
 
 function mapStateToProps(state) {
     return {
-        drawerOpen: state.drawerOpen,
+        drawer: state.drawer,
         userData: state.user.data,
 
     }
