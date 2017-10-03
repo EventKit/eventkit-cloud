@@ -5,7 +5,7 @@ from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError
 from mapproxy.seed.spec import validate_seed_conf
-from mapproxy.config.loader import ProxyConfiguration
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError
 from mapproxy.config.spec import validate_options
 
 from mapproxy.config.config import load_config, base_config, load_default_config
@@ -70,14 +70,13 @@ class ExternalRasterServiceToGeopackage(object):
         self.task_uid = task_uid
         self.selection = selection
 
-    def convert(self,):
-        """
-        Convert external service to gpkg.
-        """
+    def build_config(self):
+        pass
 
-        from ..tasks.task_process import TaskProcess
-        from .geopackage import remove_empty_zoom_levels
-
+    def get_check_config(self):
+        """
+        Create a MapProxy configuration object and verifies its validity
+        """
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
@@ -97,8 +96,8 @@ class ExternalRasterServiceToGeopackage(object):
             conf_dict['caches']['cache']['cache']['filename'] = self.gpkgfile
         except KeyError:
             conf_dict['caches']['cache'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
-                                                     [grids for grids in conf_dict.get('grids')],
-                                                     self.gpkgfile, table_name=self.layer)
+                                                              [grids for grids in conf_dict.get('grids')],
+                                                              self.gpkgfile, table_name=self.layer)
 
         # Prevent the service from failing if source has missing tiles.
         for source in conf_dict.get('sources'):
@@ -129,6 +128,32 @@ class ExternalRasterServiceToGeopackage(object):
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
 
+        errors, informal_only = validate_options(mapproxy_config)
+        if not informal_only or errors:
+            logger.error("MapProxy configuration failed.")
+            logger.error("Using Configuration:")
+            logger.error(mapproxy_config)
+            raise ConfigurationError("MapProxy configuration error - {}".format(", ".join(errors)))
+
+        errors, informal_only = validate_seed_conf(seed_dict)
+        if not informal_only or errors:
+            logger.error("Mapproxy Seed failed.")
+            logger.error("Using Seed Configuration:")
+            logger.error(seed_dict)
+            raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
+
+        return conf_dict, seed_configuration, mapproxy_configuration
+
+    def convert(self,):
+        """
+        Convert external service to gpkg.
+        """
+
+        from ..tasks.task_process import TaskProcess
+        from .geopackage import remove_empty_zoom_levels
+
+        conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
+
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             check_service(conf_dict)
@@ -145,17 +170,17 @@ class ExternalRasterServiceToGeopackage(object):
                 raise Exception("The Raster Service failed to complete, please contact an administrator.")
         except Exception:
             logger.error("Export failed for url {}.".format(self.service_url))
-            errors, informal_only = validate_options(mapproxy_config)
-            if not informal_only:
-                logger.error("MapProxy configuration failed.")
-                logger.error("Using Configuration:")
-                logger.error(mapproxy_config)
-            errors, informal_only = validate_seed_conf(seed_dict)
-            if not informal_only:
-                logger.error("Mapproxy Seed failed.")
-                logger.error("Using Seed Configuration:")
-                logger.error(seed_dict)
-                raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
+            # errors, informal_only = validate_options(mapproxy_config)
+            # if not informal_only:
+            #     logger.error("MapProxy configuration failed.")
+            #     logger.error("Using Configuration:")
+            #     logger.error(mapproxy_config)
+            # errors, informal_only = validate_seed_conf(seed_dict)
+            # if not informal_only:
+            #     logger.error("Mapproxy Seed failed.")
+            #     logger.error("Using Seed Configuration:")
+            #     logger.error(seed_dict)
+            #     raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
             raise
         finally:
             connections.close_all()

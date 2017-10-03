@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 from django.template import RequestContext
 from django.conf.urls import url
 from django.contrib import messages
@@ -10,7 +11,6 @@ from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, Ex
     ProviderTask, DatamodelPreset, License, UserLicense
 
 admin.site.register(ExportFormat)
-admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
 admin.site.register(ExportProviderType)
 admin.site.register(ProviderTask)
@@ -101,6 +101,53 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ['uid', 'name', 'user', 'config_type', 'published', 'created_at']
 
 
+class ExportProviderForm(forms.ModelForm):
+    """
+    Admin form for editing export providers in the admin interface.
+    """
+    class Meta:
+        model = ExportProvider
+        fields = ['name',
+                  'slug',
+                  'url',
+                  'preview_url',
+                  'service_copyright',
+                  'service_description',
+                  'layer',
+                  'export_provider_type',
+                  'level_from',
+                  'level_to',
+                  'config',
+                  'user',
+                  'license',
+                  'zip',
+                  'display',
+                  ]
+
+    def clean_config(self):
+        config = self.cleaned_data.get('config')
+        if config == "":
+            return self.cleaned_data
+
+        from ..utils.external_service import ExternalRasterServiceToGeopackage, ConfigurationError
+
+        service = ExternalRasterServiceToGeopackage(config=config)
+        try:
+            conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
+        except ConfigurationError as e:
+            raise forms.ValidationError("MapProxy seed configuration error  - {}".format(e.message))
+
+        return self.cleaned_data
+
+class ExportProviderAdmin(admin.ModelAdmin):
+    """
+    Admin model for editing export providers in the admin interface.
+    """
+    form = ExportProviderForm
+    list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
+
+
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
+admin.site.register(ExportProvider, ExportProviderAdmin)
