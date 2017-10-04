@@ -1,4 +1,6 @@
 import ol from 'openlayers';
+import isEqual from 'lodash/isEqual';
+import toString from 'lodash/toString';
 import reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
@@ -122,25 +124,6 @@ export function generateDrawLayer() {
 
         })
     })
-}
-
-export function generateModifyInteraction(drawLayer) {
-    const modify = new ol.interaction.Modify({
-        source: drawLayer.getSource(),
-        insertVertexCondition: ol.events.condition.never,
-        wrapX: true,
-        style: new ol.style.Style({
-            image: new ol.style.Circle({
-                fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
-                stroke: new ol.style.Stroke({color: '#ce4427', width: 1.25}),
-                radius: 5
-            }),
-            fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
-            stroke: new ol.style.Stroke({color: '#3399CC', width: 1.25})
-        })
-    });
-    modify.setActive(false);
-    return modify;
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
@@ -335,4 +318,54 @@ export function goToValidExtent(view) {
     const worldsAway = Math.ceil((projectionExtent[0] - center[0])/ worldWidth);
     view.setCenter([center[0] + worldWidth * worldsAway, center[1]]);
     return view.getCenter();
+}
+
+// check if a polygon has the shape of a rectangle
+export function isBox(feature) {
+    let featCoords = feature.getGeometry().getCoordinates();
+    // if there are more than 5 coordinate pairs it can not be a box
+    if (featCoords[0].length != 5) {
+        return false
+    }
+    // if the extent geometry is the same as the feature geometry we know it is a box
+    const extent = feature.getGeometry().getExtent();
+    const extentGeom = ol.geom.Polygon.fromExtent(extent);
+    let extentCoords = extentGeom.getCoordinates();
+    
+    // since the 5th coord is the same as the first remove it, duplicate messes with the comparison if coordinates are in a different order
+    // there is probably a better way to compare arrays with different order of sub arrays, but this is what ive got for now
+    featCoords = [
+        toString(featCoords[0][0]), 
+        toString(featCoords[0][1]), 
+        toString(featCoords[0][2]), 
+        toString(featCoords[0][3])
+    ].sort();
+    extentCoords = [
+        toString(extentCoords[0][0]), 
+        toString(extentCoords[0][1]), 
+        toString(extentCoords[0][2]), 
+        toString(extentCoords[0][3])
+    ].sort();
+
+    return isEqual(featCoords, extentCoords);
+}
+
+// check if the pixel in question lies over a feature vertex, if it does, return the vertex coords
+export function isVertex(pixel, feature, tolarance, map) {
+    // check target pixel with pixel for each corner of the box, if within tolerance or equal, we have a vertex
+    tolarance = tolarance || 3;
+    const geomType = feature.getGeometry().getType();
+    let coords = feature.getGeometry().getCoordinates();
+    coords = geomType == 'Point' ? [coords] : geomType == 'Polygon' ? coords[0] : coords;
+    let vertex = null;
+    coords.some(coord => {
+        const px = map.getPixelFromCoordinate(coord)
+        const xDif = Math.abs(Math.round(pixel[0]) - Math.round(px[0]))
+        const yDif = Math.abs(Math.round(pixel[1]) - Math.round(px[1]));
+        if (xDif <= tolarance && yDif <= tolarance) {
+            vertex = coord;
+            return true;
+        }
+    });
+    return vertex ? vertex : false;
 }
