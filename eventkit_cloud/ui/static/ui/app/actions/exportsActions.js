@@ -93,6 +93,24 @@ export const getProviders = () => dispatch => {
     });
 }
 
+export const getFormats = () => dispatch => {
+    dispatch({
+        type: types.GETTING_FORMATS
+    });
+
+    return axios({
+        url: '/api/formats',
+        method: 'GET',
+    }).then((response) => {
+        dispatch({
+            type: types.FORMATS_RECEIVED,
+            formats: response.data
+        });
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
 export function clearAoiInfo() {
     return {
         type: types.CLEAR_AOI_INFO,
@@ -105,16 +123,50 @@ export function clearJobInfo() {
     }
 }
 
-export function closeDrawer() {
-    return {
-        type: types.CLOSE_DRAWER
+// This is probably not the correct way to cancel async actions... but it works.
+let closeDrawerTimeout = null;
+let openDrawerTimeout = null;
+
+export const closeDrawer = () => dispatch => {
+    if (openDrawerTimeout !== null) {
+        clearTimeout(openDrawerTimeout);
+        openDrawerTimeout = null;
     }
+
+    dispatch({
+        type: types.CLOSING_DRAWER
+    });
+
+    return new Promise((resolve) => {
+        closeDrawerTimeout = setTimeout(() => {
+            closeDrawerTimeout = null;
+            dispatch({
+                type: types.CLOSED_DRAWER
+            });
+            resolve();
+        }, 450);
+    });
 }
 
-export function openDrawer() {
-    return {
-        type: types.OPEN_DRAWER
+export const openDrawer = () => dispatch => {
+    if (closeDrawerTimeout !== null) {
+        clearTimeout(closeDrawerTimeout);
+        closeDrawerTimeout = null;
     }
+
+    dispatch({
+        type: types.OPENING_DRAWER
+    });
+
+    return new Promise((resolve) => {
+        openDrawerTimeout = setTimeout(() => {
+            openDrawerTimeout = null;
+            dispatch({
+                type: types.OPENED_DRAWER
+            });
+            resolve();
+        }, 450);
+    });
 }
 
 

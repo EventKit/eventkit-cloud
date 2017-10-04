@@ -2,12 +2,16 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
-export function drawerMenuReducer(state = initialState.drawerOpen, action) {
+export function drawerMenuReducer(state = initialState.drawer, action) {
     switch(action.type) {
-        case types.OPEN_DRAWER:
-            return true;
-        case types.CLOSE_DRAWER:
-            return false;
+        case types.OPENING_DRAWER:
+            return 'opening';
+        case types.OPENED_DRAWER:
+            return 'open';
+        case types.CLOSING_DRAWER:
+            return 'closing';
+        case types.CLOSED_DRAWER:
+            return 'closed';
         default:
             return state;
     }
@@ -74,6 +78,17 @@ export function getProvidersReducer(state = initialState.providers, action ) {
             return  []
         case types.PROVIDERS_RECEIVED:
             return action.providers
+        default:
+            return state
+    }
+}
+
+export function getFormatsReducer(state = initialState.formats, action ) {
+    switch (action.type) {
+        case types.GETTING_FORMATS:
+            return  []
+        case types.FORMATS_RECEIVED:
+            return action.formats
         default:
             return state
     }

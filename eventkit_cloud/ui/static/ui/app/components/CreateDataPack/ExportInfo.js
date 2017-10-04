@@ -16,6 +16,7 @@ import debounce from 'lodash/debounce';
 import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
 import CustomTextField from "../CustomTextField";
+import ol3mapCss from '../../styles/ol3map.css';
 
 
 export class ExportInfo extends React.Component {
@@ -26,10 +27,11 @@ export class ExportInfo extends React.Component {
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
+            layers: [],
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
-        this.onProjectChange = this.onProjectChange.bind(this);        
+        this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this._initializeOpenLayers = this._initializeOpenLayers.bind(this);
     }
@@ -41,7 +43,17 @@ export class ExportInfo extends React.Component {
         }
 
         // calculate the area of the AOI
-        this.setArea();
+        const area_str = this.setArea();
+
+        //Will need to change this once we are allowing other formats
+        // since formats is checked and disabled we can't track user selection
+        let formats = [];
+        formats.push(this.refs.formatsCheckbox.props.name);
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            area_str: area_str,
+            formats: formats
+        });
 
         // set up debounce functions for user text input
         this.nameHandler = debounce(event => {
@@ -62,6 +74,7 @@ export class ExportInfo extends React.Component {
                 projectName: event.target.value
             });
         }, 250);
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -125,6 +138,7 @@ export class ExportInfo extends React.Component {
                 }
             }
         }
+
         // update the state with the new array of options
         this.props.updateExportInfo({
             ...this.props.exportInfo,
@@ -151,6 +165,7 @@ export class ExportInfo extends React.Component {
             && exportInfo.providers.length > 0;
     }
 
+
     setArea() {
         const source = new ol.source.Vector({wrapX: true})
         const geojson = new ol.format.GeoJSON()
@@ -164,10 +179,7 @@ export class ExportInfo extends React.Component {
         })
         const area = feature.getGeometry().getArea() / 1000000
         const area_str = numeral(area).format('0,0')
-        this.props.updateExportInfo({
-            ...this.props.exportInfo,
-            area_str: area_str + ' sq km'
-        });
+        return area_str + ' sq km';
     }
 
     _initializeOpenLayers() {
@@ -194,7 +206,20 @@ export class ExportInfo extends React.Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-            })
+            }),
+            controls: [
+                new ol.control.ScaleLine({
+                    className: ol3mapCss.olScaleLine,
+                }),
+                new ol.control.Attribution({
+                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
+                    collapsible: false,
+                    collapsed: false,
+                }),
+                new ol.control.Zoom({
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                }),
+            ],
         });
         const source = new ol.source.Vector();
         const geojson = new ol.format.GeoJSON();
@@ -287,6 +312,11 @@ export class ExportInfo extends React.Component {
         const providers = this.props.providers.filter((provider) => {
             return provider.display != false;
         });
+
+        //We only display geopackage as a format option for right now.
+        const formats = this.props.formats.filter((format) => {
+            return format.slug == 'gpkg'
+        })
 
         return (
             <div id='root' className={'qa-ExportInfo-root'} style={style.root}>
@@ -457,26 +487,29 @@ export class ExportInfo extends React.Component {
                             </div>
 
                             <div id='formatsHeader' className={'qu-ExportInfo-formatsHeader'} style={style.heading}>Select Export File Formats</div>
-                            <div style={style.sectionBottom}>
-                                <div id='formatsCheckbox' style={style.checkboxLabel}>
+                            <div id='formatsCheckbox' style={style.sectionBottom}>
+                                {formats.map((format, ix) => {
+                                return <div key={format.slug} style={style.checkboxLabel}>
                                     <Checkbox
                                         className={'qa-ExportInfo-CheckBox-formats'}
-                                        label="Geopackage (.gpkg)"
+                                        key={format.slug}
+                                        ref="formatsCheckbox"
+                                        label={format.name}
                                         labelStyle={{fontWeight: 'normal', fontSize:'16px', width:'90%'}}
+                                        name={format.slug}
                                         style={{display:'inlineBlock'}}
-                                        name="Geopackage"
-                                        checked={true}
+                                        defaultChecked={true}
                                         disabled={true}
-                                        checkedIcon={<ActionCheckCircle className={'qa-ExportInfo-ActionCheckCircle-formats'} />}
-                                    /><Info className={'qa-ExportInfo-Info-formats'} onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+                                        checkedIcon={<ActionCheckCircle />}
+                                    /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{marginLeft:'10px',height:'24px', width:'24px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
                                     <BaseDialog
                                         show={this.state.formatsDialogOpen}
                                         title='Format Information'
                                         onClose={this.handleFormatsClose.bind(this)}
-                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}  className={'qa-ExportInfo-dialog-formats'}>
+                                    ><div style={{paddingBottom:'20px', wordWrap: 'break-word'}}>
                                         EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
                                     </BaseDialog>
-                                </div>
+                                </div> })}
                             </div>
 
                             <div style={style.mapCard}>
@@ -517,6 +550,7 @@ function mapStateToProps(state) {
         exportInfo: state.exportInfo,
         providers: state.providers,
         nextEnabled: state.stepperNextEnabled,
+        formats: state.formats,
     }
 }
 
@@ -546,7 +580,8 @@ ExportInfo.propTypes = {
     handlePrev: PropTypes.func.isRequired,
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
-    setNextEnabled: PropTypes.func.isRequired
+    setNextEnabled: PropTypes.func.isRequired,
+    formats:        React.PropTypes.array,
 }
 
 export default connect(
