@@ -81,21 +81,19 @@ export class Application extends Component {
                     beacon: {
                         offsetX: 10,
                         offsetY: 10,
-                        inner: '#000',
-                        outer: '#000'
+                        inner: '#FFF',
+                        outer: '#FFF'
                     },
                     header: {
-                        textAlign: 'right'
+                        textAlign: 'center'
                         // or any style attribute
                     },
                     main: {
                         padding: '20px'
                     },
-                    footer: {
-                        display: 'none'
-                    },
+
                     skip: {
-                        color: '#f04'
+                        color: '#FFF'
                     },
                     hole: {
                         backgroundColor: 'rgba(201, 23, 33, 0.2)',
@@ -103,8 +101,8 @@ export class Application extends Component {
                 }
             },
             {
-                title: 'Advance customization',
-                text: 'You can set individual styling options for beacons and tooltips. <br/>To advance click `NEXT` inside the hole.',
+                title: 'Creating a DataPack',
+                text: 'This will take you to the Create Datapack Page. <br/> Blah blah blah!',
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 position: 'bottom',
                 allowClicksThruHole: true,
@@ -116,12 +114,10 @@ export class Application extends Component {
                         fontSize: '3rem',
                         textAlign: 'center',
                     },
-                    footer: {
-                        display: 'none',
-                    },
+
                     beacon: {
-                        inner: '#000',
-                        outer: '#000',
+                        inner: '#FFF',
+                        outer: '#FFF',
                     },
                 },
             },
@@ -140,11 +136,14 @@ export class Application extends Component {
         this.joyrideAddSteps(steps);
 
 
-        this.refs.joyride.addTooltip(steps[0]);
+        //this.refs.joyride.addTooltip(steps[0]);
 
 
     }
 
+    next() {
+        this.joyride.next();
+    }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
@@ -200,7 +199,6 @@ export class Application extends Component {
     }
 
     joyrideAddSteps(steps) {
-        let joyride = this.refs.joyride;
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
@@ -301,6 +299,13 @@ export class Application extends Component {
                         showOverlay={true}
                         showSkipButton={true}
                         showStepsProgress={true}
+                        locale={{
+                            back: (<span>Back</span>),
+                            close: (<span>Close</span>),
+                            last: (<span>Done</span>),
+                            next: (<span>Next</span>),
+                            skip: (<span>Skip</span>),
+                        }}
                         run={isRunning}/>
                     <Banner />
 
