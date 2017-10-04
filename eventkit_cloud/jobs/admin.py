@@ -129,15 +129,17 @@ class ExportProviderForm(forms.ModelForm):
         if config == "":
             return self.cleaned_data
 
-        from ..utils.external_service import ExternalRasterServiceToGeopackage, ConfigurationError
+        from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+                                             ConfigurationError, SeedConfigurationError
 
         service = ExternalRasterServiceToGeopackage(config=config)
         try:
             conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
-        except ConfigurationError as e:
-            raise forms.ValidationError("MapProxy seed configuration error  - {}".format(e.message))
+        except (ConfigurationError, SeedConfigurationError) as e:
+            raise forms.ValidationError(e.message)
 
         return self.cleaned_data
+
 
 class ExportProviderAdmin(admin.ModelAdmin):
     """

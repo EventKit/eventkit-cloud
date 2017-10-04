@@ -100,7 +100,7 @@ class ExternalRasterServiceToGeopackage(object):
                                                               self.gpkgfile, table_name=self.layer)
 
         # Prevent the service from failing if source has missing tiles.
-        for source in conf_dict.get('sources'):
+        for source in conf_dict.get('sources') or []:
             if 'wmts' in source:
                 conf_dict['sources'][source]['transparent'] = True
                 conf_dict['sources'][source]['on_error'] = {"other": {"response": "transparent", "cache": False}}
@@ -118,9 +118,10 @@ class ExternalRasterServiceToGeopackage(object):
         mapproxy_configuration = ProxyConfiguration(mapproxy_config, seed=seed, renderd=None)
 
         # # As of Mapproxy 1.9.x, datasource files covering a small area cause a bbox error.
-        if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
-            logger.warn('Using bbox instead of selection, because the area is too small')
-            self.selection = None
+        if self.bbox:
+            if isclose(self.bbox[0], self.bbox[2], rel_tol=0.001) or isclose(self.bbox[0], self.bbox[2], rel_tol=0.001):
+                logger.warn('Using bbox instead of selection, because the area is too small')
+                self.selection = None
 
         seed_dict = get_seed_template(bbox=self.bbox, level_from=self.level_from, level_to=self.level_to,
                                       coverage_file=self.selection)
