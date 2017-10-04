@@ -2,9 +2,9 @@ import {DropZoneDialog} from '../../components/MapTools/DropZoneDialog';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import {PopupBox} from '../../components/PopupBox.js';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import BaseDialog from '../../components/BaseDialog';
+import RaisedButton from 'material-ui/RaisedButton';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
 
@@ -19,39 +19,27 @@ describe('DropZoneDialog component', () => {
         }
     }
 
-    it('by default it should only have an empty div', () => {
-        const wrapper = mount(<DropZoneDialog {...getProps()}/>, {
+    const getWrapper = (props) => {
+        return mount(<DropZoneDialog {...props}/>, {
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find('div')).toHaveLength(1);
-    })
+    }
 
     it('should have a dropzone', () => {
         let props = getProps();
         props.showImportModal = true;
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
+        const wrapper = getWrapper(props);
+        const children = mount(wrapper.find(BaseDialog).props().children, {
+            ...props,
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        expect(wrapper.find(Dropzone)).toHaveLength(1);
-        expect(wrapper.find('.qa-DropZoneDialog-text')).toHaveLength(1);
-        expect(wrapper.find('.qa-DropZoneDialog-text').find('span')).toHaveLength(1);
-        expect(wrapper.find('.qa-DropZoneDialog-text').find('span').text()).toEqual('GeoJSON format only, 2MB max,Drag and drop or');
-        expect(wrapper.find('.qa-DropZoneDialog-button')).toHaveLength(1);
-        expect(wrapper.find(FileFileUpload)).toHaveLength(1);
-    });
-
-    it('should handle button click', () => {
-        let props = getProps();
-        props.showImportModal = true;
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        const openSpy = sinon.spy(wrapper.instance().dropzone, 'open');
-        wrapper.find(Dropzone).find('button').simulate('click');
-        expect(openSpy.calledOnce).toEqual(true);
+        expect(children.find(Dropzone)).toHaveLength(1);
+        expect(children.find('.qa-DropZoneDialog-text')).toHaveLength(1);
+        expect(children.find('.qa-DropZoneDialog-text').find('span').first().text()).toEqual('GeoJSON format only, 2MB max,Drag and drop or');
+        expect(children.find('.qa-DropZoneDialog-RaisedButton-select')).toHaveLength(1);
+        expect(children.find(FileFileUpload)).toHaveLength(1);
     });
 
     it('should handle onDrop', () => {
@@ -61,11 +49,13 @@ describe('DropZoneDialog component', () => {
         props.setImportModalState = sinon.spy();
         props.processGeoJSONFile = sinon.spy();
         const fakeFile = new File([""], "fakeFile");
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
+        const wrapper = getWrapper(props);
+        const children = mount(wrapper.find(BaseDialog).props().children, {
+            ...props,
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        wrapper.find(Dropzone).simulate('drop', { dataTransfer: {files: [fakeFile] } });
+        children.find(Dropzone).simulate('drop', { dataTransfer: {files: [fakeFile] } });
         expect(props.setImportModalState.calledOnce).toEqual(true);
         expect(props.processGeoJSONFile.calledWith(fakeFile)).toEqual(true);
     });
@@ -77,12 +67,34 @@ describe('DropZoneDialog component', () => {
         props.setImportModalState = sinon.spy();
         props.processGeoJSONFile = sinon.spy();
         const oversizedFile = [{name: 'file.geojson', size: 99999999, type: 'application/json'}];
-        const wrapper = mount(<DropZoneDialog {...props}/>, {
+        const wrapper = getWrapper(props);
+        const children = mount(wrapper.find(BaseDialog).props().children, {
+            ...props,
             context: {muiTheme},
             childContextTypes: {muiTheme: React.PropTypes.object}
         });
-        wrapper.find(Dropzone).simulate('drop', { dataTransfer: {files: oversizedFile } });
+        children.find(Dropzone).simulate('drop', { dataTransfer: {files: oversizedFile } });
         expect(props.setImportModalState.calledOnce).toEqual(false);
         expect(props.processGeoJSONFile.calledWith(oversizedFile)).toEqual(false);
+    });
+
+    it('onOpenClick should call dropzone.open', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const openSpy = new sinon.spy();
+        wrapper.instance().dropzone = {open: openSpy};
+        expect(openSpy.called).toBe(false);
+        wrapper.instance().onOpenClick();
+        expect(openSpy.calledOnce).toBe(true);
+    });
+
+    it('handleClear should call setImportModalState and setAllButtonsDefault', () => {
+        const props = getProps();
+        props.setImportModalState = new sinon.spy();
+        props.setAllButtonsDefault = new sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleClear();
+        expect(props.setImportModalState.calledOnce).toBe(true);
+        expect(props.setAllButtonsDefault.calledOnce).toBe(true);
     });
 });
