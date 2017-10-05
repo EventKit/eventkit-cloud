@@ -19,6 +19,8 @@ import FilterDrawer from './FilterDrawer';
 import {getGeocode} from '../../actions/searchToolbarActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 import {isGeoJSONValid} from '../../utils/mapUtils';
+import Info from 'material-ui/svg-icons/action/info';
+import Joyride from 'react-joyride';
 
 export class DataPackPage extends React.Component {
 
@@ -35,6 +37,7 @@ export class DataPackPage extends React.Component {
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
+        this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.state = {
             open: window.innerWidth < 1200 ? false: true,
@@ -55,6 +58,8 @@ export class DataPackPage extends React.Component {
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
+            steps: [],
+            isRunning: false,
         }
     }
 
@@ -77,6 +82,42 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
+        const steps = [
+            {
+                title: 'Create DataPack',
+                text: 'Click here to Navigate to Create a DataPack.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'inherit',
+
+            },
+            {
+                title: 'Search DataPacks',
+                text: 'Search and Sort the existing DataPack Library.',
+                selector: '.qa-DataPackSearchBar-TextField',
+                position: 'bottom',
+            },
+            {
+                title: 'Filter DataPacks',
+                text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                selector: '.qa-FilterDrawer-Drawer > div',
+                position: 'bottom',
+            },
+            {
+                title: 'DataPack Status',
+                text: 'Check the status of previously created DataPacks',
+                selector: '.qa-DataPackListItem-subtitle-date',
+                position: 'bottom',
+            },
+            {
+                title: 'Status and Download',
+                text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                selector: '.qa-DataPackListItem-IconMenu',
+                position: 'bottom',
+            },
+
+        ];
+        this.joyrideAddSteps(steps);
+
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -252,8 +293,39 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState(currentState => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+    callback(data) {
+        if (data.action === 'close' && data.type === 'step:after') {
+            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+            this.setState({ isRunning: false });
+        }
+    }
+
+    handleJoyride() {
+        if(this.state.isRunning === true){
+            this.refs.joyride.reset(true);
+        }
+        else {
+            this.setState({isRunning: true})
+        }
+    }
+
     render() {
-        const pageTitle = "DataPack Library"
+        const {steps, isRunning} = this.state;
+        const pageTitle = <span>DataPack Library <Info onTouchTap={this.handleJoyride.bind(this)} style={{color: 'white', paddingLeft:'10px', paddingTop:'10px', width:'24px', cursor:'pointer'}}/></span>
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
@@ -300,6 +372,24 @@ export class DataPackPage extends React.Component {
 
         return (
             <div style={styles.backgroundStyle}>
+                <Joyride
+                    callback={this.callback}
+                    ref={'joyride'}
+                    debug={false}
+                    steps={steps}
+                    autostart={true}
+                    type={'continuous'}
+                    disableOverlay
+                    showSkipButton={true}
+                    showStepsProgress={true}
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}/>
                 <AppBar
                     className={'qa-DataPackPage-AppBar'}
                     style={styles.appBar}

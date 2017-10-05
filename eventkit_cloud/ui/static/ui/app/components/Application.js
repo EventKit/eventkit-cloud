@@ -41,7 +41,8 @@ export class Application extends Component {
         this.getConfig = this.getConfig.bind(this);
         this.handleMouseOver =  this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
-        this.handleResize = this.handleResize.bind(this);        
+        this.handleResize = this.handleResize.bind(this);
+        this.callback = this.callback.bind(this);
         this.state = {
             config: {},
             hovered: '',
@@ -66,78 +67,21 @@ export class Application extends Component {
                 text: 'Start using the <strong>joyride</strong>',
                 selector: '.qa-Application-header',
                 position: 'inherit',
-                type: 'click',
-                isFixed: true,
-                style: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    borderRadius: '0',
-                    color: '#fff',
-                    mainColor: '#ff4456',
-                    textAlign: 'center',
-                    width: '29rem',
-                    arrow: {
-                        display: 'none'
-                    },
-                    beacon: {
-                        offsetX: 10,
-                        offsetY: 10,
-                        inner: '#FFF',
-                        outer: '#FFF'
-                    },
-                    header: {
-                        textAlign: 'center'
-                        // or any style attribute
-                    },
-                    main: {
-                        padding: '20px'
-                    },
 
-                    skip: {
-                        color: '#FFF'
-                    },
-                    hole: {
-                        backgroundColor: 'rgba(201, 23, 33, 0.2)',
-                    }
-                }
             },
             {
                 title: 'Creating a DataPack',
                 text: 'This will take you to the Create Datapack Page. <br/> Blah blah blah!',
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 position: 'bottom',
-                allowClicksThruHole: true,
-                style: {
-                    backgroundColor: '#ccc',
-                    mainColor: '#000',
-                    header: {
-                        color: '#f04',
-                        fontSize: '3rem',
-                        textAlign: 'center',
-                    },
+            }
 
-                    beacon: {
-                        inner: '#FFF',
-                        outer: '#FFF',
-                    },
-                },
-            },
         ]
 
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
 
-        setTimeout(() => {
-            this.setState({
-                isReady: true,
-                isRunning: true,
-            });
-        }, 1000);
-
         this.joyrideAddSteps(steps);
-
-
-        //this.refs.joyride.addTooltip(steps[0]);
-
 
     }
 
@@ -212,7 +156,21 @@ export class Application extends Component {
             return currentState;
         });
     }
+    callback(data) {
+        if (data.action === 'close' && data.type === 'step:after') {
+            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+            this.setState({ isRunning: false });
+        }
+    }
 
+    handleJoyride() {
+        if(this.state.isRunning === true){
+            this.refs.joyride.reset(true);
+        }
+        else {
+            this.setState({isRunning: true})
+        }
+    }
 
     render() {
         const {steps, isRunning} = this.state;
@@ -292,11 +250,13 @@ export class Application extends Component {
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{backgroundColor: '#000'}}>
                     <Joyride
+                        callback={this.callback}
                         ref={'joyride'}
                         debug={false}
                         steps={steps}
+                        autostart={true}
                         type={'continuous'}
-                        showOverlay={true}
+                        disableOverlay
                         showSkipButton={true}
                         showStepsProgress={true}
                         locale={{
@@ -328,7 +288,7 @@ export class Application extends Component {
                             <IndexLink 
                                 className={"qa-Application-Link-exports"} 
                                 style={{...styles.link, backgroundColor: this.state.hovered == 'exports' ? '#161e2e': ''}} 
-                                activeStyle={styles.activeLink} 
+                                activeStyle={styles.activeLink}
                                 to="/exports"
                                 onMouseEnter={() => this.handleMouseOver('exports')}
                                 onMouseLeave={this.handleMouseOut}
