@@ -413,10 +413,8 @@ export class ExportAOI extends Component {
                     goToValidExtent(this.map.getView());
                 };
                 const coords = isVertex(pixel, feature, 10, map);
-                if(coords && !this.markerLayer.getSource().getFeatures().length > 0) {
-                    if(!this.markerLayer.getSource().getFeatures().length > 0) {
-                        this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
-                    }
+                if(coords) {
+                    this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
                 }
             }
         }

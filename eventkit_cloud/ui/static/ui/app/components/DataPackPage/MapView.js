@@ -637,10 +637,8 @@ export class MapView extends Component {
                 const geojson_geometry = createGeoJSONGeometry(geom);
                 this.props.onMapFilter(geojson_geometry);
                 this.showInvalidDrawWarning(false);
-                // this.props.setNextEnabled();
             }
             else {
-                // this.props.setNextDisabled();
                 this.showInvalidDrawWarning(true);
             }
         }
@@ -702,10 +700,8 @@ export class MapView extends Component {
                     goToValidExtent(this.map.getView());
                 };
                 const coords = isVertex(pixel, feature, 10, map);
-                if(coords && !this.markerLayer.getSource().getFeatures().length > 0) {
-                    if(!this.markerLayer.getSource().getFeatures().length > 0) {
-                        this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
-                    }
+                if(coords) {
+                    this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
                 }
             }
         }
