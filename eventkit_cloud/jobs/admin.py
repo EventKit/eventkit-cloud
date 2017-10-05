@@ -145,7 +145,7 @@ class ExportProviderForm(forms.ModelForm):
         except AssertionError:
             raise forms.ValidationError("Invalid configuration")
 
-        return self.cleaned_data
+        return config
 
 
 class ExportProviderAdmin(admin.ModelAdmin):
