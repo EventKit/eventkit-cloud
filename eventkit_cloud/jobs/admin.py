@@ -129,14 +129,21 @@ class ExportProviderForm(forms.ModelForm):
         if config == "":
             return self.cleaned_data
 
-        from ..utils.external_service import ExternalRasterServiceToGeopackage, \
-                                             ConfigurationError, SeedConfigurationError
+        # from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+        #                                      ConfigurationError, SeedConfigurationError
+        #
+        # service = ExternalRasterServiceToGeopackage(config=config)
+        # try:
+        #     conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
+        # except (ConfigurationError, SeedConfigurationError) as e:
+        #     raise forms.ValidationError(e.message)
 
-        service = ExternalRasterServiceToGeopackage(config=config)
+        from ..feature_selection.feature_selection import FeatureSelection
+
         try:
-            conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
-        except (ConfigurationError, SeedConfigurationError) as e:
-            raise forms.ValidationError(e.message)
+            f = FeatureSelection.example(config)
+        except AssertionError:
+            raise forms.ValidationError("Invalid configuration")
 
         return self.cleaned_data
 
