@@ -29,7 +29,7 @@ describe('Application component', () => {
             openDrawer: () => {},
             closeDrawer: () => {},
             userData: {},
-            drawerOpen: true,
+            drawer: 'open',
         }
     }
 
@@ -148,11 +148,11 @@ describe('Application component', () => {
         let props = getProps();
         props.openDrawer = new sinon.spy();
         props.closeDrawer = new sinon.spy();
-        props.drawerOpen = true;
+        props.drawer = 'open';
         const wrapper = getWrapper(props);
         wrapper.instance().handleToggle();
         expect(props.closeDrawer.calledOnce).toBe(true);
-        wrapper.setProps({...props, drawerOpen: false});
+        wrapper.setProps({...props, drawer: 'closed'});
         wrapper.instance().handleToggle();
         expect(props.openDrawer.calledOnce).toBe(true);
     });

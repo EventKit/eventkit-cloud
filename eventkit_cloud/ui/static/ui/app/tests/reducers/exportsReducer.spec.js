@@ -2,21 +2,35 @@ import * as reducers from '../../reducers/exportsReducer'
 
 describe('drawerMenu Reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.drawerMenuReducer(undefined, {})).toEqual(false);
+        expect(reducers.drawerMenuReducer(undefined, {})).toEqual('closed');
     });
 
-    it('should handle OPEN_DRAWER', () => {
+    it('should handle OPENING_DRAWER', () => {
         expect(reducers.drawerMenuReducer(
-            false,
-            {type: 'OPEN_DRAWER'}
-        )).toEqual(true);
+            'closed',
+            {type: 'OPENING_DRAWER'}
+        )).toEqual('opening');
     });
-    
-    it('should handle CLOSE_DRAWER', () => {
+
+    it('should handle OPENED_DRAWER', () => {
         expect(reducers.drawerMenuReducer(
-            true,
-            {type: 'CLOSE_DRAWER'}
-        )).toEqual(false);
+            'opening',
+            {type: 'OPENED_DRAWER'}
+        )).toEqual('open');
+    });
+
+    it('should handle CLOSING_DRAWER', () => {
+        expect(reducers.drawerMenuReducer(
+            'open',
+            {type: 'CLOSING_DRAWER'}
+        )).toEqual('closing');
+    });
+
+    it('should handle CLOSED_DRAWER', () => {
+        expect(reducers.drawerMenuReducer(
+            'closing',
+            {type: 'CLOSED_DRAWER'}
+        )).toEqual('closed');
     });
 });
 
