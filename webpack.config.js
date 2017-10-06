@@ -2,6 +2,7 @@ var webpack = require('webpack');
 var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 var BASE_DIR = path.resolve('/var', 'lib', 'eventkit', 'eventkit_cloud', 'ui', 'static', 'ui')
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -12,7 +13,18 @@ var devtool = 'source-map';
 var plugins = [
     new WriteFilePlugin(),
     new ExtractTextPlugin('styles.css'),
-    new webpack.optimize.CommonsChunkPlugin({name:'vendor', filename: 'vendor.bundle.js', minChunks: 'Infinity'}),
+    new webpack.optimize.CommonsChunkPlugin({
+        name:'node-modules', 
+        filename: 'node-modules.js', 
+        minChunks(module, count) {
+            var context = module.context;
+            return context && context.indexOf('node_modules') >= 0;
+        }
+    }),
+    new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        reportFilename: 'report.html'
+    })
 ];
 var app = [APP_DIR + '/index.js'];
 
@@ -20,7 +32,6 @@ var config = {
     devtool: devtool,
     entry: {
         app: app,
-        vendor: ['material-ui', 'openlayers']
     },
     output: {
         path: BUILD_DIR,
