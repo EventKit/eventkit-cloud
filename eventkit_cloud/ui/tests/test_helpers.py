@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import tempfile
 
 from django.test import TestCase
 
