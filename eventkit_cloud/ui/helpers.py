@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 import os
-import tempfile
 import subprocess
 import zipfile
 import shutil
