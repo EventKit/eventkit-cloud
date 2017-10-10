@@ -15,6 +15,9 @@ from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
 from logging import getLogger
 from ..utils.geocode import Geocode
+from .helpers import file_to_geojson
+
+
 
 logger = getLogger(__file__)
 
@@ -203,6 +206,19 @@ def get_config(request):
 
     return HttpResponse(json.dumps(config), status=200)
 
+
+@require_http_methods(['POST'])
+def convert_to_geojson(request):
+    file = request.FILES.get('file', None)
+    if not file:
+        return HttpResponse('No file supplied in the POST request', status=400)
+    try:
+        geojson = file_to_geojson(file)
+        return HttpResponse(json.dumps(geojson), status=200)
+    except Exception as e:
+        return HttpResponse(e.message, status=400)
+
+
 # error views
 @require_http_methods(['GET'])
 def create_error_view(request):
@@ -219,4 +235,3 @@ def not_found_error_view(request):
 
 def not_allowed_error_view(request):
     return render_to_response('ui/403.html', {}, RequestContext(request), status=403)
-

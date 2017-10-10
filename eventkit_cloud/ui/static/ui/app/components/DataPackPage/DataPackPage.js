@@ -353,7 +353,7 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
-                            {this.state.loading || this.props.runsDeletion.deleting ? 
+                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ? 
                             <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
                                 <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                                     <CircularProgress 
