@@ -98,9 +98,9 @@ def get_file_paths(directory):
     return paths
 
 
-def file_to_geojson(file):
+def file_to_geojson(in_memory_file):
     """
-    :param file: A WSGI In memory file
+    :param in_memory_file: A WSGI In memory file
     :return: A geojson object if available
     """
     stage_dir = settings.EXPORT_STAGING_ROOT.rstrip('\/')
@@ -109,21 +109,21 @@ def file_to_geojson(file):
 
     try:
         os.mkdir(dir)
-        file_name = file.name
+        file_name = in_memory_file.name
         file_name, file_extension = os.path.splitext(file_name)
         if not file_name or not file_extension:
             raise Exception('No file type detected')
 
         in_path = os.path.join(dir, 'in_{0}{1}'.format(file_name, file_extension))
         out_path = os.path.join(dir, 'out_{0}.geojson'.format(file_name))
-        write_uploaded_file(file, in_path)
+        write_uploaded_file(in_memory_file, in_path)
 
         if file_extension == '.zip':
             if unzip_file(in_path, dir):
                 has_shp = False
-                for file in os.listdir(dir):
-                    if file.endswith('.shp'):
-                        in_path = os.path.join(dir, file)
+                for unzipped_file in os.listdir(dir):
+                    if unzipped_file.endswith('.shp'):
+                        in_path = os.path.join(dir, unzipped_file)
                         has_shp = True
                         break
                 if not has_shp:
@@ -194,15 +194,15 @@ def unzip_file(fp, dir):
         raise Exception('Could not unzip file')
 
 
-def write_uploaded_file(file, write_path):
+def write_uploaded_file(in_memory_file, write_path):
     """
-    :param file: An WSGI in memory file
+    :param in_memory_file: An WSGI in memory file
     :param write_path: The path which the file should be written to on disk
     :return: True if successful
     """
     try:
         with open(write_path, 'w+') as temp_file:
-            for chunk in file.chunks():
+            for chunk in in_memory_file.chunks():
                 temp_file.write(chunk)
         return True
     except Exception as e:
