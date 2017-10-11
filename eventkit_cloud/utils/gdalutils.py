@@ -27,7 +27,8 @@ def open_ds(ds_path):
 
     try:
         gdal_dataset = gdal.Open(ds_path)
-        return gdal_dataset
+        if gdal_dataset:
+            return gdal_dataset
     except RuntimeError as ex:
         if ('not recognized as a supported file format' not in ex.message) or \
                 ('Error browsing database for PostGIS Raster tables' in ex.message):

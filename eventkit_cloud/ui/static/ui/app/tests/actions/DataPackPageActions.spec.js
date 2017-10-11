@@ -4,7 +4,6 @@ import * as actions from '../../actions/DataPackPageActions';
 import types from '../../actions/actionTypes';
 import React from 'react';
 import axios from 'axios';
-import expect from 'expect';
 import MockAdapter from 'axios-mock-adapter';
 
 const middlewares = [thunk];
