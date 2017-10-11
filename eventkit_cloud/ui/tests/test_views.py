@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import json
+import tempfile
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.test import Client
@@ -43,6 +44,48 @@ class TestUIViews(TestCase):
                 'BANNER_TEXT': 'This is banner text',
                 'MAX_EXPORTRUN_EXPIRATION_DAYS': 45,
             })
+
+
+    @patch('eventkit_cloud.ui.views.file_to_geojson')
+    def test_covert_to_geojson(self, file_to_geojson):
+        geojson = {
+          "type": "FeatureCollection",
+          "features": [
+            {
+              "type": "Feature",
+              "properties": {},
+              "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [7.2, 46.2],
+                    [7.6, 46.2],
+                    [7.6, 46.6],
+                    [7.2, 46.6],
+                    [7.2, 46.2]
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+        file_to_geojson.return_value = geojson
+        response = self.client.post('/file_upload')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.content, 'No file supplied in the POST request')
+
+        with tempfile.TemporaryFile() as fp:
+            response = self.client.post('/file_upload',
+                                        {'file': fp})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, json.dumps(geojson))
+
+        file_to_geojson.side_effect = Exception('This is the message')
+        with tempfile.TemporaryFile() as fp:
+            response = self.client.post('/file_upload',
+                                        {'file': fp})
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.content, 'This is the message')
 
 
     @patch('eventkit_cloud.ui.views.get_size_estimate')
