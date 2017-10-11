@@ -44,8 +44,8 @@ var config = {
     module: {
         loaders: [
             {
-                test: /\.jsx?$/,
-                exclude: [/node_modules/, /staticfiles/],
+                test: /\.js?$/,
+                exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 loader: ['babel-loader?presets[]=es2015,presets[]=react,presets[]=stage-0'],
             },
             {
@@ -84,8 +84,11 @@ var config = {
 };
 
 if (PROD) {
-    // config.plugins.push(new webpack.DefinePlugin({'process.env': {'NODE_ENV': JSON.stringify('production')}}));
-    // config.plugins.push(new webpack.optimize.UglifyJsPlugin({compressor: {warnings: false}}));
+    config.plugins.push(new webpack.DefinePlugin({'process.env.NODE_ENV': "'production'"}));
+    config.plugins.push(new webpack.optimize.UglifyJsPlugin({
+        compressor: { warnings: false },
+        sourceMap: true,
+    }));
 } else {
     config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080')
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
