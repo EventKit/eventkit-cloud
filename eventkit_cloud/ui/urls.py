@@ -4,7 +4,7 @@ from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .views import logout, data_estimator, auth, geocode, get_config
+from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson
 from django.conf import settings
 
 urlpatterns = [
@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^estimator/?$', login_required(data_estimator)),
     url(r'^geocode/?$', login_required(geocode)),
     url(r'^configuration/?$', get_config),
+    url(r'^file_upload/?$', login_required(convert_to_geojson)),
 ]
 
 urlpatterns += [
