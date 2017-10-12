@@ -144,9 +144,7 @@ def file_to_geojson(in_memory_file):
 
         try:
             proc = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-            exitcode = proc.wait()
-            if exitcode != 0:
-                raise Exception("ogr2ogr failed with exit code: {0}".format(exitcode))
+            proc.wait()
         except Exception as e:
             logger.debug(e)
             raise Exception('Failed to convert file')
