@@ -216,6 +216,7 @@ def convert_to_geojson(request):
         geojson = file_to_geojson(file)
         return HttpResponse(json.dumps(geojson), status=200)
     except Exception as e:
+        logger.error(e)
         return HttpResponse(e.message, status=400)
 
 
