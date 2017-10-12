@@ -36,7 +36,7 @@ export class DrawAOIToolbar extends Component {
         }
         return (
             <div>
-                <div id='container' style={styles.container}>
+                <div id='container' className='qa-DrawAOIToolbar-div' style={styles.container}>
                     <div className={'qa-DrawAOIToolbar-div-title'} id='title' style={styles.title}><strong>TOOLS</strong></div>
                     <DrawBoxButton 
                         handleCancel={this.props.handleCancel}

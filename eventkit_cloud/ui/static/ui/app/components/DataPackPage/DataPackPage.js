@@ -307,6 +307,7 @@ export class DataPackPage extends React.Component {
             return currentState;
         });
     }
+    
     callback(data) {
         if (data.action === 'close' && data.type === 'step:after') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)

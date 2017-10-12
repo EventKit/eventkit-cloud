@@ -16,6 +16,7 @@ import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteracti
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent} from '../../utils/mapUtils'
+import Joyride from 'react-joyride';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -37,6 +38,7 @@ export class ExportAOI extends Component {
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.callback = this.callback.bind(this);
         this.state = {
             toolbarIcons: {
                 box: "DEFAULT",
@@ -47,7 +49,9 @@ export class ExportAOI extends Component {
             },
             showImportModal: false,
             showInvalidDrawWarning: false,
-            mode: MODE_NORMAL
+            mode: MODE_NORMAL,
+            steps: [],
+            isRunning: false,
         }
     }
 
@@ -65,6 +69,35 @@ export class ExportAOI extends Component {
             this.props.setNextEnabled();
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
+
+        const steps = [
+            {
+                title: 'Search for location',
+                text: 'Type in location name to set area of interest.',
+                selector: '.bootstrap-typeahead-input',
+                position: 'bottom',
+            },
+            {
+                title: 'Select location',
+                text: 'Use tools to draw box or freehand boundaries.',
+                selector: '.qa-DrawAOIToolbar-div',
+                position: 'left',
+            },
+            {
+                title: 'Cancel Selection',
+                text: 'Cancel or clear selection by clicking the "X".',
+                selector: '.qa-DrawBoxButton-button',
+                position: 'left',
+            },
+            {
+                title: 'Go to next page',
+                text: 'Once the area of interst in set, move to the next step with the green arrow button.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
+                position: 'left',
+            },
+        ];
+
+        this.joyrideAddSteps(steps);
     }
 
     componentDidUpdate() {
@@ -74,6 +107,11 @@ export class ExportAOI extends Component {
     componentWillReceiveProps(nextProps) {
         if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
             this.handleGeoJSONUpload(nextProps.importGeom.geom);
+        }
+
+        if(nextProps.walkthrough != this.state.isRunning)
+        {
+            this.setState({isRunning: nextProps.walkthrough})
         }
     }
 
@@ -317,7 +355,81 @@ export class ExportAOI extends Component {
         zoomToGeometry(geom, this.map);
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState(currentState => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+
+    callback(data) {
+        this.setAllButtonsDefault();
+        this.props.setNextDisabled();
+        if (data.action === 'close' && data.type === 'step:after') {
+            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+            this.setState({ isRunning: false });
+        }
+
+        if(data.index === 2 && data.type === 'tooltip:before') {
+            //make the map have a selection, make toolbar have the X
+            //this.drawFakeBbox();
+            this.setButtonSelected('box');
+        }
+
+        if(data.index === 3 && data.type === 'tooltip:before') {
+            //make the map have a selection, make toolbar have the X
+            this.props.setNextEnabled();
+        }
+    }
+
+    handleJoyride() {
+        if(this.state.isRunning === true){
+            this.refs.joyride.reset(true);
+        }
+        else {
+            this.setState({isRunning: true})
+        }
+    }
+
+    drawFakeBbox(){
+
+        const geo =
+        {
+            coordinates : [
+                [23.244361442456267, 27.249998957614693],
+                [29.45916713647866, 27.249998957614693],
+                [29.45916713647866, 31.790769123952998],
+                [23.244361442456267, 31.790769123952998],
+                [23.244361442456267, 27.249998957614693]
+            ]
+        }
+
+        const fakeGeoJson = {
+            type: "FeatureCollection",
+            features: [
+            {
+                type: "Feature",
+                bbox: [23.24436, 27.25, 29.45917, 31.79077],
+                geometry: {
+                    coordinates : geo
+                }
+            }
+            ]
+        }
+
+    }
+
     render() {
+        const {steps, isRunning} = this.state;
+
         const mapStyle = {
                 right: '0px',
         }
@@ -333,6 +445,24 @@ export class ExportAOI extends Component {
 
         return (
             <div>
+                <Joyride
+                    callback={this.callback}
+                    ref={'joyride'}
+                    debug={false}
+                    steps={steps}
+                    autostart={true}
+                    type={'continuous'}
+                    disableOverlay
+                    showSkipButton={true}
+                    showStepsProgress={true}
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}/>
                 <div id="map" className={css.map}  style={mapStyle} ref="olmap">
                     <AoiInfobar 
                         aoiInfo={this.props.aoiInfo}
@@ -393,6 +523,7 @@ ExportAOI.propTypes = {
     getGeocode: PropTypes.func,
     processGeoJSONFile: PropTypes.func,
     resetGeoJSONFile: PropTypes.func,
+    walkthrough: React.PropTypes.bool,
 }
 
 function mapStateToProps(state) {

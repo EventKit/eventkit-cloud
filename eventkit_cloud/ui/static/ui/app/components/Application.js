@@ -19,7 +19,6 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Joyride from 'react-joyride';
 
 const muiTheme = getMuiTheme({
     datePicker: {
@@ -42,12 +41,9 @@ export class Application extends Component {
         this.handleMouseOver =  this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleResize = this.handleResize.bind(this);
-        this.callback = this.callback.bind(this);
         this.state = {
             config: {},
             hovered: '',
-            steps: [],
-            isRunning: false,
         }
     }
 
@@ -61,33 +57,11 @@ export class Application extends Component {
     }
 
     componentDidMount() {
-        const steps = [
-            {
-                title: 'First Step',
-                text: 'Start using the <strong>joyride</strong>',
-                selector: '.qa-Application-header',
-                position: 'inherit',
-
-            },
-            {
-                title: 'Creating a DataPack',
-                text: 'This will take you to the Create Datapack Page. <br/> Blah blah blah!',
-                selector: '.qa-DataPackLinkButton-RaisedButton',
-                position: 'bottom',
-            }
-
-        ]
-
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
 
-        this.joyrideAddSteps(steps);
-
     }
 
-    next() {
-        this.joyride.next();
-    }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
@@ -142,39 +116,7 @@ export class Application extends Component {
         this.setState({hovered: ''});
     }
 
-    joyrideAddSteps(steps) {
-        let newSteps = steps;
-
-        if (!Array.isArray(newSteps)) {
-            newSteps = [newSteps];
-        }
-
-        if (!newSteps.length) return;
-
-        this.setState(currentState => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
-        });
-    }
-    callback(data) {
-        if (data.action === 'close' && data.type === 'step:after') {
-            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
-            this.setState({ isRunning: false });
-        }
-    }
-
-    handleJoyride() {
-        if(this.state.isRunning === true){
-            this.refs.joyride.reset(true);
-        }
-        else {
-            this.setState({isRunning: true})
-        }
-    }
-
     render() {
-        const {steps, isRunning} = this.state;
-
         const styles = {
             appBar: {
                 backgroundColor: 'black',
@@ -249,24 +191,6 @@ export class Application extends Component {
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{backgroundColor: '#000'}}>
-                    <Joyride
-                        callback={this.callback}
-                        ref={'joyride'}
-                        debug={false}
-                        steps={steps}
-                        autostart={true}
-                        type={'continuous'}
-                        disableOverlay
-                        showSkipButton={true}
-                        showStepsProgress={true}
-                        locale={{
-                            back: (<span>Back</span>),
-                            close: (<span>Close</span>),
-                            last: (<span>Done</span>),
-                            next: (<span>Next</span>),
-                            skip: (<span>Skip</span>),
-                        }}
-                        run={isRunning}/>
                     <Banner />
 
                     <header className="qa-Application-header" style={{height: '95px'}}>
