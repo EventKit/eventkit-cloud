@@ -117,7 +117,7 @@ export function generateDrawLayer() {
                 width: 3,
             }),
             image: new ol.style.Icon({
-                src: require("../../images/ic_room_black_24px.svg"),
+                src: require("../../images/ic_room_black_24px.png"),
             })
 
         })

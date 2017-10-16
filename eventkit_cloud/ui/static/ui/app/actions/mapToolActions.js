@@ -27,7 +27,7 @@ export const processGeoJSONFile = file => (dispatch) => {
     const csrftoken = cookie.load('csrftoken');
 
     const formData = new FormData();
-    formData.set('file', file);
+    formData.append('file', file);
 
     return axios({
         url: '/file_upload',
