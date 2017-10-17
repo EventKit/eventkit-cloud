@@ -380,7 +380,7 @@ export class ExportAOI extends Component {
 
         if(data.index === 2 && data.type === 'tooltip:before') {
             //make the map have a selection, make toolbar have the X
-            //this.drawFakeBbox();
+            this.drawFakeBbox();
             this.setButtonSelected('box');
         }
 
@@ -399,34 +399,28 @@ export class ExportAOI extends Component {
         }
     }
 
-    drawFakeBbox(){
-
+    drawFakeBbox() {
         //generate fake coordinates and have the map zoom to them.
-
-        const geo =
-        {
-            coordinates : [
-                [23.244361442456267, 27.249998957614693],
-                [29.45916713647866, 27.249998957614693],
-                [29.45916713647866, 31.790769123952998],
-                [23.244361442456267, 31.790769123952998],
-                [23.244361442456267, 27.249998957614693]
+        clearDraw(this.drawLayer);
+        const coords =[
+            [
+                [55.25307655334473, 25.256418028713934],
+                [55.32946586608887, 25.256418028713934],
+                [55.32946586608887, 25.296621588996263],
+                [55.25307655334473, 25.296621588996263],
+                [55.25307655334473, 25.256418028713934],
             ]
-        }
-
-        const fakeGeoJson = {
-            type: "FeatureCollection",
-            features: [
-            {
-                type: "Feature",
-                bbox: [23.24436, 27.25, 29.45917, 31.79077],
-                geometry: {
-                    coordinates : geo
-                }
-            }
-            ]
-        }
-
+        ]
+        const polygon = new ol.geom.Polygon(coords);
+        polygon.transform('EPSG:4326', 'EPSG:3857');
+        const feature = new ol.Feature({
+            geometry: polygon,
+        });
+        const geojson = createGeoJSON(polygon);
+        this.drawLayer.getSource().addFeature(feature);
+        this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box');
+        this.props.setNextEnabled();
+        zoomToGeometry(polygon, this.map);
     }
 
     render() {
