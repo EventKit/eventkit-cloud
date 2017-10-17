@@ -104,3 +104,5 @@ coverage
 eventkit_cloud/ui/static/ui/build
 .vscode/settings.json
 
+# NightwatchJS
+reports/

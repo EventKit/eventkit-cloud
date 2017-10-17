@@ -1,0 +1,46 @@
+{
+  "src_folders" : ["eventkit_cloud/ui/static/ui/app/tests/e2e/tests"],
+  "output_folder" : "reports",
+  "custom_commands_path" : "",
+  "custom_assertions_path" : "",
+  "page_objects_path" : "",
+  "globals_path" : "",
+
+  "selenium" : {
+    "start_process" : false,
+    "server_path" : "",
+    "log_path" : "reports",
+    "port" : 4444,
+    "cli_args" : {
+      "webdriver.chrome.driver" : "",
+      "webdriver.gecko.driver" : "",
+      "webdriver.edge.driver" : ""
+    }
+  },
+
+  "test_settings" : {
+    "default" : {
+      "launch_url" : "https://eventkit.dev.geointservices.io",
+      "selenium_port"  : 80,
+      "selenium_host"  : "ondemand.saucelabs.com",
+      "silent": true,
+      "username": "${SAUCELABS_USERNAME}",
+      "access_key": "${SAUCELABS_ACCESS_KEY}",
+      "screenshots" : {
+        "enabled" : false,
+        "path" : ""
+      },
+      "desiredCapabilities": {
+        "acceptSslCerts": true,
+        "marionette": true,
+        "screenResolution": "1920x1080",
+        "platform": "Windows 10",
+        "browserName": "chrome",
+        "version": "61.0"
+      },
+      "globals": {
+        "waitForConditionTimeout": 10000
+      }
+    }
+  }
+}
