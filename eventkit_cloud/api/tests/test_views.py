@@ -26,7 +26,6 @@ from ...tasks.models import ExportRun, ExportTask, ExportProviderTask
 from mock import patch, Mock
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -524,7 +523,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['errors'][0]['title'])
+        self.assertEquals('missing_bbox_parameter', response.data['errors']['id'])
 
     def test_bbox_missing_coord(self,):
         url = reverse('api:jobs-list')
@@ -534,7 +533,7 @@ class TestBBoxSearch(APITestCase):
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEquals(response['Content-Type'], 'application/json')
         self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['errors'][0]['title'])
+        self.assertEquals('missing_bbox_parameter', response.data['errors']['id'])
 
 
 class TestPagination(APITestCase):
