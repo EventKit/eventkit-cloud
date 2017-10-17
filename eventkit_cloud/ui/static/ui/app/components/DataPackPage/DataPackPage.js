@@ -353,7 +353,7 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
-                            {this.state.loading || this.props.runsDeletion.deleting ? 
+                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ? 
                             <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
                                 <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                                     <CircularProgress 
@@ -381,7 +381,7 @@ DataPackPage.propTypes = {
     deleteRuns: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
-    drawerOpen: PropTypes.bool.isRequired,
+    drawer: PropTypes.string.isRequired,
     importGeom: PropTypes.object.isRequired,
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
@@ -396,7 +396,7 @@ function mapStateToProps(state) {
         runsList: state.runsList,
         user: state.user,
         runsDeletion: state.runsDeletion,
-        drawerOpen: state.drawerOpen,
+        drawer: state.drawer,
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,

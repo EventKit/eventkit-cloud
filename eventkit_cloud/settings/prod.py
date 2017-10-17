@@ -293,9 +293,22 @@ if os.environ.get('USE_S3'):
 else:
     USE_S3 = False
 
-AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
-AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
-AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
+if os.getenv("VCAP_SERVICES"):
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+        if 's3' in service.lower():
+            try:
+                AWS_BUCKET_NAME = listings[0]['credentials']['bucket']
+                AWS_ACCESS_KEY = listings[0]['credentials']['access_key_id']
+                AWS_SECRET_KEY = listings[0]['credentials']['secret_access_key']
+            except (KeyError, TypeError) as e:
+                import sys
+                print(e)
+                sys.stdout.flush()
+                continue
+AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', AWS_BUCKET_NAME)
+AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', AWS_ACCESS_KEY)
+AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', AWS_SECRET_KEY)
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 

@@ -322,7 +322,7 @@ export class ExportAOI extends Component {
                 right: '0px',
         }
 
-        if(this.props.drawerOpen && window.innerWidth >= 1200) {
+        if(this.props.drawer === 'open' && window.innerWidth >= 1200) {
             mapStyle.left = '200px';
         }
         else {
@@ -384,7 +384,7 @@ ExportAOI.contextTypes = {
 ExportAOI.propTypes = {
     aoiInfo: PropTypes.object,
     importGeom: PropTypes.object,
-    drawerOpen: PropTypes.bool,
+    drawer: PropTypes.string,
     geocode: PropTypes.object,
     updateAoiInfo: PropTypes.func,
     clearAoiInfo: PropTypes.func,
@@ -399,7 +399,7 @@ function mapStateToProps(state) {
     return {
         aoiInfo: state.aoiInfo,
         importGeom: state.importGeom,
-        drawerOpen: state.drawerOpen,
+        drawer: state.drawer,
         geocode: state.geocode,
     };
 }

@@ -197,6 +197,8 @@ export class MapView extends Component {
                     className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
                     collapsed: window.innerWidth < 768 ? true: false,
+                    collapseLabel: '\u00BB',
+                    label: '\u00AB',
                 }),
             ],
             interactions: ol.interaction.defaults({

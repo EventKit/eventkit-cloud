@@ -75,6 +75,7 @@ describe('LoadButtons component', () => {
         expect(wrapper.find('#moreInfo').find('div').at(2).text()).toEqual('Created at: 2017-03-10');
         expect(wrapper.find('#moreInfo').find('div').at(3).text()).toEqual('Expiration: 2017-03-10');
         expect(wrapper.find('#moreInfo').find('div').at(4).text()).toEqual('Owner: test user');
+        expect(wrapper.find('#show-more').text()).toEqual('Show Less');
         showSpy.restore();
     });
 

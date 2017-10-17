@@ -104,16 +104,30 @@ describe('export actions', () => {
         });
     });
 
-    it('closeDrawer should return type CLOSE_DRAWER', () => {
-        expect(actions.closeDrawer()).toEqual({
-            type: 'CLOSE_DRAWER'
-        });
+    it('closeDrawer should close drawer', () => {
+        const expectedActions = [
+            {type: types.CLOSING_DRAWER},
+            {type: types.CLOSED_DRAWER},
+        ];
+
+        const store = mockStore({drawer: 'open'});
+        return store.dispatch(actions.closeDrawer())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
 
-    it('openDrawer should return type OPEN_DRAWER', () => {
-        expect(actions.openDrawer()).toEqual({
-            type: 'OPEN_DRAWER'
-        });
+    it('openDrawer should open drawer', () => {
+        const expectedActions = [
+            {type: types.OPENING_DRAWER},
+            {type: types.OPENED_DRAWER},
+        ];
+
+        const store = mockStore({drawer: 'closed'});
+        return store.dispatch(actions.openDrawer())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
 
     it('stepperNextDisabled should return MAKE_STEPPER_INACTIVE and false', () => {

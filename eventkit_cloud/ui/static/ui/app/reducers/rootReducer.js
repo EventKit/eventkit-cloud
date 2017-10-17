@@ -19,7 +19,7 @@ const rootReducer = combineReducers({
     importGeom: importGeomReducer,
     user: userReducer,
     routing: routerReducer,
-    drawerOpen: drawerMenuReducer,
+    drawer: drawerMenuReducer,
     runsList: DataPackPageReducer,
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,

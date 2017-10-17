@@ -2,12 +2,18 @@ from __future__ import absolute_import
 
 from contextlib import contextmanager
 import os
+import subprocess
+import zipfile
+import shutil
+import json
 
 from django.conf import settings
 from django.utils import timezone
 from django.template.loader import get_template, render_to_string
-
 from celery.utils.log import get_task_logger
+from ..utils.gdalutils import driver_for
+from uuid import uuid4
+from string import Template
 
 logger = get_task_logger(__name__)
 
@@ -90,3 +96,116 @@ def get_file_paths(directory):
             for f in filenames:
                 paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
     return paths
+
+
+def file_to_geojson(in_memory_file):
+    """
+    :param in_memory_file: A WSGI In memory file
+    :return: A geojson object if available
+    """
+    stage_dir = settings.EXPORT_STAGING_ROOT.rstrip('\/')
+    uid = str(uuid4())
+    dir = os.path.join(stage_dir, uid)
+
+    try:
+        os.mkdir(dir)
+        file_name = in_memory_file.name
+        file_name, file_extension = os.path.splitext(file_name)
+        if not file_name or not file_extension:
+            raise Exception('No file type detected')
+
+        in_path = os.path.join(dir, 'in_{0}{1}'.format(file_name, file_extension))
+        out_path = os.path.join(dir, 'out_{0}.geojson'.format(file_name))
+        write_uploaded_file(in_memory_file, in_path)
+
+        if file_extension == '.zip':
+            if unzip_file(in_path, dir):
+                has_shp = False
+                for unzipped_file in os.listdir(dir):
+                    if unzipped_file.endswith('.shp'):
+                        in_path = os.path.join(dir, unzipped_file)
+                        has_shp = True
+                        break
+                if not has_shp:
+                    raise Exception('Zip file does not contain a shp')
+
+        driver, raster = driver_for(in_path)
+
+        if not driver:
+            raise Exception("Could not find the proper driver to handle this file")
+
+        cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
+
+        cmd = cmd_template.safe_substitute({
+            'fmt': 'geojson',
+            'out_ds': out_path,
+            'in_ds': in_path
+        })
+
+        try:
+            proc = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+            proc.wait()
+        except Exception as e:
+            logger.debug(e)
+            raise Exception('Failed to convert file')
+
+        if os.path.exists(out_path):
+            geojson = read_json_file(out_path)
+            return geojson
+
+        raise Exception('An unknown error occured while processing the file')
+
+    except Exception as e:
+        logger.error(e)
+        raise e
+
+    finally:
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
+
+
+def read_json_file(fp):
+    """
+    :param fp: Path to a geojson file
+    :return: A geojson object
+    """
+    try:
+        with open(fp) as file_geojson:
+            geojson = json.load(file_geojson)
+            return geojson
+    except:
+        raise Exception('Unable to read the file')
+
+
+def unzip_file(fp, dir):
+    """
+    :param fp: Path to a zip file 
+    :param dir: Directory where the files should be unzipped to
+    :return: True if successful
+    """
+    if not fp or not dir:
+        return False
+    try:
+        zip = zipfile.ZipFile(fp, 'r')
+        zip.extractall(dir)
+        zip.close()
+        return True
+    except Exception as e:
+        logger.debug(e)
+        raise Exception('Could not unzip file')
+
+
+def write_uploaded_file(in_memory_file, write_path):
+    """
+    :param in_memory_file: An WSGI in memory file
+    :param write_path: The path which the file should be written to on disk
+    :return: True if successful
+    """
+    try:
+        with open(write_path, 'w+') as temp_file:
+            for chunk in in_memory_file.chunks():
+                temp_file.write(chunk)
+        return True
+    except Exception as e:
+        logger.debug(e)
+        raise Exception('Could not write file to disk')

@@ -626,7 +626,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         from ..tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
         try:
-            self.validate_licenses(queryset)
+            self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
@@ -651,7 +651,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
         try:
-            self.validate_licenses(queryset)
+            self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
@@ -715,7 +715,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         )
 
         try:
-            self.validate_licenses(queryset)
+            self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
@@ -811,9 +811,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
 
     @staticmethod
-    def validate_licenses(queryset):
+    def validate_licenses(queryset, user=None):
         for run in queryset.all():
-            invalid_licenses = get_invalid_licenses(run.job)
+            invalid_licenses = get_invalid_licenses(run.job, user=user)
             if invalid_licenses:
                 raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
                                      "Please use the user account page, or the user api to agree to the " \
