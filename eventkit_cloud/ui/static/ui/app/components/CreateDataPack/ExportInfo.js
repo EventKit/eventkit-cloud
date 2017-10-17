@@ -17,6 +17,7 @@ import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
 import CustomTextField from "../CustomTextField";
 import ol3mapCss from '../../styles/ol3map.css';
+import Joyride from 'react-joyride';
 
 
 export class ExportInfo extends React.Component {
@@ -28,12 +29,15 @@ export class ExportInfo extends React.Component {
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
             layers: [],
+            steps: [],
+            isRunning: false,
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this._initializeOpenLayers = this._initializeOpenLayers.bind(this);
+        this.callback = this.callback.bind(this);
     }
 
     componentDidMount() {        
@@ -75,6 +79,28 @@ export class ExportInfo extends React.Component {
             });
         }, 250);
 
+        const steps = [
+            {
+                title: 'Enter General Information',
+                text: 'Enter the general details and identifying information about the datapack.',
+                selector: '.qa-ExportInfo-input-name',
+                position: 'bottom',
+            },
+            {
+                title: 'Choose your sources',
+                text: 'Choose the data sources desired for the datapack.',
+                selector: '.qa-ExportInfo-List',
+                position: 'left',
+            },
+            {
+                title: 'Go to next step',
+                text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
+                position: 'left',
+            },
+        ];
+
+        this.joyrideAddSteps(steps);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -84,7 +110,6 @@ export class ExportInfo extends React.Component {
                 this._initializeOpenLayers()
             }
         }
-
     }
 
     componentWillReceiveProps(nextProps) {
@@ -98,6 +123,12 @@ export class ExportInfo extends React.Component {
         else if (nextProps.nextEnabled) {
             this.props.setNextDisabled();
         }
+
+        if(nextProps.walkthrough != this.state.isRunning)
+        {
+            this.setState({isRunning: nextProps.walkthrough})
+        }
+
     }
 
     onNameChange(e) {
@@ -260,7 +291,42 @@ export class ExportInfo extends React.Component {
         this.setState({licenseDialogOpen: false});
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState(currentState => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+
+    callback(data) {
+
+        this.props.setNextDisabled();
+        if (data.action === 'close' && data.type === 'step:after') {
+            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+            this.setState({ isRunning: false });
+        }
+    }
+
+    handleJoyride() {
+        if(this.state.isRunning === true){
+            this.refs.joyride.reset(true);
+        }
+        else {
+            this.setState({isRunning: true})
+        }
+    }
+
     render() {
+        const {steps, isRunning} = this.state;
+
         const style ={
             underlineStyle: {
                 width: 'calc(100% - 10px)',
@@ -320,6 +386,24 @@ export class ExportInfo extends React.Component {
 
         return (
             <div id='root' className={'qa-ExportInfo-root'} style={style.root}>
+                <Joyride
+                    callback={this.callback}
+                    ref={'joyride'}
+                    debug={false}
+                    steps={steps}
+                    autoStart={true}
+                    type={'continuous'}
+                    disableOverlay
+                    showSkipButton={true}
+                    showStepsProgress={true}
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}/>
                 <CustomScrollbar>
                     <form id='form' onSubmit={this.onSubmit} style={style.form} className={'qa-ExportInfo-form'}>
                         <Paper id='paper' className={'qa-ExportInfo-Paper'} style={{margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px'}} zDepth={2} rounded>
@@ -582,6 +666,7 @@ ExportInfo.propTypes = {
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
     formats:        React.PropTypes.array,
+    walkthrough: React.PropTypes.bool,
 }
 
 export default connect(

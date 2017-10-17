@@ -378,7 +378,7 @@ export class DataPackPage extends React.Component {
                     ref={'joyride'}
                     debug={false}
                     steps={steps}
-                    autostart={true}
+                    autoStart={true}
                     type={'continuous'}
                     disableOverlay
                     showSkipButton={true}

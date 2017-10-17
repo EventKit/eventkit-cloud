@@ -79,7 +79,7 @@ export class ExportAOI extends Component {
             },
             {
                 title: 'Select location',
-                text: 'Use tools to draw box or freehand boundaries.',
+                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
                 selector: '.qa-DrawAOIToolbar-div',
                 position: 'left',
             },
@@ -90,8 +90,8 @@ export class ExportAOI extends Component {
                 position: 'left',
             },
             {
-                title: 'Go to next page',
-                text: 'Once the area of interst in set, move to the next step with the green arrow button.',
+                title: 'Go to next step',
+                text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
                 selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
                 position: 'left',
             },
@@ -401,6 +401,8 @@ export class ExportAOI extends Component {
 
     drawFakeBbox(){
 
+        //generate fake coordinates and have the map zoom to them.
+
         const geo =
         {
             coordinates : [
@@ -450,7 +452,7 @@ export class ExportAOI extends Component {
                     ref={'joyride'}
                     debug={false}
                     steps={steps}
-                    autostart={true}
+                    autoStart={true}
                     type={'continuous'}
                     disableOverlay
                     showSkipButton={true}

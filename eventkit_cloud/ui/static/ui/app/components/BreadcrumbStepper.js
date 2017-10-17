@@ -127,7 +127,8 @@ export class BreadcrumbStepper extends React.Component {
             case 1:
                 return <ExportInfo providers={this.props.providers}
                                    formats={this.props.formats}
-                                   handlePrev={this.handlePrev}/>
+                                   handlePrev={this.handlePrev}
+                                   walkthrough={this.props.walkthrough}/>
             case 2:
                 return <ExportSummary
                                    allFormats={this.props.formats}/>
