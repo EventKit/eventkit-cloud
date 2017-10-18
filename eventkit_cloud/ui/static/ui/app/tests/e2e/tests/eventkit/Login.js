@@ -1,7 +1,7 @@
 
 const bindHelpers = require('../../common/snaptest-nw-driver').bindHelpers;
 const bindComponents = require('../../common/components').bindComponents;
-const screenshot = require('../../common/screenshot');
+const screenshot = require('../../screenshot');
 
 
 module.exports = {
