@@ -85,8 +85,10 @@ describe('MapView component', () => {
     const initOverlay = MapView.prototype.initOverlay;
     beforeEach(() => {
         MapView.prototype.initOverlay = new sinon.spy();
-        const stub1 = new sinon.stub(utils, 'generateDrawBoxInteraction', () => {return {on: () => {}, setActive: () => {}}})
-        const stub2 = new sinon.stub(utils, 'generateDrawFreeInteraction', () => {return {on: () => {}, setActive: () => {}}})
+        const stub1 = new sinon.stub(utils, 'generateDrawBoxInteraction')
+            .callsFake(() => {return {on: () => {}, setActive: () => {}}});
+        const stub2 = new sinon.stub(utils, 'generateDrawFreeInteraction')
+            .callsFake(() => {return {on: () => {}, setActive: () => {}}});
         ol.Map.prototype.addInteraction = new sinon.spy()
     });
 
@@ -183,6 +185,7 @@ describe('MapView component', () => {
         const getViewSpy = new sinon.spy(ol.Map.prototype, 'getView');
         const fitSpy = new sinon.spy(ol.View.prototype, 'fit');
         const onSpy = new sinon.spy(ol.Map.prototype, 'on');
+        const generateSpy = new sinon.spy(utils, 'generateDrawLayer');
         
         // check that expected function calls were made
         const props = getProps();
@@ -190,15 +193,17 @@ describe('MapView component', () => {
         expect(mountSpy.calledOnce).toBe(true);
         expect(mapSpy.calledOnce).toBe(true);
         expect(MapView.prototype.initOverlay.calledOnce).toBe(true);
-        expect(sourceSpy.calledTwice).toBe(true);
+        expect(sourceSpy.calledThrice).toBe(true);
         expect(sourceSpy.calledWith({wrapX: true})).toBe(true);
-        expect(layerSpy.calledTwice).toBe(true);
+        expect(layerSpy.calledThrice).toBe(true);
+        expect(generateSpy.calledTwice).toBe(true);
         expect(layerSpy.calledWith(
             {source: wrapper.instance().source, style: wrapper.instance().defaultStyleFunction}
         )).toBe(true);
-        expect(addLayerSpy.calledTwice).toBe(true);
+        expect(addLayerSpy.calledThrice).toBe(true);
         expect(addLayerSpy.calledWith(wrapper.instance().layer)).toBe(true);
         expect(addLayerSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
+        expect(addLayerSpy.calledWith(wrapper.instance().markerLayer)).toBe(true);
         expect(MapView.prototype.addRunFeatures.calledOnce).toBe(true);
         expect(MapView.prototype.addRunFeatures.calledWith(props.runs, wrapper.instance().source)).toBe(true);
         expect(getViewSpy.calledOnce).toBe(true);
@@ -216,6 +221,7 @@ describe('MapView component', () => {
         getViewSpy.restore();
         fitSpy.restore();
         onSpy.restore();
+        generateSpy.restore();
         MapView.prototype.addRunFeatures = addRunFeatures;
     });
 
@@ -729,6 +735,7 @@ describe('MapView component', () => {
         const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
         const props = getProps();
         const wrapper = getWrapper(props);
+        ol.style.Circle.reset();
         const setStyleSpy = new sinon.spy();
         const geomSpy = new sinon.spy();
         const event = {vectorContext: {setStyle: setStyleSpy, drawGeometry: geomSpy}, frameState: {time: 500}}
@@ -761,6 +768,7 @@ describe('MapView component', () => {
         const renderSpy = new sinon.spy(ol.Map.prototype, 'render');
         const props = getProps();
         const wrapper = getWrapper(props);
+        ol.style.Circle.reset();
         const setStyleSpy = new sinon.spy();
         const geomSpy = new sinon.spy();
         const event = {vectorContext: {setStyle: setStyleSpy, drawGeometry: geomSpy}, frameState: {time: 4000}}
@@ -1273,7 +1281,8 @@ describe('MapView component', () => {
         const createSpy = new sinon.spy(utils, 'createGeoJSON');
         const featureSpy = new sinon.spy(ol, 'Feature');
         const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
-        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid')
+            .callsFake(() => {return false});
         wrapper.setState({mode: 'MODE_DRAW_FREE'});
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);
@@ -1314,7 +1323,8 @@ describe('MapView component', () => {
         const createSpy = new sinon.spy(utils, 'createGeoJSON');
         const createGeomSpy = new sinon.spy(utils, 'createGeoJSONGeometry');
         const addSpy = new sinon.spy(ol.source.Vector.prototype, 'addFeature');
-        const validSpy = new sinon.stub(utils, 'isGeoJSONValid', () => {return false});
+        const validSpy = new sinon.stub(utils, 'isGeoJSONValid')
+            .callsFake(() => {return false});
         wrapper.setState({mode: 'MODE_DRAW_BOX'});
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);
@@ -1406,6 +1416,19 @@ describe('MapView component', () => {
         expect(stateSpy.calledWith({mode: 'MODE_DRAW_FREE'})).toBe(true);
     });
 
+    it('updateMode should goToValidExtent', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const isValidStub = new sinon.stub(utils, 'isViewOutsideValidExtent')
+            .returns(true);
+        const goToValidExtent = new sinon.stub(utils, 'goToValidExtent');
+        wrapper.instance().updateMode('mode');
+        expect(isValidStub.calledOnce).toBe(true);
+        expect(goToValidExtent.calledOnce).toBe(true);
+        isValidStub.restore();
+        goToValidExtent.restore();
+    });
+
     it('handleGeoJSONUpload should clear the draw layer, add a feature, zoom, and call onMapFilter', () => {
         const props = getProps();
         props.onMapFilter = new sinon.spy();
@@ -1435,6 +1458,467 @@ describe('MapView component', () => {
         createSpy.restore();
     });
 
+    it('handleUp should return false if there is no feature', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().handleUp({})).toBe(false);
+    });
+
+    it('handleUp should check for a feature then call onMapFilter if its valid', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const geojson = utils.createGeoJSON(feature.getGeometry());
+        const unwrapStub = new sinon.stub(utils, 'unwrapCoordinates')
+            .callsFake((coords) => {return coords});
+        const setSpy = new sinon.spy(ol.geom.Polygon.prototype, 'setCoordinates');
+        const createSpy = new sinon.spy(utils, 'createGeoJSON');
+        const validStub = new sinon.stub(utils, 'isGeoJSONValid')
+            .callsFake(() => {return true});
+        const createGeomStub = new sinon.stub(utils, 'createGeoJSONGeometry')
+            .returns({});
+
+        const warningSpy = new sinon.stub(MapView.prototype, 'showInvalidDrawWarning');
+        props.onMapFilter = new sinon.spy();
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().feature = feature;
+        const ret = wrapper.instance().handleUp({});
+        expect(ret).toBe(false);
+        expect(unwrapStub.calledOnce).toBe(true);
+        expect(setSpy.calledOnce).toBe(true);
+        expect(createSpy.calledOnce).toBe(true);
+        expect(validStub.calledOnce).toBe(true);
+        expect(createGeomStub.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith({})).toBe(true);
+        expect(warningSpy.calledOnce).toBe(true);
+        expect(warningSpy.calledWith(false)).toBe(true);
+
+        unwrapStub.restore();
+        setSpy.restore();
+        createSpy.restore();
+        validStub.restore();
+        createGeomStub.restore();
+        warningSpy.restore();
+    });
+
+    it('handleUp should display the invalid draw warning', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [103.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const unwrapStub = new sinon.stub(utils, 'unwrapCoordinates')
+            .callsFake((coords) => {return coords});
+        const validStub = new sinon.stub(utils, 'isGeoJSONValid')
+            .callsFake(() => {return false});
+        const warningSpy = new sinon.stub(MapView.prototype, 'showInvalidDrawWarning');
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().feature = feature;
+        const ret = wrapper.instance().handleUp({});
+        expect(ret).toBe(false);
+        expect(validStub.calledOnce).toBe(true);
+        expect(warningSpy.calledOnce).toBe(true);
+        expect(warningSpy.calledWith(true)).toBe(true);
+
+        unwrapStub.restore();
+        validStub.restore();
+        warningSpy.restore();
+    });
+
+    it('hanldeDrag should transform a bbox and update its coordinates then move the vertex marker', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const coord = [101.0, 1.0]
+        const eventCoord = [103.0, 1.0];
+        const evt = {coordinate: eventCoord};
+        const boxStub = new sinon.stub(utils, 'isBox').returns(true);
+        const clearStub = new sinon.stub(utils, 'clearDraw');
+        const addStub = new sinon.stub(ol.source.Vector.prototype, 'addFeature');
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().coordinate = coord;
+        wrapper.instance().feature = feature;
+        const ret = wrapper.instance().handleDrag(evt);
+        expect(ret).toBe(true);
+        expect(boxStub.calledOnce).toBe(true);
+        expect(clearStub.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
+        expect(wrapper.instance().coordinate).toEqual([103.0, 1.0]);
+        expect(wrapper.instance().feature.getGeometry().getCoordinates())
+            .toEqual([[
+                [100.0, 0.0], 
+                [103.0, 0.0], 
+                [103.0, 1.0],
+                [100.0, 1.0], 
+                [100.0, 0.0]
+            ]]);
+
+        boxStub.restore();
+        clearStub.restore();
+        addStub.restore();
+    });
+
+    it('handleDrag should transform a polygon and update its coordinates then move the vertex marker', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [103.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const coord = [103.0, 1.0]
+        const eventCoord = [109.0, 1.0];
+        const evt = {coordinate: eventCoord};
+        const boxStub = new sinon.stub(utils, 'isBox').returns(false);
+        const clearStub = new sinon.stub(utils, 'clearDraw');
+        const addStub = new sinon.stub(ol.source.Vector.prototype, 'addFeature');
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().coordinate = coord;
+        wrapper.instance().feature = feature;
+        const ret = wrapper.instance().handleDrag(evt);
+        expect(ret).toBe(true);
+        expect(boxStub.calledOnce).toBe(true);
+        expect(clearStub.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
+        expect(wrapper.instance().coordinate).toEqual([109.0, 1.0]);
+        expect(wrapper.instance().feature.getGeometry().getCoordinates())
+            .toEqual([[
+                [100.0, 0.0], 
+                [101.0, 0.0], 
+                [109.0, 1.0],
+                [100.0, 1.0], 
+                [100.0, 0.0]
+            ]]);
+
+        boxStub.restore();
+        clearStub.restore();
+        addStub.restore();
+    });
+
+    it('handleDrag return false if updated feature has no area', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const coord = [101.0, 1.0]
+        const eventCoord = [100.0, 0.0];
+        const evt = {coordinate: eventCoord};
+        const boxStub = new sinon.stub(utils, 'isBox').returns(true);
+        const clearStub = new sinon.stub(utils, 'clearDraw');
+        const addStub = new sinon.stub(ol.source.Vector.prototype, 'addFeature');
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().coordinate = coord;
+        wrapper.instance().feature = feature;
+        const ret = wrapper.instance().handleDrag(evt);
+        expect(ret).toBe(false);
+        expect(boxStub.calledOnce).toBe(true);
+        expect(clearStub.called).toBe(false);
+        expect(addStub.called).toBe(false);
+        expect(wrapper.instance().coordinate).toEqual([101.0, 1.0]);
+        expect(wrapper.instance().feature.getGeometry().getCoordinates())
+            .toEqual([[
+                [100.0, 0.0], 
+                [101.0, 0.0], 
+                [101.0, 1.0],
+                [100.0, 1.0], 
+                [100.0, 0.0]
+            ]]);
+
+        boxStub.restore();
+        clearStub.restore();
+        addStub.restore();
+    });
+
+    it('handleMove should add a marker feature to the map', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const vertexStub = new sinon.stub(utils, 'isVertex')
+            .returns([100.0, 0.0]);
+        const viewStub = new sinon.stub(utils, 'isViewOutsideValidExtent')
+            .returns(false);
+        const addStub = new sinon.stub(ol.source.Vector.prototype, 'addFeature');
+
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        wrapper.instance().handleMove(evt);
+        expect(hasFeatureStub.calledOnce).toBe(true);
+        expect(getFeaturesStub.calledOnce).toBe(true);
+        expect(vertexStub.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
+
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        vertexStub.restore();
+        viewStub.restore();
+        addStub.restore();
+    });
+
+    it('handleMove should not add a marker if pixel is not occupied by a vertex', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const vertexStub = new sinon.stub(utils, 'isVertex')
+            .returns(false);
+        const viewStub = new sinon.stub(utils, 'isViewOutsideValidExtent')
+            .returns(false);
+        const addStub = new sinon.stub(ol.source.Vector.prototype, 'addFeature');
+
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        wrapper.instance().handleMove(evt);
+        expect(hasFeatureStub.calledOnce).toBe(true);
+        expect(getFeaturesStub.calledOnce).toBe(true);
+        expect(vertexStub.calledOnce).toBe(true);
+        expect(addStub.called).toBe(false);
+
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        vertexStub.restore();
+        viewStub.restore();
+        addStub.restore();
+    });
+
+    it('handleMove should go to the valid extent', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const viewStub = new sinon.stub(utils, 'isViewOutsideValidExtent')
+            .returns(true);
+        const goToStub = new sinon.stub(utils, 'goToValidExtent');
+        const vertexStub = new sinon.stub(utils, 'isVertex')
+            .returns(false);
+
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        wrapper.instance().handleMove(evt);
+        expect(hasFeatureStub.calledOnce).toBe(true);
+        expect(getFeaturesStub.calledOnce).toBe(true);
+        expect(viewStub.calledOnce).toBe(true);
+        expect(goToStub.calledOnce).toBe(true);
+
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        viewStub.restore();
+        goToStub.restore();
+        vertexStub.restore();
+    });
+
+    it('handleMove should clear the markerLayer', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Point([100.0, 0.0])
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(false);
+        const clearStub = new sinon.stub(utils, 'clearDraw');
+
+        const wrapper = getWrapper(props);
+        wrapper.instance().markerLayer.getSource().addFeature(feature);
+        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        wrapper.instance().handleMove(evt);
+        expect(clearStub.calledOnce).toBe(true);
+        expect(hasFeatureStub.calledOnce).toBe(true);
+
+        hasFeatureStub.restore();
+        clearStub.restore();
+    });
+
+    it('handleDown should skip features that are not polygons', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Point([100.0, 0.0])
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const vertexStub = new sinon.stub(utils, 'isVertex');
+        const viewStub = new sinon.stub(utils, 'isViewOutsideValidExtent')
+            .returns(false);
+
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        wrapper.instance().handleMove(evt);
+        expect(hasFeatureStub.calledOnce).toBe(true);
+        expect(getFeaturesStub.calledOnce).toBe(true);
+        expect(vertexStub.called).toBe(false);
+
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        vertexStub.restore();
+        viewStub.restore();
+    });
+
+    it('handleDown should check if there is a feature at the target pixel and return true', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const vertexStub = new sinon.stub(utils, 'isVertex')
+            .returns([100.0, 0.0]);
+        
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const ret = wrapper.instance().handleDown(evt);
+        expect(ret).toBe(true);
+        expect(wrapper.instance().feature).toBe(feature);
+        expect(wrapper.instance().coordinate).toEqual([100.0, 0.0]);
+
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        vertexStub.restore();
+    });
+
+    it('handleDown should return false if map has no feature at pixel', () => {
+        const props = getProps();
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(false);
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const ret = wrapper.instance().handleDown(evt);
+        expect(ret).toBe(false);
+        hasFeatureStub.restore();
+    });
+
+    it('handleDown should return false if feature is not a polygon', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Point([1,1])
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const ret = wrapper.instance().handleDown(evt);
+        expect(ret).toBe(false);
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+    });
+
+    it('handleDown should return false if it is not a vertex', () => {
+        const props = getProps();
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [100.0, 0.0], 
+                    [101.0, 0.0], 
+                    [101.0, 1.0],
+                    [100.0, 1.0], 
+                    [100.0, 0.0]
+                ]]
+            )
+        });
+        const hasFeatureStub = new sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+            .returns(true);
+        const getFeaturesStub = new sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+            .returns([feature]);
+        const vertexStub = new sinon.stub(utils, 'isVertex').returns(false);
+        const wrapper = getWrapper(props);
+        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const ret = wrapper.instance().handleDown(evt);
+        expect(ret).toBe(false);
+        hasFeatureStub.restore();
+        getFeaturesStub.restore();
+        vertexStub.restore();
+    });
 });
 
 function getRuns() {
