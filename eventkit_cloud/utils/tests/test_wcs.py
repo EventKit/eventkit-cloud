@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from mock import Mock, patch
+import requests
+from mock import Mock, patch, MagicMock
 from django.conf import settings
 from django.test import TransactionTestCase
 from string import Template
-from ..wcs import WCSConverter
+from ..wcs import WCSConverter, ping_wcs
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,59 @@ class TestWCSConverter(TransactionTestCase):
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
+
+    @patch('eventkit_cloud.utils.wcs.requests.get')
+    def test_ping_wcs(self, get):
+        url = "http://example.com/wcs?"
+        coverage = "examplecoverage"
+
+        valid_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs">
+                               <wcs:ContentMetadata>
+                                   <wcs:CoverageOfferingBrief>
+                                       <wcs:label>examplecoverage</wcs:label>
+                                   </wcs:CoverageOfferingBrief>
+                               </wcs:ContentMetadata>
+                           </wcs:WCS_Capabilities>"""
+        invalid_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs"></wcs:WCS_Capabilities>"""
+        empty_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs">
+                               <wcs:ContentMetadata></wcs:ContentMetadata>
+                           </wcs:WCS_Capabilities>"""
+
+        # Test: cannot connect to server
+        get.side_effect = requests.exceptions.ConnectionError()
+        success, error = ping_wcs(url, coverage)
+        self.assertEquals(False, success)
+
+        # Test: server does not return status 200
+        get.side_effect = None
+        response = MagicMock()
+        response.content = ""
+        response.status_code = 403
+        response.ok = False
+        get.return_value = response
+        success, _ = ping_wcs(url, coverage)
+        self.assertEquals(False, success)
+
+        # Test: server does not return recognizable xml
+        response.content = invalid_content
+        response.status_code = 200
+        response.ok = True
+        get.return_value = response
+        success, _ = ping_wcs(url, coverage)
+        self.assertEquals(False, success)
+
+        # Test: server does not offer the requested coverage
+        response.content = empty_content
+        get.return_value = response
+        success, _ = ping_wcs(url, coverage)
+        self.assertEquals(False, success)
+
+        # Test: success
+        response.content = valid_content
+        get.return_value = response
+        success, _ = ping_wcs(url, coverage)
+        self.assertEquals(True, success)
+
 
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
     def test_convert_geotiff(self, exists):

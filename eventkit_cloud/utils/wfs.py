@@ -2,12 +2,54 @@ from __future__ import absolute_import
 
 import logging
 import os
+import re
+import requests
 import subprocess
 from string import Template
+import xml.etree.ElementTree as ET
 from ..tasks.task_process import TaskProcess
 from ..utils.geopackage import check_content_exists
 
 logger = logging.getLogger(__name__)
+
+
+def ping_wfs(service_url, layer):
+    """
+    Contacts the specified URL and confirms that it can supply the requested feature layer
+    :param service_url:
+    :param layer:
+    :return: 2-tuple: (True if source is up and has data available, description if false)
+    """
+    query = {
+        "SERVICE": "WFS",
+        "VERSION": "1.0.0",
+        "REQUEST": "GetCapabilities"
+    }
+    # If service or version parameters are included in query string, it can lead to a protocol error and false negative
+    if "?" in service_url:
+        service_url = service_url.split("?")[0]
+
+    response = requests.get(url=service_url, params=query)
+    if response.status_code != 200:
+        logger.error("WFS ping failed: code {}, message {}".format(response.status_code, response.content))
+        return False, "WFS server returned status {}".format(response.status_code)
+
+    root = ET.fromstring(response.content)
+
+    # Check for namespace
+    m = re.search(r"^{.*?}", root.tag)
+    ns = m.group() if m else ""
+
+    feature_type_list = root.find(".//{}FeatureTypeList".format(ns))
+    if feature_type_list is None:
+        return False, "Unknown format or layer not available"
+
+    feature_types = feature_type_list.findall("{}FeatureType".format(ns))
+    titles = [ft.find("{}Title".format(ns)).text for ft in feature_types]
+    if layer not in titles:
+        return False, "Layer '{}' not available".format(layer)
+
+    return True, None
 
 
 class WFSToGPKG(object):
