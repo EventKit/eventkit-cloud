@@ -1,9 +1,10 @@
 import ol from 'openlayers';
-import reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
+import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
@@ -13,20 +14,15 @@ export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
 /**
- * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
- * @param {jstsGeometry} A JSTS geometry.
- * @return {jstsGeometry} A JSTS geometry.
+ * Convert a jsts geometry to an openlayers3 geometry
+ * @param {jstsGeom} a JSTS geometry in EPSG:3857
+ * @return {olGeom} an openlayers3 geometry in EPSG:4326
  */
-export function bufferGeometry(jstsGeometry) {
-    //This buffers jsts points so that those features will have an actual area to be collected.
-    // The buffer size is relative to the unit of measurement for the projection.
-    // In order to get meters and circles, 3857 should be used.
-    const bufferSize = 1000;
-    if (!(jstsGeometry.getGeometryType() === "Polygon" || jstsGeometry.getGeometryType() === "MultiPolygon" )) {
-        const temp_geom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857')
-        return transformJSTSGeometry(BufferOp.bufferOp(temp_geom, bufferSize), 'EPSG:3857', 'EPSG:4326')
-    }
-    return jstsGeometry;
+export function jstsGeomToOlGeom(jstsGeom) {
+    const writer = new GeoJSONWriter();
+    const olReader = new ol.format.GeoJSON();
+    const olGeom = olReader.readGeometry(writer.write(jstsGeom)).transform('EPSG:4326', 'EPSG:3857');
+    return olGeom;
 }
 
 /**
@@ -36,42 +32,74 @@ export function bufferGeometry(jstsGeometry) {
  * @param {to_srs} An EPSG code as a string, example: "EPSG:3857".
  * @return {jstsGeometry} A JSTS geometry.
  */
-export function transformJSTSGeometry(jstsGeometry, from_srs, to_srs) {
-    //This all seems excessive, however jsts ol3Parser wasn't working with versions
+export function transformJSTSGeometry(jstsGeometry, fromSrs, toSrs) {
+    // This all seems excessive, however jsts ol3Parser wasn't working with versions
     // "jsts": "~1.4.0" and "openlayers": "~3.19.1", worth revisting in the future.
     const writer = new GeoJSONWriter();
-    const geojsonReader = new reader();
+    const geojsonReader = new Reader();
     const ol3GeoJSON = new ol.format.GeoJSON();
-    const geom = (new ol.format.GeoJSON()).readGeometry(writer.write(jstsGeometry)).transform(from_srs, to_srs);
+    const geom = (new ol.format.GeoJSON())
+        .readGeometry(writer.write(jstsGeometry)).transform(fromSrs, toSrs);
     return geojsonReader.read(ol3GeoJSON.writeGeometry(geom));
+}
+
+
+/**
+ * Creates a buffer around a jsts geometry if not a Polygon or MultiPolygon.
+ * @param {jstsGeometry} A JSTS geometry.
+ * @param {bufferSize} The size of the buffer (in meteres)
+ * @param {bufferPolys} Whether polygon/multipolygon features should be buffered
+ * @return {jstsGeometry} A JSTS geometry.
+ */
+export function bufferGeometry(jstsGeometry, bufferSize, bufferPolys) {
+    // This buffers jsts points so that those features will have an actual area to be collected.
+    // The buffer size is relative to the unit of measurement for the projection.
+    // In order to get meters and circles, 3857 should be used.
+    const bufferParams = new BufferParameters();
+    bufferParams.setJoinStyle(2);
+
+    const size = bufferSize || 100;
+    if (bufferPolys) {
+        const tempGeom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857');
+        const buff = new BufferOp(tempGeom, bufferParams);
+        const geomBuff = buff.getResultGeometry(size);
+        return transformJSTSGeometry(geomBuff, 'EPSG:3857', 'EPSG:4326');
+    } else if (!(jstsGeometry.getGeometryType() === 'Polygon' || jstsGeometry.getGeometryType() === 'MultiPolygon')) {
+        const tempGeom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857');
+        return transformJSTSGeometry(BufferOp.bufferOp(tempGeom, size), 'EPSG:3857', 'EPSG:4326');
+    }
+    return jstsGeometry;
 }
 
 /**
  * Converts a GeoJSON to a JSTS Polygon/MultiPolygon geometry
  * @param {geojson} A geojson object.
+ * @param {bufferSize} The size of the buffer (in meters)
+ * @param {bufferPolys} Whether polygon/multipolygon features should be buffered
  * @return {geometry} A JSTS Polygon or MultiPolygon
  */
-export function convertGeoJSONtoJSTS(geojson) {
-    const geojsonReader = new reader();
+export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
+    const geojsonReader = new Reader();
 
     const jstsGeoJSON = geojsonReader.read(geojson);
+    
     let geometry;
     if (jstsGeoJSON.features) {
-        let features = jstsGeoJSON.features;
-        geometry = bufferGeometry(features[0].geometry);
-        for (let i = 1; i < features.length; i++) {
-            geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry));
+        const { features } = jstsGeoJSON;
+        geometry = bufferGeometry(features[0].geometry, bufferSize, bufferPolys);
+        for (let i = 1; i < features.length; i += 1) {
+            geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry, bufferSize, bufferPolys));
         }
     } else if (jstsGeoJSON.geometries) {
-        let geometries = jstsGeoJSON.geometries;
-        geometry = bufferGeometry(geometries[0]);
-        for (let i = 1; i < geometries.length; i++) {
-            geometry = UnionOp.union(geometry, bufferGeometry(geometries[i]));
+        const { geometries } = jstsGeoJSON;
+        geometry = bufferGeometry(geometries[0], bufferSize, bufferPolys);
+        for (let i = 1; i < geometries.length; i += 1) {
+            geometry = UnionOp.union(geometry, bufferGeometry(geometries[i], bufferSize, bufferPolys));
         }
     } else if (jstsGeoJSON.geometry) {
-        geometry = bufferGeometry(jstsGeoJSON.geometry);
+        geometry = bufferGeometry(jstsGeoJSON.geometry, bufferSize, bufferPolys);
     } else {
-        geometry = bufferGeometry(jstsGeoJSON);
+        geometry = bufferGeometry(jstsGeoJSON, bufferSize, bufferPolys);
     }
     return geometry;
 }
@@ -216,7 +244,7 @@ export function serialize(extent) {
 
 export function isGeoJSONValid(geojson) {
     // creates a jsts GeoJSONReader
-    const parser = new reader();
+    const parser = new Reader();
     // reads in geojson geometry and returns a jsts geometry
     const geom = parser.read(geojson.features[0].geometry);
     // return whether the geom is valid

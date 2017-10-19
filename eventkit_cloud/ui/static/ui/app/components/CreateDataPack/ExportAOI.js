@@ -15,7 +15,7 @@ import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
-    isViewOutsideValidExtent, goToValidExtent} from '../../utils/mapUtils'
+    isViewOutsideValidExtent, goToValidExtent, convertGeoJSONtoJSTS, jstsGeomToOlGeom} from '../../utils/mapUtils'
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -37,44 +37,45 @@ export class ExportAOI extends Component {
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.doesMapHaveFeatures = this.doesMapHaveFeatures.bind(this);
+        this.bufferMapFeature = this.bufferMapFeature.bind(this);
         this.state = {
             toolbarIcons: {
-                box: "DEFAULT",
-                free: "DEFAULT",
-                mapView: "DEFAULT",
-                import: "DEFAULT",
-                search: "DEFAULT",
+                box: 'DEFAULT',
+                free: 'DEFAULT',
+                mapView: 'DEFAULT',
+                import: 'DEFAULT',
+                search: 'DEFAULT',
             },
             showImportModal: false,
             showInvalidDrawWarning: false,
-            mode: MODE_NORMAL
-        }
+            mode: MODE_NORMAL,
+        };
     }
 
     componentDidMount() {
         this.initializeOpenLayers();
-        if(Object.keys(this.props.aoiInfo.geojson).length != 0) {
-            const bbox = this.props.aoiInfo.geojson.features[0].bbox;
+        if (Object.keys(this.props.aoiInfo.geojson).length !== 0) {
             const reader = new ol.format.GeoJSON();
             const feature = reader.readFeatures(this.props.aoiInfo.geojson, {
                 dataProjection: WGS84,
-                featureProjection: WEB_MERCATOR
+                featureProjection: WEB_MERCATOR,
             });
             this.drawLayer.getSource().addFeature(feature[0]);
-            this.map.getView().fit(this.drawLayer.getSource().getExtent())
+            this.map.getView().fit(this.drawLayer.getSource().getExtent());
             this.props.setNextEnabled();
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
     }
 
-    componentDidUpdate() {
-        this.map.updateSize();
-    }
-
     componentWillReceiveProps(nextProps) {
-        if(nextProps.importGeom.processed && !this.props.importGeom.processed) {
+        if (nextProps.importGeom.processed && !this.props.importGeom.processed) {
             this.handleGeoJSONUpload(nextProps.importGeom.geom);
         }
+    }
+
+    componentDidUpdate() {
+        this.map.updateSize();
     }
 
     setButtonSelected(iconName) {
@@ -158,7 +159,7 @@ export class ExportAOI extends Component {
         clearDraw(this.drawLayer);
         this.drawLayer.getSource().addFeature(
             new ol.Feature({
-                geometry: geom
+                geometry: geom,
             })
         );
         const geojson = createGeoJSON(geom);
@@ -271,17 +272,22 @@ export class ExportAOI extends Component {
                     collapsed: false,
                 }),
                 new ol.control.Zoom({
-                    className: css.olZoom
+                    className: css.olZoom,
                 }),
                 new ol.control.ZoomExtent({
                     className: css.olZoomToExtent,
-                    extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
+                    extent: [
+                        -14251567.50789682,
+                        -10584983.780136958,
+                        14251787.50789682,
+                        10584983.780136958,
+                    ],
                 }),
             ],
             interactions: ol.interaction.defaults({
                 keyboard: false,
                 altShiftDragRotate: false,
-                pinchRotate: false
+                pinchRotate: false,
             }),
             layers: [
                 // Order matters here
@@ -289,18 +295,18 @@ export class ExportAOI extends Component {
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
                         wrapX: true,
-                        attributions: this.context.config.BASEMAP_COPYRIGHT
-                    })
+                        attributions: this.context.config.BASEMAP_COPYRIGHT,
+                    }),
                 }),
             ],
             target: 'map',
             view: new ol.View({
-                projection: "EPSG:3857",
+                projection: 'EPSG:3857',
                 center: [110, 0],
                 zoom: 2.5,
                 minZoom: 2.5,
                 maxZoom: 22,
-            })
+            }),
         });
 
         this.map.addInteraction(this.drawBoxInteraction);
@@ -312,29 +318,58 @@ export class ExportAOI extends Component {
         const ol3GeoJSON = new ol.format.GeoJSON();
         const geom = ol3GeoJSON.readGeometry(this.props.aoiInfo.geojson.features[0].geometry, {
             dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857'
+            featureProjection: 'EPSG:3857',
         });
         zoomToGeometry(geom, this.map);
     }
 
-    render() {
-        const mapStyle = {
-                right: '0px',
+    bufferMapFeature(size) {
+        const { geojson } = this.props.aoiInfo;
+        if (!geojson) {
+            return false;
+        }
+        const bufferedFeature = convertGeoJSONtoJSTS(geojson, size, true);
+
+        if (bufferedFeature.getArea() === 0) {
+            return false;
         }
 
-        if(this.props.drawer === 'open' && window.innerWidth >= 1200) {
+        const olGeometry = jstsGeomToOlGeom(bufferedFeature);
+        const feature = this.drawLayer.getSource().getFeatures()[0];
+        feature.setGeometry(olGeometry);
+        const newGeojson = createGeoJSON(olGeometry);
+        this.props.updateAoiInfo(
+            newGeojson,
+            this.props.aoiInfo.geomType,
+            this.props.aoiInfo.title,
+            this.props.aoiInfo.description,
+            this.props.aoiInfo.selectionType,
+        );
+        this.props.setNextEnabled();
+        return true;
+    }
+
+    doesMapHaveFeatures() {
+        return Object.keys(this.props.aoiInfo.geojson).length !== 0;
+    }
+
+    render() {
+        const mapStyle = {
+            right: '0px',
+        };
+
+        if (this.props.drawer === 'open' && window.innerWidth >= 1200) {
             mapStyle.left = '200px';
-        }
-        else {
+        } else {
             mapStyle.left = '0px';
         }
 
-        let buttonClass = `${css.draw} ol-unselectable ol-control`
+        const showBuffer = this.doesMapHaveFeatures();
 
         return (
             <div>
-                <div id="map" className={css.map}  style={mapStyle} ref="olmap">
-                    <AoiInfobar 
+                <div id="map" className={css.map} style={mapStyle} ref="olmap">
+                    <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
                         disabled={false}
                         clickZoomToSelection={this.handleZoomToSelection}
@@ -346,7 +381,7 @@ export class ExportAOI extends Component {
                         toolbarIcons={this.state.toolbarIcons}
                         getGeocode={this.props.getGeocode}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setSearchAOIButtonSelected={() => {this.setButtonSelected('search')}} 
+                        setSearchAOIButtonSelected={() => { this.setButtonSelected('search'); }}
                     />
                     <DrawAOIToolbar
                         toolbarIcons={this.state.toolbarIcons}
@@ -354,13 +389,15 @@ export class ExportAOI extends Component {
                         handleCancel={this.handleCancel}
                         setMapView={this.setMapView}
                         setAllButtonsDefault={this.setAllButtonsDefault}
-                        setBoxButtonSelected={() => {this.setButtonSelected('box')}}
-                        setFreeButtonSelected={() => {this.setButtonSelected('free')}}
-                        setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
-                        setImportButtonSelected={() => {this.setButtonSelected('import')}} 
+                        setBoxButtonSelected={() => { this.setButtonSelected('box'); }}
+                        setFreeButtonSelected={() => { this.setButtonSelected('free'); }}
+                        setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
+                        setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                         setImportModalState={this.toggleImportModal}
+                        showBufferButton={showBuffer}
+                        onBufferClick={this.bufferMapFeature}
                     />
-                    <InvalidDrawWarning 
+                    <InvalidDrawWarning
                         show={this.state.showInvalidDrawWarning}
                     />
                     <DropZone
