@@ -15,13 +15,12 @@ import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction, 
     serialize, isGeoJSONValid, createGeoJSON, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
-    isViewOutsideValidExtent, goToValidExtent, convertGeoJSONtoJSTS, jstsGeomToOlGeom} from '../../utils/mapUtils'
+    isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, convertGeoJSONtoJSTS, jstsGeomToOlGeom} from '../../utils/mapUtils';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
 export class ExportAOI extends Component {
-
     constructor(props) {
         super(props)
         this.setButtonSelected = this.setButtonSelected.bind(this);
@@ -39,6 +38,10 @@ export class ExportAOI extends Component {
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
         this.doesMapHaveFeatures = this.doesMapHaveFeatures.bind(this);
         this.bufferMapFeature = this.bufferMapFeature.bind(this);
+        this.downEvent = this.downEvent.bind(this);
+        this.moveEvent = this.moveEvent.bind(this);
+        this.dragEvent = this.dragEvent.bind(this);
+        this.upEvent = this.upEvent.bind(this);
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -253,6 +256,18 @@ export class ExportAOI extends Component {
         ol.inherits(ol.control.ZoomExtent, ol.control.Control);
 
         this.drawLayer = generateDrawLayer();
+        this.markerLayer = generateDrawLayer();
+
+        this.markerLayer.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+                stroke: new ol.style.Stroke({color: '#ce4427', width: 1.25}),
+                radius: 5
+            }),
+            fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+            stroke: new ol.style.Stroke({color: '#3399CC', width: 1.25})
+        }));
+
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
         this.drawBoxInteraction.on('drawstart', this.handleDrawStart);
         this.drawBoxInteraction.on('drawend', this.handleDrawEnd);
@@ -309,9 +324,124 @@ export class ExportAOI extends Component {
             }),
         });
 
+        this.pointer = new ol.interaction.Pointer({
+            handleDownEvent: this.downEvent,
+            handleDragEvent: this.dragEvent,
+            handleMoveEvent: this.moveEvent,
+            handleUpEvent: this.upEvent
+        });
+
+        this.map.addInteraction(this.pointer);
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
         this.map.addLayer(this.drawLayer);
+        this.map.addLayer(this.markerLayer);
+    }
+
+    upEvent(evt) {
+        const feature = this.feature;
+        if (feature) {
+            const geom = feature.getGeometry();
+            const coords = geom.getCoordinates();
+            const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+            geom.setCoordinates(unwrappedCoords);
+            const geojson = createGeoJSON(geom);
+            if (isGeoJSONValid(geojson)) {
+                if(isBox(feature)) {
+                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box');
+                }
+                else {
+                    this.props.updateAoiInfo(geojson, 'Polygon', 'Custom Polygon', 'Draw', 'free');
+                }
+                this.showInvalidDrawWarning(false);
+                this.props.setNextEnabled();
+            }
+            else {
+                this.props.setNextDisabled();
+                this.showInvalidDrawWarning(true);
+            }
+        }
+        this.coordinate = null;
+        this.feature = null;
+        return false;
+    }
+
+    dragEvent(evt) {
+        const deltaX = evt.coordinate[0] - this.coordinate[0];
+        const deltaY = evt.coordinate[1] - this.coordinate[1];
+        const feature = this.feature;
+        let coords = feature.getGeometry().getCoordinates()[0];
+         // create new coordinates for the feature based on new drag coordinate
+        if (isBox(feature)) {
+            coords = coords.map(coord => {
+                let newCoord = [...coord]
+                if (coord[0] == this.coordinate[0]) {
+                    newCoord[0] = evt.coordinate[0];
+                }
+                if (coord[1] == this.coordinate[1]) {
+                    newCoord[1] = evt.coordinate[1];
+                }
+                return newCoord;
+            });
+        }
+        else {
+            coords = coords.map(coord => {
+                let newCoord = [...coord];
+                if (coord[0] == this.coordinate[0] && coord[1] === this.coordinate[1]) {
+                    newCoord = [...evt.coordinate];
+                }
+                return newCoord;
+            });
+        }
+        const bounds = ol.extent.boundingExtent(coords);
+        // do not update the feature if it would have no area
+        if(bounds[0] == bounds[2] || bounds[1] == bounds[3]) {
+            return false;
+        }
+        feature.getGeometry().setCoordinates([coords]);
+        clearDraw(this.markerLayer);
+        this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(evt.coordinate)}));
+        this.coordinate = [...evt.coordinate];
+        return true;
+    }
+
+    moveEvent(evt) {
+        const map = evt.map;
+        const pixel = evt.pixel;
+        if(this.markerLayer.getSource().getFeatures().length > 0) {
+            clearDraw(this.markerLayer);
+        }
+        const opts = {layerFilter: (layer) => {return layer == this.drawLayer}};
+        if (map.hasFeatureAtPixel(pixel, opts)) {
+            const feature = map.getFeaturesAtPixel(pixel, opts)[0];
+            if (feature.getGeometry().getType() == 'Polygon') {
+                if (isViewOutsideValidExtent(this.map.getView())) {
+                    goToValidExtent(this.map.getView());
+                };
+                const coords = isVertex(pixel, feature, 10, map);
+                if(coords) {
+                    this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
+                }
+            }
+        }
+    }
+
+    downEvent(evt) {
+        const map = evt.map;
+        const pixel = evt.pixel;
+        const opts = {layerFilter: (layer) => {return layer == this.drawLayer}};
+        if (map.hasFeatureAtPixel(pixel, opts)) {
+            const feature = map.getFeaturesAtPixel(pixel, opts)[0]; 
+            if (feature.getGeometry().getType() == 'Polygon') {
+                const vertex = isVertex(pixel, feature, 10, map);
+                if(vertex) {
+                    this.feature = feature;
+                    this.coordinate = vertex;
+                    return true;
+                }
+            }           
+        }
+        return false;
     }
 
     handleZoomToSelection() {
