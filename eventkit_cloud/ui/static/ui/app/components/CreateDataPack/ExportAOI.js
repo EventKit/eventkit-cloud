@@ -455,7 +455,7 @@ export class ExportAOI extends Component {
 
     bufferMapFeature(size) {
         const { geojson } = this.props.aoiInfo;
-        if (!geojson) {
+        if (Object.keys(this.props.aoiInfo.geojson).length === 0) {
             return false;
         }
         const bufferedFeature = convertGeoJSONtoJSTS(geojson, size, true);
@@ -562,42 +562,43 @@ ExportAOI.propTypes = {
     resetGeoJSONFile: PropTypes.func,
 }
 
-function mapStateToProps(state) {
-    return {
-        aoiInfo: state.aoiInfo,
-        importGeom: state.importGeom,
-        drawer: state.drawer,
-        geocode: state.geocode,
-    };
-}
+// function mapStateToProps(state) {
+//     return {
+//         aoiInfo: state.aoiInfo,
+//         importGeom: state.importGeom,
+//         drawer: state.drawer,
+//         geocode: state.geocode,
+//     };
+// }
 
-function mapDispatchToProps(dispatch) {
-    return {
-        updateAoiInfo: (geojson, geomType, title, description, selectionType) => {
-            dispatch(updateAoiInfo(geojson, geomType, title, description, selectionType));
-        },
-        clearAoiInfo: () => {
-            dispatch(clearAoiInfo());
-        },
-        setNextDisabled: () => {
-            dispatch(stepperNextDisabled());
-        },
-        setNextEnabled: () => {
-            dispatch(stepperNextEnabled());
-        },
-        getGeocode: (query) => {
-            dispatch(getGeocode(query));
-        },
-        processGeoJSONFile: (file) => {
-            dispatch(processGeoJSONFile(file));
-        },
-        resetGeoJSONFile: (file) => {
-            dispatch(resetGeoJSONFile());
-        },
-    }
-}
+// function mapDispatchToProps(dispatch) {
+//     return {
+//         updateAoiInfo: (geojson, geomType, title, description, selectionType) => {
+//             dispatch(updateAoiInfo(geojson, geomType, title, description, selectionType));
+//         },
+//         clearAoiInfo: () => {
+//             dispatch(clearAoiInfo());
+//         },
+//         setNextDisabled: () => {
+//             dispatch(stepperNextDisabled());
+//         },
+//         setNextEnabled: () => {
+//             dispatch(stepperNextEnabled());
+//         },
+//         getGeocode: (query) => {
+//             dispatch(getGeocode(query));
+//         },
+//         processGeoJSONFile: (file) => {
+//             dispatch(processGeoJSONFile(file));
+//         },
+//         resetGeoJSONFile: (file) => {
+//             dispatch(resetGeoJSONFile());
+//         },
+//     }
+// }
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(ExportAOI);
+// export default connect(
+//     mapStateToProps,
+//     mapDispatchToProps
+// )(ExportAOI);
+export default ExportAOI;

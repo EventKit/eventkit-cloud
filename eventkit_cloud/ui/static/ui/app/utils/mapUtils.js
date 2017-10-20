@@ -92,7 +92,7 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
         for (let i = 1; i < features.length; i += 1) {
             geometry = UnionOp.union(
                 geometry,
-                bufferGeometry(features[i].geometry, bufferSize, bufferPolys)
+                bufferGeometry(features[i].geometry, bufferSize, bufferPolys),
             );
         }
     } else if (jstsGeoJSON.geometries) {
@@ -101,7 +101,7 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
         for (let i = 1; i < geometries.length; i += 1) {
             geometry = UnionOp.union(
                 geometry,
-                bufferGeometry(geometries[i], bufferSize, bufferPolys)
+                bufferGeometry(geometries[i], bufferSize, bufferPolys),
             );
         }
     } else if (jstsGeoJSON.geometry) {

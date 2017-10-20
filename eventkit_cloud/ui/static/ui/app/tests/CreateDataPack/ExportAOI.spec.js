@@ -1255,4 +1255,11 @@ describe('ExportAOI component', () => {
         readSpy.restore();
         zoomSpy.restore();
     });
+
+    it('bufferMapFeature should return false if no geojson in aoiInfo', () => {
+        const props = getProps();
+        props.aoiInfo.geojson = {};
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().bufferMapFeature(11)).toBe(false);
+    });
 });
