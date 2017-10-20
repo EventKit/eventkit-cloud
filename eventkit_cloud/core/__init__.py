@@ -1,5 +1,6 @@
 import os
 from django.conf import settings
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,3 +14,4 @@ def create_staging_dir():
             logger.error("Could not create the EXPORT_STAGING_ROOT directory: {0}".format(settings.EXPORT_STAGING_ROOT))
 
 create_staging_dir()
+

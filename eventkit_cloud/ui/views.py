@@ -214,8 +214,9 @@ def convert_to_geojson(request):
         return HttpResponse('No file supplied in the POST request', status=400)
     try:
         geojson = file_to_geojson(file)
-        return HttpResponse(json.dumps(geojson), status=200)
+        return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
+        logger.error(e)
         return HttpResponse(e.message, status=400)
 
 
