@@ -74,20 +74,26 @@ export class DrawAOIToolbar extends Component {
     }
 }
 
+DrawAOIToolbar.defaultProps = {
+    containerStyle: {},
+    showBufferButton: false,
+    onBufferClick: null,
+};
+
 DrawAOIToolbar.propTypes = {
-    toolbarIcons: PropTypes.object,
-    updateMode: PropTypes.func,
-    setMapView: PropTypes.func,
-    handleCancel: PropTypes.func,
-    setAllButtonsDefault: PropTypes.func,
-    setBoxButtonSelected: PropTypes.func,
-    setFreeButtonSelected: PropTypes.func,
-    setMapViewButtonSelected: PropTypes.func,
-    setImportButtonSelected: PropTypes.func,
-    setImportModalState: PropTypes.func,
+    toolbarIcons: PropTypes.object.isRequired,
+    updateMode: PropTypes.func.isRequired,
+    setMapView: PropTypes.func.isRequired,
+    handleCancel: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setBoxButtonSelected: PropTypes.func.isRequired,
+    setFreeButtonSelected: PropTypes.func.isRequired,
+    setMapViewButtonSelected: PropTypes.func.isRequired,
+    setImportButtonSelected: PropTypes.func.isRequired,
+    setImportModalState: PropTypes.func.isRequired,
     containerStyle: PropTypes.object,
     showBufferButton: PropTypes.bool,
-    onBufferClick: PropTypes.func
+    onBufferClick: PropTypes.func,
 };
 
 export default DrawAOIToolbar;

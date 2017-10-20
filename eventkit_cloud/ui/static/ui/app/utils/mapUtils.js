@@ -84,19 +84,25 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
     const geojsonReader = new Reader();
 
     const jstsGeoJSON = geojsonReader.read(geojson);
-    
+
     let geometry;
     if (jstsGeoJSON.features) {
         const { features } = jstsGeoJSON;
         geometry = bufferGeometry(features[0].geometry, bufferSize, bufferPolys);
         for (let i = 1; i < features.length; i += 1) {
-            geometry = UnionOp.union(geometry, bufferGeometry(features[i].geometry, bufferSize, bufferPolys));
+            geometry = UnionOp.union(
+                geometry,
+                bufferGeometry(features[i].geometry, bufferSize, bufferPolys)
+            );
         }
     } else if (jstsGeoJSON.geometries) {
         const { geometries } = jstsGeoJSON;
         geometry = bufferGeometry(geometries[0], bufferSize, bufferPolys);
         for (let i = 1; i < geometries.length; i += 1) {
-            geometry = UnionOp.union(geometry, bufferGeometry(geometries[i], bufferSize, bufferPolys));
+            geometry = UnionOp.union(
+                geometry,
+                bufferGeometry(geometries[i], bufferSize, bufferPolys)
+            );
         }
     } else if (jstsGeoJSON.geometry) {
         geometry = bufferGeometry(jstsGeoJSON.geometry, bufferSize, bufferPolys);
@@ -106,12 +112,12 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
     return geometry;
 }
 
-export function zoomToExtent(opt_option) {
-    let options = opt_option ? opt_option : {};
-    options.className = options.className != undefined ? options.className : ''
+export function zoomToExtent(optOption) {
+    const options = optOption || {};
+    options.className = options.className !== undefined ? options.className : '';
 
-    let button = document.createElement('button');
-    let icon = document.createElement('i');
+    const button = document.createElement('button');
+    const icon = document.createElement('i');
     icon.className = 'fa fa-globe';
     button.appendChild(icon);
     let this_ = this;
@@ -120,26 +126,26 @@ export function zoomToExtent(opt_option) {
         const map = this_.getMap();
         const view = map.getView();
         const size = map.getSize();
-        const extent = !options.extent ? view.getProjection().getExtent() : options.extent;        
+        const extent = !options.extent ? view.getProjection().getExtent() : options.extent;
         view.fit(extent, size);
-    }
+    };
 
     button.addEventListener('click', this_.zoomer, false);
     button.addEventListener('touchstart', this_.zoomer, false);
-    let element = document.createElement('div');
-    element.className = options.className + ' ol-unselectable ol-control';
+    const element = document.createElement('div');
+    element.className = `${options.className} ol-unselectable ol-control`;
     element.appendChild(button);
 
     ol.control.Control.call(this, {
-        element: element,
-        target: options.target
+        element,
+        target: options.target,
     });
 }
 
 export function generateDrawLayer() {
     return new ol.layer.Vector({
         source: new ol.source.Vector({
-            wrapX: true
+            wrapX: true,
         }),
         style: new ol.style.Style({
             stroke: new ol.style.Stroke({
@@ -148,10 +154,10 @@ export function generateDrawLayer() {
             }),
             image: new ol.style.Icon({
                 src: require("../../images/ic_room_black_24px.svg"),
-            })
+            }),
 
-        })
-    })
+        }),
+    });
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
@@ -165,22 +171,22 @@ export function generateDrawBoxInteraction(drawLayer) {
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
                     color: 'black',
-                    width: 1
+                    width: 1,
                 }),
                 points: 4,
                 radius: 15,
                 radius2: 0,
-                angle: 0
+                angle: 0,
             }),
             stroke: new ol.style.Stroke({
                 color: '#ce4427',
                 width: 2,
-                lineDash: [5, 5]
-            })
-        })
-    })
-    draw.setActive(false)
-    return draw
+                lineDash: [5, 5],
+            }),
+        }),
+    });
+    draw.setActive(false);
+    return draw;
 }
 
 export function generateDrawFreeInteraction(drawLayer) {
@@ -193,55 +199,53 @@ export function generateDrawFreeInteraction(drawLayer) {
             image: new ol.style.RegularShape({
                 stroke: new ol.style.Stroke({
                     color: 'black',
-                    width: 1
+                    width: 1,
                 }),
                 points: 4,
                 radius: 15,
                 radius2: 0,
-                angle: 0
+                angle: 0,
             }),
             stroke: new ol.style.Stroke({
                 color: '#ce4427',
                 width: 2,
-                lineDash: [5, 5]
-            })
-        })
-    })
-    draw.setActive(false)
-    return draw
+                lineDash: [5, 5],
+            }),
+        }),
+    });
+    draw.setActive(false);
+    return draw;
 }
 
-
-
 export function truncate(number) {
-    return Math.round(number * 100000) / 100000
+    return Math.round(number * 100000) / 100000;
 }
 
 export function unwrapPoint([x, y]) {
     return [
         x > 0 ? Math.min(180, x) : Math.max(-180, x),
-        y
-    ]
+        y,
+    ];
 }
 
 export function featureToBbox(feature) {
-    const reader = new ol.format.GeoJSON()
-    const geometry = reader.readGeometry(feature.geometry, {featureProjection: WEB_MERCATOR})
-    return geometry.getExtent()
+    const reader = new ol.format.GeoJSON();
+    const geometry = reader.readGeometry(feature.geometry, { featureProjection: WEB_MERCATOR });
+    return geometry.getExtent();
 }
 
 export function deserialize(serialized) {
     if (serialized && serialized.length === 4) {
-        return ol.proj.transformExtent(serialized, WGS84, WEB_MERCATOR)
+        return ol.proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
     }
-    return null
+    return null;
 }
 
 export function serialize(extent) {
-    const bbox = ol.proj.transformExtent(extent, WEB_MERCATOR, WGS84)
-    const p1 = unwrapPoint(bbox.slice(0, 2))
-    const p2 = unwrapPoint(bbox.slice(2, 4))
-    return p1.concat(p2).map(truncate)
+    const bbox = ol.proj.transformExtent(extent, WEB_MERCATOR, WGS84);
+    const p1 = unwrapPoint(bbox.slice(0, 2));
+    const p2 = unwrapPoint(bbox.slice(2, 4));
+    return p1.concat(p2).map(truncate);
 }
 
 export function isGeoJSONValid(geojson) {
@@ -253,28 +257,30 @@ export function isGeoJSONValid(geojson) {
     return isValidOp.isValid(geom);
 }
 
-export function createGeoJSON(ol3Geometry) {
-    const bbox = serialize(ol3Geometry.getExtent());
-    const geojson = {"type": "FeatureCollection",
-                    "features": [
-                        {
-                            "type": "Feature",
-                            "bbox": bbox,
-                            "geometry": createGeoJSONGeometry(ol3Geometry)
-                        }
-                    ]}
-    return geojson;
-}
-
 export function createGeoJSONGeometry(ol3Geometry) {
     const geom = ol3Geometry.clone();
     geom.transform(WEB_MERCATOR, WGS84);
     const coords = geom.getCoordinates();
-    const geojson_geom = {
-        "type": geom.getType(),
-        "coordinates": coords
-    }
-    return geojson_geom;
+    const geojsonGeom = {
+        type: geom.getType(),
+        coordinates: coords,
+    };
+    return geojsonGeom;
+}
+
+export function createGeoJSON(ol3Geometry) {
+    const bbox = serialize(ol3Geometry.getExtent());
+    const geojson = {
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                bbox,
+                geometry: createGeoJSONGeometry(ol3Geometry),
+            },
+        ],
+    };
+    return geojson;
 }
 
 export function clearDraw(drawLayer) {
@@ -282,17 +288,15 @@ export function clearDraw(drawLayer) {
 }
 
 export function zoomToGeometry(geom, map) {
-    if(geom.getType() != 'Point') {
-        map.getView().fit(
-            geom
-        );
+    if (geom.getType() !== 'Point') {
+        map.getView().fit(geom);
     } else {
-        map.getView().setCenter(geom.getCoordinates())
+        map.getView().setCenter(geom.getCoordinates());
     }
 }
 
 export function featureToPoint(feature) {
-    if (!feature) {return null}
+    if (!feature) { return null; }
     const center = ol.extent.getCenter(feature.getGeometry().getExtent());
     return new ol.geom.Point(center);
 }
@@ -303,29 +307,29 @@ export function unwrapCoordinates(coords, projection) {
     // https://github.com/openlayers/openlayers/blob/2bff72122757b8eeb3f3dda6191d1301ff296948/src/ol/renderer/maprenderer.js#L155
     const projectionExtent = projection.getExtent();
     const worldWidth = ol.extent.getWidth(projectionExtent);
-    return coords.map((coord) => {
-        return coord.map((xy) => {
+    return coords.map(coord => (
+        coord.map((xy) => {
             const x = xy[0];
             if (x < projectionExtent[0] || x > projectionExtent[2]) {
-                const worldsAway = Math.ceil((projectionExtent[0] - x)/ worldWidth);
+                const worldsAway = Math.ceil((projectionExtent[0] - x) / worldWidth);
                 return [x + worldWidth * worldsAway, xy[1]];
             }
             return xy;
-        });
-    });
+        })
+    ));
 }
 
 export function unwrapExtent(extent, projection) {
     const projectionExtent = projection.getExtent();
     const worldWidth = ol.extent.getWidth(projectionExtent);
     let minX = extent[0];
-    if(minX < projectionExtent[0] || minX > projectionExtent[2]) {
-        const worldsAway = Math.ceil((projectionExtent[0] - minX)/ worldWidth);
+    if (minX < projectionExtent[0] || minX > projectionExtent[2]) {
+        const worldsAway = Math.ceil((projectionExtent[0] - minX) / worldWidth);
         minX = minX + worldWidth * worldsAway;
     }
     let maxX = extent[2];
-    if(maxX < projectionExtent[0] || maxX > projectionExtent[2]) {
-        const worldsAway = Math.ceil((projectionExtent[0] - maxX)/ worldWidth);
+    if (maxX < projectionExtent[0] || maxX > projectionExtent[2]) {
+        const worldsAway = Math.ceil((projectionExtent[0] - maxX) / worldWidth);
         maxX = maxX + worldWidth * worldsAway;
     }
     return [minX, extent[1], maxX, extent[3]];
@@ -343,7 +347,7 @@ export function goToValidExtent(view) {
     const projectionExtent = view.getProjection().getExtent();
     const worldWidth = ol.extent.getWidth(projectionExtent);
     const center = view.getCenter();
-    const worldsAway = Math.ceil((projectionExtent[0] - center[0])/ worldWidth);
+    const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
     view.setCenter([center[0] + worldWidth * worldsAway, center[1]]);
     return view.getCenter();
 }
@@ -352,27 +356,29 @@ export function goToValidExtent(view) {
 export function isBox(feature) {
     let featCoords = feature.getGeometry().getCoordinates();
     // if there are more than 5 coordinate pairs it can not be a box
-    if (featCoords[0].length != 5) {
-        return false
+    if (featCoords[0].length !== 5) {
+        return false;
     }
     // if the extent geometry is the same as the feature geometry we know it is a box
     const extent = feature.getGeometry().getExtent();
     const extentGeom = ol.geom.Polygon.fromExtent(extent);
     let extentCoords = extentGeom.getCoordinates();
-    
-    // since the 5th coord is the same as the first remove it, duplicate messes with the comparison if coordinates are in a different order
-    // there is probably a better way to compare arrays with different order of sub arrays, but this is what ive got for now
+
+    // since the 5th coord is the same as the first remove it,
+    // duplicate messes with the comparison if coordinates are in a different order
+    // there is probably a better way to compare arrays with different order of sub arrays,
+    // but this is what ive got for now
     featCoords = [
-        toString(featCoords[0][0]), 
-        toString(featCoords[0][1]), 
-        toString(featCoords[0][2]), 
-        toString(featCoords[0][3])
+        toString(featCoords[0][0]),
+        toString(featCoords[0][1]),
+        toString(featCoords[0][2]),
+        toString(featCoords[0][3]),
     ].sort();
     extentCoords = [
-        toString(extentCoords[0][0]), 
-        toString(extentCoords[0][1]), 
-        toString(extentCoords[0][2]), 
-        toString(extentCoords[0][3])
+        toString(extentCoords[0][0]),
+        toString(extentCoords[0][1]),
+        toString(extentCoords[0][2]),
+        toString(extentCoords[0][3]),
     ].sort();
 
     return isEqual(featCoords, extentCoords);
@@ -380,7 +386,8 @@ export function isBox(feature) {
 
 // check if the pixel in question lies over a feature vertex, if it does, return the vertex coords
 export function isVertex(pixel, feature, tolarance, map) {
-    // check target pixel with pixel for each corner of the box, if within tolerance or equal, we have a vertex
+    // check target pixel with pixel for each corner of the box, 
+    // if within tolerance or equal, we have a vertex
     tolarance = tolarance || 3;
     const geomType = feature.getGeometry().getType();
     let coords = feature.getGeometry().getCoordinates();

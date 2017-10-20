@@ -1,14 +1,13 @@
-import {DrawAOIToolbar} from '../../components/MapTools/DrawAOIToolbar';
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import {DrawBoxButton} from '../../components/MapTools/DrawBoxButton';
-import {DrawFreeButton} from '../../components/MapTools/DrawFreeButton';
-import {MapViewButton} from '../../components/MapTools/MapViewButton';
-import {ImportButton} from '../../components/MapTools/ImportButton';
-import {fakeStore} from '../../__mocks__/fakeStore';
-import { Provider } from 'react-redux';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { DrawAOIToolbar } from '../../components/MapTools/DrawAOIToolbar';
+import { DrawBoxButton } from '../../components/MapTools/DrawBoxButton';
+import { DrawFreeButton } from '../../components/MapTools/DrawFreeButton';
+import { MapViewButton } from '../../components/MapTools/MapViewButton';
+import { ImportButton } from '../../components/MapTools/ImportButton';
+import { BufferButton } from '../../components/MapTools/BufferButton';
 
 
 describe('DrawAOIToolbar component', () => {
@@ -18,7 +17,7 @@ describe('DrawAOIToolbar component', () => {
         const props = {
             toolbarIcons: {},
             updateMode: () => {},
-            handleCancel: (sender) => {},
+            handleCancel: () => {},
             setMapView: () => {},
             setAllButtonsDefault: sinon.spy(),
             setBoxButtonSelected: () => {},
@@ -26,19 +25,25 @@ describe('DrawAOIToolbar component', () => {
             setMapViewButtonSelected: () => {},
             setImportButtonSelected: () => {},
             setImportModalState: () => {},
-        }
-        const store = fakeStore({});
-        const wrapper = mount(<Provider store={store}><DrawAOIToolbar {...props}/></Provider>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+            showBufferButton: false,
+        };
+
+        const wrapper = mount(<DrawAOIToolbar {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
         expect(wrapper.find('#container')).toHaveLength(1);
-        expect(wrapper.find('#title')).toHaveLength(1);
-        expect(wrapper.find('#title').text()).toEqual('TOOLS');
+        expect(wrapper.find('.qa-DrawAOIToolbar-div-title')).toHaveLength(1);
+        expect(wrapper.find('.qa-DrawAOIToolbar-div-title').text()).toEqual('TOOLS');
         expect(wrapper.find(DrawBoxButton)).toHaveLength(1);
         expect(wrapper.find(DrawFreeButton)).toHaveLength(1);
         expect(wrapper.find(MapViewButton)).toHaveLength(1);
         expect(wrapper.find(ImportButton)).toHaveLength(1);
+        expect(wrapper.find(BufferButton)).toHaveLength(0);
         expect(props.setAllButtonsDefault.calledOnce).toEqual(true);
+        const newProps = { ...props };
+        newProps.showBufferButton = true;
+        wrapper.setProps(newProps);
+        expect(wrapper.find(BufferButton)).toHaveLength(1);
     });
 });

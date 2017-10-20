@@ -10,7 +10,6 @@ import raf from 'raf';
 raf.polyfill();
 
 describe('mapUtils', () => {
-
     it('convertJSTSGeometry should covert a JSTS from one SRS to another', () => {
         const writer = new GeoJSONWriter();
         const geojsonReader = new GeoJSONReader();

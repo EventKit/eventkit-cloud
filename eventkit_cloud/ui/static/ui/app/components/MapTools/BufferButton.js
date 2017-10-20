@@ -72,9 +72,14 @@ export class BufferButton extends Component {
         ];
 
         return (
-            <button style={styles.button} onClick={this.openBufferDialog}>
+            <button
+                style={styles.button}
+                onClick={this.openBufferDialog}
+                className="qa-BufferButton-button"
+            >
                 BUFFER
                 <BaseDialog
+                    className="qa-BufferButton-BaseDialog"
                     show={this.state.showDialog}
                     title="Buffer Feature"
                     onClose={this.closeBufferDialog}
