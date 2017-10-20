@@ -301,9 +301,10 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_SECRET_KEY = listings[0]['credentials']['secret_access_key']
             except (KeyError, TypeError) as e:
                 continue
-AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME', AWS_BUCKET_NAME)
-AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', AWS_ACCESS_KEY)
-AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', AWS_SECRET_KEY)
+else:
+    AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
