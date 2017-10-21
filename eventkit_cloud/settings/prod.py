@@ -213,7 +213,7 @@ if os.environ.get('VCAP_SERVICES'):
     if not DATABASES:
         for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
             try:
-                if 'pg_95' in service:
+                if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
                     DATABASES['default']['CONN_MAX_AGE'] = 500
             except (KeyError, TypeError) as e:
