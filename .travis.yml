@@ -25,7 +25,7 @@ script:
     - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run coverage
     - sudo chown -R eventkit:eventkit ./coverage
     - docker-compose -f docker-compose-test.yml run --rm -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
-    - docker-compose -f docker-compose-test.yml run --rm -T eventkit python manage.py run_integration_tests
+#    - docker-compose -f docker-compose-test.yml run --rm -T eventkit python manage.py run_integration_tests
     # Check that finish_worker_tasks finishes active tasks but leaves new tasks on the queue
 #    - docker-compose -f docker-compose-test.yml exec eventkit bash -c 'PYTHONPATH=/var/lib/eventkit/ python /var/lib/eventkit/eventkit_cloud/management/tests/shutdown_celery_workers_test_script.py' &&
 #      sleep 1 &&
