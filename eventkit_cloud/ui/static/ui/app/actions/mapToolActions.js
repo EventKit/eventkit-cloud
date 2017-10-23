@@ -29,7 +29,7 @@ export const processGeoJSONFile = file => (dispatch) => {
             try {
                 // Because the UI doesn't support multiple features
                 // combine all polygons into one feature.
-                const multipolygon = convertGeoJSONtoJSTS(data, 1000, false);
+                const multipolygon = convertGeoJSONtoJSTS(data, 1, false);
                 const geom = jstsGeomToOlGeom(multipolygon);
                 dispatch({ type: types.FILE_PROCESSED, geom });
             } catch (err) {

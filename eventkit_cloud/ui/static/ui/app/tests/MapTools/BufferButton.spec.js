@@ -62,7 +62,7 @@ describe('BufferButton component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().closeBufferDialog();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showDialog: false })).toBe(true);
+        expect(stateSpy.calledWith({ showDialog: false, buffer: 0 })).toBe(true);
         stateSpy.restore();
     });
 

@@ -26,7 +26,7 @@ export class BufferButton extends Component {
     }
 
     closeBufferDialog() {
-        this.setState({ showDialog: false });
+        this.setState({ showDialog: false, buffer: 0 });
     }
 
     handleBufferChange(e, newValue) {

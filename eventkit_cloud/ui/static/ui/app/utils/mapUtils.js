@@ -60,7 +60,7 @@ export function bufferGeometry(jstsGeometry, bufferSize, bufferPolys) {
     const bufferParams = new BufferParameters();
     bufferParams.setJoinStyle(2);
 
-    const size = bufferSize || 100;
+    const size = bufferSize || 1;
     if (bufferPolys) {
         const tempGeom = transformJSTSGeometry(jstsGeometry, 'EPSG:4326', 'EPSG:3857');
         const buff = new BufferOp(tempGeom, bufferParams);
