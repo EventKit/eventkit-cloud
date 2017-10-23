@@ -123,17 +123,19 @@ export class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
             case 0:
-                return <ExportAOI walkthrough={this.props.walkthrough}/>;
+                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}
+                                  onWalkthroughReset={this.props.onWalkthroughReset}/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
                                    formats={this.props.formats}
                                    handlePrev={this.handlePrev}
-                                   walkthrough={this.props.walkthrough}/>
+                                   walkthroughClicked={this.props.walkthroughClicked}
+                                   onWalkthroughReset={this.props.onWalkthroughReset}/>
             case 2:
                 return <ExportSummary
                                    allFormats={this.props.formats}/>
             default:
-                return <ExportAOI walkthrough={this.props.walkthrough}/>;
+                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}/>;
         }
     }
 
@@ -282,7 +284,8 @@ BreadcrumbStepper.propTypes = {
     jobFetched: React.PropTypes.bool,
     jobuid: React.PropTypes.string,
     formats: React.PropTypes.array,
-    walkthrough: React.PropTypes.bool,
+    walkthroughClicked: React.PropTypes.bool,
+    onWalkthroughReset: React.PropTypes.func,
 };
 
 function mapStateToProps(state) {

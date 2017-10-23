@@ -70,31 +70,65 @@ export class ExportAOI extends Component {
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
 
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf'
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf'
+            },
+            skip: {
+                color: '#8b9396'
+            },
+            back: {
+                color: '#8b9396'
+            },
+            hole: {
+                backgroundColor: 'rgba(226,226,226, 0.2)',
+            }
+        }
+
         const steps = [
             {
                 title: 'Search for location',
                 text: 'Type in location name to set area of interest.',
                 selector: '.bootstrap-typeahead-input',
                 position: 'bottom',
+                style: tooltipStyle,
             },
             {
                 title: 'Select location',
                 text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
                 selector: '.qa-DrawAOIToolbar-div',
                 position: 'left',
+                style: tooltipStyle,
             },
             {
                 title: 'Cancel Selection',
                 text: 'Cancel or clear selection by clicking the "X".',
                 selector: '.qa-DrawBoxButton-button',
                 position: 'left',
+                style: tooltipStyle,
             },
             {
                 title: 'Go to next step',
                 text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
                 selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
                 position: 'left',
-            },
+                style: tooltipStyle,
+            }
         ];
 
         this.joyrideAddSteps(steps);
@@ -109,9 +143,10 @@ export class ExportAOI extends Component {
             this.handleGeoJSONUpload(nextProps.importGeom.geom);
         }
 
-        if(nextProps.walkthrough != this.state.isRunning)
+        if(nextProps.walkthroughClicked == true && this.state.isRunning == false)
         {
-            this.setState({isRunning: nextProps.walkthrough})
+            this.refs.joyride.reset(true);
+            this.setState({isRunning: true});
         }
     }
 
@@ -373,9 +408,13 @@ export class ExportAOI extends Component {
     callback(data) {
         this.setAllButtonsDefault();
         this.props.setNextDisabled();
-        if (data.action === 'close' && data.type === 'step:after') {
-            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+
+        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+            this.props.clearAoiInfo();
+            this.handleResetMap();
             this.setState({ isRunning: false });
+            this.props.onWalkthroughReset();
+            this.refs.joyride.reset(true);
         }
 
         if(data.index === 2 && data.type === 'tooltip:before') {
@@ -519,7 +558,8 @@ ExportAOI.propTypes = {
     getGeocode: PropTypes.func,
     processGeoJSONFile: PropTypes.func,
     resetGeoJSONFile: PropTypes.func,
-    walkthrough: React.PropTypes.bool,
+    walkthroughClicked: React.PropTypes.bool,
+    onWalkthroughReset: React.PropTypes.func,
 }
 
 function mapStateToProps(state) {

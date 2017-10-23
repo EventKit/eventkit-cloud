@@ -19,7 +19,7 @@ import FilterDrawer from './FilterDrawer';
 import {getGeocode} from '../../actions/searchToolbarActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 import {isGeoJSONValid} from '../../utils/mapUtils';
-import Info from 'material-ui/svg-icons/action/info';
+import Help from 'material-ui/svg-icons/action/help';
 import Joyride from 'react-joyride';
 
 export class DataPackPage extends React.Component {
@@ -82,12 +82,44 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf'
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf'
+            },
+            skip: {
+                color: '#8b9396'
+            },
+            back: {
+                color: '#8b9396'
+            },
+            hole: {
+                backgroundColor: 'rgba(226,226,226, 0.2)',
+            }
+        };
+
         const steps = [
             {
                 title: 'Create DataPack',
                 text: 'Click here to Navigate to Create a DataPack.',
                 selector: '.qa-DataPackLinkButton-RaisedButton',
-                position: 'inherit',
+                position: 'bottom',
+                style: tooltipStyle,
 
             },
             {
@@ -95,27 +127,31 @@ export class DataPackPage extends React.Component {
                 text: 'Search and Sort the existing DataPack Library.',
                 selector: '.qa-DataPackSearchBar-TextField',
                 position: 'bottom',
+                style: tooltipStyle,
             },
             {
                 title: 'Filter DataPacks',
                 text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
                 selector: '.qa-FilterDrawer-Drawer > div',
                 position: 'bottom',
+                style: tooltipStyle,
             },
             {
                 title: 'DataPack Status',
                 text: 'Check the status of previously created DataPacks',
                 selector: '.qa-DataPackListItem-subtitle-date',
                 position: 'bottom',
+                style: tooltipStyle,
             },
             {
                 title: 'Status and Download',
                 text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
                 selector: '.qa-DataPackListItem-IconMenu',
                 position: 'bottom',
+                style: tooltipStyle,
             },
-
         ];
+
         this.joyrideAddSteps(steps);
 
         this.props.getProviders();
@@ -309,14 +345,16 @@ export class DataPackPage extends React.Component {
     }
     
     callback(data) {
-        if (data.action === 'close' && data.type === 'step:after') {
+        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false });
+            this.refs.joyride.reset(true)
         }
     }
 
     handleJoyride() {
         if(this.state.isRunning === true){
+            this.setState({isRunning: false})
             this.refs.joyride.reset(true);
         }
         else {
@@ -326,7 +364,7 @@ export class DataPackPage extends React.Component {
 
     render() {
         const {steps, isRunning} = this.state;
-        const pageTitle = <span>DataPack Library <Info onTouchTap={this.handleJoyride.bind(this)} style={{color: 'white', paddingLeft:'10px', paddingTop:'10px', width:'24px', cursor:'pointer'}}/></span>
+        const pageTitle = <div style={{display: 'inline-block'}}><div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library </div><div onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>{this.state.isRunning == false ? 'Page Tour' : 'Close Tour'}</div></div>
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,

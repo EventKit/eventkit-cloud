@@ -11,7 +11,7 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone} from '../../actions/exportsActions.js';
+import {updateExportInfo, stepperNextEnabled, stepperNextDisabled, exportInfoNotDone, clearExportInfo,} from '../../actions/exportsActions.js';
 import debounce from 'lodash/debounce';
 import Info from 'material-ui/svg-icons/action/info';
 import BaseDialog from '../BaseDialog';
@@ -31,6 +31,7 @@ export class ExportInfo extends React.Component {
             layers: [],
             steps: [],
             isRunning: false,
+            demoName: "Demo DataPackName"
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -79,24 +80,57 @@ export class ExportInfo extends React.Component {
             });
         }, 250);
 
+        const tooltipStyle = {
+                backgroundColor: 'white',
+                borderRadius: '0',
+                color: 'black',
+                mainColor: '#ff4456',
+                textAlign: 'left',
+                header: {
+                    textAlign: 'left',
+                    fontSize: '20px',
+                    borderColor: '#4598bf'
+                },
+                main: {
+                    paddingTop: '20px',
+                    paddingBottom: '20px',
+                },
+                button: {
+                    color: 'white',
+                    backgroundColor: '#4598bf'
+                },
+                skip: {
+                    color: '#8b9396'
+                },
+                back: {
+                    color: '#8b9396'
+                },
+                hole: {
+                    backgroundColor: 'rgba(226,226,226, 0.2)',
+                }
+            }
+
         const steps = [
             {
                 title: 'Enter General Information',
                 text: 'Enter the general details and identifying information about the datapack.',
                 selector: '.qa-ExportInfo-input-name',
                 position: 'bottom',
+                style: tooltipStyle,
             },
             {
                 title: 'Choose your sources',
                 text: 'Choose the data sources desired for the datapack.',
                 selector: '.qa-ExportInfo-List',
                 position: 'left',
+                style: tooltipStyle,
             },
             {
                 title: 'Go to next step',
                 text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
                 selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
                 position: 'left',
+                style: tooltipStyle,
             },
         ];
 
@@ -113,20 +147,24 @@ export class ExportInfo extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        // if required fields are fulfilled enable next
-        if (this.hasRequiredFields(nextProps.exportInfo)) {
-            if (!nextProps.nextEnabled) {
-                this.props.setNextEnabled();
+        //if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
+        if(nextProps.walkthroughClicked != true) {
+            // if required fields are fulfilled enable next
+            if (this.hasRequiredFields(nextProps.exportInfo)) {
+                if (!nextProps.nextEnabled) {
+                    this.props.setNextEnabled();
+                }
+            }
+            // if not and next is enabled it should be disabled
+            else if (nextProps.nextEnabled) {
+                this.props.setNextDisabled();
             }
         }
-        // if not and next is enabled it should be disabled
-        else if (nextProps.nextEnabled) {
-            this.props.setNextDisabled();
-        }
 
-        if(nextProps.walkthrough != this.state.isRunning)
+        if(nextProps.walkthroughClicked == true && this.state.isRunning == false)
         {
-            this.setState({isRunning: nextProps.walkthrough})
+            this.refs.joyride.reset(true);
+            this.setState({isRunning: true});
         }
 
     }
@@ -307,11 +345,18 @@ export class ExportInfo extends React.Component {
     }
 
     callback(data) {
-
         this.props.setNextDisabled();
-        if (data.action === 'close' && data.type === 'step:after') {
-            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
             this.setState({ isRunning: false });
+            this.props.onWalkthroughReset();
+            this.refs.joyride.reset(true);
+        }
+        if(data.index === 0 && data.type === 'tooltip:before') {
+
+        }
+
+        if(data.index === 2 && data.type === 'tooltip:before') {
+            this.props.setNextEnabled();
         }
     }
 
@@ -643,6 +688,9 @@ function mapDispatchToProps(dispatch) {
         updateExportInfo: (exportInfo) => {
             dispatch(updateExportInfo(exportInfo))
         },
+        clearExportInfo: () => {
+            dispatch(clearExportInfo());
+        },
         setNextDisabled: () => {
             dispatch(stepperNextDisabled())
         },
@@ -663,10 +711,12 @@ ExportInfo.propTypes = {
     nextEnabled: PropTypes.bool.isRequired,
     handlePrev: PropTypes.func.isRequired,
     updateExportInfo: PropTypes.func.isRequired,
+    clearExportInfo: React.PropTypes.func,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
     formats:        React.PropTypes.array,
     walkthrough: React.PropTypes.bool,
+    onWalkthroughReset: React.PropTypes.func,
 }
 
 export default connect(
