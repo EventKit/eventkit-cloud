@@ -6,7 +6,6 @@ import BaseDialog from '../BaseDialog';
 const Dropzone = require('react-dropzone');
 
 export class DropZoneDialog extends Component {
-
     constructor(props) {
         super(props);
         this.onDrop = this.onDrop.bind(this);
@@ -36,7 +35,7 @@ export class DropZoneDialog extends Component {
             drop: {
                 margin: '0px auto',
                 width: '100%',
-                height: '200px',
+                height: '250px',
                 textAlign: 'center',
                 border: '1px dashed',
                 fontSize: '1em',
@@ -46,7 +45,7 @@ export class DropZoneDialog extends Component {
                 verticalAlign: 'center',
                 color: 'grey',
                 height: '100px',
-                marginTop: '50px',
+                marginTop: '30px',
             },
         };
 
@@ -70,8 +69,10 @@ export class DropZoneDialog extends Component {
                 >
                     <div style={styles.text} className="qa-DropZoneDialog-text">
                         <span>
-                            <strong>GeoJSON, KML, GPKG, or zipped SHP </strong>
-                            formats only, <strong>5 MB</strong> max,<br />Drag and drop or<br />
+                            <strong>GeoJSON, KML, GPKG, zipped SHP,</strong><br />
+                            and other major geospatial data formats are supported.<br />
+                            <strong> 5 MB </strong>max<br />
+                            Drag and drop or<br />
                         </span>
                         <RaisedButton
                             style={{ margin: '15px 5px 10px' }}
@@ -90,10 +91,10 @@ export class DropZoneDialog extends Component {
 }
 
 DropZoneDialog.propTypes = {
-    showImportModal: PropTypes.bool,
-    setAllButtonsDefault: PropTypes.func,
-    setImportModalState: PropTypes.func,
-    processGeoJSONFile: PropTypes.func,
+    showImportModal: PropTypes.bool.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setImportModalState: PropTypes.func.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
 };
 
 export default DropZoneDialog;

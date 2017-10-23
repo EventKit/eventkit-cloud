@@ -532,4 +532,71 @@ describe('mapUtils', () => {
         expect(utils.goToValidExtent(view)).toEqual([170, 20]);
         expect(view.getCenter()).toEqual([170, 20]);
     });
+
+    it('isBox should return false if the feature has more than 5 coordinate pairs', () => {
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [99.30541992187499,2.6467632307409725],
+                    [99.195556640625,2.2296616399183624],
+                    [100.074462890625,2.04302395742204],
+                    [100.03051757812499,2.591888984149953],
+                    [99.65698242187499,2.943040910055132],
+                    [99.107666015625,3.0417830279332634],
+                    [98.44848632812499,2.8223442468940902],
+                    [98.997802734375,2.756504385543263],
+                    [99.30541992187499,2.6467632307409725]
+                ]]
+            )
+        });
+        expect(utils.isBox(feature)).toBe(false);
+    });
+
+    it('isBox should return false if the extent coords of a 4 vertex feature are not the same as the feature coords', () => {
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [101.75537109375,-0.37353251022880474],
+                    [101.3818359375,-0.8239462091017558],
+                    [102.041015625,-1.197422590365017],
+                    [102.293701171875,-0.7140928403610857],
+                    [101.75537109375,-0.37353251022880474]
+                ]]
+            )
+        });
+        expect(utils.isBox(feature)).toBe(false);
+    });
+
+    it('isBox should return true if the extent coords are same as feature coords', () => {
+        const feature = new ol.Feature({
+            geometry: new ol.geom.Polygon(
+                [[
+                    [101.57958984375,0.9667509997666425],
+                    [101.79931640625,0.9667509997666425],
+                    [101.79931640625,1.2962761196418218],
+                    [101.57958984375,1.2962761196418218],
+                    [101.57958984375,0.9667509997666425]
+                ]]
+            )
+        });
+        expect(utils.isBox(feature)).toBe(true);
+    });
+
+    it('isVertx should check to see if a feature coordinate lies on the pixel and return the vertex if its with the tolerance', () => {
+        const pixel = [10, 10];
+        const tolerance = 2;
+        const feature = new ol.Feature({geometry: new ol.geom.Point([1,1])});
+        const getPixelStub = new sinon.stub().returns([8,8]);
+        const map = {getPixelFromCoordinate: getPixelStub};
+        expect(utils.isVertex(pixel, feature, tolerance, map)).toEqual([1,1]);
+    });
+
+    it('isVertex should return false if feature coords are not within the tolerance', () => {
+        const pixel = [10, 10];
+        const tolerance = 2;
+        const feature = new ol.Feature({geometry: new ol.geom.Point([1,1])});
+        const getPixelStub = new sinon.stub().returns([7,7]);
+        const map = {getPixelFromCoordinate: getPixelStub};
+        expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
+    })
 });
