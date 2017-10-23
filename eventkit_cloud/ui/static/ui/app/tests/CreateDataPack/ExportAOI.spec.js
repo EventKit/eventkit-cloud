@@ -1287,6 +1287,7 @@ describe('ExportAOI component', () => {
         const getFeatureStub = sinon.stub(ol.source.Vector.prototype, 'getFeatures')
             .returns([fakeFeature]);
         const setGeomSpy = sinon.spy(ol.Feature.prototype, 'setGeometry');
+        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
         const createStub = sinon.stub(utils, 'createGeoJSON')
             .returns(geojson);
 
@@ -1297,6 +1298,7 @@ describe('ExportAOI component', () => {
         expect(jstsToOlStub.calledWith(fakeBuffered)).toBe(true);
         expect(getFeatureStub.calledOnce).toBe(true);
         expect(setGeomSpy.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
         expect(createStub.calledOnce).toBe(true);
         expect(createStub.calledWith(fakeGeom)).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
@@ -1306,6 +1308,7 @@ describe('ExportAOI component', () => {
         jstsToOlStub.restore();
         getFeatureStub.restore();
         setGeomSpy.restore();
+        addStub.restore();
         createStub.restore();
     });
 });
