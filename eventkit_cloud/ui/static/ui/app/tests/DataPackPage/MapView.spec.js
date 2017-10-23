@@ -1,50 +1,45 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import raf from 'raf';
+import ol from 'openlayers';
+import { mount } from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {GridList} from 'material-ui/GridList'
+import { GridList } from 'material-ui/GridList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import ol from 'openlayers';
-import isEqual from 'lodash/isEqual';
-import css from '../../styles/ol3map.css';
-import {Card, CardHeader, CardTitle, CardActions} from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
-
-import MapView, {RED_STYLE, BLUE_STYLE} from '../../components/DataPackPage/MapView';
+import MapView, { RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
-import raf from 'raf';
 raf.polyfill();
 
 const providers = [
     {
-        "id": 2,
-        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
-        "type": "osm",
-        "license": null,
-        "created_at": "2017-08-15T19:25:10.844911Z",
-        "updated_at": "2017-08-15T19:25:10.844919Z",
-        "uid": "bc9a834a-727a-4779-8679-2500880a8526",
-        "name": "OpenStreetMap Data (Themes)",
-        "slug": "osm",
-        "preview_url": "",
-        "service_copyright": "",
-        "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-        "layer": null,
-        "level_from": 0,
-        "level_to": 10,
-        "zip": false,
-        "display": true,
-        "export_provider_type": 2
+        id: 2,
+        model_url: 'http://cloud.eventkit.dev/api/providers/osm',
+        type: 'osm',
+        license: null,
+        created_at: '2017-08-15T19:25:10.844911Z',
+        updated_at: '2017-08-15T19:25:10.844919Z',
+        uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+        name: 'OpenStreetMap Data (Themes)',
+        slug: 'osm',
+        preview_url: '',
+        service_copyright: '',
+        service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+        layer: null,
+        level_from: 0,
+        level_to: 10,
+        zip: false,
+        display: true,
+        export_provider_type: 2,
     },
 ]
 
@@ -1095,11 +1090,11 @@ describe('MapView component', () => {
         const props = getProps();
         props.onMapFilter = new sinon.spy();
         props.runs = []
-        const getSpy = new sinon.spy(ol.source.Vector.prototype, 'getFeatures');
         const wrapper = getWrapper(props);
+        const getSpy = new sinon.spy(ol.source.Vector.prototype, 'getFeatures');
         const zoomSpy = new sinon.spy(utils, 'zoomToGeometry');        
         expect(wrapper.instance().handleSearch(result)).toBe(true);
-        expect(getSpy.calledOnce).toBe(true);
+        expect(getSpy.calledTwice).toBe(true);
         expect(zoomSpy.calledOnce).toBe(true);
         getSpy.restore();
         zoomSpy.restore();
@@ -1456,6 +1451,130 @@ describe('MapView component', () => {
         addSpy.restore();
         featureSpy.restore();
         createSpy.restore();
+    });
+
+    it('bufferMapFeature should create a new buffered feature and add it to the map', () => {
+        const coords = [
+            [
+              [17.9296875, 41.244772343082076],
+              [22.5, 41.244772343082076],
+              [22.5, 44.59046718130883],
+              [17.9296875, 44.59046718130883],
+              [17.9296875, 41.244772343082076]
+            ]
+        ];
+        const geojson = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinate: coords,
+                    }
+                }
+            ]
+        }
+        const geom = new ol.geom.Polygon(coords);
+        const feature = new ol.Feature({
+            geometry: geom,
+        });
+        const getFeatureStub = sinon.stub(ol.source.Vector.prototype, 'getFeatures')
+            .returns([feature]);
+        const createGeoJSONStub = new sinon.stub(utils, 'createGeoJSON')
+            .returns(geojson);
+        const bufferSpy = sinon.spy(() => { return 10; });
+        const convertStub = sinon.stub(utils, 'convertGeoJSONtoJSTS')
+            .returns({ getArea: bufferSpy });
+        const jstsToOlStub = sinon.stub(utils, 'jstsGeomToOlGeom')
+            .returns(geom);
+        const createGeomStub = sinon.stub(utils, 'createGeoJSONGeometry')
+            .returns(geojson.features[0].geometry);
+        const cloneSpy = sinon.spy(ol.Feature.prototype, 'clone');
+        const setGeomSpy = sinon.spy(ol.Feature.prototype, 'setGeometry');
+        const clearStub = sinon.stub(utils, 'clearDraw');
+        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+
+        expect(wrapper.instance().bufferMapFeature(11)).toBe(true);
+        expect(getFeatureStub.calledTwice).toBe(true);
+        expect(createGeoJSONStub.calledOnce).toBe(true);
+        expect(createGeoJSONStub.calledWith(geom)).toBe(true);
+        expect(convertStub.calledOnce).toBe(true);
+        expect(convertStub.calledWith(geojson, 11, true)).toBe(true);
+        expect(jstsToOlStub.calledOnce).toBe(true);
+        expect(cloneSpy.calledOnce).toBe(true);
+        expect(createGeomStub.calledOnce).toBe(true);
+        expect(createGeomStub.calledWith(geom)).toBe(true);
+        expect(setGeomSpy.calledOnce).toBe(true);
+        expect(setGeomSpy.calledWith(geom)).toBe(true);
+        expect(clearStub.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledOnce).toBe(true);
+        expect(props.onMapFilter.calledWith(geojson.features[0].geometry)).toBe(true);
+
+        getFeatureStub.restore();
+        createGeoJSONStub.restore();
+        convertStub.restore();
+        jstsToOlStub.restore();
+        createGeomStub.restore();
+        cloneSpy.restore();
+        setGeomSpy.restore();
+        clearStub.restore();
+        addStub.restore();
+    });
+
+    it('bufferMapFeature should return false if buffered feature has no area', () => {
+        const coords = [
+            [
+              [17.9296875, 41.244772343082076],
+              [22.5, 41.244772343082076],
+              [22.5, 44.59046718130883],
+              [17.9296875, 44.59046718130883],
+              [17.9296875, 41.244772343082076]
+            ]
+        ];
+        const geojson = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinate: coords,
+                    }
+                }
+            ]
+        }
+        const geom = new ol.geom.Polygon(coords);
+        const feature = new ol.Feature({
+            geometry: geom,
+        });
+        const getFeatureStub = sinon.stub(ol.source.Vector.prototype, 'getFeatures')
+            .returns([feature]);
+        const createGeoJSONStub = new sinon.stub(utils, 'createGeoJSON')
+            .returns(geojson);
+        const bufferSpy = sinon.spy(() => { return 0; });
+        const convertStub = sinon.stub(utils, 'convertGeoJSONtoJSTS')
+            .returns({ getArea: bufferSpy });
+        
+        const props = getProps();
+        props.onMapFilter = new sinon.spy();
+        const wrapper = getWrapper(props);
+
+        expect(wrapper.instance().bufferMapFeature(11)).toBe(false);
+        expect(getFeatureStub.calledTwice).toBe(true);
+        expect(createGeoJSONStub.calledOnce).toBe(true);
+        expect(createGeoJSONStub.calledWith(geom)).toBe(true);
+        expect(convertStub.calledOnce).toBe(true);
+        expect(convertStub.calledWith(geojson, 11, true)).toBe(true);
+        expect(props.onMapFilter.called).toBe(false);
+
+        getFeatureStub.restore();
+        createGeoJSONStub.restore();
+        convertStub.restore();
     });
 
     it('handleUp should return false if there is no feature', () => {

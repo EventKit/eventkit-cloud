@@ -16,7 +16,7 @@ import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteracti
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex} from '../../utils/mapUtils'
+    isBox, isVertex, convertGeoJSONtoJSTS, jstsGeomToOlGeom } from '../../utils/mapUtils';
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -65,6 +65,8 @@ export class MapView extends Component {
         this.handleMove = this.handleMove.bind(this);
         this.handleDrag = this.handleDrag.bind(this);
         this.handleDown = this.handleDown.bind(this);
+        this.bufferMapFeature = this.bufferMapFeature.bind(this);
+        this.doesMapHaveDrawFeature = this.doesMapHaveDrawFeature.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -625,6 +627,34 @@ export class MapView extends Component {
         this.props.onMapFilter(geojson_geometry);
     }
 
+    bufferMapFeature(size) {
+        const feature = this.drawLayer.getSource().getFeatures()[0];
+        const geom = feature.getGeometry();
+
+        const geojson = createGeoJSON(geom);
+        const bufferedFeature = convertGeoJSONtoJSTS(geojson, size, true);
+        if (bufferedFeature.getArea() === 0) {
+            return false;
+        }
+
+        const newGeom = jstsGeomToOlGeom(bufferedFeature);
+        const newFeature = feature.clone();
+        const newGeojsonGeom = createGeoJSONGeometry(newGeom);
+        newFeature.setGeometry(newGeom);
+        clearDraw(this.drawLayer);
+        this.drawLayer.getSource().addFeature(newFeature);
+        this.props.onMapFilter(newGeojsonGeom);
+
+        return true;
+    }
+
+    doesMapHaveDrawFeature() {
+        if (!this.drawLayer) {
+            return false;
+        }
+        return this.drawLayer.getSource().getFeatures().length > 0;
+    }
+
     handleUp(evt) {
         const feature = this.feature;
         if (feature) {
@@ -783,6 +813,7 @@ export class MapView extends Component {
             />
         
         const feature = this.state.selectedFeature ? this.source.getFeatureById(this.state.selectedFeature): null;
+        const showBuffer = this.doesMapHaveDrawFeature();
         return (
             <div style={{height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223}}>
                 <CustomScrollbar style={styles.list}>
@@ -831,6 +862,8 @@ export class MapView extends Component {
                         setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
                         setImportButtonSelected={() => {this.setButtonSelected('import')}}
                         setImportModalState={this.toggleImportModal}
+                        showBufferButton={showBuffer}
+                        onBufferClick={this.bufferMapFeature}
                     />
                     <InvalidDrawWarning
                         show={this.state.showInvalidDrawWarning}
