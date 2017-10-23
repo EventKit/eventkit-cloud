@@ -373,10 +373,9 @@ def osm_data_collection_pipeline(
 
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
-
-    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}' port='{port}'\"".format(host=database['HOST'],
+    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(host=database['HOST'],
                                         user=database['USER'],
-                                        password=database['PASSWORD'],
+                                        password=database['PASSWORD'].replace('$', '\$'),
                                         port=database['PORT'],
                                         name=database['NAME'])
 
