@@ -8,9 +8,19 @@ import * as utils from '../../utils/mapUtils';
 raf.polyfill();
 
 describe('mapUtils', () => {
+    it('jstsGeomToOlGeom should convert JSTS to Ol', () => {
+        const Reader = new WKTReader();
+        const jstsGeom = Reader.read('POINT (-20 0)');
+        expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
+        const olGeom = utils.jstsGeomToOlGeom(jstsGeom);
+        expect(olGeom instanceof ol.geom.Point).toBe(true);
+        const expected = ol.proj.transform([-20, 0], 'EPSG:4326', 'EPSG:3857');
+        expect(olGeom.getCoordinates()).toEqual(expected);
+    });
+
     it('convertJSTSGeometry should covert a JSTS from one SRS to another', () => {
-        const reader = new WKTReader();
-        const jstsGeom = reader.read('POINT (-20 0)');
+        const Reader = new WKTReader();
+        const jstsGeom = Reader.read('POINT (-20 0)');
         expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
         const newGeom = utils.transformJSTSGeometry(jstsGeom, 'EPSG:4326', 'EPSG:3857');
         expect(newGeom.getCoordinate()).toEqual({
@@ -38,6 +48,15 @@ describe('mapUtils', () => {
         const returnedGeom = utils.bufferGeometry(jstsGeom);
         expect(returnedGeom.getGeometryType()).toEqual('Polygon');
         expect(jstsGeom).toEqual(returnedGeom);
+    });
+
+    it('bufferGeometry should change a polygon', () => {
+        const reader = new WKTReader();
+        const jstsGeom = reader.read('POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))');
+        expect(jstsGeom.getGeometryType()).toEqual('Polygon');
+        const returnedGeom = utils.bufferGeometry(jstsGeom, 10, true);
+        expect(returnedGeom.getGeometryType()).toEqual('Polygon');
+        expect(jstsGeom).not.toEqual(returnedGeom);
     });
 
     it('convertGeoJSONtoJSTS should convert GeoJSON Point to JSTS Geometry', () => {
@@ -227,19 +246,19 @@ describe('mapUtils', () => {
     it('generateDrawBoxInteraction should setup a new interaction', () => {
         const stroke = ol.style.Stroke;
         ol.style.Stroke = sinon.spy();
-
         const shape = ol.style.RegularShape;
         ol.style.RegularShape = sinon.spy();
-
         const style = ol.style.Style;
         ol.style.Style = sinon.spy();
-
         const activeSpy = sinon.spy();
-
         const drawReturn = { setActive: activeSpy };
 
         const draw = ol.interaction.Draw;
-        ol.interaction.Draw = () => ({ setActive: activeSpy });
+
+        ol.interaction.Draw = options => (
+            { setActive: activeSpy }
+        );
+
         ol.interaction.Draw.createBox = () => ({});
 
         const interactionSpy = sinon.spy(ol.interaction, 'Draw');
@@ -302,7 +321,8 @@ describe('mapUtils', () => {
                         [23.027343749999996, 52.669720383688166],
                         [21.423339843749996, 53.212612189941574],
                         [21.1376953125, 52.736291655910925],
-                        [21.708984375, 52.45600939264076]],
+                        [21.708984375, 52.45600939264076],
+                    ],
                 ],
             },
         };
@@ -408,7 +428,9 @@ describe('mapUtils', () => {
                 {
                     type: 'Feature',
                     bbox: [-1, 1, -1, 1],
-                    geometry: { type: 'Point', coordinates: [-1, 1] },
+                    geometry: {
+                        type: 'Point', coordinates: [-1, 1],
+                    },
                 },
             ],
         };
@@ -535,49 +557,49 @@ describe('mapUtils', () => {
 
     it('isBox should return false if the feature has more than 5 coordinate pairs', () => {
         const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [99.30541992187499,2.6467632307409725],
-                    [99.195556640625,2.2296616399183624],
-                    [100.074462890625,2.04302395742204],
-                    [100.03051757812499,2.591888984149953],
-                    [99.65698242187499,2.943040910055132],
-                    [99.107666015625,3.0417830279332634],
-                    [98.44848632812499,2.8223442468940902],
-                    [98.997802734375,2.756504385543263],
-                    [99.30541992187499,2.6467632307409725]
-                ]]
-            )
+            geometry: new ol.geom.Polygon([
+                [
+                    [99.30541992187499, 2.6467632307409725],
+                    [99.195556640625, 2.2296616399183624],
+                    [100.074462890625, 2.04302395742204],
+                    [100.03051757812499, 2.591888984149953],
+                    [99.65698242187499, 2.943040910055132],
+                    [99.107666015625, 3.0417830279332634],
+                    [98.44848632812499, 2.8223442468940902],
+                    [98.997802734375, 2.756504385543263],
+                    [99.30541992187499, 2.6467632307409725],
+                ],
+            ]),
         });
         expect(utils.isBox(feature)).toBe(false);
     });
 
     it('isBox should return false if the extent coords of a 4 vertex feature are not the same as the feature coords', () => {
         const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [101.75537109375,-0.37353251022880474],
-                    [101.3818359375,-0.8239462091017558],
-                    [102.041015625,-1.197422590365017],
-                    [102.293701171875,-0.7140928403610857],
-                    [101.75537109375,-0.37353251022880474]
-                ]]
-            )
+            geometry: new ol.geom.Polygon([
+                [
+                    [101.75537109375, -0.37353251022880474],
+                    [101.3818359375, -0.8239462091017558],
+                    [102.041015625, -1.197422590365017],
+                    [102.293701171875, -0.7140928403610857],
+                    [101.75537109375, -0.37353251022880474],
+                ],
+            ]),
         });
         expect(utils.isBox(feature)).toBe(false);
     });
 
     it('isBox should return true if the extent coords are same as feature coords', () => {
         const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [101.57958984375,0.9667509997666425],
-                    [101.79931640625,0.9667509997666425],
-                    [101.79931640625,1.2962761196418218],
-                    [101.57958984375,1.2962761196418218],
-                    [101.57958984375,0.9667509997666425]
-                ]]
-            )
+            geometry: new ol.geom.Polygon([
+                [
+                    [101.57958984375, 0.9667509997666425],
+                    [101.79931640625, 0.9667509997666425],
+                    [101.79931640625, 1.2962761196418218],
+                    [101.57958984375, 1.2962761196418218],
+                    [101.57958984375, 0.9667509997666425],
+                ],
+            ]),
         });
         expect(utils.isBox(feature)).toBe(true);
     });
@@ -585,18 +607,18 @@ describe('mapUtils', () => {
     it('isVertx should check to see if a feature coordinate lies on the pixel and return the vertex if its with the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new ol.Feature({geometry: new ol.geom.Point([1,1])});
-        const getPixelStub = new sinon.stub().returns([8,8]);
-        const map = {getPixelFromCoordinate: getPixelStub};
-        expect(utils.isVertex(pixel, feature, tolerance, map)).toEqual([1,1]);
+        const feature = new ol.Feature({ geometry: new ol.geom.Point([1, 1]) });
+        const getPixelStub = sinon.stub().returns([8, 8]);
+        const map = { getPixelFromCoordinate: getPixelStub };
+        expect(utils.isVertex(pixel, feature, tolerance, map)).toEqual([1, 1]);
     });
 
     it('isVertex should return false if feature coords are not within the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new ol.Feature({geometry: new ol.geom.Point([1,1])});
-        const getPixelStub = new sinon.stub().returns([7,7]);
-        const map = {getPixelFromCoordinate: getPixelStub};
+        const feature = new ol.Feature({ geometry: new ol.geom.Point([1, 1]) });
+        const getPixelStub = sinon.stub().returns([7, 7]);
+        const map = { getPixelFromCoordinate: getPixelStub };
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
-    })
+    });
 });
