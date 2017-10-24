@@ -1,7 +1,19 @@
-import ol from 'openlayers';
-import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
+import proj from 'ol/proj';
+import extent from 'ol/extent';
+import GeoJSON from 'ol/format/geojson';
+import VectorLayer from 'ol/layer/vector';
+import VectorSource from 'ol/source/vector';
+import Style from 'ol/style/style';
+import Stroke from 'ol/style/stroke';
+import Icon from 'ol/style/icon';
+import RegularShape from 'ol/style/regularshape';
+import Draw from 'ol/interaction/draw';
+import Point from 'ol/geom/point';
+import Polygon from 'ol/geom/polygon';
+
 import isEqual from 'lodash/isEqual';
 import toString from 'lodash/toString';
+import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
@@ -22,7 +34,7 @@ export const WEB_MERCATOR = 'EPSG:3857';
  */
 export function jstsGeomToOlGeom(jstsGeom) {
     const writer = new GeoJSONWriter();
-    const olReader = new ol.format.GeoJSON();
+    const olReader = new GeoJSON();
     const olGeom = olReader.readGeometry(writer.write(jstsGeom)).transform('EPSG:4326', 'EPSG:3857');
     return olGeom;
 }
@@ -39,8 +51,8 @@ export function transformJSTSGeometry(jstsGeometry, fromSrs, toSrs) {
     // "jsts": "~1.4.0" and "openlayers": "~3.19.1", worth revisting in the future.
     const writer = new GeoJSONWriter();
     const geojsonReader = new Reader();
-    const ol3GeoJSON = new ol.format.GeoJSON();
-    const geom = (new ol.format.GeoJSON())
+    const ol3GeoJSON = new GeoJSON();
+    const geom = (new GeoJSON())
         .readGeometry(writer.write(jstsGeometry)).transform(fromSrs, toSrs);
     return geojsonReader.read(ol3GeoJSON.writeGeometry(geom));
 }
@@ -112,64 +124,63 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
     return geometry;
 }
 
-export function zoomToExtent(optOption) {
-    const options = optOption || {};
-    options.className = options.className !== undefined ? options.className : '';
+// export function zoomToExtent(opt_option) {
+//     let options = opt_option ? opt_option : {};
+//     options.className = options.className != undefined ? options.className : ''
 
-    const button = document.createElement('button');
-    const icon = document.createElement('i');
-    icon.className = 'fa fa-globe';
-    button.appendChild(icon);
-    let this_ = this;
+//     let button = document.createElement('button');
+//     let icon = document.createElement('i');
+//     icon.className = 'fa fa-globe';
+//     button.appendChild(icon);
+//     let this_ = this;
 
-    this.zoomer = () => {
-        const map = this_.getMap();
-        const view = map.getView();
-        const size = map.getSize();
-        const extent = !options.extent ? view.getProjection().getExtent() : options.extent;
-        view.fit(extent, size);
-    };
+//     this.zoomer = () => {
+//         const map = this_.getMap();
+//         const view = map.getView();
+//         const size = map.getSize();
+//         const extent = !options.extent ? view.getProjection().getExtent() : options.extent;        
+//         view.fit(extent, size);
+//     }
 
-    button.addEventListener('click', this_.zoomer, false);
-    button.addEventListener('touchstart', this_.zoomer, false);
-    const element = document.createElement('div');
-    element.className = `${options.className} ol-unselectable ol-control`;
-    element.appendChild(button);
+//     button.addEventListener('click', this_.zoomer, false);
+//     button.addEventListener('touchstart', this_.zoomer, false);
+//     let element = document.createElement('div');
+//     element.className = options.className + ' ol-unselectable ol-control';
+//     element.appendChild(button);
 
-    ol.control.Control.call(this, {
-        element,
-        target: options.target,
-    });
-}
+//     ol.control.Control.call(this, {
+//         element: element,
+//         target: options.target
+//     });
+// }
 
 export function generateDrawLayer() {
-    return new ol.layer.Vector({
-        source: new ol.source.Vector({
+    return new VectorLayer({
+        source: new VectorSource({
             wrapX: true,
         }),
-        style: new ol.style.Style({
-            stroke: new ol.style.Stroke({
+        style: new Style({
+            stroke: new Stroke({
                 color: '#ce4427',
                 width: 3,
             }),
-            image: new ol.style.Icon({
+            image: new Icon({
                 src: require("../../images/ic_room_black_24px.svg"),
             }),
-
         }),
     });
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
-    const draw = new ol.interaction.Draw({
+    const draw = new Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
         wrapX: true,
-        geometryFunction: ol.interaction.Draw.createBox(),
+        geometryFunction: Draw.createBox(),
         freehand: true,
-        style: new ol.style.Style({
-            image: new ol.style.RegularShape({
-                stroke: new ol.style.Stroke({
+        style: new Style({
+            image: new RegularShape({
+                stroke: new Stroke({
                     color: 'black',
                     width: 1,
                 }),
@@ -178,7 +189,7 @@ export function generateDrawBoxInteraction(drawLayer) {
                 radius2: 0,
                 angle: 0,
             }),
-            stroke: new ol.style.Stroke({
+            stroke: new Stroke({
                 color: '#ce4427',
                 width: 2,
                 lineDash: [5, 5],
@@ -190,14 +201,14 @@ export function generateDrawBoxInteraction(drawLayer) {
 }
 
 export function generateDrawFreeInteraction(drawLayer) {
-    const draw = new ol.interaction.Draw({
+    const draw = new Draw({
         source: drawLayer.getSource(),
         type: 'Polygon',
         wrapX: true,
         freehand: false,
-        style: new ol.style.Style({
-            image: new ol.style.RegularShape({
-                stroke: new ol.style.Stroke({
+        style: new Style({
+            image: new RegularShape({
+                stroke: new Stroke({
                     color: 'black',
                     width: 1,
                 }),
@@ -206,7 +217,7 @@ export function generateDrawFreeInteraction(drawLayer) {
                 radius2: 0,
                 angle: 0,
             }),
-            stroke: new ol.style.Stroke({
+            stroke: new Stroke({
                 color: '#ce4427',
                 width: 2,
                 lineDash: [5, 5],
@@ -229,20 +240,20 @@ export function unwrapPoint([x, y]) {
 }
 
 export function featureToBbox(feature) {
-    const reader = new ol.format.GeoJSON();
+    const reader = new GeoJSON();
     const geometry = reader.readGeometry(feature.geometry, { featureProjection: WEB_MERCATOR });
     return geometry.getExtent();
 }
 
 export function deserialize(serialized) {
     if (serialized && serialized.length === 4) {
-        return ol.proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
+        return proj.transformExtent(serialized, WGS84, WEB_MERCATOR);
     }
     return null;
 }
 
 export function serialize(extent) {
-    const bbox = ol.proj.transformExtent(extent, WEB_MERCATOR, WGS84);
+    const bbox = proj.transformExtent(extent, WEB_MERCATOR, WGS84);
     const p1 = unwrapPoint(bbox.slice(0, 2));
     const p2 = unwrapPoint(bbox.slice(2, 4));
     return p1.concat(p2).map(truncate);
@@ -297,8 +308,8 @@ export function zoomToGeometry(geom, map) {
 
 export function featureToPoint(feature) {
     if (!feature) { return null; }
-    const center = ol.extent.getCenter(feature.getGeometry().getExtent());
-    return new ol.geom.Point(center);
+    const center = extent.getCenter(feature.getGeometry().getExtent());
+    return new Point(center);
 }
 
 // if any coordinates are wrapped adjust them to be within the projection extent
@@ -306,7 +317,7 @@ export function unwrapCoordinates(coords, projection) {
     // based on:
     // https://github.com/openlayers/openlayers/blob/2bff72122757b8eeb3f3dda6191d1301ff296948/src/ol/renderer/maprenderer.js#L155
     const projectionExtent = projection.getExtent();
-    const worldWidth = ol.extent.getWidth(projectionExtent);
+    const worldWidth = extent.getWidth(projectionExtent);
     return coords.map(coord => (
         coord.map((xy) => {
             const x = xy[0];
@@ -321,7 +332,7 @@ export function unwrapCoordinates(coords, projection) {
 
 export function unwrapExtent(extent, projection) {
     const projectionExtent = projection.getExtent();
-    const worldWidth = ol.extent.getWidth(projectionExtent);
+    const worldWidth = extent.getWidth(projectionExtent);
     let minX = extent[0];
     if (minX < projectionExtent[0] || minX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - minX) / worldWidth);
@@ -345,7 +356,7 @@ export function isViewOutsideValidExtent(view) {
 // calculate what the 'valid' view center should be and set it
 export function goToValidExtent(view) {
     const projectionExtent = view.getProjection().getExtent();
-    const worldWidth = ol.extent.getWidth(projectionExtent);
+    const worldWidth = extent.getWidth(projectionExtent);
     const center = view.getCenter();
     const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
     view.setCenter([center[0] + worldWidth * worldsAway, center[1]]);
@@ -361,7 +372,7 @@ export function isBox(feature) {
     }
     // if the extent geometry is the same as the feature geometry we know it is a box
     const extent = feature.getGeometry().getExtent();
-    const extentGeom = ol.geom.Polygon.fromExtent(extent);
+    const extentGeom = Polygon.fromExtent(extent);
     let extentCoords = extentGeom.getCoordinates();
 
     // since the 5th coord is the same as the first remove it,
@@ -391,7 +402,7 @@ export function isVertex(pixel, feature, tolarance, map) {
     tolarance = tolarance || 3;
     const geomType = feature.getGeometry().getType();
     let coords = feature.getGeometry().getCoordinates();
-    coords = geomType == 'Point' ? [coords] : geomType == 'Polygon' ? coords[0] : coords;
+    coords = geomType === 'Point' ? [coords] : geomType === 'Polygon' ? coords[0] : coords;
     let vertex = null;
     coords.some(coord => {
         const px = map.getPixelFromCoordinate(coord)
