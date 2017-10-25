@@ -1222,7 +1222,6 @@ describe('MapView component', () => {
 
     it('onDrawEnd should handle a free draw polygon', () => {
         jest.useFakeTimers();
-        wrapper.setState({mode: 'MODE_DRAW_FREE'});
         const stateSpy = sinon.spy(MapView.prototype, 'setState');
         const props = getProps();
         props.onMapFilter = sinon.spy();
