@@ -28,7 +28,6 @@
     "moment": "~2.17.1",
     "numeral": "~2.0.4",
     "ol": "~4.4.2",
-    "openlayers": "~4.3.4",
     "style-loader": "~0.18.1",
     "react-dom": "~15.5.4",
     "react": "~15.4.0",
@@ -95,7 +94,7 @@
     },
     "modulePathIgnorePatterns": ["staticfiles/", "rootReducer.js", "index.js", "store/"],
     "setupFiles": ["./setupFile.js"],
-    "transformIgnorePatterns": ["/node_modules/(?!jsts)"]
+    "transformIgnorePatterns": ["/node_modules/(?!(jsts|ol))"]
   },
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",

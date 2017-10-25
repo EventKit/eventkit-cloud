@@ -1,13 +1,13 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import raf from 'raf';
+import { mount, shallow } from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {DataPackPage} from '../../components/DataPackPage/DataPackPage';
 import AppBar from 'material-ui/AppBar';
-import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
-import Drawer from 'material-ui/Drawer';
+import { DataPackPage } from '../../components/DataPackPage/DataPackPage';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
 import DataPackList from '../../components/DataPackPage/DataPackList';
@@ -18,15 +18,11 @@ import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDrop
 import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterButton';
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import isEqual from 'lodash/isEqual';
 import * as utils from '../../utils/mapUtils';
-import ol from 'openlayers';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
-import raf from 'raf';
 raf.polyfill();
-jest.mock('../../components/DataPackPage/MapView')
+jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
     injectTapEventPlugin();

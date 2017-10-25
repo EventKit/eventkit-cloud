@@ -1,5 +1,4 @@
 import React, {PropTypes, Component} from 'react'
-import '../tap_events'
 import {Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';

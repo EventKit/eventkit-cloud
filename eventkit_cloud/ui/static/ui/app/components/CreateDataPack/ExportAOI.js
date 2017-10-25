@@ -288,6 +288,8 @@ export class ExportAOI extends Component {
         this.drawFreeInteraction.on('drawstart', this.handleDrawStart);
         this.drawFreeInteraction.on('drawend', this.handleDrawEnd);
 
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-globe';
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -303,6 +305,7 @@ export class ExportAOI extends Component {
                 }),
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
+                    label: icon,
                     extent: [
                         -14251567.50789682,
                         -10584983.780136958,

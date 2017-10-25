@@ -7,7 +7,6 @@ import Paper from 'material-ui/Paper'
 import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-import '../../components/tap_events'
 import CustomScrollbar from '../../components/CustomScrollbar';
 import TimerMixin from 'react-timer-mixin';
 import {browserHistory} from 'react-router';

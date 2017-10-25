@@ -1,10 +1,23 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount} from 'enzyme';
+import { mount } from 'enzyme';
+import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import {ExportAOI, WGS84, WEB_MERCATOR} from '../../components/CreateDataPack/ExportAOI';
-import ol from 'openlayers';
+
+import Map from 'ol/map';
+import View from 'ol/view';
+import proj from 'ol/proj';
+import extent from 'ol/extent';
+import GeoJSON from 'ol/format/geojson';
+import Feature from 'ol/feature';
+import Point from 'ol/geom/point';
+import Polygon from 'ol/geom/polygon';
+import SimpleGeometry from 'ol/geom/simplegeometry';
+import VectorSource from 'ol/source/vector';
+import Draw from 'ol/interaction/draw';
+
+import { ExportAOI, WGS84, WEB_MERCATOR } from '../../components/CreateDataPack/ExportAOI';
 import AoiInfobar from '../../components/CreateDataPack/AoiInfobar.js';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
@@ -13,7 +26,6 @@ import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
-import raf from 'raf';
 raf.polyfill();
 
 
@@ -21,29 +33,34 @@ describe('ExportAOI component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
-    const geojson = { 
-        "type": "FeatureCollection",
-        "features": [{ 
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                    [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-                    [100.0, 1.0], [100.0, 0.0] ]
-                ]
+    const geojson = {
+        type: 'FeatureCollection',
+        features: [{
+            type: 'Feature',
+            geometry: {
+                type: 'Polygon',
+                coordinates: [
+                    [
+                        [100.0, 0.0],
+                        [101.0, 0.0],
+                        [101.0, 1.0],
+                        [100.0, 1.0],
+                        [100.0, 0.0],
+                    ],
+                ],
             },
-            "bbox": [100.0, 0.0, 101.0, 1.0]
-        }]
-    }
+            bbox: [100.0, 0.0, 101.0, 1.0],
+        }],
+    };
 
-    const getProps = () => {
-        return {
+    const getProps = () => (
+        {
             aoiInfo: {
                 geojson: {},
                 geomType: null,
                 title: null,
                 description: null,
-                selectionType: null
+                selectionType: null,
             },
             importGeom: {
                 processing: false,
@@ -64,29 +81,20 @@ describe('ExportAOI component', () => {
             setNextEnabled: () => {},
             getGeocode: () => {},
             processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {}
+            resetGeoJSONFile: () => {},
         }
-    }
+    );
 
     const getWrapper = (props) => {
-        const config = {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};        
-        return mount(<ExportAOI {...props}/>, {
-            context: {muiTheme, config},
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };        
+        return mount(<ExportAOI {...props} />, {
+            context: { muiTheme, config },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object
-            }
+                config: React.PropTypes.object,
+            },
         });
-    }
-
-    const regShape = ol.style.RegularShape;
-    beforeEach(() => {
-        ol.style.RegularShape = sinon.spy();
-    });
-
-    afterEach(() => {
-        ol.style.RegularShape = regShape;
-    });
+    };
 
     it('should render the basic elements', () => {
         const props = getProps();
@@ -144,9 +152,9 @@ describe('ExportAOI component', () => {
         props.aoiInfo.selectionType = 'fake type';
         const mountSpy = sinon.spy(ExportAOI.prototype, 'componentDidMount');
         const initSpy = sinon.spy(ExportAOI.prototype, 'initializeOpenLayers');
-        const readSpy = sinon.spy(ol.format.GeoJSON.prototype, 'readFeatures');
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
-        const fitSpy = sinon.spy(ol.View.prototype, 'fit');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
+        const fitSpy = sinon.spy(View.prototype, 'fit');
         props.setNextEnabled = sinon.spy();
         const setSpy = sinon.spy(ExportAOI.prototype, 'setButtonSelected');
         const wrapper = getWrapper(props);
@@ -174,9 +182,9 @@ describe('ExportAOI component', () => {
         const props = getProps();
         const mountSpy = sinon.spy(ExportAOI.prototype, 'componentDidMount');
         const initSpy = sinon.spy(ExportAOI.prototype, 'initializeOpenLayers');
-        const readSpy = sinon.spy(ol.format.GeoJSON.prototype, 'readFeatures');
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
-        const fitSpy = sinon.spy(ol.View.prototype, 'fit');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
+        const fitSpy = sinon.spy(View.prototype, 'fit');
         props.setNextEnabled = sinon.spy();
         const setSpy = sinon.spy(ExportAOI.prototype, 'setButtonSelected');
         const wrapper = getWrapper(props);
@@ -198,7 +206,7 @@ describe('ExportAOI component', () => {
     it('componentDidUpdate should update map size', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const updateMapSpy = sinon.spy(ol.Map.prototype, 'updateSize');
+        const updateMapSpy = sinon.spy(Map.prototype, 'updateSize');
         const updateSpy = sinon.spy(wrapper.instance(), 'componentDidUpdate');
         expect(updateSpy.called).toBe(false);
         expect(updateMapSpy.called).toBe(false);
@@ -217,7 +225,7 @@ describe('ExportAOI component', () => {
         wrapper.instance().updateAoiInfo = sinon.spy();
         const nextProps = getProps();
         nextProps.importGeom.processed = true;
-        nextProps.importGeom.geom = new ol.geom.Point([1,1]);
+        nextProps.importGeom.geom = new Point([1, 1]);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(wrapper.instance().handleGeoJSONUpload.calledOnce).toBe(true);
@@ -228,7 +236,7 @@ describe('ExportAOI component', () => {
     it('setButtonSelected should update the specified icon state to SELECTED and all others to INACTIVE', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(wrapper.instance(), 'setState');        
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().setButtonSelected('box');
         expect(stateSpy.calledOnce).toBe(true);
@@ -239,7 +247,7 @@ describe('ExportAOI component', () => {
                 mapView: 'INACTIVE',
                 import: 'INACTIVE',
                 search: 'INACTIVE',
-            }
+            },
         })).toBe(true);
     });
 
@@ -252,21 +260,21 @@ describe('ExportAOI component', () => {
             mapView: 'INACTIVE',
             import: 'INACTIVE',
             search: 'INACTIVE',
-        }
+        };
         const expectedIconState = {
             box: 'DEFAULT',
             free: 'DEFAULT',
             mapView: 'DEFAULT',
             import: 'DEFAULT',
             search: 'DEFAULT',
-        }
-        wrapper.setState({toolbarIcons: initialIconState});
+        };
+        wrapper.setState({ toolbarIcons: initialIconState });
         expect(wrapper.state().toolbarIcons).toEqual(initialIconState);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().setAllButtonsDefault();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({toolbarIcons: expectedIconState})).toBe(true);
+        expect(stateSpy.calledWith({ toolbarIcons: expectedIconState })).toBe(true);
     });
 
     it('toggleImportModal should set the specified bool', () => {
@@ -277,7 +285,7 @@ describe('ExportAOI component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().toggleImportModal(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showImportModal: true})).toBe(true);
+        expect(stateSpy.calledWith({ showImportModal: true })).toBe(true);
     });
 
     it('toggleImportModal should negate the current state if no bool is passed in', () => {
@@ -288,7 +296,7 @@ describe('ExportAOI component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().toggleImportModal();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showImportModal: true})).toBe(true);
+        expect(stateSpy.calledWith({ showImportModal: true })).toBe(true);
     });
 
     it('showInvalidDrawWarning shoul set the specified bool', () => {
@@ -299,7 +307,7 @@ describe('ExportAOI component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showInvalidDrawWarning(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showInvalidDrawWarning: true})).toBe(true);
+        expect(stateSpy.calledWith({ showInvalidDrawWarning: true })).toBe(true);
     });
 
     it('showInvalidDrawWarning should negate the current state if no bool is passed in', () => {
@@ -310,7 +318,7 @@ describe('ExportAOI component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showInvalidDrawWarning();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showInvalidDrawWarning: true})).toBe(true);
+        expect(stateSpy.calledWith({ showInvalidDrawWarning: true })).toBe(true);
     });
 
     it('handleCancel should hide invalid drawWarning, clear draw and aoiInfo, and set next disabled', () => {
@@ -351,8 +359,8 @@ describe('ExportAOI component', () => {
     it('handleResetMap should get the world extent and fit the view to it', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const transformSpy = sinon.spy(ol.proj, 'transformExtent');
-        const fitSpy = sinon.spy(ol.View.prototype, 'fit');
+        const transformSpy = sinon.spy(proj, 'transformExtent');
+        const fitSpy = sinon.spy(View.prototype, 'fit');
         wrapper.instance().handleResetMap();
         expect(transformSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
@@ -369,9 +377,9 @@ describe('ExportAOI component', () => {
         const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
         const wrapper = getWrapper(props);
         const showSpy = wrapper.instance().showInvalidDrawWarning = sinon.spy();
-        const readSpy = sinon.spy(ol.format.GeoJSON.prototype, 'readFeature');
-        const transformSpy = sinon.spy(ol.geom.Polygon.prototype, 'transform');
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');
+        const transformSpy = sinon.spy(Polygon.prototype, 'transform');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         expect(wrapper.instance().handleSearch(geojson.features[0])).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(showSpy.calledOnce).toBe(true);
@@ -413,8 +421,8 @@ describe('ExportAOI component', () => {
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
         const wrapper = getWrapper(props);
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
-        const geom = new ol.geom.Point([1,1]);
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
+        const geom = new Point([1, 1]);
         wrapper.instance().handleGeoJSONUpload(geom);
         expect(clearSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
@@ -437,10 +445,10 @@ describe('ExportAOI component', () => {
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const serializeSpy = sinon.spy(utils, 'serialize');
         const wrapper = getWrapper(props);
-        const calcSpy = sinon.spy(ol.View.prototype, 'calculateExtent');
-        const fromExtentSpy = sinon.spy(ol.geom.Polygon, 'fromExtent');
-        const getCoordSpy = sinon.spy(ol.geom.Polygon.prototype, 'getCoordinates');
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const calcSpy = sinon.spy(View.prototype, 'calculateExtent');
+        const fromExtentSpy = sinon.spy(Polygon, 'fromExtent');
+        const getCoordSpy = sinon.spy(Polygon.prototype, 'getCoordinates');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         wrapper.instance().setMapView();
         expect(clearSpy.calledOnce).toBe(true);
         expect(calcSpy.calledOnce).toBe(true);
@@ -466,7 +474,7 @@ describe('ExportAOI component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        const activeSpy = sinon.spy(ol.interaction.Draw.prototype, 'setActive');
+        const activeSpy = sinon.spy(Draw.prototype, 'setActive');
         const viewSpy = sinon.spy(utils, 'isViewOutsideValidExtent');
         expect(wrapper.state().mode).toEqual('MODE_NORMAL');
         expect(activeSpy.called).toBe(false);
@@ -486,7 +494,7 @@ describe('ExportAOI component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        const activeSpy = sinon.spy(ol.interaction.Draw.prototype, 'setActive');
+        const activeSpy = sinon.spy(Draw.prototype, 'setActive');
         const viewSpy = sinon.spy(utils, 'isViewOutsideValidExtent');
         expect(wrapper.state().mode).toEqual('MODE_NORMAL');
         expect(activeSpy.called).toBe(false);
@@ -506,7 +514,7 @@ describe('ExportAOI component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
-        const activeSpy = sinon.spy(ol.interaction.Draw.prototype, 'setActive');
+        const activeSpy = sinon.spy(Draw.prototype, 'setActive');
         const viewSpy = sinon.spy(utils, 'isViewOutsideValidExtent');
         expect(wrapper.state().mode).toEqual('MODE_NORMAL');
         expect(activeSpy.called).toBe(false);
@@ -528,7 +536,7 @@ describe('ExportAOI component', () => {
         const goToSpy = sinon.spy(utils, 'goToValidExtent');
         const viewSpy = sinon.spy(utils, 'isViewOutsideValidExtent');
         const view = wrapper.instance().map.getView();
-        const worldWidth = ol.extent.getWidth(view.getProjection().getExtent());
+        const worldWidth = extent.getWidth(view.getProjection().getExtent());
         const center = view.getCenter();
         // set the center to be somewhere that require the map to wrap
         view.setCenter([center[0] + (3 * worldWidth), center[1]]);
@@ -546,28 +554,32 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.setState({mode: 'MODE_DRAW_FREE'})
-        const getGeomSpy = sinon.spy(ol.Feature.prototype, 'getGeometry');
-        const getCoordSpy = sinon.spy(ol.geom.Polygon.prototype, 'getCoordinates');
+        wrapper.setState({ mode: 'MODE_DRAW_FREE' });
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
-        const setCoordSpy = sinon.spy(ol.geom.Polygon.prototype, 'setCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const isValidSpy = sinon.stub(utils, 'isGeoJSONValid').returns(true);
         const updateSpy = wrapper.instance().updateMode = sinon.spy();
+        
+        const geom = new Polygon(
+            [[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]],
+        ).transform(WGS84, WEB_MERCATOR);
+        const getCoordSpy = sinon.spy(geom, 'getCoordinates');
+        const setCoordSpy = sinon.spy(geom, 'setCoordinates');
+        const feat = new Feature({
+            geometry: geom,
+        });
+        const getGeomSpy = sinon.spy(feat, 'getGeometry');
         const event = {
-            feature: new ol.Feature({
-                geometry: new ol.geom.Polygon(
-                    [[
-                        [100.0, 0.0], 
-                        [101.0, 0.0], 
-                        [101.0, 1.0],
-                        [100.0, 1.0], 
-                        [100.0, 0.0]
-                    ]]
-                ).transform(WGS84,WEB_MERCATOR)
-            })
-        }
+            feature: feat,
+        };
+        
         wrapper.instance().handleDrawEnd(event);
         expect(getGeomSpy.calledOnce).toBe(true);
         expect(getCoordSpy.called).toBe(true);
@@ -594,13 +606,13 @@ describe('ExportAOI component', () => {
         props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setState({mode: 'MODE_DRAW_FREE'})
-        const addSpy = sinon.spy(ol.source.Vector.prototype, 'addFeature');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const isValidSpy = sinon.stub(utils, 'isGeoJSONValid').returns(false);
         const updateSpy = wrapper.instance().updateMode = sinon.spy();
         const showWarningSpy = wrapper.instance().showInvalidDrawWarning = sinon.spy();
         const event = {
-            feature: new ol.Feature({
-                geometry: new ol.geom.Polygon(
+            feature: new Feature({
+                geometry: new Polygon(
                     [[
                         [100.0, 0.0], 
                         [101.0, 0.0], 
@@ -627,34 +639,33 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.setState({mode: 'MODE_DRAW_BBOX'})
-        const getGeomSpy = sinon.spy(ol.Feature.prototype, 'getGeometry');
-        const getCoordSpy = sinon.spy(ol.geom.Polygon.prototype, 'getCoordinates');
+        wrapper.setState({ mode: 'MODE_DRAW_BBOX' });
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
-        const setCoordSpy = sinon.spy(ol.geom.Polygon.prototype, 'setCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const serializeSpy = sinon.spy(utils, 'serialize');
         const updateSpy = wrapper.instance().updateMode = sinon.spy();
+        const geom = new Polygon([[ 
+            [100.0, 0.0],
+            [101.0, 0.0],
+            [101.0, 1.0],
+            [100.0, 1.0],
+            [100.0, 0.0],
+        ]]).transform(WGS84, WEB_MERCATOR);
+        const feat = new Feature({
+            geometry: geom,
+        });
         const event = {
-            feature: new ol.Feature({
-                geometry: new ol.geom.Polygon(
-                    [[ 
-                        [100.0, 0.0], 
-                        [101.0, 0.0], 
-                        [101.0, 1.0],
-                        [100.0, 1.0], 
-                        [100.0, 0.0]
-                    ]]
-                ).transform(WGS84,WEB_MERCATOR)
-            })
-        }
+            feature: feat,
+        };
+        const getGeomSpy = sinon.spy(feat, 'getGeometry');
+        const getCoordSpy = sinon.spy(geom, 'getCoordinates');
+        const setCoordSpy = sinon.spy(geom, 'setCoordinates');
+
         wrapper.instance().handleDrawEnd(event);
         expect(getGeomSpy.calledOnce).toBe(true);
         expect(getCoordSpy.called).toBe(true);
         expect(unwrapSpy.calledOnce).toBe(true);
         expect(setCoordSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
-        expect(serializeSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(updateSpy.calledOnce).toBe(true);
@@ -663,7 +674,6 @@ describe('ExportAOI component', () => {
         unwrapSpy.restore();
         setCoordSpy.restore();
         createSpy.restore();
-        serializeSpy.restore();
     });
 
     it('handleDrawEnd should ignore the event if the bbox has no area', () => {
@@ -671,21 +681,19 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.setState({mode: 'MODE_DRAW_BBOX'})
+        wrapper.setState({ mode: 'MODE_DRAW_BBOX' })
         const updateSpy = wrapper.instance().updateMode = sinon.spy();
         const event = {
-            feature: new ol.Feature({
-                geometry: new ol.geom.Polygon(
-                    [[ 
-                        [100.0, 0.0], 
-                        [100.0, 0.0], 
-                        [100.0, 0.0],
-                        [100.0, 0.0], 
-                        [100.0, 0.0]
-                    ]]
-                ).transform(WGS84,WEB_MERCATOR)
-            })
-        }
+            feature: new Feature({
+                geometry: new Polygon([[ 
+                    [100.0, 0.0],
+                    [100.0, 0.0],
+                    [100.0, 0.0],
+                    [100.0, 0.0],
+                    [100.0, 0.0],
+                ]]).transform(WGS84, WEB_MERCATOR),
+            }),
+        };
         wrapper.instance().handleDrawEnd(event);
         expect(props.updateAoiInfo.called).toBe(false);
         expect(props.setNextEnabled.called).toBe(false);
@@ -708,20 +716,17 @@ describe('ExportAOI component', () => {
         const layerSpy = sinon.spy(utils, 'generateDrawLayer');
         const boxSpy = sinon.spy(utils, 'generateDrawBoxInteraction');
         const freeSpy = sinon.spy(utils, 'generateDrawFreeInteraction');
-        const mapSpy = sinon.spy(ol, 'Map');
-        const addInteractionSpy = sinon.spy(ol.Map.prototype, 'addInteraction');
-        const addLayerSpy = sinon.spy(ol.Map.prototype, 'addLayer');
+        const addInteractionSpy = sinon.spy(Map.prototype, 'addInteraction');
+        const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
         wrapper.instance().initializeOpenLayers();
         expect(layerSpy.calledTwice).toBe(true);
         expect(boxSpy.calledOnce).toBe(true);
         expect(freeSpy.calledOnce).toBe(true);
-        expect(mapSpy.calledOnce).toBe(true);
         expect(addInteractionSpy.calledThrice).toBe(true);
         expect(addLayerSpy.calledTwice).toBe(true);
         layerSpy.restore();
         boxSpy.restore();
         freeSpy.restore();
-        mapSpy.restore();
         addInteractionSpy.restore();
         addLayerSpy.restore();
     });
@@ -734,26 +739,25 @@ describe('ExportAOI component', () => {
 
     it('upEvent should check for a feature then updateAOI info if its a valid box', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const geom = new Polygon([[
+            [100.0, 0.0],
+            [101.0, 0.0],
+            [101.0, 1.0],
+            [100.0, 1.0],
+            [100.0, 0.0],
+        ]]);
+        const feature = new Feature({
+            geometry: geom,
         });
         const geojson = utils.createGeoJSON(feature.getGeometry());
         const unwrapStub = sinon.stub(utils, 'unwrapCoordinates')
-            .callsFake((coords) => {return coords});
-        const setSpy = sinon.spy(ol.geom.Polygon.prototype, 'setCoordinates');
+            .callsFake(coords => (coords));
+        const setSpy = sinon.spy(geom, 'setCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const validStub = sinon.stub(utils, 'isGeoJSONValid')
-            .callsFake(() => {return true});
+            .callsFake(() => (true));
         const boxStub = sinon.stub(utils, 'isBox')
-            .callsFake(() => {return true});
+            .callsFake(() => (true));
         const warningSpy = sinon.stub(ExportAOI.prototype, 'showInvalidDrawWarning');
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
@@ -783,26 +787,25 @@ describe('ExportAOI component', () => {
 
     it('upEvent should check for a feature then updateAOI info if its a valid polygon (but not a box)', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [103.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const geom = new Polygon([[
+            [100.0, 0.0],
+            [101.0, 0.0],
+            [103.0, 1.0],
+            [100.0, 1.0],
+            [100.0, 0.0],
+        ]]);
+        const feature = new Feature({
+            geometry: geom,
         });
         const geojson = utils.createGeoJSON(feature.getGeometry());
         const unwrapStub = sinon.stub(utils, 'unwrapCoordinates')
-            .callsFake((coords) => {return coords});
-        const setSpy = sinon.spy(ol.geom.Polygon.prototype, 'setCoordinates');
+            .callsFake(coords => (coords));
+        const setSpy = sinon.spy(geom, 'setCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const validStub = sinon.stub(utils, 'isGeoJSONValid')
-            .callsFake(() => {return true});
+            .callsFake(() => (true));
         const boxStub = sinon.stub(utils, 'isBox')
-            .callsFake(() => {return false});
+            .callsFake(() => (false));
         const warningSpy = sinon.stub(ExportAOI.prototype, 'showInvalidDrawWarning');
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
@@ -832,21 +835,19 @@ describe('ExportAOI component', () => {
 
     it('upEvent should display the invalid draw warning)', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [103.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [103.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
         const unwrapStub = sinon.stub(utils, 'unwrapCoordinates')
-            .callsFake((coords) => {return coords});
+            .callsFake(coords => (coords));
         const validStub = sinon.stub(utils, 'isGeoJSONValid')
-            .callsFake(() => {return false});
+            .callsFake(() => (false));
         const warningSpy = sinon.stub(ExportAOI.prototype, 'showInvalidDrawWarning');
         props.updateAoiInfo = sinon.spy();
         props.setNextDisabled = sinon.spy();
@@ -868,23 +869,21 @@ describe('ExportAOI component', () => {
 
     it('dragEvent should transform a bbox and update its coordinates then move the vertex marker', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const coord = [101.0, 1.0]
+        const coord = [101.0, 1.0];
         const eventCoord = [103.0, 1.0];
-        const evt = {coordinate: eventCoord};
+        const evt = { coordinate: eventCoord };
         const boxStub = sinon.stub(utils, 'isBox').returns(true);
         const clearStub = sinon.stub(utils, 'clearDraw');
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
         wrapper.instance().coordinate = coord;
@@ -897,11 +896,11 @@ describe('ExportAOI component', () => {
         expect(wrapper.instance().coordinate).toEqual([103.0, 1.0]);
         expect(wrapper.instance().feature.getGeometry().getCoordinates())
             .toEqual([[
-                [100.0, 0.0], 
-                [103.0, 0.0], 
+                [100.0, 0.0],
+                [103.0, 0.0],
                 [103.0, 1.0],
-                [100.0, 1.0], 
-                [100.0, 0.0]
+                [100.0, 1.0],
+                [100.0, 0.0],
             ]]);
 
         boxStub.restore();
@@ -911,23 +910,21 @@ describe('ExportAOI component', () => {
 
     it('dragEvent should transform a polygon and update its coordinates then move the vertex marker', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [103.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [103.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const coord = [103.0, 1.0]
+        const coord = [103.0, 1.0];
         const eventCoord = [109.0, 1.0];
-        const evt = {coordinate: eventCoord};
+        const evt = { coordinate: eventCoord };
         const boxStub = sinon.stub(utils, 'isBox').returns(false);
         const clearStub = sinon.stub(utils, 'clearDraw');
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
         wrapper.instance().coordinate = coord;
@@ -940,11 +937,11 @@ describe('ExportAOI component', () => {
         expect(wrapper.instance().coordinate).toEqual([109.0, 1.0]);
         expect(wrapper.instance().feature.getGeometry().getCoordinates())
             .toEqual([[
-                [100.0, 0.0], 
-                [101.0, 0.0], 
+                [100.0, 0.0],
+                [101.0, 0.0],
                 [109.0, 1.0],
-                [100.0, 1.0], 
-                [100.0, 0.0]
+                [100.0, 1.0],
+                [100.0, 0.0],
             ]]);
 
         boxStub.restore();
@@ -954,23 +951,21 @@ describe('ExportAOI component', () => {
 
     it('dragEvent return false if updated feature has no area', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const coord = [101.0, 1.0]
+        const coord = [101.0, 1.0];
         const eventCoord = [100.0, 0.0];
-        const evt = {coordinate: eventCoord};
+        const evt = { coordinate: eventCoord };
         const boxStub = sinon.stub(utils, 'isBox').returns(true);
         const clearStub = sinon.stub(utils, 'clearDraw');
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
         wrapper.instance().coordinate = coord;
@@ -983,11 +978,11 @@ describe('ExportAOI component', () => {
         expect(wrapper.instance().coordinate).toEqual([101.0, 1.0]);
         expect(wrapper.instance().feature.getGeometry().getCoordinates())
             .toEqual([[
-                [100.0, 0.0], 
-                [101.0, 0.0], 
+                [100.0, 0.0],
+                [101.0, 0.0],
                 [101.0, 1.0],
-                [100.0, 1.0], 
-                [100.0, 0.0]
+                [100.0, 1.0],
+                [100.0, 0.0],
             ]]);
 
         boxStub.restore();
@@ -997,29 +992,27 @@ describe('ExportAOI component', () => {
 
     it('moveEvent should add a marker feature to the map', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex')
             .returns([100.0, 0.0]);
         const viewStub = sinon.stub(utils, 'isViewOutsideValidExtent')
             .returns(false);
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        const evt = { pixel: [1, 1], map: wrapper.instance().map }
         wrapper.instance().moveEvent(evt);
         expect(hasFeatureStub.calledOnce).toBe(true);
         expect(getFeaturesStub.calledOnce).toBe(true);
@@ -1035,29 +1028,27 @@ describe('ExportAOI component', () => {
 
     it('moveEvent should not add a marker if pixel is not occupied by a vertex', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex')
             .returns(false);
         const viewStub = sinon.stub(utils, 'isViewOutsideValidExtent')
             .returns(false);
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        const evt = { pixel: [1, 1], map: wrapper.instance().map }
         wrapper.instance().moveEvent(evt);
         expect(hasFeatureStub.calledOnce).toBe(true);
         expect(getFeaturesStub.calledOnce).toBe(true);
@@ -1073,20 +1064,18 @@ describe('ExportAOI component', () => {
 
     it('moveEvent should go to the valid extent', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const viewStub = sinon.stub(utils, 'isViewOutsideValidExtent')
             .returns(true);
@@ -1095,7 +1084,7 @@ describe('ExportAOI component', () => {
             .returns(false);
 
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        const evt = { pixel: [1, 1], map: wrapper.instance().map }
         wrapper.instance().moveEvent(evt);
         expect(hasFeatureStub.calledOnce).toBe(true);
         expect(getFeaturesStub.calledOnce).toBe(true);
@@ -1111,16 +1100,16 @@ describe('ExportAOI component', () => {
 
     it('moveEvent should clear the markerLayer', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Point([100.0, 0.0])
+        const feature = new Feature({
+            geometry: new Point([100.0, 0.0]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(false);
         const clearStub = sinon.stub(utils, 'clearDraw');
 
         const wrapper = getWrapper(props);
         wrapper.instance().markerLayer.getSource().addFeature(feature);
-        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        const evt = { pixel: [1, 1], map: wrapper.instance().map }
         wrapper.instance().moveEvent(evt);
         expect(clearStub.calledOnce).toBe(true);
         expect(hasFeatureStub.calledOnce).toBe(true);
@@ -1131,19 +1120,19 @@ describe('ExportAOI component', () => {
 
     it('moveEvent should skip features that are not polygons', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Point([100.0, 0.0])
+        const feature = new Feature({
+            geometry: new Point([100.0, 0.0]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex');
         const viewStub = sinon.stub(utils, 'isViewOutsideValidExtent')
             .returns(false);
 
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map}
+        const evt = { pixel: [1, 1], map: wrapper.instance().map }
         wrapper.instance().moveEvent(evt);
         expect(hasFeatureStub.calledOnce).toBe(true);
         expect(getFeaturesStub.calledOnce).toBe(true);
@@ -1157,26 +1146,24 @@ describe('ExportAOI component', () => {
 
     it('downEvent should check if there is a feature at the target pixel and return true', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex')
             .returns([100.0, 0.0]);
         
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const evt = { pixel: [1, 1], map: wrapper.instance().map };
         const ret = wrapper.instance().downEvent(evt);
         expect(ret).toBe(true);
         expect(wrapper.instance().feature).toBe(feature);
@@ -1189,10 +1176,10 @@ describe('ExportAOI component', () => {
 
     it('downEvent should return false if map has no feature at pixel', () => {
         const props = getProps();
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(false);
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const evt = { pixel: [1, 1], map: wrapper.instance().map };
         const ret = wrapper.instance().downEvent(evt);
         expect(ret).toBe(false);
         hasFeatureStub.restore();
@@ -1200,15 +1187,15 @@ describe('ExportAOI component', () => {
 
     it('downEvent should return false if feature is not a polygon', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Point([1,1])
+        const feature = new Feature({
+            geometry: new Point([1, 1]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const evt = { pixel: [1, 1], map: wrapper.instance().map };
         const ret = wrapper.instance().downEvent(evt);
         expect(ret).toBe(false);
         hasFeatureStub.restore();
@@ -1217,24 +1204,22 @@ describe('ExportAOI component', () => {
 
     it('downEvent should return false if it is not a vertex', () => {
         const props = getProps();
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(
-                [[
-                    [100.0, 0.0], 
-                    [101.0, 0.0], 
-                    [101.0, 1.0],
-                    [100.0, 1.0], 
-                    [100.0, 0.0]
-                ]]
-            )
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [100.0, 0.0],
+                [101.0, 0.0],
+                [101.0, 1.0],
+                [100.0, 1.0],
+                [100.0, 0.0],
+            ]]),
         });
-        const hasFeatureStub = sinon.stub(ol.Map.prototype, 'hasFeatureAtPixel')
+        const hasFeatureStub = sinon.stub(Map.prototype, 'hasFeatureAtPixel')
             .returns(true);
-        const getFeaturesStub = sinon.stub(ol.Map.prototype, 'getFeaturesAtPixel')
+        const getFeaturesStub = sinon.stub(Map.prototype, 'getFeaturesAtPixel')
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex').returns(false);
         const wrapper = getWrapper(props);
-        const evt = {pixel: [1,1], map: wrapper.instance().map};
+        const evt = { pixel: [1, 1], map: wrapper.instance().map };
         const ret = wrapper.instance().downEvent(evt);
         expect(ret).toBe(false);
         hasFeatureStub.restore();
@@ -1246,7 +1231,7 @@ describe('ExportAOI component', () => {
         const props = getProps();
         props.aoiInfo.geojson = geojson;
         const wrapper = getWrapper(props);
-        const readSpy = sinon.spy(ol.format.GeoJSON.prototype, 'readGeometry');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readGeometry');
         const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
         wrapper.instance().handleZoomToSelection();
         expect(readSpy.calledOnce).toBe(true);
@@ -1278,16 +1263,16 @@ describe('ExportAOI component', () => {
         const wrapper = getWrapper(props);
         props.setNextEnabled.reset();
         const fakeBuffered = { getArea: sinon.stub().returns(10) };
-        const fakeGeom = new ol.geom.SimpleGeometry();
-        const fakeFeature = new ol.Feature();
+        const fakeGeom = new SimpleGeometry();
+        const fakeFeature = new Feature();
         const convertStub = sinon.stub(utils, 'convertGeoJSONtoJSTS')
             .returns(fakeBuffered);
         const jstsToOlStub = sinon.stub(utils, 'jstsGeomToOlGeom')
             .returns(fakeGeom);
-        const getFeatureStub = sinon.stub(ol.source.Vector.prototype, 'getFeatures')
+        const getFeatureStub = sinon.stub(VectorSource.prototype, 'getFeatures')
             .returns([fakeFeature]);
-        const setGeomSpy = sinon.spy(ol.Feature.prototype, 'setGeometry');
-        const addStub = sinon.stub(ol.source.Vector.prototype, 'addFeature');
+        const setGeomSpy = sinon.spy(Feature.prototype, 'setGeometry');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
         const createStub = sinon.stub(utils, 'createGeoJSON')
             .returns(geojson);
 

@@ -228,7 +228,7 @@ export class ExportSummary extends Component {
                                     <tbody>
                                         <tr>
                                             <td style={style.tdHeading}>Area</td>
-                                            <td style={style.tdData}>{this.props.area_str}</td>
+                                            <td style={style.tdData}>{this.props.areaStr}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -260,7 +260,7 @@ export class ExportSummary extends Component {
                     </form>
                 </CustomScrollbar>
             </div>
-        )
+        );
     }
 }
 
@@ -272,7 +272,7 @@ function mapStateToProps(state) {
         projectName: state.exportInfo.projectName,
         makePublic: state.exportInfo.makePublic,
         providers: state.exportInfo.providers,
-        area_str: state.exportInfo.area_str,
+        areaStr: state.exportInfo.areaStr,
         formats: state.exportInfo.formats,
     };
 }
@@ -288,7 +288,7 @@ ExportSummary.propTypes = {
     projectName: PropTypes.string,
     makePublic: PropTypes.bool,
     providers: PropTypes.array,
-    area_str: PropTypes.string,
+    areaStr: PropTypes.string,
     formats: PropTypes.array,
     allFormats: PropTypes.array,
 };

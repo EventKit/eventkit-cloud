@@ -17,6 +17,7 @@ import ExportAOI from './components/CreateDataPack/ExportAOI'
 import ExportInfo from './components/CreateDataPack/ExportInfo'
 import ExportSummary from './components/CreateDataPack/ExportSummary'
 import StatusDownload from './components/StatusDownloadPage/StatusDownload'
+import injectTapEventPlugin from 'react-tap-event-plugin';
 import { UserAuthWrapper } from 'redux-auth-wrapper'
 import { applyMiddleware } from 'redux'
 import { login } from './actions/userActions'
@@ -25,6 +26,7 @@ import { setCSRF } from './actions/authActions'
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
+injectTapEventPlugin();
 
 const UserIsAuthenticated = UserAuthWrapper({
     authSelector: state => state.user.data,

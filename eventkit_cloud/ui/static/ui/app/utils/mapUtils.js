@@ -124,36 +124,6 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
     return geometry;
 }
 
-// export function zoomToExtent(opt_option) {
-//     let options = opt_option ? opt_option : {};
-//     options.className = options.className != undefined ? options.className : ''
-
-//     let button = document.createElement('button');
-//     let icon = document.createElement('i');
-//     icon.className = 'fa fa-globe';
-//     button.appendChild(icon);
-//     let this_ = this;
-
-//     this.zoomer = () => {
-//         const map = this_.getMap();
-//         const view = map.getView();
-//         const size = map.getSize();
-//         const extent = !options.extent ? view.getProjection().getExtent() : options.extent;        
-//         view.fit(extent, size);
-//     }
-
-//     button.addEventListener('click', this_.zoomer, false);
-//     button.addEventListener('touchstart', this_.zoomer, false);
-//     let element = document.createElement('div');
-//     element.className = options.className + ' ol-unselectable ol-control';
-//     element.appendChild(button);
-
-//     ol.control.Control.call(this, {
-//         element: element,
-//         target: options.target
-//     });
-// }
-
 export function generateDrawLayer() {
     return new VectorLayer({
         source: new VectorSource({
@@ -172,11 +142,12 @@ export function generateDrawLayer() {
 }
 
 export function generateDrawBoxInteraction(drawLayer) {
+    const geomFunction = Draw.createBox();
     const draw = new Draw({
         source: drawLayer.getSource(),
         type: 'Circle',
         wrapX: true,
-        geometryFunction: Draw.createBox(),
+        geometryFunction: geomFunction,
         freehand: true,
         style: new Style({
             image: new RegularShape({
@@ -330,20 +301,20 @@ export function unwrapCoordinates(coords, projection) {
     ));
 }
 
-export function unwrapExtent(extent, projection) {
+export function unwrapExtent(inExtent, projection) {
     const projectionExtent = projection.getExtent();
     const worldWidth = extent.getWidth(projectionExtent);
-    let minX = extent[0];
+    let minX = inExtent[0];
     if (minX < projectionExtent[0] || minX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - minX) / worldWidth);
         minX = minX + worldWidth * worldsAway;
     }
-    let maxX = extent[2];
+    let maxX = inExtent[2];
     if (maxX < projectionExtent[0] || maxX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - maxX) / worldWidth);
         maxX = maxX + worldWidth * worldsAway;
     }
-    return [minX, extent[1], maxX, extent[3]];
+    return [minX, inExtent[1], maxX, inExtent[3]];
 }
 
 // check if the view center is outside of the 'valid' extent
@@ -371,8 +342,8 @@ export function isBox(feature) {
         return false;
     }
     // if the extent geometry is the same as the feature geometry we know it is a box
-    const extent = feature.getGeometry().getExtent();
-    const extentGeom = Polygon.fromExtent(extent);
+    const featureExtent = feature.getGeometry().getExtent();
+    const extentGeom = Polygon.fromExtent(featureExtent);
     let extentCoords = extentGeom.getCoordinates();
 
     // since the 5th coord is the same as the first remove it,

@@ -86,7 +86,7 @@ export class DataPackGridItem extends Component {
                     collapsed: false,
                 }),
                 new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ');
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
                 }),
             ],
         });
