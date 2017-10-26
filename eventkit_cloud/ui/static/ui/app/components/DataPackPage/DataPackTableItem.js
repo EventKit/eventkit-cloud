@@ -140,6 +140,7 @@ export class DataPackTableItem extends Component {
                 </TableRowColumn>
                 <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-iconMenu'} style={{paddingRight: '10px', padding: '0px', width: '35px'}}>
                     <IconMenu
+                        className='qa-DataPackTableItem-IconMenu'
                         iconButtonElement={
                             <IconButton
                                 className={'qa-DataPackTableItem-IconMenu'}

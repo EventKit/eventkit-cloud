@@ -31,7 +31,6 @@ export class ExportInfo extends React.Component {
             layers: [],
             steps: [],
             isRunning: false,
-            demoName: "Demo DataPackName"
         }
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);

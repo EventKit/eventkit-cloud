@@ -52,6 +52,7 @@ export class ExportAOI extends Component {
             mode: MODE_NORMAL,
             steps: [],
             isRunning: false,
+            fakeData: false,
         }
     }
 
@@ -410,8 +411,15 @@ export class ExportAOI extends Component {
         this.props.setNextDisabled();
 
         if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
-            this.props.clearAoiInfo();
-            this.handleResetMap();
+            if (this.state.fakeData === true){
+                this.props.clearAoiInfo();
+                this.handleResetMap();
+            }
+            else {
+                this.setButtonSelected('box');
+                this.props.setNextEnabled();
+            }
+
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this.refs.joyride.reset(true);
@@ -419,8 +427,14 @@ export class ExportAOI extends Component {
 
         if(data.index === 2 && data.type === 'tooltip:before') {
             //make the map have a selection, make toolbar have the X
-            this.drawFakeBbox();
             this.setButtonSelected('box');
+            if (this.props.aoiInfo.description === null) {
+                this.drawFakeBbox();
+                this.setState({fakeData : true});
+            }
+            else {
+                this.handleZoomToSelection();
+            }
         }
 
         if(data.index === 3 && data.type === 'tooltip:before') {

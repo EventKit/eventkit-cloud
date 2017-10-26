@@ -133,9 +133,12 @@ export class BreadcrumbStepper extends React.Component {
                                    onWalkthroughReset={this.props.onWalkthroughReset}/>
             case 2:
                 return <ExportSummary
-                                   allFormats={this.props.formats}/>
+                                   allFormats={this.props.formats}
+                                   walkthroughClicked={this.props.walkthroughClicked}
+                                   onWalkthroughReset={this.props.onWalkthroughReset}/>
             default:
-                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}/>;
+                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}
+                                  onWalkthroughReset={this.props.onWalkthroughReset}/>;
         }
     }
 

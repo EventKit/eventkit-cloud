@@ -6,17 +6,88 @@ import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar'
 import Paper from 'material-ui/Paper'
 import ol3mapCss from '../../styles/ol3map.css';
+import Joyride from 'react-joyride';
 
 export class ExportSummary extends Component {
     constructor(props) {
         super(props)
         this.state = {
             expanded: false,
+            steps: [],
+            isRunning: false,
         }
+        this.callback = this.callback.bind(this);
     }
 
     expandedChange(expanded) {
         this.setState({expanded: expanded});
+    }
+
+    componentDidMount(){
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf'
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf'
+            },
+            skip: {
+                color: '#8b9396'
+            },
+            back: {
+                color: '#8b9396'
+            },
+            hole: {
+                backgroundColor: 'rgba(226,226,226, 0.2)',
+            }
+        }
+
+        const steps = [
+            {
+                title: 'Verify Information',
+                text: 'Verify the information entered is correct before proceeding.',
+                selector: '.qa-ExportSummary-div',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Go Back to Edit',
+                text: 'If you need to make changes before submitting, use the small blue arrow to navigate back.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Submit DataPack',
+                text: 'Once ready, click the large green button to kick off the DataPack submission process.<br>You will be redirected to the Status and Download page.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+        ];
+
+        this.joyrideAddSteps(steps);
+    }
+
+    componentWillReceiveProps(nextProps) {
+
+        if(nextProps.walkthroughClicked == true && this.state.isRunning == false)
+        {
+            this.refs.joyride.reset(true);
+            this.setState({isRunning: true});
+        }
+
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -81,7 +152,48 @@ export class ExportSummary extends Component {
         this._map.getView().fit(source.getExtent(), this._map.getSize());
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState(currentState => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+
+    callback(data) {
+        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+            this.setState({ isRunning: false });
+            this.props.onWalkthroughReset();
+            this.refs.joyride.reset(true);
+        }
+        if(data.index === 0 && data.type === 'tooltip:before') {
+
+        }
+
+        if(data.index === 2 && data.type === 'tooltip:before') {
+
+        }
+    }
+
+    handleJoyride() {
+        if(this.state.isRunning === true){
+            this.refs.joyride.reset(true);
+        }
+        else {
+            this.setState({isRunning: true})
+        }
+    }
+
     render() {
+        const {steps, isRunning} = this.state;
+
         const style ={
             root : {
                 width:'100%',
@@ -174,6 +286,24 @@ export class ExportSummary extends Component {
         });
         return (
             <div id="root" style={style.root}>
+                <Joyride
+                    callback={this.callback}
+                    ref={'joyride'}
+                    debug={false}
+                    steps={steps}
+                    autoStart={true}
+                    type={'continuous'}
+                    disableOverlay
+                    showSkipButton={true}
+                    showStepsProgress={true}
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}/>
                 <CustomScrollbar>
                     <form id="form" style={style.form} className={'qa-ExportSummary-form'}>
                         <Paper className={'qa-ExportSummary-Paper'}  style={style.paper} zDepth={2} rounded>
@@ -181,7 +311,7 @@ export class ExportSummary extends Component {
                             <div id='subHeading' style={style.subHeading} className={'qa-ExportSummary-subHeading'}>
                                 Please make sure all the information below is correct.
                             </div>
-                            <div>
+                            <div className={'qa-ExportSummary-div'}>
                                 <div id="export-information-heading" className={'qa-ExportSummary-exportHeading'} style={style.exportHeading}>
                                     Export Information
                                 </div>
@@ -279,6 +409,8 @@ ExportSummary.propTypes = {
     area_str: PropTypes.string,
     formats: PropTypes.array,
     allFormats: PropTypes.array,
+    walkthrough: React.PropTypes.bool,
+    onWalkthroughReset: React.PropTypes.func,
 }
 
 export default connect(
