@@ -60,6 +60,8 @@ const types = {
     FORMATS_RECEIVED: 'FORMATS_RECEIVED',
     SET_PAGE_ORDER: 'SET_PAGE_ORDER',
     SET_PAGE_VIEW: 'SET_PAGE_VIEW',
+    START_TOUR: 'START_TOUR',
+    END_TOUR: 'END_TOUR'
 }
 
 export default types

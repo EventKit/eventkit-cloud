@@ -96,4 +96,5 @@ export default {
         error: null,
     },
     formats: [],
+    tour: false,
 }

@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {getRuns, deleteRuns, setPageOrder, setPageView} from '../../actions/DataPackPageActions';
-import {getProviders} from '../../actions/exportsActions'
+import {getProviders, endTour} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
@@ -78,6 +78,10 @@ export class DataPackPage extends React.Component {
             if(nextProps.runsDeletion.deleted) {
                 this.setState({loading: true}, this.makeRunRequest);
             }
+        }
+        if (nextProps.tour == true && this.state.isRunning == false){
+            console.log("Start the tour")
+            this.setState({isRunning:true})
         }
     }
 
@@ -476,7 +480,8 @@ export class DataPackPage extends React.Component {
         if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false });
-            this.refs.joyride.reset(true)
+            this.refs.joyride.reset(true);
+            this.props.endTour();
         }
         if(data.index === 2 && data.type === 'step:before') {
             if (this.state.open == false){
@@ -497,7 +502,7 @@ export class DataPackPage extends React.Component {
 
     render() {
         const {steps, isRunning} = this.state;
-        const pageTitle = <div style={{display: 'inline-block'}}><div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library </div><div onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>{this.state.isRunning == false ? 'Page Tour' : 'Close Tour'}</div></div>
+        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library </div>
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
@@ -651,6 +656,7 @@ DataPackPage.propTypes = {
     resetGeoJSONFile: PropTypes.func.isRequired,
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
+    tour: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -662,6 +668,7 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
+        tour: state.tour,
     };
 }
 
@@ -690,6 +697,9 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
+        },
+        endTour: () => {
+            dispatch(endTour());
         }
     }
 }
