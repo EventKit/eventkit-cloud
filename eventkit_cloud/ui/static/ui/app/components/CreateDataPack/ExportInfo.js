@@ -236,7 +236,7 @@ export class ExportInfo extends React.Component {
         this._map.getView().fit(source.getExtent(), this._map.getSize())
     }
 
-    handleFormatsClose = () => {
+    handleFormatsClose() {
         this.setState({formatsDialogOpen: false});
     };
 
@@ -244,7 +244,7 @@ export class ExportInfo extends React.Component {
         this.setState({formatsDialogOpen: true})
     };
 
-    handleProjectionsClose = () => {
+    handleProjectionsClose() {
         this.setState({projectionsDialogOpen: false});
     };
 
@@ -252,11 +252,11 @@ export class ExportInfo extends React.Component {
         this.setState({projectionsDialogOpen: true})
     };
 
-    setLicenseOpen = () => {
+    setLicenseOpen() {
         this.setState({licenseDialogOpen: true});
     }
 
-    handleLicenseClose = () => {
+    handleLicenseClose() {
         this.setState({licenseDialogOpen: false});
     }
 
