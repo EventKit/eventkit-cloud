@@ -3,6 +3,7 @@ services:
   base:
      volumes:
        - ./:/var/lib/eventkit/
+       - ../django-audit-logging:/var/lib/.virtualenvs/eventkit/src/django-audit-logging
      build:
        context: .
        dockerfile: config/Dockerfile
