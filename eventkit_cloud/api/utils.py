@@ -1,4 +1,5 @@
 from rest_framework.views import exception_handler
+from rest_framework.exceptions import ValidationError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,21 +23,44 @@ def eventkit_exception_handler(exc, context):
     # to get the standard error response. Parse the response accordingly.
     response = exception_handler(exc, context)
     error = response.data
-    error_response = {'status': response.status_code,
-                      'title': error.get('title') or stringify(error.get('id')) or stringify(error.get('description')),
-                      'detail': error.get('detail') or stringify(error.get('message')) or parseProviderTasks(error)}
-    # Parse title if not already defined.
-    # Define it as the title of the erroneous form field if such data is present.
-    if not error_response.get('title'):
-        if error.get('provider_tasks'):
-            error_response['title'] = error.get('provider_tasks')[0].keys()[0];
+    status = response.status_code
+    error_class = exc.__class__.__name__
+
+    error_response = {
+        'status': status,
+        'title': error_class,
+        'detail': error
+    }
+
+    if (error.get('id')) and (error.get('message')):
+        # if both id and message are present we can assume that this error was generated from validators.py
+        # and use them as the title and detail
+        error_response['title'] = stringify(error.get('id'))
+        error_response['detail'] = stringify(error.get('message'))
+
+    elif isinstance(exc, ValidationError):
+        # if the error is a ValidationError type and not from validators.py we need to get rid of the wonky format.
+        # Error might looks like this: {'name': [u'Ensure this field has no more than 100 characters.']}
+        # it should look like this: 'name: Ensure this field has no more than 100 characters.'
+        detail = ''
+        if isinstance(error, dict):
+            if error.get('provider_tasks'):
+                # provider tasks errors have some extra nesting that needs to be handled
+                detail = parse_provider_tasks(error)
+            else:
+                for key, value in error.iteritems():
+                    detail += '{0}: {1}\n'.format(key, stringify(value))
+            detail = detail.rstrip('\n')
         else:
-            error_response['title'] = "Improperly formatted JSON"
+            detail = stringify(error)
+
+        error_response['detail'] = detail
+
     response.data = {'errors':[error_response]}
     return response
 
 
-def parseProviderTasks(error):
+def parse_provider_tasks(error):
     """
     Parse out provider tasks depending on what kind of object it is and isolate the message about a specific form field if necessary.
     :param error:
@@ -44,11 +68,12 @@ def parseProviderTasks(error):
     """
     if error.get('provider_tasks'):
         if isinstance(error.get('provider_tasks')[0], dict):
-            return stringify(error.get('provider_tasks')[0].values()[0]);
+            return stringify(error.get('provider_tasks')[0].values()[0])
         else:
             return error.get('provider_tasks')[0]
     else:
-        return error.get('provider_tasks');
+        return error.get('provider_tasks')
+
 
 def stringify(item):
     """

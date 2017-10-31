@@ -363,6 +363,25 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data['errors'][0]['title'])
 
+    def test_string_too_long_param(self,):
+        url = reverse('api:jobs-list')
+        formats = [export_format.slug for export_format in ExportFormat.objects.all()]
+        name = 'x' * 300
+        request_data = {
+            'name': name,
+            'description': 'Test description',
+            'event': 'Test event',
+            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
+        }
+        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEquals(response['Content-Type'], 'application/json')
+        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEquals('ValidationError', response.data['errors'][0]['title'])
+        self.assertEquals('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
+
+
     def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
         request_data = {
