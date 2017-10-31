@@ -1,39 +1,46 @@
-import "babel-polyfill";
+import 'babel-polyfill';
 import React from 'react';
 import { render } from 'react-dom';
-import configureStore from './store/configureStore';
 import { Provider } from 'react-redux';
-import { browserHistory, Router, Route, IndexRoute, Redirect } from 'react-router'
-import { syncHistoryWithStore, routerActions, routerMiddleware } from 'react-router-redux'
-import Application from './components/Application'
-import LoginPage from './components/auth/LoginPage'
-import Loading from './components/auth/Loading'
-import Logout from './containers/logoutContainer'
-import About from './components/About/About'
-import Account from './components/AccountPage/Account'
-import DataPackPage from './components/DataPackPage/DataPackPage'
-import CreateExport from './components/CreateDataPack/CreateExport'
-import ExportAOI from './components/CreateDataPack/ExportAOI'
-import ExportInfo from './components/CreateDataPack/ExportInfo'
-import ExportSummary from './components/CreateDataPack/ExportSummary'
-import StatusDownload from './components/StatusDownloadPage/StatusDownload'
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import { UserAuthWrapper } from 'redux-auth-wrapper'
-import { applyMiddleware } from 'redux'
-import { login } from './actions/userActions'
-import { setCSRF } from './actions/authActions'
+import { UserAuthWrapper } from 'redux-auth-wrapper';
+import { browserHistory, Router, Route, Redirect } from 'react-router';
+import { syncHistoryWithStore, routerActions } from 'react-router-redux';
+import configureStore from './store/configureStore';
+import Application from './components/Application';
+import LoginPage from './components/auth/LoginPage';
+import Loading from './components/auth/Loading';
+import Logout from './containers/logoutContainer';
+import About from './components/About/About';
+import Account from './components/AccountPage/Account';
+import DataPackPage from './components/DataPackPage/DataPackPage';
+import CreateExport from './components/CreateDataPack/CreateExport';
+import ExportAOI from './components/CreateDataPack/ExportAOI';
+import ExportInfo from './components/CreateDataPack/ExportInfo';
+import ExportSummary from './components/CreateDataPack/ExportSummary';
+import StatusDownload from './components/StatusDownloadPage/StatusDownload';
+import { isBrowserValid } from './utils/generic';
+import { login } from './actions/userActions';
 
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
 injectTapEventPlugin();
 
+function allTrue(acceptedLicenses) {
+    for (const l in acceptedLicenses) {
+        if (acceptedLicenses[l]) {continue;}
+        else {return false;}
+    }
+    return true;
+}
+
 const UserIsAuthenticated = UserAuthWrapper({
     authSelector: state => state.user.data,
     authenticatingSelector: state => state.user.isLoading,
     LoadingComponent: Loading,
     redirectAction: routerActions.replace,
-    wrapperDisplayName: 'UserIsAuthenticated'
+    wrapperDisplayName: 'UserIsAuthenticated',
 });
 
 const UserIsNotAuthenticated = UserAuthWrapper({
@@ -43,7 +50,7 @@ const UserIsNotAuthenticated = UserAuthWrapper({
     // Want to redirect the user when they are done loading and authenticated
     predicate: user => !user.data && user.isLoading === false,
     failureRedirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
-    allowRedirectBack: false
+    allowRedirectBack: false,
 });
 
 const UserHasAgreed = UserAuthWrapper({
@@ -51,44 +58,57 @@ const UserHasAgreed = UserAuthWrapper({
     redirectAction: routerActions.replace,
     failureRedirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    predicate: userData => allTrue(userData.accepted_licenses)
+    predicate: userData => allTrue(userData.accepted_licenses),
 });
 
 function checkAuth(store) {
-  return (nextState, replace) => {
-    let { user } = store.getState();
-    if (!user.data){
-        store.dispatch(login(null, (nextState.location ? nextState.location.query : "")));
+    if (isBrowserValid()) {
+        return (nextState, replace) => {
+            const { user } = store.getState();
+            if (!user.data) {
+                store.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+            }
+        };
     }
-  }
-};
-
-function allTrue(accepted_licenses) {
-    for (const l in accepted_licenses) {
-        if(accepted_licenses[l]) {continue;}
-        else {return false;}
-    }
-    return true
+    return null;
 }
 
 render(
     <Provider store={store}>
         <Router history={history}>
-            <Redirect from="/" to="/exports"/>
+            <Redirect from="/" to="/exports" />
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
-                <Route path="/login" component={UserIsNotAuthenticated(LoginPage)}/>
-                <Route path="/logout" component={Logout}/>
-                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}/>
-                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))}>
-                    <Route path="/exportAOI" component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}/>
-                    <Route path="/exportInfo" component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}/>
-                    <Route path="/exportSummary" component={UserIsAuthenticated(UserHasAgreed(ExportSummary))}/>
+                <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+                <Route path="/logout" component={Logout} />
+                <Route
+                    path="/exports"
+                    component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}
+                />
+                <Route
+                    path="/create"
+                    component={UserIsAuthenticated(UserHasAgreed(CreateExport))}
+                >
+                    <Route
+                        path="/exportAOI"
+                        component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}
+                    />
+                    <Route
+                        path="/exportInfo"
+                        component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}
+                    />
+                    <Route
+                        path="/exportSummary"
+                        component={UserIsAuthenticated(UserHasAgreed(ExportSummary))}
+                    />
                 </Route>
-                <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}/>
-                <Route path="/about" component={UserIsAuthenticated(About)}/>
-                <Route path="/account" component={UserIsAuthenticated(Account)}/>
+                <Route
+                    path="/status/:jobuid"
+                    component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
+                />
+                <Route path="/about" component={UserIsAuthenticated(About)} />
+                <Route path="/account" component={UserIsAuthenticated(Account)} />
             </Route>
         </Router>
     </Provider>,
-    document.getElementById('root')
+    document.getElementById('root'),
 );

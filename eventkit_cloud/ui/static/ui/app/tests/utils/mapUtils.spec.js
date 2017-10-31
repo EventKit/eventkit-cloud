@@ -10,7 +10,7 @@ import Draw from 'ol/interaction/draw';
 import VectorSource from 'ol/source/vector';
 import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
-import * as utils from '../utils/mapUtils';
+import * as utils from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
