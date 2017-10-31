@@ -30,7 +30,7 @@ export class DataPackListItem extends Component {
             deleteDialogOpen: false
         };
     }
-    handleProviderClose = () => {
+    handleProviderClose() {
         this.setState({providerDialogOpen: false});
 
     };

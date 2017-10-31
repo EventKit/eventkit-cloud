@@ -101,7 +101,7 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleSortChange = (value) => {
+    handleSortChange(value) {
         this.setState({order: value, loading: true}, this.makeRunRequest);
     }
 
@@ -136,18 +136,18 @@ export class DataPackPage extends React.Component {
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
-    handleOwnerFilter = (event, index, value) => {
+    handleOwnerFilter(event, index, value) {
         this.setState({ownerFilter: value, loading: true}, this.makeRunRequest);
     }
 
-    handleFilterApply = (state) => {
+    handleFilterApply(state) {
         this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
         if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
     }
 
-    handleFilterClear = () => {
+    handleFilterClear() {
         this.setState({
             published: null,
             minDate: null,
@@ -164,7 +164,7 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleSpatialFilter = (geojson) => {
+    handleSpatialFilter(geojson) {
         this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
     }
 
@@ -180,7 +180,7 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleToggle = () => {
+    handleToggle() {
         this.setState({open: !this.state.open});
     }
 

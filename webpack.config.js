@@ -86,8 +86,8 @@ var config = {
 if (PROD) {
     config.plugins.push(new webpack.DefinePlugin({'process.env.NODE_ENV': "'production'"}));
     config.plugins.push(new webpack.optimize.UglifyJsPlugin({
-        compressor: { warnings: false },
-        sourceMap: true,
+        compress: { warnings: false },
+        sourceMap: false,
     }));
 } else {
     config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080')
