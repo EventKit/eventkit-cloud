@@ -27,7 +27,7 @@ describe('BreadcrumbStepper component', () => {
                 projectName: '',
                 makePublic: false,
                 providers: providers,
-                area_str: '',
+                areaStr: '',
                 formats: ['gpkg']
             },
             formats: formats,

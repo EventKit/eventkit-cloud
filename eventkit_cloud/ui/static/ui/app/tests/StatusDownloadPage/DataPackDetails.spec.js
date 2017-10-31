@@ -11,7 +11,6 @@ import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import Checkbox from 'material-ui/Checkbox';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react-dom/test-utils';
-import '../../components/tap_events'
 
 describe('DataPackDetails component', () => {
 
