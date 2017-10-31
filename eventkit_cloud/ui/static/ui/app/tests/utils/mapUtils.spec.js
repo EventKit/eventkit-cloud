@@ -1,10 +1,8 @@
 import ol from 'openlayers';
 import sinon from 'sinon';
 import raf from 'raf';
-import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
-import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
-import * as utils from '../utils/mapUtils';
+import * as utils from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();

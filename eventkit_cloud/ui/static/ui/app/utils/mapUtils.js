@@ -155,7 +155,6 @@ export function generateDrawLayer() {
             image: new ol.style.Icon({
                 src: require("../../images/ic_room_black_24px.svg"),
             }),
-
         }),
     });
 }
