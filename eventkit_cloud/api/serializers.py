@@ -486,7 +486,6 @@ class ListJobSerializer(serializers.Serializer):
         return obj.user.username
 
 
-
 class JobSerializer(serializers.Serializer):
     """
     Return a full representation of an export Job.
