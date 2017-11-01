@@ -51,7 +51,7 @@ export default {
         projectName: '',
         makePublic: false,
         providers: [],
-        area_str: '',
+        areaStr: '',
         formats: [],
     },
     providers: [],

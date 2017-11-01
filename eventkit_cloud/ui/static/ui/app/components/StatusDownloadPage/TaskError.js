@@ -1,5 +1,4 @@
 import React, {PropTypes, Component} from 'react'
-import '../tap_events'
 import Warning from 'material-ui/svg-icons/alert/warning'
 import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';

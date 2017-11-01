@@ -1,38 +1,50 @@
-import React from 'react'
+import React from 'react';
 import sinon from 'sinon';
-import {mount} from 'enzyme'
+import raf from 'raf';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
-import {ExportInfo} from '../../components/CreateDataPack/ExportInfo'
-import CustomScrollbar from '../../components/CustomScrollbar';
-import ol from 'openlayers';
-import { List, ListItem} from 'material-ui/List';
-import {Card, CardActions, CardHeader, CardText} from 'material-ui/Card';
+import { List, ListItem } from 'material-ui/List';
+import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
-import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
+
+import Map from 'ol/map';
+import View from 'ol/view';
+import interaction from 'ol/interaction';
+import VectorSource from 'ol/source/vector';
+import GeoJSON from 'ol/format/geojson';
+
 import BaseDialog from '../../components/BaseDialog';
+import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
+import CustomScrollbar from '../../components/CustomScrollbar';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
-import raf from 'raf';
 raf.polyfill();
 
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
-    const getProps = () => {
-        return {
-            geojson: { 
-                "type": "FeatureCollection",
-                "features": [{ "type": "Feature",
-                    "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-                        [100.0, 1.0], [100.0, 0.0] ]
-                        ]
-                    },}]
+    const getProps = () => (
+        {
+            geojson: {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [
+                            [
+                                [100.0, 0.0],
+                                [101.0, 0.0],
+                                [101.0, 1.0],
+                                [100.0, 1.0],
+                                [100.0, 0.0],
+                            ],
+                        ],
+                    },
+                }],
             },
             exportInfo: {
                 exportName: '',
@@ -41,14 +53,15 @@ describe('ExportInfo component', () => {
                 makePublic: false,
             },
             providers: [],
-            formats:formats,
+            formats,
             nextEnabled: true,
             handlePrev: () => {},
             updateExportInfo: () => {},
             setNextDisabled: () => {},
             setNextEnabled: () => {},
         }
-    }
+    );
+
     const formats = [
         {
             "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
@@ -66,21 +79,21 @@ describe('ExportInfo component', () => {
         },]
 
     const getWrapper = (props) => {
-        const config = {BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png'};
-        return mount(<ExportInfo {...props}/>, {
-            context: {muiTheme, config},
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
+        return mount(<ExportInfo {...props} />, {
+            context: { muiTheme, config },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object
-            }
+                config: React.PropTypes.object,
+            },
         });
-    }
+    };
 
     it('should render a form', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('#root')).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);        
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find('#paper')).toHaveLength(1);
         expect(wrapper.find('#mainHeading')).toHaveLength(1);
@@ -105,11 +118,11 @@ describe('ExportInfo component', () => {
         const expectedString = '12,393 sq km';
         const expectedFormat = ['gpkg'];
         const props = getProps();
-        props.updateExportInfo = new sinon.spy();
-        props.setNextDisabled = new sinon.spy();
-        const mountSpy = new sinon.spy(ExportInfo.prototype, 'componentDidMount');
-        const areaSpy = new sinon.spy(ExportInfo.prototype, 'setArea');
-        const hasFieldsSpy = new sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
+        props.updateExportInfo = sinon.spy();
+        props.setNextDisabled = sinon.spy();
+        const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
+        const areaSpy = sinon.spy(ExportInfo.prototype, 'setArea');
+        const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
@@ -118,8 +131,8 @@ describe('ExportInfo component', () => {
         expect(areaSpy.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            area_str: expectedString,
-            formats: expectedFormat
+            areaStr: expectedString,
+            formats: expectedFormat,
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
         expect(wrapper.instance().nameHandler).not.toBe(undefined);
@@ -132,12 +145,12 @@ describe('ExportInfo component', () => {
 
     it('componentDidUpdate should initializeOpenLayers if expanded', () => {
         const props = getProps();
-        const initSpy = new sinon.spy();
-        const updateSpy = new sinon.spy(ExportInfo.prototype, 'componentDidUpdate');
+        const initSpy = sinon.spy();
+        const updateSpy = sinon.spy(ExportInfo.prototype, 'componentDidUpdate');
         const wrapper = getWrapper(props);
-        wrapper.instance()._initializeOpenLayers = initSpy;
+        wrapper.instance().initializeOpenLayers = initSpy;
         expect(wrapper.state().expanded).toBe(false);
-        wrapper.setState({expanded: true});
+        wrapper.setState({ expanded: true });
         expect(updateSpy.calledOnce).toBe(true);
         expect(wrapper.state().expanded).toBe(true);
         expect(initSpy.calledOnce).toBe(true);
@@ -146,7 +159,7 @@ describe('ExportInfo component', () => {
 
     it('componentWillReceiveProps should setNextEnabled', () => {
         const props = getProps();
-        props.setNextEnabled = new sinon.spy();
+        props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.setNextEnabled.called).toBe(false);
         const nextProps = getProps();
@@ -161,7 +174,7 @@ describe('ExportInfo component', () => {
 
     it('componentWillReceiveProps should setNextDisabled', () => {
         const props = getProps();
-        props.setNextDisabled = new sinon.spy();
+        props.setNextDisabled = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         const nextProps = getProps();
@@ -172,9 +185,9 @@ describe('ExportInfo component', () => {
 
     it('onNameChange should call persist and nameHandler', () => {
         const props = getProps();
-        const event = {persist: new sinon.spy()}
+        const event = { persist: sinon.spy() };
         const wrapper = getWrapper(props);
-        wrapper.instance().nameHandler = new sinon.spy();
+        wrapper.instance().nameHandler = sinon.spy();
         wrapper.instance().onNameChange(event);
         expect(event.persist.calledOnce).toBe(true);
         expect(wrapper.instance().nameHandler.calledOnce).toBe(true);
@@ -183,9 +196,9 @@ describe('ExportInfo component', () => {
 
     it('onDescriptionChange should call persist and nameHandler', () => {
         const props = getProps();
-        const event = {persist: new sinon.spy()}
+        const event = { persist: sinon.spy() };
         const wrapper = getWrapper(props);
-        wrapper.instance().descriptionHandler = new sinon.spy();
+        wrapper.instance().descriptionHandler = sinon.spy();
         wrapper.instance().onDescriptionChange(event);
         expect(event.persist.calledOnce).toBe(true);
         expect(wrapper.instance().descriptionHandler.calledOnce).toBe(true);
@@ -194,9 +207,9 @@ describe('ExportInfo component', () => {
 
     it('onProjectChange should call persist and nameHandler', () => {
         const props = getProps();
-        const event = {persist: new sinon.spy()}
+        const event = { persist: sinon.spy() };
         const wrapper = getWrapper(props);
-        wrapper.instance().projectHandler = new sinon.spy();
+        wrapper.instance().projectHandler = sinon.spy();
         wrapper.instance().onProjectChange(event);
         expect(event.persist.calledOnce).toBe(true);
         expect(wrapper.instance().projectHandler.calledOnce).toBe(true);
@@ -204,11 +217,11 @@ describe('ExportInfo component', () => {
     });
 
     it('onChangeCheck should add a provider', () => {
-        const appProviders = [{name: 'one'}, {name: 'two'}];
-        const exportProviders = [{name: 'one'}];
-        const event = {target: {name: 'two', checked: true}};
+        const appProviders = [{ name: 'one' }, { name: 'two' }];
+        const exportProviders = [{ name: 'one' }];
+        const event = { target: { name: 'two', checked: true } };
         const props = getProps();
-        props.updateExportInfo = new sinon.spy();
+        props.updateExportInfo = sinon.spy();
         props.exportInfo.providers = exportProviders;
         props.providers = appProviders;
         const wrapper = getWrapper(props);
@@ -216,16 +229,16 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            providers: [{name: 'one'}, {name: 'two'}]
+            providers: [{ name: 'one' }, { name: 'two' }],
         })).toBe(true);
     });
 
     it('onChangeCheck should remove a provider', () => {
-        const appProviders = [{name: 'one'}, {name: 'two'}];
-        const exportProviders = [{name: 'one'}, {name: 'two'}];
-        const event = {target: {name: 'two', checked: false}};
+        const appProviders = [{ name: 'one' }, { name: 'two' }];
+        const exportProviders = [{ name: 'one' }, { name: 'two' }];
+        const event = { target: { name: 'two', checked: false } };
         const props = getProps();
-        props.updateExportInfo = new sinon.spy();
+        props.updateExportInfo = sinon.spy();
         props.exportInfo.providers = exportProviders;
         props.providers = appProviders;
         const wrapper = getWrapper(props);
@@ -233,38 +246,48 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            providers: [{name: 'one'}]
+            providers: [{ name: 'one' }],
         })).toBe(true);
     });
 
     it('toggleCheckbox should update exportInfo with new makePublic state', () => {
         const props = getProps();
-        props.updateExportInfo = new sinon.spy();
+        props.updateExportInfo = sinon.spy();
         const wrapper = getWrapper(props);
-        const newState =  !props.exportInfo.makePublic;
+        const newState = !props.exportInfo.makePublic;
         wrapper.instance().toggleCheckbox({}, newState);
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            makePublic: newState
+            makePublic: newState,
         })).toBe(true);
     });
 
     it('expandedChange should setState', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(ExportInfo.prototype, 'setState');
+        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         // dont actually create a map when expanded
-        wrapper.instance()._initializeOpenLayers = new sinon.spy();
+        wrapper.instance().initializeOpenLayers = sinon.spy();
         wrapper.instance().expandedChange(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({expanded: true})).toBe(true);
+        expect(stateSpy.calledWith({ expanded: true })).toBe(true);
     });
 
     it('hasRequiredFields should return whether the exportInfo required fields are filled', () => {
-        const invalid = {exportName: 'name', datapackDescription: 'stuff', projectName: 'name', providers: []};
-        const valid = {exportName: 'name', datapackDescription: 'stuff', projectName: 'name', providers: [{}]};
+        const invalid = {
+            exportName: 'name',
+            datapackDescription: 'stuff',
+            projectName: 'name',
+            providers: [],
+        };
+        const valid = {
+            exportName: 'name',
+            datapackDescription: 'stuff',
+            projectName: 'name',
+            providers: [{}],
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.instance().hasRequiredFields(invalid)).toBe(false);
@@ -274,7 +297,7 @@ describe('ExportInfo component', () => {
     it('setArea should construct an area string and update exportInfo', () => {
         const expectedString = '12,393 sq km';
         const props = getProps();
-        props.updateExportInfo = new sinon.spy();
+        props.updateExportInfo = sinon.spy();
         // dont run component did mount so setArea is not called yet
         const mountFunc = ExportInfo.prototype.componentDidMount;
         ExportInfo.prototype.componentDidMount = () => {};
@@ -286,20 +309,20 @@ describe('ExportInfo component', () => {
     it('initializeOpenLayers should create a map and add layer', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const xyzSpy = new sinon.spy(ol.source, 'XYZ');
-        const tileSpy = new sinon.spy(ol.layer, 'Tile');
-        const mapSpy = new sinon.spy(ol, 'Map');
-        const viewSpy = new sinon.spy(ol, 'View');
-        const sourceSpy = new sinon.spy(ol.source, 'Vector');
-        const geoSpy = new sinon.spy(ol.format, 'GeoJSON');
-        const readSpy = new sinon.spy(ol.format.GeoJSON.prototype, 'readFeature');
-        wrapper.instance()._initializeOpenLayers();
-        expect(xyzSpy.calledOnce).toBe(true);
-        expect(tileSpy.calledOnce).toBe(true);
-        expect(mapSpy.calledOnce).toBe(true);
-        expect(viewSpy.calledOnce).toBe(true);
-        expect(sourceSpy.calledOnce).toBe(true);
-        expect(geoSpy.calledOnce).toBe(true);
+        const defaultSpy = sinon.spy(interaction, 'defaults');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');
+        const addFeatureSpy = sinon.spy(VectorSource.prototype, 'addFeature');
+        const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
+        const getViewSpy = sinon.spy(Map.prototype, 'getView');
+        const getSizeSpy = sinon.spy(Map.prototype, 'getSize');
+        const fitSpy = sinon.spy(View.prototype, 'fit');
+        wrapper.instance().initializeOpenLayers();
+        expect(defaultSpy.calledOnce).toBe(true);
         expect(readSpy.calledOnce).toBe(true);
+        expect(addFeatureSpy.calledOnce).toBe(true);
+        expect(addLayerSpy.calledOnce).toBe(true);
+        expect(getViewSpy.calledTwice).toBe(true);
+        expect(fitSpy.calledOnce).toBe(true);
+        expect(getSizeSpy.calledOnce).toBe(true);
     });
 });

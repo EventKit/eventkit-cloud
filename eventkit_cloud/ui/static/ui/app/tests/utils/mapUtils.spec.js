@@ -1,6 +1,14 @@
-import ol from 'openlayers';
 import sinon from 'sinon';
 import raf from 'raf';
+import proj from 'ol/proj';
+import View from 'ol/view';
+import extent from 'ol/extent';
+import Feature from 'ol/feature';
+import Point from 'ol/geom/point';
+import Polygon from 'ol/geom/polygon';
+import Draw from 'ol/interaction/draw';
+import VectorSource from 'ol/source/vector';
+import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
 
@@ -13,8 +21,8 @@ describe('mapUtils', () => {
         const jstsGeom = Reader.read('POINT (-20 0)');
         expect(jstsGeom.getCoordinate()).toEqual({ x: -20, y: 0, z: undefined });
         const olGeom = utils.jstsGeomToOlGeom(jstsGeom);
-        expect(olGeom instanceof ol.geom.Point).toBe(true);
-        const expected = ol.proj.transform([-20, 0], 'EPSG:4326', 'EPSG:3857');
+        expect(olGeom instanceof Point).toBe(true);
+        const expected = proj.transform([-20, 0], 'EPSG:4326', 'EPSG:3857');
         expect(olGeom.getCoordinates()).toEqual(expected);
     });
 
@@ -202,109 +210,34 @@ describe('mapUtils', () => {
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
     });
 
-    it('zoomToExtent should create dom elements and add listeners and stuff', () => {
-        const fitSpy = sinon.spy();
-        const extentSpy = sinon.spy();
-        const projSpy = sinon.spy(() => ({ getExtent: extentSpy }));
-        const viewSpy = sinon.spy(() => ({ fit: fitSpy, getProjection: projSpy }));
-        const sizeSpy = sinon.spy(() => ([500, 500]));
-        const mapSpy = sinon.spy(() => ({ getView: viewSpy, getSize: sizeSpy }));
-
-        const fakeThis = { getMap: mapSpy };
-        utils.zoomToExtent.bind({}, fakeThis);
-
-        const button = document.createElement('button');
-        const addSpy = sinon.spy(button, 'addEventListener');
-        const icon = document.createElement('i');
-        const div = document.createElement('div');
-        const stub = sinon.stub(document, 'createElement');
-        stub.withArgs('button').returns(button);
-        stub.withArgs('i').returns(icon);
-        stub.withArgs('div').returns(div);
-
-        ol.control.Control.call = sinon.spy();
-
-        utils.zoomToExtent.apply(fakeThis, [{ className: 'fake', target: 'target', extent: [-1, 1, -1, 1] }]);
-        expect(addSpy.calledTwice).toBe(true);
-        expect(stub.calledThrice).toBe(true);
-        expect(div.className).toEqual('fake ol-unselectable ol-control');
-        expect(ol.control.Control.call.calledOnce).toBe(true);
-        expect(ol.control.Control.call.calledWith(fakeThis, { element: div, target: 'target' })).toBe(true);
-
-        stub.restore();
-
-        button.dispatchEvent(new Event('click'));
-        expect(mapSpy.calledOnce).toBe(true);
-        expect(viewSpy.calledOnce).toBe(true);
-        expect(sizeSpy.calledOnce).toBe(true);
-        expect(projSpy.notCalled).toBe(true);
-        expect(extentSpy.notCalled).toBe(true);
-        expect(fitSpy.calledOnce).toBe(true);
-        expect(fitSpy.calledWith([-1, 1, -1, 1], [500, 500]));
-    });
-
     it('generateDrawBoxInteraction should setup a new interaction', () => {
-        const stroke = ol.style.Stroke;
-        ol.style.Stroke = sinon.spy();
-        const shape = ol.style.RegularShape;
-        ol.style.RegularShape = sinon.spy();
-        const style = ol.style.Style;
-        ol.style.Style = sinon.spy();
-        const activeSpy = sinon.spy();
-        const drawReturn = { setActive: activeSpy };
+        const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
+        // const createBoxStub = sinon.stub(Draw.prototype, 'createBox');
 
-        const draw = ol.interaction.Draw;
-
-        ol.interaction.Draw = options => (
-            { setActive: activeSpy }
-        );
-
-        ol.interaction.Draw.createBox = () => ({});
-
-        const interactionSpy = sinon.spy(ol.interaction, 'Draw');
-
-        const layer = new ol.layer.Vector({
-            source: new ol.source.Vector(),
+        const layer = new VectorLayer({
+            source: new VectorSource(),
         });
         const drawInteraction = utils.generateDrawBoxInteraction(layer);
-        expect(interactionSpy.calledOnce).toBe(true);
-        expect(drawInteraction).toEqual(drawReturn);
-        expect(activeSpy.calledOnce).toBe(true);
+        expect(drawInteraction instanceof Draw).toBe(true);
+        expect(setActiveStub.called).toBe(true);
+        expect(setActiveStub.calledWith(false)).toBe(true);
+        // expect(createBoxStub.called).toBe(true);
 
-        ol.style.Stroke = stroke;
-        ol.style.RegularShape = shape;
-        ol.style.Style = style;
-        ol.interaction.Draw = draw;
+        setActiveStub.restore();
+        // createBoxStub.restore();
     });
 
     it('generateDrawFreeInteraction should setup a new interaction', () => {
-        const stroke = ol.style.Stroke;
-        ol.style.Stroke = sinon.spy();
+        const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
 
-        const shape = ol.style.RegularShape;
-        ol.style.RegularShape = sinon.spy();
-
-        const style = ol.style.Style;
-        ol.style.Style = sinon.spy();
-
-        const activeSpy = sinon.spy();
-        const drawReturn = { setActive: activeSpy };
-
-        const draw = ol.interaction.Draw;
-        ol.interaction.Draw = sinon.spy(() => (drawReturn));
-
-        const layer = new ol.layer.Vector({
-            source: new ol.source.Vector(),
+        const layer = new VectorLayer({
+            source: new VectorSource(),
         });
         const drawInteraction = utils.generateDrawFreeInteraction(layer);
-        expect(ol.interaction.Draw.calledOnce).toBe(true);
-        expect(drawInteraction).toEqual(drawReturn);
-        expect(activeSpy.calledOnce).toBe(true);
+        expect(drawInteraction instanceof Draw).toBe(true);
+        expect(setActiveStub.calledWith(false)).toBe(true);
 
-        ol.style.Stroke = stroke;
-        ol.style.RegularShape = shape;
-        ol.style.Style = style;
-        ol.interaction.Draw = draw;
+        setActiveStub.restore();
     });
 
     it('featureToBbox should take a geojson feature and return the bbox', () => {
@@ -326,7 +259,7 @@ describe('mapUtils', () => {
                 ],
             },
         };
-        const bbox = ol.proj.transformExtent([
+        const bbox = proj.transformExtent([
             20.214843749999996,
             51.33061163769853,
             23.027343749999996,
@@ -340,7 +273,7 @@ describe('mapUtils', () => {
         expect(utils.deserialize()).toBe(null);
         expect(utils.deserialize([-3, -3, 3])).toBe(null);
         const bbox = [-90, -45, 90, 45];
-        const expected = ol.proj.transformExtent(bbox, utils.WGS84, utils.WEB_MERCATOR);
+        const expected = proj.transformExtent(bbox, utils.WGS84, utils.WEB_MERCATOR);
         expect(utils.deserialize(bbox)).toEqual(expected);
     });
 
@@ -419,9 +352,9 @@ describe('mapUtils', () => {
     });
 
     it('createGeoJSON should take an ol3 geom and return a feature collection containing a feature with that geom', () => {
-        const extentSpy = sinon.spy(ol.geom.Point.prototype, 'getExtent');
-        const coords = ol.proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
-        const geom = new ol.geom.Point(coords);
+        const extentSpy = sinon.spy(Point.prototype, 'getExtent');
+        const coords = proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
+        const geom = new Point(coords);
         const expected = {
             type: 'FeatureCollection',
             features: [
@@ -440,12 +373,12 @@ describe('mapUtils', () => {
     });
 
     it('createGeoJSONGeometry should take a ol3 geom and return the geom in geojson format', () => {
-        const coords = ol.proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
-        const geom = new ol.geom.Point(coords);
+        const coords = proj.transform([-1, 1], utils.WGS84, utils.WEB_MERCATOR);
+        const geom = new Point(coords);
         const expected = { type: 'Point', coordinates: [-1, 1] };
-        const cloneSpy = sinon.spy(ol.geom.Point.prototype, 'clone');
-        const transformSpy = sinon.spy(ol.geom.Point.prototype, 'transform');
-        const coordsSpy = sinon.spy(ol.geom.Point.prototype, 'getCoordinates');
+        const cloneSpy = sinon.spy(Point.prototype, 'clone');
+        const transformSpy = sinon.spy(Point.prototype, 'transform');
+        const coordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         expect(utils.createGeoJSONGeometry(geom)).toEqual(expected);
         expect(cloneSpy.calledOnce).toBe(true);
         expect(transformSpy.calledOnce).toBe(true);
@@ -496,13 +429,13 @@ describe('mapUtils', () => {
         expect(utils.featureToPoint()).toBe(null);
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
         const bbox = [-15, -14, 14, 12];
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon(coords),
+        const feature = new Feature({
+            geometry: new Polygon(coords),
         });
-        const expectedCoords = ol.extent.getCenter(bbox);
-        const centerSpy = sinon.spy(ol.extent, 'getCenter');
-        const geomSpy = sinon.spy(ol.Feature.prototype, 'getGeometry');
-        const extentSpy = sinon.spy(ol.geom.Polygon.prototype, 'getExtent');
+        const expectedCoords = extent.getCenter(bbox);
+        const centerSpy = sinon.spy(extent, 'getCenter');
+        const geomSpy = sinon.spy(Feature.prototype, 'getGeometry');
+        const extentSpy = sinon.spy(Polygon.prototype, 'getExtent');
         const point = utils.featureToPoint(feature);
         expect(centerSpy.calledOnce).toBe(true);
         expect(centerSpy.calledWith(bbox)).toBe(true);
@@ -515,49 +448,49 @@ describe('mapUtils', () => {
     });
 
     it('unwrapCoordinates should adjust x coords to be in valid extent', () => {
-        const proj = ol.proj.get('EPSG:4326');
+        const coordProj = proj.get('EPSG:4326');
         const coords = [[[-380, 20], [-160, 20], [-160, -20], [-380, -20]]];
         const expected = [[[-20, 20], [-160, 20], [-160, -20], [-20, -20]]];
-        expect(utils.unwrapCoordinates(coords, proj)).toEqual(expected);
+        expect(utils.unwrapCoordinates(coords, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const proj = ol.proj.get('EPSG:4326');
-        const extent = [700, -90, 740, 90];
+        const coordProj = proj.get('EPSG:4326');
+        const coordExtent = [700, -90, 740, 90];
         const expected = [-20, -90, 20, 90];
-        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+        expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should adjust min and max x coords to be in valid extent', () => {
-        const proj = ol.proj.get('EPSG:4326');
-        const extent = [-540, -90, -185, 90];
+        const coordProj = proj.get('EPSG:4326');
+        const coordExtent = [-540, -90, -185, 90];
         const expected = [-180, -90, 175, 90];
-        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+        expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('unwrapExtent should return the extent unmodified', () => {
-        const proj = ol.proj.get('EPSG:4326');
-        const extent = [-120, -90, 180, 90];
+        const coordProj = proj.get('EPSG:4326');
+        const coordExtent = [-120, -90, 180, 90];
         const expected = [-120, -90, 180, 90];
-        expect(utils.unwrapExtent(extent, proj)).toEqual(expected);
+        expect(utils.unwrapExtent(coordExtent, coordProj)).toEqual(expected);
     });
 
     it('isViewOutsideValidExtent should return true or false', () => {
-        const view = new ol.View({ center: [-190, 40], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 40], projection: 'EPSG:4326' });
         expect(utils.isViewOutsideValidExtent(view)).toBe(true);
-        const view2 = new ol.View({ center: [-20, 20], projection: 'EPSG:4326' });
+        const view2 = new View({ center: [-20, 20], projection: 'EPSG:4326' });
         expect(utils.isViewOutsideValidExtent(view2)).toBe(false);
     });
 
     it('goToValidExtent should set the center of view to be inside the valid map extent', () => {
-        const view = new ol.View({ center: [-190, 20], projection: 'EPSG:4326' });
+        const view = new View({ center: [-190, 20], projection: 'EPSG:4326' });
         expect(utils.goToValidExtent(view)).toEqual([170, 20]);
         expect(view.getCenter()).toEqual([170, 20]);
     });
 
     it('isBox should return false if the feature has more than 5 coordinate pairs', () => {
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon([
+        const feature = new Feature({
+            geometry: new Polygon([
                 [
                     [99.30541992187499, 2.6467632307409725],
                     [99.195556640625, 2.2296616399183624],
@@ -575,8 +508,8 @@ describe('mapUtils', () => {
     });
 
     it('isBox should return false if the extent coords of a 4 vertex feature are not the same as the feature coords', () => {
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon([
+        const feature = new Feature({
+            geometry: new Polygon([
                 [
                     [101.75537109375, -0.37353251022880474],
                     [101.3818359375, -0.8239462091017558],
@@ -590,8 +523,8 @@ describe('mapUtils', () => {
     });
 
     it('isBox should return true if the extent coords are same as feature coords', () => {
-        const feature = new ol.Feature({
-            geometry: new ol.geom.Polygon([
+        const feature = new Feature({
+            geometry: new Polygon([
                 [
                     [101.57958984375, 0.9667509997666425],
                     [101.79931640625, 0.9667509997666425],
@@ -607,7 +540,7 @@ describe('mapUtils', () => {
     it('isVertx should check to see if a feature coordinate lies on the pixel and return the vertex if its with the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new ol.Feature({ geometry: new ol.geom.Point([1, 1]) });
+        const feature = new Feature({ geometry: new Point([1, 1]) });
         const getPixelStub = sinon.stub().returns([8, 8]);
         const map = { getPixelFromCoordinate: getPixelStub };
         expect(utils.isVertex(pixel, feature, tolerance, map)).toEqual([1, 1]);
@@ -616,7 +549,7 @@ describe('mapUtils', () => {
     it('isVertex should return false if feature coords are not within the tolerance', () => {
         const pixel = [10, 10];
         const tolerance = 2;
-        const feature = new ol.Feature({ geometry: new ol.geom.Point([1, 1]) });
+        const feature = new Feature({ geometry: new Point([1, 1]) });
         const getPixelStub = sinon.stub().returns([7, 7]);
         const map = { getPixelFromCoordinate: getPixelStub };
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);

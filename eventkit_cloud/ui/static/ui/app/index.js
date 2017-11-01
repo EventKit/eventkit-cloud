@@ -2,9 +2,10 @@ import 'babel-polyfill';
 import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+import { UserAuthWrapper } from 'redux-auth-wrapper';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
-import { UserAuthWrapper } from 'redux-auth-wrapper';
 import configureStore from './store/configureStore';
 import Application from './components/Application';
 import LoginPage from './components/auth/LoginPage';
@@ -24,6 +25,7 @@ import { login } from './actions/userActions';
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
+injectTapEventPlugin();
 
 function allTrue(acceptedLicenses) {
     for (const l in acceptedLicenses) {

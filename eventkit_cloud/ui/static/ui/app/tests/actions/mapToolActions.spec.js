@@ -1,5 +1,5 @@
 import configureMockStore from 'redux-mock-store';
-import ol from 'openlayers';
+import GeoJSON from 'ol/format/geojson';
 import thunk from 'redux-thunk';
 import axios from 'axios';
 import sinon from 'sinon';
@@ -42,8 +42,8 @@ describe('mapTool actions', () => {
         };
         const initialState = {};
         const store = mockStore(initialState);
-        const geom = (new ol.format.GeoJSON()).readGeometry(geojson.features[0].geometry);
-        const readGeomStub = sinon.stub(ol.format.GeoJSON.prototype, 'readGeometry')
+        const geom = (new GeoJSON()).readGeometry(geojson.features[0].geometry);
+        const readGeomStub = sinon.stub(GeoJSON.prototype, 'readGeometry')
             .returns(geom);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(200, geojson);

@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import '../../components/tap_events';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';

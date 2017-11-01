@@ -5,7 +5,6 @@ import TimerMixin from 'react-timer-mixin';
 import reactMixin from 'react-mixin';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
-import '../tap_events';
 import DataCartDetails from './DataCartDetails';
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
