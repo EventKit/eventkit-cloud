@@ -1,6 +1,6 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
-import {getRuns, deleteRuns} from '../../actions/DataPackListActions';
+import {getRuns, deleteRuns, setPageOrder, setPageView} from '../../actions/DataPackPageActions';
 import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -9,7 +9,6 @@ import Drawer from 'material-ui/Drawer';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
-import primaryStyles from '../../styles/constants.css'
 import DataPackSearchbar from './DataPackSearchbar';
 import DataPackViewButtons from './DataPackViewButtons';
 import DataPackSortDropDown from './DataPackSortDropDown';
@@ -29,7 +28,6 @@ export class DataPackPage extends React.Component {
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
         this.handleOwnerFilter = this.handleOwnerFilter.bind(this);
-        this.screenSizeUpdate = this.screenSizeUpdate.bind(this);
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.changeView = this.changeView.bind(this);
@@ -50,9 +48,9 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            view: 'map',
+            view: props.runsList.view || 'map',
             pageLoading: true,
-            order: '-job__featured',
+            order: props.runsList.order || '-job__featured',
             ownerFilter: '',
             pageSize: 12,
             loading: false,
@@ -81,28 +79,29 @@ export class DataPackPage extends React.Component {
     componentDidMount() {
         this.props.getProviders();
         this.makeRunRequest();
-        window.addEventListener('resize', this.screenSizeUpdate);
         this.fetch = setInterval(this.makeRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
 
     componentWillUnmount() {
-        window.removeEventListener('resize', this.screenSizeUpdate);
         clearInterval(this.fetch);
+        // save view and order to redux state so it can be set next time the page is visited
+        if (this.props.runsList.order != this.state.order) {this.props.setOrder(this.state.order)};
+        if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
     }
 
-    onSearch(searchText, ix) { 
+    onSearch(searchText) { 
         this.setState({search: searchText, loading: true}, this.makeRunRequest);
     }
 
-    checkForEmptySearch(searchText, dataSource, params) {
-        if(searchText == '') {
+    checkForEmptySearch(searchText) {
+        if(searchText == '' && this.state.search) {
             this.setState({search: '', loading: true}, this.makeRunRequest);
         }
     }
 
-    handleSortChange = (value) => {
+    handleSortChange(value) {
         this.setState({order: value, loading: true}, this.makeRunRequest);
     }
 
@@ -137,18 +136,18 @@ export class DataPackPage extends React.Component {
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
-    handleOwnerFilter = (event, index, value) => {
+    handleOwnerFilter(event, index, value) {
         this.setState({ownerFilter: value, loading: true}, this.makeRunRequest);
     }
 
-    handleFilterApply = (state) => {
+    handleFilterApply(state) {
         this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
         if(window.innerWidth < 1200) {
             this.setState({open: false});
         }
     }
 
-    handleFilterClear = () => {
+    handleFilterClear() {
         this.setState({
             published: null,
             minDate: null,
@@ -165,12 +164,8 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleSpatialFilter = (geojson) => {
+    handleSpatialFilter(geojson) {
         this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
-    }
-
-    screenSizeUpdate() {
-        this.forceUpdate();
     }
 
     changeView(view) {
@@ -185,7 +180,7 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleToggle = () => {
+    handleToggle() {
         this.setState({open: !this.state.open});
     }
 
@@ -261,7 +256,7 @@ export class DataPackPage extends React.Component {
         const pageTitle = "DataPack Library"
         const styles = {
             wholeDiv: {
-                height: window.innerHeight - 231,
+                height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
@@ -271,6 +266,12 @@ export class DataPackPage extends React.Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
+            },
+            pageTitle: {
+                fontSize: '18px',
+                lineHeight: '35px',
+                paddingLeft: '10px',
+                height: '35px'
             },
             toolbarSearch: {
                 backgroundColor: '#253447',
@@ -299,24 +300,26 @@ export class DataPackPage extends React.Component {
 
         return (
             <div style={styles.backgroundStyle}>
-                <AppBar 
-                    className={primaryStyles.sectionTitle} 
-                    style={styles.appBar} title={pageTitle}
+                <AppBar
+                    className={'qa-DataPackPage-AppBar'}
+                    style={styles.appBar}
+                    title={pageTitle}
+                    titleStyle={styles.pageTitle}
                     iconElementLeft={<p></p>}
                 >
                     <DataPackLinkButton />
                 </AppBar>
-                <Toolbar style={styles.toolbarSearch}>
-                    <ToolbarGroup style={{margin: 'auto', width: '100%'}}>
+                
+                <Toolbar className={'qa-DataPackPage-Toolbar-search'} style={styles.toolbarSearch}>
+                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{width: '100%'}}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
-                            searchbarWidth={'100%'} 
                         />
                     </ToolbarGroup>
                 </Toolbar>
 
-                <Toolbar style={styles.toolbarSort}>
+                <Toolbar className={'qa-DataPackPage-Toolbar-sort'} style={styles.toolbarSort}>
                         <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
                         <DataPackFilterButton 
                             handleToggle={this.handleToggle}
@@ -349,8 +352,8 @@ export class DataPackPage extends React.Component {
                             />
                         </div>
                         :
-                        <div style={{position: 'relative'}}>
-                            {this.state.loading || this.props.runsDeletion.deleting ? 
+                        <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
+                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ? 
                             <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
                                 <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
                                     <CircularProgress 
@@ -378,12 +381,14 @@ DataPackPage.propTypes = {
     deleteRuns: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
-    drawerOpen: PropTypes.bool.isRequired,
+    drawer: PropTypes.string.isRequired,
     importGeom: PropTypes.object.isRequired,
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
-    resetGeoJSONFile: PropTypes.func.isRequired
+    resetGeoJSONFile: PropTypes.func.isRequired,
+    setOrder: PropTypes.func.isRequired,
+    setView: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -391,7 +396,7 @@ function mapStateToProps(state) {
         runsList: state.runsList,
         user: state.user,
         runsDeletion: state.runsDeletion,
-        drawerOpen: state.drawerOpen,
+        drawer: state.drawer,
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
@@ -418,6 +423,12 @@ function mapDispatchToProps(dispatch) {
         resetGeoJSONFile: (file) => {
             dispatch(resetGeoJSONFile());
         },
+        setOrder: (order) => {
+            dispatch(setPageOrder(order));
+        },
+        setView: (view) => {
+            dispatch(setPageView(view));
+        }
     }
 }
 

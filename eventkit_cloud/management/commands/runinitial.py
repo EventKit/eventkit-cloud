@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 from django.core.management import call_command
-
+from ...core.helpers import load_land_vectors
 
 class Command(BaseCommand):
     help = "Runs all integration tests"
@@ -17,3 +17,4 @@ class Command(BaseCommand):
             call_command('loaddata', 'insert_provider_types')
             call_command('loaddata', 'osm_provider')
             call_command('loaddata', 'datamodel_presets')
+            load_land_vectors()

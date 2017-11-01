@@ -110,9 +110,9 @@ export class MapPopup extends Component {
         };
         
         return (
-            <Card containerStyle={{padding: '10px', zIndex: 10}}>
+            <Card className={'qa-MapPopup-Card'} containerStyle={{padding: '10px', zIndex: 10}}>
                 <div id="popup-header" style={styles.popupHeader}>
-                    <div id="popup-name-container" style={styles.popupNameContainer}>
+                    <div className={'qa-MapPopup-div-name'} id="popup-name-container" style={styles.popupNameContainer}>
                         <div id="popup-name" style={styles.popupName}>
                             <a href={`/status/${this.props.featureInfo.job.uid}`} style={{color: '#4598bf'}}>
                                 <Dot style={styles.dot}/>
@@ -120,31 +120,32 @@ export class MapPopup extends Component {
                             </a>
                         </div>
                     </div>
-                    <div id="close-button-container" style={styles.closeButtonContainer}>
-                        <Clear 
+                    <div className={'qa-MapPopup-close'} id="close-button-container" style={styles.closeButtonContainer}>
+                        <Clear
+                            className={'qa-MapPopup-Clear'}
                             style={styles.closeButton} 
                             onClick={this.props.handlePopupClose}
                         />
                     </div>
                 </div>
-                <div id="popup-event" style={styles.event}>
+                <div  className={'qa-MapPopup-event'} id="popup-event" style={styles.event}>
                     Event: {this.props.featureInfo.job.event}                                    
                 </div>
                 <div id="popup-actions" style={styles.actions}>
                     <div style={{display: 'inline-block', margin: 'auto', width: '100%'}}>
-                        <div style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
+                        <div  className={'qa-MapPopup-div-detailsUrl'} style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
                             <a id='details-url' href={this.props.detailUrl} style={{color: '#4598bf'}}>
                                 Go To Detail and Downloads
                             </a>
                         </div>
-                        <div style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
+                        <div  className={'qa-MapPopup-div-zoomTo'} style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
                             <a id='zoom-to' onClick={this.props.handleZoom} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
                                 Zoom To Selection
                             </a>
                         </div>
-                        <div style={{display: 'inline-block', height: '22px', float: 'left'}}>
+                        <div  className={'qa-MapPopup-div-showMore'} style={{display: 'inline-block', height: '22px', float: 'left'}}>
                             <div id='show-more' onClick={this.showMore} style={{textDecoration: 'none', cursor: 'pointer', color: '#4598bf'}}>
-                                Show More
+                                {this.state.showMore ? 'Show Less' : 'Show More' }
                                 {this.state.showMore ? <ArrowUp style={styles.showMoreIcon}/> : <ArrowDown style={styles.showMoreIcon}/>}
                             </div>
                         </div>
@@ -152,7 +153,7 @@ export class MapPopup extends Component {
                 </div>
                 
                 {this.state.showMore? 
-                    <div id="moreInfo" style={styles.moreInfo}>
+                    <div  className={'qa-MapPopup-div-moreInfo'} id="moreInfo" style={styles.moreInfo}>
                         {this.props.featureInfo.job.description ? <div style={{margin: '5px 0px'}}>Description: {this.props.featureInfo.job.description}</div>: null}
                         {this.props.featureInfo.created_at ? <div style={{margin: '5px 0px'}}>Created at: {moment(this.props.featureInfo.created_at).format('YYYY-MM-DD')}</div>: null}
                         {this.props.featureInfo.expiration ? <div style={{margin: '5px 0px'}}>Expiration: {moment(this.props.featureInfo.expiration).format('YYYY-MM-DD')}</div>: null}

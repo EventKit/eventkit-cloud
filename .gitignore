@@ -8,6 +8,9 @@ db_dir
 .komodotools
 staticfiles/
 node_modules/
+.DS_Store
+.flowconfig
+.eslintrc.json
 
 
 # Byte-compiled / optimized / DLL files

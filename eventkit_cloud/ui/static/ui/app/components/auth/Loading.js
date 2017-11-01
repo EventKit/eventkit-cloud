@@ -3,12 +3,12 @@ import CircularProgress from 'material-ui/CircularProgress';
 
 export default function Loading() {
   const constainerStyle = {
-    backgroundImage: 'url("../../images/ek_topo_pattern.png")', 
+    backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')', 
     height: window.innerHeight - 95, 
     width: window.innerWidth, 
     display: 'inline-flex'
   };
-  return <div 
+  return <div  className={'qa-loading-body'}
       style={constainerStyle}
     >
       <CircularProgress 

@@ -29,6 +29,7 @@ describe('DataCartDetails component', () => {
             cartDetails: {...run},
             providers: providers,
             maxResetExpirationDays: '30',
+            zipFileProp: null,
             onUpdateExpiration: () => {},
             onUpdatePermission: () => {},
             onRunDelete: () => {},
@@ -51,7 +52,7 @@ describe('DataCartDetails component', () => {
         let props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(4);
-        expect(wrapper.find(BaseDialog)).toHaveLength(5);
+        expect(wrapper.find(BaseDialog)).toHaveLength(7);
         let table = wrapper.find('table').at(0);
         expect(table.find('tr').first().find('td').first().text()).toEqual('Name');
         expect(table.find('tr').first().find('td').last().text()).toEqual('test');
@@ -77,7 +78,7 @@ describe('DataCartDetails component', () => {
         expect(table.find('tr').at(2).find('td').first().text()).toEqual('Data Sources');
         expect(table.find('tr').at(2).find('td').last().text()).toEqual('OpenStreetMap Data (Themes)');
         expect(table.find('tr').at(3).find('td').first().text()).toEqual('File Formats');
-        expect(table.find('tr').at(3).find('td').last().text()).toEqual('.gpkg');
+        expect(table.find('tr').at(3).find('td').last().text()).toEqual('Geopackage');
         expect(table.find('tr').at(4).find('td').first().text()).toEqual('Projection');
         expect(table.find('tr').at(4).find('td').last().text()).toEqual('EPSG:4326 - World Geodetic System 1984 (WGS84)');
         expect(wrapper.find('#summaryMap')).toHaveLength(1);
@@ -153,6 +154,21 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.callCount).toEqual(4);
         expect(stateSpy.calledWith({status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396'})).toBe(true);
 
+        stateSpy.restore();
+        propsSpy.restore();
+    });
+
+    it('should handle setting state of zipFileUrl when component updates', () => {
+        let props = getProps();
+        props.cartDetails.zipfile_url = null;
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        let nextProps = getProps();
+        nextProps.cartDetails.zipfile_url = 'fakeFileUrl.zip';
+        const propsSpy = new sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        wrapper.setProps(nextProps);
+        expect(propsSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
         stateSpy.restore();
         propsSpy.restore();
     });
@@ -304,6 +320,28 @@ describe('DataCartDetails component', () => {
         stateSpy.restore();
     });
 
+    it('handleFormatsOpen should set format dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionOpen should set projection dialog to open', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsOpen();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: true})).toBe(true);
+        stateSpy.restore();
+    });
+
     it('handleRerunClose should set the rerun dialog to closed', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
@@ -344,6 +382,28 @@ describe('DataCartDetails component', () => {
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleFormatClose should set the format dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleFormatsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({formatsDialogOpen: false})).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleProjectionsClose should set the projections dialog to closed', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = shallow(<DataCartDetails {...props}/>);
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().handleProjectionsClose();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({projectionsDialogOpen: false})).toBe(true);
         stateSpy.restore();
     });
 
@@ -410,6 +470,8 @@ describe('DataCartDetails component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         stateSpy.restore();
     });
+
+
 });
 
 const providerArray = [
@@ -547,7 +609,10 @@ const run = {
                 ]
             }
         },
-        "published": true
+        "published": true,
+        "formats": [
+            "Geopackage"
+        ]
     },
     "provider_tasks": [
         {

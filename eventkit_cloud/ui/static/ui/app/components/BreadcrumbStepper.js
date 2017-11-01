@@ -10,7 +10,7 @@ import ExportAOI from './CreateDataPack/ExportAOI'
 import ExportInfo from './CreateDataPack/ExportInfo'
 import ExportSummary from './CreateDataPack/ExportSummary'
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, exportInfoDone, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo} from '../actions/exportsActions'
+    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats} from '../actions/exportsActions'
 import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
 import BaseDialog from './BaseDialog';
 import Divider from 'material-ui/Divider';
@@ -25,7 +25,6 @@ export class BreadcrumbStepper extends React.Component {
         this.handleNext = this.handleNext.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.handlePrev = this.handlePrev.bind(this);
-        this.incrementStepper = this.incrementStepper.bind(this);
         this.showError = this.showError.bind(this);
         this.hideError = this.hideError.bind(this);
         this.state = {
@@ -41,6 +40,7 @@ export class BreadcrumbStepper extends React.Component {
             this.props.setNextDisabled();
         }
         this.props.getProviders();
+        this.props.getFormats();
     }
 
     componentWillUnmount() {
@@ -138,10 +138,11 @@ export class BreadcrumbStepper extends React.Component {
         let provider_tasks = [];
         const providers = this.props.exportInfo.providers;
 
-        //TODO: Set formats up as an array for future need of other formats other than geopackage!
+        //formats only consists of geopackage right now
+        const formats = this.props.exportInfo.formats;
 
         providers.forEach((provider) => {
-            provider_tasks.push({'provider': provider.name, 'formats': ['gpkg']});
+            provider_tasks.push({'provider': provider.name, 'formats': [formats[0]]});
         });
 
         const data = {
@@ -159,18 +160,8 @@ export class BreadcrumbStepper extends React.Component {
 
     handleNext() {
         const {stepIndex} = this.state;
-        if (stepIndex == 1) {
-            this.props.setExportInfoDone();
-        }
-        else {
-            this.setState({stepIndex: stepIndex + 1});
-        }
-    };
-
-    incrementStepper() {
-        const {stepIndex} = this.state;
         this.setState({stepIndex: stepIndex + 1});
-    }
+    };
 
     handlePrev() {
         const {stepIndex} = this.state;
@@ -191,19 +182,19 @@ export class BreadcrumbStepper extends React.Component {
 
         switch(stepIndex) {
             case 0:
-                return  <div style={labelStyle}>
+                return  <div className={'qa-BreadcrumbStepper-step1Label'} style={labelStyle}>
                             STEP 1 OF 3:  Define Area of Interest
                         </div>;
             case 1:
-                return  <div style={labelStyle}>
+                return  <div className={'qa-BreadcrumbStepper-step2Label'} style={labelStyle}>
                             STEP 2 OF 3:  Select Data & Formats
                         </div>;
             case 2:
-                return  <div style={labelStyle}>
+                return  <div className={'qa-BreadcrumbStepper-step3Label'} style={labelStyle}>
                             STEP 3 OF 3:  Review & Submit
                         </div>;
             default:
-                return  <div style={labelStyle}>
+                return  <div className={'qa-BreadcrumbStepper-stepErrorLabel'} style={labelStyle}>
                             STEPPER ERROR
                         </div>;
         }
@@ -215,10 +206,11 @@ export class BreadcrumbStepper extends React.Component {
                 return <ExportAOI/>;
             case 1:
                 return <ExportInfo providers={this.props.providers}
-                                   incrementStepper={this.incrementStepper}
+                                   formats={this.props.formats}
                                    handlePrev={this.handlePrev}/>
             case 2:
-                return <ExportSummary/>
+                return <ExportSummary
+                                   allFormats={this.props.formats}/>
             default:
                 return <ExportAOI/>;
         }
@@ -238,20 +230,23 @@ export class BreadcrumbStepper extends React.Component {
         switch (stepIndex) {
             case 0:
                 return <NavigationArrowBack
+                    className={'qa-BreadcrumbStepper-NavigationArrowBack-previous-case0'}
                     style={styles.arrowBack}
                     onClick={this.handlePrev}
                 />
             case 1:
                 return <NavigationArrowBack
+                    className={'qa-BreadcrumbStepper-NavigationArrowBack-previous-case1'}
                     style={styles.arrowBack}
                     onClick={this.handlePrev}
                 />
             case 2:
                 return <FloatingActionButton mini={true}
+                                             className={'qa-BreadcrumbStepper-FloatingActionButton-previous'}
                                              onClick={this.handlePrev}
                                              style={styles.arrowBack}
                                              backgroundColor={'#4598bf'}>
-                        <NavigationArrowBack/>
+                        <NavigationArrowBack className={'qa-BreadcrumbStepper-NavigationArrowBack-previous-case2'}/>
                     </FloatingActionButton>
 
             default:
@@ -279,6 +274,7 @@ export class BreadcrumbStepper extends React.Component {
         switch (stepIndex) {
             case 0:
                 return <FloatingActionButton mini={true}
+                            className={'qa-BreadcrumbStepper-FloatingActionButton-case0'}
                             disabled={!this.props.stepperNextEnabled}
                             backgroundColor={'#55ba63'}
                             onClick={this.handleNext}
@@ -287,6 +283,7 @@ export class BreadcrumbStepper extends React.Component {
                         </FloatingActionButton>
             case 1:
                 return <FloatingActionButton mini={true}
+                            className={'qa-BreadcrumbStepper-FloatingActionButton-case1'}
                             disabled={!this.props.stepperNextEnabled}
                             backgroundColor={'#55ba63'}
                             onClick={this.handleNext}
@@ -294,12 +291,14 @@ export class BreadcrumbStepper extends React.Component {
                                 <NavigationArrowForward/>
                         </FloatingActionButton>
             case 2:
-                return <FloatingActionButton mini={false}
+                return <FloatingActionButton
+                            className={'qa-BreadcrumbStepper-FloatingActionButton-case2'}
+                            mini={false}
                             disabled={!this.props.stepperNextEnabled}
                             backgroundColor={'#55ba63'}
                             onClick={this.handleSubmit}
                             style={btnStyles.submit}>
-                                <NavigationCheck/>
+                                <NavigationCheck className={'qa-BreadcrumbStepper-NavigationCheck'}/>
                         </FloatingActionButton>
             default:
                 return <div/>;
@@ -332,10 +331,10 @@ export class BreadcrumbStepper extends React.Component {
 
         const message = this.getErrorMessage();
         return (
-            <div style={{backgroundColor: '#161e2e'}}>
-                <div style={{width: '100%', height: '50px'}}>
+            <div className={'qa-BreadcrumbStepper-div-content'} style={{backgroundColor: '#161e2e'}}>
+                <div  className={'qa-BreadcrumbStepper-div-stepLabel'}style={{width: '100%', height: '50px'}}>
                     {this.getStepLabel(this.state.stepIndex)}
-                    <div style={{float: 'right', padding: '5px'}}>
+                    <div className={'qa-BreadcrumbStepper-div-buttons'} style={{float: 'right', padding: '5px'}}>
                         {this.getPreviousButtonContent(this.state.stepIndex)}
                         {this.getButtonContent(this.state.stepIndex)}
                     </div>
@@ -364,12 +363,12 @@ BreadcrumbStepper.propTypes = {
     setNextDisabled: React.PropTypes.func,
     setNextEnabled: React.PropTypes.func,
     setDatacartDetailsReceived: React.PropTypes.func,
-    setExportInfoDone: React.PropTypes.func,
     clearAoiInfo: React.PropTypes.func,
     clearExportInfo: React.PropTypes.func,
     clearJobInfo: React.PropTypes.func,
     jobFetched: React.PropTypes.bool,
     jobuid: React.PropTypes.string,
+    formats: React.PropTypes.array,
 };
 
 function mapStateToProps(state) {
@@ -381,7 +380,8 @@ function mapStateToProps(state) {
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
         jobError: state.submitJob.error,
-        jobuid: state.submitJob.jobuid
+        jobuid: state.submitJob.jobuid,
+        formats: state.formats,
     };
 }
 function mapDispatchToProps(dispatch) {
@@ -401,9 +401,6 @@ function mapDispatchToProps(dispatch) {
         setNextEnabled: () => {
             dispatch(stepperNextEnabled());
         },
-        setExportInfoDone: () => {
-            dispatch(exportInfoDone());
-        },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());
         },
@@ -418,6 +415,9 @@ function mapDispatchToProps(dispatch) {
         },
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid))
+        },
+        getFormats: () => {
+            dispatch(getFormats())
         },
     }
 }

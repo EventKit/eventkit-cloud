@@ -13,7 +13,6 @@ import Warning from 'material-ui/svg-icons/alert/warning'
 import Check from 'material-ui/svg-icons/navigation/check'
 import IconButton from 'material-ui/IconButton';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'
-import styles from '../../styles/StatusDownload.css'
 import { Link, IndexLink } from 'react-router';
 import Checkbox from 'material-ui/Checkbox'
 import LinearProgress from 'material-ui/LinearProgress';
@@ -21,11 +20,12 @@ import CustomScrollbar from '../CustomScrollbar';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
 import BaseDialog from '../BaseDialog';
+import LicenseRow from './LicenseRow';
 
 export class ProviderRow extends React.Component {
     constructor(props) {
         super(props)
-        this.handleDownload = this.handleDownload.bind(this);
+        this.handleSingleDownload = this.handleSingleDownload.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.state = {
@@ -69,29 +69,6 @@ export class ProviderRow extends React.Component {
         this.setState({openTable: !this.state.openTable});
     }
 
-    handleDownload()  {
-        let downloadUids = [];
-        let selectedTasks = {...this.state.selectedRows};
-        Object.keys(selectedTasks).forEach((keyName, keyIndex) => {
-            if (selectedTasks[keyName] == true) {
-                downloadUids.push(keyName);
-            }
-        });
-
-        let tasks = this.props.provider.tasks;
-        let downloadUrls = [];
-        downloadUids.forEach((uid) => {
-            let a = tasks.find(x => x.uid === uid)
-            downloadUrls.push(a.result.url);
-        })
-        downloadUrls.forEach((value, idx) => {
-            // setTimeout(() => {
-            //     window.location.href = value;
-            // }, idx * 1000);
-            window.open(value, '_blank');
-        });
-    }
-
     onChangeCheck(e, checked){
         const selectedRows = {...this.state.selectedRows};
         selectedRows[e.target.name] = checked;
@@ -121,7 +98,7 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    handleCloudDownload(url) {
+    handleSingleDownload(url) {
         window.open(url, '_blank');
     }
 
@@ -142,15 +119,15 @@ export class ProviderRow extends React.Component {
     getTaskStatus(task) {
         switch (task.status) {
             case "SUCCESS":
-                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
+                return <Check  className={'qa-ProviderRow-Check-taskStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
                 return <TaskError task={task}/>
             case "PENDING":
                 return "WAITING";
             case "RUNNING":
-                return <span><LinearProgress mode="determinate" value={task.progress}/>{task.progress == 100 ? '' : task.progress + ' %'}</span>;
+                return <span className={'qa-ProviderRow-span-taskStatus'}><LinearProgress mode="determinate" value={task.progress}/>{task.progress == 100 ? '' : task.progress + ' %'}</span>;
             case "CANCELED":
-                return <Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
+                return <Warning  className={'qa-ProviderRow-Warning-taskStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/>;
             default:
                 return "";
         }
@@ -159,7 +136,7 @@ export class ProviderRow extends React.Component {
     getProviderStatus(provider) {
         switch (provider.status) {
             case "COMPLETED":
-                return <Check style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
+                return <Check className={'qa-ProviderRow-Check-providerStatus'} style={{fill:'#55ba63', verticalAlign: 'middle', marginBottom: '2px'}}/>;
             case "INCOMPLETE":
                 return <ProviderError provider={provider} key={provider.uid}/>;
             case "PENDING":
@@ -167,14 +144,14 @@ export class ProviderRow extends React.Component {
             case "RUNNING":
                 return "IN PROGRESS";
             case "CANCELED":
-                return <span style={{
+                return <span  className={'qa-ProviderRow-span-providerStatus'} style={{
                     fontWeight: 'bold',
                     display: 'inlineBlock',
                     borderTopWidth: '10px',
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
                     color: '#f4d225'
-                }}>CANCELED<Warning style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
+                }}>CANCELED<Warning className={'qa-ProviderRow-Warning-providerStatus'} style={{marginLeft:'10px', display:'inlineBlock', fill:'#f4d225', verticalAlign: 'bottom'}}/></span>
             default:
                 return "";
         }
@@ -183,37 +160,37 @@ export class ProviderRow extends React.Component {
 
     getTaskLink(task) {
         if (!task.result.hasOwnProperty('url')) {
-            return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{task.name}</span>
+            return <span className={'qa-ProviderRow-span-taskLinkDisabled'} style={{display:'inlineBlock', color:'gray'}}>{task.name}</span>
         }
         else {
-            return <a className={styles.taskLink} href={task.result.url} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf'}}>{task.name}</a>
+            return <a  className={'qa-ProviderRow-a-taskLinkenabled'} onClick={() => {this.handleSingleDownload(task.result.url)}} style={{display:'inlineBlock', color:'#4598bf', cursor: 'pointer'}}>{task.name}</a>
         }
     }
 
     getTaskDownloadIcon(task) {
         if (!task.result.hasOwnProperty('url')) {
-            return <CloudDownload key={task.result == null ? '' : task.result.url} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
+            return <CloudDownload  className={'qa-ProviderRow-CloudDownload-taskLinkDisabled'} key={task.result == null ? '' : task.result.url} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
-            return <CloudDownload  onClick={() => {this.handleCloudDownload(task.result.url)}} key={task.result.url} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-ProviderRow-CloudDownload-taskLinkEnabled'} onClick={() => {this.handleSingleDownload(task.result.url)}} key={task.result.url} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
         }
     }
 
     getProviderLink(provider) {
         if(provider.status != "COMPLETED") {
-            return <span style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{provider.name}</span>
+            return <span className={'qa-ProviderRow-span-providerLinkDisabled'} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'gray'}}>{provider.name}</span>
         }
         else {
-            return <a onClick={() => {this.handleProviderCloudDownload(provider.uid)}} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf', cursor: 'pointer'}}>{provider.name}</a>
+            return <a className={'qa-ProviderRow-a-providerLinkEnabled'} onClick={() => {this.handleProviderCloudDownload(provider.uid)}} style={{display:'inlineBlock', borderTopWidth:'10px', borderBottomWidth:'10px', borderLeftWidth:'10px', color:'#4598bf', cursor: 'pointer'}}>{provider.name}</a>
         }
     }
 
     getProviderDownloadIcon(provider) {
         if(provider.status != "COMPLETED"){
-            return <CloudDownload key={provider.uid} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-ProviderRow-CloudDownload-providerLinkDisabled'} key={provider.uid} style={{marginLeft:'10px', display:'inlineBlock', fill:'gray', verticalAlign: 'middle'}}/>
         }
         else {
-            return <CloudDownload  onClick={() => {this.handleProviderCloudDownload(provider.uid)}} key={provider.uid} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
+            return <CloudDownload className={'qa-ProviderRow-CloudDownload-providerLinkEnabled'} onClick={() => {this.handleProviderCloudDownload(provider.uid)}} key={provider.uid} style={{marginLeft:'10px', cursor: 'pointer', display:'inlineBlock', fill:'#4598bf', verticalAlign: 'middle'}}/>
         }
     }
 
@@ -226,10 +203,6 @@ export class ProviderRow extends React.Component {
         }
     }
 
-    getToggleCellWidth() {
-        return '50px';
-    }
-
     handleProviderClose = () => {
         this.setState({providerDialogOpen: false});
     };
@@ -240,66 +213,16 @@ export class ProviderRow extends React.Component {
         this.setState({providerDesc, providerDialogOpen: true});
     };
 
-
     render() {
-        const style = {
-            textDecoration: 'underline'
-        }
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
-        const toggleCellWidth = this.getToggleCellWidth();
+        const toggleCellWidth = '50px';
         const {provider, ...rowProps} = this.props;
-
         let propsProvider = this.props.providers.find(x => x.slug === this.props.provider.slug);
-        let licenseText = '';
-        let licenseData;
-        if (propsProvider.license != null) {
-            licenseText = <i>Use of this data is governed by the <a href='../account'>{propsProvider.license.name}</a></i>;
-            licenseData = <TableRow selectable={false} style={{height: '20px'}} displayBorder={true}>
-                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
-
-                    </TableRowColumn>
-                    <TableRowColumn  style={{paddingRight: '12px', paddingLeft: '12px', fontSize: '12px'}}>
-                        {licenseText}
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        width: tableCellWidth,
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}>
-
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        width: tableCellWidth,
-                        paddingRight: '10px',
-                        paddingLeft: '10px',
-                        textAlign: 'center',
-                        fontSize: textFontSize,
-                        fontWeight: 'bold'
-                    }}>
-
-                    </TableRowColumn>
-                    <TableRowColumn style={{
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        width: '20px',
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}></TableRowColumn>
-                    <TableRowColumn style={{
-                        paddingRight: '0px',
-                        paddingLeft: '0px',
-                        width: toggleCellWidth,
-                        textAlign: 'center',
-                        fontSize: textFontSize
-                    }}></TableRowColumn>
-                </TableRow>
-        }
-
-
-
+        const licenseData = propsProvider.license ?
+            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
+            :
+            null;
         let menuItems = [];
         let cancelMenuDisabled;
         if(this.props.provider.status == 'PENDING' || this.props.provider.status == 'RUNNING') {
@@ -309,12 +232,14 @@ export class ProviderRow extends React.Component {
             cancelMenuDisabled = true;
         }
         menuItems.push(<MenuItem
+            className={'qa-ProviderRow-MenuItem-cancel'}
             key={'cancel'}
             disabled={cancelMenuDisabled}
             style={{fontSize: '12px'}}
             primaryText="Cancel"
             onClick={() => {this.props.onProviderCancel(this.props.provider.uid)}}
         />,<MenuItem
+            className={'qa-ProviderRow-MenuItem-viewDataSources'}
         key={'viewProviderData'}
         style={{fontSize: '12px'}}
         primaryText='View Data Source'
@@ -328,6 +253,7 @@ export class ProviderRow extends React.Component {
         let tableData;
         if(this.state.openTable == true){
             tableData = <TableBody
+                className={'qa-ProviderRow-TableBody'}
                 displayRowCheckbox={false}
                 deselectOnClickaway={false}
                 showRowHover={false}
@@ -335,16 +261,16 @@ export class ProviderRow extends React.Component {
                 {licenseData}
                 {tasks.map((task) => (
 
-                    <TableRow selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
-                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '44px'}}>
+                    <TableRow className={'qa-ProviderRow-TableRow-task'} selectable={false} style={{height: '20px'}} displayBorder={true} key={task.uid} >
+                    <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', width: '12px'}}>
 
                     </TableRowColumn>
-                        <TableRowColumn style={{paddingRight: '12px', paddingLeft: '12px', fontSize: textFontSize}}>
+                        <TableRowColumn className={'qa-ProviderRow-TableRowColumn-taskLinks'} style={{paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize}}>
                             {this.getTaskLink(task)}
                             {this.getTaskDownloadIcon(task)}
                         </TableRowColumn>
-                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
-                    <TableRowColumn style={{width: tableCellWidth, paddingRight: '10px', paddingLeft: '10px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
+                    <TableRowColumn  className={'qa-ProviderRow-TableRowColumn-size'} style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', fontSize: textFontSize}}>{task.result == null ? '' : task.result.size}</TableRowColumn>
+                    <TableRowColumn  className={'qa-ProviderRow-TableRowColumn-status'} style={{width: tableCellWidth, paddingRight: '10px', paddingLeft: '10px', textAlign: 'center', fontSize: textFontSize, fontWeight: 'bold'}}>{this.getTaskStatus(task)}</TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     <TableRowColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'center', fontSize: textFontSize}}></TableRowColumn>
                     </TableRow>
@@ -352,57 +278,61 @@ export class ProviderRow extends React.Component {
                 ))}
 
             </TableBody>
-
         }
         else{
             tableData = <TableBody/>
         }
 
-
-        
         return (
             <Table key={this.props.provider.uid}
+                   className={'qa-ProviderRow-Table'}
                    style={{width:'100%', backgroundColor:this.props.backgroundColor}}
                    selectable={false}
                    multiSelectable={false}
             >
                 <TableHeader
+                    className={'qa-ProviderRow-TableHeader'}
                     displaySelectAll={false}
                     adjustForCheckbox={false}
                     enableSelectAll={false}
                     >
-                    <TableRow displayBorder={true}>
-                        <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'44px'}}>
-                            <Checkbox
-                                disabled={this.props.provider.status != "COMPLETED"}
-                                checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}
-                                name={this.props.provider.uid}
-                                onCheck={this.onChangeCheck}
-                                checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
-                                uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
-                            />
+                    <TableRow  className={'qa-ProviderRow-TableRow-provider'} displayBorder={true}>
+                        {/*<TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'12px'}}>*/}
+                            {/*<Checkbox*/}
+                                {/*disabled={this.props.provider.status != "COMPLETED"}*/}
+                                {/*checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}*/}
+                                {/*name={this.props.provider.uid}*/}
+                                {/*onCheck={this.onChangeCheck}*/}
+                                {/*checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}*/}
+                                {/*uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}*/}
+                            {/*/>*/}
+                        {/*</TableHeaderColumn>*/}
+                        {/*<TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>*/}
+                            {/*{this.getProviderLink(this.props.provider)}*/}
+                            {/*{this.getProviderDownloadIcon(this.props.provider)}*/}
+                        {/*</TableHeaderColumn>*/}
+                        <TableHeaderColumn className={'qa-ProviderRow-TableRowColumn-providerName'} style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
+                            {this.props.provider.name}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
-                            {this.getProviderLink(this.props.provider)}
-                            {this.getProviderDownloadIcon(this.props.provider)}
-                        </TableHeaderColumn>
-                        <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                        <TableHeaderColumn className={'qa-ProviderRow-TableRowColumn-fileSize'} style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.state.fileSize == null ? '' : this.state.fileSize + " MB"}
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
+                        <TableHeaderColumn className={'qa-ProviderRow-TableRowColumn-providerStatus'} style={{width: tableCellWidth, paddingRight: '0px', paddingLeft: '0px', textAlign: 'center', color: 'black!important', fontSize: textFontSize}}>
                             {this.getProviderStatus(this.props.provider)}
 
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'right'}}>
+                        <TableHeaderColumn className={'qa-ProviderRow-TableRowColumn-menu'} style={{paddingRight: '0px', paddingLeft: '0px', width: '20px',textAlign: 'right'}}>
                             {menuItems.length > 0 ? 
                                 <IconMenu
+                                    className={'qa-ProviderRow-IconMenu'}
                                     iconButtonElement={
                                         <IconButton
+                                            className={'qa-ProviderRow-IconButton'}
                                             style={{padding: '0px', width: '20px', verticalAlign: 'middle'}}
                                             iconStyle={{color: '#4598bf'}}>
-                                            <NavigationMoreVert />
+                                            <NavigationMoreVert className={'qa-ProviderRow-NavigationMoreVert'}/>
                                         </IconButton>}
-                                    anchorOrigin={{horizontal: 'middle', vertical: 'center'}}
+                                    anchorOrigin={{horizontal: 'right', vertical: 'top'}}
                                     targetOrigin={{horizontal: 'right', vertical: 'top'}}
                                 >
                                     {menuItems}
@@ -411,6 +341,7 @@ export class ProviderRow extends React.Component {
                                 null
                             }
                             <BaseDialog
+                                className={'qa-ProviderRow-BaseDialog'}
                                 show={this.state.providerDialogOpen}
                                 title={this.props.provider.name}
                                 onClose={this.handleProviderClose.bind(this)}
@@ -418,13 +349,12 @@ export class ProviderRow extends React.Component {
                                 {this.state.providerDesc}
                             </BaseDialog>
                         </TableHeaderColumn>
-                        <TableHeaderColumn style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
+                        <TableHeaderColumn className={'qa-ProviderRow-TableRowColumn-arrows'} style={{paddingRight: '0px', paddingLeft: '0px', width: toggleCellWidth, textAlign: 'left'}}>
                             <IconButton disableTouchRipple={true} onTouchTap={this.handleToggle} iconStyle={{fill: '4598bf'}}>
-                                {this.state.openTable ? <ArrowDown/> : <ArrowUp/>}
+                                {this.state.openTable ? <ArrowUp className={'qa-ProviderRow-ArrowUp'}/> : <ArrowDown className={'qa-ProviderRow-ArrowDown'}/>}
                             </IconButton>
                         </TableHeaderColumn>
                     </TableRow>
-
                 </TableHeader>
                             {tableData}
             </Table>

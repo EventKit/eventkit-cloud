@@ -6,6 +6,7 @@ import dj_database_url
 import os
 import logging
 import json
+import urllib
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -43,9 +44,7 @@ if os.getenv("VCAP_SERVICES"):
             try:
                 EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
             except (KeyError, TypeError) as e:
-                import sys
                 print(e)
-                sys.stdout.flush()
                 continue
 if not EXPORT_STAGING_ROOT:
     EXPORT_STAGING_ROOT = os.getenv('EXPORT_STAGING_ROOT', '/var/lib/eventkit/exports_stage/')
@@ -124,8 +123,6 @@ http://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#timeout
 """
 
 OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in seconds
-
-USE_DISK_CACHE = True
 
 # Authentication Settings
 
@@ -215,13 +212,12 @@ if os.environ.get('VCAP_SERVICES'):
     if not DATABASES:
         for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
             try:
-                if 'pg_95' in service:
+                if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
                     DATABASES['default']['CONN_MAX_AGE'] = 500
             except (KeyError, TypeError) as e:
                 print("Could not configure information for service: {0}".format(service))
                 print(e)
-                sys.stdout.flush()
                 continue
             if DATABASES:
                 break
@@ -231,6 +227,11 @@ else:
 DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 DATABASES['default']['OPTIONS'] = {'options': '-c search_path=exports,public'}
+
+if os.getenv("FEATURE_DATABASE_URL"):
+    DATABASES['feature_data'] = dj_database_url.parse(os.getenv("FEATURE_DATABASE_URL"))
+else:
+    DATABASES['feature_data'] = DATABASES['default']
 
 TEMPLATES = [
     {
@@ -281,7 +282,8 @@ UI_CONFIG = {
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
     'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
-    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png')
+    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+    'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', 'Map data © OpenStreetMap contributors'),
 }
 
 if os.environ.get('USE_S3'):
@@ -289,9 +291,20 @@ if os.environ.get('USE_S3'):
 else:
     USE_S3 = False
 
-AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
-AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
-AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
+if os.getenv("VCAP_SERVICES"):
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+        if 's3' in service.lower():
+            try:
+                AWS_BUCKET_NAME = listings[0]['credentials']['bucket']
+                AWS_ACCESS_KEY = listings[0]['credentials']['access_key_id']
+                AWS_SECRET_KEY = listings[0]['credentials']['secret_access_key']
+            except (KeyError, TypeError) as e:
+                continue
+AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.environ.get('AWS_BUCKET_NAME')
+AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.environ.get('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = AWS_SECRET_KEY or os.environ.get('AWS_SECRET_KEY')
+
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
 
@@ -325,3 +338,5 @@ LOGGING = {
 DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
 
 MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 30)
+
+LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")

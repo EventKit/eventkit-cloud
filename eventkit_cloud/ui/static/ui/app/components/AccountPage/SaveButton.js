@@ -16,6 +16,7 @@ export class SaveButton extends Component {
         if(this.props.saved) {
             return (
                 <RaisedButton
+                    className={'qa-SaveButton-RaisedButton-Saved'}
                     style={styles.button}
                     disabled={true}
                     label={'Saved'}
@@ -23,7 +24,7 @@ export class SaveButton extends Component {
                     labelStyle={styles.label}
                     disabledBackgroundColor={'#55BA63'}
                 >    
-                    <NavigationCheck style={{fill: '#fff', verticalAlign: 'middle'}}/>
+                    <NavigationCheck className={'qa-SaveButton-NavigationCheck'} style={{fill: '#fff', verticalAlign: 'middle'}}/>
                 </RaisedButton>
             );
         }
@@ -31,6 +32,7 @@ export class SaveButton extends Component {
         else {
             return (
                 <RaisedButton
+                    className={'qa-SaveButton-RaisedButton-SaveChanges'}
                     disabled={this.props.saveDisabled}
                     disabledLabelColor={'#e2e2e2'}
                     disabledBackgroundColor={'rgba(226,226,226, 0.5'}

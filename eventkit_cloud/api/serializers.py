@@ -52,6 +52,49 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+class ProviderTaskSerializer(serializers.ModelSerializer):
+    formats = serializers.SlugRelatedField(
+        many=True,
+        queryset=ExportFormat.objects.all(),
+        slug_field='slug',
+        error_messages={'non_field_errors': _('Select an export format.')}
+    )
+    provider = serializers.CharField()
+
+    class Meta:
+        model = ProviderTask
+        fields = ('provider', 'formats')
+
+    @staticmethod
+    def create(validated_data, **kwargs):
+        from eventkit_cloud.api.views import get_models
+        """Creates an export ProviderTask."""
+        format_names = validated_data.pop("formats")
+        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        provider_model = ExportProvider.objects.get(name=validated_data.get("provider"))
+        provider_task = ProviderTask.objects.create(provider=provider_model)
+        provider_task.formats.add(*format_models)
+        provider_task.save()
+        return provider_task
+
+    @staticmethod
+    def update(instance, validated_data, **kwargs):
+        """Not implemented.
+        :param **kwargs:
+        """
+        raise NotImplementedError
+
+    def validate(self, data, **kwargs):
+        """
+        Validates the data submitted during ProviderTask creation.
+
+        See api/validators.py for validation code.
+        :param **kwargs:
+        """
+        # selection = validators.validate_licenses(self.context['request'].data, user=self.context['request'].user)
+        return data
+
+
 class ExportTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
@@ -132,7 +175,6 @@ class ExportProviderTaskSerializer(serializers.ModelSerializer):
         model = ExportProviderTask
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
 
-
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
 
@@ -151,6 +193,7 @@ class SimpleJobSerializer(serializers.Serializer):
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
     featured = serializers.BooleanField()
+    formats = serializers.SerializerMethodField('get_provider_tasks')
 
     @staticmethod
     def get_uid(obj):
@@ -168,6 +211,9 @@ class SimpleJobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+    def get_provider_tasks(self, obj):
+        return [format.name for format in obj.provider_tasks.first().formats.all()]
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -439,48 +485,6 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
-
-class ProviderTaskSerializer(serializers.ModelSerializer):
-    formats = serializers.SlugRelatedField(
-        many=True,
-        queryset=ExportFormat.objects.all(),
-        slug_field='slug',
-        error_messages={'non_field_errors': _('Select an export format.')}
-    )
-    provider = serializers.CharField()
-
-    class Meta:
-        model = ProviderTask
-        fields = ('provider', 'formats')
-
-    @staticmethod
-    def create(validated_data, **kwargs):
-        from eventkit_cloud.api.views import get_models
-        """Creates an export ProviderTask."""
-        format_names = validated_data.pop("formats")
-        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
-        provider_model = ExportProvider.objects.get(name=validated_data.get("provider"))
-        provider_task = ProviderTask.objects.create(provider=provider_model)
-        provider_task.formats.add(*format_models)
-        provider_task.save()
-        return provider_task
-
-    @staticmethod
-    def update(instance, validated_data, **kwargs):
-        """Not implemented.
-        :param **kwargs:
-        """
-        raise NotImplementedError
-
-    def validate(self, data, **kwargs):
-        """
-        Validates the data submitted during ProviderTask creation.
-
-        See api/validators.py for validation code.
-        :param **kwargs:
-        """
-        # selection = validators.validate_licenses(self.context['request'].data, user=self.context['request'].user)
-        return data
 
 
 class JobSerializer(serializers.Serializer):

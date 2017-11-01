@@ -12,7 +12,7 @@ from eventkit_cloud.jobs.models import Job, Region, ProviderTask, ExportProvider
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
     get_invalid_licenses)
-from mock import patch, Mock, MagicMock
+from mock import patch, Mock, MagicMock, ANY
 
 
 logger = logging.getLogger(__name__)
@@ -59,9 +59,10 @@ class TestExportTaskFactory(TestCase):
 
     @patch('eventkit_cloud.tasks.task_factory.os')
     @patch('eventkit_cloud.tasks.task_factory.get_invalid_licenses')
+    @patch('eventkit_cloud.tasks.task_factory.create_task')
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, finalize_task, mock_invalid_licenses, mock_os):
+    def test_task_factory(self, task_factory_chain, finalize_task, create_task, mock_invalid_licenses, mock_os):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
@@ -81,6 +82,7 @@ class TestExportTaskFactory(TestCase):
         task_factory_chain.assert_called()
         finalize_task.s.assert_called()
         mock_os.makedirs.assert_called()
+        self.assertEqual(2, create_task.call_count)
 
         # Test that run is prevented and deleted if the user has not agreed to the licenses.
         mock_invalid_licenses.return_value = ['invalid-licenses']
@@ -115,6 +117,7 @@ class TestExportTaskFactory(TestCase):
 
 class CreateFinalizeRunTaskCollectionTests(TestCase):
 
+
     @patch('eventkit_cloud.tasks.task_factory.prepare_for_export_zip_task')
     @patch('eventkit_cloud.tasks.task_factory.zip_file_task')
     @patch('eventkit_cloud.tasks.task_factory.finalize_run_task')
@@ -136,7 +139,7 @@ class CreateFinalizeRunTaskCollectionTests(TestCase):
         finalize_chain = create_finalize_run_task_collection(run_uid=run_uid, run_dir=run_dir, worker=worker,
                                                              apply_args=expected_task_settings)
 
-        zip_file_task.s.assert_called_once_with(run_uid=run_uid)
+        zip_file_task.s.assert_called_once_with(run_uid=run_uid, static_files=ANY)
         zip_file_task.s.return_value.set.assert_called_once_with(**expected_task_settings)
 
         finalize_run_task.si.assert_called_once_with(run_uid=run_uid, stage_dir=run_dir)

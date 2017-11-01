@@ -8,12 +8,7 @@ export default {
         geomType: null,
         title: null,
         description: null,
-    },
-    zoomToSelection: {
-        click: false
-    },
-    resetMap: {
-        click: false
+        selectionType: null,
     },
     geocode: {
         fetching: false,
@@ -28,7 +23,7 @@ export default {
         geom: {},
         error: null,
     },
-    drawerOpen: false,
+    drawer: 'closed',
     runsList: {
         fetching: false,
         fetched: false,
@@ -36,6 +31,8 @@ export default {
         error: null,
         nextPage: false,
         range: '',
+        order: '',
+        view: '',
     },
     runsDeletion: {
         deleting: false,
@@ -55,11 +52,10 @@ export default {
         makePublic: false,
         providers: [],
         area_str: '',
-        layers: '',
+        formats: [],
     },
     providers: [],
     stepperNextEnabled: false,
-    setExportPackageFlag: false,
     datacartDetailsReceived:false,
     datacartDetails: {
         fetching: false,
@@ -98,5 +94,6 @@ export default {
         updating: false,
         updated: false,
         error: null,
-    }
+    },
+    formats: [],
 }

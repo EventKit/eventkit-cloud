@@ -1,0 +1,53 @@
+/* 
+We still need this css file because the typeahead component 
+has no support for inline styles :(
+ */
+
+.typeahead {
+    left: 0px;
+    top: 0px;
+    height: 50px;
+    width: calc(100% - 50px);
+    position: absolute;
+}
+
+.typeahead > div {
+    height: 50px;
+    position: absolute !important;
+    width: 100%;
+}
+
+.typeahead > div > div {
+    position: absolute !important;
+    width: 100%;
+}
+
+.typeahead > div > div > input {
+    height: 50px;
+    border: none;
+    --webkit-box-shadow: none;
+    box-shadow: none;
+    color: #707274;
+    padding-right: 48px;
+    background-color: #fff !important;
+}
+
+.typeahead > div > div > input:focus {
+    border: none;
+}
+
+.typeahead ul {
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+.menuItem {
+    border-top: 1px solid rgba(112, 114, 116, .4);
+}
+
+.menuItem > a {
+    padding: 7px 10px !important;
+}

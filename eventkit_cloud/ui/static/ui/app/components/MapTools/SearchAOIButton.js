@@ -41,22 +41,22 @@ export class SearchAOIButton extends Component {
 
         }
         const DEFAULT_ICON = <div id='default_icon'>
-                <ActionSearch style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>SEARCH</div>
+                <ActionSearch className={'qa-SearchAOIButton-ActionSearch-default'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-SearchAOIButton-div-default'} style={styles.buttonName}>SEARCH</div>
             </div>
                     
         const INACTIVE_ICON = <div id='inactive_icon'>
-                <ActionSearch style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={{...styles.buttonName, opacity: 0.4}}>SEARCH</div>
+                <ActionSearch className={'qa-SearchAOIButton-ActionSearch-inactive'} style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-SearchAOIButton-div-default'}style={{...styles.buttonName, opacity: 0.4}}>SEARCH</div>
             </div>
 
         const SELECTED_ICON =<div id='selected_icon'>
-                <ContentClear style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div style={styles.buttonName}>SEARCH</div>
+                <ContentClear className={'qa-SearchAOIButton-ContentClear'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
+                <div className={'qa-SearchAOIButton-div'} style={styles.buttonName}>SEARCH</div>
             </div>
 
         return(
-            <button style={styles.buttonGeneral} onClick={this.handleOnClick}>
+            <button className={'qa-SearchAOIButton-button'}style={styles.buttonGeneral} onClick={this.handleOnClick}>
                 {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
             </button>
         )

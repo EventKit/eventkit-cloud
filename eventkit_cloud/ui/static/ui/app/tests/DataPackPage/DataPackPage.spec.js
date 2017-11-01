@@ -61,7 +61,9 @@ describe('DataPackPage component', () => {
                 runs: [],
                 error: null,
                 nextPage: false,
-                range: '12/24'
+                range: '12/24',
+                order: '',
+                view: '',
             },
             user: {data: {user: {username: 'admin'}}},
             getRuns: () => {},
@@ -72,26 +74,31 @@ describe('DataPackPage component', () => {
                 deleted: false,
                 error: null
             },
-            drawerOpen: true,
+            drawer: 'open',
             providers: providers,
             importGeom: {},
             geocode: {},
             getGeocode: () => {},
             processGeoJSONFile: () => {},
             resetGeoJSONFile: () => {},
+            setOrder: () => {},
+            setView: () => {},
         }
     };
 
-    it('should render all the basic components', () => {
-        const props = getProps();
-        const wrapper = mount(<DataPackPage {...props}/>, {
+    const getWrapper = (props) => {
+        return mount(<DataPackPage {...props}/>, {
             context: {muiTheme},
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
             }
         });
+    }
+
+    it('should render all the basic components', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).hasClass('sectionTitle')).toBe(true);
         expect(wrapper.find(AppBar).find('h1').text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
@@ -108,14 +115,23 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackList)).toHaveLength(0);
     });
 
+    it('should use order and view from props or just default to map and featured', () => {
+        const props = getProps();
+        props.runsList.order = 'job__featured';
+        props.runsList.view = 'grid';
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().order).toEqual('job__featured');
+        expect(wrapper.state().view).toEqual('grid');
+        wrapper.unmount();
+        const nextProps = getProps();
+        const nextWrapper = getWrapper(nextProps);
+        expect(nextWrapper.state().order).toEqual('-job__featured');
+        expect(nextWrapper.state().view).toEqual('map');
+    });
+
     it('should show MapView instead of progress circle when runs are received', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         let nextProps = getProps();
@@ -129,12 +145,7 @@ describe('DataPackPage component', () => {
 
     it('should show a progress circle when deleting a datapack', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
+        const wrapper = getWrapper(props);
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
@@ -144,54 +155,54 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call makeRunRequest, add eventlistener, and setInterval when mounting', () => {
+    it('should call makeRunRequest  and setInterval when mounting', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
         const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
-        const eventSpy = new sinon.spy(window, 'addEventListener');
         const intervalSpy = new sinon.spy(global, 'setInterval');
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(requestSpy.calledOnce).toBe(true);
-        expect(eventSpy.calledWith('resize', wrapper.instance().screenSizeUpdate)).toBe(true);
         expect(intervalSpy.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
         mountSpy.restore();
         requestSpy.restore();
-        eventSpy.restore();
         intervalSpy.restore();
     });
 
-    it('remove eventlister on unmount', () => {
+    it('componentWillUnmout should clear interval', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
-        const removeSpy = new sinon.spy(window, 'removeEventListener');
         const intervalSpy = new sinon.spy(global, 'clearInterval');
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        const update = wrapper.instance().screenSizeUpdate;
+        const wrapper = getWrapper(props);
         const fetch = wrapper.instance().fetch;
         wrapper.unmount();
         expect(mountSpy.calledOnce).toBe(true);
-        expect(removeSpy.calledWith('resize', update)).toBe(true);
         expect(intervalSpy.calledWith(fetch)).toBe(true);
         mountSpy.restore();
-        removeSpy.restore();
         intervalSpy.restore();
+    });
+
+    it('should setOrder and setView if props are different from state', () => {
+        const props = getProps();
+        props.setOrder = new sinon.spy();
+        props.setView = new sinon.spy();
+        const wrapper = getWrapper(props);
+        expect(wrapper.props().runsList.order).toEqual('');
+        expect(wrapper.props().runsList.view).toEqual('');
+        expect(wrapper.state().order).toEqual('-job__featured');
+        expect(wrapper.state().view).toEqual('map');
+        wrapper.unmount();
+        expect(props.setOrder.calledOnce).toBe(true);
+        expect(props.setOrder.calledWith('-job__featured')).toBe(true);
+        expect(props.setView.calledOnce).toBe(true);
+        expect(props.setView.calledWith('map')).toBe(true);
     });
 
     it('should run getRuns at intervals', () => {
         jest.useFakeTimers();
         let props = getProps();
         props.getRuns = new sinon.spy();
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -241,8 +252,9 @@ describe('DataPackPage component', () => {
     it('checkForEmptySearch should update state and call makeRunRequest', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
+        wrapper.setState({search: 'some search term'});
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.instance().checkForEmptySearch('', [], {});
+        wrapper.instance().checkForEmptySearch('');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
@@ -252,10 +264,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         const makeRequestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
-        const wrapper = mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
         let nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
@@ -386,15 +395,6 @@ describe('DataPackPage component', () => {
         )).toBe(true);
         stateSpy.restore();
     })
-
-    it('screenSizeUpdate should force the component to update', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const updateSpy = new sinon.spy(DataPackPage.prototype, 'forceUpdate');
-        wrapper.instance().screenSizeUpdate();
-        expect(updateSpy.calledOnce).toBe(true);
-        updateSpy.restore();
-    });
 
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
         let props = getProps();

@@ -28,8 +28,9 @@ describe('BreadcrumbStepper component', () => {
                 makePublic: false,
                 providers: providers,
                 area_str: '',
-                layers: '',
+                formats: ['gpkg']
             },
+            formats: formats,
             createExportRequest: () => {},
             submitJob: (data) => {},
             getProviders: () => {},
@@ -95,27 +96,6 @@ describe('BreadcrumbStepper component', () => {
         stateSpy.restore();
     });
 
-    it('handleNext should call setExportInfoDone', () => {
-        let props = getProps();
-        props.setExportInfoDone = new sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({stepIndex: 1});
-        expect(props.setExportInfoDone.called).toBe(false);
-        wrapper.instance().handleNext();
-        expect(props.setExportInfoDone.calledOnce).toBe(true); 
-    });
-
-    it('incrementStepper should increment the stepIndex', () => {
-        const props = getProps();
-        const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance().incrementStepper();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({stepIndex: 1})).toBe(true);
-        stateSpy.restore();
-    });
-
     it('handlePrev should decrement the stepIndex only when index is > 0', () => {
         const props = getProps();
         const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
@@ -156,12 +136,12 @@ describe('BreadcrumbStepper component', () => {
 
         content = wrapper.instance().getStepContent(1);
         expect(isEqual(content, <ExportInfo 
-            providers={props.providers} 
-            incrementStepper={wrapper.instance().incrementStepper}
+            providers={props.providers}
+            formats={props.formats}
             handlePrev={wrapper.instance().handlePrev}/>)).toBe(true);
-        
+
         content = wrapper.instance().getStepContent(2);
-        expect(isEqual(content, <ExportSummary/>)).toBe(true);
+        expect(isEqual(content, <ExportSummary allFormats={props.formats}/>)).toBe(true);
 
         content = wrapper.instance().getStepContent(3);
         expect(isEqual(content, <ExportAOI/>)).toBe(true);
@@ -256,3 +236,42 @@ const providers = [
         "export_provider_type": 1
     }
 ]
+
+const formats = [
+    {
+        "uid": "fa94240a-14d1-469f-8b31-335cab6b682a",
+        "url": "http://cloud.eventkit.dev/api/formats/shp",
+        "slug": "shp",
+        "name": "ESRI Shapefile Format",
+        "description": "Esri Shapefile (OSM Schema)"
+    },
+    {
+        "uid": "381e8529-b6d8-46f4-b6d1-854549ae652c",
+        "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+        "slug": "gpkg",
+        "name": "Geopackage",
+        "description": "GeoPackage"
+    },
+    {
+        "uid": "db36b559-bbca-4322-b059-048dabeceb67",
+        "url": "http://cloud.eventkit.dev/api/formats/gtiff",
+        "slug": "gtiff",
+        "name": "GeoTIFF Format",
+        "description": "GeoTIFF Raster"
+    },
+    {
+        "uid": "79f1d574-ca37-4011-a99c-0484dd331dc3",
+        "url": "http://cloud.eventkit.dev/api/formats/kml",
+        "slug": "kml",
+        "name": "KML Format",
+        "description": "Google Earth KMZ"
+    },
+    {
+        "uid": "20a6ba89-e03d-4610-b61f-158a74f963c4",
+        "url": "http://cloud.eventkit.dev/api/formats/sqlite",
+        "slug": "sqlite",
+        "name": "SQLITE Format",
+        "description": "SQlite SQL"
+    }
+]
+

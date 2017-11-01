@@ -60,9 +60,9 @@ export class ProviderError extends React.Component {
             errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>;
             errorData = errors.slice(0,3).map((error, index) => (
                 <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
-                    <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
+                    <Warning className={'qa-ProviderError-Warning->3'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                     {error}
-                    <Divider style={{marginTop: '5px'}}/>
+                    <Divider className={'qa-ProviderError-Divider->3'} style={{marginTop: '5px'}}/>
                 </div>
             ))
         }
@@ -70,26 +70,28 @@ export class ProviderError extends React.Component {
             errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
             errorData = errors.map((error, index) => (
                 <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
-                    <Warning style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
+                    <Warning className={'qa-ProviderError-Warning-<3'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
                     {error}
-                    <Divider style={{marginTop: '15px'}}/>
+                    <Divider className={'qa-ProviderError-Warning-<3'} style={{marginTop: '15px'}}/>
                 </div>
             ))
         }
 
         return (
-            <span>
+            <span  className={'qa-ProviderError-span-errorText'}>
                 <a 
                     onClick={() => {this.handleProviderErrorOpen()}} 
                     style={styles.errorText}
                 >
                     ERROR
                 </a>
-                <Warning 
+                <Warning
+                    className={'qa-ProviderError-Warning'}
                     onClick={() => {this.handleProviderErrorOpen()}} 
                     style={styles.warning}
                 />
                 <BaseDialog
+                    className={'qa-ProviderError-BaseDialog'}
                     show={this.state.providerErrorDialogOpen}
                     title={errorTitle}
                     onClose={this.handleProviderErrorClose}

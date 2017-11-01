@@ -14,7 +14,9 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
 import {generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, zoomToExtent, clearDraw,
-    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint} from '../../utils/mapUtils'
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
+    isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
+    isBox, isVertex, convertGeoJSONtoJSTS, jstsGeomToOlGeom } from '../../utils/mapUtils';
 
 export const RED_STYLE = new ol.style.Style({
     stroke: new ol.style.Stroke({
@@ -59,6 +61,12 @@ export class MapView extends Component {
         this.setMapView = this.setMapView.bind(this);
         this.defaultStyleFunction = this.defaultStyleFunction.bind(this);
         this.selectedStyleFunction = this.selectedStyleFunction.bind(this);
+        this.handleUp = this.handleUp.bind(this);
+        this.handleMove = this.handleMove.bind(this);
+        this.handleDrag = this.handleDrag.bind(this);
+        this.handleDown = this.handleDown.bind(this);
+        this.bufferMapFeature = this.bufferMapFeature.bind(this);
+        this.doesMapHaveDrawFeature = this.doesMapHaveDrawFeature.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -80,12 +88,23 @@ export class MapView extends Component {
     componentDidMount() {
         this.map = this.initMap();
         this.initOverlay();
-        this.source = new ol.source.Vector({wrapX: false});
+        this.source = new ol.source.Vector({wrapX: true});
         this.layer = new ol.layer.Vector({
             source: this.source,
             style: this.defaultStyleFunction
         });
         this.drawLayer = generateDrawLayer();
+        this.markerLayer = generateDrawLayer();
+
+        this.markerLayer.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+                stroke: new ol.style.Stroke({color: '#ce4427', width: 1.25}),
+                radius: 5
+            }),
+            fill: new ol.style.Fill({color: 'rgba(255,255,255,0.4)'}),
+            stroke: new ol.style.Stroke({color: '#3399CC', width: 1.25})
+        }));
 
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
         this.drawBoxInteraction.on('drawstart', this.onDrawStart);
@@ -95,12 +114,21 @@ export class MapView extends Component {
         this.drawFreeInteraction.on('drawstart', this.onDrawStart);
         this.drawFreeInteraction.on('drawend', this.onDrawEnd);
 
+        this.pointer = new ol.interaction.Pointer({
+            handleDownEvent: this.handleDown,
+            handleDragEvent: this.handleDrag,
+            handleMoveEvent: this.handleMove,
+            handleUpEvent: this.handleUp
+        });
+
+        this.map.addInteraction(this.pointer);
         this.map.addInteraction(this.drawBoxInteraction);
         this.map.addInteraction(this.drawFreeInteraction);
         
 
         this.map.addLayer(this.layer);
         this.map.addLayer(this.drawLayer);
+        this.map.addLayer(this.markerLayer);
 
         this.addRunFeatures(this.props.runs, this.source);
         this.map.getView().fit(this.source.getExtent(), this.map.getSize());
@@ -181,6 +209,7 @@ export class MapView extends Component {
         return new ol.Map({
             controls: [
                 new ol.control.Attribution({
+                    className: ['ol-attribution', css['ol-attribution']].join(' '),
                     collapsible: false,
                     collapsed: false,
                 }),
@@ -192,9 +221,11 @@ export class MapView extends Component {
                     extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958],
                 }),
                 new ol.control.OverviewMap({
-                    className: 'ol-overviewmap ' + css['ol-custom-overviewmap'],
+                    className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
                     collapsed: window.innerWidth < 768 ? true: false,
+                    collapseLabel: '\u00BB',
+                    label: '\u00AB',
                 }),
             ],
             interactions: ol.interaction.defaults({
@@ -206,7 +237,8 @@ export class MapView extends Component {
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.context.config.BASEMAP_URL,
-                        wrapX: false
+                        wrapX: true,
+                        attributions: this.context.config.BASEMAP_COPYRIGHT
                     })
                 }),
             ],
@@ -217,7 +249,6 @@ export class MapView extends Component {
                 zoom: 2,
                 minZoom: 2,
                 maxZoom: 22,
-                extent: [-14251567.50789682, -10584983.780136958, 14251787.50789682, 10584983.780136958]
             })
         });
     }
@@ -271,9 +302,12 @@ export class MapView extends Component {
                     this.setState({selectedFeature: feature.getId(), showPopup: true});
 
                     // if the feature in not in current view, center the view on selected feature
-                    const mapExtent = this.map.getView().calculateExtent();
-                    if(!ol.extent.containsExtent(mapExtent, feature.getGeometry().getExtent())) {
-                        this.map.getView().setCenter(ol.extent.getCenter(feature.getGeometry().getExtent()));
+                    // make sure we are comparing only unwrapped extents to avoid uneeded centering when map is wrapped
+                    const mapExtent = unwrapExtent(this.map.getView().calculateExtent(), this.map.getView().getProjection());
+                    const featureExtent = unwrapExtent(feature.getGeometry().getExtent(), this.map.getView().getProjection());
+
+                    if(!ol.extent.containsExtent(mapExtent, featureExtent)) {
+                        this.map.getView().setCenter(ol.extent.getCenter(featureExtent));
                     }
                     // if it is in view and not a polygon, trigger an animation
                     else {
@@ -516,6 +550,9 @@ export class MapView extends Component {
     onDrawEnd(event) {
         // get the drawn geometry
         const geom = event.feature.getGeometry();
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geom);
         const bbox = geojson.features[0].bbox;
         //make sure the user didnt create a polygon with no area
@@ -540,14 +577,15 @@ export class MapView extends Component {
                 this.setState({disableMapClick: false});
             }, 300);
         }
-        
-        
     }
 
     setMapView() {
         clearDraw(this.drawLayer);
         const extent = this.map.getView().calculateExtent(this.map.getSize());
         const geom = new ol.geom.Polygon.fromExtent(extent);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
         const feature = new ol.Feature({
             geometry: geom
         });
@@ -560,6 +598,12 @@ export class MapView extends Component {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
+        if (isViewOutsideValidExtent(this.map.getView())) {
+            // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
+            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // avoid that issue we go back to the valid extent but maintain the same view
+            goToValidExtent(this.map.getView());
+        };
         // if box or draw activate the respective interaction
         if(mode == MODE_DRAW_BBOX) {
             this.drawBoxInteraction.setActive(true);
@@ -581,6 +625,134 @@ export class MapView extends Component {
         zoomToGeometry(geom, this.map);
         const geojson_geometry = createGeoJSONGeometry(geom);
         this.props.onMapFilter(geojson_geometry);
+    }
+
+    bufferMapFeature(size) {
+        const feature = this.drawLayer.getSource().getFeatures()[0];
+        const geom = feature.getGeometry();
+
+        const geojson = createGeoJSON(geom);
+        const bufferedFeature = convertGeoJSONtoJSTS(geojson, size, true);
+        if (bufferedFeature.getArea() === 0) {
+            return false;
+        }
+
+        const newGeom = jstsGeomToOlGeom(bufferedFeature);
+        const newFeature = feature.clone();
+        const newGeojsonGeom = createGeoJSONGeometry(newGeom);
+        newFeature.setGeometry(newGeom);
+        clearDraw(this.drawLayer);
+        this.drawLayer.getSource().addFeature(newFeature);
+        this.props.onMapFilter(newGeojsonGeom);
+
+        return true;
+    }
+
+    doesMapHaveDrawFeature() {
+        if (!this.drawLayer) {
+            return false;
+        }
+        return this.drawLayer.getSource().getFeatures().length > 0;
+    }
+
+    handleUp(evt) {
+        const feature = this.feature;
+        if (feature) {
+            const geom = feature.getGeometry();
+            const coords = geom.getCoordinates();
+            const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+            geom.setCoordinates(unwrappedCoords);
+            const geojson = createGeoJSON(geom);
+            if (isGeoJSONValid(geojson)) {
+                const geojson_geometry = createGeoJSONGeometry(geom);
+                this.props.onMapFilter(geojson_geometry);
+                this.showInvalidDrawWarning(false);
+            }
+            else {
+                this.showInvalidDrawWarning(true);
+            }
+        }
+        this.coordinate = null;
+        this.feature = null;
+        return false;
+    }
+
+    handleDrag(evt) {
+        const deltaX = evt.coordinate[0] - this.coordinate[0];
+        const deltaY = evt.coordinate[1] - this.coordinate[1];
+        const feature = this.feature;
+        let coords = feature.getGeometry().getCoordinates()[0];
+         // create new coordinates for the feature based on new drag coordinate
+        if (isBox(feature)) {
+            coords = coords.map(coord => {
+                let newCoord = [...coord]
+                if (coord[0] == this.coordinate[0]) {
+                    newCoord[0] = evt.coordinate[0];
+                }
+                if (coord[1] == this.coordinate[1]) {
+                    newCoord[1] = evt.coordinate[1];
+                }
+                return newCoord;
+            });
+        }
+        else {
+            coords = coords.map(coord => {
+                let newCoord = [...coord];
+                if (coord[0] == this.coordinate[0] && coord[1] === this.coordinate[1]) {
+                    newCoord = [...evt.coordinate];
+                }
+                return newCoord;
+            });
+        }
+        const bounds = ol.extent.boundingExtent(coords);
+        // do not update the feature if it would have no area
+        if(bounds[0] == bounds[2] || bounds[1] == bounds[3]) {
+            return false;
+        }
+        feature.getGeometry().setCoordinates([coords]);
+        clearDraw(this.markerLayer);
+        this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(evt.coordinate)}));
+        this.coordinate = [...evt.coordinate];
+        return true;
+    }
+
+    handleMove(evt) {
+        const map = evt.map;
+        const pixel = evt.pixel;
+        if(this.markerLayer.getSource().getFeatures().length > 0) {
+            clearDraw(this.markerLayer);
+        }
+        const opts = {layerFilter: (layer) => {return layer == this.drawLayer}};
+        if (map.hasFeatureAtPixel(pixel, opts)) {
+            const feature = map.getFeaturesAtPixel(pixel, opts)[0];
+            if (feature.getGeometry().getType() == 'Polygon') {
+                if (isViewOutsideValidExtent(this.map.getView())) {
+                    goToValidExtent(this.map.getView());
+                };
+                const coords = isVertex(pixel, feature, 10, map);
+                if(coords) {
+                    this.markerLayer.getSource().addFeature(new ol.Feature({geometry: new ol.geom.Point(coords)}));
+                }
+            }
+        }
+    }
+
+    handleDown(evt) {
+        const map = evt.map;
+        const pixel = evt.pixel;
+        const opts = {layerFilter: (layer) => {return layer == this.drawLayer}};
+        if (map.hasFeatureAtPixel(pixel, opts)) {
+            const feature = map.getFeaturesAtPixel(pixel, opts)[0]; 
+            if (feature.getGeometry().getType() == 'Polygon') {
+                const vertex = isVertex(pixel, feature, 10, map);
+                if(vertex) {
+                    this.feature = feature;
+                    this.coordinate = vertex;
+                    return true;
+                }
+            }           
+        }
+        return false;
     }
 
     render() {
@@ -606,10 +778,10 @@ export class MapView extends Component {
             :
                 {
                     width: '70%', 
-                    height: window.innerHeight - 236, 
+                    height: window.innerHeight - 241,
                     display: 'inline-block', 
                     overflow: 'hidden', 
-                    padding: '0px 10px 10px 3px', 
+                    padding: '0px 10px 0px 3px',
                     position: 'relative'
                 },
             list: window.innerWidth < 768 ?
@@ -618,7 +790,7 @@ export class MapView extends Component {
                 }
             :
                 {
-                    height: window.innerHeight - 236, 
+                    height: window.innerHeight - 241,
                     width: '30%', 
                     display: 'inline-block'
                 },
@@ -641,11 +813,13 @@ export class MapView extends Component {
             />
         
         const feature = this.state.selectedFeature ? this.source.getFeatureById(this.state.selectedFeature): null;
+        const showBuffer = this.doesMapHaveDrawFeature();
         return (
-            <div style={{height: window.innerHeight - 236}}>
+            <div style={{height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223}}>
                 <CustomScrollbar style={styles.list}>
                     <div style={styles.root}>
                         <GridList
+                            className={'qa-MapView-GridList'}
                             cellHeight={'auto'}
                             cols={1}
                             padding={0}
@@ -666,8 +840,8 @@ export class MapView extends Component {
                     </div>
                     {load}
                 </CustomScrollbar>
-                <div style={styles.map}>
-                    <div style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
+                <div  style={styles.map}>
+                    <div className={'qa-MapView-div-map'} style={{width: '100%', height: '100%', position: 'relative'}} id='map'>
                     <SearchAOIToolbar
                         handleSearch={this.handleSearch}
                         handleCancel={this.handleCancel}
@@ -688,6 +862,8 @@ export class MapView extends Component {
                         setMapViewButtonSelected={() => {this.setButtonSelected('mapView')}}
                         setImportButtonSelected={() => {this.setButtonSelected('import')}}
                         setImportModalState={this.toggleImportModal}
+                        showBufferButton={showBuffer}
+                        onBufferClick={this.bufferMapFeature}
                     />
                     <InvalidDrawWarning
                         show={this.state.showInvalidDrawWarning}
@@ -703,7 +879,7 @@ export class MapView extends Component {
                     </div>
                     <div id="popup" className={css.olPopup}>
                         <a href="#" id="popup-closer" className={css.olPopupCloser}/>
-                        <div id="popup-content">
+                        <div className={'qa-MapView-div-popupContent'} id="popup-content">
                             <p style={{color: 'grey'}}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                             {this.state.groupedFeatures.map((feature, ix) => {

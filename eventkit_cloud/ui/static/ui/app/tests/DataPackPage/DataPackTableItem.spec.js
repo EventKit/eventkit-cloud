@@ -81,20 +81,20 @@ describe('DataPackTableItem component', () => {
         let props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props}/>);
         let icon = wrapper.instance().getPermissionsIcon(true);
-        expect(icon).toEqual(<SocialGroup style={{color: 'bcdfbb'}}/>);
+        expect(icon).toEqual(<SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>);
         icon = wrapper.instance().getPermissionsIcon(false);
-        expect(icon).toEqual(<SocialPerson style={{color: 'grey'}}/>);
+        expect(icon).toEqual(<SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>);
     });
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
         let props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props}/>);
         let icon = wrapper.instance().getStatusIcon('SUBMITTED');
-        expect(icon).toEqual(<NotificationSync style={{color: '#f4d225'}}/>);
+        expect(icon).toEqual(<NotificationSync className={'qa-DataPackTableItem-NotificationSync'} style={{color: '#f4d225'}}/>);
         icon = wrapper.instance().getStatusIcon('INCOMPLETE');
-        expect(icon).toEqual(<AlertError style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>);
+        expect(icon).toEqual(<AlertError className={'qa-DataPackTableItem-AlertError'} style={{color: '#ce4427', opacity: '0.6', height: '22px'}}/>);
         icon = wrapper.instance().getStatusIcon('COMPLETED');
-        expect(icon).toEqual(<NavigationCheck style={{color: '#bcdfbb', height: '22px'}}/>)
+        expect(icon).toEqual(<NavigationCheck className={'qa-DataPackTableItem-NavigationCheck'} style={{color: '#bcdfbb', height: '22px'}}/>)
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
@@ -117,6 +117,41 @@ describe('DataPackTableItem component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({providerDescs:{"OpenStreetMap Data (Themes)":"OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...)."}, providerDialogOpen: true})).toBe(true);
         stateSpy.restore();
+    });
+
+    it('showDeleteDialog should set deleteDialogOpen to true', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().showDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: true}));
+        stateSpy.restore();
+    });
+
+    it('hideDeleteDialog should set deleteDialogOpen to false', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        expect(stateSpy.called).toBe(false);
+        wrapper.instance().hideDeleteDialog();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({deleteDialogOpen: false}));
+        stateSpy.restore();
+    });
+
+    it('handleDelete should call hideDelete and onRunDelete', () => {
+        const props = getProps();
+        props.onRunDelete = new sinon.spy();
+        const hideSpy = new sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
+        const wrapper = shallow(<DataPackTableItem {...props}/>);
+        expect(props.onRunDelete.called).toBe(false);
+        expect(hideSpy.called).toBe(false);
+        wrapper.instance().handleDelete();
+        expect(hideSpy.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledOnce).toBe(true);
+        expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 });
 const providers = [

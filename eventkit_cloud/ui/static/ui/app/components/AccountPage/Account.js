@@ -14,7 +14,6 @@ export class Account extends Component {
 
     constructor(props) {
         super(props);
-        this.handleResize = this.handleResize.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
         this.handleAll = this.handleAll.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -27,11 +26,6 @@ export class Account extends Component {
     componentWillMount() {
         this.setState({acceptedLicenses: {...this.props.user.data.accepted_licenses}});
         this.props.getLicenses();
-        window.addEventListener('resize', this.handleResize);
-    };
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.handleResize);
     };
     
     componentWillReceiveProps(nextProps) {
@@ -42,10 +36,6 @@ export class Account extends Component {
             }, 3000);
         }
     }
-
-    handleResize() {
-        this.forceUpdate();
-    };
 
     handleCheck(slug, checked) {
         const licenses = this.state.acceptedLicenses;
@@ -82,8 +72,8 @@ export class Account extends Component {
             },
             headerTitle: {
                 fontSize: '18px',
-                lineHeight: '30px',
-                height: '25px',
+                lineHeight: '35px',
+                height: '35px',
             },
             body: {
                 height: window.innerHeight - 130,
@@ -101,6 +91,7 @@ export class Account extends Component {
         return (
             <div style={{backgroundColor: 'white'}}>
                 <AppBar
+                    className={'qa-Account-AppBar'}
                     title={'Account'}
                     style={styles.header}
                     titleStyle={styles.headerTitle}
@@ -115,9 +106,9 @@ export class Account extends Component {
                 
                 <div style={styles.body}>
                     <CustomScrollbar style={{height: window.innerHeight - 130, width: '100%'}}>
-                        <div style={styles.bodyContent}>
+                        <div style={styles.bodyContent}  className={'qa-Account-body'}>
                             {this.props.licenses.licenses.length > 0 ?
-                                <div style={{marginBottom: '34px'}}>
+                                <div style={{marginBottom: '34px'}} className={'qa-Account-licenses'}>
                                     <LicenseInfo
                                         user={this.props.user}
                                         licenses={this.props.licenses}
@@ -129,7 +120,7 @@ export class Account extends Component {
                             : null}
                             
                             {Object.keys(this.props.user.data.user).length > 0 ?
-                                <div style={{marginBottom: '34px'}}>
+                                <div style={{marginBottom: '34px'}}  className={'qa-Account-userInfo'}>
                                     <UserInfo user={this.props.user.data.user} updateLink={''}/>
                                 </div> 
                             : null}

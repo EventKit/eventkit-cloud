@@ -2,12 +2,16 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
-export function drawerMenuReducer(state = initialState.drawerOpen, action) {
+export function drawerMenuReducer(state = initialState.drawer, action) {
     switch(action.type) {
-        case types.OPEN_DRAWER:
-            return true;
-        case types.CLOSE_DRAWER:
-            return false;
+        case types.OPENING_DRAWER:
+            return 'opening';
+        case types.OPENED_DRAWER:
+            return 'open';
+        case types.CLOSING_DRAWER:
+            return 'closing';
+        case types.CLOSED_DRAWER:
+            return 'closed';
         default:
             return state;
     }
@@ -24,17 +28,6 @@ export function stepperReducer(state = initialState.stepperNextEnabled, action) 
     }
 }
 
-export function startExportPackageReducer(state = initialState.setExportPackageFlag, action) {
-    switch(action.type) {
-        case types.EXPORT_INFO_DONE:
-            return true;
-        case types.EXPORT_INFO_NOTDONE:
-            return false;
-        default:
-            return state;
-    }
-}
-
 export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch(action.type) {
         case types.UPDATE_AOI_INFO:
@@ -43,6 +36,7 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
                 geomType: action.geomType,
                 title: action.title,
                 description: action.description,
+                selectionType: action.selectionType,
             };
         case types.CLEAR_AOI_INFO:
             return {
@@ -60,13 +54,8 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
     switch(action.type) {
         case types.UPDATE_EXPORT_INFO:
             return {
-                exportName: action.exportName,
-                datapackDescription: action.datapackDescription,
-                projectName: action.projectName,
-                makePublic: action.makePublic,
-                providers: action.providers,
-                area_str: action.area_str,
-                layers: action.layers,
+                ...state,
+                ...action.exportInfo
             };
         case types.CLEAR_EXPORT_INFO:
             return {
@@ -94,6 +83,17 @@ export function getProvidersReducer(state = initialState.providers, action ) {
     }
 }
 
+export function getFormatsReducer(state = initialState.formats, action ) {
+    switch (action.type) {
+        case types.GETTING_FORMATS:
+            return  []
+        case types.FORMATS_RECEIVED:
+            return action.formats
+        default:
+            return state
+    }
+}
+
 export function submitJobReducer(state = initialState.submitJob, action) {
     switch(action.type) {
         case types.SUBMITTING_JOB:
@@ -103,7 +103,7 @@ export function submitJobReducer(state = initialState.submitJob, action) {
         case types.JOB_SUBMITTED_ERROR:
             return {fetching: false, fetched: false, jobuid: '', error: action.error};
         case types.CLEAR_JOB_INFO:
-            return {fectching: false, fetched: false, jobuid: '', error: null};
+            return {fetching: false, fetched: false, jobuid: '', error: null};
         default:
             return state;
     }

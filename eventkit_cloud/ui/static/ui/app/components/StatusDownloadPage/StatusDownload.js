@@ -1,121 +1,122 @@
-import React, {Component, PropTypes } from 'react';
-import {connect} from 'react-redux';
-import {browserHistory} from 'react-router';
-import '../tap_events'
-import Paper from 'material-ui/Paper'
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { browserHistory } from 'react-router';
+import TimerMixin from 'react-timer-mixin';
+import reactMixin from 'react-mixin';
+import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
-import DataCartDetails from './DataCartDetails'
-import cssStyles from '../../styles/StatusDownload.css'
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration,updatePermission, getProviderDesc, clearProviderDesc} from '../../actions/statusDownloadActions'
-import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions'
-import TimerMixin from 'react-timer-mixin'
-import reactMixin from 'react-mixin'
+import '../tap_events';
+import DataCartDetails from './DataCartDetails';
+import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
+import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
+
+const topoPattern = require('../../../images/ek_topo_pattern.png');
 
 export class StatusDownload extends React.Component {
     constructor(props) {
-        super(props)
-        this.handleResize = this.handleResize.bind(this);
+        super(props);
         this.state = {
             datacartDetails: [],
             isLoading: true,
             maxDays: null,
-        }
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.runDeletion.deleted != this.props.runDeletion.deleted) {
-            if (nextProps.runDeletion.deleted) {
-                browserHistory.push('/exports');
-            }
-        }
-        if (nextProps.exportReRun.fetched != this.props.exportReRun.fetched) {
-            if (nextProps.exportReRun.fetched == true) {
-                let datacartDetails = [];
-                datacartDetails[0] = nextProps.exportReRun.data;
-                this.setState({datacartDetails: datacartDetails});
-                this.startTimer();
-            }
-        }
-        if (nextProps.updateExpiration.updated != this.props.updateExpiration.updated) {
-            if (nextProps.updateExpiration.updated == true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
-        }
-        if (nextProps.updatePermission.updated != this.props.updatePermission.updated) {
-            if (nextProps.updatePermission.updated == true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
-        }
-        if (nextProps.datacartDetails.fetched != this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched == true) {
-                let datacartDetails = nextProps.datacartDetails.data;
-                this.setState({datacartDetails: datacartDetails});
-
-                //If the status of the job is completed, check the provider tasks to ensure they are all completed as well
-                //If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
-                // means that at least one task is not completed, so do not stop the timer
-                if (datacartDetails[0].status == "COMPLETED" || datacartDetails[0].status == "INCOMPLETE") {
-                    let providerTasks = datacartDetails[0].provider_tasks;
-                    let clearTimer = 0;
-                     providerTasks.forEach((tasks) => {
-                        tasks.tasks.forEach((task) => {
-                            if((task.status != 'SUCCESS') && (task.status != 'CANCELED') && (task.status != 'FAILED')){
-                                clearTimer++
-                            }
-                        });
-                    });
-
-                    if (clearTimer == 0 ){
-                        TimerMixin.clearInterval(this.timer);
-                        setTimeout(() => {
-                            this.props.getDatacartDetails(this.props.params.jobuid);
-                        }, 270000);
-                    }
-                }
-
-                if(this.state.isLoading) {
-                    this.setState({isLoading: false});
-                }
-            }
-        }
-    }
-
-    startTimer() {
-        this.timer = TimerMixin.setInterval(() => {
-            this.props.getDatacartDetails(this.props.params.jobuid);
-        }, 3000);
+            zipFileProp: null,
+        };
     }
 
     componentDidMount() {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
-        window.addEventListener('resize', this.handleResize);
         const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
-        this.setState({maxDays});
+        this.setState({ maxDays });
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.runDeletion.deleted !== this.props.runDeletion.deleted) {
+            if (nextProps.runDeletion.deleted) {
+                browserHistory.push('/exports');
+            }
+        }
+        if (nextProps.exportReRun.fetched !== this.props.exportReRun.fetched) {
+            if (nextProps.exportReRun.fetched === true) {
+                let datacartDetails = [];
+                datacartDetails[0] = nextProps.exportReRun.data;
+                this.setState({ datacartDetails });
+                this.startTimer();
+            }
+        }
+        if (nextProps.updateExpiration.updated !== this.props.updateExpiration.updated) {
+            if (nextProps.updateExpiration.updated === true) {
+                this.props.getDatacartDetails(this.props.params.jobuid);
+            }
+        }
+        if (nextProps.updatePermission.updated !== this.props.updatePermission.updated) {
+            if (nextProps.updatePermission.updated === true) {
+                this.props.getDatacartDetails(this.props.params.jobuid);
+            }
+        }
+        if (nextProps.datacartDetails.fetched !== this.props.datacartDetails.fetched) {
+            if (nextProps.datacartDetails.fetched === true) {
+                const datacartDetails = nextProps.datacartDetails.data;
+                this.setState({ datacartDetails, zipFileProp: nextProps.datacartDetails.data[0].zipfile_url });
+
+                let clearTimer = 0;
+                if (nextProps.datacartDetails.data[0].zipfile_url == null) {
+                    clearTimer += 1;
+                }
+
+
+                // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
+                // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+                // means that at least one task is not completed, so do not stop the timer
+                if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
+                    const providerTasks = datacartDetails[0].provider_tasks;
+                    providerTasks.forEach((tasks) => {
+                        tasks.tasks.forEach((task) => {
+                            if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
+                                clearTimer += 1;
+                            }
+                        });
+                    });
+
+                    if (clearTimer === 0) {
+                        TimerMixin.clearInterval(this.timer);
+                        this.timeout = setTimeout(() => {
+                            this.props.getDatacartDetails(this.props.params.jobuid);
+                        }, 270000);
+                    }
+                }
+
+                if (this.state.isLoading) {
+                    this.setState({ isLoading: false });
+                }
+            }
+        }
     }
 
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
-        window.removeEventListener('resize', this.handleResize);
-    }
-
-    handleClone(cartDetails, providerArray) {
-        this.props.cloneExport(cartDetails, providerArray)
-    }
-
-    handleResize() {
-        this.forceUpdate();
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
     }
 
     getMarginPadding() {
-        if(window.innerWidth <= 767) {
+        if (window.innerWidth <= 767) {
             return '0px';
         }
-        else {
-            return '30px';
-        }
+        return '30px';
+    }
+
+    handleClone(cartDetails, providerArray) {
+        this.props.cloneExport(cartDetails, providerArray);
+    }
+
+    startTimer() {
+        this.timer = TimerMixin.setInterval(() => {
+            this.props.getDatacartDetails(this.props.params.jobuid);
+        }, 3000);
     }
 
     render() {
@@ -127,8 +128,8 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
-                backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')',
-                backgroundRepeat: 'repeat repeat'
+                backgroundImage: `url(${topoPattern})`,
+                backgroundRepeat: 'repeat repeat',
             },
             content: {
                 paddingTop: marginPadding,
@@ -136,58 +137,76 @@ export class StatusDownload extends React.Component {
                 paddingLeft: marginPadding,
                 paddingRight: marginPadding,
                 margin: 'auto',
-                maxWidth: '1100px'
-            }
-        }
+                maxWidth: '1100px',
+            },
+            heading: {
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: 'black',
+                alignContent: 'flex-start',
+                paddingBottom: '5px',
+            },
+            deleting: {
+                zIndex: 10,
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                display: 'inline-flex',
+                backgroundColor: 'rgba(0,0,0,0.3)',
+            },
+        };
 
         return (
 
-            <div style={styles.root}>
-                {this.props.runDeletion.deleting ? 
-                    <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%', display: 'inline-flex', backgroundColor: 'rgba(0,0,0,0.3)'}}>
-                        <CircularProgress 
-                            style={{margin: 'auto', display: 'block'}} 
-                            color={'#4598bf'}
+            <div className="qa-StatusDownload-div-root" style={styles.root}>
+                {this.props.runDeletion.deleting ?
+                    <div style={styles.deleting}>
+                        <CircularProgress
+                            style={{ margin: 'auto', display: 'block' }}
+                            color="#4598bf"
                             size={50}
                         />
                     </div>
-                : 
-                    null 
+                    :
+                    null
                 }
-                <CustomScrollbar style={{height: window.innerHeight - 95, width: '100%'}}>
-                    <div style={styles.content}>
+                <CustomScrollbar style={{ height: window.innerHeight - 95, width: '100%' }}>
+                    <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <form>
-                            <Paper style={{padding: '20px'}} zDepth={2} >
-                                <div id='mainHeading' className={cssStyles.heading}>Status & Download</div>
-                                {this.state.isLoading ? 
-                                    <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
-                                    <CircularProgress color={'#4598bf'} size={50} style={{margin: '30px auto', display: 'block'}}/>
+                            <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
+                                <div className="qa-StatusDownload-heading" style={styles.heading}>
+                                    Status & Download
+                                </div>
+                                {this.state.isLoading ?
+                                    <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                                        <CircularProgress color="#4598bf" size={50} style={{ margin: '30px auto', display: 'block' }} />
                                     </div>
-                                :
-                                null
+                                    :
+                                    null
                                 }
-                                {this.state.datacartDetails.map((cartDetails) => (
-                                    <DataCartDetails key={cartDetails.uid}
-                                                     cartDetails={cartDetails}
-                                                     onRunDelete={this.props.deleteRun}
-                                                     onUpdateExpiration={this.props.updateExpirationDate}
-                                                     onUpdatePermission={this.props.updatePermission}
-                                                     onRunRerun={this.props.rerunExport}
-                                                     onClone={this.props.cloneExport}
-                                                     onProviderCancel={this.props.cancelProviderTask}
-                                                     providers={this.props.providers}
-                                                     maxResetExpirationDays={this.state.maxDays}/>
+                                {this.state.datacartDetails.map(cartDetails => (
+                                    <DataCartDetails
+                                        key={cartDetails.uid}
+                                        cartDetails={cartDetails}
+                                        onRunDelete={this.props.deleteRun}
+                                        onUpdateExpiration={this.props.updateExpirationDate}
+                                        onUpdatePermission={this.props.updatePermission}
+                                        onRunRerun={this.props.rerunExport}
+                                        onClone={this.props.cloneExport}
+                                        onProviderCancel={this.props.cancelProviderTask}
+                                        providers={this.props.providers}
+                                        maxResetExpirationDays={this.state.maxDays}
+                                        zipFileProp={this.state.zipFileProp}
+                                    />
                                 ))}
-
                             </Paper>
                         </form>
                     </div>
                 </CustomScrollbar>
             </div>
-        )
+        );
     }
 }
-
 
 
 function mapStateToProps(state) {
@@ -199,46 +218,53 @@ function mapStateToProps(state) {
         updatePermission: state.updatePermission,
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
-        providers: state.providers
-    }
+        providers: state.providers,
+    };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
         getDatacartDetails: (jobuid) => {
-            dispatch(getDatacartDetails(jobuid))
+            dispatch(getDatacartDetails(jobuid));
         },
         deleteRun: (jobuid) => {
-            dispatch(deleteRun(jobuid))
+            dispatch(deleteRun(jobuid));
         },
         rerunExport: (jobuid) => {
-            dispatch(rerunExport(jobuid))
+            dispatch(rerunExport(jobuid));
         },
         updateExpirationDate: (uid, expiration) => {
-            dispatch(updateExpiration(uid, expiration))
+            dispatch(updateExpiration(uid, expiration));
         },
         updatePermission: (uid, value) => {
-            dispatch(updatePermission(uid, value))
+            dispatch(updatePermission(uid, value));
         },
         clearReRunInfo: () => {
-            dispatch(clearReRunInfo())
+            dispatch(clearReRunInfo());
         },
         cloneExport: (cartDetails, providerArray) => {
-            dispatch(updateAoiInfo({type: "FeatureCollection", features: [cartDetails.job.extent]}, 'Polygon', 'Custom Polygon', 'Box'));
-            dispatch(updateExportInfo(cartDetails.job.name, cartDetails.job.description, cartDetails.job.event, cartDetails.job.published, providerArray, 'Geopackage'))
-            browserHistory.push('/create/')
+            dispatch(updateAoiInfo({ type: 'FeatureCollection', features: [cartDetails.job.extent] }, 'Polygon', 'Custom Polygon', 'Box', 'box'));
+            dispatch(updateExportInfo({
+                exportName: cartDetails.job.name,
+                datapackDescription: cartDetails.job.description,
+                projectName: cartDetails.job.event,
+                makePublic: cartDetails.job.published,
+                providers: providerArray,
+                layers: 'Geopackage',
+            }));
+            browserHistory.push('/create/');
         },
-        cancelProviderTask:(providerUid) => {
-            dispatch(cancelProviderTask(providerUid))
+        cancelProviderTask: (providerUid) => {
+            dispatch(cancelProviderTask(providerUid));
         },
         getProviders: () => {
-            dispatch(getProviders())
+            dispatch(getProviders());
         },
-    }
+    };
 }
 StatusDownload.contextTypes = {
-    config: React.PropTypes.object
-}
+    config: PropTypes.object,
+};
 
 StatusDownload.propTypes = {
     datacartDetails: PropTypes.object.isRequired,
@@ -255,8 +281,8 @@ StatusDownload.propTypes = {
 
 reactMixin(StatusDownload.prototype, TimerMixin);
 
-export default  connect(
+export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
 )(StatusDownload);
 
