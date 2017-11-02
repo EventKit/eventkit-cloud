@@ -106,3 +106,5 @@ eventkit_cloud/ui/static/ui/build
 
 # NightwatchJS
 reports/
+screenshots/*
+!screenshots/baseline

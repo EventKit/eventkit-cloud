@@ -55,9 +55,10 @@
     "image-webpack-loader": "~3.0.0",    
     "jest-cli": "~21.1.0",
     "jsdom": "~9.12.0",
-    "nock": "~9.0.2",
-    "webpack-dev-server": "~2.4.5",
     "nightwatch": "^0.9.16",
+    "nock": "~9.0.2",
+    "pixelmatch": "^4.0.2",
+    "pngjs": "^3.3.0",
     "raf": "~3.3.2",
     "react-addons-test-utils": "~15.4.0",
     "react-hot-loader": "3.0.0-beta.6",
@@ -83,9 +84,25 @@
   },
   "jest": {
     "coverageDirectory": "/var/lib/eventkit/coverage",
-    "collectCoverageFrom" : ["**/*.{js,jsx}", "!**/coverage/**", "!**/webpack.config.js", "!**/build/**", "!**/staticfiles/**", "!**/styles/**", "!**/node_modules/**", "!**/vendor/**"],
-    "moduleFileExtensions": ["js", "jsx"],
-    "moduleDirectories": ["node_modules", "bower_components", "shared"],
+    "collectCoverageFrom": [
+      "**/*.{js,jsx}",
+      "!**/coverage/**",
+      "!**/webpack.config.js",
+      "!**/build/**",
+      "!**/staticfiles/**",
+      "!**/styles/**",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "bower_components",
+      "shared"
+    ],
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
