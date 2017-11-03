@@ -101,8 +101,10 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
-EMAIL_USE_TLS = True
+if 'f' in os.getenv('EMAIL_USE_TLS', '').lower():
+    EMAIL_USE_TLS = os.getenv(False)
+else:
+    EMAIL_USE_TLS = True
 
 """
 Overpass Element limit
