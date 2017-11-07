@@ -16,12 +16,11 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import {getGeocode} from '../../actions/searchToolbarActions';
-import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
-import {isGeoJSONValid} from '../../utils/mapUtils';
+import { getGeocode } from '../../actions/searchToolbarActions';
+import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
+import { flattenFeatureCollection } from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
-
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
@@ -165,7 +164,11 @@ export class DataPackPage extends React.Component {
     }
 
     handleSpatialFilter(geojson) {
-        this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
+        let geom = null;
+        if (geojson) {
+            geom = flattenFeatureCollection(geojson).geometry;
+        }
+        this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
     }
 
     changeView(view) {

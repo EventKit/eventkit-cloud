@@ -1,8 +1,6 @@
 import configureMockStore from 'redux-mock-store';
-import GeoJSON from 'ol/format/geojson';
 import thunk from 'redux-thunk';
 import axios from 'axios';
-import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
 import * as actions from '../../actions/mapToolActions';
 import types from '../../actions/mapToolActionTypes';
@@ -42,9 +40,6 @@ describe('mapTool actions', () => {
         };
         const initialState = {};
         const store = mockStore(initialState);
-        const geom = (new GeoJSON()).readGeometry(geojson.features[0].geometry);
-        const readGeomStub = sinon.stub(GeoJSON.prototype, 'readGeometry')
-            .returns(geom);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(200, geojson);
         const file = new File(
@@ -55,50 +50,7 @@ describe('mapTool actions', () => {
 
         const expectedPayload = [
             { type: types.FILE_PROCESSING },
-            { type: types.FILE_PROCESSED, geom },
-        ];
-        return store.dispatch(actions.processGeoJSONFile(file))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedPayload);
-                readGeomStub.restore();
-            });
-    });
-
-    it('processGeoJSONFile should not add AOI to state if invalid geojson', () => {
-        const geojson = {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                        type: 'polygon',
-                        coordinates: [
-                            [
-                                [7.2, 46.2],
-                                [7.6, 46.2],
-                                [7.6, 46.6],
-                                [7.2, 46.6],
-                                [7.2, 46.2],
-                            ],
-                        ],
-                    },
-                },
-            ],
-        };
-        const initialState = {};
-        const store = mockStore(initialState);
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
-        mock.onPost('/file_upload').reply(200, geojson);
-        const file = new File(
-            [geojson],
-            'test.geojson',
-            { type: 'application/json' },
-        );
-
-        const expectedPayload = [
-            { type: types.FILE_PROCESSING },
-            { type: types.FILE_ERROR, error: 'There was an error processing the geojson file.' },
+            { type: types.FILE_PROCESSED, featureCollection: geojson },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
             .then(() => {
