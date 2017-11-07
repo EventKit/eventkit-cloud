@@ -12,10 +12,14 @@ export class CustomScrollbar extends Component {
             <div style={{...style, ...thumbStyle}} {...props}/>
         );
     }
+    scrollToBottom() {
+        return this.refs.scrollBar.scrollToBottom();
+    }
     
     render() {
         return (
             <Scrollbars
+                ref="scrollBar"
                 renderThumbVertical={this.renderThumb}
                 {...this.props}/>
         );

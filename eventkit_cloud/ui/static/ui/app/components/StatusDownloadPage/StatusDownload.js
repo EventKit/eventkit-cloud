@@ -181,7 +181,7 @@ export class StatusDownload extends React.Component {
             {
                 title: 'AIO',
                 text: 'This is the selected area of interest for the datapack.',
-                selector: '.qa-DataCartDetails-div-aoi',
+                selector: '.qa-DataCartDetails-div-map',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed:true,
@@ -238,6 +238,7 @@ export class StatusDownload extends React.Component {
     }
 
     callback(data) {
+        const { scrollBar } = this.refs;
         if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
@@ -247,7 +248,7 @@ export class StatusDownload extends React.Component {
         }
 
         if(data.index === 5 && data.type === 'tooltip:before') {
-            this.scrollbars.scrollToBottom();
+            scrollBar.scrollToBottom();
         }
     }
 
@@ -328,7 +329,7 @@ export class StatusDownload extends React.Component {
                 : 
                     null 
                 }
-                <CustomScrollbar ref={s => { this.scrollbars = s; }} style={{height: window.innerHeight - 95, width: '100%'}}>
+                <CustomScrollbar ref='scrollBar' style={{height: window.innerHeight - 95, width: '100%'}}>
                     <div  className={'qa-StatusDownload-div-content'} style={styles.content}>
                         <Joyride
                             callback={this.callback}
