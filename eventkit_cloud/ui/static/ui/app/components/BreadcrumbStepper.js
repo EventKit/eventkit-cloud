@@ -73,6 +73,7 @@ export class BreadcrumbStepper extends React.Component {
             published : this.props.exportInfo.makePublic,
             provider_tasks : provider_tasks,
             selection: this.props.aoiInfo.geojson,
+            original_selection: this.props.aoiInfo.originalGeojson,
             tags : [],
         };
         this.props.submitJob(data);
