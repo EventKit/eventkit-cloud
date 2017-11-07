@@ -6,7 +6,7 @@ import requests
 from django.conf import settings
 from django.test import TransactionTestCase
 from string import Template
-from ..wfs import WFSToGPKG, ping_wfs
+from ..wfs import WFSToGPKG
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -20,58 +20,6 @@ class TestWFSToGPKG(TransactionTestCase):
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
-
-    @patch('eventkit_cloud.utils.wcs.requests.get')
-    def test_ping_wfs(self, get):
-        url = "http://example.com/wfs?"
-        coverage = "exampleLayer"
-
-        valid_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs">
-                               <wcs:ContentMetadata>
-                                   <wcs:CoverageOfferingBrief>
-                                       <wcs:label>exampleLayer</wcs:label>
-                                   </wcs:CoverageOfferingBrief>
-                               </wcs:ContentMetadata>
-                           </wcs:WCS_Capabilities>"""
-        invalid_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs"></wcs:WCS_Capabilities>"""
-        empty_content = """<wcs:WCS_Capabilities xmlns:wcs="http://www.opengis.net/wcs">
-                               <wcs:ContentMetadata></wcs:ContentMetadata>
-                           </wcs:WCS_Capabilities>"""
-
-        # Test: cannot connect to server
-        get.side_effect = requests.exceptions.ConnectionError()
-        success, error = ping_wfs(url, coverage)
-        self.assertEquals(False, success)
-
-        # Test: server does not return status 200
-        get.side_effect = None
-        response = MagicMock()
-        response.content = ""
-        response.status_code = 403
-        response.ok = False
-        get.return_value = response
-        success, _ = ping_wfs(url, coverage)
-        self.assertEquals(False, success)
-
-        # Test: server does not return recognizable xml
-        response.content = invalid_content
-        response.status_code = 200
-        response.ok = True
-        get.return_value = response
-        success, _ = ping_wfs(url, coverage)
-        self.assertEquals(False, success)
-
-        # Test: server does not offer the requested coverage
-        response.content = empty_content
-        get.return_value = response
-        success, _ = ping_wfs(url, coverage)
-        self.assertEquals(False, success)
-
-        # Test: success
-        response.content = valid_content
-        get.return_value = response
-        success, _ = ping_wfs(url, coverage)
-        self.assertEquals(True, success)
 
     @patch('eventkit_cloud.utils.wfs.check_content_exists')
     @patch('eventkit_cloud.utils.wfs.os.path.exists')

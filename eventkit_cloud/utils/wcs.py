@@ -2,62 +2,12 @@ from __future__ import absolute_import
 
 import logging
 import os
-import re
-import requests
 from string import Template
 import subprocess
-import xml.etree.ElementTree as ET
 from ..tasks.task_process import TaskProcess
 import tempfile
 
 logger = logging.getLogger(__name__)
-
-
-def ping_wcs(service_url, coverage):
-    """
-    Contacts the specified URL and confirms that it can supply the requested coverage
-    :param service_url:
-    :param coverage:
-    :return: 2-tuple: (True if source is up and has data available, description if false)
-    """
-    query = {
-        "SERVICE": "WCS",
-        "VERSION": "1.0.0",
-        "REQUEST": "GetCapabilities"
-    }
-    # If service or version parameters are included in query string, it can lead to a protocol error and false negative
-    if "?" in service_url:
-        service_url = service_url.split("?")[0]
-
-    try:
-        response = requests.get(url=service_url, params=query)
-    except requests.exceptions.ConnectionError as ex:
-        logger.error("Could not establish WCS connection at {}: {}".format(service_url, ex.message))
-        return False, "Could not connect to WCS server {}".format(service_url)
-
-    if not response.ok:
-        logger.error("WCS ping failed: {} {}, message {}".format(response.status_code, response.reason, response.content))
-        return False, "WCS server returned status {} {}".format(response.status_code, response.reason)
-
-    root = ET.fromstring(response.content)
-
-    # Check for namespace
-    m = re.search(r"^{.*?}", root.tag)
-    ns = m.group() if m else ""
-    content_meta = root.find(".//{}ContentMetadata".format(ns))
-    if content_meta is None:
-        return "WARN", "Unknown protocol or coverage not available"
-
-    # Get names of available coverages
-    coverage_offers = content_meta.findall("{}CoverageOfferingBrief".format(ns))
-    if coverage_offers is None or 0 == len(coverage_offers):
-        return "WARN", "Unknown protocol or coverage not available"
-
-    labels = [c.find("{}label".format(ns)).text for c in coverage_offers]
-    if coverage not in labels:
-        return "WARN", "Coverage '{}' not available".format(coverage)
-
-    return True, None
 
 
 class WCSConverter(object):

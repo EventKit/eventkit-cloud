@@ -186,7 +186,8 @@ def get_cache_template(sources, grids, geopackage, table_name='tiles'):
     }
 
 
-def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None, coverage_file=None):
+def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
+    bbox = bbox or [-180, -89, 180, 89]
     seed_template = {
         'coverages': {
             'geom': {
@@ -229,9 +230,28 @@ def create_conf_from_url(service_url):
     return conf_dict
 
 
+def ping_service(service_url, layer, aoi_json):
+    """
+    Used to check the service's general availability before the user initiates the job.
+    This only checks the endpoint's GetCapabilities endpoint, and does not guarantee the existence of a specific tile
+    like external_service.check_service() does.
+    :param service_url: URL pointing to WM(T)S endpoint; no params required
+    :param layer: Layer to check for within the GetCapabilities metadata response
+    :param aoi_json: (Optional) GeoJSON string describing AOI. If present, will compare with GetCapabilities bounds.
+    :return: String describing outcome of this ping. May be one of:
+                ERR_NO_CONNECTION - Could not connect to endpoint (requests.get raised ConnectionError)
+                ERR_UNAUTHORIZED - Not authorized to connect (response status 401 or 403)
+                WARN_UNKNOWN_FORMAT - GetCapabilities returned blank, or unrecognized metadata format
+                WARN_LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
+                WARN_NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
+                SUCCESS - No problems: export should proceed without issues
+    """
+    pass
+
+
 def check_service(conf_dict):
     """
-    Used to verify the state of the service before running the seed task. This is used to prevent and invalid url from
+    Used to verify the state of the service before running the seed task. This is used to prevent an invalid url from
     being seeded.  MapProxy's default behavior is to either cache a blank tile or to retry, that behavior can be altered,
     in the cache settings (i.e. `get_cache_template`).
     :param conf_dict: A MapProxy configuration as a dict.

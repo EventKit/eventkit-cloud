@@ -19,6 +19,8 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..utils.provider_check import get_provider_checker
+
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
@@ -54,7 +56,7 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
 class JobViewSet(viewsets.ModelViewSet):
     """
-    Main endpoint for export creation and managment. Provides endpoints
+    Main endpoint for export creation and management. Provides endpoints
     for creating, listing and deleting export jobs.
 
     Updates to existing jobs are not supported as exports can be cloned.
@@ -180,7 +182,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 }
 
 
-        To monitor the resulting export run retreive the `uid` value from the returned json
+        To monitor the resulting export run retrieve the `uid` value from the returned json
         and call /api/runs?job_uid=[the returned uid]
 
         * Returns: the newly created Job instance.
@@ -447,7 +449,6 @@ class JobViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 
-
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -506,6 +507,27 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         for the currently authenticated user.
         """
         return ExportProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+
+    @detail_route(methods=['get', 'post'])
+    def status(self, request, slug=None, *args, **kwargs):
+        """
+        :return:
+        """
+        provider = ExportProvider.objects.get(slug=slug)
+        provider_type = provider.export_provider_type
+
+        response = {"slug": slug,
+                    "request": str(request),
+                    "params": request.query_params,
+                    "type_id": str(provider.export_provider_type),
+                    "provider": str(provider),}
+
+        checker_type = get_provider_checker(provider_type)
+        checker = checker_type(service_url=provider.url, layer=provider.layer, aoi_geojson=None)
+
+        response = checker.check()
+
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -708,7 +730,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
-
         """
         Update the expiration date for an export run
 

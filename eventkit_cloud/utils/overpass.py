@@ -24,7 +24,7 @@ class Overpass(object):
     """
 
     def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
-            raw_data_filename=None):
+                 raw_data_filename=None):
         """
         Initialize the Overpass utility.
 
@@ -121,6 +121,13 @@ class Overpass(object):
             logger.debug('Query finished at %s'.format(datetime.now()))
             logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
+
+    def ping(self):
+        response = requests.post(url=self.url, data='out meta;')
+        if not response.ok:
+            logger.error("Overpass query returned {}, content {}".format(response.status_code, response.content))
+            raise Exception("Overpass ping returned {}: {}".format(response.status_code, response.reason))
+        return True
 
     def _build_overpass_query(self,):  # pragma: no cover
         """
