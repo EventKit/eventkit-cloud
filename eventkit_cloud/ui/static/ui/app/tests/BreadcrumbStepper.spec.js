@@ -13,6 +13,7 @@ import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
 import isEqual from 'lodash/isEqual';
 import {browserHistory} from 'react-router';
+import * as utils from '../utils/mapUtils'
 
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
@@ -66,7 +67,7 @@ describe('BreadcrumbStepper component', () => {
         props.exportInfo.exportName = 'test name';
         props.exportInfo.datapackDescription = 'test description';
         props.exportInfo.projectName = 'test event';
-        props.submitJob = new sinon.spy();
+        props.submitJob = sinon.spy();
         const expectedProps = {
             name: 'test name',
             description: 'test description',
@@ -78,17 +79,20 @@ describe('BreadcrumbStepper component', () => {
             selection: {},
             tags: [],
         }
-        const handleSpy = new sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
+        const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
+        const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')
+            .callsFake(fc => (fc));
         const wrapper = getWrapper(props);
         wrapper.instance().handleSubmit();
         expect(handleSpy.calledOnce).toBe(true);
         expect(props.submitJob.calledOnce).toBe(true);
         expect(props.submitJob.calledWith(expectedProps)).toBe(true);
+        flattenStub.restore();
     });
 
     it('handleNext should increment the stepIndex', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleNext();
@@ -98,7 +102,7 @@ describe('BreadcrumbStepper component', () => {
 
     it('handlePrev should decrement the stepIndex only when index is > 0', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handlePrev();

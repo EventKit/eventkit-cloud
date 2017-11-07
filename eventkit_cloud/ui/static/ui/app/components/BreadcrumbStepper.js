@@ -1,19 +1,17 @@
 import React from 'react';
-import {browserHistory} from 'react-router';
-import { Link, IndexLink } from 'react-router'
-import {connect} from 'react-redux'
-import FloatingActionButton from 'material-ui/FloatingActionButton'
+import { browserHistory } from 'react-router';
+import { connect } from 'react-redux';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import ExportAOI from './CreateDataPack/ExportAOI'
-import ExportInfo from './CreateDataPack/ExportInfo'
-import ExportSummary from './CreateDataPack/ExportSummary'
+import ExportAOI from './CreateDataPack/ExportAOI';
+import ExportInfo from './CreateDataPack/ExportInfo';
+import ExportSummary from './CreateDataPack/ExportSummary';
 import { createExportRequest, getProviders, stepperNextDisabled,
-    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats} from '../actions/exportsActions'
-import { setDatacartDetailsReceived, getDatacartDetails} from '../actions/statusDownloadActions'
-
-const isEqual = require('lodash/isEqual');
+    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
+import { setDatacartDetailsReceived, getDatacartDetails } from '../actions/statusDownloadActions';
+import { flattenFeatureCollection } from '../utils/mapUtils';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -27,9 +25,9 @@ export class BreadcrumbStepper extends React.Component {
         };
     }
 
-    componentDidMount(){
-        //Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
-        if(this.props.exportInfo.exportName == '') {
+    componentDidMount() {
+        // Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
+        if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
         this.props.getProviders();
@@ -65,6 +63,8 @@ export class BreadcrumbStepper extends React.Component {
             provider_tasks.push({'provider': provider.name, 'formats': [formats[0]]});
         });
 
+        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson)
+
         const data = {
             name: this.props.exportInfo.exportName,
             description: this.props.exportInfo.datapackDescription,
@@ -72,7 +72,7 @@ export class BreadcrumbStepper extends React.Component {
             include_zipfile : false,
             published : this.props.exportInfo.makePublic,
             provider_tasks : provider_tasks,
-            selection: this.props.aoiInfo.geojson,
+            selection,
             tags : [],
         };
         this.props.submitJob(data);

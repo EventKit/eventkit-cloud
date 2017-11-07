@@ -184,13 +184,13 @@ export function bufferGeojson(featureCollection, bufferSize, bufferPolys) {
 /**
  * Converts a feature collection into a single feature, buffering points and lines if needed
  * @param {featureCollection} A geojson feature collection in EPSG:4326
- * @return {feature} A single geojson feature containing all feature geometries in EPSG:4326
+ * @return {newFeatureCollection} A feature collection with a single feature
+ * containing all feature geometries in EPSG:4326
  */
 export function flattenFeatureCollection(featureCollection) {
     const jsts = convertGeoJSONtoJSTS(featureCollection, 1, false);
     const newFeatureCollection = jstsToFeatureCollection(jsts);
-    const feature = newFeatureCollection.features[0];
-    return feature;
+    return newFeatureCollection;
 }
 
 export function generateDrawLayer() {

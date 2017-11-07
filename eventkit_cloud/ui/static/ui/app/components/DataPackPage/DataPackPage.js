@@ -166,7 +166,7 @@ export class DataPackPage extends React.Component {
     handleSpatialFilter(geojson) {
         let geom = null;
         if (geojson) {
-            geom = flattenFeatureCollection(geojson).geometry;
+            geom = flattenFeatureCollection(geojson).features[0].geometry;
         }
         this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
     }
