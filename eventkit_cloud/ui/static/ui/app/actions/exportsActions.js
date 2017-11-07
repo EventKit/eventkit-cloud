@@ -169,17 +169,6 @@ export const openDrawer = () => dispatch => {
     });
 }
 
-export function startTour() {
-    return {
-        type: types.START_TOUR,
-    }
-}
-
-export function endTour() {
-    return {
-        type: types.END_TOUR,
-    }
-}
 
 
 

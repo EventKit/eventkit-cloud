@@ -108,14 +108,3 @@ export function submitJobReducer(state = initialState.submitJob, action) {
             return state;
     }
 }
-
-export function tourReducer(state = initialState.tour, action) {
-    switch(action.type) {
-        case types.START_TOUR:
-            return true;
-        case types.END_TOUR:
-            return false;
-        default:
-            return state;
-    }
-}

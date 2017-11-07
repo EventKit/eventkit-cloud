@@ -1,7 +1,6 @@
-import React, {Component, PropTypes} from 'react'
+import React, {Component} from 'react'
 import {connect} from 'react-redux'
 import AppBar from 'material-ui/AppBar'
-import {endTour} from '../../actions/exportsActions'
 import BreadcrumbStepper from '../BreadcrumbStepper'
 import Help from 'material-ui/svg-icons/action/help';
 
@@ -10,7 +9,6 @@ export class CreateExport extends React.Component {
     constructor() {
         super()
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
-        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.state = {
             walkthroughClicked : false
         }
@@ -18,22 +16,15 @@ export class CreateExport extends React.Component {
 
     handleWalkthroughReset() {
         this.setState({walkthroughClicked: false})
-        this.props.endTour();
     }
 
     handleWalkthroughClick() {
         this.setState({walkthroughClicked: true})
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.tour == true ){
-            this.handleWalkthroughClick();
-        }
-    }
-
     render() {
-        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Create DataPack</div>
-        //const pageTitle = <span>Create DataPack<Info onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: 'white', paddingLeft:'10px', paddingTop:'10px', width:'24px', cursor:'pointer'}}/></span>
+        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Create DataPack </div>
+        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
         const styles = {
             appBar: {
                 backgroundColor: '#161e2e',
@@ -56,6 +47,7 @@ export class CreateExport extends React.Component {
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
                     iconStyleRight={{marginTop: '2px'}}
+                    iconElementRight={iconElementRight}
                     iconElementLeft={<p style={{display: 'none'}}/>}
                 />
                 <BreadcrumbStepper
@@ -69,24 +61,4 @@ export class CreateExport extends React.Component {
         );
     }
 }
-CreateExport.propTypes = {
-    tour: PropTypes.string.isRequired,
-};
-function mapStateToProps(state) {
-    return {
-        tour: state.tour,
-    };
-}
-
-function mapDispatchToProps(dispatch) {
-    return {
-        endTour: () => {
-            dispatch(endTour());
-        }
-    }
-}
-
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps
-)(CreateExport);
+export default CreateExport;

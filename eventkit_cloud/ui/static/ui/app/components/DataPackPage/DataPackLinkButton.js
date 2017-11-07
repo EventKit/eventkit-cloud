@@ -29,7 +29,7 @@ export class DataPackLinkButton extends React.Component {
     render() {
         const styles = {
             button: {
-                margin: '0px', 
+                margin: '0px',
                 minWidth: '50px', 
                 height: '35px', 
                 borderRadius: '0px'

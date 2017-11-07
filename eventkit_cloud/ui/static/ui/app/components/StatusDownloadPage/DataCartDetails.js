@@ -444,8 +444,8 @@ export class DataCartDetails extends React.Component {
                                      providers={this.props.providers}
                                      zipFileProp={this.props.zipFileProp}/>
                 </div>
-                <div style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
-                    <div className={'qa-DataCartDetails-div-otherOptions'} style={styles.subHeading}>
+                <div className={'qa-DataCartDetails-div-otherOptions'} style={{width:'100%', float:'left', paddingTop:'10px',paddingBottom:'30px'}}>
+                    <div  style={styles.subHeading}>
                         Other Options
                     </div>
                     <div>
@@ -581,7 +581,7 @@ export class DataCartDetails extends React.Component {
                     <div className={'qa-DataCartDetails-div-map'} id="summaryMap" style={{maxHeight: '400px'}}></div>
                 </div>
                 <div style={{width:'100%', paddingTop:'30px'}}>
-                    <div className={'qa-DataCartDetails-div-exportInfo'} style={styles.subHeading}>
+                    <div className={'qa-DataCartDetails-div-exportInfo'} ref={'qa-DataCartDetails-div-exportInfo'} style={styles.subHeading}>
                         Export Information
                     </div>
                     <table  style={styles.table} className={'qa-DataCartDetails-table-exportInfo'}>

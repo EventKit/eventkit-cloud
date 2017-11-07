@@ -205,7 +205,7 @@ export class DataPackDetails extends React.Component {
         }
 
         return (
-            <div style={{paddingTop: '20px'}}>
+            <div className={'qa-DatapackDetails-div-downloadOptions'} style={{paddingTop: '20px'}}>
                 <div className={'qa-DataPackDetails-heading'} style={styles.subHeading}>
                    Download Options
                 </div>

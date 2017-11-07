@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 import {connect} from 'react-redux';
 import {getRuns, deleteRuns, setPageOrder, setPageView} from '../../actions/DataPackPageActions';
-import {getProviders, endTour} from '../../actions/exportsActions'
+import {getProviders} from '../../actions/exportsActions'
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
@@ -78,10 +78,6 @@ export class DataPackPage extends React.Component {
             if(nextProps.runsDeletion.deleted) {
                 this.setState({loading: true}, this.makeRunRequest);
             }
-        }
-        if (nextProps.tour == true && this.state.isRunning == false){
-            console.log("Start the tour")
-            this.setState({isRunning:true})
         }
     }
 
@@ -254,46 +250,6 @@ export class DataPackPage extends React.Component {
                         style: tooltipStyle,
                     },
                 ];
-
-            // default:
-            //     steps = [
-            //     {
-            //         title: 'Create DataPack',
-            //         text: 'Click here to Navigate to Create a DataPack.',
-            //         selector: '.qa-DataPackLinkButton-RaisedButton',
-            //         position: 'bottom',
-            //         style: tooltipStyle,
-            //
-            //     },
-            //     {
-            //         title: 'Search DataPacks',
-            //         text: 'Search and Sort the existing DataPack Library.',
-            //         selector: '.qa-DataPackSearchBar-TextField',
-            //         position: 'bottom',
-            //         style: tooltipStyle,
-            //     },
-            //     {
-            //         title: 'Filter DataPacks',
-            //         text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
-            //         selector: '.qa-FilterDrawer-Drawer > div',
-            //         position: 'bottom',
-            //         style: tooltipStyle,
-            //     },
-            //     {
-            //         title: 'DataPack Status',
-            //         text: 'Check the status of previously created DataPacks',
-            //         selector: '.qa-DataPackListItem-subtitle-date',
-            //         position: 'bottom',
-            //         style: tooltipStyle,
-            //     },
-            //     {
-            //         title: 'Status and Download',
-            //         text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
-            //         selector: '.qa-DataPackListItem-IconMenu',
-            //         position: 'bottom',
-            //         style: tooltipStyle,
-            //     },
-            // ];
         }
 
     }
@@ -481,7 +437,6 @@ export class DataPackPage extends React.Component {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
-            this.props.endTour();
         }
         if(data.index === 2 && data.type === 'step:before') {
             if (this.state.open == false){
@@ -503,6 +458,7 @@ export class DataPackPage extends React.Component {
     render() {
         const {steps, isRunning} = this.state;
         const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library </div>
+        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginRight:'30px', fontSize:'16px'}}><Help onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
@@ -572,6 +528,7 @@ export class DataPackPage extends React.Component {
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
+                    iconElementRight={iconElementRight}
                     iconElementLeft={<p></p>}
                 >
                     <DataPackLinkButton />
@@ -656,7 +613,6 @@ DataPackPage.propTypes = {
     resetGeoJSONFile: PropTypes.func.isRequired,
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
-    tour: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -668,7 +624,6 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        tour: state.tour,
     };
 }
 
@@ -698,9 +653,6 @@ function mapDispatchToProps(dispatch) {
         setView: (view) => {
             dispatch(setPageView(view));
         },
-        endTour: () => {
-            dispatch(endTour());
-        }
     }
 }
 

@@ -8,7 +8,7 @@ import SearchAOIToolbar from '../MapTools/SearchAOIToolbar.js';
 import DrawAOIToolbar from '../MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../MapTools/InvalidDrawWarning.js';
 import DropZone from '../MapTools/DropZone.js';
-import {updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled, endTour} from '../../actions/exportsActions.js';
+import {updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled} from '../../actions/exportsActions.js';
 import {getGeocode} from '../../actions/searchToolbarActions';
 import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
 import GeoJSONReader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
@@ -422,7 +422,6 @@ export class ExportAOI extends Component {
 
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.props.endTour();
             this.refs.joyride.reset(true);
         }
 
@@ -609,9 +608,6 @@ function mapDispatchToProps(dispatch) {
         resetGeoJSONFile: (file) => {
             dispatch(resetGeoJSONFile());
         },
-        endTour: () => {
-            dispatch(endTour());
-        }
     }
 }
 
