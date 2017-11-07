@@ -102,7 +102,7 @@ else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 if 'f' in os.getenv('EMAIL_USE_TLS', '').lower():
-    EMAIL_USE_TLS = os.getenv(False)
+    EMAIL_USE_TLS = False
 else:
     EMAIL_USE_TLS = True
 
