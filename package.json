@@ -55,8 +55,10 @@
     "image-webpack-loader": "~3.0.0",    
     "jest-cli": "~21.1.0",
     "jsdom": "~9.12.0",
+    "nightwatch": "^0.9.16",
     "nock": "~9.0.2",
-    "webpack-dev-server": "~2.4.5",
+    "pixelmatch": "^4.0.2",
+    "pngjs": "^3.3.0",
     "raf": "~3.3.2",
     "react-addons-test-utils": "~15.4.0",
     "react-hot-loader": "3.0.0-beta.6",
@@ -66,6 +68,7 @@
     "url-loader": "~0.5.8",
     "webpack": "~2.5.1",
     "webpack-bundle-analyzer":"~2.9.0",
+    "webpack-dev-server": "~2.4.5",
     "write-file-webpack-plugin": "~4.0.2"
   },
   "babel": {
@@ -82,9 +85,25 @@
   },
   "jest": {
     "coverageDirectory": "/var/lib/eventkit/coverage",
-    "collectCoverageFrom" : ["**/*.{js,jsx}", "!**/coverage/**", "!**/webpack.config.js", "!**/build/**", "!**/staticfiles/**", "!**/styles/**", "!**/node_modules/**", "!**/vendor/**"],
-    "moduleFileExtensions": ["js", "jsx"],
-    "moduleDirectories": ["node_modules", "bower_components", "shared"],
+    "collectCoverageFrom": [
+      "**/*.{js,jsx}",
+      "!**/coverage/**",
+      "!**/webpack.config.js",
+      "!**/build/**",
+      "!**/staticfiles/**",
+      "!**/styles/**",
+      "!**/node_modules/**",
+      "!**/vendor/**"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "bower_components",
+      "shared"
+    ],
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
@@ -97,7 +116,8 @@
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",
     "start": "node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline",
     "coverage": "node_modules/jest-cli/bin/jest.js --coverage --silent && mkdir -p /var/lib/eventkit/coverage/coveralls && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls/coveralls.json",
-    "test": "node_modules/jest-cli/bin/jest.js --silent"
+    "test": "node_modules/jest-cli/bin/jest.js --silent",
+    "e2e": "node_modules/nightwatch/bin/nightwatch"
   },
   "repository": {
     "type": "git",
