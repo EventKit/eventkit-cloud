@@ -3,7 +3,6 @@ import {connect} from 'react-redux'
 import {login} from '../actions/userActions'
 import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import '../components/tap_events';
 import axios from 'axios';
 import RaisedButton from 'material-ui/RaisedButton';
 

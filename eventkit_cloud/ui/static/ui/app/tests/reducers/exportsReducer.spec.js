@@ -106,7 +106,7 @@ describe('exportInfo reducer', () => {
             projectName: '',
             makePublic: false,
             providers: [],
-            area_str: '',
+            areaStr: '',
             formats: [],
         });
     });
@@ -119,7 +119,7 @@ describe('exportInfo reducer', () => {
                 projectName: '',
                 makePublic: false,
                 providers: [],
-                area_str: '',
+                areaStr: '',
                 layers: ''
             },
             {
@@ -130,7 +130,7 @@ describe('exportInfo reducer', () => {
                     projectName: 'project',
                     makePublic: true,
                     providers: ['provider'],
-                    area_str: 'string',
+                    areaStr: 'string',
                     layers: 'layer'
                 }
             }
@@ -140,7 +140,7 @@ describe('exportInfo reducer', () => {
             projectName: 'project',
             makePublic: true,
             providers: ['provider'],
-            area_str: 'string',
+            areaStr: 'string',
             layers: 'layer'
         });
     });
@@ -153,7 +153,7 @@ describe('exportInfo reducer', () => {
                 projectName: 'project',
                 makePublic: true,
                 providers: ['provider'],
-                area_str: 'string',
+                areaStr: 'string',
                 layers: 'layer'
             },
             {type: 'CLEAR_EXPORT_INFO'}
@@ -164,7 +164,7 @@ describe('exportInfo reducer', () => {
                 projectName: '',
                 makePublic: false,
                 providers: [],
-                area_str: '',
+                areaStr: '',
                 layers: ''
             }
         )

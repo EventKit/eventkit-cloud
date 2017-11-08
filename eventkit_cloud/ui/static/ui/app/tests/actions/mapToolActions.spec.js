@@ -1,5 +1,5 @@
 import configureMockStore from 'redux-mock-store';
-import ol from 'openlayers';
+import GeoJSON from 'ol/format/geojson';
 import thunk from 'redux-thunk';
 import axios from 'axios';
 import sinon from 'sinon';
@@ -16,24 +16,6 @@ describe('mapTool actions', () => {
         expect(actions.resetGeoJSONFile()).toEqual({
             type: 'FILE_RESET',
         });
-    });
-
-    it('processGeoJSONFile should create error if extension is not an accepted file type ', () => {
-        const initialState = {};
-        const store = mockStore(initialState);
-        const file = new File(
-            ['<!doctype html><div>file</div>'],
-            'test.wkt',
-            { type: 'text/html' },
-        );
-        const expectedPayload = [
-            { type: types.FILE_PROCESSING },
-            { type: types.FILE_ERROR, error: 'File type wkt is not supported' },
-        ];
-        return store.dispatch(actions.processGeoJSONFile(file))
-            .catch(() => {
-                expect(store.getActions()).toEqual(expectedPayload);
-            });
     });
 
     it('processGeoJSONFile should add AOI to state if valid geojson', () => {
@@ -60,8 +42,8 @@ describe('mapTool actions', () => {
         };
         const initialState = {};
         const store = mockStore(initialState);
-        const geom = (new ol.format.GeoJSON()).readGeometry(geojson.features[0].geometry);
-        const readGeomStub = sinon.stub(ol.format.GeoJSON.prototype, 'readGeometry')
+        const geom = (new GeoJSON()).readGeometry(geojson.features[0].geometry);
+        const readGeomStub = sinon.stub(GeoJSON.prototype, 'readGeometry')
             .returns(geom);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(200, geojson);

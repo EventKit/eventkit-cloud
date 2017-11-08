@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import axios from 'axios';
-import logo from '../../images/eventkit-logo.1.png'
+import logo from '../../images/eventkit-logo.1.png';
 import AppBar from 'material-ui/AppBar'
 import Drawer from 'material-ui/Drawer'
 import Subheader from 'material-ui/Subheader'
