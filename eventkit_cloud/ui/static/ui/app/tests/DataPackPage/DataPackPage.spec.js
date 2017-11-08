@@ -391,7 +391,7 @@ describe('DataPackPage component', () => {
                 },
             ],
         };
-        const expected = utils.flattenFeatureCollection(geojson).geometry;
+        const expected = utils.flattenFeatureCollection(geojson).features[0].geometry;
         wrapper.instance().handleSpatialFilter(geojson);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith(
