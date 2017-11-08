@@ -11,7 +11,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 from django.utils import timezone as real_timezone
 from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
@@ -86,7 +86,7 @@ class TestLockingTask(TestCase):
         mock_cache.add.assert_called_with(expected_lock_key, task_id, lock_task.lock_expiration)
 
 
-class ExportTaskBase(TestCase):
+class ExportTaskBase(TransactionTestCase):
     fixtures = ('datamodel_presets.json',)
 
     def setUp(self,):

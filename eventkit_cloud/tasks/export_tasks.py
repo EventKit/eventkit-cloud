@@ -1139,6 +1139,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         #Update Connection
         db.close_old_connections()
         run.refresh_from_db()
+
         run.zipfile_url = zipfile_url
 
         try:

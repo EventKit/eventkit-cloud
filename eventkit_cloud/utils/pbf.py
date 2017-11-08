@@ -50,6 +50,7 @@ class OSMToPBF(object):
             logger.error('{0}'.format(task_process.stderr))
             logger.error("osmconvert failed with return code: {0}".format(task_process.exitcode))
             logger.error("osmconvert most commonly fails due to lack of memory.")
+            raise Exception("Osmconvert Failed.")
 
         if (self.debug):
             print 'Osmconvert returned: %s' % task_process.exitcode
