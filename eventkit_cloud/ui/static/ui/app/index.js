@@ -20,7 +20,7 @@ import ExportInfo from './components/CreateDataPack/ExportInfo';
 import ExportSummary from './components/CreateDataPack/ExportSummary';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
 import { isBrowserValid } from './utils/generic';
-import { login } from './actions/userActions';
+import { login, userActive } from './actions/userActions';
 
 
 const store = configureStore();
@@ -72,6 +72,29 @@ function checkAuth(store) {
     }
     return null;
 }
+
+
+let isUserActive = false;
+window.addEventListener('mousemove', () => {
+    isUserActive = true;
+});
+
+(function pingUserActive() {
+    // Start polling for user activity after a delay.
+    setTimeout(() => {
+        const intervalId = setInterval(() => {
+            if (isUserActive) {
+                // Notify server.
+                store.dispatch(userActive());
+
+                // Start cycle over with initial delay to prevent spamming requests.
+                isUserActive = false;
+                clearInterval(intervalId);
+                pingUserActive();
+            }
+        }, 100);
+    }, 60 * 1000);
+})();
 
 render(
     <Provider store={store}>

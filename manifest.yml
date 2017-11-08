@@ -44,3 +44,4 @@ env:
   EXPORT_DOWNLOAD_ROOT: '/home/vcap/download/'
   EXPORT_MEDIA_ROOT: '/home/vcap/media/'
   TILESET_CACHE_DIRECTORY: '/home/vcap/cache/'
+  AUTO_LOGOUT_SECONDS: 1800

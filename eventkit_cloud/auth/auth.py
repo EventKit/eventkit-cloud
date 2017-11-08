@@ -4,11 +4,40 @@ import requests
 import logging
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth import logout as auth_logout
+from django.shortcuts import redirect
 from .models import OAuth
 import json
+from datetime import datetime, timedelta
+import dateutil.parser
 
 logger = logging.getLogger(__name__)
 
+
+def auto_logout(get_response):
+    def middleware(request):
+        logger.error('RUNNING AUTOLOGOUT MIDDLEWARE')
+        if not request.user.is_authenticated():
+            # Can't log out if not logged in
+            return get_response(request)
+
+        last_active = request.session.get(settings.SESSION_USER_LAST_ACTIVE)
+        if last_active:
+            last_active_datetime = dateutil.parser.parse(last_active)
+            logger.error('LAST ACTIVE = ' + str(last_active_datetime))
+            if datetime.now() - last_active_datetime > timedelta(0, settings.AUTO_LOGOUT_SECONDS, 0):
+                logger.error('AUTO LOGOUT!!!')
+                # Force logout and redirect to login page.
+                auth_logout(request)
+                response = redirect('login')
+                if settings.SESSION_USER_LAST_ACTIVE in request.session:
+                    del request.session[settings.SESSION_USER_LAST_ACTIVE]
+                response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+                return response
+
+        return get_response(request)
+
+    return middleware
 
 
 def fetch_user_from_token(access_token):

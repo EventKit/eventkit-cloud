@@ -16,6 +16,7 @@ from rest_framework.renderers import JSONRenderer
 from logging import getLogger
 from ..utils.geocode import Geocode
 from .helpers import file_to_geojson
+from datetime import datetime, date, timedelta
 
 
 
@@ -67,6 +68,13 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def auth(request):
+    def set_user_active(_response):
+        max_age = 2 * 60
+        expires = datetime.utcnow() + timedelta(seconds=max_age) #datetime.strftime(datetime.utcnow() + timedelta(seconds=max_age), "%a, %d-%b-%Y %H:%M:%S GMT")
+        request.session[settings.SESSION_USER_LAST_ACTIVE] = datetime.now().isoformat()
+        _response.set_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, expires.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                             path='/;HttpOnly', domain=settings.SESSION_COOKIE_DOMAIN)
+
     if getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
         if request.method == 'POST':
             """Logs out user"""
@@ -78,16 +86,20 @@ def auth(request):
                 return HttpResponse(status=401)
             else:
                 login(request, user_data)
-                return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
+                response = HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
                                     content_type="application/json",
                                     status=200)
+                set_user_active(response)
+                return response
         if request.method == 'GET':
             # We want to return a 200 so that the frontend can decide if the auth endpoint is valid for displaying the
             # the login form.
             if request.user.is_authenticated():
-                return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+                response = HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
                                     content_type="application/json",
                                     status=200)
+                set_user_active(response)
+                return response
             else:
                 return HttpResponse(status=200)
     else:
@@ -96,7 +108,11 @@ def auth(request):
 def logout(request):
     """Logs out user"""
     auth_logout(request)
-    return redirect('login')
+    response = redirect('login')
+    if settings.SESSION_USER_LAST_ACTIVE in request.session:
+        del request.session[settings.SESSION_USER_LAST_ACTIVE]
+    response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+    return response
 
 
 def require_email(request):
