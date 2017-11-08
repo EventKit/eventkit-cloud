@@ -1,9 +1,9 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import FloatingActionButton from 'material-ui/FloatingActionButton'
+import Warning from 'material-ui/svg-icons/alert/warning';
+import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
@@ -11,45 +11,41 @@ import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
 import ExportAOI from '../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
-import isEqual from 'lodash/isEqual';
-import {browserHistory} from 'react-router';
-import * as utils from '../utils/mapUtils'
+import * as utils from '../utils/mapUtils';
 
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            aoiInfo: {geojson: {}},
-            providers: providers,
-            stepperNextEnabled: false,
-            exportInfo: {
-                exportName: '',
-                datapackDescription: '',
-                projectName: '',
-                makePublic: false,
-                providers: providers,
-                areaStr: '',
-                formats: ['gpkg']
-            },
-            formats: formats,
-            createExportRequest: () => {},
-            submitJob: (data) => {},
-            getProviders: () => {},
-            setNextDisabled: () => {},
-            setNextEnabled: () => {},
-            setExportInfoDone: () => {},
-            clearAoiInfo: () => {},
-            clearExportInfo: () => {}
-        }
-    };
-    const getWrapper = (props) => {
-        return shallow(<BreadcrumbStepper {...props}/>, {
-            context: {muiTheme},
+    const getProps = () => ({
+        aoiInfo: { geojson: {} },
+        providers,
+        stepperNextEnabled: false,
+        exportInfo: {
+            exportName: '',
+            datapackDescription: '',
+            projectName: '',
+            makePublic: false,
+            providers,
+            areaStr: '',
+            formats: ['gpkg'],
+        },
+        formats,
+        createExportRequest: () => {},
+        submitJob: () => {},
+        getProviders: () => {},
+        setNextDisabled: () => {},
+        setNextEnabled: () => {},
+        setExportInfoDone: () => {},
+        clearAoiInfo: () => {},
+        clearExportInfo: () => {},
+    });
+    const getWrapper = props => (
+        shallow(<BreadcrumbStepper {...props} />, {
+            context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-    }
+                muiTheme: React.PropTypes.object,
+            },
+        })
+    );
 
     it('should render step 1 with disabled next arrow by default', () => {
         const props = getProps();
@@ -62,8 +58,133 @@ describe('BreadcrumbStepper component', () => {
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
     });
 
+    it('getErrorMessage should return formated title and detail', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(message.find('.BreadcrumbStepper-error-container')).toHaveLength(1);
+        expect(message.find('.BreadcrumbStepper-error-title')).toHaveLength(1);
+        expect(message.find('.BreadcrumbStepper-error-title').find(Warning)).toHaveLength(1);
+        expect(message.find('.BreadcrumbStepper-error-title').text()).toEqual('test title');
+        expect(message.find('.BreadcrumbStepper-error-detail')).toHaveLength(1);
+        expect(message.find('.BreadcrumbStepper-error-detail').text()).toEqual('test detail');
+    });
+
+    it('getStepLabel should return the correct label for each stepIndex', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        let elem = mount(wrapper.instance().getStepLabel(0));
+        expect(elem.text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
+
+        elem = mount(wrapper.instance().getStepLabel(1));
+        expect(elem.text()).toEqual('STEP 2 OF 3:  Select Data & Formats');
+
+        elem = mount(wrapper.instance().getStepLabel(2));
+        expect(elem.text()).toEqual('STEP 3 OF 3:  Review & Submit');
+
+        elem = mount(wrapper.instance().getStepLabel(3));
+        expect(elem.text()).toEqual('STEPPER ERROR');
+    });
+
+    it('getStepContent should return the correct content for each stepIndex', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        let content = wrapper.instance().getStepContent(0);
+        expect(content).toEqual(<ExportAOI />);
+
+        content = wrapper.instance().getStepContent(1);
+        expect(content).toEqual((
+            <ExportInfo
+                providers={props.providers}
+                formats={props.formats}
+                handlePrev={wrapper.instance().handlePrev}
+            />
+        ));
+
+        content = wrapper.instance().getStepContent(2);
+        expect(content).toEqual(<ExportSummary allFormats={props.formats} />);
+
+        content = wrapper.instance().getStepContent(3);
+        expect(content).toEqual(<ExportAOI />);
+    });
+
+    it('getButtonContent should return the correct content for each stepIndex', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        let content = mount(wrapper.instance().getButtonContent(0), {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowForward)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getButtonContent(1),{
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowForward)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getButtonContent(2),{
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationCheck)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getButtonContent(3));
+        expect(content.find('div')).toHaveLength(1);
+    });
+
+    it('getPreviousButtonContent should return the correct content for each stepIndex', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+
+        let content = mount(wrapper.instance().getPreviousButtonContent(0), {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(1), {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(2), {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+            },
+        });
+        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(NavigationArrowBack)).toHaveLength(1);
+
+        content = mount(wrapper.instance().getPreviousButtonContent(3));
+        expect(content.find('div')).toHaveLength(1);
+    });
+
     it('handleSubmit should submit a job with the correct data', () => {
-        let props = getProps();
+        const props = getProps();
         props.exportInfo.exportName = 'test name';
         props.exportInfo.datapackDescription = 'test description';
         props.exportInfo.projectName = 'test event';
@@ -74,11 +195,13 @@ describe('BreadcrumbStepper component', () => {
             event: 'test event',
             include_zipfile: false,
             published: false,
-            provider_tasks: [{ "provider" : "OpenStreetMap Data (Themes)",
-                "formats" : ["gpkg"]}],
+            provider_tasks: [{
+                provider: 'OpenStreetMap Data (Themes)',
+                formats: ['gpkg'],
+            }],
             selection: {},
             tags: [],
-        }
+        };
         const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
         const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')
             .callsFake(fc => (fc));
@@ -107,117 +230,35 @@ describe('BreadcrumbStepper component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handlePrev();
         expect(stateSpy.called).toBe(false);
-        wrapper.setState({stepIndex: 1});
+        wrapper.setState({ stepIndex: 1 });
         wrapper.instance().handlePrev();
         expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({stepIndex: 0})).toBe(true);
+        expect(stateSpy.calledWith({ stepIndex: 0 })).toBe(true);
         stateSpy.restore();
     });
 
-    it('getStepLabel should return the correct label for each stepIndex', () => {
+    it('showError should setState and clear job info', () => {
         const props = getProps();
+        props.clearJobInfo = sinon.spy();
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
-
-        let elem = mount(wrapper.instance().getStepLabel(0));
-        expect(elem.text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
-
-        elem = mount(wrapper.instance().getStepLabel(1));
-        expect(elem.text()).toEqual('STEP 2 OF 3:  Select Data & Formats');
-
-        elem = mount(wrapper.instance().getStepLabel(2));
-        expect(elem.text()).toEqual('STEP 3 OF 3:  Review & Submit');
-
-        elem = mount(wrapper.instance().getStepLabel(3));
-        expect(elem.text()).toEqual('STEPPER ERROR');
+        const error = { message: 'oh no' };
+        wrapper.instance().showError(error);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ showError: true, error })).toBe(true);
+        expect(props.clearJobInfo.calledOnce).toBe(true);
+        stateSpy.restore();
     });
 
-    it('getStepContent should return the correct content for each stepIndex', () => {
+    it('hideError should setState', () => {
         const props = getProps();
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
-
-        let content = wrapper.instance().getStepContent(0);
-        expect(isEqual(content, <ExportAOI/>)).toBe(true);
-
-        content = wrapper.instance().getStepContent(1);
-        expect(isEqual(content, <ExportInfo 
-            providers={props.providers}
-            formats={props.formats}
-            handlePrev={wrapper.instance().handlePrev}/>)).toBe(true);
-
-        content = wrapper.instance().getStepContent(2);
-        expect(isEqual(content, <ExportSummary allFormats={props.formats}/>)).toBe(true);
-
-        content = wrapper.instance().getStepContent(3);
-        expect(isEqual(content, <ExportAOI/>)).toBe(true);
+        wrapper.instance().hideError();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ showError: false })).toBe(true);
+        stateSpy.restore();
     });
-
-    it('getButtonContent should return the correct content for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        let content = mount(wrapper.instance().getButtonContent(0),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
-        expect(content.find(NavigationArrowForward)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getButtonContent(1),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
-        expect(content.find(NavigationArrowForward)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getButtonContent(2),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
-        expect(content.find(NavigationCheck)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getButtonContent(3));
-        expect(content.find('div')).toHaveLength(1);
-    })
-
-    it('getPreviousButtonContent should return the correct content for each stepIndex', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        let content = mount(wrapper.instance().getPreviousButtonContent(0),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(NavigationArrowBack)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getPreviousButtonContent(1),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(NavigationArrowBack)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getPreviousButtonContent(2),{
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
-        expect(content.find(NavigationArrowBack)).toHaveLength(1);
-
-        content = mount(wrapper.instance().getPreviousButtonContent(3));
-        expect(content.find('div')).toHaveLength(1);
-    })
 });
 
 const providers = [
