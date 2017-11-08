@@ -77,7 +77,7 @@ def load_land_vectors(db_conn=None, url=None):
           'PG:"host={host} user={user} password={password} dbname={name} port={port}" ' \
           '{file} land_polygons'.format(host=database['HOST'],
                                         user=database['USER'],
-                                        password=database['PASSWORD'],
+                                        password=database['PASSWORD'].replace('$', '\$'),
                                         name=database['NAME'],
                                         port=database['PORT'],
                                         file=file_name)
@@ -96,3 +96,6 @@ def load_land_vectors(db_conn=None, url=None):
         pass
     finally:
         logger.info("Finished loading land data.")
+
+
+

@@ -1,6 +1,5 @@
 import React, {PropTypes, Component} from 'react'
 import {connect} from 'react-redux';
-import '../tap_events'
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn}
     from 'material-ui/Table';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download'

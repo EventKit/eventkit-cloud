@@ -1,13 +1,14 @@
 import React, {Component} from 'react';
 import {TextField} from 'material-ui';
-import _ from 'lodash';
+import clone from 'lodash/clone';
+import uniqueId from 'lodash/uniqueId';
 import * as ReactDOM from 'react-dom';
 
 export class CustomTextField extends Component {
     constructor(props) {
         super(props);
 
-        this.textFieldProps = _.clone(this.props);
+        this.textFieldProps = clone(this.props);
         delete this.textFieldProps.showRemaining;
         delete this.textFieldProps.onChange;
 
@@ -58,7 +59,7 @@ export class CustomTextField extends Component {
             <div style={{position: 'relative'}}>
                 <TextField
                     className={'qa-CustomTextField-TextField'}
-                    id={_.uniqueId()}
+                    id={uniqueId()}
                     ref={(textField) => {
                         if (!textField) {
                             return;

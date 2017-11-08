@@ -15,7 +15,6 @@ import Warning from 'material-ui/svg-icons/alert/warning';
 import Check from 'material-ui/svg-icons/navigation/check';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
-import '../../components/tap_events';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/BaseDialog';

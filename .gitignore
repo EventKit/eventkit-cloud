@@ -9,6 +9,8 @@ db_dir
 staticfiles/
 node_modules/
 .DS_Store
+.flowconfig
+.eslintrc.json
 
 
 # Byte-compiled / optimized / DLL files
@@ -102,3 +104,7 @@ coverage
 eventkit_cloud/ui/static/ui/build
 .vscode/settings.json
 
+# NightwatchJS
+reports/
+screenshots/*
+!screenshots/baseline
