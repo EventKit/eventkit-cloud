@@ -61,9 +61,10 @@ export class BreadcrumbStepper extends React.Component {
         this.props.clearJobInfo();
     }
 
-    getErrorMessage(title, detail) {
+    getErrorMessage(title, detail, ix) {
         return (
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
+                { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
                 <p className="BreadcrumbStepper-error-title">
                     <Warning style={{ fill: '#ce4427', verticalAlign: 'bottom', marginRight: '10px' }} />
                     <strong>
@@ -73,7 +74,6 @@ export class BreadcrumbStepper extends React.Component {
                 <p className="BreadcrumbStepper-error-detail">
                     {detail}
                 </p>
-                <Divider style={{ marginBottom: '10px' }} />
             </div>
         );
     }
@@ -289,8 +289,8 @@ export class BreadcrumbStepper extends React.Component {
             const responseError = { ...this.state.error };
             if (responseError.data && responseError.data.errors) {
                 const errors = [...responseError.data.errors];
-                message = errors.map(error => (
-                    this.getErrorMessage(error.title, error.detail)
+                message = errors.map((error, ix) => (
+                    this.getErrorMessage(error.title, error.detail, ix)
                 ));
             }
             if (!message.length) {
