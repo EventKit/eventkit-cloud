@@ -457,7 +457,7 @@ export class DataPackPage extends React.Component {
 
     render() {
         const {steps, isRunning} = this.state;
-        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library </div>
+        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library</div>
         const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginRight:'30px', fontSize:'16px'}}><Help onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
         const styles = {
             wholeDiv: {

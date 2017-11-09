@@ -4,6 +4,7 @@ import { browserHistory } from 'react-router';
 import TimerMixin from 'react-timer-mixin';
 import reactMixin from 'react-mixin';
 import Paper from 'material-ui/Paper';
+import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import DataCartDetails from './DataCartDetails';
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
