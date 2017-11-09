@@ -399,11 +399,12 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props}/>);
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().changeView('list');
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(wrapper.update().state().view).toBe('list');
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({view: 'list'})).toBe(true);
         wrapper.setState({order: 'some_other_order'});
         wrapper.instance().changeView('map');
-        expect(stateSpy.callCount).toEqual(4);
+        expect(stateSpy.callCount).toEqual(5);
         expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
         expect(stateSpy.calledWith({view: 'map'})).toBe(true);
         stateSpy.restore();
