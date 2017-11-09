@@ -89,10 +89,10 @@ SITE_ID = 1
 Admin email address
 which receives task error notifications.
 """
-TASK_ERROR_EMAIL = 'eventkit.team@gmail.com'
-DEFAULT_FROM_EMAIL = 'Eventkit Team <eventkit.team@gmail.com>'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+TASK_ERROR_EMAIL = os.getenv('TASK_ERROR_EMAIL', 'eventkit.team@gmail.com')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Eventkit Team <eventkit.team@gmail.com>')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'eventkit.team@gmail.com')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', None)
 
@@ -101,8 +101,10 @@ if EMAIL_HOST_PASSWORD:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-
-EMAIL_USE_TLS = True
+if 'f' in os.getenv('EMAIL_USE_TLS', '').lower():
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_USE_TLS = True
 
 """
 Overpass Element limit
@@ -301,10 +303,9 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_SECRET_KEY = listings[0]['credentials']['secret_access_key']
             except (KeyError, TypeError) as e:
                 continue
-else:
-    AWS_BUCKET_NAME = os.environ.get('AWS_BUCKET_NAME')
-    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
-    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.environ.get('AWS_BUCKET_NAME')
+AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.environ.get('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = AWS_SECRET_KEY or os.environ.get('AWS_SECRET_KEY')
 
 
 MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)

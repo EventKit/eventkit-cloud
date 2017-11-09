@@ -62,7 +62,7 @@ describe('export actions', () => {
             projectName: 'projectName', 
             makePublic: true, 
             providers: ['provider1'], 
-            area_str: 'area_str', 
+            areaStr: 'areaStr', 
             layers: ['layer1']
         })).toEqual({
             type: 'UPDATE_EXPORT_INFO',
@@ -72,7 +72,7 @@ describe('export actions', () => {
                 projectName: 'projectName', 
                 makePublic: true, 
                 providers: ['provider1'], 
-                area_str: 'area_str', 
+                areaStr: 'areaStr', 
                 layers: ['layer1']
             }
         });
