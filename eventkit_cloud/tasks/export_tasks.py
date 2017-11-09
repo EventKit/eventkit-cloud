@@ -132,10 +132,10 @@ class LockingTask(UserDetailsBase):
         else:
             if retry:
                 logger.warn('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
-                # if worker:
-                #     self.apply_async(args=args, kwargs=kwargs)#.set(**task_settings)
-                # else:
-                self.delay(*args, **kwargs)
+                if worker:
+                    self.apply_async(args=args, kwargs=kwargs).set(**task_settings)
+                else:
+                    self.delay(*args, **kwargs)
             else:
                 logger.info('Task {0} skipped due to lock'.format(self.request.id))
 

@@ -498,6 +498,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = ExportProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    parser_classes = (JSONParser,)
     lookup_field = 'slug'
     ordering = ['name']
 
@@ -516,14 +517,9 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         provider = ExportProvider.objects.get(slug=slug)
         provider_type = provider.export_provider_type
 
-        response = {"slug": slug,
-                    "request": str(request),
-                    "params": request.query_params,
-                    "type_id": str(provider.export_provider_type),
-                    "provider": str(provider),}
-
+        aoi = request.data.get('aoi')
         checker_type = get_provider_checker(provider_type)
-        checker = checker_type(service_url=provider.url, layer=provider.layer, aoi_geojson=None)
+        checker = checker_type(service_url=provider.url, layer=provider.layer, aoi_geojson=aoi)
 
         response = checker.check()
 
