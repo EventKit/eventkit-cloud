@@ -653,9 +653,9 @@ export class ExportAOI extends Component {
                 [55.25307655334473, 25.256418028713934],
             ]
         ]
-        const polygon = new ol.geom.Polygon(coords);
+        const polygon = new Polygon(coords);
         polygon.transform('EPSG:4326', 'EPSG:3857');
-        const feature = new ol.Feature({
+        const feature = new Feature({
             geometry: polygon,
         });
         const geojson = createGeoJSON(polygon);
