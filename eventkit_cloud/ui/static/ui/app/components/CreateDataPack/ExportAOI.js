@@ -86,7 +86,10 @@ export class ExportAOI extends Component {
             });
             this.drawLayer.getSource().addFeatures(features);
             this.map.getView().fit(this.drawLayer.getSource().getExtent());
-            this.props.setNextEnabled();
+            if (!hasPointOrLine(this.props.aoiInfo.geojson)) {
+                this.props.setNextEnabled();
+            }
+            // this.props.setNextEnabled();
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
     }

@@ -262,7 +262,7 @@ function mapDispatchToProps(dispatch) {
                 providers: providerArray,
                 layers: 'Geopackage',
             }));
-            browserHistory.push('/create/');
+            browserHistory.push('/create');
         },
         cancelProviderTask: (providerUid) => {
             dispatch(cancelProviderTask(providerUid));

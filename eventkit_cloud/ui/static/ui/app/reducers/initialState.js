@@ -56,7 +56,6 @@ export default {
     },
     providers: [],
     stepperNextEnabled: false,
-    datacartDetailsReceived: false,
     datacartDetails: {
         fetching: false,
         fetched: false,

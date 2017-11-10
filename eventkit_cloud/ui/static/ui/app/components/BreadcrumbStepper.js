@@ -13,7 +13,7 @@ import ExportSummary from './CreateDataPack/ExportSummary';
 import { flattenFeatureCollection } from '../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
-import { setDatacartDetailsReceived, getDatacartDetails } from '../actions/statusDownloadActions';
+import { getDatacartDetails } from '../actions/statusDownloadActions';
 import BaseDialog from './BaseDialog';
 
 export class BreadcrumbStepper extends React.Component {
@@ -42,12 +42,10 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.datacartDetailsReceived) {
-            browserHistory.push(`/status/${nextProps.jobuid}`);
-        }
         if (this.props.jobFetched !== nextProps.jobFetched) {
             if (nextProps.jobFetched) {
-                this.props.setDatacartDetailsReceived();
+                browserHistory.push(`/status/${nextProps.jobuid}`);
+                this.props.clearJobInfo();
             }
         }
         if (nextProps.jobError) {
@@ -332,8 +330,6 @@ BreadcrumbStepper.propTypes = {
     getProviders: React.PropTypes.func.isRequired,
     setNextDisabled: React.PropTypes.func.isRequired,
     setNextEnabled: React.PropTypes.func.isRequired,
-    datacartDetailsReceived: React.PropTypes.bool.isRequired,
-    setDatacartDetailsReceived: React.PropTypes.func.isRequired,
     clearAoiInfo: React.PropTypes.func.isRequired,
     clearExportInfo: React.PropTypes.func.isRequired,
     clearJobInfo: React.PropTypes.func.isRequired,
@@ -349,7 +345,6 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         providers: state.providers,
         stepperNextEnabled: state.stepperNextEnabled,
-        datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
         jobError: state.submitJob.error,
@@ -379,9 +374,6 @@ function mapDispatchToProps(dispatch) {
         },
         clearJobInfo: () => {
             dispatch(clearJobInfo());
-        },
-        setDatacartDetailsReceived: () => {
-            dispatch(setDatacartDetailsReceived());
         },
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid));
