@@ -28,6 +28,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'eventkit_cloud.api.renderers.HOTExportApiRenderer',
     ),
+    'EXCEPTION_HANDLER': 'eventkit_cloud.api.utils.eventkit_exception_handler',
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
     'DEFAULT_VERSION': '1.0',
 }

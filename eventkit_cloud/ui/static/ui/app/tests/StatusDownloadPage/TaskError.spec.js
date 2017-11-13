@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import '../../components/tap_events';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import TaskError from '../../components/StatusDownloadPage/TaskError';

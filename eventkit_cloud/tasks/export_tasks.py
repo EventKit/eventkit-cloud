@@ -373,10 +373,9 @@ def osm_data_collection_pipeline(
 
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
-
-    in_dataset = "PG:\"dbname='{name}' host='{host}' user='{user}' password='{password}' port='{port}'\"".format(host=database['HOST'],
+    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(host=database['HOST'],
                                         user=database['USER'],
-                                        password=database['PASSWORD'],
+                                        password=database['PASSWORD'].replace('$', '\$'),
                                         port=database['PORT'],
                                         name=database['NAME'])
 
@@ -1059,6 +1058,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     """
     from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
     from .task_runners import normalize_name
+    from django import db
+
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
 
@@ -1130,14 +1131,21 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         run_uid = str(run_uid)
         if getattr(settings, "USE_S3", False):
             zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
-            os.remove(zip_st_filepath)
         else:
             if zip_st_filepath != zip_dl_filepath:
                 shutil.copy(zip_st_filepath, zip_dl_filepath)
             zipfile_url = os.path.join(run_uid, zip_filename)
 
+        #Update Connection
+        db.close_old_connections()
+        run.refresh_from_db()
+
         run.zipfile_url = zipfile_url
-        run.save()
+
+        try:
+            run.save()
+        except Exception as e:
+            logger.error(e)
 
     result = {'result': zip_st_filepath}
     return result
