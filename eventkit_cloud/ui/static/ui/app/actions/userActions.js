@@ -2,7 +2,6 @@ import actions from './actionTypes'
 import {push} from 'react-router-redux'
 import axios from 'axios'
 import cookie from 'react-cookie'
-import types from './actionTypes';
 
 
 export const logout = query => dispatch => {
@@ -78,9 +77,18 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     });
 }
 
-export const userActive = () => dispatch => {
-    return axios('/auth', {method: 'GET'}).then(() => {
-        dispatch({type: types.USER_ACTIVE, autoLogout: new Date(cookie.load('eventkit_auto_logout'))});
+export const userActive = () => (dispatch) => {
+    return axios('/user_active', {method: 'GET'}).then((response) => {
+        const autoLogoutAt = response.data.auto_logout_at;
+        const autoLogoutWarningat = response.data.auto_logout_warning_at;
+
+        dispatch({
+            type: actions.USER_ACTIVE,
+            payload: {
+                autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
+                autoLogoutWarningAt: (autoLogoutWarningat) ? new Date(autoLogoutWarningat) : null,
+            },
+        });
     }).catch((error) => {
         console.error(error.message);
     });

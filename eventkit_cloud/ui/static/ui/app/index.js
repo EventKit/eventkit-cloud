@@ -73,29 +73,6 @@ function checkAuth(store) {
     return null;
 }
 
-
-let isUserActive = false;
-window.addEventListener('mousemove', () => {
-    isUserActive = true;
-});
-
-(function pingUserActive() {
-    // Start polling for user activity after a delay.
-    setTimeout(() => {
-        const intervalId = setInterval(() => {
-            if (isUserActive) {
-                // Notify server.
-                store.dispatch(userActive());
-
-                // Start cycle over with initial delay to prevent spamming requests.
-                isUserActive = false;
-                clearInterval(intervalId);
-                pingUserActive();
-            }
-        }, 100);
-    }, 60 * 1000);
-})();
-
 render(
     <Provider store={store}>
         <Router history={history}>

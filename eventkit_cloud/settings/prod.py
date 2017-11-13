@@ -273,7 +273,7 @@ SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
 SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', SITE_NAME)
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_USER_LAST_ACTIVE = 'user_last_active'
+SESSION_USER_LAST_ACTIVE_AT = 'user_last_active_at'
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'
@@ -345,6 +345,7 @@ MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 
 AUTO_LOGOUT_COOKIE_NAME = 'eventkit_auto_logout'
-AUTO_LOGOUT_SECONDS = os.getenv('AUTO_LOGOUT_SECONDS ', 2 * 60)
+AUTO_LOGOUT_SECONDS = os.getenv('AUTO_LOGOUT_SECONDS', None)
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60)
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
