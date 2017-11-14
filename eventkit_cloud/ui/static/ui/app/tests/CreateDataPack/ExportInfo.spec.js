@@ -26,6 +26,38 @@ raf.polyfill();
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
+
+    const tooltipStyle = {
+        backgroundColor: 'white',
+        borderRadius: '0',
+        color: 'black',
+        mainColor: '#ff4456',
+        textAlign: 'left',
+        header: {
+            textAlign: 'left',
+            fontSize: '20px',
+            borderColor: '#4598bf'
+        },
+        main: {
+            paddingTop: '20px',
+            paddingBottom: '20px',
+        },
+
+        button: {
+            color: 'white',
+            backgroundColor: '#4598bf'
+        },
+        skip: {
+            color: '#8b9396'
+        },
+        back: {
+            color: '#8b9396'
+        },
+        hole: {
+            backgroundColor: 'rgba(226,226,226, 0.2)',
+        }
+    };
+
     const getProps = () => (
         {
             geojson: {
@@ -55,6 +87,8 @@ describe('ExportInfo component', () => {
             providers: [],
             formats,
             nextEnabled: true,
+            walkthroughClicked: false,
+            onWalkthroughReset: () => {},
             handlePrev: () => {},
             updateExportInfo: () => {},
             setNextDisabled: () => {},
@@ -114,7 +148,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
     });
 
-    it('componentDidMount should setNextDisabled, setArea, and create deboucers', () => {
+    it('componentDidMount should setNextDisabled, setArea, setJoyRideSteps, and create deboucers', () => {
         const expectedString = '12,393 sq km';
         const expectedFormat = ['gpkg'];
         const props = getProps();
@@ -123,10 +157,12 @@ describe('ExportInfo component', () => {
         const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = sinon.spy(ExportInfo.prototype, 'setArea');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
+        const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(areaSpy.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
@@ -141,6 +177,7 @@ describe('ExportInfo component', () => {
         mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('componentDidUpdate should initializeOpenLayers if expanded', () => {
@@ -151,7 +188,7 @@ describe('ExportInfo component', () => {
         wrapper.instance().initializeOpenLayers = initSpy;
         expect(wrapper.state().expanded).toBe(false);
         wrapper.setState({ expanded: true });
-        expect(updateSpy.calledOnce).toBe(true);
+        expect(updateSpy.called).toBe(true);
         expect(wrapper.state().expanded).toBe(true);
         expect(initSpy.calledOnce).toBe(true);
         updateSpy.restore();
@@ -267,12 +304,13 @@ describe('ExportInfo component', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
+        //expect(stateSpy.called).toBe(false);
         // dont actually create a map when expanded
         wrapper.instance().initializeOpenLayers = sinon.spy();
         wrapper.instance().expandedChange(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        stateSpy.restore();
     });
 
     it('hasRequiredFields should return whether the exportInfo required fields are filled', () => {
@@ -325,4 +363,49 @@ describe('ExportInfo component', () => {
         expect(fitSpy.calledOnce).toBe(true);
         expect(getSizeSpy.calledOnce).toBe(true);
     });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{title: 'Search for location', text: 'Type in location name to set area of interest.', selector: '.bootstrap-typeahead-input', position: 'bottom', style: tooltipStyle,},
+            {title: 'Select location', text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.', selector: '.qa-DrawAOIToolbar-div', position: 'left', style: tooltipStyle,},
+            {title: 'Cancel Selection', text: 'Cancel or clear selection by clicking the "X".', selector: '.qa-DrawBoxButton-button', position: 'left', style: tooltipStyle,},
+            {title: 'Go to next step', text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0', position: 'left', style: tooltipStyle,}];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({steps: steps}));
+        stateSpy.restore();
+    });
+
+    it('handleJoyride should set state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: "close",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "step:before",
+        }
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
 });

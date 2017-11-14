@@ -184,13 +184,6 @@ export class ExportSummary extends Component {
             this.props.onWalkthroughReset();
             this.refs.joyride.reset(true);
         }
-        if(data.index === 0 && data.type === 'tooltip:before') {
-
-        }
-
-        if(data.index === 2 && data.type === 'tooltip:before') {
-
-        }
     }
 
     handleJoyride() {

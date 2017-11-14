@@ -28,6 +28,38 @@ raf.polyfill();
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
     injectTapEventPlugin();
+
+    const tooltipStyle = {
+        backgroundColor: 'white',
+        borderRadius: '0',
+        color: 'black',
+        mainColor: '#ff4456',
+        textAlign: 'left',
+        header: {
+            textAlign: 'left',
+            fontSize: '20px',
+            borderColor: '#4598bf'
+        },
+        main: {
+            paddingTop: '20px',
+            paddingBottom: '20px',
+        },
+
+        button: {
+            color: 'white',
+            backgroundColor: '#4598bf'
+        },
+        skip: {
+            color: '#8b9396'
+        },
+        back: {
+            color: '#8b9396'
+        },
+        hole: {
+            backgroundColor: 'rgba(226,226,226, 0.2)',
+        }
+    };
+
     const getProps = () => {
         return {
             geojson: { 
@@ -68,6 +100,8 @@ describe('Export Summary Component', () => {
                     "description": "GeoPackage"
                 },
             ],
+            walkthroughClicked: false,
+            onWalkthroughReset: () => {},
         }
     }
 
@@ -113,6 +147,17 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#summaryMap')).toHaveLength(0);
     });
 
+    it('componentDidMount should setJoyRideSteps', () => {
+        const props = getProps();
+        const mountSpy = new sinon.spy(ExportSummary.prototype, 'componentDidMount');
+        const joyrideSpy = new sinon.spy(ExportSummary.prototype, 'joyrideAddSteps');
+        const wrapper = getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
+        mountSpy.restore();
+        joyrideSpy.restore();
+    });
+
     it('should call initializeOpenLayers  when card is expanded', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -126,11 +171,10 @@ describe('Export Summary Component', () => {
 
     it('expandedChange should call setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
+        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
         wrapper.instance().expandedChange(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
         stateSpy.restore();
     });
@@ -151,5 +195,51 @@ describe('Export Summary Component', () => {
         expect(getViewSpy.calledTwice).toBe(true);
         expect(getExtentSpy.calledOnce).toBe(true);
         expect(getSizeSpy.calledOnce).toBe(true);
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {title: 'Verify Information', text: 'Verify the information entered is correct before proceeding.', selector: '.qa-ExportSummary-div', position: 'bottom', style: tooltipStyle,},
+            {title: 'Go Back to Edit', text: 'If you need to make changes before submitting, use the small blue arrow to navigate back.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous', position: 'bottom', style: tooltipStyle,},
+            {title: 'Submit DataPack', text: 'Once ready, click the large green button to kick off the DataPack submission process.<br>You will be redirected to the Status and Download page.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2', position: 'bottom', style: tooltipStyle,},];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        wrapper.update();
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({steps: steps}));
+        stateSpy.restore();
+    });
+
+    it('handleJoyride should set state', () => {
+        const props = getProps();
+        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        const wrapper = getWrapper(props);
+
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: "close",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "step:before",
+        }
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
     });
 });
