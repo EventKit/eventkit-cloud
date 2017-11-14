@@ -122,13 +122,6 @@ class Overpass(object):
             logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
 
-    def ping(self):
-        response = requests.post(url=self.url, data='out meta;')
-        if not response.ok:
-            logger.error("Overpass query returned {}, content {}".format(response.status_code, response.content))
-            raise Exception("Overpass ping returned {}: {}".format(response.status_code, response.reason))
-        return True
-
     def _build_overpass_query(self,):  # pragma: no cover
         """
         Overpass  imposes a limit of 1023 statements per query.

@@ -536,7 +536,10 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         provider = ExportProvider.objects.get(slug=slug)
         provider_type = provider.export_provider_type
 
-        aoi = request.data.get('aoi')
+        aoi = None
+        if request is not None:
+            aoi = request.data.get('aoi')
+
         checker_type = get_provider_checker(provider_type)
         checker = checker_type(service_url=provider.url, layer=provider.layer, aoi_geojson=aoi)
 
