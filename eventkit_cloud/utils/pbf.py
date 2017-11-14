@@ -47,8 +47,10 @@ class OSMToPBF(object):
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash', stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
-            logger.error('%s', task_process.stderr)
-            raise Exception, "osmconvert failed with return code: {0}".format(task_process.exitcode)
+            logger.error('{0}'.format(task_process.stderr))
+            logger.error("osmconvert failed with return code: {0}".format(task_process.exitcode))
+            logger.error("osmconvert most commonly fails due to lack of memory.")
+            raise Exception("Osmconvert Failed.")
 
         if (self.debug):
             print 'Osmconvert returned: %s' % task_process.exitcode
