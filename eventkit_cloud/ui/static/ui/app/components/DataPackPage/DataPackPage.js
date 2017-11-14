@@ -100,7 +100,6 @@ export class DataPackPage extends React.Component {
     }
 
     setJoyRideSteps() {
-        let steps =[];
         const tooltipStyle = {
             backgroundColor: 'white',
             borderRadius: '0',

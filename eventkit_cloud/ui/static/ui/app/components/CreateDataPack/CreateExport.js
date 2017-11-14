@@ -9,6 +9,7 @@ export class CreateExport extends React.Component {
     constructor() {
         super()
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.state = {
             walkthroughClicked : false
         }
@@ -24,7 +25,7 @@ export class CreateExport extends React.Component {
 
     render() {
         const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Create DataPack </div>
-        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
+        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
         const styles = {
             appBar: {
                 backgroundColor: '#161e2e',

@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
@@ -53,6 +53,37 @@ describe('ExportAOI component', () => {
         }],
     };
 
+    const tooltipStyle = {
+        backgroundColor: 'white',
+        borderRadius: '0',
+        color: 'black',
+        mainColor: '#ff4456',
+        textAlign: 'left',
+        header: {
+            textAlign: 'left',
+            fontSize: '20px',
+            borderColor: '#4598bf'
+        },
+        main: {
+            paddingTop: '20px',
+            paddingBottom: '20px',
+        },
+
+        button: {
+            color: 'white',
+            backgroundColor: '#4598bf'
+        },
+        skip: {
+            color: '#8b9396'
+        },
+        back: {
+            color: '#8b9396'
+        },
+        hole: {
+            backgroundColor: 'rgba(226,226,226, 0.2)',
+        }
+    };
+
     const getProps = () => (
         {
             aoiInfo: {
@@ -75,6 +106,8 @@ describe('ExportAOI component', () => {
                 data: [],
                 error: null,
             },
+            walkthroughClicked: false,
+            onWalkthroughReset: () => {},
             updateAoiInfo: () => {},
             clearAoiInfo: () => {},
             setNextDisabled: () => {},
@@ -146,7 +179,7 @@ describe('ExportAOI component', () => {
         expect(setSpy.calledWith('search')).toBe(true);
     });
 
-    it('componentDidMount should initialize the map and handle aoiInfo if present', () => {
+    it('componentDidMount should initialize the map, setJoyRideSteps, and handle aoiInfo if present', () => {
         const props = getProps();
         props.aoiInfo.geojson = geojson;
         props.aoiInfo.selectionType = 'fake type';
@@ -155,6 +188,7 @@ describe('ExportAOI component', () => {
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const fitSpy = sinon.spy(View.prototype, 'fit');
+        const joyrideSpy = sinon.spy(ExportAOI.prototype, 'joyrideAddSteps');
         props.setNextEnabled = sinon.spy();
         const setSpy = sinon.spy(ExportAOI.prototype, 'setButtonSelected');
         const wrapper = getWrapper(props);
@@ -167,6 +201,7 @@ describe('ExportAOI component', () => {
         })).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith('fake type')).toBe(true);
@@ -176,6 +211,7 @@ describe('ExportAOI component', () => {
         addSpy.restore();
         fitSpy.restore();
         setSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('componentDidMount should initialize the map and ignore empty geojson value', () => {
@@ -1295,5 +1331,75 @@ describe('ExportAOI component', () => {
         setGeomSpy.restore();
         addStub.restore();
         createStub.restore();
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{title: 'Search for location', text: 'Type in location name to set area of interest.', selector: '.bootstrap-typeahead-input', position: 'bottom', style: tooltipStyle,},
+            {title: 'Select location', text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.', selector: '.qa-DrawAOIToolbar-div', position: 'left', style: tooltipStyle,},
+            {title: 'Cancel Selection', text: 'Cancel or clear selection by clicking the "X".', selector: '.qa-DrawBoxButton-button', position: 'left', style: tooltipStyle,},
+            {title: 'Go to next step', text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0', position: 'left', style: tooltipStyle,}];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({steps: steps}));
+        stateSpy.restore();
+    });
+
+    //Not sure why but this causes a Maximum call stack size exceeded error?????
+    // it('handleJoyride should set state', () => {
+    //     const props = getProps();
+    //     const wrapper = getWrapper(props);
+    //     const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+    //     wrapper.instance().handleJoyride();
+    //     expect(stateSpy.calledWith({isRunning: false}));
+    //     stateSpy.restore();
+    // });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: "close",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "step:before",
+        }
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
+    it('callback function should draw fake bbox if none is currently drawn on map', () => {
+        const callbackData = {
+            action: "next",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "tooltip:before",
+        }
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        props.aoiInfo.description = null;
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
+        const drawFakeBboxSpy = sinon.spy(wrapper.instance(), 'drawFakeBbox');
+        wrapper.instance().callback(callbackData);
+        expect(drawFakeBboxSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({fakeData: true}));
+        stateSpy.restore();
+        drawFakeBboxSpy.restore();
     });
 });

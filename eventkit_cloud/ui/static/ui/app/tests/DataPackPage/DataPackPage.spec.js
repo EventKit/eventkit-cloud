@@ -49,6 +49,36 @@ describe('DataPackPage component', () => {
             "export_provider_type": 2
         },
     ]
+    const tooltipStyle = {
+        backgroundColor: 'white',
+        borderRadius: '0',
+        color: 'black',
+        mainColor: '#ff4456',
+        textAlign: 'left',
+        header: {
+            textAlign: 'left',
+            fontSize: '20px',
+            borderColor: '#4598bf'
+        },
+        main: {
+            paddingTop: '20px',
+            paddingBottom: '20px',
+        },
+
+        button: {
+            color: 'white',
+            backgroundColor: '#4598bf'
+        },
+        skip: {
+            color: '#8b9396'
+        },
+        back: {
+            color: '#8b9396'
+        },
+        hole: {
+            backgroundColor: 'rgba(226,226,226, 0.2)',
+        }
+    };
     const getProps = () => {
         return {
             runsList: {
@@ -151,18 +181,21 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call makeRunRequest  and setInterval when mounting', () => {
+    it('should call makeRunRequest, setJoyRideSteps and setInterval when mounting', () => {
         const props = getProps();
         const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
         const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
+        const joyrideSpy = new sinon.spy(DataPackPage.prototype, 'setJoyRideSteps');
         const intervalSpy = new sinon.spy(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(requestSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         expect(intervalSpy.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
         mountSpy.restore();
         requestSpy.restore();
         intervalSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('componentWillUnmout should clear interval', () => {
@@ -397,17 +430,20 @@ describe('DataPackPage component', () => {
         const promise = {then: (func) => {func()}};
         props.getRuns = (params) => {return promise};
         const wrapper = shallow(<DataPackPage {...props}/>);
+        const joyrideSpy = sinon.spy(DataPackPage.prototype, 'setJoyRideSteps');
         const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().changeView('list');
         expect(wrapper.update().state().view).toBe('list');
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({view: 'list'})).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         wrapper.setState({order: 'some_other_order'});
         wrapper.instance().changeView('map');
         expect(stateSpy.callCount).toEqual(5);
         expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
         expect(stateSpy.calledWith({view: 'map'})).toBe(true);
         stateSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('handleToggle should set state', () => {
@@ -494,5 +530,110 @@ describe('DataPackPage component', () => {
         );
         expect(wrapper.instance().getView('bad case')).toEqual(null);
     });
+
+    it('setJoyRideSteps should return correct steps based on view', () => {
+
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        wrapper.setState({view: 'map'});
+        expect(wrapper.instance().setJoyRideSteps()).toEqual(
+            [   {title: 'Create DataPack', text: 'Click here to Navigate to Create a DataPack.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
+                {title: 'Search DataPacks', text: 'Search and Sort the existing DataPack Library.', selector: '.qa-DataPackSearchBar-TextField',  position: 'bottom', style: tooltipStyle,},
+                {title: 'Filter DataPacks', text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
+                {title: 'DataPack Status', text: 'Check the status of previously created DataPacks', selector: '.qa-DataPackListItem-subtitle-date', position: 'bottom', style: tooltipStyle,},
+                {title: 'Status and Download', text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.', selector: '.qa-DataPackListItem-IconMenu', position: 'bottom', style: tooltipStyle,},
+            ]
+        );
+        wrapper.setState({view: 'grid'});
+        expect(wrapper.instance().setJoyRideSteps()).toEqual(
+            [   {title: 'Create DataPack', text: 'Click here to Navigate to Create a DataPack.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
+                {title: 'Search DataPacks', text: 'Search and Sort the existing DataPack Library.', selector: '.qa-DataPackSearchBar-TextField', position: 'bottom', style: tooltipStyle,},
+                {title: 'Filter DataPacks', text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
+                {title: 'DataPack Status', text: 'Check the status of previously created DataPacks', selector: '.qa-DataPackGridItem-CardActions', position: 'bottom', style: tooltipStyle,},
+                {title: 'Status and Download', text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.', selector: '.qa-DataPackGridItem-IconMenu', position: 'bottom', style: tooltipStyle,},
+            ]
+        );
+        wrapper.setState({view: 'list'})
+        expect(wrapper.instance().setJoyRideSteps()).toEqual(
+            [   {title: 'Create DataPack', text: 'Click here to Navigate to Create a DataPack.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
+                {title: 'Search DataPacks', text: 'Search and Sort the existing DataPack Library.', selector: '.qa-DataPackSearchBar-TextField', position: 'bottom', style: tooltipStyle,},
+                {title: 'Filter DataPacks', text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
+                {title: 'DataPack Status', text: 'Check the status of previously created DataPacks', selector: '.qa-DataPackTableItem-TableRowColumn-status', position: 'bottom', style: tooltipStyle,},
+                {title: 'Status and Download', text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.', selector: '.qa-DataPackTableItem-IconMenu', position: 'bottom', style: tooltipStyle,},
+            ]
+        );
+
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [   {title: 'Create DataPack', text: 'Click here to Navigate to Create a DataPack.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
+            {title: 'Search DataPacks', text: 'Search and Sort the existing DataPack Library.', selector: '.qa-DataPackSearchBar-TextField',  position: 'bottom', style: tooltipStyle,},
+            {title: 'Filter DataPacks', text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
+            {title: 'DataPack Status', text: 'Check the status of previously created DataPacks', selector: '.qa-DataPackListItem-subtitle-date', position: 'bottom', style: tooltipStyle,},
+            {title: 'Status and Download', text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.', selector: '.qa-DataPackListItem-IconMenu', position: 'bottom', style: tooltipStyle,},
+        ]
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({steps: steps}));
+        stateSpy.restore();
+    });
+
+    it('handleJoyride should set state', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
+    it('callback function should open drawer if it is closed', () => {
+        const callbackData = {
+            action: "next",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "step:before",
+        }
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props}/>);
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.setState({open: false});
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({open: true}));
+        stateSpy.restore();
+    });
+
+    it('callback should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: "close",
+            index: 2,
+            step: {
+                position: "bottom",
+                selector: ".qa-DataPackLinkButton-RaisedButton",
+                style: tooltipStyle,
+                text: "Click here to Navigate to Create a DataPack.",
+                title: "Create DataPack",
+            },
+            type: "step:before",
+        }
+        const props = getProps();
+        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({isRunning: false}));
+        stateSpy.restore();
+    });
+
 });
 
