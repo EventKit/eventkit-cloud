@@ -9,6 +9,9 @@ from django.contrib.gis.geos import GEOSGeometry
 
 from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
     ProviderTask, DatamodelPreset, License, UserLicense
+import logging
+
+logger = logging.getLogger(__name__)
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProfile)
@@ -129,21 +132,32 @@ class ExportProviderForm(forms.ModelForm):
         if config == "":
             return self.cleaned_data
 
-        # from ..utils.external_service import ExternalRasterServiceToGeopackage, \
-        #                                      ConfigurationError, SeedConfigurationError
-        #
-        # service = ExternalRasterServiceToGeopackage(config=config)
-        # try:
-        #     conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
-        # except (ConfigurationError, SeedConfigurationError) as e:
-        #     raise forms.ValidationError(e.message)
+        service_type = self.cleaned_data.get('export_provider_type').type_name
 
-        from ..feature_selection.feature_selection import FeatureSelection
+        logger.info("Checking config for service type {}".format(service_type))
+        logger.info("type(service_type): {}".format(str(type(service_type))))
+        logger.info("service_type == 'osm': {}".format(str(service_type == 'osm')))
+        logger.info("service_type in ['osm', 'osm-generic']: {}".format(str(service_type in ['osm', 'osm-generic'])))
 
-        try:
-            f = FeatureSelection.example(config)
-        except AssertionError:
-            raise forms.ValidationError("Invalid configuration")
+        if service_type in ['wms', 'wmts']:
+            from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+                                                 ConfigurationError, SeedConfigurationError
+            service = ExternalRasterServiceToGeopackage(config=config)
+            try:
+                conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
+                logger.info("Config is valid for MapProxy configuration")
+            except (ConfigurationError, SeedConfigurationError) as e:
+                logger.info("Invalid MapProxy config")
+                raise forms.ValidationError(e.message)
+
+        elif service_type in ['osm', 'osm-generic']:
+            from ..feature_selection.feature_selection import FeatureSelection
+            try:
+                f = FeatureSelection.example(config)
+                logger.info("Created FeatureSelection for osm config")
+            except AssertionError:
+                logger.info("Failed to create FeatureSelection for osm config")
+                raise forms.ValidationError("Invalid configuration")
 
         return config
 

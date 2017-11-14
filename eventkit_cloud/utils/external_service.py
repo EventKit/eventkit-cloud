@@ -171,17 +171,6 @@ class ExternalRasterServiceToGeopackage(object):
                 raise Exception("The Raster Service failed to complete, please contact an administrator.")
         except Exception:
             logger.error("Export failed for url {}.".format(self.service_url))
-            # errors, informal_only = validate_options(mapproxy_config)
-            # if not informal_only:
-            #     logger.error("MapProxy configuration failed.")
-            #     logger.error("Using Configuration:")
-            #     logger.error(mapproxy_config)
-            # errors, informal_only = validate_seed_conf(seed_dict)
-            # if not informal_only:
-            #     logger.error("Mapproxy Seed failed.")
-            #     logger.error("Using Seed Configuration:")
-            #     logger.error(seed_dict)
-            #     raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
             raise
         finally:
             connections.close_all()
