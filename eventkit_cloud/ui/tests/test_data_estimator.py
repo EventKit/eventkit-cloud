@@ -17,7 +17,7 @@ class TestDataEstimation(TestCase):
         self.assertAlmostEqual(expected_return_value, actual_return_value, places=9)
 
     @patch('eventkit_cloud.ui.data_estimator.get_gb_estimate')
-    @patch('eventkit_cloud.ui.data_estimator.ExportProvider')
+    @patch('eventkit_cloud.ui.data_estimator.DataProvider')
     def test_get_size_estimate(self, export_provider, get_estimate):
         provider_name = "Test_name"
         get_estimate.return_value = 4

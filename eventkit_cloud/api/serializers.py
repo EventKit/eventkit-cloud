@@ -24,17 +24,17 @@ from eventkit_cloud.jobs.models import (
     Job,
     Region,
     RegionMask,
-    ExportProvider,
-    ProviderTask,
+    DataProvider,
+    DataProviderTask,
     License,
     UserLicense
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
-    ExportTask,
+    ExportTaskRecord,
     ExportTaskException,
     FileProducingTaskResult,
-    ExportProviderTask
+    DataProviderTaskRecord
 )
 from eventkit_cloud.utils.s3 import get_presigned_url
 from rest_framework import serializers
@@ -62,17 +62,17 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     provider = serializers.CharField()
 
     class Meta:
-        model = ProviderTask
+        model = DataProviderTask
         fields = ('provider', 'formats')
 
     @staticmethod
     def create(validated_data, **kwargs):
         from eventkit_cloud.api.views import get_models
-        """Creates an export ProviderTask."""
+        """Creates an export DataProviderTask."""
         format_names = validated_data.pop("formats")
         format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
-        provider_model = ExportProvider.objects.get(name=validated_data.get("provider"))
-        provider_task = ProviderTask.objects.create(provider=provider_model)
+        provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
+        provider_task = DataProviderTask.objects.create(provider=provider_model)
         provider_task.formats.add(*format_models)
         provider_task.save()
         return provider_task
@@ -86,7 +86,7 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     def validate(self, data, **kwargs):
         """
-        Validates the data submitted during ProviderTask creation.
+        Validates the data submitted during DataProviderTask creation.
 
         See api/validators.py for validation code.
         :param **kwargs:
@@ -130,7 +130,7 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
         return str(exc_info[1])
 
-class ExportTaskSerializer(serializers.ModelSerializer):
+class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
     result = serializers.SerializerMethodField()
     errors = serializers.SerializerMethodField()
@@ -140,13 +140,13 @@ class ExportTaskSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = ExportTask
+        model = ExportTaskRecord
         fields = (
             'uid', 'url', 'name', 'status', 'progress', 'estimated_finish', 'started_at', 'finished_at', 'duration',
             'result', 'errors', 'display')
 
     def get_result(self, obj):
-        """Serialize the FileProducingTaskResult for this ExportTask."""
+        """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
             serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
@@ -155,7 +155,7 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             return None  # no result yet
 
     def get_errors(self, obj):
-        """Serialize the ExportTaskExceptions for this ExportTask."""
+        """Serialize the ExportTaskExceptions for this ExportTaskRecord."""
         try:
             errors = obj.exceptions
             serializer = ExportTaskExceptionSerializer(errors, many=True, context=self.context)
@@ -164,15 +164,15 @@ class ExportTaskSerializer(serializers.ModelSerializer):
             return None
 
 
-class ExportProviderTaskSerializer(serializers.ModelSerializer):
-    tasks = ExportTaskSerializer(many=True, required=False)
+class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
+    tasks = ExportTaskRecordSerializer(many=True, required=False)
     url = serializers.HyperlinkedIdentityField(
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
     )
 
     class Meta:
-        model = ExportProviderTask
+        model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -233,7 +233,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         lookup_field='uid'
     )
     job = SimpleJobSerializer()  # nest the job details
-    provider_tasks = ExportProviderTaskSerializer(many=True)
+    provider_tasks = DataProviderTaskRecordSerializer(many=True)
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
     expiration = serializers.SerializerMethodField
@@ -402,7 +402,7 @@ class ExportFormatSerializer(serializers.ModelSerializer):
         fields = ('uid', 'url', 'slug', 'name', 'description')
 
 
-class ExportProviderSerializer(serializers.ModelSerializer):
+class DataProviderSerializer(serializers.ModelSerializer):
     model_url = serializers.HyperlinkedIdentityField(
         view_name='api:providers-detail',
         lookup_field='slug'
@@ -411,7 +411,7 @@ class ExportProviderSerializer(serializers.ModelSerializer):
     license = LicenseSerializer(required=False)
 
     class Meta:
-        model = ExportProvider
+        model = DataProvider
         extra_kwargs = {'url': {'write_only': True}, 'user': {'write_only': True}, 'config': {'write_only': True}}
         read_only_fields = ('uid',)
         fields = '__all__'
@@ -425,9 +425,9 @@ class ExportProviderSerializer(serializers.ModelSerializer):
         if license_data:
             License.objects.create(**license_data)
 
-        ep = ExportProvider.objects.filter(url=url, user=user).first()
+        ep = DataProvider.objects.filter(url=url, user=user).first()
         if not ep:
-            ep = ExportProvider.objects.create(**validated_data)
+            ep = DataProvider.objects.create(**validated_data)
         return ep
 
     @staticmethod
@@ -594,7 +594,7 @@ class JobSerializer(serializers.Serializer):
     def get_providers(self, obj):
         """Return the export formats selected for this export."""
         providers = [provider_format for provider_format in obj.providers.all()]
-        serializer = ExportProviderSerializer(providers, many=True, context={'request': self.context['request']})
+        serializer = DataProviderSerializer(providers, many=True, context={'request': self.context['request']})
         return serializer.data
 
     @staticmethod
