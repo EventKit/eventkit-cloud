@@ -5,7 +5,7 @@ from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError
 from mapproxy.seed.spec import validate_seed_conf
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.config.spec import validate_options
 
 from mapproxy.config.config import load_config, base_config, load_default_config
@@ -99,6 +99,8 @@ class ExternalRasterServiceToGeopackage(object):
                                                               [grids for grids in conf_dict.get('grids')],
                                                               self.gpkgfile, table_name=self.layer)
 
+        conf_dict['services'] = ['demo']
+
         # Prevent the service from failing if source has missing tiles.
         for source in conf_dict.get('sources') or []:
             if 'wmts' in source:
@@ -129,19 +131,12 @@ class ExternalRasterServiceToGeopackage(object):
         # Create a seed configuration object
         seed_configuration = SeedingConfiguration(seed_dict, mapproxy_conf=mapproxy_configuration)
 
-        errors, informal_only = validate_options(mapproxy_config)
-        if not informal_only or errors:
+        errors = validate_references(conf_dict)
+        if errors:
             logger.error("MapProxy configuration failed.")
             logger.error("Using Configuration:")
-            logger.error(mapproxy_config)
-            raise ConfigurationError("MapProxy configuration error - {}".format(", ".join(errors)))
-
-        errors, informal_only = validate_seed_conf(seed_dict)
-        if not informal_only or errors:
-            logger.error("Mapproxy Seed failed.")
-            logger.error("Using Seed Configuration:")
-            logger.error(seed_dict)
-            raise SeedConfigurationError('MapProxy seed configuration error  - {}'.format(', '.join(errors)))
+            logger.error(conf_dict)
+            raise ConfigurationError("MapProxy returned the error - {0}".format(", ".join(errors)))
 
         return conf_dict, seed_configuration, mapproxy_configuration
 
@@ -193,7 +188,7 @@ def get_cache_template(sources, grids, geopackage, table_name='tiles'):
         "cache": {
             "type": "geopackage",
             "filename": str(geopackage),
-            "table_name": table_name
+            "table_name": table_name or 'None'
         },
         "grids": [grid for grid in grids if grid == 'geodetic'] or grids,
         "format": "mixed",

@@ -137,7 +137,7 @@ class ExportProviderForm(forms.ModelForm):
         if service_type in ['wms', 'wmts']:
             from ..utils.external_service import ExternalRasterServiceToGeopackage, \
                                                  ConfigurationError, SeedConfigurationError
-            service = ExternalRasterServiceToGeopackage(config=config)
+            service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
                 conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
             except (ConfigurationError, SeedConfigurationError) as e:
