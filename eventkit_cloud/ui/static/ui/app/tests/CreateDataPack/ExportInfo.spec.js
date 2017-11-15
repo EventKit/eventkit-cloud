@@ -18,6 +18,7 @@ import GeoJSON from 'ol/format/geojson';
 import BaseDialog from '../../components/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import Joyride from 'react-joyride';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -146,6 +147,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardText)).toHaveLength(0);
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('componentDidMount should setNextDisabled, setArea, setJoyRideSteps, and create deboucers', () => {

@@ -19,6 +19,8 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -135,6 +137,8 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackSortDropDown)).toHaveLength(1);
         expect(wrapper.find(DataPackViewButtons)).toHaveLength(1);
         expect(wrapper.find(FilterDrawer)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
         // Should show loading before datapacks have been fetched
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);

@@ -20,6 +20,7 @@ import Zoom from 'ol/control/zoom';
 
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import Joyride from 'react-joyride';
 
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -145,6 +146,7 @@ describe('Export Summary Component', () => {
         expect(wrapper.find(CardHeader).text()).toEqual('Selected Area of Interest');
         expect(wrapper.find(CardText)).toHaveLength(0);
         expect(wrapper.find('#summaryMap')).toHaveLength(0);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('componentDidMount should setJoyRideSteps', () => {

@@ -24,6 +24,7 @@ import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
+import Joyride from 'react-joyride';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -138,6 +139,7 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('the left position should be 200px if drawer is open, otherwise 0px', () => {

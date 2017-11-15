@@ -10,6 +10,7 @@ import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetail
 import CustomScrollbar from '../../components/CustomScrollbar';
 import TimerMixin from 'react-timer-mixin';
 import {browserHistory} from 'react-router';
+import Joyride from 'react-joyride';
 
 describe('StatusDownload component', () => {
     beforeAll(() => {
@@ -316,6 +317,7 @@ describe('StatusDownload component', () => {
         nextProps.datacartDetails.data = exampleRun;
         wrapper.setProps(nextProps);
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('getMarginPadding should return the pixel string for div padding based on window width', () => {
