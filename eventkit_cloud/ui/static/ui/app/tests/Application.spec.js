@@ -30,6 +30,7 @@ describe('Application component', () => {
             closeDrawer: () => {},
             userData: {},
             drawer: 'open',
+            userActive: () => {}
         }
     }
 
