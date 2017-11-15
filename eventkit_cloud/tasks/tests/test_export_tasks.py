@@ -11,10 +11,10 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from django.utils import timezone as real_timezone
 from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
+from django.db.models.signals import post_save
 
 from billiard.einfo import ExceptionInfo
 from celery import chain
@@ -86,17 +86,19 @@ class TestLockingTask(TestCase):
         mock_cache.add.assert_called_with(expected_lock_key, task_id, lock_task.lock_expiration)
 
 
-class ExportTaskBase(TestCase):
+class ExportTaskBase(TransactionTestCase):
     fixtures = ('datamodel_presets.json',)
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(
-            username='demo',
-            email='demo@demo.com',
-            password='demo'
-        )
+        self.group = Group.objects.create(name="TestDefault")
+        with patch('eventkit_cloud.jobs.models.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            self.user = User.objects.create(
+                username='demo',
+                email='demo@demo.com',
+                password='demo'
+            )
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertEquals(259, len(tags))
@@ -112,7 +114,6 @@ class ExportTaskBase(TestCase):
         self.job.feature_pub = True
         self.job.save()
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
-
 
 class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
@@ -554,7 +555,9 @@ class TestExportTasks(ExportTaskBase):
         worker_name = "test_worker"
         task_pid = 55
         celery_uid = uuid.uuid4()
-        user = User.objects.create(username="test_user", password="test_password", email="test@email.com")
+        with patch('eventkit_cloud.jobs.models.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            user = User.objects.create(username="test_user", password="test_password", email="test@email.com")
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run,
             name='test_provider_task',
