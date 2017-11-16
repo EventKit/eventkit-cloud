@@ -375,7 +375,7 @@ describe('ExportAOI component', () => {
         props.setNextEnabled = sinon.spy();
         const clearSpy = sinon.spy(utils, 'clearDraw');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
+        const zoomSpy = sinon.spy(utils, 'zoomToFeature');
         const wrapper = getWrapper(props);
         const showSpy = wrapper.instance().showInvalidDrawWarning = sinon.spy();
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');

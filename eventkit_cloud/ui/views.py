@@ -110,8 +110,11 @@ def require_email(request):
 @require_http_methods(['GET'])
 def geocode(request):
     geocode = Geocode()
-    result = geocode.search(request.GET.get('search'))
-    if result:
+    if request.GET.get('search'):
+        result = geocode.search(request.GET.get('search'))
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+    if request.GET.get('result'):
+        result = geocode.add_bbox(json.loads(request.GET.get('result')))
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")

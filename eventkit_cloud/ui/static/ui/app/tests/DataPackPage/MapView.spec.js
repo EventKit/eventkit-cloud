@@ -837,7 +837,7 @@ describe('MapView component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const getFeature = sinon.spy(VectorSource.prototype, 'getFeatureById');
-        const zoomToSpy = sinon.spy(utils, 'zoomToGeometry');
+        const zoomToSpy = sinon.spy(utils, 'zoomToFeature');
         wrapper.setState({ selectedFeature: '6870234f-d876-467c-a332-65fdf0399a0d' });
         wrapper.instance().zoomToSelected();
         // called twice because of the render method also using it
@@ -1059,7 +1059,7 @@ describe('MapView component', () => {
         createSpy.restore();
     });
 
-    it('if there are no run features, handleSearch should call zoomToGeometry with the search geom', () => {
+    it('if there are no run features, handleSearch should call zoomToFeature with the search geom', () => {
         const result = {
             geometry: {
                 type: 'Polygon',
@@ -1076,7 +1076,7 @@ describe('MapView component', () => {
         const props = getProps();
         props.onMapFilter = sinon.spy();
         props.runs = [];
-        const zoomStub = sinon.stub(utils, 'zoomToGeometry')
+        const zoomStub = sinon.stub(utils, 'zoomToFeature')
             .callsFake(() => {});
         const wrapper = getWrapper(props);
         const getSpy = sinon.spy(VectorSource.prototype, 'getFeatures');
