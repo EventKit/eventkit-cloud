@@ -133,8 +133,7 @@ class LockingTask(UserDetailsBase):
             if retry:
                 logger.warn('Task {0} waiting for lock {1} to be free.'.format(self.request.id, lock_key))
                 if worker:
-                    #self.apply_async(args=args, kwargs=kwargs, **task_settings)
-                    self.delay(*args, **kwargs)
+                    self.apply_async(args=args, kwargs=kwargs, **task_settings)
                 else:
                     self.delay(*args, **kwargs)
             else:
