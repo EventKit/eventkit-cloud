@@ -98,7 +98,8 @@ class TestGeopackage(TransactionTestCase):
         json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
         json_config['sources']['imagery_wmts']['transparent'] = True
         json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
-
+        json_config['services'] = ['demo']
+        
         check_service.assert_called_once_with(json_config)
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
