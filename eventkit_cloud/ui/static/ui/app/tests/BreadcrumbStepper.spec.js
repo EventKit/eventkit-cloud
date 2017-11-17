@@ -11,7 +11,7 @@ import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
 import ExportAOI from '../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
-
+import * as utils from '../utils/mapUtils';
 
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
@@ -61,7 +61,6 @@ describe('BreadcrumbStepper component', () => {
     it('getErrorMessage should return formated title and detail', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-
         const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
             context: { muiTheme },
             childContextTypes: {
@@ -204,11 +203,14 @@ describe('BreadcrumbStepper component', () => {
             tags: [],
         };
         const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
+        const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')
+            .callsFake(fc => (fc));
         const wrapper = getWrapper(props);
         wrapper.instance().handleSubmit();
         expect(handleSpy.calledOnce).toBe(true);
         expect(props.submitJob.calledOnce).toBe(true);
         expect(props.submitJob.calledWith(expectedProps)).toBe(true);
+        flattenStub.restore();
     });
 
     it('handleNext should increment the stepIndex', () => {

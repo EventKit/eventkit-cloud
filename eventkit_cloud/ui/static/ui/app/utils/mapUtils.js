@@ -27,16 +27,40 @@ export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
 
+
 /**
  * Convert a jsts geometry to an openlayers3 geometry
- * @param {jstsGeom} a JSTS geometry in EPSG:3857
- * @return {olGeom} an openlayers3 geometry in EPSG:4326
+ * @param {jstsGeom} a JSTS geometry in EPSG:4326
+ * @return {olGeom} an openlayers3 geometry in EPSG:3857
  */
 export function jstsGeomToOlGeom(jstsGeom) {
     const writer = new GeoJSONWriter();
     const olReader = new GeoJSON();
     const olGeom = olReader.readGeometry(writer.write(jstsGeom)).transform('EPSG:4326', 'EPSG:3857');
     return olGeom;
+}
+
+/**
+ * Convert a jsts geometry to a feature collection
+ * @param {jstsGeom} a JSTS geometry in EPSG:4326
+ * @return {featureCollection} a geojson feature collection in EPSG:4326
+ */
+export function jstsToFeatureCollection(jsts) {
+    const writer = new GeoJSONWriter();
+    const geom = writer.write((jsts));
+    if (geom.coordinates) {
+        return {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: geom,
+                },
+            ],
+        };
+    }
+    return null;
 }
 
 /**
@@ -122,6 +146,51 @@ export function convertGeoJSONtoJSTS(geojson, bufferSize, bufferPolys) {
         geometry = bufferGeometry(jstsGeoJSON, bufferSize, bufferPolys);
     }
     return geometry;
+}
+
+/**
+ * Buffers a geojson feature collection and returns the collection
+ * @param {featureCollection} A geojson feature collection in EPSG:4326
+ * @param {bufferSize} The linear distance (meters) to buffer by
+ * @param {bufferPolys} True if polygon features should be buffered too
+ */
+export function bufferGeojson(featureCollection, bufferSize, bufferPolys) {
+    const geojsonReader = new Reader();
+    const jstsGeoJSON = geojsonReader.read(featureCollection);
+    const { features } = jstsGeoJSON;
+    const writer = new GeoJSONWriter();
+    const bufferedFeatures = features.map((feat) => {
+        const size = bufferSize || 1;
+        const geom = bufferGeometry(feat.geometry, size, bufferPolys);
+        let geojsonGeom;
+        if (geom.getArea() !== 0) {
+            geojsonGeom = writer.write(geom);
+        } else {
+            geojsonGeom = writer.write(feat.geometry);
+        }
+        return {
+            type: 'Feature',
+            properties: feat.properties || {},
+            geometry: { ...geojsonGeom },
+        };
+    });
+    const bufferedFeatureCollection = {
+        type: 'FeatureCollection',
+        features: bufferedFeatures,
+    };
+    return bufferedFeatureCollection;
+}
+
+/**
+ * Converts a feature collection into a single feature, buffering points and lines if needed
+ * @param {featureCollection} A geojson feature collection in EPSG:4326
+ * @return {newFeatureCollection} A feature collection with a single feature
+ * containing all feature geometries in EPSG:4326
+ */
+export function flattenFeatureCollection(featureCollection) {
+    const jsts = convertGeoJSONtoJSTS(featureCollection, 1, false);
+    const newFeatureCollection = jstsToFeatureCollection(jsts);
+    return newFeatureCollection;
 }
 
 export function generateDrawLayer() {
@@ -230,13 +299,23 @@ export function serialize(extent) {
     return p1.concat(p2).map(truncate);
 }
 
-export function isGeoJSONValid(geojson) {
+
+/**
+ * Check if all features in collection are valid
+ * @param {featureCollection} A geojson feature collection
+ * @return True if all features are valid, false if at least one feature is invalid
+ */
+export function isGeoJSONValid(featureCollection) {
     // creates a jsts GeoJSONReader
     const parser = new Reader();
-    // reads in geojson geometry and returns a jsts geometry
-    const geom = parser.read(geojson.features[0].geometry);
-    // return whether the geom is valid
-    return isValidOp.isValid(geom);
+    for (let i = 0; i < featureCollection.features.length; i += 1) {
+        // reads in geojson geometry and returns a jsts geometry
+        const geom = parser.read(featureCollection.features[i].geometry);
+        if (!isValidOp.isValid(geom)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 export function createGeoJSONGeometry(ol3Geometry) {
@@ -385,4 +464,20 @@ export function isVertex(pixel, feature, tolarance, map) {
         }
     });
     return vertex ? vertex : false;
+}
+
+/**
+ * Check if a feature collection has any non-polygon geometries
+ * @param {featureCollection} A geojson feature collection
+ * @return true if any of the geom types are point or line, otherwise false
+ */
+export function hasPointOrLine(featureCollection) {
+    const { features } = featureCollection;
+    for (let i = 0; i < features.length; i += 1) {
+        const geomType = features[i].geometry.type.toUpperCase();
+        if (geomType.includes('POINT') || geomType.includes('LINE')) {
+            return true;
+        }
+    }
+    return false;
 }

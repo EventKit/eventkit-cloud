@@ -70,7 +70,7 @@ describe('MapView component', () => {
             loadMoreDisabled: false,
             geocode: {},
             getGeocode: () => {},
-            importGeom: { processed: false, geom: null },
+            importGeom: { processed: false, featureCollection: null },
             processGeoJSONFile: () => {},
             resetGeoJSONFile: () => {},
             onMapFilter: () => {},
@@ -352,7 +352,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const clearSpy = sinon.spy(VectorSource.prototype, 'clear');
         const addRunSpy = sinon.spy(wrapper.instance(), 'addRunFeatures');
-        const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
+        const fitSpy = sinon.spy(View.prototype, 'fit');
         const feature = new Feature({
             geometry: new Point([-10, 10]),
         });
@@ -373,11 +373,11 @@ describe('MapView component', () => {
         expect(clearSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledOnce).toBe(true);
         expect(addRunSpy.calledWith(nextProps.runs, wrapper.instance().source)).toBe(true);
-        expect(zoomSpy.calledOnce).toBe(true);
+        expect(fitSpy.calledOnce).toBe(true);
         newSpy.restore();
         clearSpy.restore();
         addRunSpy.restore();
-        zoomSpy.restore();
+        fitSpy.restore();
     });
 
     it('componentWillReceiveProps should call handleGeoJSONUpload', () => {
@@ -385,11 +385,11 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.importGeom.processed = true;
-        nextProps.importGeom.geom = {};
+        nextProps.importGeom.featureCollection = {};
         wrapper.instance().handleGeoJSONUpload = sinon.spy();
         wrapper.setProps(nextProps);
         expect(wrapper.instance().handleGeoJSONUpload.calledOnce).toBe(true);
-        expect(wrapper.instance().handleGeoJSONUpload.calledWith(nextProps.importGeom.geom)).toBe(true);
+        expect(wrapper.instance().handleGeoJSONUpload.calledWith(nextProps.importGeom.featureCollection)).toBe(true);
     });
 
     it('should update map size when component updates', () => {
@@ -1039,7 +1039,7 @@ describe('MapView component', () => {
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');
         const transformSpy = sinon.spy(Polygon.prototype, 'transform');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
-        const createSpy = sinon.spy(utils, 'createGeoJSONGeometry');
+        const createSpy = sinon.spy(utils, 'createGeoJSON');
         expect(wrapper.instance().handleSearch(result)).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
@@ -1415,151 +1415,91 @@ describe('MapView component', () => {
         props.onMapFilter = sinon.spy();
         const wrapper = getWrapper(props);
         const clearSpy = sinon.spy(utils, 'clearDraw');
-        const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
-        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
-        // const featureSpy = sinon.spy(ol, 'Feature');
-        const createSpy = sinon.spy(utils, 'createGeoJSONGeometry');
-        const geom = new Polygon([[[-29, 9], [-4, 9], [-4, 28], [-29, 28], [-29, 9]]]);
-        wrapper.instance().handleGeoJSONUpload(geom);
+        const fitSpy = sinon.spy(View.prototype, 'fit');
+        const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
+        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        coordinates: [[[-29, 9], [-4, 9], [-4, 28], [-29, 28], [-29, 9]]],
+                        type: 'Polygon',
+                    },
+                },
+            ],
+        };
+        wrapper.instance().handleGeoJSONUpload(featureCollection);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().drawLayer)).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
-        // expect(featureSpy.calledOnce).toBe(true);
-        // expect(featureSpy.calledWith({geometry: geom})).toBe(true);
-        expect(zoomSpy.calledOnce).toBe(true);
-        expect(zoomSpy.calledWith(geom, wrapper.instance().map)).toBe(true);
-        expect(createSpy.calledOnce).toBe(true);
-        expect(createSpy.calledWith(geom)).toBe(true);
+        expect(fitSpy.calledOnce).toBe(true);
+        expect(readSpy.calledOnce).toBe(true);
+        expect(readSpy.calledWith(featureCollection)).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
-        expect(props.onMapFilter.calledWith(utils.createGeoJSONGeometry(geom))).toBe(true);
+        expect(props.onMapFilter.calledWith(featureCollection)).toBe(true);
         clearSpy.restore();
-        zoomSpy.restore();
+        fitSpy.restore();
         addSpy.restore();
-        // featureSpy.restore();
-        createSpy.restore();
+        readSpy.restore();
     });
 
     it('bufferMapFeature should create a new buffered feature and add it to the map', () => {
-        const coords = [
-            [
-                [17.9296875, 41.244772343082076],
-                [22.5, 41.244772343082076],
-                [22.5, 44.59046718130883],
-                [17.9296875, 44.59046718130883],
-                [17.9296875, 41.244772343082076],
-            ],
-        ];
+        const coords = [[
+            [17.9296875, 41.244772343082076],
+            [22.5, 41.244772343082076],
+            [22.5, 44.59046718130883],
+            [17.9296875, 44.59046718130883],
+            [17.9296875, 41.244772343082076],
+        ]];
         const geojson = {
             type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Polygon',
-                        coordinate: coords,
-                    },
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinate: coords,
                 },
-            ],
+            }],
         };
         const geom = new Polygon(coords);
         const feature = new Feature({
             geometry: geom,
         });
-        const getFeatureStub = sinon.stub(VectorSource.prototype, 'getFeatures')
-            .returns([feature]);
-        const createGeoJSONStub = sinon.stub(utils, 'createGeoJSON')
-            .returns(geojson);
-        const bufferSpy = sinon.spy(() => (10));
-        const convertStub = sinon.stub(utils, 'convertGeoJSONtoJSTS')
-            .returns({ getArea: bufferSpy });
-        const jstsToOlStub = sinon.stub(utils, 'jstsGeomToOlGeom')
-            .returns(geom);
-        const createGeomStub = sinon.stub(utils, 'createGeoJSONGeometry')
-            .returns(geojson.features[0].geometry);
-        const cloneSpy = sinon.spy(Feature.prototype, 'clone');
-        const setGeomSpy = sinon.spy(Feature.prototype, 'setGeometry');
-        const clearStub = sinon.stub(utils, 'clearDraw');
-        const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
+        
         const props = getProps();
         props.onMapFilter = sinon.spy();
         const wrapper = getWrapper(props);
-
+        const getFeatureStub = sinon.stub(VectorSource.prototype, 'getFeatures')
+            .returns([feature]);
+        const writeFeaturesStub = sinon.stub(GeoJSON.prototype, 'writeFeaturesObject')
+            .returns(geojson);
+        const bufferStub = sinon.stub(utils, 'bufferGeojson')
+            .returns(geojson);
+        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures')
+            .returns([feature]);
+        const clearStub = sinon.stub(utils, 'clearDraw');
+        const addStub = sinon.stub(VectorSource.prototype, 'addFeatures');
         expect(wrapper.instance().bufferMapFeature(11)).toBe(true);
-        expect(getFeatureStub.calledTwice).toBe(true);
-        expect(createGeoJSONStub.calledOnce).toBe(true);
-        expect(createGeoJSONStub.calledWith(geom)).toBe(true);
-        expect(convertStub.calledOnce).toBe(true);
-        expect(convertStub.calledWith(geojson, 11, true)).toBe(true);
-        expect(jstsToOlStub.calledOnce).toBe(true);
-        expect(cloneSpy.calledOnce).toBe(true);
-        expect(createGeomStub.calledOnce).toBe(true);
-        expect(createGeomStub.calledWith(geom)).toBe(true);
-        expect(setGeomSpy.called).toBe(true);
-        expect(setGeomSpy.calledWith(geom)).toBe(true);
+        expect(getFeatureStub.calledOnce).toBe(true);
+        expect(writeFeaturesStub.calledOnce).toBe(true);
+        expect(writeFeaturesStub.calledWith([feature])).toBe(true);
+        expect(bufferStub.calledOnce).toBe(true);
+        expect(bufferStub.calledWith(geojson, 11, true)).toBe(true);
+        expect(readStub.calledOnce).toBe(true);
+        expect(readStub.calledWith(geojson)).toBe(true);
         expect(clearStub.calledOnce).toBe(true);
         expect(addStub.calledOnce).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
-        expect(props.onMapFilter.calledWith(geojson.features[0].geometry)).toBe(true);
+        expect(props.onMapFilter.calledWith(geojson)).toBe(true);
 
         getFeatureStub.restore();
-        createGeoJSONStub.restore();
-        convertStub.restore();
-        jstsToOlStub.restore();
-        createGeomStub.restore();
-        cloneSpy.restore();
-        setGeomSpy.restore();
+        writeFeaturesStub.restore();
+        bufferStub.restore();
+        readStub.restore();
         clearStub.restore();
         addStub.restore();
-    });
-
-    it('bufferMapFeature should return false if buffered feature has no area', () => {
-        const coords = [
-            [
-                [17.9296875, 41.244772343082076],
-                [22.5, 41.244772343082076],
-                [22.5, 44.59046718130883],
-                [17.9296875, 44.59046718130883],
-                [17.9296875, 41.244772343082076],
-            ],
-        ];
-        const geojson = {
-            type: 'FeatureCollection',
-            features: [
-                {
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Polygon',
-                        coordinate: coords,
-                    },
-                },
-            ],
-        };
-        const geom = new Polygon(coords);
-        const feature = new Feature({
-            geometry: geom,
-        });
-        const getFeatureStub = sinon.stub(VectorSource.prototype, 'getFeatures')
-            .returns([feature]);
-        const createGeoJSONStub = sinon.stub(utils, 'createGeoJSON')
-            .returns(geojson);
-        const bufferSpy = sinon.spy(() => (0));
-        const convertStub = sinon.stub(utils, 'convertGeoJSONtoJSTS')
-            .returns({ getArea: bufferSpy });
-        const props = getProps();
-        props.onMapFilter = sinon.spy();
-        const wrapper = getWrapper(props);
-
-        expect(wrapper.instance().bufferMapFeature(11)).toBe(false);
-        expect(getFeatureStub.calledTwice).toBe(true);
-        expect(createGeoJSONStub.calledOnce).toBe(true);
-        expect(createGeoJSONStub.calledWith(geom)).toBe(true);
-        expect(convertStub.calledOnce).toBe(true);
-        expect(convertStub.calledWith(geojson, 11, true)).toBe(true);
-        expect(props.onMapFilter.called).toBe(false);
-
-        getFeatureStub.restore();
-        createGeoJSONStub.restore();
-        convertStub.restore();
     });
 
     it('handleUp should return false if there is no feature', () => {
@@ -1578,17 +1518,15 @@ describe('MapView component', () => {
             [100.0, 0.0],
         ]]);
         const feature = new Feature({
-            geometry: geom
+            geometry: geom,
         });
+
         const unwrapStub = sinon.stub(utils, 'unwrapCoordinates')
             .callsFake(coords => (coords));
         const setSpy = sinon.spy(geom, 'setCoordinates');
-        const createSpy = sinon.spy(utils, 'createGeoJSON');
+        const createSpy = sinon.spy(GeoJSON.prototype, 'writeFeaturesObject');
         const validStub = sinon.stub(utils, 'isGeoJSONValid')
-            .callsFake(() => (true));
-        const createGeomStub = sinon.stub(utils, 'createGeoJSONGeometry')
-            .returns({});
-
+            .returns(true);
         const warningSpy = sinon.stub(MapView.prototype, 'showInvalidDrawWarning');
         props.onMapFilter = sinon.spy();
 
@@ -1600,9 +1538,7 @@ describe('MapView component', () => {
         expect(setSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
         expect(validStub.calledOnce).toBe(true);
-        expect(createGeomStub.calledOnce).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
-        expect(props.onMapFilter.calledWith({})).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
 
@@ -1610,7 +1546,6 @@ describe('MapView component', () => {
         setSpy.restore();
         createSpy.restore();
         validStub.restore();
-        createGeomStub.restore();
         warningSpy.restore();
     });
 
