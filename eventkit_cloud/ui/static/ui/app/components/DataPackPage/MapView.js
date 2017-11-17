@@ -41,7 +41,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex, convertGeoJSONtoJSTS, jstsGeomToOlGeom } from '../../utils/mapUtils';
+    isBox, isVertex, bufferGeojson } from '../../utils/mapUtils';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -154,7 +154,7 @@ export class MapView extends Component {
         this.map.addLayer(this.markerLayer);
 
         if (this.addRunFeatures(this.props.runs, this.source)) {
-            this.map.getView().fit(this.source.getExtent(), this.map.getSize());            
+            this.map.getView().fit(this.source.getExtent(), this.map.getSize());
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
     }
@@ -177,12 +177,12 @@ export class MapView extends Component {
                 }
             } else if (this.drawLayer.getSource().getFeatures().length) {
                 // if no features added but there is a draw feature: zoom to draw feature
-                zoomToGeometry(this.drawLayer.getSource().getFeatures()[0].getGeometry(), this.map);
+                this.map.getView().fit(drawExtent);
             }
         }
 
         if (nextProps.importGeom.processed && !this.props.importGeom.processed) {
-            this.handleGeoJSONUpload(nextProps.importGeom.geom);
+            this.handleGeoJSONUpload(nextProps.importGeom.featureCollection);
         }
     }
 
@@ -513,8 +513,8 @@ export class MapView extends Component {
         const searchFeature = (new GeoJSON()).readFeature(result);
         searchFeature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
         this.drawLayer.getSource().addFeature(searchFeature);
-        const geojsonGeometry = createGeoJSONGeometry(searchFeature.getGeometry());
-        this.props.onMapFilter(geojsonGeometry);
+        const geojson = createGeoJSON(searchFeature.getGeometry());
+        this.props.onMapFilter(geojson);
         if (this.source.getFeatures().length === 0) {
             zoomToGeometry(searchFeature.getGeometry(), this.map);
         }
@@ -579,7 +579,9 @@ export class MapView extends Component {
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
         const geojson = createGeoJSON(geom);
-        const bbox = geojson.features[0].bbox;
+        // Since this is a controlled draw we make the assumption
+        // that there is only one feature in the collection
+        const { bbox } = geojson.features[0];
         // make sure the user didnt create a polygon with no area
         if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
             if (this.state.mode === MODE_DRAW_FREE) {
@@ -637,32 +639,36 @@ export class MapView extends Component {
         this.setState({ mode }, callback);
     }
 
-    handleGeoJSONUpload(geom) {
+    handleGeoJSONUpload(featureCollection) {
         clearDraw(this.drawLayer);
-        this.drawLayer.getSource().addFeature(new Feature({ geometry: geom }));
-        zoomToGeometry(geom, this.map);
-        const geojsonGeometry = createGeoJSONGeometry(geom);
-        this.props.onMapFilter(geojsonGeometry);
+        const reader = new GeoJSON();
+        const features = reader.readFeatures(featureCollection, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+        });
+        this.drawLayer.getSource().addFeatures(features);
+        this.props.onMapFilter(featureCollection);
+        this.map.getView().fit(this.drawLayer.getSource().getExtent());
     }
 
     bufferMapFeature(size) {
-        const originalFeature = this.drawLayer.getSource().getFeatures()[0];
-        const geom = originalFeature.getGeometry();
-
-        const geojson = createGeoJSON(geom);
-        const bufferedFeature = convertGeoJSONtoJSTS(geojson, size, true);
-        if (bufferedFeature.getArea() === 0) {
-            return false;
+        if (!size) {
+            return true;
         }
-
-        const newGeom = jstsGeomToOlGeom(bufferedFeature);
-        const newFeature = originalFeature.clone();
-        const newGeojsonGeom = createGeoJSONGeometry(newGeom);
-        newFeature.setGeometry(newGeom);
+        const features = this.drawLayer.getSource().getFeatures();
+        const geo = new GeoJSON();
+        const geojson = geo.writeFeaturesObject(features, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+        });
+        const bufferedFeatureCollection = bufferGeojson(geojson, size, true);
+        const newFeatures = geo.readFeatures(bufferedFeatureCollection, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+        });
         clearDraw(this.drawLayer);
-        this.drawLayer.getSource().addFeature(newFeature);
-        this.props.onMapFilter(newGeojsonGeom);
-
+        this.drawLayer.getSource().addFeatures(newFeatures);
+        this.props.onMapFilter(bufferedFeatureCollection);
         return true;
     }
 
@@ -673,17 +679,19 @@ export class MapView extends Component {
         return this.drawLayer.getSource().getFeatures().length > 0;
     }
 
-    handleUp(evt) {
+    handleUp() {
         const upFeature = this.feature;
         if (upFeature) {
             const geom = upFeature.getGeometry();
             const coords = geom.getCoordinates();
             const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
             geom.setCoordinates(unwrappedCoords);
-            const geojson = createGeoJSON(geom);
+            const geojson = new GeoJSON().writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
+                dataProjection: 'EPSG:4326',
+                featureProjection: 'EPSG:3857',
+            });
             if (isGeoJSONValid(geojson)) {
-                const geojsonGeometry = createGeoJSONGeometry(geom);
-                this.props.onMapFilter(geojsonGeometry);
+                this.props.onMapFilter(geojson);
                 this.showInvalidDrawWarning(false);
             } else {
                 this.showInvalidDrawWarning(true);
@@ -740,16 +748,20 @@ export class MapView extends Component {
         }
         const opts = { layerFilter: layer => (layer === this.drawLayer) };
         if (map.hasFeatureAtPixel(pixel, opts)) {
-            const mapFeature = map.getFeaturesAtPixel(pixel, opts)[0];
-            if (mapFeature.getGeometry().getType() === 'Polygon') {
-                if (isViewOutsideValidExtent(this.map.getView())) {
-                    goToValidExtent(this.map.getView());
-                }
-                const coords = isVertex(pixel, mapFeature, 10, map);
-                if (coords) {
-                    this.markerLayer.getSource().addFeature(new Feature({
-                        geometry: new Point(coords),
-                    }));
+            const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
+            for (let i = 0; i < mapFeatures.length; i += 1) {
+                const geomType = mapFeatures[i].getGeometry().getType();
+                if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                    if (isViewOutsideValidExtent(this.map.getView())) {
+                        goToValidExtent(this.map.getView());
+                    }
+                    const coords = isVertex(pixel, mapFeatures[i], 10, map);
+                    if (coords) {
+                        this.markerLayer.getSource().addFeature(new Feature({
+                            geometry: new Point(coords),
+                        }));
+                        break;
+                    }
                 }
             }
         }
@@ -760,13 +772,16 @@ export class MapView extends Component {
         const { pixel } = evt;
         const opts = { layerFilter: layer => (layer === this.drawLayer) };
         if (map.hasFeatureAtPixel(pixel, opts)) {
-            const mapFeature = map.getFeaturesAtPixel(pixel, opts)[0];
-            if (mapFeature.getGeometry().getType() === 'Polygon') {
-                const vertex = isVertex(pixel, mapFeature, 10, map);
-                if (vertex) {
-                    this.feature = mapFeature;
-                    this.coordinate = vertex;
-                    return true;
+            const mapFeatures = map.getFeaturesAtPixel(pixel, opts);
+            for (let i = 0; i < mapFeatures.length; i += 1) {
+                const geomType = mapFeatures[i].getGeometry().getType();
+                if (geomType === 'Polygon' || geomType === 'MultiPolygon') {
+                    const vertex = isVertex(pixel, mapFeatures[i], 10, map);
+                    if (vertex) {
+                        this.feature = mapFeatures[i];
+                        this.coordinate = vertex;
+                        return true;
+                    }
                 }
             }
         }

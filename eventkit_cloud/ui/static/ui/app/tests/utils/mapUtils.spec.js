@@ -210,10 +210,62 @@ describe('mapUtils', () => {
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
     });
 
+    it('bufferGeojson should read in feature collection and buffer each feature, then return a new feature collection', () => {
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature1' },
+                    geometry: { type: 'Point', coordinates: [1, 1] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature2' },
+                    geometry: { type: 'Point', coordinates: [2, 2] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature3' },
+                    geometry: { type: 'Point', coordinates: [3, 3] },
+                },
+            ],
+        };
+        const ret = utils.bufferGeojson(featureCollection, 10, false);
+        expect(ret.features[0].geometry.type).toEqual('Polygon');
+        expect(ret.features[0].properties.name).toEqual('feature1');
+        expect(ret.features[1].geometry.type).toEqual('Polygon');
+        expect(ret.features[1].properties.name).toEqual('feature2');
+        expect(ret.features[2].geometry.type).toEqual('Polygon');
+        expect(ret.features[2].properties.name).toEqual('feature3');
+    });
+
+    it('bufferGeojson should return original feature if buffer would reduce area to 0', () => {
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature1' },
+                    geometry: { type: 'Point', coordinates: [1, 1] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature2' },
+                    geometry: { type: 'Point', coordinates: [2, 2] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature3' },
+                    geometry: { type: 'Point', coordinates: [3, 3] },
+                },
+            ],
+        };
+        expect(utils.bufferGeojson(featureCollection, -10, true)).toEqual(featureCollection);
+    });
+
     it('generateDrawBoxInteraction should setup a new interaction', () => {
         const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
-        // const createBoxStub = sinon.stub(Draw.prototype, 'createBox');
-
         const layer = new VectorLayer({
             source: new VectorSource(),
         });
@@ -221,22 +273,17 @@ describe('mapUtils', () => {
         expect(drawInteraction instanceof Draw).toBe(true);
         expect(setActiveStub.called).toBe(true);
         expect(setActiveStub.calledWith(false)).toBe(true);
-        // expect(createBoxStub.called).toBe(true);
-
         setActiveStub.restore();
-        // createBoxStub.restore();
     });
 
     it('generateDrawFreeInteraction should setup a new interaction', () => {
         const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
-
         const layer = new VectorLayer({
             source: new VectorSource(),
         });
         const drawInteraction = utils.generateDrawFreeInteraction(layer);
         expect(drawInteraction instanceof Draw).toBe(true);
         expect(setActiveStub.calledWith(false)).toBe(true);
-
         setActiveStub.restore();
     });
 
@@ -553,5 +600,37 @@ describe('mapUtils', () => {
         const getPixelStub = sinon.stub().returns([7, 7]);
         const map = { getPixelFromCoordinate: getPixelStub };
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
+    });
+
+    it('hasPointOrLine should return true if any of the geometry types are point or lines, false if not', () => {
+        const featureCollectionTrue = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: { type: 'MultiPoint' },
+            }, {
+                type: 'Feature',
+                geometry: { type: 'LineString' },
+            }, {
+                type: 'Feature',
+                geometry: { type: 'Polygon' },
+            }],
+        };
+        expect(utils.hasPointOrLine(featureCollectionTrue)).toBe(true);
+
+        const featureCollectionFalse = {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: { type: 'MultiPolygon' },
+            }, {
+                type: 'Feature',
+                geometry: { type: 'Polygon' },
+            }, {
+                type: 'Feature',
+                geometry: { type: 'Polygon' },
+            }],
+        };
+        expect(utils.hasPointOrLine(featureCollectionFalse)).toBe(false);
     });
 });

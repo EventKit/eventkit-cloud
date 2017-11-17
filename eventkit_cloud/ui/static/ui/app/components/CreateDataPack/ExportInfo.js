@@ -23,9 +23,9 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions.js';
+import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../BaseDialog';
-import CustomTextField from "../CustomTextField";
+import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
 
 
@@ -157,12 +157,15 @@ export class ExportInfo extends React.Component {
     setArea() {
         const source = new VectorSource({ wrapX: true });
         const geojson = new GeoJSON();
-        const feature = geojson.readFeature(this.props.geojson.features[0], {
+        const features = geojson.readFeatures(this.props.geojson, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',
         });
-        source.addFeature(feature);
-        const area = feature.getGeometry().getArea() / 1000000;
+        source.addFeatures(features);
+        let area = 0;
+        features.forEach((feature) => {
+            area += feature.getGeometry().getArea() / 1000000;
+        });
         const areaStr = numeral(area).format('0,0');
         return `${areaStr} sq km`;
     }
@@ -251,11 +254,11 @@ export class ExportInfo extends React.Component {
         });
         const source = new VectorSource();
         const geojson = new GeoJSON();
-        const feature = geojson.readFeature(this.props.geojson.features[0], {
+        const features = geojson.readFeatures(this.props.geojson, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',
         });
-        source.addFeature(feature);
+        source.addFeatures(features);
         const layer = new VectorLayer({
             source,
         });

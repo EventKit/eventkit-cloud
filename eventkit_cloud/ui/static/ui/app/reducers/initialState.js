@@ -20,7 +20,7 @@ export default {
     importGeom: {
         processing: false,
         processed: false,
-        geom: {},
+        featureCollection: {},
         error: null,
     },
     drawer: 'closed',
