@@ -94,7 +94,7 @@ class Overpass(object):
         try:
             req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
-            update_progress(self.task_uid, progress=50.0, subtask_percentage=subtask_percentage)
+            update_progress(self.task_uid, progress=50, subtask_percentage=subtask_percentage)
             try:
                 size = int(req.headers.get('content-length'))
             except (ValueError, TypeError):
