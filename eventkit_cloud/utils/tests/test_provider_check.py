@@ -91,7 +91,7 @@ class TestProviderCheck(TransactionTestCase):
         no_intersect_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                                       <FeatureTypeList>
                                           <FeatureType>
-                                              <Title>exampleLayer</Title>
+                                              <Name>exampleLayer</Name>
                                               <LatLongBoundingBox maxx="11" maxy="11" minx="10" miny="10"/>
                                           </FeatureType>
                                       </FeatureTypeList>
@@ -99,7 +99,7 @@ class TestProviderCheck(TransactionTestCase):
         valid_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                                <FeatureTypeList>
                                    <FeatureType>
-                                       <Title>exampleLayer</Title>
+                                       <Name>exampleLayer</Name>
                                        <LatLongBoundingBox maxx="1" maxy="1" minx="-1" miny="-1"/>
                                    </FeatureType>
                                </FeatureTypeList>
@@ -121,7 +121,7 @@ class TestProviderCheck(TransactionTestCase):
         no_intersect_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
                                       <wcs:ContentMetadata>
                                           <wcs:CoverageOfferingBrief>
-                                              <wcs:label>exampleCoverage</wcs:label>
+                                              <wcs:Name>exampleCoverage</wcs:Name>
                                               <wcs:lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
                                                    <gml:pos>10 10</gml:pos>
                                                    <gml:pos>11 11</gml:pos>
@@ -132,7 +132,7 @@ class TestProviderCheck(TransactionTestCase):
         valid_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
                                <wcs:ContentMetadata>
                                    <wcs:CoverageOfferingBrief>
-                                       <wcs:label>exampleCoverage</wcs:label>
+                                       <wcs:Name>exampleCoverage</wcs:Name>
                                        <wcs:lonLatEnvelope srsName="urn:ogc:def:crs:OGC:1.3:CRS84">
                                             <gml:pos>-1 -1</gml:pos>
                                             <gml:pos>1 1</gml:pos>
@@ -159,7 +159,7 @@ class TestProviderCheck(TransactionTestCase):
                                       <Capability>
                                           <Layer>
                                               <Layer>
-                                                  <Title>exampleLayer</Title>
+                                                  <Name>exampleLayer</Name>
                                                   <LatLonBoundingBox minx="10" miny="10" maxx="11" maxy="11"/>
                                               </Layer>
                                           </Layer>
@@ -169,7 +169,7 @@ class TestProviderCheck(TransactionTestCase):
         valid_content = """<WMT_MS_Capabilities version="1.1.1">
                                <Capability>
                                    <Layer>
-                                       <Title>exampleLayer</Title>
+                                       <Name>exampleLayer</Name>
                                        <LatLonBoundingBox minx="-1" miny="-1" maxx="1" maxy="1"/>
                                    </Layer>
                                </Capability>

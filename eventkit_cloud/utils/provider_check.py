@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from django.utils.translation import ugettext as _
 from enum import Enum
 import json
 import logging
@@ -24,31 +25,40 @@ class CheckResults(Enum):
         SUCCESS - No problems: export should proceed without issues
     """
     CONNECTION = {"status": "ERR_CONNECTION",
-                  "message": "A connection to the provider could not be established"},
+                  "message": _("A connection to the provider could not be established")},
 
     UNAUTHORIZED = {"status": "ERR_UNAUTHORIZED",
-                    "message": "Authorization is required to connect to this provider"},
+                    "message": _("Authorization is required to connect to this provider")},
 
     UNAVAILABLE = {"status": "WARN_UNAVAILABLE",
-                   "message": "The provider may be unavailable (status %(status)s)"},
+                   "message": _("The provider may be unavailable (status %(status)s)")},
 
     UNKNOWN_FORMAT = {"status": "WARN_UNKNOWN_FORMAT",
-                      "message": "The provider returned metadata in an unexpected format; "
-                                 "errors may occur when creating the DataPack"},
+                      "message": _("The provider returned metadata in an unexpected format; "
+                                   "errors may occur when creating the DataPack")},
 
     LAYER_NOT_AVAILABLE = {"status": "WARN_LAYER_NOT_AVAILABLE",
-                           "message": "The provider does not offer the requested layer; "
-                                      "errors may occur when creating the DataPack"},
+                           "message": _("The provider does not offer the requested layer; "
+                                        "errors may occur when creating the DataPack")},
 
     NO_INTERSECT = {"status": "WARN_NO_INTERSECT",
-                    "message": "The selected AOI does not intersect the provider's layer. "
-                               "The DataPack will contain no data from this provider"},
+                    "message": _("The selected AOI does not intersect the provider's layer. "
+                                 "The DataPack will contain no data from this provider")},
 
     SUCCESS = {"status": "SUCCESS",
                "message": ""},
 
 
 class ProviderCheck(object):
+    """
+    During the second stage of creating a datapack, each available data provider is pinged to apprise the user
+    of its availability. This class and its subclasses contain methods to ping OWS and Overpass servers, and determine:
+        * Whether they are online
+        * Whether authorization is required
+        * Whether they are able to serve the requested layers; and
+        * Whether the requested layer intersects the AOI of the DataPack to be created.
+    Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
+    """
 
     def __init__(self, service_url, layer, aoi_geojson):
         """
@@ -72,7 +82,7 @@ class ProviderCheck(object):
 
     def get_check_response(self):
         """
-        Makes request to provider URL and returns its response if status code is ok
+        Sends a GET request to provider URL and returns its response if status code is ok
         """
 
         try:
@@ -111,24 +121,48 @@ class ProviderCheck(object):
         self.result = CheckResults.SUCCESS
 
         response = self.get_check_response()
-        self.validate_response(response)
+        if response is not None:
+            self.validate_response(response)
 
         result_json = json.dumps(self.result.value[0]) % self.token_dict
         logger.debug("Provider check returning result: {}".format(result_json))
         return result_json
 
 
-class OWSProviderCheck(object):
+class OverpassProviderCheck(ProviderCheck):
     """
-    During the second stage of creating a datapack, each available data provider is pinged to apprise the user
-    of its availability. This class contains methods to ping OWS or Overpass servers, and determine:
-        * Whether they are online
-        * Whether authorization is required
-        * Whether they are able to serve the requested layers; and
-        * Whether the requested layer intersects the AOI of the DataPack to be created.
-    Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
+    Implementation of ProviderCheck for Overpass providers.
     """
+    def __init__(self, service_url, layer, aoi_geojson):
+        super(self.__class__, self).__init__(service_url, layer, aoi_geojson)
 
+    def get_check_response(self):
+        """
+        Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
+        """
+        try:
+            response = requests.post(url=self.service_url, data="out meta;")
+
+            self.token_dict['status'] = response.status_code
+
+            if response.status_code in [401, 403]:
+                self.result = CheckResults.UNAUTHORIZED
+                return None
+
+            if not response.ok:
+                self.result = CheckResults.UNAVAILABLE
+                return None
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            self.result = CheckResults.CONNECTION
+            return None
+
+
+class OWSProviderCheck(ProviderCheck):
+    """
+    Implementation of ProviderCheck for OWS (WMS, WMTS, WFS, WCS) providers.
+    """
     def __init__(self, service_url, layer, aoi_geojson):
         """
         Initialize this OWSProviderCheck object with a service URL and layer.
@@ -136,6 +170,8 @@ class OWSProviderCheck(object):
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
+        super(OWSProviderCheck, self).__init__(service_url, layer, aoi_geojson)
+
         self.query = {
             "VERSION": "1.0.0",
             "REQUEST": "GetCapabilities"
@@ -148,6 +184,7 @@ class OWSProviderCheck(object):
             self.service_url = service_url.split("?")[0]
 
         self.ns = ""  # Common namespace for XML parsing
+        self.layer = self.layer.lower()
 
     def find_layer(self, root):
         raise NotImplementedError("Method is specific to provider type")
@@ -178,7 +215,7 @@ class OWSProviderCheck(object):
     def validate_response(self, response):
 
         try:
-            root = ET.fromstring(response.content)
+            root = ET.fromstring(response.content.lower())
             # Check for namespace
             m = re.search(r"^{.*?}", root.tag)
             self.ns = m.group() if m else ""
@@ -191,7 +228,6 @@ class OWSProviderCheck(object):
             bbox = self.get_bbox(layer_element)
             if bbox is not None:
                 self.check_intersection(bbox)
-
 
         except ET.ParseError as ex:
             logger.error("Provider check failed to parse GetCapabilities XML: {}".format(ex.message))
@@ -209,17 +245,26 @@ class WCSProviderCheck(OWSProviderCheck):
         self.query["SERVICE"] = "WCS"
 
     def find_layer(self, root):
+        """
+        :param root: Name of layer to find
+        :return: XML 'Layer' Element, or None if not found
+        """
 
-        content_meta = root.find(".//{}ContentMetadata".format(self.ns))
+        content_meta = root.find(".//{}contentmetadata".format(self.ns))
         if content_meta is None:
             self.result = CheckResults.UNKNOWN_FORMAT
             return None
 
         # Get names of available coverages
-        coverage_offers = content_meta.findall("{}CoverageOfferingBrief".format(self.ns))
+        coverage_offers = content_meta.findall("{}coverageofferingbrief".format(self.ns))
 
-        covers = [c for c in coverage_offers if self.layer == c.find("{}label".format(self.ns)).text]
-        if len(covers) == 0:
+        cover_names = map(lambda c: (c, c.find("{}name".format(self.ns))), coverage_offers)
+        if len(cover_names) == 0:  # No coverages are offered
+            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            return None
+
+        covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
+        if len(covers) == 0:  # Requested coverage is not offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
@@ -227,7 +272,7 @@ class WCSProviderCheck(OWSProviderCheck):
 
     def get_bbox(self, element):
 
-        envelope = element.find("{}lonLatEnvelope".format(self.ns))
+        envelope = element.find("{}lonlatenvelope".format(self.ns))
         if envelope is None:
             return None
 
@@ -256,16 +301,22 @@ class WFSProviderCheck(OWSProviderCheck):
         self.query["SERVICE"] = "WFS"
 
     def find_layer(self, root):
-
-        # Find layer in metadata
-        feature_type_list = root.find(".//{}FeatureTypeList".format(self.ns))
+        """
+        :param root: Name of layer to find
+        :return: XML 'Layer' Element, or None if not found
+        """
+        feature_type_list = root.find(".//{}featuretypelist".format(self.ns))
         if feature_type_list is None:
             self.result = CheckResults.UNKNOWN_FORMAT
             return None
 
-        feature_types = feature_type_list.findall("{}FeatureType".format(self.ns))
+        feature_types = feature_type_list.findall("{}featuretype".format(self.ns))
 
-        features = [ft for ft in feature_types if self.layer == ft.find("{}Title".format(self.ns)).text]
+        # Get layer names
+        feature_names = map(lambda f: (f, f.find("{}name".format(self.ns))), feature_types)
+        logger.debug("WFS layers offered: {}".format([n.text for f, n in feature_names if n]))
+        features = [f for f, n in feature_names if n is not None and self.layer == n.text]
+
         if len(features) == 0:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
@@ -275,7 +326,7 @@ class WFSProviderCheck(OWSProviderCheck):
 
     def get_bbox(self, element):
 
-        bbox_element = element.find("{}LatLongBoundingBox".format(self.ns))
+        bbox_element = element.find("{}latlongboundingbox".format(self.ns))
 
         if bbox_element is None:
             return None
@@ -297,19 +348,26 @@ class WMSProviderCheck(OWSProviderCheck):
         self.query["VERSION"] = "1.1.1"
 
     def find_layer(self, root):
-
-        # Find layer in metadata
-        capability = root.find(".//{}Capability".format(self.ns))
+        """
+        :param root: Name of layer to find
+        :return: XML 'Layer' Element, or None if not found
+        """
+        capability = root.find(".//{}capability".format(self.ns))
         if capability is None:
             self.result = CheckResults.UNKNOWN_FORMAT
             return None
 
-        layers = capability.findall("{}Layer".format(self.ns))
-        layers.extend([l for layer in layers for l in layer.findall("{}Layer".format(self.ns))])
+        # Flatten nested layers to single list
+        layers = capability.findall("{}layer".format(self.ns))
+        sublayers = layers
+        while len(sublayers) > 0:
+            sublayers = [l for layer in sublayers for l in layer.findall("{}layer".format(self.ns))]
+            layers.extend(sublayers)
 
-        # Get layer titles
-        layer_titles = map(lambda l: (l, l.find("{}Title".format(self.ns))), layers)
-        layer = [l for l,t in layer_titles if t is not None and self.layer == t.text]
+        # Get layer names
+        layer_names = map(lambda l: (l, l.find("{}name".format(self.ns))), layers)
+        logger.debug("WMS layers offered: {}".format([n.text for l,n in layer_names if n]))
+        layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
         if len(layer) == 0:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
@@ -319,7 +377,7 @@ class WMSProviderCheck(OWSProviderCheck):
 
     def get_bbox(self, element):
 
-        bbox_element = element.find("{}LatLonBoundingBox".format(self.ns))
+        bbox_element = element.find("{}latlonboundingbox".format(self.ns))
 
         if bbox_element is None:
             return None
@@ -332,7 +390,7 @@ PROVIDER_CHECK_MAP = {
     "wfs": WFSProviderCheck,
     "wcs": WCSProviderCheck,
     "wms": WMSProviderCheck,
-    "osm": ProviderCheck,
+    "osm": OverpassProviderCheck,
     "wmts": WMSProviderCheck,
     "arcgis-raster": ProviderCheck,
     "arcgis-feature": ProviderCheck
@@ -340,6 +398,12 @@ PROVIDER_CHECK_MAP = {
 
 
 def get_provider_checker(type_slug):
+    """
+    Given a string describing a provider type, return a reference to the class appropriate for checking the status
+    of a provider of that type.
+    :param type_slug: String describing provider type
+    :return: Checker for given provider type
+    """
     try:
         return PROVIDER_CHECK_MAP[type_slug]
     except KeyError:
