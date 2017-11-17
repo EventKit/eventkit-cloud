@@ -214,7 +214,6 @@ class Pelias(GeocodeAdapter):
             features = response.get('features', [])
             if len(features):
                 feature = features[0]
-                logger.error(feature)
                 bbox = feature.get('bbox', None)
                 if bbox:
                     data['bbox'] = bbox

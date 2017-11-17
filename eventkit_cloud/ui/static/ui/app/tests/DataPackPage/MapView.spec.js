@@ -1,10 +1,12 @@
 import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { GridList } from 'material-ui/GridList';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
 import Map from 'ol/map';
 import Feature from 'ol/feature';
@@ -360,7 +362,7 @@ describe('MapView component', () => {
         wrapper.instance().drawLayer = {
             getSource: () => (
                 {
-                    getFeatures: () => ([feature]),
+                    getFeatures: () => ([feature, feature]),
                     getExtent: () => ([-10, -10, 10, 10]),
                 }
             ),
@@ -378,6 +380,30 @@ describe('MapView component', () => {
         clearSpy.restore();
         addRunSpy.restore();
         fitSpy.restore();
+    });
+
+    it('componentWillReceiveProps should call zoomToFeature', () => {
+        const props = getProps();
+        const newStub = sinon.stub(MapView.prototype, 'hasNewRuns')
+            .returns(true);
+        const addStub = sinon.stub(MapView.prototype, 'addRunFeatures')
+            .returns(false);
+        const wrapper = getWrapper(props);
+        const clearStub = sinon.stub(VectorSource.prototype, 'clear');
+        const zoomStub = sinon.stub(utils, 'zoomToFeature');
+        const feature = new Feature({
+            geometry: new Point([1, 1]),
+        });
+        wrapper.instance().drawLayer.getSource().addFeature(feature);
+        const nextProps = getProps();
+        nextProps.runs = [];
+        wrapper.setProps(nextProps);
+        expect(zoomStub.calledOnce).toBe(true);
+        expect(zoomStub.calledWith(feature, wrapper.instance().map)).toBe(true);
+        newStub.restore();
+        addStub.restore();
+        clearStub.restore();
+        zoomStub.restore();
     });
 
     it('componentWillReceiveProps should call handleGeoJSONUpload', () => {
@@ -1014,7 +1040,53 @@ describe('MapView component', () => {
 
         featureStub.restore();
         displayStub.restore();
-        // ol.style.Circle = circle;
+    });
+
+    it('checkForSearchUpdate should get new result if feature is a point and has no bbox', async () => {
+        const feature = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1],
+            },
+            properties: {
+                name: 'feature1',
+            },
+        };
+        const returnedFeature = { ...feature };
+        returnedFeature.bbox = [1, 1, 1, 1];
+        const mock = new MockAdapter(axios, { delayResponse: 0 });
+        mock.onGet('/geocode').reply(200, returnedFeature);
+        const handleSearchStub = sinon.stub(MapView.prototype, 'handleSearch')
+            .callsFake(() => (true));
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const ret = await wrapper.instance().checkForSearchUpdate(feature);
+        expect(ret).toBe(true);
+        expect(handleSearchStub.calledOnce).toBe(true);
+        expect(handleSearchStub.calledWith(returnedFeature)).toBe(true);
+        handleSearchStub.restore();
+    });
+
+    it('checkForSearchUpdate should handle search if not Point feature', () => {
+        const feature = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1],
+            },
+            properties: {},
+            bbox: [1, 1, 1, 1],
+        };
+        const handleSearchStub = sinon.stub(MapView.prototype, 'handleSearch')
+            .returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const ret = wrapper.instance().checkForSearchUpdate(feature);
+        expect(ret).toBe(true);
+        expect(handleSearchStub.calledOnce).toBe(true);
+        expect(handleSearchStub.calledWith(feature)).toBe(true);
+        handleSearchStub.restore();
     });
 
     it('handleSearch should clearDraw, hide warning, create and add a feature, zoom to feature, and call onMapFitler if its a polygon', () => {
