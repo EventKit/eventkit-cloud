@@ -100,6 +100,7 @@ class TaskFactory:
                 'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
                 'priority': TaskPriority.FINALIZE_RUN.value}
 
+            finalized_provider_task_chain_list = []
             for provider_task_record in job.provider_tasks.all():
 
                 # Create an instance of a task runner based on the type name
@@ -173,14 +174,19 @@ class TaskFactory:
                                 provider_subtask_chain, zip_export_provider_sig
                             )
 
-                        finalized_provider_task_chain = chain(
+                        finalized_provider_task_chain_list.append(chain(
                             selection_task,
                             provider_subtask_chain,
                             finalize_export_provider_signature,
                             wait_for_providers_signature
-                        )
+                        ))
 
-                        finalized_provider_task_chain.apply_async(**finalize_task_settings)
+            # we kick off all of the sub-tasks at once down here rather than one at a time in the for loop above so
+            # that if an error occurs earlier on in the method, all of the tasks will fail rather than an undefined
+            # number of them. this simplifies error handling, because we don't have to deduce which tasks were
+            # successfully kicked off and which ones failed.
+            for item in finalized_provider_task_chain_list:
+                item.apply_async(**finalize_task_settings)
 
 
 @transaction.atomic
