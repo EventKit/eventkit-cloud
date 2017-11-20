@@ -105,6 +105,6 @@ eventkit_cloud/ui/static/ui/build
 .vscode/settings.json
 
 # NightwatchJS
-reports/
+e2e_reports/
 screenshots/*
 !screenshots/baseline

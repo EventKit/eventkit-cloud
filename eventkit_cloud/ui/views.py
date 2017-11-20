@@ -15,7 +15,9 @@ from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
 from logging import getLogger
 from ..utils.geocode import Geocode
-from .helpers import file_to_geojson
+from .helpers import file_to_geojson, set_session_user_last_active_at
+from datetime import datetime, timedelta
+import pytz
 
 
 
@@ -67,7 +69,12 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def auth(request):
-    if getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
+    if request.method == 'GET' and request.user.is_authenticated():
+        # If the user is already authenticated we want to return the user data (required for oauth).
+        return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
+                            content_type="application/json",
+                            status=200)
+    elif getattr(settings, "LDAP_SERVER_URI", getattr(settings, "DJANGO_MODEL_LOGIN")):
         if request.method == 'POST':
             """Logs out user"""
             auth_logout(request)
@@ -78,25 +85,25 @@ def auth(request):
                 return HttpResponse(status=401)
             else:
                 login(request, user_data)
+                set_session_user_last_active_at(request)
                 return HttpResponse(JSONRenderer().render(UserDataSerializer(user_data).data),
                                     content_type="application/json",
                                     status=200)
         if request.method == 'GET':
             # We want to return a 200 so that the frontend can decide if the auth endpoint is valid for displaying the
             # the login form.
-            if request.user.is_authenticated():
-                return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
-                                    content_type="application/json",
-                                    status=200)
-            else:
-                return HttpResponse(status=200)
+            return HttpResponse(status=200)
     else:
         return HttpResponse(status=400)
 
 def logout(request):
     """Logs out user"""
     auth_logout(request)
-    return redirect('login')
+    response = redirect('login')
+    if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
+        del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
+    response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+    return response
 
 
 def require_email(request):
@@ -218,6 +225,21 @@ def convert_to_geojson(request):
     except Exception as e:
         logger.error(e)
         return HttpResponse(e.message, status=400)
+
+
+def user_active(request):
+    """Prevents auto logout by updating the session's last active time"""
+    # If auto logout is disabled, just return an empty body.
+    if not settings.AUTO_LOGOUT_SECONDS:
+        return HttpResponse(json.dumps({}), content_type='application/json', status=200)
+
+    last_active_at = set_session_user_last_active_at(request)
+    auto_logout_at = last_active_at + timedelta(seconds=settings.AUTO_LOGOUT_SECONDS)
+    auto_logout_warning_at = auto_logout_at - timedelta(seconds=settings.AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT)
+    return HttpResponse(json.dumps({
+        'auto_logout_at': auto_logout_at.isoformat(),
+        'auto_logout_warning_at': auto_logout_warning_at.isoformat(),
+    }), content_type='application/json', status=200)
 
 
 # error views

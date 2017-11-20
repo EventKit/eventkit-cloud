@@ -4,11 +4,40 @@ import requests
 import logging
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.auth import logout as auth_logout
+from django.shortcuts import redirect
 from .models import OAuth
 import json
+from datetime import datetime, timedelta
+import dateutil.parser
+import pytz
 
 logger = logging.getLogger(__name__)
 
+
+def auto_logout(get_response):
+    def middleware(request):
+        # Only check for auto logout if we're logged in.
+        if not request.user.is_authenticated():
+            return get_response(request)
+
+        last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)
+        if last_active_at_iso:
+            # Check if our inactive time has exceeded the auto logout time limit.
+            last_active_at = dateutil.parser.parse(last_active_at_iso)
+            time_passed = datetime.utcnow().replace(tzinfo=pytz.utc) - last_active_at
+            if time_passed >= timedelta(0, settings.AUTO_LOGOUT_SECONDS, 0):
+                # Force logout and redirect to login page.
+                auth_logout(request)
+                response = redirect('login')
+                if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
+                    del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
+                response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+                return response
+
+        return get_response(request)
+
+    return middleware
 
 
 def fetch_user_from_token(access_token):
