@@ -77,3 +77,19 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     });
 }
 
+export const userActive = () => (dispatch) => {
+    return axios('/user_active', {method: 'GET'}).then((response) => {
+        const autoLogoutAt = response.data.auto_logout_at;
+        const autoLogoutWarningat = response.data.auto_logout_warning_at;
+
+        dispatch({
+            type: actions.USER_ACTIVE,
+            payload: {
+                autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
+                autoLogoutWarningAt: (autoLogoutWarningat) ? new Date(autoLogoutWarningat) : null,
+            },
+        });
+    }).catch((error) => {
+        console.error(error.message);
+    });
+};
