@@ -8,6 +8,7 @@ import Subheader from 'material-ui/Subheader'
 import MenuItem from 'material-ui/MenuItem'
 import { Link, IndexLink } from 'react-router';
 import {closeDrawer, openDrawer} from '../actions/exportsActions';
+import {userActive} from "../actions/userActions";
 require ('../fonts/index.css');
 import Banner from './Banner'
 import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
@@ -19,6 +20,7 @@ import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import BaseDialog from "./BaseDialog";
 
 const muiTheme = getMuiTheme({
     datePicker: {
@@ -40,25 +42,43 @@ export class Application extends Component {
         this.getConfig = this.getConfig.bind(this);
         this.handleMouseOver =  this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
-        this.handleResize = this.handleResize.bind(this);        
+        this.handleResize = this.handleResize.bind(this);
+        this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);
+        this.stopCheckingForAutoLogout = this.stopCheckingForAutoLogout.bind(this);
+        this.startSendingUserActivePings = this.startSendingUserActivePings.bind(this);
+        this.stopSendingUserActivePings = this.stopSendingUserActivePings.bind(this);
+        this.handleStayLoggedIn = this.handleStayLoggedIn.bind(this);
+        this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
         this.state = {
             config: {},
-            hovered: ''
-        }
+            hovered: '',
+            showAutoLogoutWarningDialog: false,
+            showAutoLoggedOutDialog: false,
+        };
+
+        this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
     }
 
     componentWillReceiveProps(nextProps) {
-        // if the user is logged in and the screen is large the drawer should be open
-         if(nextProps.userData != this.props.userData) {
-             if(nextProps.userData != null && window.innerWidth >= 1200) {
-                 this.props.openDrawer();
-             }
-         }
+        if(nextProps.userData != this.props.userData) {
+            if(nextProps.userData != null) {
+                // if the user is logged in and the screen is large the drawer should be open
+                if (window.innerWidth >= 1200) {
+                    this.props.openDrawer();
+                }
+
+                this.startCheckingForAutoLogout();
+                this.startSendingUserActivePings();
+            } else {
+                this.stopCheckingForAutoLogout();
+                this.stopSendingUserActivePings();
+            }
+        }
     }
 
     componentDidMount() {
         this.getConfig();
-        window.addEventListener('resize', this.handleResize);        
+        window.addEventListener('resize', this.handleResize);
     }
 
     componentWillUnmount() {
@@ -68,6 +88,150 @@ export class Application extends Component {
     handleResize() {
         this.forceUpdate();
     };
+
+    startCheckingForAutoLogout() {
+        if (this.checkAutoLogoutIntervalId) {
+            console.warn('Already checking for auto logout.');
+            return;
+        }
+
+        // Regularly check if the user should be notified about an impending auto logout.
+        this.checkAutoLogoutIntervalId = setInterval(() => {
+            if (!this.props.autoLogoutAt) {
+                return;
+            }
+
+            if (Date.now() >= this.props.autoLogoutAt.getTime()) {
+                // Redirect to logout and show auto logged out dialog.
+                this.stopCheckingForAutoLogout();
+                this.stopSendingUserActivePings();
+                this.hideAutoLogoutWarning();
+                this.setState({
+                    showAutoLoggedOutDialog: true,
+                });
+                this.props.closeDrawer();
+                this.props.router.push('/logout');
+            } else if (Date.now() >= this.props.autoLogoutWarningAt.getTime()) {
+                if (!this.state.showAutoLogoutWarningDialog) {
+                    this.showAutoLogoutWarning();
+                }
+            }
+        }, 1000);
+    }
+
+    stopCheckingForAutoLogout() {
+        if (!this.checkAutoLogoutIntervalId) {
+            console.warn('Not checking for auto logout.');
+            return;
+        }
+
+        clearInterval(this.checkAutoLogoutIntervalId);
+        this.checkAutoLogoutIntervalId = null;
+    }
+
+    startSendingUserActivePings() {
+        if (this.isSendingUserActivePings) {
+            console.warn('Already sending user active pings.');
+            return;
+        }
+
+        this.isSendingUserActivePings = true;
+
+        let sendPing = true;
+        this.handleUserActiveInput = () => {
+            if (sendPing) {
+                // Allow the next ping to be sent after one minute.
+                sendPing = false;
+                setTimeout(() => {
+                    sendPing = true;
+                }, 60 * 1000);
+
+                // Notify server.
+                this.props.userActive();
+            }
+        };
+
+        // Check all forms of input to track user activity.
+        this.userActiveInputTypes.forEach((eventType) => {
+            window.addEventListener(eventType, this.handleUserActiveInput);
+        });
+
+        // Send an initial user active ping to kick the whole cycle off.
+        this.props.userActive();
+    }
+
+    stopSendingUserActivePings() {
+        if (!this.isSendingUserActivePings) {
+            console.warn('Not sending user active pings.');
+            return;
+        }
+
+        this.isSendingUserActivePings = false;
+
+        // Remove input event listeners.
+        this.userActiveInputTypes.forEach((eventType) => {
+            window.removeEventListener(eventType, this.handleUserActiveInput);
+        });
+    }
+
+    showAutoLogoutWarning() {
+        if (this.autoLogoutWarningIntervalId) {
+            console.warn('Already showing auto logout warning.');
+            return;
+        }
+
+        const updateAutoLogoutWarningText = () => {
+            const secondsLeft = Math.ceil((this.props.autoLogoutAt.getTime() - Date.now()) / 1000);
+
+            let timeLeftText;
+            if (secondsLeft > 60) {
+                // For anything above one minute, show minutes left.
+                const minutesLeft = Math.ceil(secondsLeft / 60);
+                timeLeftText = `${minutesLeft} minutes`;
+            } else {
+                // For one minute or less, show seconds left.
+                timeLeftText = `${secondsLeft} second`;
+                if (secondsLeft !== 1) {
+                    timeLeftText += 's';
+                }
+            }
+
+            this.setState({
+                autoLogoutWarningText: `You will be automatically logged out in ${timeLeftText} due to inactivity.`
+            });
+        };
+
+        updateAutoLogoutWarningText();
+        this.setState({showAutoLogoutWarningDialog: true});
+
+        // Stop automatically sending user active pings during this time, so that the user
+        // has to press a button to stay logged in.
+        this.stopSendingUserActivePings();
+
+        // Update auto logout warning text every second.
+        this.autoLogoutWarningIntervalId = setInterval(updateAutoLogoutWarningText, 1000);
+    }
+
+    hideAutoLogoutWarning() {
+        if (!this.autoLogoutWarningIntervalId) {
+            console.warn('Not showing auto logout warning.');
+            return;
+        }
+
+        this.setState({showAutoLogoutWarningDialog: false});
+
+        clearInterval(this.autoLogoutWarningIntervalId);
+        this.autoLogoutWarningIntervalId = null;
+    }
+
+    handleStayLoggedIn() {
+        this.hideAutoLogoutWarning();
+        this.startSendingUserActivePings();
+    }
+
+    handleCloseAutoLoggedOutDialog() {
+        this.setState({showAutoLoggedOutDialog: false});
+    }
 
     handleToggle() {
         if(this.props.drawer === 'open' || this.props.drawer === 'opening') {
@@ -274,6 +438,19 @@ export class Application extends Component {
                     <div style={styles.content} className={"qa-Application-content"}>
                         <div>{childrenWithContext}</div>
                     </div>
+                    <BaseDialog
+                        show={this.state.showAutoLogoutWarningDialog}
+                        title={'AUTO LOGOUT'}
+                        buttonText={'Stay Logged In'}
+                        onClose={this.handleStayLoggedIn}>
+                        <strong>{this.state.autoLogoutWarningText}</strong>
+                    </BaseDialog>
+                    <BaseDialog
+                        show={this.state.showAutoLoggedOutDialog}
+                        title={'AUTO LOGOUT'}
+                        onClose={this.handleCloseAutoLoggedOutDialog}>
+                        <strong>You have been automatically logged out due to inactivity.</strong>
+                    </BaseDialog>
                 </div>
             </MuiThemeProvider>
         )
@@ -285,6 +462,7 @@ Application.propTypes = {
     closeDrawer: PropTypes.func,
     userDate: PropTypes.object,
     drawer: PropTypes.string,
+    router: PropTypes.object,
 };
 
 Application.childContextTypes = {
@@ -295,7 +473,8 @@ function mapStateToProps(state) {
     return {
         drawer: state.drawer,
         userData: state.user.data,
-
+        autoLogoutAt: state.user.autoLogoutAt,
+        autoLogoutWarningAt: state.user.autoLogoutWarningAt,
     }
 }
 
@@ -306,6 +485,9 @@ function mapDispatchToProps(dispatch) {
         },
         openDrawer: () => {
             dispatch(openDrawer());
+        },
+        userActive: () => {
+            dispatch(userActive());
         }
     }
 }
