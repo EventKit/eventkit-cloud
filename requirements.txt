@@ -84,4 +84,4 @@ waitress==1.0.2
 WebOb==1.7.1
 WebTest==2.0.26
 whitenoise==3.3.0
--e git+https://github.com/JivanAmara/django-audit-logging.git@v0.1.7#egg=django-audit-logging
+-e git+https://github.com/venicegeo/django-audit-logging.git@v0.1.8#egg=django-audit-logging

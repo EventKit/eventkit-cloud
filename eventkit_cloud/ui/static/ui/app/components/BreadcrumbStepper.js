@@ -1,6 +1,5 @@
 import React from 'react';
 import { browserHistory } from 'react-router';
-import { Link, IndexLink } from 'react-router';
 import { connect } from 'react-redux';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
@@ -11,6 +10,7 @@ import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import ExportAOI from './CreateDataPack/ExportAOI';
 import ExportInfo from './CreateDataPack/ExportInfo';
 import ExportSummary from './CreateDataPack/ExportSummary';
+import { flattenFeatureCollection } from '../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
 import { setDatacartDetailsReceived, getDatacartDetails } from '../actions/statusDownloadActions';
@@ -239,15 +239,17 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     handleSubmit() {
-        const providerTasks = [];
+        const provider_tasks = [];
         const providers = [...this.props.exportInfo.providers];
 
         // formats only consists of geopackage right now
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+            provider_tasks.push({ provider: provider.name, formats: [formats[0]] });
         });
+
+        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
 
         const data = {
             name: this.props.exportInfo.exportName,
@@ -255,8 +257,8 @@ export class BreadcrumbStepper extends React.Component {
             event: this.props.exportInfo.projectName,
             include_zipfile: false,
             published: this.props.exportInfo.makePublic,
-            provider_tasks: providerTasks,
-            selection: this.props.aoiInfo.geojson,
+            provider_tasks: provider_tasks,
+            selection,
             tags: [],
         };
         this.props.submitJob(data);
