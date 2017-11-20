@@ -6,6 +6,8 @@ export const initialState = {
   patching: false,
   patched: false,
   error: null,
+  autoLogoutAt: null,
+  autoLogoutWarningAt: null,
 }
 
 export default (state = initialState, { type, payload, error }) => {
@@ -26,6 +28,8 @@ export default (state = initialState, { type, payload, error }) => {
       return { ...state, patching: false, patched: true, data: payload}
     case types.PATCHING_USER_ERROR:
       return { ...state, patching: false, error: error}
+    case types.USER_ACTIVE:
+      return { ...state, ...payload }
     default:
       return state
   }

@@ -14,6 +14,8 @@ from celery.utils.log import get_task_logger
 from ..utils.gdalutils import driver_for
 from uuid import uuid4
 from string import Template
+from datetime import datetime
+import pytz
 
 logger = get_task_logger(__name__)
 
@@ -209,3 +211,12 @@ def write_uploaded_file(in_memory_file, write_path):
     except Exception as e:
         logger.debug(e)
         raise Exception('Could not write file to disk')
+
+
+def set_session_user_last_active_at(request):
+    # Set last active time, which is used for auto logout.
+    last_active_at = datetime.utcnow().replace(tzinfo=pytz.utc)
+    request.session[settings.SESSION_USER_LAST_ACTIVE_AT] = last_active_at.isoformat()
+
+    # Return the last active datetime for convenience.
+    return last_active_at
