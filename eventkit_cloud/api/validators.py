@@ -12,7 +12,7 @@ import magic
 from lxml import etree
 
 from django.conf import settings
-from django.contrib.gis.geos import GEOSException, GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSException, GEOSGeometry, GeometryCollection, Polygon
 from django.contrib.gis.gdal import GDALException
 from django.utils.translation import ugettext as _
 
@@ -131,6 +131,28 @@ def validate_bbox(extents, user=None):
             raise serializers.ValidationError(detail)
     except GEOSException:
         raise serializers.ValidationError(detail)
+
+def validate_original_selection(data):
+    """
+    Checks for a feature collection with features and constructs a GEOS Geometry Collection if possible
+    :param data: the request data
+    :return: A GEOS Geometry Collection
+    """
+    original_selection = data.get('original_selection', {})
+    geoms = []
+    for feature in original_selection.get('features', []):
+        try:
+            geom = GEOSGeometry(json.dumps(feature.get('geometry')))
+            geoms.append(geom)
+        except GEOSException as geos_exception:
+            logger.error(geos_exception)
+    try:
+        collection = GeometryCollection(geoms)
+        return collection
+    except GEOSException as geos_exception:
+        logger.error(geos_exception)
+        return GeometryCollection()
+
 
 
 def validate_selection(data, user=None):

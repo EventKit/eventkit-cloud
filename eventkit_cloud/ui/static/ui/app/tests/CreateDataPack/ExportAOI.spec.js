@@ -57,6 +57,7 @@ describe('ExportAOI component', () => {
         {
             aoiInfo: {
                 geojson: {},
+                orginalGeojson: {},
                 geomType: null,
                 title: null,
                 description: null,
@@ -787,7 +788,15 @@ describe('ExportAOI component', () => {
         expect(validStub.calledOnce).toBe(true);
         expect(boxStub.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.updateAoiInfo.calledWith(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box')).toBe(true);
+        console.log(props.updateAoiInfo.args[0]);
+        expect(props.updateAoiInfo.calledWith({
+            geojson,
+            orginalGeojson: {},
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Box',
+            selectionType: 'box',
+        })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
@@ -836,7 +845,14 @@ describe('ExportAOI component', () => {
         expect(validStub.calledOnce).toBe(true);
         expect(boxStub.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.updateAoiInfo.calledWith(geojson, 'Polygon', 'Custom Polygon', 'Draw', 'free')).toBe(true);
+        expect(props.updateAoiInfo.calledWith({
+            geojson,
+            orginalGeojson: {},
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Draw',
+            selectionType: 'free',
+        })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);

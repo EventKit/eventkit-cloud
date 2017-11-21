@@ -17,7 +17,7 @@ import DataPackPage from './components/DataPackPage/DataPackPage';
 import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
 import { isBrowserValid } from './utils/generic';
-import { login } from './actions/userActions';
+import { login, userActive } from './actions/userActions';
 
 
 const store = configureStore();

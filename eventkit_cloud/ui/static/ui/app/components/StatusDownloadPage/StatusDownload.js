@@ -242,7 +242,18 @@ function mapDispatchToProps(dispatch) {
             dispatch(clearReRunInfo());
         },
         cloneExport: (cartDetails, providerArray) => {
-            dispatch(updateAoiInfo({ type: 'FeatureCollection', features: [cartDetails.job.extent] }, 'Polygon', 'Custom Polygon', 'Box', 'box'));
+            const featureCollection = {
+                type: 'FeatureCollection',
+                features: [cartDetails.job.extent],
+            };
+            dispatch(updateAoiInfo({
+                geojson: featureCollection,
+                originalGeojson: featureCollection,
+                geomType: 'Polygon',
+                title: 'Custom Polygon',
+                description: 'Box',
+                selectionType: 'box',
+            }));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name,
                 datapackDescription: cartDetails.job.description,
@@ -251,7 +262,7 @@ function mapDispatchToProps(dispatch) {
                 providers: providerArray,
                 layers: 'Geopackage',
             }));
-            browserHistory.push('/create/');
+            browserHistory.push('/create');
         },
         cancelProviderTask: (providerUid) => {
             dispatch(cancelProviderTask(providerUid));
