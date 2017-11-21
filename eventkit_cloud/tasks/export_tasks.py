@@ -824,6 +824,21 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
         raise Exception(e)
 
 
+class PickUpRunFailureTask(ExportTask):
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        from ..tasks.models import ExportTask as ExportTaskModel
+        tasks = ExportTaskModel.objects.filter(celery_uid=task_id)
+        for task in tasks:
+            task.status = TaskStates.FAILED.value
+            task.finished_at = timezone.now()
+            task.save()
+
+            if task.export_provider_task.status != TaskStates.FAILED.value:
+                task.export_provider_task.status = TaskStates.FAILED.value
+                task.export_provider_task.save()
+
+
 @app.task(name='Pickup Run', bind=True)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
