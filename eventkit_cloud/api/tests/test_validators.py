@@ -2,12 +2,13 @@
 import logging
 
 from django.contrib.auth.models import User
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 from mock import patch, Mock
 
-from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox, validate_selection, validate_bbox_params
+from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox, \
+    validate_selection, validate_bbox_params, validate_original_selection
 from eventkit_cloud.jobs.models import bbox_to_geojson
 import json
 
@@ -45,6 +46,40 @@ class TestValidators(TestCase):
         bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
         area = get_geodesic_area(bbox)
         self.assertEquals(2006874.9259034647, area / 1000000)
+
+    def test_validate_original_selection(self):
+        geojson = {
+            'type': 'FeatureCollection',
+            'features': [
+                {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [1, 1]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [5.625, 48.458],
+                            [0.878, 44.339]
+                        ]
+                    }
+                }
+            ]
+        }
+        data = {'original_selection': geojson}
+        collection = validate_original_selection(data)
+        self.assertIsInstance(collection, GeometryCollection)
+        self.assertIsInstance(collection[0], Point)
+        self.assertIsInstance(collection[1], LineString)
+
+        data = {'original_selection': {}}
+        collection = validate_original_selection(data)
+        self.assertIsInstance(collection, GeometryCollection)
+        self.assertEquals(collection.length, 0)
 
     def test_validate_selection(self):
         data = {'selection': self.selection}
