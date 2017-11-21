@@ -26,7 +26,6 @@ const rootReducer = combineReducers({
     submitJob: submitJobReducer,
     runsDeletion: DeleteRunsReducer,
     datacartDetails: getDatacartDetailsReducer,
-    datacartDetailsReceived: setDatacartDetailsReducer,
     runDeletion: deleteRunReducer,
     exportReRun: rerunExportReducer,
     licenses: licenseReducer,
