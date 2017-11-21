@@ -129,8 +129,8 @@ class ExportProviderForm(forms.ModelForm):
 
     def clean_config(self):
         config = self.cleaned_data.get('config')
-        if config == "":
-            return self.cleaned_data
+        if not config:
+            return
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
