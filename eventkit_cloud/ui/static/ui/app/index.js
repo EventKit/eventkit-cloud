@@ -15,9 +15,6 @@ import About from './components/About/About';
 import Account from './components/AccountPage/Account';
 import DataPackPage from './components/DataPackPage/DataPackPage';
 import CreateExport from './components/CreateDataPack/CreateExport';
-import ExportAOI from './components/CreateDataPack/ExportAOI';
-import ExportInfo from './components/CreateDataPack/ExportInfo';
-import ExportSummary from './components/CreateDataPack/ExportSummary';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
 import { isBrowserValid } from './utils/generic';
 import { login, userActive } from './actions/userActions';
@@ -87,20 +84,7 @@ render(
                 <Route
                     path="/create"
                     component={UserIsAuthenticated(UserHasAgreed(CreateExport))}
-                >
-                    <Route
-                        path="/exportAOI"
-                        component={UserIsAuthenticated(UserHasAgreed(ExportAOI))}
-                    />
-                    <Route
-                        path="/exportInfo"
-                        component={UserIsAuthenticated(UserHasAgreed(ExportInfo))}
-                    />
-                    <Route
-                        path="/exportSummary"
-                        component={UserIsAuthenticated(UserHasAgreed(ExportSummary))}
-                    />
-                </Route>
+                />
                 <Route
                     path="/status/:jobuid"
                     component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
