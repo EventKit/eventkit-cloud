@@ -828,11 +828,18 @@ class PickUpRunFailureTask(ExportTask):
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from ..tasks.models import ExportTask as ExportTaskModel
+        from ..tasks.models import ExportTaskException, ExportProviderTask
+
+        exception = cPickle.dumps(einfo)
         tasks = ExportTaskModel.objects.filter(celery_uid=task_id)
         for task in tasks:
             task.status = TaskStates.FAILED.value
             task.finished_at = timezone.now()
             task.save()
+
+            ete = ExportTaskException(task=task, exception=exception)
+            ete.save()
+            logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
 
             if task.export_provider_task.status != TaskStates.FAILED.value:
                 task.export_provider_task.status = TaskStates.FAILED.value
