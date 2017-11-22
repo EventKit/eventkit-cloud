@@ -12,6 +12,7 @@ from rest_framework.renderers import JSONRenderer
 from django.http import HttpResponse
 import json
 from django.contrib.auth import logout as auth_logout
+from datetime import datetime
 
 from logging import getLogger
 
@@ -55,6 +56,12 @@ def logout(request):
     """Logs out user"""
     auth_logout(request)
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
-        return redirect(settings.OAUTH_LOGOUT_URL)
+        response = redirect(settings.OAUTH_LOGOUT_URL)
     else:
-        return redirect('login')
+        response = redirect('login')
+
+    if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
+        del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
+    response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
+
+    return response

@@ -89,5 +89,37 @@ describe('userActions actions', () => {
                 expect(store.getActions()).toEqual(expectedActions)
             })
     });
+
+    it('userActive should set auto logout and auto logout warning times', () => {
+        const mock = new MockAdapter(axios, {delayResponse: 1000});
+
+        const autoLogoutAtMS = Date.now() + (30 * 60 * 1000);
+        const autoLogoutWarningAtMS = Date.now() + (5 * 60 * 1000);
+
+        mock.onGet('/user_active').reply(200, {
+            auto_logout_at: new Date(autoLogoutAtMS),
+            auto_logout_warning_at: new Date(autoLogoutWarningAtMS),
+        });
+
+        const expectedActions = [{
+            type: types.USER_ACTIVE,
+            payload: {
+                autoLogoutAt: new Date(autoLogoutAtMS),
+                autoLogoutWarningAt: new Date(autoLogoutWarningAtMS)
+            },
+        }];
+
+        const store = mockStore({
+            user: {
+                autoLogoutAt: null,
+                autoLogoutWarningat: null,
+            }
+        });
+
+        return store.dispatch(userActions.userActive())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions)
+            })
+    });
 })
 

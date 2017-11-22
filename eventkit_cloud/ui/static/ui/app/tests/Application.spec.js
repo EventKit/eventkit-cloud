@@ -20,6 +20,7 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MockAdapter from 'axios-mock-adapter';
+import BaseDialog from "../components/BaseDialog";
 
 describe('Application component', () => {
     injectTapEventPlugin();
@@ -30,6 +31,8 @@ describe('Application component', () => {
             closeDrawer: () => {},
             userData: {},
             drawer: 'open',
+            userActive: () => {},
+            router: {push: () => {}},
         }
     }
 
@@ -45,6 +48,7 @@ describe('Application component', () => {
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
         expect(wrapper.find(MenuItem)).toHaveLength(5);
         expect(wrapper.find(MenuItem).at(0).text()).toEqual('DataPack Library');
         expect(wrapper.find(MenuItem).at(0).find(AVLibraryBooks)).toHaveLength(1);
@@ -222,5 +226,43 @@ describe('Application component', () => {
         wrapper.instance().handleMouseOut();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({hovered: ''})).toBe(true);
+    });
+
+    it('Auto logout warning should show remaining minutes when above one minute', () => {
+        jest.useFakeTimers();
+        const props = getProps();
+        // Set auto logout time to 5 minutes from now.
+        props.autoLogoutAt = new Date(Date.now() + (5 * 60 * 1000));
+        props.autoLogoutWarningAt = new Date(Date.now() - 1000);
+        const wrapper = getWrapper(props);
+        wrapper.instance().startCheckingForAutoLogout();
+        jest.runOnlyPendingTimers();
+        expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
+        expect(wrapper.state().autoLogoutWarningText).toContain('5 minutes');
+    });
+
+    it('Auto logout warning should show remaining seconds at one minute or less', () => {
+        jest.useFakeTimers();
+        const props = getProps();
+        // Set auto logout time to 60 seconds from now.
+        props.autoLogoutAt = new Date(Date.now() + (60 * 1000));
+        props.autoLogoutWarningAt = new Date(Date.now() - 1000);
+        const wrapper = getWrapper(props);
+        wrapper.instance().startCheckingForAutoLogout();
+        jest.runOnlyPendingTimers();
+        expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
+        expect(wrapper.state().autoLogoutWarningText).toContain('60 seconds');
+    });
+
+    it('Auto logged out alert should show after exceeding auto logout time', () => {
+        jest.useFakeTimers();
+        const props = getProps();
+        // Set auto logout time to 1 second in the past.
+        props.autoLogoutAt = new Date(Date.now() - 1000);
+        props.autoLogoutWarningAt = new Date(Date.now());
+        const wrapper = getWrapper(props);
+        wrapper.instance().startCheckingForAutoLogout();
+        jest.runOnlyPendingTimers();
+        expect(wrapper.state().showAutoLoggedOutDialog).toBe(true);
     });
 });
