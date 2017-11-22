@@ -1,5 +1,5 @@
 [{
-		"model" : "jobs.exportprovider",
+		"model" : "jobs.dataprovider",
 		"pk" : 3,
 		"fields" : {
 			"created_at" : "2016-10-06T17:44:54.837Z",
@@ -16,7 +16,7 @@
 			"config" : ""
 		}
 	}, {
-		"model" : "jobs.exportprovider",
+		"model" : "jobs.dataprovider",
 		"pk" : 4,
 		"fields" : {
 			"created_at" : "2016-10-06T17:45:46.213Z",
@@ -33,7 +33,7 @@
 			"config" : "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
 		}
 	}, {
-		"model" : "jobs.exportprovider",
+		"model" : "jobs.dataprovider",
 		"pk" : 5,
 		"fields" : {
 			"created_at" : "2016-10-06T19:17:28.770Z",
@@ -50,7 +50,7 @@
 			"config" : "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis-raster:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
 		}
 	}, {
-		"model" : "jobs.exportprovider",
+		"model" : "jobs.dataprovider",
 		"pk" : 6,
 		"fields" : {
 			"created_at" : "2016-10-13T17:23:26.890Z",

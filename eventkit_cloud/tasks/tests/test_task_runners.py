@@ -10,7 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.db.utils import DatabaseError
 
-from eventkit_cloud.jobs.models import ExportFormat, Job, Region, ProviderTask, ExportProvider
+from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
 
 from ..task_runners import (
     ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
@@ -41,8 +41,8 @@ class TestExportTaskRunner(TestCase):
     def test_run_osm_task(self, mock_chain):
         shp_task = ExportFormat.objects.get(slug='shp')
 
-        provider = ExportProvider.objects.get(slug='osm')
-        provider_task = ProviderTask.objects.create(provider=provider)
+        provider = DataProvider.objects.get(slug='osm')
+        provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
 
         # celery chain mock
@@ -67,8 +67,8 @@ class TestExportTaskRunner(TestCase):
     def test_run_wms_task(self, mock_shp, mock_chain):
         shp_task = ExportFormat.objects.get(slug='shp')
         celery_uid = str(uuid.uuid4())
-        provider = ExportProvider.objects.get(slug='wms')
-        provider_task_record = ProviderTask.objects.create(provider=provider)
+        provider = DataProvider.objects.get(slug='wms')
+        provider_task_record = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task_record)
         # shp export task mock
         mock_shp.run.return_value = Mock(state='PENDING', id=celery_uid)
@@ -87,7 +87,7 @@ class TestExportTaskRunner(TestCase):
         run = self.job.runs.first()
         self.assertIsNotNone(run)
 
-    @patch('eventkit_cloud.tasks.task_runners.ExportTask')
+    @patch('eventkit_cloud.tasks.task_runners.ExportTaskRecord')
     def test_create_export_task_record(self, mock_export_task):
         from ..export_tasks import TaskStates
 

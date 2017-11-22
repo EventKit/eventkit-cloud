@@ -33,7 +33,7 @@ class TimeTrackingModelMixin(models.Model):
 
     @property
     def duration(self):
-        """Get the duration for this ExportTask."""
+        """Get the duration for this ExportTaskRecord."""
         started = self.started_at
         finished = self.finished_at
         if started and finished:

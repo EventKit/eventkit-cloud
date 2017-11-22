@@ -7,11 +7,11 @@ import shutil
 from time import sleep
 from datetime import timedelta, datetime
 
-from ...tasks.models import ExportProviderTask
+from ...tasks.models import DataProviderTaskRecord
 from ...tasks.export_tasks import TaskStates
 from ...tasks.task_runners import normalize_name
 from ...core.helpers import download_file
-from ..models import ExportProvider, ExportProviderType, Job
+from ..models import DataProvider, DataProviderType, Job
 from ...utils.geopackage import check_content_exists, check_zoom_levels
 
 from django.conf import settings
@@ -73,7 +73,7 @@ class TestJob(TestCase):
 
     def test_cancel_job(self):
         # update provider to ensure it runs long enough to cancel...
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        export_provider = DataProvider.objects.get(slug="eventkit-integration-test-wms")
         original_level_to = export_provider.level_to
         export_provider.level_to = 19
         export_provider.save()
@@ -86,7 +86,7 @@ class TestJob(TestCase):
 
         run_json = self.wait_for_task_pickup(job_uid=job_json.get('uid'))
 
-        export_provider_task = ExportProviderTask.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=run_json.get('provider_tasks')[0].get('uid'))
 
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
@@ -100,7 +100,7 @@ class TestJob(TestCase):
         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
         self.orm_run = self.orm_job.runs.last()
 
-        pt = ExportProviderTask.objects.get(uid=export_provider_task.uid)
+        pt = DataProviderTaskRecord.objects.get(uid=export_provider_task.uid)
 
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
 
@@ -110,7 +110,7 @@ class TestJob(TestCase):
         self.assertIn(self.orm_run.status, [TaskStates.CANCELED.value, TaskStates.INCOMPLETE.value])
 
         # update provider to original setting.
-        export_provider = ExportProvider.objects.get(slug="eventkit-integration-test-wms")
+        export_provider = DataProvider.objects.get(slug="eventkit-integration-test-wms")
         export_provider.level_to = original_level_to
         export_provider.save()
 
@@ -493,7 +493,7 @@ def get_providers_list():
         "slug": "eventkit-integration-test-wms",
         "url": "http://basemap.nationalmap.gov/arcgis/services/USGSImageryOnly/MapServer/WmsServer?",
         "layer": "0",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wms'),
+        "export_provider_type": DataProviderType.objects.using('default').get(type_name='wms'),
         "level_from": 0,
         "level_to": 2,
         "config": ""
@@ -505,7 +505,7 @@ def get_providers_list():
         "slug": "eventkit-integration-test-wmts",
         "url": "https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=USGSShadedReliefOnly&TILEMATRIXSET=WEBMERCATOR&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng",
         "layer": "imagery",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wmts'),
+        "export_provider_type": DataProviderType.objects.using('default').get(type_name='wmts'),
         "level_from": 0,
         "level_to": 2,
         "config": "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\n"
@@ -523,7 +523,7 @@ def get_providers_list():
         "slug": "eventkit-integration-test-arc-raster",
         "url": "http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer",
         "layer": "imagery",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-raster'),
+        "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-raster'),
         "level_from": 0,
         "level_to": 2,
         "config": "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\n"
@@ -544,7 +544,7 @@ def get_providers_list():
         "slug": "eventkit-integration-test-wfs",
         "url": "http://geonode.state.gov/geoserver/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=geonode:Eurasia_Oceania_LSIB7a_gen_polygons&SRSNAME=EPSG:4326",
         "layer": "geonode:Eurasia_Oceania_LSIB7a_gen_polygons",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wfs'),
+        "export_provider_type": DataProviderType.objects.using('default').get(type_name='wfs'),
         "level_from": 0,
         "level_to": 2,
         "config": ""
@@ -556,7 +556,7 @@ def get_providers_list():
         "slug": "eventkit-integration-test-wcs",
         "url": "http://demo.pixia.com/wcsserver/?",
         "layer": "3",
-        "export_provider_type": ExportProviderType.objects.using('default').get(type_name='wcs'),
+        "export_provider_type": DataProviderType.objects.using('default').get(type_name='wcs'),
         "level_from": 0,
         "level_to": 2,
         "config": ""
@@ -569,7 +569,7 @@ def get_providers_list():
     #     "slug": "eventkit-integration-test-arc-fs",
     #     "url": "http://services1.arcgis.com/0IrmI40n5ZYxTUrV/ArcGIS/rest/services/ONS_Boundaries_02/FeatureServer/0/query?where=objectid%3Dobjectid&outfields=*&f=json",
     #     "layer": "0",
-    #     "export_provider_type": ExportProviderType.objects.using('default').get(type_name='arcgis-feature'),
+    #     "export_provider_type": DataProviderType.objects.using('default').get(type_name='arcgis-feature'),
     #     "level_from": 0,
     #     "level_to": 2,
     #     "config": ""
@@ -579,14 +579,14 @@ def get_providers_list():
 
 def load_providers():
     export_providers = get_providers_list()
-    providers = [ExportProvider(**export_provider) for export_provider in export_providers]
-    ExportProvider.objects.bulk_create(providers)
+    providers = [DataProvider(**export_provider) for export_provider in export_providers]
+    DataProvider.objects.bulk_create(providers)
 
 
 def delete_providers():
     export_providers = get_providers_list()
     for export_provider in export_providers:
-        provider = ExportProvider.objects.using('default').filter(
+        provider = DataProvider.objects.using('default').filter(
             name=export_provider.get('name')
         ).first()
         if provider:
