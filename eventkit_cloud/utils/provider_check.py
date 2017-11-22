@@ -215,7 +215,9 @@ class OWSProviderCheck(ProviderCheck):
     def validate_response(self, response):
 
         try:
-            root = ET.fromstring(response.content.lower())
+            xml = response.content.lower()
+            xml = xml.replace("![cdata[", "![CDATA[")
+            root = ET.fromstring(xml)
             # Check for namespace
             m = re.search(r"^{.*?}", root.tag)
             self.ns = m.group() if m else ""
