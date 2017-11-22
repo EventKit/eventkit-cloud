@@ -30,7 +30,10 @@ import ol3mapCss from '../../styles/ol3map.css';
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
-
+        this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
+        this.handleDeleteClose = this.handleDeleteClose.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        this.handleExpirationChange = this.handleExpirationChange.bind(this);
         this.state = {
             minDate: null,
             maxDate: null,
@@ -513,7 +516,7 @@ export class DataCartDetails extends Component {
                             disableTouchRipple
                             labelColor="#ff0000"
                             labelStyle={{ fontWeight: 'bold' }}
-                            onTouchTap={this.handleDeleteOpen.bind(this)}
+                            onTouchTap={this.handleDeleteOpen}
                             label="DELETE"
                         />
                         <DeleteDialog
