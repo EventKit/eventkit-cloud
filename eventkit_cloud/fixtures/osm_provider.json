@@ -1,5 +1,5 @@
 [{
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
         "created_at": "2017-08-01T15:53:09.203Z",
         "updated_at": "2017-08-01T15:53:09.203Z",
@@ -22,7 +22,7 @@
     }
 },
 {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
         "created_at": "2017-08-01T15:53:09.206Z",
         "updated_at": "2017-08-01T15:53:09.206Z",
