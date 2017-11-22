@@ -1,6 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import { GridList } from 'material-ui/GridList';
 import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
+import axios from 'axios';
 
 import Map from 'ol/map';
 import Feature from 'ol/feature';
@@ -39,7 +40,7 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
 import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
-    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToGeometry, featureToPoint,
+    MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex, bufferGeojson } from '../../utils/mapUtils';
 
@@ -79,6 +80,7 @@ export class MapView extends Component {
         this.showInvalidDrawWarning = this.showInvalidDrawWarning.bind(this);
         this.handleCancel = this.handleCancel.bind(this);
         this.handleSearch = this.handleSearch.bind(this);
+        this.checkForSearchUpdate = this.checkForSearchUpdate.bind(this);
         this.onDrawEnd = this.onDrawEnd.bind(this);
         this.onDrawStart = this.onDrawStart.bind(this);
         this.updateMode = this.updateMode.bind(this);
@@ -177,7 +179,12 @@ export class MapView extends Component {
                 }
             } else if (this.drawLayer.getSource().getFeatures().length) {
                 // if no features added but there is a draw feature: zoom to draw feature
-                this.map.getView().fit(drawExtent);
+                if (this.drawLayer.getSource().getFeatures().length === 1) {
+                    // if there is only one feature we should zoom specifically to that, not the layer extent
+                    zoomToFeature(this.drawLayer.getSource().getFeatures()[0], this.map);
+                } else {
+                    this.map.getView().fit(drawExtent);
+                }
             }
         }
 
@@ -429,7 +436,7 @@ export class MapView extends Component {
     zoomToSelected() {
         if (this.state.selectedFeature) {
             const selectedFeature = this.source.getFeatureById(this.state.selectedFeature);
-            zoomToGeometry(selectedFeature.getGeometry(), this.map);
+            zoomToFeature(selectedFeature, this.map);
         }
     }
 
@@ -507,6 +514,22 @@ export class MapView extends Component {
         return RED_STYLE;
     }
 
+    checkForSearchUpdate(result) {
+        if (result.geometry.type === 'Point' && !(result.bbox || result.properties.bbox)) {
+            return axios.get('/geocode', {
+                params: {
+                    result,
+                },
+            }).then(response => (
+                this.handleSearch(response.data)
+            )).catch((error) => {
+                console.log(error.message);
+                return this.handleSearch(result);
+            });
+        }
+        return this.handleSearch(result);
+    }
+
     handleSearch(result) {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
@@ -516,7 +539,7 @@ export class MapView extends Component {
         const geojson = createGeoJSON(searchFeature.getGeometry());
         this.props.onMapFilter(geojson);
         if (this.source.getFeatures().length === 0) {
-            zoomToGeometry(searchFeature.getGeometry(), this.map);
+            zoomToFeature(searchFeature, this.map);
         }
         return true;
     }
@@ -896,7 +919,7 @@ export class MapView extends Component {
                 <div style={styles.map}>
                     <div className="qa-MapView-div-map" style={{ width: '100%', height: '100%', position: 'relative' }} id="map">
                         <SearchAOIToolbar
-                            handleSearch={this.handleSearch}
+                            handleSearch={this.checkForSearchUpdate}
                             handleCancel={this.handleCancel}
                             geocode={this.props.geocode}
                             toolbarIcons={this.state.toolbarIcons}
