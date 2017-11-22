@@ -11,7 +11,7 @@ from django.contrib.gis.db.models.functions import Area
 from django.core.files import File
 from django.test import TestCase
 from eventkit_cloud.jobs.models import (
-    ExportFormat, ExportProfile, Job, Region, ExportProvider, ProviderTask
+    ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderTask
 , DatamodelPreset)
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,8 @@ class TestJob(TestCase):
         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        export_provider = ExportProvider.objects.get(slug='osm-generic')
-        provider_task = ProviderTask.objects.create(provider=export_provider)
+        export_provider = DataProvider.objects.get(slug='osm-generic')
+        provider_task = DataProviderTask.objects.create(provider=export_provider)
         self.tags = [
             {'key': 'building', 'value': 'yes'}, {'key': 'place', 'value': 'city'},
             {'key': 'highway', 'value': 'service'}, {'key': 'aeroway', 'value': 'helipad'}

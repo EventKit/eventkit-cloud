@@ -348,9 +348,12 @@ export function clearDraw(drawLayer) {
     drawLayer.getSource().clear();
 }
 
-export function zoomToGeometry(geom, map) {
+export function zoomToFeature(feature, map) {
+    const geom = feature.getGeometry();
     if (geom.getType() !== 'Point') {
         map.getView().fit(geom);
+    } else if (feature.getProperties().bbox) {
+        map.getView().fit(proj.transformExtent(feature.getProperties().bbox, WGS84, WEB_MERCATOR));
     } else {
         map.getView().setCenter(geom.getCoordinates());
     }
