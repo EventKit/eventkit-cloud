@@ -11,6 +11,7 @@ import VectorSource from 'ol/source/vector';
 import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
+import { WGS84, WEB_MERCATOR } from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -446,30 +447,57 @@ describe('mapUtils', () => {
         expect(clear.calledOnce).toBe(true);
     });
 
-    it('zoomToGeometry should fit view to geom if its not a point type', () => {
-        const geom = { getType: sinon.spy(() => ('Polygon')) };
+    it('zoomToFeature should fit view to geom if its not a point type', () => {
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [-98, -31],
+                [68, -31],
+                [68, 57],
+                [-98, 57],
+                [-98, -31],
+            ]]),
+        });
+        const featureSpy = sinon.spy(Feature.prototype, 'getGeometry');
+        const geomSpy = sinon.spy(Polygon.prototype, 'getType');
         const fit = sinon.spy(() => {});
         const map = { getView: sinon.spy(() => ({ fit })) };
-        utils.zoomToGeometry(geom, map);
-        expect(geom.getType.calledOnce).toBe(true);
+        utils.zoomToFeature(feature, map);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(geomSpy.calledOnce).toBe(true);
         expect(map.getView.calledOnce).toBe(true);
         expect(fit.calledOnce).toBe(true);
+        featureSpy.restore();
+        geomSpy.restore();
     });
 
-    it('zoomToGeometry should center on geom if it is a point type', () => {
-        const geom = {
-            getType: sinon.spy(() => ('Point')),
-            getCoordinates: sinon.spy(),
-        };
+    it('zoomToFeature should fit bbox if point feature has one', () => {
+        const feature = new Feature({ geometry: new Point([1, 1]) });
+        feature.setProperties({ bbox: [1, 1, 1, 1] });
+        const fitSpy = sinon.spy();
+        const transformStub = sinon.stub(proj, 'transformExtent')
+            .callsFake(ext => (ext));
+        const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
+        utils.zoomToFeature(feature, map);
+        expect(transformStub.calledOnce).toBe(true);
+        expect(transformStub.calledWith([1, 1, 1, 1], WGS84, WEB_MERCATOR)).toBe(true);
+        expect(fitSpy.calledOnce).toBe(true);
+        expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
+        transformStub.restore();
+    });
+
+    it('zoomToFeature should center on geom if it is a point type', () => {
+        const feature = new Feature({ geometry: new Point([1, 1]) });
+        const getTypeSpy = sinon.spy(Point.prototype, 'getType');
+        const getCoordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         const center = sinon.spy();
-        const map = {
-            getView: sinon.spy(() => ({ setCenter: center })),
-        };
-        utils.zoomToGeometry(geom, map);
-        expect(geom.getType.calledOnce).toBe(true);
+        const map = { getView: sinon.spy(() => ({ setCenter: center })) };
+        utils.zoomToFeature(feature, map);
+        expect(getTypeSpy.calledOnce).toBe(true);
         expect(map.getView.calledOnce).toBe(true);
         expect(center.calledOnce).toBe(true);
-        expect(geom.getCoordinates.calledOnce).toBe(true);
+        expect(getCoordsSpy.calledOnce).toBe(true);
+        getTypeSpy.restore();
+        getCoordsSpy.restore();
     });
 
     it('featureToPoint should return a point representing the center of a feature\'s extent', () => {
