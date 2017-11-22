@@ -54,6 +54,8 @@ class TestGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
+    @patch('eventkit_cloud.utils.external_service.validate_seed_conf')
+    @patch('eventkit_cloud.utils.external_service.validate_options')
     @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.check_service')
@@ -64,7 +66,7 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds, validate_options, validate_seed_conf):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -72,6 +74,8 @@ class TestGeopackage(TransactionTestCase):
         bbox = [-2, -2, 2, 2]
         cache_template.return_value = {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}
         seed_template.return_value = {'coverages': {'geom': {'srs': 'EPSG:4326', 'bbox': [-2, -2, 2, 2]}}, 'seeds': {'seed': {'coverages': ['geom'], 'refresh_before': {'minutes': 0}, 'levels': {'to': 10, 'from': 0}, 'caches': ['cache']}}}
+        validate_options.return_value = (False, True)
+        validate_seed_conf.return_value = (False, True)
         self.task_process.return_value = Mock(exitcode=0)
         w2g = ExternalRasterServiceToGeopackage(config=config,
                                gpkgfile=gpkgfile,
@@ -94,7 +98,8 @@ class TestGeopackage(TransactionTestCase):
         json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
         json_config['sources']['imagery_wmts']['transparent'] = True
         json_config['sources']['imagery_wmts']['on_error'] = {'other': {'cache': False,'response': 'transparent'}}
-
+        json_config['services'] = ['demo']
+        
         check_service.assert_called_once_with(json_config)
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)

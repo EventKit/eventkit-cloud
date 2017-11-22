@@ -6,7 +6,7 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             }
         );
@@ -17,7 +17,7 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             },
             {type: 'FILE_PROCESSING'}
@@ -25,7 +25,7 @@ describe('importGeom reducer', () => {
             {
                 processing: true,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             }
         );
@@ -36,15 +36,15 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             },
-            {type: 'FILE_PROCESSED', geom: {data: 'here'}}
+            {type: 'FILE_PROCESSED', featureCollection: {data: 'here'}}
         )).toEqual(
             {
                 processing: false,
                 processed: true,
-                geom: {data: 'here'},
+                featureCollection: {data: 'here'},
                 error: null,
             }
         );
@@ -55,7 +55,7 @@ describe('importGeom reducer', () => {
             {
                 processing: true,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             },
             {type: 'FILE_ERROR', error: 'This is an error'}
@@ -63,7 +63,7 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: 'This is an error',
             }
         );
@@ -74,7 +74,7 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: true,
-                geom: {},
+                featureCollection: {},
                 error: null,
             },
             {type: 'FILE_RESET'}
@@ -82,7 +82,7 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             }
         );

@@ -60,7 +60,7 @@ class TaskFactory:
         They need to be finalized (was the task successful?) to update the database state:
             PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK
 
-        We also have an optional chain of tasks that get processed after the providers are ran:
+        We also have an optional chain of tasks that get processed after the providers are run:
             AD_HOC_TASK1 -> AD_HOC_TASK2 -> FINALIZE_RUN_TASK = FINALIZE_RUN_TASK_COLLECTION
 
         If the PROVIDER_SUBTASK_CHAIN fails it needs to be cleaned up.  The clean up task also calls the finalize provider

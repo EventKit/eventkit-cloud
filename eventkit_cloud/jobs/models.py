@@ -7,7 +7,7 @@ import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.core.serializers import serialize
 from django.db.models.fields import CharField
 from django.db.models.signals import (
@@ -246,6 +246,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
+    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326, default=GeometryCollection(), null=True, blank=True)
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)

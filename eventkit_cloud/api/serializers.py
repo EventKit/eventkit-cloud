@@ -190,6 +190,7 @@ class SimpleJobSerializer(serializers.Serializer):
         lookup_field='uid'
     )
     extent = serializers.SerializerMethodField()
+    original_selection = serializers.SerializerMethodField(read_only=True)
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
     featured = serializers.BooleanField()
@@ -211,6 +212,22 @@ class SimpleJobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+    @staticmethod
+    def get_original_selection(obj):
+        geom_collection = obj.original_selection
+        if not geom_collection:
+            return None
+        feature_collection = OrderedDict()
+        feature_collection['type'] = 'FeatureCollection'
+        feature_collection['features'] = []
+        for geom in geom_collection:
+            geojson_geom = json.loads(geom.geojson)
+            feature = OrderedDict()
+            feature['type'] = 'Feature'
+            feature['geometry'] = geojson_geom
+            feature_collection['features'].append(feature)
+        return feature_collection
 
     def get_provider_tasks(self, obj):
         return [format.name for format in obj.provider_tasks.first().formats.all()]
@@ -459,6 +476,7 @@ class ListJobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
     extent = serializers.SerializerMethodField()
+    original_selection = serializers.SerializerMethodField(read_only=True)
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
     featured  = serializers.BooleanField()
@@ -480,6 +498,22 @@ class ListJobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+    @staticmethod
+    def get_original_selection(obj):
+        geom_collection = obj.original_selection
+        if not geom_collection:
+            return None
+        feature_collection = OrderedDict()
+        feature_collection['type'] = 'FeatureCollection'
+        feature_collection['features'] = []
+        for geom in geom_collection:
+            geojson_geom = json.loads(geom.geojson)
+            feature = OrderedDict()
+            feature['type'] = 'Feature'
+            feature['geometry'] = geojson_geom
+            feature_collection['features'].append(feature)
+        return feature_collection
 
     @staticmethod
     def get_owner(obj):
@@ -520,6 +554,7 @@ class JobSerializer(serializers.Serializer):
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
+    original_selection = serializers.SerializerMethodField(read_only=True)
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
@@ -556,6 +591,8 @@ class JobSerializer(serializers.Serializer):
         user = data['user']
         selection = validators.validate_selection(self.context['request'].data, user=user)
         data['the_geom'] = selection
+        original_selection = validators.validate_original_selection(self.context['request'].data)
+        data['original_selection'] = original_selection
         data.pop('provider_tasks')
 
         return data
@@ -572,6 +609,22 @@ class JobSerializer(serializers.Serializer):
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
         return feature
+
+    @staticmethod
+    def get_original_selection(obj):
+        geom_collection = obj.original_selection
+        if not geom_collection:
+            return None
+        feature_collection = OrderedDict()
+        feature_collection['type'] = 'FeatureCollection'
+        feature_collection['features'] = []
+        for geom in geom_collection:
+            geojson_geom = json.loads(geom.geojson)
+            feature = OrderedDict()
+            feature['type'] = 'Feature'
+            feature['geometry'] = geojson_geom
+            feature_collection['features'].append(feature)
+        return feature_collection
 
     def get_exports(self, obj):
         """Return the export formats selected for this export."""

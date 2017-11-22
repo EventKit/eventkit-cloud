@@ -1,6 +1,5 @@
 import React from 'react';
 import { browserHistory } from 'react-router';
-import { Link, IndexLink } from 'react-router';
 import { connect } from 'react-redux';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
@@ -11,9 +10,10 @@ import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import ExportAOI from './CreateDataPack/ExportAOI';
 import ExportInfo from './CreateDataPack/ExportInfo';
 import ExportSummary from './CreateDataPack/ExportSummary';
+import { flattenFeatureCollection } from '../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
-import { setDatacartDetailsReceived, getDatacartDetails } from '../actions/statusDownloadActions';
+import { getDatacartDetails } from '../actions/statusDownloadActions';
 import BaseDialog from './BaseDialog';
 
 export class BreadcrumbStepper extends React.Component {
@@ -42,12 +42,10 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.datacartDetailsReceived) {
-            browserHistory.push(`/status/${nextProps.jobuid}`);
-        }
         if (this.props.jobFetched !== nextProps.jobFetched) {
             if (nextProps.jobFetched) {
-                this.props.setDatacartDetailsReceived();
+                browserHistory.push(`/status/${nextProps.jobuid}`);
+                this.props.clearJobInfo();
             }
         }
         if (nextProps.jobError) {
@@ -239,15 +237,17 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     handleSubmit() {
-        const providerTasks = [];
+        const provider_tasks = [];
         const providers = [...this.props.exportInfo.providers];
 
         // formats only consists of geopackage right now
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            providerTasks.push({ provider: provider.name, formats: [formats[0]] });
+            provider_tasks.push({ provider: provider.name, formats: [formats[0]] });
         });
+
+        const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
 
         const data = {
             name: this.props.exportInfo.exportName,
@@ -255,8 +255,9 @@ export class BreadcrumbStepper extends React.Component {
             event: this.props.exportInfo.projectName,
             include_zipfile: false,
             published: this.props.exportInfo.makePublic,
-            provider_tasks: providerTasks,
-            selection: this.props.aoiInfo.geojson,
+            provider_tasks: provider_tasks,
+            selection,
+            original_selection: this.props.aoiInfo.originalGeojson,
             tags: [],
         };
         this.props.submitJob(data);
@@ -329,8 +330,6 @@ BreadcrumbStepper.propTypes = {
     getProviders: React.PropTypes.func.isRequired,
     setNextDisabled: React.PropTypes.func.isRequired,
     setNextEnabled: React.PropTypes.func.isRequired,
-    datacartDetailsReceived: React.PropTypes.bool.isRequired,
-    setDatacartDetailsReceived: React.PropTypes.func.isRequired,
     clearAoiInfo: React.PropTypes.func.isRequired,
     clearExportInfo: React.PropTypes.func.isRequired,
     clearJobInfo: React.PropTypes.func.isRequired,
@@ -346,7 +345,6 @@ function mapStateToProps(state) {
         aoiInfo: state.aoiInfo,
         providers: state.providers,
         stepperNextEnabled: state.stepperNextEnabled,
-        datacartDetailsReceived: state.datacartDetailsReceived,
         exportInfo: state.exportInfo,
         jobFetched: state.submitJob.fetched,
         jobError: state.submitJob.error,
@@ -376,9 +374,6 @@ function mapDispatchToProps(dispatch) {
         },
         clearJobInfo: () => {
             dispatch(clearJobInfo());
-        },
-        setDatacartDetailsReceived: () => {
-            dispatch(setDatacartDetailsReceived());
         },
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid));

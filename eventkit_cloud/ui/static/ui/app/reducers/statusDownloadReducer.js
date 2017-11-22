@@ -14,15 +14,6 @@ export function getDatacartDetailsReducer(state = initialState.datacartDetails, 
     }
 }
 
-export function setDatacartDetailsReducer(state = initialState.datacartDetailsReceived, action){
-    switch(action.type) {
-        case types.DATACART_DETAILS_RECEIVED_FLAG:
-            return true;
-        default:
-            return state;
-    }
-}
-
 export function deleteRunReducer(state = initialState.runDeletion, action) {
     switch(action.type) {
         case types.DELETING_RUN:

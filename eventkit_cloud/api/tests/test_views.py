@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
 from ..pagination import LinkHeaderPagination
 from ..views import get_models, get_provider_task, ExportRunViewSet
@@ -50,9 +50,10 @@ class TestJobViewSet(APITestCase):
         )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
+        original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', event='Test Activation', description='Test description',
-                                      user=self.user, the_geom=the_geom)
+                                      user=self.user, the_geom=the_geom, original_selection=original_selection)
 
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()
@@ -226,7 +227,29 @@ class TestJobViewSet(APITestCase):
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
-            'tags': self.tags
+            'tags': self.tags,
+            'original_selection': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                        'type': 'Feature',
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [1, 1]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [5.625, 48.458],
+                                [0.878, 44.339]
+                            ]
+                        }
+                    }
+                ]
+            }
         }
         response = self.client.post(url, request_data, format='json')
         job_uid = response.data['uid']
@@ -247,6 +270,7 @@ class TestJobViewSet(APITestCase):
                          request_data['provider_tasks'][0]['formats'][1])
         self.assertEqual(response.data['name'], request_data['name'])
         self.assertEqual(response.data['description'], request_data['description'])
+        self.assertEqual(response.data['original_selection'], request_data['original_selection'])
         self.assertTrue(response.data['published'])
 
         # check we have the correct tags

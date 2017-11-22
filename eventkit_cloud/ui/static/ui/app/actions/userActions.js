@@ -1,20 +1,20 @@
-import actions from './actionTypes'
-import {push} from 'react-router-redux'
-import axios from 'axios'
-import cookie from 'react-cookie'
+import { push } from 'react-router-redux';
+import axios from 'axios';
+import cookie from 'react-cookie';
+import actions from './actionTypes';
 
-
-export const logout = query => dispatch => {
-
-    return axios('/logout', {method: 'GET'}).then((response) => {
+export const logout = query => (dispatch) => {
+    return axios('/logout', { method: 'GET' }).then(() => {
         dispatch({
             type: actions.USER_LOGGED_OUT,
-        })
-        dispatch(push({ pathname: '/login', search: query }));
+        });
+        if (typeof query === 'undefined') {
+            dispatch(push({ pathname: '/login' }));
+        }
     }).catch((error) => {
         console.log(error);
     });
-}
+};
 
 
 export const login = (data, query) => (dispatch) => {
@@ -26,7 +26,7 @@ export const login = (data, query) => (dispatch) => {
     });
 
     const form_data = new FormData();
-    var method = 'get';
+    let method = 'get';
     if (data && (data.username && data.password)) {
         form_data.append('username', data.username);
         form_data.append('password', data.password);
@@ -35,22 +35,22 @@ export const login = (data, query) => (dispatch) => {
 
     return axios({
         url: '/auth',
-        method: method,
+        method,
         data: form_data,
-        headers: {"X-CSRFToken": csrftoken}
+        headers: { 'X-CSRFToken': csrftoken },
     }).then((response) => {
-            if (response.data) {
-                dispatch({
-                    type: actions.USER_LOGGED_IN,
-                    payload: response.data
-                });
-            } else {
-                dispatch(logout(query));
-            }
-        }).catch((error) => {
+        if (response.data) {
+            dispatch({
+                type: actions.USER_LOGGED_IN,
+                payload: response.data,
+            });
+        } else {
+            dispatch(logout(query));
+        }
+    }).catch(() => {
         dispatch(logout(query));
     });
-}
+};
 
 export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     const csrftoken = cookie.load('csrftoken');
@@ -59,21 +59,36 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     });
 
     return axios({
-        url: '/api/user/' + username,
+        url: `/api/user/${username}`,
         method: 'PATCH',
-        data: {accepted_licenses: acceptedLicenses},
-        headers: {'X-CSRFToken': csrftoken}
+        data: { accepted_licenses: acceptedLicenses },
+        headers: { 'X-CSRFToken': csrftoken },
     }).then((response) => {
-
         dispatch({
             type: actions.PATCHED_USER,
-            payload: response.data || {"ERROR": "No user response data"}
+            payload: response.data || { ERROR: 'No user response data'},
         });
     }).catch((error) => {
         dispatch({
             type: actions.PATCHING_USER_ERROR,
-            error: error
+            error,
         });
     });
 }
 
+export const userActive = () => (dispatch) => {
+    return axios('/user_active', {method: 'GET'}).then((response) => {
+        const autoLogoutAt = response.data.auto_logout_at;
+        const autoLogoutWarningat = response.data.auto_logout_warning_at;
+
+        dispatch({
+            type: actions.USER_ACTIVE,
+            payload: {
+                autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
+                autoLogoutWarningAt: (autoLogoutWarningat) ? new Date(autoLogoutWarningat) : null,
+            },
+        });
+    }).catch((error) => {
+        console.error(error.message);
+    });
+};

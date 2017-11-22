@@ -1,6 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
+import { browserHistory } from 'react-router';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
@@ -11,13 +12,14 @@ import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
 import ExportAOI from '../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
-
+import * as utils from '../utils/mapUtils';
 
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => ({
-        aoiInfo: { geojson: {} },
+        aoiInfo: { geojson: {}, originalGeojson: {} },
         providers,
+        jobFetched: false,
         stepperNextEnabled: false,
         exportInfo: {
             exportName: '',
@@ -37,6 +39,7 @@ describe('BreadcrumbStepper component', () => {
         setExportInfoDone: () => {},
         clearAoiInfo: () => {},
         clearExportInfo: () => {},
+        clearJobInfo: () => {},
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />, {
@@ -58,10 +61,85 @@ describe('BreadcrumbStepper component', () => {
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
     });
 
+    it('render should call getErrorMessage twice', () => {
+        const props = getProps();
+        const getMessageSpy = sinon.spy(BreadcrumbStepper.prototype, 'getErrorMessage');
+        const wrapper = getWrapper(props);
+        expect(getMessageSpy.called).toBe(false);
+        const nextProps = { ...getProps() };
+        nextProps.jobError = {
+            response: {
+                data: {
+                    errors: [
+                        { title: 'one', detail: 'one' },
+                        { title: 'two', detail: 'two' },
+                    ],
+                },
+            },
+        };
+        wrapper.setProps(nextProps);
+        expect(getMessageSpy.calledTwice).toBe(true);
+    });
+
+    it('componentDidMount should set nextDisabled and get providers and formats', () => {
+        const props = getProps();
+        const mountSpy = sinon.spy(BreadcrumbStepper.prototype, 'componentDidMount');
+        props.exportInfo.exportName = '';
+        props.getProviders = sinon.spy();
+        props.getFormats = sinon.spy();
+        props.setNextDisabled = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().componentDidMount();
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(props.setNextDisabled.calledOnce).toBe(true);
+        expect(props.getProviders.calledOnce).toBe(true);
+        expect(props.getFormats.calledOnce).toBe(true);
+        mountSpy.restore();
+    });
+
+    it('componentWillReceiveProps should push to status page and clearJobInfo', () => {
+        const props = getProps();
+        props.clearJobInfo = sinon.spy();
+        const pushStub = sinon.stub(browserHistory, 'push');
+        const wrapper = getWrapper(props);
+        const nextProps = { ...getProps() };
+        nextProps.jobuid = '123';
+        nextProps.jobFetched = true;
+        wrapper.setProps(nextProps);
+        expect(pushStub.calledOnce).toBe(true);
+        expect(pushStub.calledWith('/status/123')).toBe(true);
+        expect(props.clearJobInfo.calledOnce).toBe(true);
+        pushStub.restore();
+    });
+
+    it('componentWillReceiveProps should show job error', () => {
+        const props = getProps();
+        props.jobError = null;
+        const showErrorStub = sinon.stub(BreadcrumbStepper.prototype, 'showError');
+        const wrapper = getWrapper(props);
+        const nextProps = { ...getProps() };
+        nextProps.jobError = { response: 'response' };
+        wrapper.setProps(nextProps);
+        expect(showErrorStub.calledOnce).toBe(true);
+        expect(showErrorStub.calledWith('response')).toBe(true);
+        showErrorStub.restore();
+    });
+
+    it('componentWillUnmount should clear out redux states', () => {
+        const props = getProps();
+        props.clearAoiInfo = sinon.spy();
+        props.clearExportInfo = sinon.spy();
+        props.clearJobInfo = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.unmount();
+        expect(props.clearAoiInfo.calledOnce).toBe(true);
+        expect(props.clearExportInfo.calledOnce).toBe(true);
+        expect(props.clearJobInfo.calledOnce).toBe(true);
+    });
+
     it('getErrorMessage should return formated title and detail', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-
         const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
             context: { muiTheme },
             childContextTypes: {
@@ -201,14 +279,18 @@ describe('BreadcrumbStepper component', () => {
                 formats: ['gpkg'],
             }],
             selection: {},
+            original_selection: {},
             tags: [],
         };
         const handleSpy = sinon.spy(BreadcrumbStepper.prototype, 'handleSubmit');
+        const flattenStub = sinon.stub(utils, 'flattenFeatureCollection')
+            .callsFake(fc => (fc));
         const wrapper = getWrapper(props);
         wrapper.instance().handleSubmit();
         expect(handleSpy.calledOnce).toBe(true);
         expect(props.submitJob.calledOnce).toBe(true);
         expect(props.submitJob.calledWith(expectedProps)).toBe(true);
+        flattenStub.restore();
     });
 
     it('handleNext should increment the stepIndex', () => {
