@@ -1,6 +1,6 @@
 from mapproxy import srs as mapproxy_srs
 from mapproxy import grid as mapproxy_grid
-from eventkit_cloud.jobs.models import ExportProvider
+from eventkit_cloud.jobs.models import DataProvider
 from django.core.exceptions import ObjectDoesNotExist
 
 
@@ -14,7 +14,7 @@ def get_size_estimate(provider, bbox, srs='3857'):
     Returns: Estimated size in GB
     """
     try:
-        provider = ExportProvider.objects.get(name=provider)
+        provider = DataProvider.objects.get(name=provider)
     except ObjectDoesNotExist:
         return None
     levels = range(provider.level_from, provider.level_to+1)

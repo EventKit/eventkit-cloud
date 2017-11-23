@@ -64,7 +64,7 @@ class TestOverpass(TestCase):
         self.assertEquals(q, self.query)
 
     @patch('django.db.connection.close')
-    @patch('eventkit_cloud.tasks.models.ExportTask')
+    @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
     @patch('eventkit_cloud.utils.overpass.requests.post')
     def test_run_query(self, mock_post, export_task, mock_close):
         verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)

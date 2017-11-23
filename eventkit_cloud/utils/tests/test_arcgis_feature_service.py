@@ -19,7 +19,7 @@ class TestArcFeatureServiceToGPKG(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.tasks.models.ExportTask')
+    @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
     @patch('eventkit_cloud.utils.arcgis_feature_service.os.path.exists')
     def test_create_convert(self, exists, export_task):
         gpkg = '/path/to/sqlite.gpkg'

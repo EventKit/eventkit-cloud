@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import axios from 'axios';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -34,7 +35,7 @@ import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
 import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, clearDraw,
-    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToGeometry, unwrapCoordinates,
+    MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasPointOrLine } from '../../utils/mapUtils';
 
 export const WGS84 = 'EPSG:4326';
@@ -52,6 +53,7 @@ export class ExportAOI extends Component {
         this.handleCancel = this.handleCancel.bind(this);
         this.handleResetMap = this.handleResetMap.bind(this);
         this.handleSearch = this.handleSearch.bind(this);
+        this.checkForSearchUpdate = this.checkForSearchUpdate.bind(this);
         this.setMapView = this.setMapView.bind(this);
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
@@ -156,13 +158,34 @@ export class ExportAOI extends Component {
         this.map.getView().fit(worldExtent, this.map.getSize());
     }
 
+    checkForSearchUpdate(result) {
+        if (result.geometry.type === 'Point' && !(result.bbox || result.properties.bbox)) {
+            return axios.get('/geocode', {
+                params: {
+                    result,
+                },
+            }).then(response => (
+                this.handleSearch(response.data)
+            )).catch((error) => {
+                console.log(error.message);
+                return this.handleSearch(result);
+            });
+        }
+        return this.handleSearch(result);
+    }
+
     handleSearch(result) {
         clearDraw(this.drawLayer);
         this.showInvalidDrawWarning(false);
         const searchFeature = (new GeoJSON()).readFeature(result);
         searchFeature.getGeometry().transform(WGS84, WEB_MERCATOR);
         this.drawLayer.getSource().addFeature(searchFeature);
-        const geojson = createGeoJSON(searchFeature.getGeometry());
+        const geojson = {
+            type: 'FeatureCollection',
+            features: [
+                result,
+            ],
+        };
         let description = '';
         description += (result.country || '');
         description += (result.province ? `, ${result.province}` : '');
@@ -176,7 +199,7 @@ export class ExportAOI extends Component {
             description,
             selectionType: 'search',
         });
-        zoomToGeometry(searchFeature.getGeometry(), this.map);
+        zoomToFeature(searchFeature, this.map);
         if (searchFeature.getGeometry().getType() === 'Polygon' || searchFeature.getGeometry().getType() === 'MultiPolygon') {
             this.props.setNextEnabled();
         }
@@ -523,10 +546,14 @@ export class ExportAOI extends Component {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857',
         });
-        const source = new VectorSource({
-            features,
-        });
-        this.map.getView().fit(source.getExtent());
+        if (features.length === 1) {
+            zoomToFeature(features[0], this.map);
+        } else {
+            const source = new VectorSource({
+                features,
+            });
+            this.map.getView().fit(source.getExtent());
+        }
     }
 
     bufferMapFeature(size) {
@@ -579,7 +606,7 @@ export class ExportAOI extends Component {
                         clickZoomToSelection={this.handleZoomToSelection}
                     />
                     <SearchAOIToolbar
-                        handleSearch={this.handleSearch}
+                        handleSearch={this.checkForSearchUpdate}
                         handleCancel={this.handleCancel}
                         geocode={this.props.geocode}
                         toolbarIcons={this.state.toolbarIcons}
