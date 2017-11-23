@@ -18,6 +18,8 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..utils.provider_check import get_provider_checker
+
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
@@ -53,7 +55,7 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
 class JobViewSet(viewsets.ModelViewSet):
     """
-    Main endpoint for export creation and managment. Provides endpoints
+    Main endpoint for export creation and management. Provides endpoints
     for creating, listing and deleting export jobs.
 
     Updates to existing jobs are not supported as exports can be cloned.
@@ -180,7 +182,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 }
 
 
-        To monitor the resulting export run retreive the `uid` value from the returned json
+        To monitor the resulting export run retrieve the `uid` value from the returned json
         and call /api/runs?job_uid=[the returned uid]
 
         * Returns: the newly created Job instance.
@@ -465,7 +467,6 @@ class JobViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 
-
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -515,6 +516,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = DataProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    parser_classes = (JSONParser,)
     lookup_field = 'slug'
     ordering = ['name']
 
@@ -524,6 +526,39 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         for the currently authenticated user.
         """
         return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+
+    @detail_route(methods=['get', 'post'])
+    def status(self, request, slug=None, *args, **kwargs):
+        """
+        :return:
+        """
+        try:
+            provider = ExportProvider.objects.get(slug=slug)
+            provider_type = str(provider.export_provider_type)
+
+            aoi = None
+            if request is not None:
+                aoi = request.data.get('aoi')
+
+            url = str(provider.url)
+            if url == "" and 'osm' in provider_type:
+                url = settings.OVERPASS_API_URL
+
+            checker_type = get_provider_checker(provider_type)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi)
+            response = checker.check()
+
+            logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except ExportProvider.DoesNotExist as e:
+            return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.error(e)
+            logger.error(e.message)
+            return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -726,7 +761,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
-
         """
         Update the expiration date for an export run
 

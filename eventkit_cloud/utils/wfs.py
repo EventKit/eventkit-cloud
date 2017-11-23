@@ -6,7 +6,6 @@ import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
 from ..utils.geopackage import check_content_exists
-
 logger = logging.getLogger(__name__)
 
 
