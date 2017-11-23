@@ -196,7 +196,8 @@ def get_cache_template(sources, grids, geopackage, table_name='tiles'):
     }
 
 
-def get_seed_template(bbox=[-180, -89, 180, 89], level_from=None, level_to=None, coverage_file=None):
+def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=None):
+    bbox = bbox or [-180, -89, 180, 89]
     seed_template = {
         'coverages': {
             'geom': {
@@ -241,7 +242,7 @@ def create_conf_from_url(service_url):
 
 def check_service(conf_dict):
     """
-    Used to verify the state of the service before running the seed task. This is used to prevent and invalid url from
+    Used to verify the state of the service before running the seed task. This is used to prevent an invalid url from
     being seeded.  MapProxy's default behavior is to either cache a blank tile or to retry, that behavior can be altered,
     in the cache settings (i.e. `get_cache_template`).
     :param conf_dict: A MapProxy configuration as a dict.
