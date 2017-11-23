@@ -61,6 +61,14 @@ describe('BreadcrumbStepper component', () => {
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
     });
 
+    it('should render a loading icon', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.find('.qa-BreadcrumbStepper-CircularProgress')).toHaveLength(0);
+        wrapper.setState({ loading: true });
+        expect(wrapper.find('.qa-BreadcrumbStepper-CircularProgress')).toHaveLength(1);
+    });
+
     it('render should call getErrorMessage twice', () => {
         const props = getProps();
         const getMessageSpy = sinon.spy(BreadcrumbStepper.prototype, 'getErrorMessage');
@@ -100,28 +108,34 @@ describe('BreadcrumbStepper component', () => {
     it('componentWillReceiveProps should push to status page and clearJobInfo', () => {
         const props = getProps();
         props.clearJobInfo = sinon.spy();
+        const hideStub = sinon.stub(BreadcrumbStepper.prototype, 'hideLoading');
         const pushStub = sinon.stub(browserHistory, 'push');
         const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
         nextProps.jobuid = '123';
         nextProps.jobFetched = true;
         wrapper.setProps(nextProps);
+        expect(hideStub.calledOnce).toBe(true);
         expect(pushStub.calledOnce).toBe(true);
         expect(pushStub.calledWith('/status/123')).toBe(true);
         expect(props.clearJobInfo.calledOnce).toBe(true);
+        hideStub.restore();
         pushStub.restore();
     });
 
     it('componentWillReceiveProps should show job error', () => {
         const props = getProps();
         props.jobError = null;
+        const hideStub = sinon.stub(BreadcrumbStepper.prototype, 'hideLoading');
         const showErrorStub = sinon.stub(BreadcrumbStepper.prototype, 'showError');
         const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
         nextProps.jobError = { response: 'response' };
         wrapper.setProps(nextProps);
+        expect(hideStub.calledOnce).toBe(true);
         expect(showErrorStub.calledOnce).toBe(true);
         expect(showErrorStub.calledWith('response')).toBe(true);
+        hideStub.restore();
         showErrorStub.restore();
     });
 
@@ -262,6 +276,20 @@ describe('BreadcrumbStepper component', () => {
         expect(content.find('div')).toHaveLength(1);
     });
 
+    it('submitDatapack should showLoading then wait and call handleSubmit', () => {
+        jest.useFakeTimers();
+        const props = getProps();
+        const loadingStub = sinon.stub(BreadcrumbStepper.prototype, 'showLoading');
+        const handleStub = sinon.stub(BreadcrumbStepper.prototype, 'handleSubmit');
+        const wrapper = getWrapper(props);
+        wrapper.instance().submitDatapack();
+        jest.runAllTimers();
+        expect(loadingStub.calledOnce).toBe(true);
+        expect(handleStub.calledOnce).toBe(true);
+        loadingStub.restore();
+        handleStub.restore();
+    });
+
     it('handleSubmit should submit a job with the correct data', () => {
         const props = getProps();
         props.exportInfo.exportName = 'test name';
@@ -337,6 +365,26 @@ describe('BreadcrumbStepper component', () => {
         wrapper.instance().hideError();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ showError: false })).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('showLoading should set loading to true', () => {
+        const props = getProps();
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().showLoading();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ loading: true })).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('hideLoading should set loading to false', () => {
+        const props = getProps();
+        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().hideLoading();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ loading: false })).toBe(true);
         stateSpy.restore();
     });
 });
