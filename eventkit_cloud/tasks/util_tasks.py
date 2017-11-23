@@ -2,12 +2,12 @@ from celery import Task
 from celery.app import app_or_default
 from eventkit_cloud.celery import app
 
-from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 
 
 class RevokeTask(Task):
     def run(self, task_uid):
-        pt = ExportProviderTask.objects.filter(uid=task_uid).first()
+        pt = DataProviderTaskRecord.objects.filter(uid=task_uid).first()
         export_tasks = pt.tasks.all()
         app = app_or_default()
 

@@ -1,5 +1,5 @@
 [{
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 1,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.104Z",
@@ -8,7 +8,7 @@
 			"supported_formats" : []
 		}
 	}, {
-		"model": "jobs.exportprovidertype",
+		"model": "jobs.dataprovidertype",
 		"pk": 2,
 		"fields": {
 			"created_at": "2016-10-19T18:01:26.116Z",
@@ -17,7 +17,7 @@
 			"supported_formats": []
 		}
 	}, {
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 3,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.109Z",
@@ -26,7 +26,7 @@
 			"supported_formats" : []
 		}
 	}, {
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 4,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.114Z",
@@ -35,7 +35,7 @@
 			"supported_formats" : []
 		}
 	}, {
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 5,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.116Z",
@@ -44,7 +44,7 @@
 			"supported_formats" : []
 		}
 	},{
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 6,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.116Z",
@@ -54,7 +54,7 @@
 		}
 	},
 	{
-		"model": "jobs.exportprovidertype",
+		"model": "jobs.dataprovidertype",
 		"pk": 7,
 		"fields": {
 			"created_at": "2016-10-19T18:01:26.116Z",
@@ -64,7 +64,7 @@
 		}
 	},
 	{
-		"model" : "jobs.exportprovidertype",
+		"model" : "jobs.dataprovidertype",
 		"pk" : 8,
 		"fields" : {
 			"created_at" : "2016-10-19T18:01:26.116Z",
