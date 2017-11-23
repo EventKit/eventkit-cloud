@@ -24,7 +24,7 @@ class Overpass(object):
     """
 
     def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
-            raw_data_filename=None):
+                 raw_data_filename=None):
         """
         Initialize the Overpass utility.
 
