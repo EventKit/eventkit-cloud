@@ -46,9 +46,14 @@ describe('export actions', () => {
     };
 
     it('updateAoiInfo should return passed in json', () => {
-        expect(actions.updateAoiInfo(geojson, 'Polygon', 'title', 'description')).toEqual({
+        expect(actions.updateAoiInfo({
+            geojson,
+            geomType: 'Polygon',
+            title: 'title',
+            description: 'description',
+        })).toEqual({
             type: 'UPDATE_AOI_INFO',
-            geojson: geojson,
+            geojson,
             geomType: 'Polygon',
             title: 'title',
             description: 'description',

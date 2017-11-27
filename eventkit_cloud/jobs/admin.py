@@ -6,20 +6,22 @@ from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
-
-from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
-    ProviderTask, DatamodelPreset, License, UserLicense
 import logging
+
+from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
+    DataProviderTask, DatamodelPreset, License, UserLicense
+
 
 logger = logging.getLogger(__name__)
 
 admin.site.register(ExportFormat)
 admin.site.register(ExportProfile)
-admin.site.register(ExportProviderType)
-admin.site.register(ProviderTask)
+admin.site.register(DataProviderType)
+admin.site.register(DataProviderTask)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(UserLicense)
+
 
 class HOTRegionGeoAdmin(OSMGeoAdmin):
     """
@@ -104,12 +106,12 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ['uid', 'name', 'user', 'config_type', 'published', 'created_at']
 
 
-class ExportProviderForm(forms.ModelForm):
+class DataProviderForm(forms.ModelForm):
     """
     Admin form for editing export providers in the admin interface.
     """
     class Meta:
-        model = ExportProvider
+        model = DataProvider
         fields = ['name',
                   'slug',
                   'url',
@@ -129,8 +131,8 @@ class ExportProviderForm(forms.ModelForm):
 
     def clean_config(self):
         config = self.cleaned_data.get('config')
-        if config == "":
-            return self.cleaned_data
+        if not config:
+            return
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
@@ -153,15 +155,15 @@ class ExportProviderForm(forms.ModelForm):
         return config
 
 
-class ExportProviderAdmin(admin.ModelAdmin):
+class DataProviderAdmin(admin.ModelAdmin):
     """
     Admin model for editing export providers in the admin interface.
     """
-    form = ExportProviderForm
+    form = DataProviderForm
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
-admin.site.register(ExportProvider, ExportProviderAdmin)
+admin.site.register(DataProvider, DataProviderAdmin)

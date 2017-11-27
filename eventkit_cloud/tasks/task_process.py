@@ -19,7 +19,7 @@ class TaskProcess(object):
         self.stderr = None
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
-        from .models import ExportTask
+        from .models import ExportTaskRecord
         from ..tasks.export_tasks import TaskStates
 
         if billiard:
@@ -37,7 +37,7 @@ class TaskProcess(object):
         # We need to close the existing connection because the logger could be using a forked process which,
         # will be invalid and throw an error.
         connection.close()
-        export_task = ExportTask.objects.filter(uid=self.task_uid).first()
+        export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
         if export_task and export_task.status == TaskStates.CANCELED.value:
             from ..tasks.exceptions import CancelException
             raise CancelException(task_name=export_task.export_provider_task.name,
@@ -51,8 +51,8 @@ class TaskProcess(object):
         if pid:
             if not self.task_uid:
                 return
-            from ..tasks.models import ExportTask
-            export_task = ExportTask.objects.filter(uid=self.task_uid).first()
+            from ..tasks.models import ExportTaskRecord
+            export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
             if export_task:
                 export_task.pid = pid
                 export_task.save()

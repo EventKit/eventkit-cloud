@@ -1,6 +1,6 @@
 [
   {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
       "name": "wms",
       "slug": "wms",
@@ -10,7 +10,7 @@
     }
   },
   {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
       "name": "wmts",
       "url": "http://test/wmts",
@@ -19,7 +19,7 @@
     }
   },
   {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
       "name": "arc-raster",
       "slug": "arc-raster",
@@ -29,7 +29,7 @@
     }
   },
   {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
       "name": "wfs",
       "slug": "wfs",
@@ -39,7 +39,7 @@
     }
   },
   {
-    "model": "jobs.exportprovider",
+    "model": "jobs.dataprovider",
     "fields": {
       "name": "arc-fs",
       "slug": "arc-fs",

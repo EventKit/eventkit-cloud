@@ -4,6 +4,8 @@ import { mount } from 'enzyme';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -57,6 +59,7 @@ describe('ExportAOI component', () => {
         {
             aoiInfo: {
                 geojson: {},
+                orginalGeojson: {},
                 geomType: null,
                 title: null,
                 description: null,
@@ -368,13 +371,59 @@ describe('ExportAOI component', () => {
         fitSpy.restore();
     });
 
+    it('checkForSearchUpdate should get new result if feature is a point and has no bbox', async () => {
+        const feature = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1],
+            },
+            properties: {
+                name: 'feature1',
+            },
+        };
+        const returnedFeature = { ...feature };
+        returnedFeature.bbox = [1, 1, 1, 1];
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onGet('/geocode').reply(200, returnedFeature);
+        const handleSearchStub = sinon.stub(ExportAOI.prototype, 'handleSearch')
+            .returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const ret = await wrapper.instance().checkForSearchUpdate(feature);
+        expect(ret).toBe(true);
+        expect(handleSearchStub.calledOnce).toBe(true);
+        expect(handleSearchStub.calledWith(returnedFeature)).toBe(true);
+        handleSearchStub.restore();
+    });
+
+    it('checkForSearchUpdate should handle search if not Point feature', () => {
+        const feature = {
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [1, 1],
+            },
+            properties: {},
+            bbox: [1, 1, 1, 1],
+        };
+        const handleSearchStub = sinon.stub(ExportAOI.prototype, 'handleSearch')
+            .returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const ret = wrapper.instance().checkForSearchUpdate(feature);
+        expect(ret).toBe(true);
+        expect(handleSearchStub.calledOnce).toBe(true);
+        expect(handleSearchStub.calledWith(feature)).toBe(true);
+        handleSearchStub.restore();
+    });
+
     it('handleSearch should create a transformed geojson, update AoiInfo, zoom to, and set next enabled', () => {
         const props = getProps();
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const clearSpy = sinon.spy(utils, 'clearDraw');
-        const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const zoomSpy = sinon.spy(utils, 'zoomToGeometry');
+        const zoomSpy = sinon.spy(utils, 'zoomToFeature');
         const wrapper = getWrapper(props);
         const showSpy = wrapper.instance().showInvalidDrawWarning = sinon.spy();
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeature');
@@ -385,13 +434,11 @@ describe('ExportAOI component', () => {
         expect(showSpy.calledOnce).toBe(true);
         expect(readSpy.calledOnce).toBe(true);
         expect(transformSpy.called).toBe(true);
-        expect(createSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(zoomSpy.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
-        createSpy.restore();
         zoomSpy.restore();
         readSpy.restore();
         transformSpy.restore();
@@ -787,7 +834,14 @@ describe('ExportAOI component', () => {
         expect(validStub.calledOnce).toBe(true);
         expect(boxStub.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.updateAoiInfo.calledWith(geojson, 'Polygon', 'Custom Polygon', 'Box', 'box')).toBe(true);
+        expect(props.updateAoiInfo.calledWith({
+            geojson,
+            orginalGeojson: {},
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Box',
+            selectionType: 'box',
+        })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
@@ -836,7 +890,14 @@ describe('ExportAOI component', () => {
         expect(validStub.calledOnce).toBe(true);
         expect(boxStub.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
-        expect(props.updateAoiInfo.calledWith(geojson, 'Polygon', 'Custom Polygon', 'Draw', 'free')).toBe(true);
+        expect(props.updateAoiInfo.calledWith({
+            geojson,
+            orginalGeojson: {},
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Draw',
+            selectionType: 'free',
+        })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);

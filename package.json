@@ -93,7 +93,8 @@
       "!**/staticfiles/**",
       "!**/styles/**",
       "!**/node_modules/**",
-      "!**/vendor/**"
+      "!**/vendor/**",
+      "!**/e2e/**"
     ],
     "moduleFileExtensions": [
       "js",

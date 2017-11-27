@@ -22,7 +22,7 @@ from ..ui.helpers import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
                                   wait_for_providers_task, TaskStates)
 
-from ..tasks.models import ExportRun, ExportProviderTask
+from ..tasks.models import ExportRun, DataProviderTaskRecord
 from ..tasks.task_runners import create_export_task_record
 from .task_runners import (
     ExportOSMTaskRunner,
@@ -236,7 +236,7 @@ def create_run(job_uid, user=None):
 def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, selection=None, task=None,
                 job_name=None, user_details=None):
     """
-    Create a new task to export the bounds for an ExportProviderTask
+    Create a new task to export the bounds for an DataProviderTaskRecord
     :param export_provider_task_uid: An export provider task UUID.
     :param worker: The name of the celery worker assigned the task.
     :return: A celery task signature.
@@ -245,7 +245,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     if user_details is None:
         user_details = {'username': 'unknown-create_task'}
 
-    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
     export_task = create_export_task_record(
         task_name=task.name, export_provider_task=export_provider_task, worker=worker,
         display=getattr(task, "display", False)
