@@ -845,8 +845,13 @@ class PickUpRunFailureTask(ExportTask):
                 task.export_provider_task.status = TaskStates.FAILED.value
                 task.export_provider_task.save()
 
+            run = task.export_provider_task.run
+            if run.status != TaskStates.FAILED.value:
+                run.status = TaskStates.FAILED.value
+                run.save()
 
-@app.task(name='Pickup Run', bind=True)
+
+@app.task(name='Pickup Run', bind=True, base=PickUpRunFailureTask)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
