@@ -3,7 +3,6 @@ import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
-import BufferButton from './BufferButton';
 
 export class DrawAOIToolbar extends Component {
     componentDidMount() {
@@ -16,7 +15,7 @@ export class DrawAOIToolbar extends Component {
                 zIndex: 1,
                 position: 'absolute',
                 width: '50px',
-                height: this.props.showBufferButton ? '260px' : '230px',
+                height: '230px',
                 top: '70px',
                 right: '10px',
                 backgroundColor: '#fff',
@@ -64,11 +63,6 @@ export class DrawAOIToolbar extends Component {
                     setImportModalState={this.props.setImportModalState}
                     setAllButtonsDefault={this.props.setAllButtonsDefault}
                 />
-                {this.props.showBufferButton ?
-                    <BufferButton onBufferClick={this.props.onBufferClick} />
-                    :
-                    null
-                }
             </div>
         );
     }
@@ -76,8 +70,6 @@ export class DrawAOIToolbar extends Component {
 
 DrawAOIToolbar.defaultProps = {
     containerStyle: {},
-    showBufferButton: false,
-    onBufferClick: null,
 };
 
 DrawAOIToolbar.propTypes = {
@@ -92,8 +84,6 @@ DrawAOIToolbar.propTypes = {
     setImportButtonSelected: PropTypes.func.isRequired,
     setImportModalState: PropTypes.func.isRequired,
     containerStyle: PropTypes.object,
-    showBufferButton: PropTypes.bool,
-    onBufferClick: PropTypes.func,
 };
 
 export default DrawAOIToolbar;

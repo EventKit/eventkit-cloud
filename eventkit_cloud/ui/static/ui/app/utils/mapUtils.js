@@ -159,20 +159,23 @@ export function bufferGeojson(featureCollection, bufferSize, bufferPolys) {
     const jstsGeoJSON = geojsonReader.read(featureCollection);
     const { features } = jstsGeoJSON;
     const writer = new GeoJSONWriter();
-    const bufferedFeatures = features.map((feat) => {
+    const bufferedFeatures = [];
+    features.forEach((feat) => {
         const size = bufferSize || 1;
         const geom = bufferGeometry(feat.geometry, size, bufferPolys);
         let geojsonGeom;
         if (geom.getArea() !== 0) {
             geojsonGeom = writer.write(geom);
-        } else {
-            geojsonGeom = writer.write(feat.geometry);
+            // } else {
+            //     // geojsonGeom = writer.write(feat.geometry);
+            //     return null;
+            // }
+            bufferedFeatures.push({
+                type: 'Feature',
+                properties: feat.properties || {},
+                geometry: { ...geojsonGeom },
+            });
         }
-        return {
-            type: 'Feature',
-            properties: feat.properties || {},
-            geometry: { ...geojsonGeom },
-        };
     });
     const bufferedFeatureCollection = {
         type: 'FeatureCollection',
