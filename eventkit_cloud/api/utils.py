@@ -1,5 +1,7 @@
 from rest_framework.views import exception_handler
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+import rest_framework.status
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,42 +23,53 @@ def eventkit_exception_handler(exc, context):
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
+
     response = exception_handler(exc, context)
-    error = response.data
-    status = response.status_code
-    error_class = exc.__class__.__name__
+    if response:
 
-    error_response = {
-        'status': status,
-        'title': error_class,
-        'detail': error
-    }
+        error = response.data
+        status = response.status_code
+        error_class = exc.__class__.__name__
 
-    if (error.get('id')) and (error.get('message')):
-        # if both id and message are present we can assume that this error was generated from validators.py
-        # and use them as the title and detail
-        error_response['title'] = stringify(error.get('id'))
-        error_response['detail'] = stringify(error.get('message'))
+        error_response = {
+            'status': status,
+            'title': error_class,
+            'detail': error
+        }
 
-    elif isinstance(exc, ValidationError):
-        # if the error is a ValidationError type and not from validators.py we need to get rid of the wonky format.
-        # Error might looks like this: {'name': [u'Ensure this field has no more than 100 characters.']}
-        # it should look like this: 'name: Ensure this field has no more than 100 characters.'
-        detail = ''
-        if isinstance(error, dict):
-            if error.get('provider_tasks'):
-                # provider tasks errors have some extra nesting that needs to be handled
-                detail = parse_provider_tasks(error)
+        if (error.get('id')) and (error.get('message')):
+            # if both id and message are present we can assume that this error was generated from validators.py
+            # and use them as the title and detail
+            error_response['title'] = stringify(error.get('id'))
+            error_response['detail'] = stringify(error.get('message'))
+
+        elif isinstance(exc, ValidationError):
+            # if the error is a ValidationError type and not from validators.py we need to get rid of the wonky format.
+            # Error might looks like this: {'name': [u'Ensure this field has no more than 100 characters.']}
+            # it should look like this: 'name: Ensure this field has no more than 100 characters.'
+            detail = ''
+            if isinstance(error, dict):
+                if error.get('provider_tasks'):
+                    # provider tasks errors have some extra nesting that needs to be handled
+                    detail = parse_provider_tasks(error)
+                else:
+                    for key, value in error.iteritems():
+                        detail += '{0}: {1}\n'.format(key, stringify(value))
+                detail = detail.rstrip('\n')
             else:
-                for key, value in error.iteritems():
-                    detail += '{0}: {1}\n'.format(key, stringify(value))
-            detail = detail.rstrip('\n')
-        else:
-            detail = stringify(error)
+                detail = stringify(error)
 
-        error_response['detail'] = detail
+            error_response['detail'] = detail
 
-    response.data = {'errors':[error_response]}
+        response.data = {'errors':[error_response]}
+    # exception_handler doesn't handle generic exceptions, so we need to handle that here.
+    else:
+        response_status = rest_framework.status.HTTP_500_INTERNAL_SERVER_ERROR
+        response = Response({'errors': {
+            'status': response_status,
+            'title': str(exc.__class__.__name__),
+            'detail': exc.message
+        }}, status=response_status)
     return response
 
 

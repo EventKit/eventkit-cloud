@@ -7,12 +7,9 @@ from ..core.helpers import get_id
 from django.contrib.auth import login
 import urllib
 from django.shortcuts import redirect
-from ..api.serializers import UserDataSerializer
-from rest_framework.renderers import JSONRenderer
 from django.http import HttpResponse
 import json
 from django.contrib.auth import logout as auth_logout
-from datetime import datetime
 
 from logging import getLogger
 

@@ -120,9 +120,10 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        response = json.loads(response.content)
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
-        response = json.loads(response.content)
+        print response
         self.assertEqual(response['exports'][0]['provider'], 'test')
 
         request_data['export_providers'][0]['name'] = 'test 2'
