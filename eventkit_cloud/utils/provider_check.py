@@ -215,9 +215,11 @@ class OWSProviderCheck(ProviderCheck):
     def validate_response(self, response):
 
         try:
-            xml = response.content.lower()
-            xml = xml.replace("![cdata[", "![CDATA[")
-            root = ET.fromstring(xml)
+            xml = response.content
+            doctype_pos = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml).end()
+            xmll = xml[:doctype_pos] + xml[doctype_pos+1:].lower()
+            xmll = xmll.replace("![cdata[", "![CDATA[")
+            root = ET.fromstring(xmll)
             # Check for namespace
             m = re.search(r"^{.*?}", root.tag)
             self.ns = m.group() if m else ""
