@@ -127,7 +127,7 @@ class TestJobViewSet(APITestCase):
 
         request_data['export_providers'][0]['name'] = 'test 2'
         # should be idempotent
-        response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
 
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)

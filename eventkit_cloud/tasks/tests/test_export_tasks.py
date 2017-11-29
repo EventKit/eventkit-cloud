@@ -14,7 +14,6 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
-from django.db.models.signals import post_save
 
 from billiard.einfo import ExceptionInfo
 from celery import chain
