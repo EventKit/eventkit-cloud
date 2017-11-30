@@ -123,7 +123,7 @@ class TestJobViewSet(APITestCase):
         response = json.loads(response.content)
         export_providers = ExportProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
-        print response
+
         self.assertEqual(response['exports'][0]['provider'], 'test')
 
         request_data['export_providers'][0]['name'] = 'test 2'
