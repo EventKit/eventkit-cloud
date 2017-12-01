@@ -7,7 +7,7 @@ class CancelException(Exception):
         :param message: A non-default message
         :param task_uid: Task_uid to look up user and task name.
         """
-        from .models import ExportTask
+        from .models import ExportTaskRecord
         self.message = message  # without this you may get DeprecationWarning
         self.filename = filename
         if not self.message:
@@ -24,7 +24,7 @@ class DeleteException(Exception):
         :param message: A non-default message
         :param task_uid: Task_uid to look up user and task name.
         """
-        from .models import ExportTask
+        from .models import ExportTaskRecord
         self.message = message  # without this you may get DeprecationWarning
         self.filename = filename
         if not self.message:

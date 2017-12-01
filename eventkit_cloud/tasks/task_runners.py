@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import DatabaseError
 
 from celery import group, chain  # required for tests
-from eventkit_cloud.jobs.models import ProviderTask
+from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
     wfs_export_task,
@@ -17,7 +17,7 @@ from eventkit_cloud.tasks.export_tasks import (
     osm_data_collection_task,
     TaskStates)
 
-from eventkit_cloud.tasks.models import ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +51,13 @@ class ExportOSMTaskRunner(TaskRunner):
         """
         Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
-        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param provider_task_uid: A reference uid for the DataProviderTask model.
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
         :param osm_gpkg: A OSM geopackage with the planet osm schema.
-        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get('user_details')
@@ -66,7 +66,7 @@ class ExportOSMTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
 
         job_name = normalize_name(job.name)
@@ -87,11 +87,11 @@ class ExportOSMTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
-        export_provider_task_record = ExportProviderTask.objects.create(run=run,
-                                                                        name=provider_task.provider.name,
-                                                                        slug=provider_task.provider.slug,
-                                                                        status=TaskStates.PENDING.value,
-                                                                        display=True)
+        export_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
+                                                                            name=provider_task.provider.name,
+                                                                            slug=provider_task.provider.slug,
+                                                                            status=TaskStates.PENDING.value,
+                                                                            display=True)
 
         for format, task in export_tasks.iteritems():
             export_task = create_export_task_record(
@@ -148,12 +148,12 @@ class ExportWFSTaskRunner(TaskRunner):
         """
         Run WFS export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
-        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param provider_task_uid: A reference uid for the DataProviderTask model.
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
-        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get('user_details')
@@ -162,7 +162,7 @@ class ExportWFSTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_name(job.name)
         # get the formats to export
@@ -183,11 +183,11 @@ class ExportWFSTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
             bbox = job.extents
 
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status=TaskStates.PENDING.value,
+                                                                         display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
@@ -248,12 +248,12 @@ class ExportWCSTaskRunner(TaskRunner):
         """
         Run WCS export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
-        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param provider_task_uid: A reference uid for the DataProviderTask model.
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
-        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get('user_details')
@@ -262,7 +262,7 @@ class ExportWCSTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_name(job.name)
         # get the formats to export
@@ -284,11 +284,11 @@ class ExportWCSTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
             bbox = job.extents
 
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status=TaskStates.PENDING.value,
+                                                                         display=True)
 
             export_tasks.pop('gpkg')
 
@@ -345,12 +345,12 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         Run ArcGIS Feature Service export tasks.
         Specifically create a task chain to be picked up by a celery worker later.
 
-        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param provider_task_uid: A reference uid for the DataProviderTask model.
         :param user: The user executing the task.
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
-        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
     export_task_registry = settings.EXPORT_TASKS
 
@@ -371,7 +371,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_name(job.name)
         # get the formats to export
@@ -392,11 +392,11 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
 
             bbox = job.extents
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status=TaskStates.PENDING.value,
+                                                                         display=True)
 
             for task_type, task in export_tasks.iteritems():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
@@ -451,13 +451,13 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         Run External Service (raster tiler) export tasks.
         Specifically create a task chain to be picked up by a celery worker later.
 
-        :param provider_task_uid: A reference uid for the ProviderTask model.
+        :param provider_task_uid: A reference uid for the DataProviderTask model.
         :param user: The user executing the task.
         :param service_type: The type name of the service type to autoconfigure the service (not yet implemented).
         :param run: The ExportRun which this task will belong to.
         :param stage_dir: The directory where to store the files while they are being created.
         :param worker: The celery worker assigned this task.
-        :return: An ExportProviderTask uid and the Celery Task Chain or None, False.
+        :return: An DataProviderTaskRecord uid and the Celery Task Chain or None, False.
         """
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, service_type=None, worker=None,
@@ -477,7 +477,7 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
-        provider_task = ProviderTask.objects.get(uid=provider_task_uid)
+        provider_task = DataProviderTask.objects.get(uid=provider_task_uid)
         job = run.job
         job_name = normalize_name(job.name)
 
@@ -498,11 +498,11 @@ class ExportExternalRasterServiceTaskRunner(TaskRunner):
         if len(export_tasks) > 0:
 
             bbox = job.extents
-            export_provider_task = ExportProviderTask.objects.create(run=run,
-                                                                     name=provider_task.provider.name,
-                                                                     slug=provider_task.provider.slug,
-                                                                     status=TaskStates.PENDING.value,
-                                                                     display=True)
+            export_provider_task = DataProviderTaskRecord.objects.create(run=run,
+                                                                         name=provider_task.provider.name,
+                                                                         slug=provider_task.provider.slug,
+                                                                         status=TaskStates.PENDING.value,
+                                                                         display=True)
 
             export_task = create_export_task_record(task_name=external_raster_service_export_task.name,
                                                     export_provider_task=export_provider_task, worker=worker,
@@ -551,9 +551,9 @@ def normalize_name(name):
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
     try:
-        export_task = ExportTask.objects.create(export_provider_task=export_provider_task,
-                                                status=TaskStates.PENDING.value,
-                                                name=task_name, worker=worker, display=display)
+        export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
+                                                      status=TaskStates.PENDING.value,
+                                                      name=task_name, worker=worker, display=display)
         logger.debug('Saved task: {0}'.format(task_name))
     except DatabaseError as e:
         logger.error('Saving task {0} threw: {1}'.format(task_name, e))

@@ -182,7 +182,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
     return download_url
 
 
-# ExportTask abstract base class and subclasses.
+# ExportTaskRecord abstract base class and subclasses.
 class ExportTask(LockingTask):
     """
     Abstract base class for export tasks.
@@ -212,7 +212,7 @@ class ExportTask(LockingTask):
             # just return.
             if not retval:
                 return
-            from ..tasks.models import (FileProducingTaskResult, ExportTask as ExportTaskModel)
+            from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord as ExportTaskModel)
             # update the task
             finished = timezone.now()
             task = ExportTaskModel.objects.get(uid=task_uid)
@@ -270,15 +270,15 @@ class ExportTask(LockingTask):
         """
         Update the failed task as follows:
 
-            1. pull out the ExportTask
+            1. pull out the ExportTaskRecord
             2. update the task status and finish time
             3. create an export task exception
             4. save the export task with the task exception
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from ..tasks.models import ExportTask as ExportTaskModel
-        from ..tasks.models import ExportTaskException, ExportProviderTask
+        from ..tasks.models import ExportTaskRecord as ExportTaskModel
+        from ..tasks.models import ExportTaskException, DataProviderTaskRecord
         task = ExportTaskModel.objects.get(celery_uid=task_id)
         task.finished_at = timezone.now()
         task.save()
@@ -291,7 +291,7 @@ class ExportTask(LockingTask):
             task.save()
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
-                export_provider_task = ExportProviderTask.objects.get(tasks__celery_uid=task_id)
+                export_provider_task = DataProviderTaskRecord.objects.get(tasks__celery_uid=task_id)
                 cancel_export_provider_task.delay(export_provider_task_uid=export_provider_task.uid,
                                                   canceling_username=None, delete=False, error=True,
                                                   locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid))
@@ -311,7 +311,7 @@ class ExportTask(LockingTask):
         """
         result = result or {}
         started = timezone.now()
-        from ..tasks.models import ExportTask as ExportTaskModel
+        from ..tasks.models import ExportTaskRecord as ExportTaskModel
         try:
             task = ExportTaskModel.objects.get(uid=task_uid)
             celery_uid = self.request.id
@@ -435,11 +435,11 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     """
     Task to create styles for osm.
     """
-    from ..jobs.models import Job, ExportProvider
+    from ..jobs.models import Job, DataProvider
 
     job = Job.objects.get(uid=job_uid)
 
-    provider = ExportProvider.objects.get(slug=provider_slug)
+    provider = DataProvider.objects.get(slug=provider_slug)
     result = result or {}
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
@@ -566,11 +566,11 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun, ExportTask
+    from .models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTask.objects.get(uid=task_uid)
+    task = ExportTaskRecord.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -712,7 +712,7 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
 @app.task(name='Project file (.zip)', bind=True, base=FormatTask)
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
                         stage_dir=None, *args, **kwargs):
-    from .models import ExportProviderTask
+    from .models import DataProviderTaskRecord
     from .task_runners import normalize_name
 
     result = result or {}
@@ -723,7 +723,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # deleted during cancellation.
     logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
     include_files = []
-    export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
     if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
         for export_task in export_provider_task.tasks.all():
             try:
@@ -796,11 +796,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     Class defining geopackage export for external raster service.
     """
 
-    from .models import ExportRun, ExportTask
+    from .models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
-    task = ExportTask.objects.get(uid=task_uid)
+    task = ExportTaskRecord.objects.get(uid=task_uid)
 
     self.update_task_state(result=result, task_uid=task_uid)
 
@@ -1035,10 +1035,10 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     Updates export provider status.
     """
 
-    from eventkit_cloud.tasks.models import ExportProviderTask
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
     with transaction.atomic():
 
-        export_provider_task = ExportProviderTask.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
         for export_task in export_provider_task.tasks.all():
             if TaskStates[status] not in TaskStates.get_finished_states():
                 export_task.status = status
@@ -1125,7 +1125,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             )
 
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
-    # be handled as an ExportTask.
+    # be handled as an ExportTaskRecord.
 
     if not adhoc:
         run_uid = str(run_uid)
@@ -1324,21 +1324,21 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
 def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_username=None, delete=False,
                                 error=False, *args, **kwargs):
     """
-    Cancels an ExportProviderTask and terminates each subtasks execution.
+    Cancels an DataProviderTaskRecord and terminates each subtasks execution.
     Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
 
     #There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
     #the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
-    from ..tasks.models import ExportProviderTask, ExportTaskException
+    from ..tasks.models import DataProviderTaskRecord, ExportTaskException
     from ..tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from django.contrib.auth.models import User
 
     result = result or {}
 
-    export_provider_task = ExportProviderTask.objects.filter(uid=export_provider_task_uid).first()
+    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
     canceling_user = User.objects.filter(username=canceling_username).first()
 
     if not export_provider_task:
@@ -1347,7 +1347,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
 
     export_tasks = export_provider_task.tasks.all()
 
-    # Loop through both the tasks in the ExportProviderTask model, as well as the Task Chain in celery
+    # Loop through both the tasks in the DataProviderTaskRecord model, as well as the Task Chain in celery
     for export_task in export_tasks.filter(~Q(status=TaskStates.CANCELED.value)| ~Q(status=TaskStates.FAILED.value)):
         if delete:
             exception_class = DeleteException
@@ -1446,15 +1446,15 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
 
 def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
     """
-    Updates the progress of the ExportTask from the given task_uid.
-    :param task_uid: A uid to reference the ExportTask.
+    Updates the progress of the ExportTaskRecord from the given task_uid.
+    :param task_uid: A uid to reference the ExportTaskRecord.
     :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
-    :return: A function which can be called to update the progress on an ExportTask.
+    :return: A function which can be called to update the progress on an ExportTaskRecord.
     """
     if task_uid is None:
         return
 
-    from ..tasks.models import ExportTask
+    from ..tasks.models import ExportTaskRecord
     from django.db import connection
 
     if not estimated_finish and not progress:
@@ -1468,7 +1468,7 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     # will be invalid and throw an error.
     connection.close()
 
-    export_task = ExportTask.objects.get(uid=task_uid)
+    export_task = ExportTaskRecord.objects.get(uid=task_uid)
     if absolute_progress:
         export_task.progress = absolute_progress
     if estimated_finish:

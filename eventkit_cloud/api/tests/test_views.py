@@ -20,9 +20,9 @@ from ..pagination import LinkHeaderPagination
 from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, ExportProvider, \
-    ExportProviderType, ProviderTask, bbox_to_geojson, DatamodelPreset, License
-from ...tasks.models import ExportRun, ExportTask, ExportProviderTask
+from ...jobs.models import ExportFormat, Job, DataProvider, \
+    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
+from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from mock import patch, Mock
 
 
@@ -56,8 +56,8 @@ class TestJobViewSet(APITestCase):
                                       user=self.user, the_geom=the_geom, original_selection=original_selection)
 
         formats = ExportFormat.objects.all()
-        provider = ExportProvider.objects.first()
-        provider_task = ProviderTask.objects.create(provider=provider)
+        provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
@@ -102,7 +102,7 @@ class TestJobViewSet(APITestCase):
 
     def test_make_job_with_export_providers(self,):
         """tests job creation with export providers"""
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
         export_providers_start_len = len(export_providers)
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
 
@@ -121,7 +121,8 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-list')
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         response = json.loads(response.content)
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
+
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
         self.assertEqual(response['exports'][0]['provider'], 'test')
@@ -130,7 +131,7 @@ class TestJobViewSet(APITestCase):
         # should be idempotent
         self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
 
-        export_providers = ExportProvider.objects.all()
+        export_providers = DataProvider.objects.all()
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
 
     def test_get_job_detail(self,):
@@ -613,8 +614,8 @@ class TestExportRunViewSet(APITestCase):
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         formats = ExportFormat.objects.all()
-        provider = ExportProvider.objects.first()
-        provider_task = ProviderTask.objects.create(provider=provider)
+        provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
@@ -932,8 +933,8 @@ class TestExportTaskViewSet(APITestCase):
                                       the_geom=the_geom)
 
         formats = ExportFormat.objects.all()
-        provider = ExportProvider.objects.first()
-        provider_task = ProviderTask.objects.create(provider=provider)
+        provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
@@ -947,11 +948,11 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
         self.celery_uid = str(uuid.uuid4())
-        self.export_provider_task = ExportProviderTask.objects.create(run=self.export_run,
-                                                                      name='Shapefile Export',
-                                                                      status=TaskStates.PENDING.value)
-        self.task = ExportTask.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
-                                              celery_uid=self.celery_uid, status='SUCCESS')
+        self.export_provider_task = DataProviderTaskRecord.objects.create(run=self.export_run,
+                                                                          name='Shapefile Export',
+                                                                          status=TaskStates.PENDING.value)
+        self.task = ExportTaskRecord.objects.create(export_provider_task=self.export_provider_task, name='Shapefile Export',
+                                                    celery_uid=self.celery_uid, status='SUCCESS')
         self.task_uid = str(self.task.uid)
 
     def test_retrieve(self,):
@@ -989,7 +990,7 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEquals(response.data, {'success': True})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        pt = ExportProviderTask.objects.get(uid=self.export_provider_task.uid)
+        pt = DataProviderTaskRecord.objects.get(uid=self.export_provider_task.uid)
         et = pt.tasks.last()
 
         self.assertEqual(pt.status, TaskStates.CANCELED.value)
@@ -1040,15 +1041,15 @@ class TestStaticFunctions(APITestCase):
         requested_types = (format_test1, format_test2)
 
         # An arbitrary provider type...
-        provider_type = ExportProviderType.objects.create(type_name="test")
+        provider_type = DataProviderType.objects.create(type_name="test")
         # ... and the formats it actually supports.
         supported_formats = [format_test2, format_test3]
         provider_type.supported_formats.add(*supported_formats)
         provider_type.save()
 
         # Assign the type to an arbitrary provider.
-        export_provider = ExportProvider.objects.create(name="provider1", export_provider_type=provider_type)
-        # Get a ProviderTask object to ensure that it is only trying to process
+        export_provider = DataProvider.objects.create(name="provider1", export_provider_type=provider_type)
+        # Get a DataProviderTask object to ensure that it is only trying to process
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)
         assert len(provider_task.formats.all()) == 1

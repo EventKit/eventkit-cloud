@@ -111,7 +111,7 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
         return '{0}'.format(self.slug)
 
 
-class ExportProviderType(TimeStampedModelMixin):
+class DataProviderType(TimeStampedModelMixin):
     """
     Model to hold types and supported exports for providers.
     """
@@ -128,9 +128,9 @@ class ExportProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
-class ExportProvider(UIDMixin, TimeStampedModelMixin):
+class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
-    Model for a ExportProvider.
+    Model for a DataProvider.
     """
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
@@ -142,7 +142,7 @@ class ExportProvider(UIDMixin, TimeStampedModelMixin):
     service_description = models.TextField(verbose_name="Description", null=True, default='', blank=True,
                                            help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
-    export_provider_type = models.ForeignKey(ExportProviderType, verbose_name="Service Type", null=True)
+    export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True)
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
                                      help_text="This determines the starting zoom level a tile export will seed from")
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
@@ -164,7 +164,7 @@ class ExportProvider(UIDMixin, TimeStampedModelMixin):
             self.slug = self.name.replace(' ', '_').lower()
             if len(self.slug) > 40:
                 self.slug = self.slug[0:39]
-        super(ExportProvider, self).save(*args, **kwargs)
+        super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
         return '{0}'.format(self.name)
@@ -204,13 +204,13 @@ class Region(UIDMixin, TimeStampedModelMixin):
         super(Region, self).save(*args, **kwargs)
 
 
-class ProviderTask(models.Model):
+class DataProviderTask(models.Model):
     """
     Model for a set of tasks assigned to a provider for a job.
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    provider = models.ForeignKey(ExportProvider, related_name='provider')
+    provider = models.ForeignKey(DataProvider, related_name='provider')
     formats = models.ManyToManyField(ExportFormat, related_name='formats')
 
     def __str__(self):
@@ -235,7 +235,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
     region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
-    provider_tasks = models.ManyToManyField(ProviderTask, related_name='provider_tasks')
+    provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
