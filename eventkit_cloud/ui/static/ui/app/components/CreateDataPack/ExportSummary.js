@@ -172,12 +172,13 @@ export class ExportSummary extends Component {
             },
         };
 
-        let formatDesc = '';
+        const formats = [];
         this.props.allFormats.forEach((format) => {
-            if (format.slug === this.props.formats) {
-                formatDesc = format.name;
+            if (this.props.formats.includes(format.slug)) {
+                formats.push(format.name);
             }
         });
+        const formatDesc = formats.join(', ');
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (

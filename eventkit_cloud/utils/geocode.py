@@ -34,6 +34,16 @@ class GeocodeAdapter:
         pass
 
     @abstractmethod
+    def add_bbox(self, update_url, data):
+        """
+        This takes an individual search result and tries to update it with a bbox if possible
+        :param update_url: The url to check for a bbox
+        :param data: A search feature
+        :return: The search feature with (if available) the relevant bbox
+        """
+        pass
+
+    @abstractmethod
     def get_payload(self, query):
         """
         This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api will expect.
@@ -168,6 +178,9 @@ class GeoNames(GeocodeAdapter):
     def property_map(self):
         return {"name": "name", "province": "adminName2", "region": "adminName1", "country": "countryName"}
 
+    def add_bbox(self, update_url, data):
+        return data
+
 
 class Pelias(GeocodeAdapter):
 
@@ -184,6 +197,29 @@ class Pelias(GeocodeAdapter):
     def property_map(self):
         return {"name": "name", "province": "county", "region": "region", "country": "country"}
 
+    def add_bbox(self, update_url, data):
+        # the different gid levels that should be checked for a bbox
+        ids = ['neighbourhood_gid', 'locality_gid', 'county_gid', 'region_gid', 'country_gid']
+        search_id = ''
+        for id in ids:
+            gid = data.get(id, data.get('properties', None).get(id, None))
+            # use the gid if it exists and its not gid of the data in question
+            # (if it is the gid of the data then we should already have a bbox if its available at that level)
+            if gid and gid != data.get('gid'):
+                search_id = gid
+                break
+
+        if search_id:
+            response = requests.get(update_url, params={'ids': search_id}).json()
+            features = response.get('features', [])
+            if len(features):
+                feature = features[0]
+                bbox = feature.get('bbox', None)
+                if bbox:
+                    data['bbox'] = bbox
+                    data['properties']['bbox'] = bbox
+        return data
+
 
 class Geocode(object):
 
@@ -192,6 +228,7 @@ class Geocode(object):
     def __init__(self):
         url = getattr(settings, 'GEOCODING_API_URL')
         type = getattr(settings, 'GEOCODING_API_TYPE')
+        self.update_url = getattr(settings, 'GEOCODING_UPDATE_URL')
         if not (url and type):
             logger.error("Both a `GEOCODING_API_URL` and a `GEOCODING_API_TYPE` must be defined in the settings.")
             raise Exception('A geocoder configuration was not provided, contact an administrator.')
@@ -203,6 +240,11 @@ class Geocode(object):
 
     def get_geocoder(self, name, url):
         return self.map.get(name.lower())(url)
+
+    def add_bbox(self, data):
+        if not self.update_url:
+            return data
+        return self.geocoder.add_bbox(self.update_url, data)
 
     def search(self, query):
         return self.geocoder.get_data(query)

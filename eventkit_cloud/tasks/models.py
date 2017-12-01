@@ -27,7 +27,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     A Job provides information for the ExportRun.
     Many ExportRuns can map to a Job.
     Many ExportProviderTasks can map to an ExportRun.
-    Many ExportTasks can map to an ExportProviderTask.
+    Many ExportTasks can map to an DataProviderTaskRecord.
     """
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
@@ -64,9 +64,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         self.save()
 
 
-class ExportProviderTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
-    The ExportProviderTask stores the task information for a specific provider.
+    The DataProviderTaskRecord stores the task information for a specific provider.
     """
     name = models.CharField(max_length=50, blank=True)
     slug = LowerCaseCharField(max_length=40, default='')
@@ -77,19 +77,19 @@ class ExportProviderTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
     class Meta:
         ordering = ['name']
         managed = True
-        db_table = 'export_provider_tasks'
+        db_table = 'data_provider_task_records'
 
     def __str__(self):
-        return 'ExportProviderTask uid: {0}'.format(self.uid)
+        return 'DataProviderTaskRecord uid: {0}'.format(self.uid)
 
 
-class ExportTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
-     An ExportTask holds the information about the process doing the actual work for a task.
+     An ExportTaskRecord holds the information about the process doing the actual work for a task.
     """
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
-    export_provider_task = models.ForeignKey(ExportProviderTask, related_name='tasks')
+    export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks')
     status = models.CharField(blank=True, max_length=20, db_index=True)
     progress = models.IntegerField(default=0, editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
@@ -102,10 +102,10 @@ class ExportTask(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     class Meta:
         ordering = ['created_at']
         managed = True
-        db_table = 'export_tasks'
+        db_table = 'export_task_records'
 
     def __str__(self):
-        return 'ExportTask uid: {0}'.format(self.uid)
+        return 'ExportTaskRecord uid: {0}'.format(self.uid)
 
 
 class FinalizeRunHookTaskRecord(UIDMixin, TimeStampedModelMixin):
@@ -143,7 +143,7 @@ class FileProducingTaskResult(models.Model):
     @property
     def task(self):
         if hasattr(self, 'finalize_task') and hasattr(self.export_task):
-            raise Exception('Both an ExportTask and a FinalizeRunHookTaskRecord are linked to FileProducingTaskResult')
+            raise Exception('Both an ExportTaskRecord and a FinalizeRunHookTaskRecord are linked to FileProducingTaskResult')
         elif hasattr(self, 'finalize_task'):
             ret = self.finalize_task
         elif hasattr(self, 'export_task'):
@@ -170,10 +170,10 @@ class FileProducingTaskResult(models.Model):
 
 class ExportTaskException(TimeStampedModelMixin):
     """
-    Model to store ExportTask exceptions for auditing.
+    Model to store ExportTaskRecord exceptions for auditing.
     """
     id = models.AutoField(primary_key=True, editable=False)
-    task = models.ForeignKey(ExportTask, related_name='exceptions')
+    task = models.ForeignKey(ExportTaskRecord, related_name='exceptions')
     exception = models.TextField(editable=False)
 
     class Meta:
