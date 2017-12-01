@@ -23,6 +23,8 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import axios from 'axios';
+import ProviderStatusIcon from './ProviderStatusIcon'
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../BaseDialog';
 import CustomTextField from '../CustomTextField';
@@ -37,6 +39,7 @@ export class ExportInfo extends React.Component {
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
+            providers: props.providers,
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -85,6 +88,24 @@ export class ExportInfo extends React.Component {
                 projectName: event.target.value,
             });
         }, 250);
+
+        // make requests to check provider availability
+
+        if (this.state.providers) {
+            this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
+                axios({
+                    url: '/api/providers/' + provider.slug + '/status',
+                    method: 'GET',
+                }).then((response) => {
+                    // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
+                    provider.availability = JSON.parse(response.data);
+                    this.setState({ providers: [...this.state.providers] });
+
+                }).catch((error) => {
+                    console.log(error);
+                });
+            }), 30000);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -431,7 +452,18 @@ export class ExportInfo extends React.Component {
                                             key={provider.uid}
                                             style={{ backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0' }}
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
-                                            primaryText={provider.name}
+                                            primaryText={
+                                                <div>
+                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
+                                                        {provider.name}
+                                                    </span>
+                                                    <ProviderStatusIcon
+                                                        availability={provider.availability}
+                                                        className="qa-ExportInfo-ListItemIcon"
+                                                        style={{  }}
+                                                    />
+                                                </div>
+                                            }
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}

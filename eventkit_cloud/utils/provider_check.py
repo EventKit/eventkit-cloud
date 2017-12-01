@@ -216,8 +216,13 @@ class OWSProviderCheck(ProviderCheck):
 
         try:
             xml = response.content
-            doctype_pos = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml).end()
-            xmll = xml[:doctype_pos] + xml[doctype_pos+1:].lower()
+            xmll = xml.lower()
+
+            doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
+            if doctype is not None:
+                doctype_pos = doctype.end()
+                xmll = xml[:doctype_pos] + xml[doctype_pos+1:].lower()
+
             xmll = xmll.replace("![cdata[", "![CDATA[")
             root = ET.fromstring(xmll)
             # Check for namespace

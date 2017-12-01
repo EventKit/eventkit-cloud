@@ -95,9 +95,32 @@ export const getProviders = () => (dispatch) => {
     });
 };
 
+export const getAvailability = provider => (dispatch) => {
+    dispatch({
+        type: types.GETTING_PROVIDER_AVAILABILITY
+    });
+
+    // axios.get('/api/providers/{}/status'.format(provider)).catch((error) => {
+    //     console.log(error);
+    // });
+
+    return axios({
+        url: '/api/providers/{}/status'.format(provider),
+        method: 'GET',
+    }).then((response) => {
+        dispatch({
+            type: types.PROVIDER_AVAILABILITY_RECEIVED,
+            provider: provider,
+            availability: response.data
+        })
+    }).catch((error) => {
+        console.log(error);
+    });
+}
+
 export const getFormats = () => (dispatch) => {
     dispatch({
-        type: types.GETTING_FORMATS,
+        type: types.GETTING_FORMATS
     });
 
     return axios({
