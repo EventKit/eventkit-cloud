@@ -5,10 +5,6 @@ import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
 
 export class DrawAOIToolbar extends Component {
-    componentDidMount() {
-        this.props.setAllButtonsDefault();
-    }
-
     render() {
         const styles = {
             container: {

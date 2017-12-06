@@ -166,10 +166,6 @@ export function bufferGeojson(featureCollection, bufferSize, bufferPolys) {
         let geojsonGeom;
         if (geom.getArea() !== 0) {
             geojsonGeom = writer.write(geom);
-            // } else {
-            //     // geojsonGeom = writer.write(feat.geometry);
-            //     return null;
-            // }
             bufferedFeatures.push({
                 type: 'Feature',
                 properties: feat.properties || {},
@@ -473,17 +469,62 @@ export function isVertex(pixel, feature, tolarance, map) {
 }
 
 /**
- * Check if a feature collection has any non-polygon geometries
+ * Check if a feature collection has any geometries with no area
  * @param {featureCollection} A geojson feature collection
- * @return true if any of the geom types are point or line, otherwise false
+ * @return true if all geometries have area, otherwise false
  */
-export function hasPointOrLine(featureCollection) {
-    const { features } = featureCollection;
+export function hasArea(featureCollection) {
+    const reader = new GeoJSON();
+    const features = reader.readFeatures(featureCollection, {
+        dataProjection: WGS84,
+        featureProjection: WEB_MERCATOR,
+    });
+
+    if (!features.length) {
+        return false;
+    }
+
     for (let i = 0; i < features.length; i += 1) {
-        const geomType = features[i].geometry.type.toUpperCase();
-        if (geomType.includes('POINT') || geomType.includes('LINE')) {
-            return true;
+        try {
+            const area = features[i].getGeometry().getArea();
+            if (!area) {
+                return false;
+            }
+        } catch (e) {
+            return false;
         }
     }
-    return false;
+    return true;
+}
+
+export function getDominantGeometry(featureCollection) {
+    const { features } = featureCollection;
+    if (!features.length) {
+        return null;
+    }
+    let polyCount = 0;
+    let lineCount = 0;
+    let pointCount = 0;
+    features.forEach((feature) => {
+        if (feature.geometry.type.toUpperCase().includes('POLYGON')) {
+            polyCount += 1;
+        } else if (feature.geometry.type.toUpperCase().includes('LINE')) {
+            lineCount += 1;
+        } else if (feature.geometry.type.toUpperCase().includes('POINT')) {
+            pointCount += 1;
+        }
+    });
+    if ((polyCount && lineCount) || (lineCount && pointCount) || (polyCount && pointCount)) {
+        return 'Collection';
+    }
+    if (polyCount) {
+        return 'Polygon';
+    }
+    if (lineCount) {
+        return 'Line';
+    }
+    if (pointCount) {
+        return 'Point';
+    }
+    return null;
 }
