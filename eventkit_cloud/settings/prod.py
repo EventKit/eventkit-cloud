@@ -61,6 +61,7 @@ OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/int
 GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://api.geonames.org/searchJSON')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
+CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://localhost:3100/v1/convert')
 
 """
 Maximum extent of a Job
