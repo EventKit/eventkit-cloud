@@ -5,7 +5,7 @@ import logging
 
 from django.test import TestCase
 from mock import patch, Mock
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from ..views import callback
 from ..models import OAuth
 from django.test import Client, override_settings
@@ -30,6 +30,9 @@ class TestAuthViews(TestCase):
         with self.settings(OAUTH_NAME=oauth_name):
             example_token = "token"
             request = Mock(GET={'code': "1234"})
+            group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+            with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+                mock_group.objects.get.return_value = group
             user = User.objects.create(username="test",
                                        email="test@email.com")
             OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
@@ -78,7 +81,10 @@ class TestAuthViews(TestCase):
     def test_logout(self):
         # Test logout ensure logout of django, and redirect to login if OAUTH URL not provided
         logout_url = "http://remote.dev/logout"
-        user = User.objects.create(username="test", password="password", email="test@email.com")
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create(username="test", password="password", email="test@email.com")
         OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
 
         self.client.login(username='test', password='password')

@@ -26,8 +26,10 @@ class TestExportRun(TestCase):
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug='osm-generic'))
@@ -110,8 +112,10 @@ class TestExportTask(TestCase):
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         Job.objects.create(name='TestExportTask', description='Test description', user=user, the_geom=the_geom)

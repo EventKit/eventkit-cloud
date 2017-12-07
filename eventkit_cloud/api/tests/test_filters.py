@@ -7,6 +7,7 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
+from mock import patch
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask
 
@@ -24,16 +25,18 @@ class TestJobFilter(APITestCase):
         super(TestJobFilter, self).__init__(*args, **kwargs)
 
     def setUp(self, ):
-        Group.objects.create(name='TestDefaultExportExtentGroup')
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.user1 = User.objects.create_user(
-            username='demo1', email='demo@demo.com', password='demo'
-        )
-        self.user2 = User.objects.create_user(
-            username='demo2', email='demo@demo.com', password='demo'
-        )
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user1 = User.objects.create_user(
+                username='demo1', email='demo@demo.com', password='demo'
+            )
+            self.user2 = User.objects.create_user(
+                username='demo2', email='demo@demo.com', password='demo'
+            )
         self.job1 = Job.objects.create(name='TestJob1', description='Test description', user=self.user1,
                                        the_geom=the_geom)
         self.job2 = Job.objects.create(name='TestJob2', description='Test description', user=self.user2,

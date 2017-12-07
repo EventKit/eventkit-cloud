@@ -90,7 +90,7 @@ class ExportTaskBase(TransactionTestCase):
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.group = Group.objects.create(name="TestDefault")
+        self.group, created = Group.objects.get_or_create(name="TestDefault")
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(
