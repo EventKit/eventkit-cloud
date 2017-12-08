@@ -99,7 +99,9 @@ export class ExportInfo extends React.Component {
                 }).then((response) => {
                     // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
                     provider.availability = JSON.parse(response.data);
+                    console.log("Response data: " + response.data);
                     this.setState({ providers: [...this.state.providers] });
+                    console.log(this.state.providers.map(p => p.availability))
 
                 }).catch((error) => {
                     console.log(error);
@@ -405,7 +407,7 @@ export class ExportInfo extends React.Component {
                                     uncheckedIcon={<UncheckedCircle className="qa-ExportInfo-UncheckedCircle" style={{ fill: '4598bf' }} />}
                                 />
                             </div>
-                            
+
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
@@ -457,11 +459,7 @@ export class ExportInfo extends React.Component {
                                                     <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
                                                         {provider.name}
                                                     </span>
-                                                    <ProviderStatusIcon
-                                                        availability={provider.availability}
-                                                        className="qa-ExportInfo-ListItemIcon"
-                                                        style={{  }}
-                                                    />
+                                                    <ProviderStatusIcon availability={provider.availability} />
                                                 </div>
                                             }
                                             leftCheckbox={<Checkbox
