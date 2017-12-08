@@ -19,14 +19,14 @@ class Convert(object):
 
     @property
     def map(self):
-        # logger.info(object.query)
+                                                                                                                                                                                   # logger.info(object.query)
         # response = requests.get("http://localhost:3100/v1/convert?from=mgrs&to=decdeg&q=" + object)
         # logger.info(response)
 
         return self
 
     def get_converter(self, url):
-        return self.map.get(url)
+        return self;
 
     def add_bbox(self, data):
         logger.info("add_bbox")
@@ -39,12 +39,11 @@ class Convert(object):
         return self.converter.get_data(query)
     
     def get(self, query):
-        response = requests.get("http://10.0.2.62:3100/v1/convert?from=mgrs&to=decdeg&q=12UUA8440")
-        mgrsResponse = response.json()
-        latitude = mgrsResponse["result"]["latitude"]
-        longitude = mgrsResponse["result"]["longitude"]
-        mgrsFeatures = { "type": "FeatureCollection", "features": [ { "type": "Feature", "properties":{"name":query}, "geometry":{ "type":"Point", "coordinates": [[[latitude, longitude]]] }, "bbox":[latitude-1, longitude-1, latitude+1, longitude+1]}]}
-        return mgrsFeatures
+        logger.info(type(query))
+        logger.info(str(query))
+        args = { "from":"mgrs", "to":"decdeg","q":str(query)}
+        response = requests.get("http://172.17.0.1:3100/v1/convert", params=args)
+        return response.json()
 
 
 def is_valid_bbox(bbox):
