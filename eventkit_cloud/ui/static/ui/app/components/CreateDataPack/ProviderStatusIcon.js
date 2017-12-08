@@ -25,7 +25,7 @@ export class ProviderStatusIcon extends Component {
                 return (<AlertWarning title={message} />);
             case 'PENDING':
             default:
-                return (<ActionSchedule title={message} />);
+                return (<ActionSchedule title={'Loading availability'} />);
         }
     }
 }

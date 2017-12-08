@@ -95,7 +95,10 @@ export class ExportInfo extends React.Component {
             this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
                 axios({
                     url: '/api/providers/' + provider.slug + '/status',
-                    method: 'GET',
+                    method: 'POST',
+                    {
+                        aoi: this.props.geojson
+                    }
                 }).then((response) => {
                     // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
                     provider.availability = JSON.parse(response.data);
