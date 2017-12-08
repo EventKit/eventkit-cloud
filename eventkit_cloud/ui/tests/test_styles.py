@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+import datetime
+import os
 
 from django.test import TestCase
+from django.conf import settings
 
 from mock import Mock, patch, MagicMock
 from ..data_estimator import get_size_estimate, get_gb_estimate
@@ -42,16 +45,17 @@ class TestStyles(TestCase):
         expected_values = [2, 4, [1, 1]]
         self.assertEquals(returned_values, expected_values)
 
-#    @patch('eventkit_cloud.ui.helpers.os.path')
+    @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.models.ExportRun')
 
-    def test_generate_qgs_style(self,ExportRun):
-#        os_path.join.return_value = 'mock.style.qgs'
+    def test_generate_qgs_style(self,ExportRun, mock_open):
 
         run_uid = 1234
+        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
         # Fill out the behavior for mocked ExportRun by adding a provider task with
         # subtasks for each file in all_file_list
+
         mocked_provider_subtasks = []
         for fname in [ 'F1']:
             mps = MagicMock()
@@ -71,4 +75,9 @@ class TestStyles(TestCase):
         ExportRun.objects.get.return_value = mocked_run
 
         returnvalue = generate_qgs_style(run_uid, mocked_provider_task)
-        self.assertEquals(returnvalue,'ABC')
+        now = datetime.datetime.now()
+        datestamp = "%s%02d%02d" % (now.year,now.month,now.day)
+        style_file = '/var/lib/eventkit/exports_stage/1234/mocked_job_name-20171208.qgs'
+        style_file2 = os.path.join(stage_dir,mocked_run.job.name+"-"+datestamp+".qgs")
+        mock_open.assert_called_once_with(style_file, 'w')
+        self.assertEquals(returnvalue,style_file)
