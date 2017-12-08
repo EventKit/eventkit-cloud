@@ -14,7 +14,7 @@ export class ProviderStatusIcon extends Component {
         }
         switch (status) {
             case 'SUCCESS':
-                return (<ActionDone className=title={message} />);
+                return (<ActionDone title={message} />);
             case 'ERR_CONNECTION':
             case 'ERR_UNAUTHORIZED':
                 return (<AlertError title={message} />);
