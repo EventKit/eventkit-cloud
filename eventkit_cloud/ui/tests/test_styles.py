@@ -74,10 +74,16 @@ class TestStyles(TestCase):
 
         ExportRun.objects.get.return_value = mocked_run
 
+        # test 1 - with a provider task
+
         returnvalue = generate_qgs_style(run_uid, mocked_provider_task)
         now = datetime.datetime.now()
         datestamp = "%s%02d%02d" % (now.year,now.month,now.day)
-        style_file = '/var/lib/eventkit/exports_stage/1234/mocked_job_name-20171208.qgs'
-        style_file2 = os.path.join(stage_dir,mocked_run.job.name+"-"+datestamp+".qgs")
+        style_file = os.path.join(stage_dir,mocked_run.job.name+"-"+datestamp+".qgs")
         mock_open.assert_called_once_with(style_file, 'w')
+        self.assertEquals(returnvalue,style_file)
+
+        # test 2 - without a provider task
+
+        returnvalue = generate_qgs_style(run_uid, None)
         self.assertEquals(returnvalue,style_file)
