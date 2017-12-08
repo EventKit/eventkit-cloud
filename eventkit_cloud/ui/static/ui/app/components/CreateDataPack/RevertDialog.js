@@ -20,7 +20,7 @@ export class RevertDialog extends Component {
             flexShrink: 0,
         };
         if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-RevertDialog-icon-draw" />;
+            return <ImageCropSquare style={iconStyle} className="qa-RevertDialog-icon-box" />;
         } else if (source === 'Map View') {
             return <Extent style={iconStyle} className="qa-RevertDialog-icon-mapview" />;
         } else if (type.includes('POINT')) {
@@ -117,8 +117,8 @@ export class RevertDialog extends Component {
                 onClick={this.props.onRevertClose}
             />,
             <RaisedButton
-                key="RevertDialog-buffer"
-                className="qa-RevertDialog-RaisedButton-buffer"
+                key="RevertDialog-revert"
+                className="qa-RevertDialog-RaisedButton-revert"
                 labelStyle={styles.updateLabel}
                 buttonStyle={styles.updateButton}
                 disableTouchRipple

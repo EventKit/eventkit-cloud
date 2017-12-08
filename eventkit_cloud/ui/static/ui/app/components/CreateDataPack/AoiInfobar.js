@@ -24,7 +24,7 @@ export class AoiInfobar extends Component {
         const type = geomType.toUpperCase();
         const iconStyle = { width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 };
         if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-draw" />;
+            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" />;
         } else if (source === 'Map View') {
             return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" />;
         } else if (type.includes('POINT')) {
@@ -123,7 +123,7 @@ export class AoiInfobar extends Component {
         const geometryIcon = this.getIcon(this.props.aoiInfo.geomType, this.props.aoiInfo.description);
 
         return (
-            <div>
+            <div className="qa-AoiInfobar">
                 <div style={styles.wrapper}>
                     <div style={styles.infobar}>
                         <div style={styles.topbar}>
@@ -150,13 +150,13 @@ export class AoiInfobar extends Component {
                             </span>
                             {this.props.showRevert ?
                                 <button
-                                    className="qa-AoiInfobar-button-zoom"
+                                    className="qa-AoiInfobar-button-revert"
                                     style={styles.button}
                                     onClick={this.props.onRevertClick}
                                 >
                                     <ActionRestore
                                         style={styles.searchIcon}
-                                        className="qa-AoiInfobar-ActionSearch"
+                                        className="qa-AoiInfobar-ActionRestore"
                                     /> REVERT TO ORIGINAL
                                 </button>
                                 :
@@ -169,7 +169,7 @@ export class AoiInfobar extends Component {
                             >
                                 <ActionZoomIn
                                     style={styles.searchIcon}
-                                    className="qa-AoiInfobar-ActionSearch"
+                                    className="qa-AoiInfobar-ActionZoomIn"
                                 /> ZOOM TO SELECTION
                             </button>
                         </div>
@@ -185,10 +185,11 @@ export class AoiInfobar extends Component {
                             </div>
                             <div style={{ margin: '5px 10px', color: 'grey' }}>+</div>
                             <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
-                                {this.props.bufferSize ?
-                                    <strong>{this.props.bufferSize}m Buffer</strong>
+                                {this.props.aoiInfo.buffer ?
+                                    <strong>{this.props.aoiInfo.buffer}m Buffer</strong>
                                     :
                                     <RaisedButton
+                                        className="qa-AoiInfobar-buffer-button"
                                         onClick={this.props.onBufferClick}
                                         labelStyle={{ color: 'whitesmoke', fontSize: '14px', textTransform: 'none', padding: '0px 10px' }}
                                         overlayStyle={{ height: '25px' }}
@@ -208,11 +209,9 @@ export class AoiInfobar extends Component {
 
 AoiInfobar.propTypes = {
     aoiInfo: PropTypes.object,
-    bufferSize: PropTypes.number,
     showAlert: PropTypes.bool,
     showRevert: PropTypes.bool,
     onRevertClick: PropTypes.func,
-    disabled: PropTypes.bool,
     clickZoomToSelection: PropTypes.func,
     onBufferClick: PropTypes.func,
 };

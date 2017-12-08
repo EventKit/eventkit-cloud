@@ -119,9 +119,9 @@ export class BufferDialog extends Component {
 
         return (
             <div>
-                <div style={styles.background} />
-                <div style={styles.dialog}>
-                    <div className="qa-BaseDialog-div" style={styles.header}>
+                <div className="qa-BufferDialog-background" style={styles.background} />
+                <div className="qa-BufferDialog-main" style={styles.dialog}>
+                    <div className="qa-BufferDialog-header" style={styles.header}>
                         <strong>
                             <div style={{ display: 'inline-block' }}>
                                 <span>
@@ -144,7 +144,7 @@ export class BufferDialog extends Component {
                         </strong>
                         <Clear style={styles.clear} onClick={this.props.closeBufferDialog} />
                     </div>
-                    <div style={styles.body}>
+                    <div className="qa-BufferDialog-body" style={styles.body}>
                         <div style={{ textAlign: 'center' }}>
                             <table style={{ width: 'calc(100% - 20px)', position: 'relative', left: '10px' }}>
                                 <thead>
@@ -180,10 +180,10 @@ export class BufferDialog extends Component {
                             </table>
                         </div>
                     </div>
-                    <div style={styles.footnote}>
+                    <div className="qa-BufferDialog-footnote" style={styles.footnote}>
                         Once updated, you must <strong>'Revert' to set again.</strong>
                     </div>
-                    <div style={styles.footer}>
+                    <div className="qa-BufferDialog-footer" style={styles.footer}>
                         {bufferActions}
                     </div>
                 </div>
@@ -201,7 +201,7 @@ BufferDialog.propTypes = {
     value: PropTypes.number.isRequired,
     valid: PropTypes.bool.isRequired,
     onBufferClick: PropTypes.func.isRequired,
-    handleBufferChange: PropTypes.func.isRequired,
+    handleBufferChange: PropTypes.func,
     closeBufferDialog: PropTypes.func.isRequired,
 };
 

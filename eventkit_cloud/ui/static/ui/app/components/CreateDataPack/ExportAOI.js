@@ -145,7 +145,6 @@ export class ExportAOI extends Component {
             icons[key] = 'DEFAULT';
         });
         this.setState({ toolbarIcons: icons });
-        this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer: 0 });
     }
 
     toggleImportModal(show) {
@@ -670,9 +669,6 @@ export class ExportAOI extends Component {
 
 
     doesMapHaveFeatures() {
-        if (!this.props.aoiInfo.geojson) {
-            return false;
-        }
         return Object.keys(this.props.aoiInfo.geojson).length !== 0;
     }
 
@@ -694,7 +690,6 @@ export class ExportAOI extends Component {
                 <div id="map" className={css.map} style={mapStyle} ref="olmap">
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
-                        bufferSize={this.props.aoiInfo.buffer}
                         showAlert={showAlert}
                         showRevert={!!this.props.aoiInfo.buffer}
                         onRevertClick={this.openResetDialog}
