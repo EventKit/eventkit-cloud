@@ -24,6 +24,7 @@ import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import axios from 'axios';
+import cookie from 'react-cookie';
 import ProviderStatusIcon from './ProviderStatusIcon'
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../BaseDialog';
@@ -93,9 +94,13 @@ export class ExportInfo extends React.Component {
 
         if (this.state.providers) {
             this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
+                const data = {'geojson': this.props.geojson};
+                const csrfmiddlewaretoken = cookie.load('csrftoken');
                 axios({
                     url: '/api/providers/' + provider.slug + '/status',
-                    method: 'GET',
+                    method: 'POST',
+                    data,
+                    headers: { 'X-CSRFToken': csrfmiddlewaretoken },
                 }).then((response) => {
                     // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
                     provider.availability = JSON.parse(response.data);

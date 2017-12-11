@@ -74,9 +74,13 @@ class ProviderCheck(object):
         self.result = CheckResults.SUCCESS
 
         if aoi_geojson is not None and aoi_geojson is not "":
-            self.aoi = ogr.CreateGeometryFromJson(aoi_geojson)
+            # TODO: Improve this parsing, it is not robust at all
+            aoi_geom = aoi_geojson['features'][0]['geometry']
+            logger.debug("AOI Geometry: {}".format(json.dumps(aoi_geom)))
+            self.aoi = ogr.CreateGeometryFromJson(json.dumps(aoi_geom))
         else:
             self.aoi = None
+            logger.debug("AOI was not given")
 
         self.token_dict = {}  # Parameters to include in message field of response
 
@@ -197,6 +201,7 @@ class OWSProviderCheck(ProviderCheck):
         Given a bounding box, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
         :param bbox: Bounding box array: [minx, miny, maxx, maxy] in EPSG:4326
         """
+        logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(bbox)))
         minx, miny, maxx, maxy = bbox
 
         bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
@@ -205,7 +210,6 @@ class OWSProviderCheck(ProviderCheck):
         bbox_ring.AddPoint(maxx, maxy)
         bbox_ring.AddPoint(minx, maxy)
         bbox_ring.AddPoint(minx, miny)
-
         bbox = ogr.Geometry(ogr.wkbPolygon)
         bbox.AddGeometry(bbox_ring)
 
