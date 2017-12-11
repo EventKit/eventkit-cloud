@@ -14,6 +14,7 @@ export function isBrowserValid() {
 }
 
 export function isMgrsString(c){ 
+    c = c.replace(/\s+/g, '');
     const MGRS = /^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$/i;
     return MGRS.test(c);
 }

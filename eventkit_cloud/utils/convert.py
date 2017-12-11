@@ -19,10 +19,6 @@ class Convert(object):
 
     @property
     def map(self):
-                                                                                                                                                                                   # logger.info(object.query)
-        # response = requests.get("http://localhost:3100/v1/convert?from=mgrs&to=decdeg&q=" + object)
-        # logger.info(response)
-
         return self
 
     def get_converter(self, url):
@@ -35,12 +31,9 @@ class Convert(object):
         return self.converter.add_bbox(self.update_url, data)
 
     def search(self, query):
-        logger.info("hello")
         return self.converter.get_data(query)
     
     def get(self, query):
-        logger.info(type(query))
-        logger.info(str(query))
         args = { "from":"mgrs", "to":"decdeg","q":str(query)}
         response = requests.get("http://172.17.0.1:3100/v1/convert", params=args)
         return response.json()
