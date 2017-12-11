@@ -94,6 +94,7 @@ export class ExportInfo extends React.Component {
 
         if (this.state.providers) {
             this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
+                if (provider.display === false) return;
                 const data = {'geojson': this.props.geojson};
                 const csrfmiddlewaretoken = cookie.load('csrftoken');
                 axios({
@@ -106,7 +107,6 @@ export class ExportInfo extends React.Component {
                     provider.availability = JSON.parse(response.data);
                     console.log("Response data: " + response.data);
                     this.setState({ providers: [...this.state.providers] });
-                    console.log(this.state.providers.map(p => p.availability))
 
                 }).catch((error) => {
                     console.log(error);
