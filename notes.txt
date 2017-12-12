@@ -1,0 +1,95 @@
+
+
+RESET :
+
+docker-compose down  <-- restart
+
+REBUILD :
+
+docker-compose build webpack
+docker-compose build eventkit
+docker-compose exec eventkit python manage.py migrate
+
+
+DATABASE ACCESS:
+
+docker-compose run --rm eventkit python manage.py dbshell
+
+REMOVE DATABASE COMPLETELY:
+
+
+TESTS
+
+to run tests:
+docker-compose exec eventkit python manage.py test eventkit_cloud
+docker-compose exec eventkit python manage.py test eventkit_cloud.api.tests.test_views
+docker-compose run  --rm -e COVERAGE=True  eventkit python manage.py test  eventkit_cloud.api.tests.test_views
+
+
+DOCKER IMAGES
+
+create unbuilt images:
+docker-compose run --rm eventkit python manage.py runinitial setup
+
+remove volume:
+docker volume rm eventkitcloudb_postgis_database
+
+docker image inspect
+docker image ls
+docker stop image_name
+docker ps
+
+
+REFACTORS:
+
+ExportProvider          DataProvider                job model
+ProviderTask            DataProviderTask            job model
+ExportProviderTask      DataProviderTaskRecord      task model
+
+Migrations for 'jobs':
+  eventkit_cloud/jobs/migrations/0021_auto_20170822_1852.py:
+    - Rename model ExportProvider to DataProvider
+    - Rename model ProviderTask to DataProviderTask
+    - Rename field provider_tasks on job to data_provider_tasks
+    - Rename table for dataprovider to data_provider
+Migrations for 'tasks':
+  eventkit_cloud/tasks/migrations/0023_auto_20170822_1852.py:
+    - Rename model ExportProviderTask to DataProviderTaskRecord
+    - Rename field export_provider_task on exporttask to data_provider_task
+    - Rename table for dataprovidertaskrecord to data_provider_tasks
+
+
+  Task tests:
+  task_task_factory         OK
+  task_models :             OK
+  test_exceptions :         OK
+  test_scheduled_tasks :    OK
+
+  test_export_tasks
+  test_task_runners
+
+
+TESTS That run long
+test_convert (eventkit_cloud.utils.tests.test_external_service.TestGeopackage) ... ok
+test_create_conf_from_arcgis (eventkit_cloud.utils.tests.test_external_service.TestGeopackage) ... ok
+test_create_conf_from_url (eventkit_cloud.utils.tests.test_external_service.TestGeopackage) ... ok
+test_check_service (eventkit_cloud.utils.tests.test_external_service.TestHelpers) ... ok
+test_check_zoom_levels (eventkit_cloud.utils.tests.test_external_service.TestHelpers) ... ok
+test_log_step (eventkit_cloud.utils.tests.test_external_service.TestLogger) ... ok
+test_add_file_metadata (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_add_geojson_to_geopackage (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_check_content_exists (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_check_zoom_levels (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_clip_geopackage (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_convert (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_create_extension_table (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+test_create_table_from_existing (eventkit_cloud.utils.tests.test_geopackage.TestGeopackage) ... ok
+
+   return self.cursor.execute(sql, params)
+django.db.utils.IntegrityError: Problem installing fixture '/var/lib/eventkit/eventkit_cloud/fixtures/osm_provider.json': Could not load jobs.ExportProvider(pk=None): duplicate key value violates unique constraint "export_provider_uid_key"
+DETAIL:  Key (uid)=(a3e2ca55-ae8b-4686-be20-51023a9ee314) already exists.
+
+
+Questions for Joe
+1 - where is Flower url
+2 - where are the export provider types defined?
