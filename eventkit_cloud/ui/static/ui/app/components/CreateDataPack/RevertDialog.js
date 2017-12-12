@@ -5,17 +5,17 @@ import Clear from 'material-ui/svg-icons/content/clear';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
-import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
 
+const irregularPolygon = require('../../../images/ic_irregularpolygon_black_24px.svg');
 
 export class RevertDialog extends Component {
     getIcon(geomType, source) {
         const type = geomType.toUpperCase();
         const iconStyle = {
             width: '35px',
-            height: '100%',
+            height: '35px',
             verticalAlign: 'top',
             flexShrink: 0,
         };
@@ -28,7 +28,7 @@ export class RevertDialog extends Component {
         } else if (type.includes('LINE')) {
             return <Line style={iconStyle} className="qa-RevertDialog-icon-line" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <Triangle style={iconStyle} className="qa-RevertDialog-icon-polygon" />;
+            return <img src={irregularPolygon} style={{ ...iconStyle, width: '32px' }} className="qa-RevertDialog-icon-polygon" alt="" />;            
         }
         return <AlertWarning style={iconStyle} className="qa-RevertDialog-icon-no-selection" />;
     }
@@ -72,7 +72,7 @@ export class RevertDialog extends Component {
                 textAlign: 'right',
             },
             updateButton: {
-                backgroundColor: '#4598bf',
+                backgroundColor: '#ce4427',
                 height: '30px',
                 lineHeight: '30px',
             },

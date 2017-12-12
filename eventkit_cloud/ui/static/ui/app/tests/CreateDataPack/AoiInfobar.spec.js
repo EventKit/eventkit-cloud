@@ -79,8 +79,8 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-name').text()).toEqual('fake title');
         expect(wrapper.find('.qa-AoiInfobar-description').text()).toEqual('fake description');
-        expect(wrapper.find(Triangle)).toHaveLength(1);
-        expect(wrapper.find(Triangle).hasClass('qa-AoiInfobar-icon-polygon')).toBe(true);
+        expect(wrapper.find('img')).toHaveLength(1);
+        expect(wrapper.find('img').hasClass('qa-AoiInfobar-icon-polygon')).toBe(true);
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {
@@ -140,7 +140,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ImageCropSquare
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-box"
             />
         );
@@ -153,7 +153,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Extent
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-mapview"
             />
         );
@@ -166,7 +166,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ActionRoom
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-point"
             />
         );
@@ -179,7 +179,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Line
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-line"
             />
         );
@@ -187,26 +187,30 @@ describe('AoiInfobar component', () => {
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return Triangle', () => {
+    it('getIcon should return img tag', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <Triangle
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+            <img
+                src="test-file-stub"
+                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-polygon"
+                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Polygon', '');
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return Triangle', () => {
+    it('getIcon should return img tag', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <Triangle
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+            <img
+                src="test-file-stub"
+                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-polygon"
+                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Collection', '');
@@ -218,7 +222,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <AlertWarning
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-AoiInfobar-icon-no-selection"
             />
         );

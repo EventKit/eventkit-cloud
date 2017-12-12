@@ -88,7 +88,7 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ImageCropSquare
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-box"
             />
         );
@@ -101,7 +101,7 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Extent
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-mapview"
             />
         );
@@ -114,7 +114,7 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ActionRoom
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-point"
             />
         );
@@ -127,7 +127,7 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Line
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-line"
             />
         );
@@ -135,26 +135,30 @@ describe('AlertCallout component', () => {
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return Triangle', () => {
+    it('getIcon should return img tag', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <Triangle
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+            <img
+                src="test-file-stub"
+                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-polygon"
+                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Polygon', '');
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return Triangle', () => {
+    it('getIcon should return img tag', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <Triangle
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+            <img
+                src="test-file-stub"
+                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-polygon"
+                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Collection', '');
@@ -166,7 +170,7 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <AlertWarning
-                style={{ width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-no-selection"
             />
         );

@@ -5,10 +5,11 @@ import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
 import ActionZoomIn from 'material-ui/svg-icons/action/zoom-in';
 import ActionRestore from 'material-ui/svg-icons/action/restore';
-import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
 import AlertCallout from './AlertCallout';
+
+const irregularPolygon = require('../../../images/ic_irregularpolygon_black_24px.svg');
 
 export class AoiInfobar extends Component {
     constructor(props) {
@@ -22,7 +23,7 @@ export class AoiInfobar extends Component {
 
     getIcon(geomType, source) {
         const type = geomType.toUpperCase();
-        const iconStyle = { width: '35px', height: '100%', verticalAlign: 'top', flexShrink: 0 };
+        const iconStyle = { width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 };
         if (source === 'Box') {
             return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" />;
         } else if (source === 'Map View') {
@@ -32,7 +33,7 @@ export class AoiInfobar extends Component {
         } else if (type.includes('LINE')) {
             return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <Triangle style={iconStyle} className="qa-AoiInfobar-icon-polygon" />;
+            return <img src={irregularPolygon} style={{ ...iconStyle, width: '32px' }} className="qa-AoiInfobar-icon-polygon" alt="" />;
         }
         return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" />;
     }
