@@ -8,9 +8,9 @@ export const logout = query => (dispatch) => {
         dispatch({
             type: actions.USER_LOGGED_OUT,
         });
-        if (typeof query === 'undefined') {
-            dispatch(push({ pathname: '/login' }));
-        }
+        // if (typeof query === 'undefined') {
+        //     dispatch(push({ pathname: '/login' }));
+        // }
     }).catch((error) => {
         console.log(error);
     });
