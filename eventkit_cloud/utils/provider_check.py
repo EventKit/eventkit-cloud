@@ -25,28 +25,28 @@ class CheckResults(Enum):
         SUCCESS - No problems: export should proceed without issues
     """
     CONNECTION = {"status": "ERR_CONNECTION",
-                  "message": _("A connection to the provider could not be established")},
+                  "message": _("A connection to this data provider could not be established.")},
 
     UNAUTHORIZED = {"status": "ERR_UNAUTHORIZED",
-                    "message": _("Authorization is required to connect to this provider")},
+                    "message": _("Authorization is required to connect to this data provider.")},
 
     UNAVAILABLE = {"status": "WARN_UNAVAILABLE",
-                   "message": _("The provider may be unavailable (status %(status)s)")},
+                   "message": _("This data provider may be unavailable (status %(status)s).")},
 
     UNKNOWN_FORMAT = {"status": "WARN_UNKNOWN_FORMAT",
-                      "message": _("The provider returned metadata in an unexpected format; "
-                                   "errors may occur when creating the DataPack")},
+                      "message": _("This data provider returned metadata in an unexpected format; "
+                                   "errors may occur when creating the DataPack.")},
 
     LAYER_NOT_AVAILABLE = {"status": "WARN_LAYER_NOT_AVAILABLE",
-                           "message": _("The provider does not offer the requested layer; "
-                                        "errors may occur when creating the DataPack")},
+                           "message": _("This data provider does not offer the requested layer; "
+                                        "errors may occur when creating the DataPack.")},
 
     NO_INTERSECT = {"status": "WARN_NO_INTERSECT",
-                    "message": _("The selected AOI does not intersect the provider's layer. "
-                                 "The DataPack will contain no data from this provider")},
+                    "message": _("The selected AOI does not intersect the data provider's layer. "
+                                 "The DataPack will contain no data from this provider.")},
 
     SUCCESS = {"status": "SUCCESS",
-               "message": ""},
+               "message": "The data provider is online and no problems were found."},
 
 
 class ProviderCheck(object):

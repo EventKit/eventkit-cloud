@@ -47,6 +47,13 @@ export class ExportInfo extends React.Component {
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
+
+        if (this.state.providers) {
+            this.state.providers.forEach((provider,pi) => {
+                if (provider.availability === undefined)
+                    provider.availability = { status: "PENDING", message: "This data provider's availability is being checked."}
+            });
+        }
     }
 
     componentDidMount() {
@@ -91,7 +98,6 @@ export class ExportInfo extends React.Component {
         }, 250);
 
         // make requests to check provider availability
-
         if (this.state.providers) {
             this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
                 if (provider.display === false) return;
@@ -461,7 +467,7 @@ export class ExportInfo extends React.Component {
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
                                             primaryText={
                                                 <div>
-                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
+                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px', pointerEvents: 'auto' }}>
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon availability={provider.availability} />
