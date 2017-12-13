@@ -19,11 +19,3 @@ export function isMgrsString(c){
     const MGRS = /^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$/i;
     return MGRS.test(c);
 }
-
-export function getDegreeMultiplier(mgrsString){
-    let mgrsChars = mgrsString.split('');
-    let precisionFirstIndex = _.findLastIndex(mgrsChars, function(char, index){ return /[a-zA-Z]/.test(char) });
-    let precisionIndicator = mgrsString.substring(precisionFirstIndex+1, mgrsString.length);
-    // Return multiplier for degree range for BBOX based on precision, assuming roughly 111km per degree
-    return Math.pow(10, -0.5*precisionIndicator.length);
-}

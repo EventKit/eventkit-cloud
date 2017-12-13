@@ -14,14 +14,14 @@ class Convert(object):
 
 
     def __init__(self):
-        url = getattr(settings, 'CONVERT_API_URL')
-        self.converter = self.get_converter(url)
+
+        self.converter = self.get_converter()
 
     @property
     def map(self):
         return self
 
-    def get_converter(self, url):
+    def get_converter(self):
         return self;
 
     def add_bbox(self, data):
@@ -34,8 +34,9 @@ class Convert(object):
         return self.converter.get_data(query)
     
     def get(self, query):
+        url = getattr(settings, 'CONVERT_API_URL')
         args = { "from":"mgrs", "to":"decdeg","q":str(query)}
-        response = requests.get("http://172.17.0.1:3100/v1/convert", params=args)
+        response = requests.get(url, params=args)
         return response.json()
 
 

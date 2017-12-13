@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { isMgrsString, getDegreeMultiplier } from '../utils/generic';
+import { isMgrsString } from '../utils/generic';
 
 export function getGeocode(query) {
     if(isMgrsString(query)){
@@ -15,7 +15,7 @@ export function getGeocode(query) {
             }).then(responseData => {
                 let data = [];
                 if(responseData.geometry){
-                    let degreeRange = 0.5*getDegreeMultiplier(responseData.properties.name);
+                    let degreeRange = 0.05;
                     for(const k in responseData.properties) responseData[k]=responseData.properties[k];
                     responseData.properties.bbox = [(responseData.geometry.coordinates[0])-degreeRange, (responseData.geometry.coordinates[1])-degreeRange, (responseData.geometry.coordinates[0])+degreeRange, (responseData.geometry.coordinates[1])+degreeRange];
                     data.push(responseData);
