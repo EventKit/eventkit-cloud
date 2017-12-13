@@ -17,16 +17,21 @@ class TestConvert(TestCase):
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
 
-    def convert_test(self, api_response):
+    def convert_test_success(self, api_response):
         self.mock_requests.get(settings.CONVERT_API_URL, text=json.dumps(api_response), status_code=200)
         convert = Convert()
         result = convert.get("18S TJ 97100 03003")
         self.assertIsNotNone(result.get("geometry"))
         self.assertEquals(result.get("type"), "Feature")
+        properties = result.get("properties")
+        geometry = result.get("geometry")
+        self.assertIsInstance(properties, dict)
+        self.assertIsInstance(geometry, dict)
+        self.assertEquals(geometry.get("type"), "Point")
+        self.assertIsInstance(geometry.get("coordinates"), list)
 
-
-    def test_geonames_success(self):
-        convert_response = {
+    def test_convert_success(self):
+        convert_response_success = {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
@@ -42,4 +47,24 @@ class TestConvert(TestCase):
             }        
         }
 
-        self.convert_test(convert_response)
+        self.convert_test_success(convert_response_success)
+
+    def convert_test_fail(self, api_response):
+        self.mock_requests.get(settings.CONVERT_API_URL, text=json.dumps(api_response), status_code=200)
+        convert = Convert()
+        result = convert.get("12UUA844")
+        self.assertIsNone(result.get("geometry"))
+        properties = result.get("properties")
+        self.assertIsInstance(properties, dict)
+
+    def test_convert_fail(self):
+        convert_response_fail = {
+            "properties": {
+                "name": "12UUA844",
+                "from": "mgrs",
+                "to": "decdeg"
+            }        
+        }
+
+        self.convert_test_fail(convert_response_fail)
+
