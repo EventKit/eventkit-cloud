@@ -56,7 +56,9 @@ def logout(request):
     """Logs out user"""
     auth_logout(request)
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
-        response = redirect(settings.OAUTH_LOGOUT_URL)
+        response = HttpResponse(json.dumps({"OAUTH_LOGOUT_URL":settings.OAUTH_LOGOUT_URL}),
+                        content_type="application/json",
+                        status=200)
     else:
         response = redirect('login')
 
