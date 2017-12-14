@@ -831,7 +831,7 @@ class PickUpRunFailureTask(ExportTask):
         from ..tasks.models import ExportTaskException
 
         exception = cPickle.dumps(einfo)
-        task = ExportTaskRecord.objects.filter(celery_uid=task_id)
+        task = ExportTaskRecord.objects.get(celery_uid=task_id)
         task.status = TaskStates.FAILED.value
         task.finished_at = timezone.now()
         task.save()
