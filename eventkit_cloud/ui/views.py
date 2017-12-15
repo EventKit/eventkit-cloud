@@ -213,7 +213,6 @@ def get_config(request):
     """
     config = getattr(settings, 'UI_CONFIG', {})
     config["MAX_EXPORTRUN_EXPIRATION_DAYS"] = getattr(settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS')
-    config["OAUTH_LOGOUT_URL"] = getattr(settings, "OAUTH_LOGOUT_URL")
 
     return HttpResponse(json.dumps(config), status=200)
 

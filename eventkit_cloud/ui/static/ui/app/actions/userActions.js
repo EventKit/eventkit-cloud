@@ -3,15 +3,15 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import actions from './actionTypes';
 
+
 export const logout = query => (dispatch) => {
     return axios('/logout', { method: 'GET' }).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_OUT,
         });
-        if(response.data){
+        if(response.data.OAUTH_LOGOUT_URL) {
             window.location.href = response.data.OAUTH_LOGOUT_URL;
-        };
-        if (typeof query === 'undefined') {
+        }else{
             dispatch(push({ pathname: '/login' }));
         };
     }).catch((error) => {
