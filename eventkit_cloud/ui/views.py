@@ -15,6 +15,7 @@ from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
 from logging import getLogger
 from ..utils.geocode import Geocode
+from ..utils.reverse import ReverseGeocode
 from ..utils.convert import Convert
 from .helpers import file_to_geojson, set_session_user_last_active_at
 from datetime import datetime, timedelta
@@ -133,11 +134,18 @@ def convert(request):
     if request.GET.get('convert'):
         
         result = convert.get(request.GET.get('convert'))
-        logger.info(result)
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")
 
+@require_http_methods(['GET'])
+def reverse_geocode(request):
+    reverseGeocode = ReverseGeocode()
+    if request.GET.get('lat') and request.GET.get('lon'):
+        result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+    else:
+        return HttpResponse(status=204, content_type="application/json")
 
 
 @require_http_methods(['GET'])
