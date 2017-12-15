@@ -99,9 +99,7 @@ export function getGeocode(query) {
             }).then(response => {
                 return response.data;
             }).then(responseData => {
-                let features = responseData.features || [];
-                let data = []
-                
+                let features = responseData.features || [], data = [];
                 features.forEach((feature, i) => {
                         if (feature.geometry) {
                           //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md

@@ -230,7 +230,6 @@ export class ExportAOI extends Component {
     }
 
     setMapView() {
-        console.log("setMapView");
         clearDraw(this.drawLayer);
         const extent = this.map.getView().calculateExtent(this.map.getSize());
         const geom = new Polygon.fromExtent(extent);

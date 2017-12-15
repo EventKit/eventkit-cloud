@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class ReverseGeocodeAdapter:
     """
-    An abstract class to implement a new geocoding service.  Note that the UI will expect,
+    An abstract class to implement a new reverse geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
 
@@ -47,7 +47,7 @@ class ReverseGeocodeAdapter:
     @abstractmethod
     def get_payload(self, query):
         """
-        This takes some query (e.g. "Boston"), and returns a dict representing query parameters that a specific api will expect.
+        This takes some query (e.g. "38, -77"), and returns a dict representing query parameters that a specific api will expect.
         :param query: A string
         :return: A dict of API specific query paramters.
             Input:
