@@ -48,10 +48,14 @@ export class ExportInfo extends React.Component {
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
 
+        // Populate provider state attributes specific to this component
         if (this.state.providers) {
             this.state.providers.forEach((provider,pi) => {
+
                 if (provider.availability === undefined)
                     provider.availability = { status: "PENDING", message: "This data provider's availability is being checked."}
+
+                provider.checked = props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true;
             });
         }
     }
@@ -157,7 +161,17 @@ export class ExportInfo extends React.Component {
         this.projectHandler(e);
     }
 
+    onAvailabilityClick(e) {
+        console.log("Avail icon clicked");
+        this.skipChangeCheck = true;
+    }
+
     onChangeCheck(e) {
+        console.log("onChangeCheck");
+        if (this.skipChangeCheck === true) {
+            this.skipChangeCheck = false;
+            return;
+        }
         // current array of providers
         const providers = [...this.props.exportInfo.providers];
         const propsProviders = this.props.providers;
@@ -167,6 +181,7 @@ export class ExportInfo extends React.Component {
             // add the provider to the array
             for (let i = 0; i < propsProviders.length; i += 1) {
                 if (propsProviders[i].name === e.target.name) {
+                    propsProviders[i].checked = true;
                     providers.push(propsProviders[i]);
                     break;
                 }
@@ -176,6 +191,7 @@ export class ExportInfo extends React.Component {
             index = providers.map(x => x.name).indexOf(e.target.name);
             for (let i = 0; i < propsProviders.length; i += 1) {
                 if (propsProviders[i].name === e.target.name) {
+                    propsProviders[i].checked = false;
                     providers.splice(index, 1);
                 }
             }
@@ -467,17 +483,17 @@ export class ExportInfo extends React.Component {
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
                                             primaryText={
                                                 <div>
-                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px', pointerEvents: 'auto' }}>
+                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
                                                         {provider.name}
                                                     </span>
-                                                    <ProviderStatusIcon availability={provider.availability} />
+                                                    <ProviderStatusIcon availability={provider.availability} onTouchTap={this.onAvailabilityClick.bind(this)} />
                                                 </div>
                                             }
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true}
+                                                checked={provider.checked}
                                                 onCheck={this.onChangeCheck.bind(this)}
                                                 checkedIcon={
                                                     <ActionCheckCircle

@@ -14,6 +14,13 @@ export class ProviderStatusIcon extends Component {
         };
     }
 
+    handleTouchTap(e) {
+        if (typeof this.props.onTouchTap === 'function') {
+            this.props.onTouchTap(e);
+        }
+        this.handleDialogOpen(e);
+    }
+
     handleDialogOpen(e) {
         this.setState({ dialogOpen: true });
         return false;
@@ -58,7 +65,7 @@ export class ProviderStatusIcon extends Component {
 
         return (
             <div style={{ display: 'inline-block' }} >
-                <StatusIcon style={style.icon} title={this.props.availability.message} onTouchTap={this.handleDialogOpen.bind(this)} />
+                <StatusIcon style={style.icon} title={this.props.availability.message} onTouchTap={this.handleTouchTap.bind(this)} />
                 <BaseDialog
                     show={this.state.dialogOpen}
                     title="Data Provider Availability"

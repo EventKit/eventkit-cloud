@@ -86,23 +86,6 @@ export function getProvidersReducer(state = initialState.providers, action ) {
     }
 }
 
-export function getProviderStatusReducer(state = initialState.providers, action ) {
-    switch (action.type) {
-        case types.GETTING_PROVIDER_AVAILABILITY:
-            return  {}
-        case types.PROVIDER_AVAILABILITY_RECEIVED:
-            let provider = { ...state.filter(provider => provider.slug == action.provider) };
-            let otherProviders = [ ...state.filter(provider => provider.slug != action.provider) ];
-            provider.availability = action.status;
-            return [
-                provider,
-                ...otherProviders,
-            ];
-        default:
-            return state;
-    }
-}
-
 export function getFormatsReducer(state = initialState.formats, action ) {
     switch (action.type) {
     case types.GETTING_FORMATS:

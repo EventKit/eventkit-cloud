@@ -23,6 +23,8 @@ class CheckResults(Enum):
         WARN_LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
         WARN_NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
         SUCCESS - No problems: export should proceed without issues
+        (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
+        In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
     CONNECTION = {"status": "ERR_CONNECTION",
                   "message": _("A connection to this data provider could not be established.")},
