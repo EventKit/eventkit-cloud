@@ -144,6 +144,9 @@ def reverse_geocode(request):
     if request.GET.get('lat') and request.GET.get('lon'):
         result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+    if request.GET.get('result'):
+        result = reverseGeocode.add_bbox(json.loads(request.GET.get('result')))
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")
 
