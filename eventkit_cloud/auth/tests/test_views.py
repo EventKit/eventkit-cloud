@@ -10,6 +10,7 @@ from ..views import callback
 from ..models import OAuth
 from django.test import Client, override_settings
 from django.core.urlresolvers import reverse
+from django.conf import settings
 import json
 import urllib
 
@@ -74,21 +75,30 @@ class TestAuthViews(TestCase):
                                                                   params=params),
                                  fetch_redirect_response=False)
 
-
-    def test_logout(self):
+    @patch('eventkit_cloud.auth.views.fetch_user_from_token')
+    @patch('eventkit_cloud.auth.views.request_access_token')
+    def test_logout(self, mock_access_token, mock_fetch_user):
         # Test logout ensure logout of django, and redirect to login if OAUTH URL not provided
+        example_auth_code = 'code'
+        example_token = 'token'
+
         logout_url = "http://remote.dev/logout"
         user = User.objects.create(username="test", password="password", email="test@email.com")
         OAuth.objects.create(user=user, identification="test_ident", commonname="test_common")
+        mock_access_token.return_value = example_token
+        mock_fetch_user.return_value = user
 
-        self.client.login(username='test', password='password')
-        response = self.client.get(reverse('logout'), follow=True)
-        self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
+        #test without logout url
+        with self.settings(OAUTH_LOGOUT_URL=None):
+            self.client.get(reverse('callback'), params={'code': example_auth_code}, follow=True)
+            response = self.client.get(reverse('logout'), follow=True)
+            self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
 
-        # Test logout ensure logout of django and oauth if url is provided
+        #test with logout url
         with self.settings(OAUTH_LOGOUT_URL=logout_url):
             self.client.login(username='test', password='password')
+            self.client.get(reverse('callback'), params={'code': example_auth_code}, follow=True)
             response = self.client.get(reverse('logout'))
-            self.assertRedirects(response, logout_url, fetch_redirect_response=False)
+            self.assertEquals(response.json().get('OAUTH_LOGOUT_URL'), settings.OAUTH_LOGOUT_URL)
 
 
