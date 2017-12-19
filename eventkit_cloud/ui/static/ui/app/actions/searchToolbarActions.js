@@ -38,7 +38,7 @@ export function getGeocode(query) {
                 else{
                     return null;
                 }
-            }).then(reverseResponse =>  reverseResponse.data
+            }).then(reverseResponse => reverseResponse.data
             ).then(reverseData => {
                 let features = reverseData.features || [];
                 features.forEach((feature, i) => {
@@ -70,7 +70,7 @@ export function getGeocode(query) {
             }).then(response => {
                 return response.data;
             }).then(responseData => {
-                let features = reverseData.features || [];
+                let features = responseData.features || [];
                 features.forEach((feature, i) => {
                         if (feature.geometry) {
                             //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
