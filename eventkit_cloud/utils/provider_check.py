@@ -32,6 +32,9 @@ class CheckResults(Enum):
     UNAUTHORIZED = {"status": "ERR_UNAUTHORIZED",
                     "message": _("Authorization is required to connect to this data provider.")},
 
+    NOT_FOUND = {"status": "ERR_NOT_FOUND",
+                    "message": _("The data provider was not found on the server (status 404).")},
+
     UNAVAILABLE = {"status": "WARN_UNAVAILABLE",
                    "message": _("This data provider may be unavailable (status %(status)s).")},
 
@@ -100,6 +103,10 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAUTHORIZED
                 return None
 
+            if response.status_code == 404:
+                self.result = CheckResults.NOT_FOUND
+                return None
+
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
                 return None
@@ -153,6 +160,10 @@ class OverpassProviderCheck(ProviderCheck):
 
             if response.status_code in [401, 403]:
                 self.result = CheckResults.UNAUTHORIZED
+                return None
+
+            if response.status_code == 404:
+                self.result = CheckResults.NOT_FOUND
                 return None
 
             if not response.ok:

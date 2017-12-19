@@ -42,20 +42,17 @@ export class ProviderStatusIcon extends Component {
         };
 
         var StatusIcon = ActionSchedule;
-        switch (this.props.availability.status) {
+        let statusStr = this.props.availability.status + " ";
+        switch (statusStr.slice(0, statusStr.indexOf("_"))) {
             case 'SUCCESS':
                 style.icon['color'] = 'rgba(0, 192, 0, 0.87)'
                 StatusIcon = ActionDone;
                 break;
-            case 'ERR_CONNECTION':
-            case 'ERR_UNAUTHORIZED':
+            case 'ERR':
                 style.icon['color'] = 'rgba(192, 0, 0, 0.87)'
                 StatusIcon = AlertError;
                 break;
-            case 'WARN_UNAVAILABLE':
-            case 'WARN_UNKNOWN_FORMAT':
-            case 'WARN_LAYER_NOT_AVAILABLE':
-            case 'WARN_NO_INTERSECT':
+            case 'WARN':
                 style.icon['color'] = 'rgba(255, 162, 0, 0.87)'
                 StatusIcon = AlertWarning;
                 break;
