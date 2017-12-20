@@ -27,6 +27,8 @@ export function isMgrsString(c) {
 export function isLatLon(c) {
     //Regex for lat and lon respectively
     const lat = /^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/;
+    con    //Regex for lat and lon respectively
+    const lat = /^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/;
     const lon = /^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$/;
     
     let coordArray, parsedCoordArray = [];
@@ -36,15 +38,14 @@ export function isLatLon(c) {
 
     if (coordArray.length > 2) {
         _.forEach(coordArray, coord => {
-            if (!_.isNaN(parseInt(coord))) {
-                console.log(parseInt(coord) + " is a number");
-                parsedCoordArray.push(parseInt(coord));
+            if (!_.isNaN(parseFloat(coord))) {
+                parsedCoordArray.push(parseFloat(coord));
             }
         });
     } else {
-        if (!_.isNaN(parseInt(coordArray[0]) && !_.isNaN(parseInt(coordArray[1])))) {
+        if (!_.isNaN(parseFloat(coordArray[0]) && !_.isNaN(parseFloat(coordArray[1])))) {
             _.forEach(coordArray, coord => {
-                parsedCoordArray.push(parseInt(coord));
+                parsedCoordArray.push(parseFloat(coord));
             });
         }
     }
