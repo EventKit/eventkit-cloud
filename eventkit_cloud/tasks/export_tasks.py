@@ -824,33 +824,7 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
         raise Exception(e)
 
 
-class PickUpRunFailureTask(ExportTask):
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        from ..tasks.models import ExportTaskRecord
-        from ..tasks.models import ExportTaskException
-
-        exception = cPickle.dumps(einfo)
-        task = ExportTaskRecord.objects.get(celery_uid=task_id)
-        task.status = TaskStates.FAILED.value
-        task.finished_at = timezone.now()
-        task.save()
-
-        ete = ExportTaskException(task=task, exception=exception)
-        ete.save()
-        logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
-
-        if task.export_provider_task.status != TaskStates.FAILED.value:
-            task.export_provider_task.status = TaskStates.FAILED.value
-            task.export_provider_task.save()
-
-        run = task.export_provider_task.run
-        if run.status != TaskStates.FAILED.value:
-            run.status = TaskStates.FAILED.value
-            run.save()
-
-
-@app.task(name='Pickup Run', bind=True, base=PickUpRunFailureTask)
+@app.task(name='Pickup Run', bind=True)
 def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, **kwargs):
     """
     Generates a Celery task to assign a celery pipeline to a specific worker.
@@ -862,11 +836,15 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     from .models import ExportRun
     from .task_factory import TaskFactory
 
-    worker = socket.gethostname()
-    run = ExportRun.objects.get(uid=run_uid)
-    run.worker = worker
-    run.save()
-    TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+    try:
+        worker = socket.gethostname()
+        run = ExportRun.objects.get(uid=run_uid)
+        run.worker = worker
+        run.save()
+        TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+    except Exception:
+        run.status = TaskStates.FAILED.value
+        run.save()
 
 
 #This could be improved by using Redis or Memcached to help manage state.
