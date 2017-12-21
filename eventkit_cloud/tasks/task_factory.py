@@ -87,12 +87,9 @@ class TaskFactory:
         :return: The AsyncResult from the celery chain of all tasks for this run.
         """
         # This is just to make it easier to trace when user_details haven't been sent
-        if user_details is None:
-            user_details = {'username': 'TaskFactory-parse_tasks'}
 
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
-            job = run.job
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
             os.makedirs(run_dir, 0750)
 
