@@ -112,6 +112,11 @@ export class SearchAOIToolbar extends Component {
                         placeholder={'Search admin boundary or location...'}
                         onInputChange={this.handleInputChange}
                         labelKey={'name'}
+                        filterBy={() => (
+                            // this disables the built in filtering
+                            // we dont need it since we are getting results dynamically based on input
+                            true
+                        )}
                         paginate={false}
                         emptyLabel={''}
                         minLength={2}
