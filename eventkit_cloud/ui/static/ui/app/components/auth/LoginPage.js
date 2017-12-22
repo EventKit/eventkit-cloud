@@ -62,6 +62,8 @@ export class LoginPage extends React.Component {
             );
         }
 
+        const version = this.context.config && this.context.config.VERSION ? this.context.config.VERSION : '';
+
         return (
             <div style={styles.wholeDiv}>
                 <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
@@ -91,6 +93,16 @@ export class LoginPage extends React.Component {
                             : null}
                     </div>
                 </CustomScrollbar>
+                { version ?
+                    <div
+                        style={{ ...styles.browserText, bottom: '17px' }}
+                        className="qa-LoginPage-version"
+                    >
+                        EventKit Version {version}
+                    </div>
+                    :
+                    null
+                }
                 <div style={styles.browserText} className="qa-LoginPage-browser-text">
                     Supported Browsers: Chrome, Firefox, Opera, Edge, and IE versions 10 or newer
                 </div>
