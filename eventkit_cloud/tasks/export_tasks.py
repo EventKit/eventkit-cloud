@@ -264,7 +264,6 @@ class ExportTask(LockingTask):
             einfo = ExceptionInfo()
             self.on_failure(e, task_uid, args, kwargs, einfo)
 
-
     @transaction.atomic
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
