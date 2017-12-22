@@ -5,21 +5,27 @@ import TimerMixin from 'react-timer-mixin';
 import reactMixin from 'react-mixin';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
+import Divider from 'material-ui/Divider';
+import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import BaseDialog from '../../components/BaseDialog';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
+        this.clearError = this.clearError.bind(this);
+        this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
             datacartDetails: [],
             isLoading: true,
             maxDays: null,
             zipFileProp: null,
+            error: null,
         };
     }
 
@@ -36,6 +42,9 @@ export class StatusDownload extends React.Component {
             if (nextProps.runDeletion.deleted) {
                 browserHistory.push('/exports');
             }
+        }
+        if (nextProps.exportReRun.error && !this.props.exportReRun.error) {
+            this.setState({ error: nextProps.exportReRun.error });
         }
         if (nextProps.exportReRun.fetched !== this.props.exportReRun.fetched) {
             if (nextProps.exportReRun.fetched === true) {
@@ -108,6 +117,28 @@ export class StatusDownload extends React.Component {
         return '30px';
     }
 
+    getErrorMessage() {
+        if (!this.state.error) {
+            return null;
+        }
+
+        const messages = this.state.error.map((error, ix) => (
+            <div className="StatusDownload-error-container" key={error.detail}>
+                { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
+                <p className="StatusDownload-error-title">
+                    <Warning style={{ fill: '#ce4427', verticalAlign: 'bottom', marginRight: '10px' }} />
+                    <strong>
+                        ERROR
+                    </strong>
+                </p>
+                <p className="StatusDownload-error-detail">
+                    {error.detail}
+                </p>
+            </div>
+        ));
+        return messages;
+    }
+
     handleClone(cartDetails, providerArray) {
         this.props.cloneExport(cartDetails, providerArray);
     }
@@ -116,6 +147,10 @@ export class StatusDownload extends React.Component {
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
+    }
+
+    clearError() {
+        this.setState({ error: null });
     }
 
     render() {
@@ -155,8 +190,9 @@ export class StatusDownload extends React.Component {
             },
         };
 
-        return (
+        const errorMessage = this.getErrorMessage();
 
+        return (
             <div className="qa-StatusDownload-div-root" style={styles.root}>
                 {this.props.runDeletion.deleting ?
                     <div style={styles.deleting}>
@@ -196,8 +232,17 @@ export class StatusDownload extends React.Component {
                                         providers={this.props.providers}
                                         maxResetExpirationDays={this.state.maxDays}
                                         zipFileProp={this.state.zipFileProp}
+                                        user={this.props.user}
                                     />
                                 ))}
+                                <BaseDialog
+                                    className="qa-StatusDownload-BaseDialog-error"
+                                    show={!!this.state.error}
+                                    title="ERROR"
+                                    onClose={this.clearError}
+                                >
+                                    {errorMessage}
+                                </BaseDialog>
                             </Paper>
                         </form>
                     </div>
@@ -218,6 +263,7 @@ function mapStateToProps(state) {
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
+        user: state.user,
     };
 }
 
@@ -272,6 +318,7 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
+
 StatusDownload.contextTypes = {
     config: PropTypes.object,
 };
@@ -281,11 +328,13 @@ StatusDownload.propTypes = {
     getDatacartDetails: PropTypes.func.isRequired,
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
+    exportReRun: PropTypes.object.isRequired,
     updateExpirationDate: PropTypes.func.isRequired,
     updatePermission: PropTypes.func.isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
+    user: PropTypes.object.isRequired,
 
 };
 
@@ -295,4 +344,3 @@ export default connect(
     mapStateToProps,
     mapDispatchToProps,
 )(StatusDownload);
-
