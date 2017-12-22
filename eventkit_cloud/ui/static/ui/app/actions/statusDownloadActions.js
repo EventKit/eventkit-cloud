@@ -67,9 +67,8 @@ export const rerunExport = jobuid => (dispatch) => {
             },
         });
     }).catch((error) => {
-        console.log(error);
         dispatch({
-            type: types.RERUN_EXPORT_ERROR, error,
+            type: types.RERUN_EXPORT_ERROR, error: error.response.data,
         });
     });
 };
