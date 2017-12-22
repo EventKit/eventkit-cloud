@@ -133,10 +133,20 @@ div.map {
     content: "✖";
 }
 
+.ol-custom-overviewmap:not(.ol-collapsed) {
+    left: 10px;
+    right: initial;
+    bottom: 25px;
+}
+
 .ol-custom-overviewmap:not(.ol-collapsed) > div {
     border: none;
     width: 100px;
     height: 100px;
+}
+
+.ol-custom-overviewmap:not(.ol-collapsed) button {
+    left: 2px;
 }
 
 .ol-attribution > ul > li {
