@@ -253,6 +253,13 @@ describe('StatusDownload component', () => {
                 error: null,
             },
             providers:providers,
+            user: {
+                data: {
+                    user: {
+                        username: 'admin'
+                    },
+                },
+            },
             getDatacartDetails: (jobuid) => {},
             deleteRun: (jobuid) => {},
             rerunExport: (jobuid) => {},
@@ -405,8 +412,8 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(12);
-        expect(setTimeout.mock.calls[3][1]).toBe(270000);
+        expect(setTimeout.mock.calls.length).toBe(13);
+        expect(setTimeout.mock.calls[4][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
         clearSpy.restore();
@@ -429,7 +436,7 @@ describe('StatusDownload component', () => {
         expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning, zipFileProp:"http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(11);
+        expect(setTimeout.mock.calls.length).toBe(12);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
@@ -491,4 +498,40 @@ describe('StatusDownload component', () => {
         updateSpy.restore();
     });
 
+    it('should set error state on export rerun error', () => {
+        const props = getProps();
+        const stateSpy = sinon.spy(StatusDownload.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        const error = [{ detail: 'this is an error' }];
+        nextProps.exportReRun.error = error;
+        wrapper.setProps(nextProps);
+        expect(stateSpy.calledWith({ error })).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('getErrorMessage should return null if no error in state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().error).toBe(null);
+        expect(wrapper.instance().getErrorMessage()).toBe(null);
+    });
+
+    it('getErrorMessage should return an array of error messages', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const error = [{ detail: 'one' }, { detail: 'two' }];
+        wrapper.setState({ error });
+        const ret = wrapper.instance().getErrorMessage();
+        expect(ret).toHaveLength(2);
+    });
+
+    it('clearError should set error state to null', () => {
+        const props = getProps();
+        const stateSpy = sinon.spy(StatusDownload.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().clearError();
+        expect(stateSpy.calledWith({ error: null })).toBe(true);
+        stateSpy.restore();
+    });
 });
