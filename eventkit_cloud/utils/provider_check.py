@@ -77,6 +77,7 @@ class ProviderCheck(object):
         self.query = None
         self.layer = layer
         self.result = CheckResults.SUCCESS
+        self.timeout = 10
 
         if aoi_geojson is not None and aoi_geojson is not "":
             # TODO: Improve this parsing, it is not robust at all
@@ -95,7 +96,7 @@ class ProviderCheck(object):
         """
 
         try:
-            response = requests.get(self.service_url, params=self.query)
+            response = requests.get(self.service_url, params=self.query, timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -154,7 +155,7 @@ class OverpassProviderCheck(ProviderCheck):
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            response = requests.post(url=self.service_url, data="out meta;")
+            response = requests.post(url=self.service_url, data="out meta;", timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
