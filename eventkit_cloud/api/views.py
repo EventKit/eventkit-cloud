@@ -904,6 +904,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     parser_classes = (JSONParser,)
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     lookup_field = 'username'
+    lookup_value_regex = '[^/]+'
     search_fields = ('user__username', 'accepted_licenses')
 
     def get_queryset(self):
