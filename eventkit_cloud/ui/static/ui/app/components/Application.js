@@ -15,6 +15,7 @@ import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
+import SocialGroup from 'material-ui/svg-icons/social/group';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationClose from 'material-ui/svg-icons/navigation/close';
@@ -421,6 +422,19 @@ export class Application extends Component {
                                 Account Settings
                             </Link>
                         </MenuItem>
+                        <MenuItem className={"qa-Application-MenuItem-groups"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <Link 
+                            className={"qa-Application-Link-groups"} 
+                            style={{...styles.link, backgroundColor: this.state.hovered == 'groups' ? '#161e2e': ''}} 
+                            activeStyle={styles.activeLink}
+                            onMouseEnter={() => this.handleMouseOver('groups')}
+                            onMouseLeave={this.handleMouseOut}
+                            to="/groups" 
+                        >
+                            <SocialGroup style={styles.icon} />
+                            Members and Groups
+                        </Link>
+                    </MenuItem>
                         <MenuItem className={"qa-Application-MenuItem-logout"} onClick={this.handleClose} innerDivStyle={styles.menuItem}>
                             <Link 
                                 className={"qa-Application-Link-logout"} 

@@ -7,7 +7,7 @@ export class CustomScrollbar extends Component {
     }
 
     renderThumb({style, ...props}) {
-        const thumbStyle = {backgroundColor: '#8A898B', opacity: '0.7', borderRadius: '5px'};
+        const thumbStyle = { backgroundColor: '#8A898B', opacity: '0.7', borderRadius: '5px', zIndex: 99 };
         return (
             <div style={{...style, ...thumbStyle}} {...props}/>
         );
