@@ -16,16 +16,20 @@ class CheckResults(Enum):
     """
     Enum describing possible results of the provider check. Returns are in JSON format, with a status field
     containing an error code, and a message field containing more detailed information. Status may be one of:
-        ERR_CONNECTION - Could not connect to endpoint (requests.get raised ConnectionError)
-        ERR_UNAUTHORIZED - Not authorized to connect (response status 401 or 403)
-        WARN_UNAVAILABLE - Server returned a status other than 200; service may not be available
-        WARN_UNKNOWN_FORMAT - GetCapabilities returned blank, or unrecognized metadata format
-        WARN_LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
-        WARN_NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
+        TIMEOUT - The connection timed out (requests.get raised ConnectionTimeout)
+        CONNECTION - Could not connect to endpoint (requests.get raised a different ConnectionError)
+        UNAUTHORIZED - Not authorized to connect (response status 401 or 403)
+        UNAVAILABLE - Server returned a status other than 200; service may not be available
+        UNKNOWN_FORMAT - GetCapabilities returned blank, or unrecognized metadata format
+        LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
+        NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
         SUCCESS - No problems: export should proceed without issues
         (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
+    TIMEOUT = {"status": "TIMEOUT",
+               "message": _("Your connection has timed out. Refresh to try again.")},
+
     CONNECTION = {"status": "ERR_CONNECTION",
                   "message": _("A connection to this data provider could not be established.")},
 
@@ -43,15 +47,13 @@ class CheckResults(Enum):
                                    "errors may occur when creating the DataPack.")},
 
     LAYER_NOT_AVAILABLE = {"status": "WARN_LAYER_NOT_AVAILABLE",
-                           "message": _("This data provider does not offer the requested layer; "
-                                        "errors may occur when creating the DataPack.")},
+                           "message": _("This data provider does not offer the requested layer.")},
 
     NO_INTERSECT = {"status": "WARN_NO_INTERSECT",
-                    "message": _("The selected AOI does not intersect the data provider's layer. "
-                                 "The DataPack will contain no data from this provider.")},
+                    "message": _("The selected AOI does not intersect the data provider's layer.")},
 
     SUCCESS = {"status": "SUCCESS",
-               "message": "The data provider is online and no problems were found."},
+               "message": "Export should proceed without issues."},
 
 
 class ProviderCheck(object):
@@ -112,6 +114,11 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
+        except requests.exceptions.ConnectTimeout as ex:
+            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            self.result = CheckResults.TIMEOUT
+            return None
+
         except requests.exceptions.ConnectionError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
             self.result = CheckResults.CONNECTION
@@ -170,6 +177,11 @@ class OverpassProviderCheck(ProviderCheck):
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
                 return None
+
+        except requests.exceptions.ConnectTimeout as ex:
+            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            self.result = CheckResults.TIMEOUT
+            return None
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
