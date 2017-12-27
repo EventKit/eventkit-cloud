@@ -21,8 +21,6 @@ export class BaseTooltip extends Component {
             tooltip: {
                 position: 'absolute',
                 fontSize: '12px',
-                // marginTop: '-38%',
-                // marginLeft: '-48%',
                 bottom: '36px',
                 left: '-157px',
                 background: 'white',
@@ -30,7 +28,8 @@ export class BaseTooltip extends Component {
                 padding: '20px',
                 width: '330px',
                 transition: '0.25s',
-                display: 'none',
+                opacity: '0',
+                pointerEvents: 'none',
                 ...this.props.tooltipStyle,
             },
             arrow: {
@@ -46,8 +45,19 @@ export class BaseTooltip extends Component {
                 width: '0',
                 position: 'absolute',
                 boxShadow: '2px -2px 0px 1px white, rgba(0,0,0,0.105) -2px 0 1px',
-                display: 'inherit',
-                opacity: 'inherit',
+                ...this.props.arrowStyle,
+            },
+            arrowBlock: {
+                top: '100%',
+                left: '50%',
+                border: '14px solid',
+                content: ' ',
+                height: '0',
+                width: '0',
+                position: 'absolute',
+                marginLeft: '-10px',
+                marginTop: '-3px',
+                opacity: '0',
                 ...this.props.arrowStyle,
             },
             title: {
@@ -59,6 +69,8 @@ export class BaseTooltip extends Component {
 
         if (this.props.show) {
             styles.tooltip.display = 'block';
+            styles.tooltip.opacity = '1';
+            styles.tooltip.pointerEvents = 'all';
         }
 
         return (
@@ -75,6 +87,7 @@ export class BaseTooltip extends Component {
                     {this.props.children}
                 </div>
                 <div className="qa-BaseTooltip-arrow" style={styles.arrow} ></div>
+                <div className="qa-BaseTooltip-arrow-block" style={styles.arrowBlock} ></div>
             </div>
         );
     }
