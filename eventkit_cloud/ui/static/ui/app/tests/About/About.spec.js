@@ -1,25 +1,25 @@
 import React from 'react';
-import {mount, shallow} from 'enzyme';
-import sinon from 'sinon';
+import { mount } from 'enzyme';
 import AppBar from 'material-ui/AppBar';
+import injectTapEventPlugin from 'react-tap-event-plugin';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import About from '../../components/About/About';
 import InfoParagraph from '../../components/About/InfoParagraph';
 import ThreeStepInfo from '../../components/About/ThreeStepInfo';
-import QuickTour from '../../components/About/QuickTour';
 import QuickTourSection from '../../components/About/QuickTourSection';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
+
 
 describe('About component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getWrapper = () => {
-        return mount(<About/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        return mount(<About />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object }
         });
     }
+
     it('should render all the basic elements', () => {
         const wrapper = getWrapper();
         expect(wrapper.find(AppBar)).toHaveLength(1);
@@ -35,19 +35,27 @@ describe('About component', () => {
     it('should only render Quick Tour header if there are quicktour elements', () => {
         const wrapper = getWrapper();
         expect(wrapper.find('h3')).toHaveLength(1);
-        let nextState = {...wrapper.state()};
+        const nextState = { ...wrapper.state() };
         nextState.pageInfo.quickTour = [];
         wrapper.setState(nextState);
         expect(wrapper.find('h3')).toHaveLength(0);
     });
 
-    it('should set state on mount', () => {
-        const mountSpy = new sinon.spy(About.prototype, 'componentDidMount');
-        const stateSpy = new sinon.spy(About.prototype, 'setState');
+    it('should not show the version tag if no version in context', () => {
         const wrapper = getWrapper();
-        expect(mountSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        mountSpy.restore();
-        stateSpy.restore();
+        expect(wrapper.find('.qa-About-version')).toHaveLength(0);
+    });
+
+    it('should render the version tag', () => {
+        const config = { VERSION: '1.2.3' };
+        const wrapper = mount(<About />, {
+            context: { muiTheme, config },
+            childContextTypes: {
+                muiTheme: React.PropTypes.object,
+                config: React.PropTypes.object,
+            },
+        });
+        expect(wrapper.find('.qa-About-version')).toHaveLength(1);
+        expect(wrapper.find('.qa-About-version').text()).toEqual('Version 1.2.3');
     });
 });

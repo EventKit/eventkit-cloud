@@ -33,6 +33,7 @@ export default {
         range: '',
         order: '',
         view: '',
+        cancelSource: null,
     },
     runsDeletion: {
         deleting: false,

@@ -7,7 +7,7 @@ from ..core.helpers import get_id
 from django.contrib.auth import login
 import urllib
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import json
 from django.contrib.auth import logout as auth_logout
 
@@ -15,9 +15,9 @@ from logging import getLogger
 
 logger = getLogger(__name__)
 
+
 def oauth(request):
     """
-
     :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings 
     """
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
@@ -36,6 +36,7 @@ def oauth(request):
     else:
         return HttpResponse(status=400)
 
+
 def callback(request):
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
@@ -46,16 +47,25 @@ def callback(request):
     else:
         logger.error('User could not be logged in.')
         return HttpResponse('{"error":"User could not be logged in"}',
-                        content_type="application/json",
-                        status=401)
+                            content_type="application/json",
+                            status=401)
+
 
 def logout(request):
-    """Logs out user"""
+    """Log out user
+
+        If user is an Oauth user it will pass back an OAuth redirect to be handled by UI.
+    """
+    is_oauth = hasattr(request.user, 'oauth')
     auth_logout(request)
+    response = redirect('login')
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
-        response = redirect(settings.OAUTH_LOGOUT_URL)
-    else:
-        response = redirect('login')
+        import sys
+        print("USER HAS OAUTH: {0}".format(is_oauth))
+        sys.stdout.flush()
+        logger.error("USER HAS OAUTH: {0}".format(is_oauth))
+        if is_oauth:
+            response = JsonResponse({'OAUTH_LOGOUT_URL': settings.OAUTH_LOGOUT_URL})
 
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
