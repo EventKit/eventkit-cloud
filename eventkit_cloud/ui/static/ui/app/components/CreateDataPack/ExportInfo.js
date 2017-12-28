@@ -53,7 +53,7 @@ export class ExportInfo extends React.Component {
             this.state.providers.forEach((provider,pi) => {
 
                 if (provider.availability === undefined)
-                    provider.availability = { status: "PENDING", message: "This data provider's availability is being checked."}
+                    provider.availability = {};
 
                 provider.checked = props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true;
             });
@@ -105,22 +105,7 @@ export class ExportInfo extends React.Component {
         if (this.state.providers) {
             this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
                 if (provider.display === false) return;
-                const data = {'geojson': this.props.geojson};
-                const csrfmiddlewaretoken = cookie.load('csrftoken');
-                axios({
-                    url: '/api/providers/' + provider.slug + '/status',
-                    method: 'POST',
-                    data,
-                    headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-                }).then((response) => {
-                    // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
-                    provider.availability = JSON.parse(response.data);
-                    console.log("Response data: " + response.data);
-                    this.setState({ providers: [...this.state.providers] });
-
-                }).catch((error) => {
-                    console.log(error);
-                });
+                this.checkAvailability(provider);
             }), 30000);
         }
     }
@@ -162,12 +147,10 @@ export class ExportInfo extends React.Component {
     }
 
     onAvailabilityClick(e) {
-        console.log("Avail icon clicked");
         this.skipChangeCheck = true;
     }
 
     onChangeCheck(e) {
-        console.log("onChangeCheck");
         if (this.skipChangeCheck === true) {
             this.skipChangeCheck = false;
             return;
@@ -202,6 +185,33 @@ export class ExportInfo extends React.Component {
             ...this.props.exportInfo,
             providers,
         });
+    }
+
+    checkAvailability(provider) {
+        const data = {'geojson': this.props.geojson};
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        axios({
+            url: '/api/providers/' + provider.slug + '/status',
+            method: 'POST',
+            data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
+            provider.availability = JSON.parse(response.data);
+            provider.availability.slug = provider.slug;
+            console.log("Response data: " + response.data);
+            this.setState({ providers: [...this.state.providers] });
+
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+
+    onRefresh(providerSlug) {
+        let provider = this.state.providers.filter(p => p.slug === providerSlug)[0];
+        provider.availability = {};
+        this.setState({ providers: [...this.state.providers] });
+        this.checkAvailability(provider);
     }
 
     setArea() {
@@ -486,7 +496,11 @@ export class ExportInfo extends React.Component {
                                                     <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
                                                         {provider.name}
                                                     </span>
-                                                    <ProviderStatusIcon availability={provider.availability} onTouchTap={this.onAvailabilityClick.bind(this)} />
+                                                    <ProviderStatusIcon
+                                                        availability={provider.availability}
+                                                        onTouchTap={this.onAvailabilityClick.bind(this)}
+                                                        onRefresh={this.onRefresh.bind(this)}
+                                                    />
                                                 </div>
                                             }
                                             leftCheckbox={<Checkbox

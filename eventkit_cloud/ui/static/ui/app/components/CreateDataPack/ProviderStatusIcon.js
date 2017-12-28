@@ -2,8 +2,8 @@ import React, {PropTypes, Component} from 'react'
 import AlertWarning from 'material-ui/svg-icons/alert/warning'
 import AlertError from 'material-ui/svg-icons/alert/error'
 import ActionDone from 'material-ui/svg-icons/action/done'
-import ActionSchedule from 'material-ui/svg-icons/action/schedule'
 import NotificationSyncProblem from 'material-ui/svg-icons/notification/sync-problem';
+import CircularProgress from 'material-ui/CircularProgress';
 import BaseTooltip from '../BaseTooltip';
 
 export class ProviderStatusIcon extends Component {
@@ -18,6 +18,9 @@ export class ProviderStatusIcon extends Component {
     onTouchTap(e) {
         if (typeof this.props.onTouchTap === 'function') {
             this.props.onTouchTap(e);
+        }
+        if (this.props.availability.status === 'TIMEOUT' && typeof this.props.onRefresh === 'function') {
+            this.props.onRefresh(this.props.availability.slug);
         }
         this.handleTooltipOpen(e);
     }
@@ -42,7 +45,11 @@ export class ProviderStatusIcon extends Component {
             },
         };
 
-        let statusStr = this.props.availability.status + " ";
+        let avail = this.props.availability.status ?
+                this.props.availability :
+                {status: "PENDING", message: "This data provider's availability is being checked."};
+
+        let statusStr = avail.status + " ";
 
         let StatusIcon;
         let title;
@@ -74,17 +81,17 @@ export class ProviderStatusIcon extends Component {
                 break;
             case 'PENDING':
                 style.icon['color'] = 'rgba(0, 0, 0, 0.87)';
-                StatusIcon = ActionSchedule;
+                StatusIcon = CircularProgress;
                 title = "Checking Availability"
                 messagePrefix = "";
             default:
                 break;
         }
 
-        let message = messagePrefix + this.props.availability.message;
+        let message = messagePrefix + avail.message;
 
         return (
-            <div style={{ display: 'inline-block', position: 'absolute' }} >
+            <div style={{ display: 'inline-block', position: 'absolute' }} className='qa-ProviderStatusIcon' >
                 <StatusIcon
                     style={style.icon}
                     title={this.props.availability.message}
@@ -93,12 +100,14 @@ export class ProviderStatusIcon extends Component {
                     onMouseOut={this.handleTooltipClose.bind(this)}
                     onTouchStart={this.handleTooltipOpen.bind(this)}
                     onTouchEnd={this.handleTooltipClose.bind(this)}
+                    size={20} thickness={2} color={style.icon['color']}
                 />
                 <BaseTooltip
                     show={this.state.tooltipOpen}
                     title={title}
                     onMouseOver={this.handleTooltipOpen.bind(this)}
                     onMouseOut={this.handleTooltipClose.bind(this)}
+                    onTouchTap={this.onTouchTap.bind(this)}
                 >
                     <div>{message}</div>
                 </BaseTooltip>

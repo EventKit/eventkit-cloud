@@ -14,6 +14,12 @@ export class BaseTooltip extends Component {
         }
     }
 
+    onTouchTap(e) {
+        if (typeof this.props.onTouchTap === 'function') {
+            this.props.onTouchTap(e);
+        }
+    }
+
 
     render() {
         // default styling with the option for overriding with custom props
@@ -70,7 +76,7 @@ export class BaseTooltip extends Component {
         if (this.props.show) {
             styles.tooltip.display = 'block';
             styles.tooltip.opacity = '1';
-            styles.tooltip.pointerEvents = 'all';
+            styles.tooltip.pointerEvents = 'auto';
         }
 
         return (
@@ -79,6 +85,7 @@ export class BaseTooltip extends Component {
                 style={styles.tooltip}
                 onMouseOver={this.onMouseOver.bind(this)}
                 onMouseOut={this.onMouseOut.bind(this)}
+                onTouchTap={this.onTouchTap.bind(this)}
             >
                 <div className="qa-BaseTooltip-title" style={styles.title}>
                     <strong>{this.props.title ? this.props.title : ''}</strong>
