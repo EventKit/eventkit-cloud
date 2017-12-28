@@ -47,7 +47,7 @@ class TestJobViewSet(APITestCase):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = group
+            mock_group.objects.get.return_value = self.group
             self.user = User.objects.create_user(
                 username='demo', email='demo@demo.com', password='demo'
             )
@@ -519,6 +519,7 @@ class TestBBoxSearch(APITestCase):
     def setUp(self,):
         url = reverse('api:jobs-list')
         # create dummy user
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create_user(
@@ -605,9 +606,9 @@ class TestExportRunViewSet(APITestCase):
         self.job_uid = None
         self.export_run = None
         self.run_uid = None
-        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
 
     def setUp(self,):
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
@@ -737,9 +738,8 @@ class TestExportRunViewSet(APITestCase):
 
 
     def test_retrieve_run_no_permissions(self,):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = group
+            mock_group.objects.get.return_value = self.group
             user = User.objects.create_user(
                 username='other_user', email='other_user@demo.com', password='demo'
             )

@@ -29,12 +29,11 @@ class TestExportTaskRunner(TestCase):
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = group
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
-        self.region, created = Region.objects.get_or_create(name='Africa')
+        self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
         self.job.region = self.region
         self.job.save()
         create_run(job_uid=self.job.uid)
