@@ -201,7 +201,7 @@ class ExportTask(LockingTask):
             if task.status == TaskStates.CANCELED.value:
                 # the task was cancelled because an error occurred earlier on in the (presumably synchronous) task chain,
                 # and therefore nothing needs to be done
-                return
+                return {'state': TaskStates.CANCELED.value}
 
             retval = super(ExportTask, self).__call__(*args, **kwargs)
 
@@ -287,7 +287,6 @@ class ExportTask(LockingTask):
         from ..tasks.models import ExportTaskRecord
         from ..tasks.models import ExportTaskException, DataProviderTaskRecord
         try:
-            logger.error('id from on_failure: ' + task_id)
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
             task.save()
@@ -332,6 +331,7 @@ class ExportTask(LockingTask):
             result = parse_result(result, 'state') or []
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status, result]:
                 logging.info('canceling before run %s', celery_uid)
+            logger.error('EJ RAISING CANCEL EXCEPTION')
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.pid = os.getpid()
             task.status = task_status
