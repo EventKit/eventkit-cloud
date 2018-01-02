@@ -331,7 +331,7 @@ class ExportTask(LockingTask):
             result = parse_result(result, 'state') or []
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status, result]:
                 logging.info('canceling before run %s', celery_uid)
-            logger.error('EJ RAISING CANCEL EXCEPTION')
+                logger.error('EJ RAISING CANCEL EXCEPTION')
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
             task.pid = os.getpid()
             task.status = task_status
