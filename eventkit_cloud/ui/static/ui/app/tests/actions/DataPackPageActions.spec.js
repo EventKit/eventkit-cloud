@@ -1,44 +1,126 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import axios from 'axios';
+import sinon from 'sinon';
+import MockAdapter from 'axios-mock-adapter';
 import * as actions from '../../actions/DataPackPageActions';
 import types from '../../actions/actionTypes';
-import React from 'react';
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 describe('DataPackList actions', () => {
-    
     it('getRuns should return runs from "api/runs/filter"', () => {
-        var mock = new MockAdapter(axios, {delayResponse: 1000});
-        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24'});
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
+        });
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
         const expectedActions = [
-            {type: types.FETCHING_RUNS},
-            {type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24'}
+            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24' }
         ];
 
-        const store = mockStore({runsList: {}});
+        const store = mockStore({ runsList: {} });
 
         return store.dispatch(actions.getRuns())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+            });
+    });
+
+    it('getRuns should cancel an active request', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
+        });
+        const cancel = sinon.spy();
+        const cancelSource = { cancel };
+        const store = mockStore({ runsList: { fetching: true, cancelSource } });
+        return store.dispatch(actions.getRuns())
+            .then(() => {
+                expect(cancel.calledOnce).toBe(true);
+                expect(cancel.calledWith('Request is no longer valid, cancelling')).toBe(true);
+            });
+    });
+
+    it('getRuns should handle the axios request being cancelled', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(400, 'oh no an error');
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+        const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
+
+        const expectedActions = [
+            { type: types.FETCHING_RUNS, cancelSource: testSource },
+        ];
+
+        const store = mockStore({ runsList: {} });
+
+        return store.dispatch(actions.getRuns())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+                cancelStub.restore();
+            });
+    });
+
+    it('getRuns should handle a generic request error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(400, 'oh no an error');
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
+        const expectedActions = [
+            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: types.FETCH_RUNS_ERROR, error: 'oh no an error' },
+        ];
+
+        const store = mockStore({ runsList: {} });
+
+        return store.dispatch(actions.getRuns())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+            });
+    });
+
+    it('deleteRuns should dispatch deleting and deleted actions', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+
+        mock.onDelete('/api/runs/123456789').reply(204);
+        const expectedActions = [
+            { type: types.DELETING_RUN },
+            { type: types.DELETED_RUN },
+        ];
+
+        const store = mockStore({ deleteRuns: {} });
+
+        return store.dispatch(actions.deleteRuns('123456789'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
 
-    it('deleteRuns should dispatch deleting and deleted actions', () => {
-        var mock = new MockAdapter(axios, {delayResponse: 1000});
-
-        mock.onDelete('/api/runs/123456789').reply(204);
+    it('deleteRuns should dispatch deleting and error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        
+        mock.onDelete('/api/runs/12233').reply(400, 'oh no an error');
         const expectedActions = [
-            {type: types.DELETING_RUN},
-            {type: types.DELETED_RUN},
+            { type: types.DELETING_RUN },
+            { type: types.DELETE_RUN_ERROR, error: 'oh no an error' },
         ];
-
-        const store = mockStore({deleteRuns: {}});
-
-        return store.dispatch(actions.deleteRuns('123456789'))
+        const store = mockStore({ deleteRuns: {} });
+        return store.dispatch(actions.deleteRuns('12233'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
