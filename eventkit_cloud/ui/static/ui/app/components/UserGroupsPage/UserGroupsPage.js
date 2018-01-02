@@ -1,27 +1,24 @@
 import React, { Component, PropTypes } from 'react';
 import AppBar from 'material-ui/AppBar';
-import Drawer from 'material-ui/Drawer';
 import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import {
     Table,
     TableBody,
     TableHeader,
-    TableHeaderColumn,
     TableRow,
-    TableRowColumn,
 } from 'material-ui/Table';
-import DropDownMenu from 'material-ui/DropDownMenu';
-import IconMenu from 'material-ui/IconMenu';
-import Menu from 'material-ui/Menu';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
-import IconButton from 'material-ui/IconButton';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import MoreHorizIcon from 'material-ui/svg-icons/navigation/more-horiz';
-import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
 import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
 import CustomScrollbar from '../CustomScrollbar';
+import BaseDialog from '../BaseDialog';
+import UserTableRowColumn from './UserTableRowColumn';
+import UserTableHeaderColum from './UserTableHeaderColumn';
+import GroupsDrawer from './GroupsDrawer';
+import CreateGroupDialog from './CreateGroupDialog';
+import LeaveGroupDialog from './LeaveGroupDialog';
+import DeleteGroupDialog from './DeleteGroupDialog';
+import CustomTextField from '../CustomTextField';
 
 export class UserGroupsPage extends Component {
     constructor(props) {
@@ -32,16 +29,36 @@ export class UserGroupsPage extends Component {
         this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
+        this.handleCreateOpen = this.handleCreateOpen.bind(this);
+        this.handleCreateClose = this.handleCreateClose.bind(this);
+        this.handleCreateInput = this.handleCreateInput.bind(this);
+        this.handleCreateSave = this.handleCreateSave.bind(this);
+        this.handleItemClick = this.handleItemClick.bind(this);
+        this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
+        this.handleLeaveGroupClick = this.handleLeaveGroupClick.bind(this);
+        this.handleDeleteGroupClick = this.handleDeleteGroupClick.bind(this);
+        this.handleLeaveOpen = this.handleLeaveOpen.bind(this);
+        this.handleLeaveClose = this.handleLeaveClose.bind(this);
+        this.handleLeaveClick = this.handleLeaveClick.bind(this);
+        this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
+        this.handleDeleteClose = this.handleDeleteClose.bind(this);
+        this.handleDeleteClick = this.handleDeleteClick.bind(this);
         this.state = {
             drawerOpen: !(window.innerWidth < 768),
             selected: [],
-            values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+            users: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
             sort: 1,
+            showCreate: false,
+            menuValues: [],
+            showLeave: false,
+            showDelete: false,
+            targetGroupName: '',
+            usersUpdating: [],
         };
     }
 
     componentDidMount() {
-        
+        // make api request for users/groups
     }
 
     toggleDrawer() {
@@ -51,7 +68,7 @@ export class UserGroupsPage extends Component {
     handleSelectAll(selected) {
         if (selected === 'all') {
             // if all are selected we need to set selected state to an array containing all table indices
-            const allIndices = Array.from(new Array(this.state.values.length), (val, ix) => ix);
+            const allIndices = Array.from(new Array(this.state.users.length), (val, ix) => ix);
             this.setState({ selected: allIndices });
         } else {
             // if all are deselected we need to set selected to an empty array
@@ -78,6 +95,79 @@ export class UserGroupsPage extends Component {
 
     handleSortChange(e, ix, val) {
         this.setState({ sort: val });
+    }
+
+    handleCreateOpen() {
+        this.setState({ showCreate: true });
+    }
+
+    handleCreateClose() {
+        this.setState({ showCreate: false });
+    }
+
+    handleCreateInput(e, val) {
+        console.log(val);
+    }
+
+    handleCreateSave() {
+        console.log('save');
+        this.handleCreateClose();
+    }
+
+    handleItemClick(value) {
+        const values = [...this.state.menuValues];
+        const index = values.indexOf(value);
+        if (index !== -1) {
+            // the item is being deselected
+            values.splice(index, 1);
+        } else {
+            // the item is being added
+            values.push(value);
+        }
+        this.setState({ menuValues: values });
+    }
+
+    handleNewGroupClick() {
+        this.handleCreateOpen();
+    }
+
+    handleLeaveGroupClick(group) {
+        console.log('leave');
+        this.setState({ targetGroupName: group });
+        this.handleLeaveOpen();
+    }
+
+    handleDeleteGroupClick(e, group) {
+        e.stopPropagation();
+        console.log('delete', group);
+        this.setState({ targetGroupName: group });
+        this.handleDeleteOpen();
+    }
+
+    handleLeaveOpen() {
+        this.setState({ showLeave: true });
+    }
+
+    handleLeaveClose() {
+        this.setState({ showLeave: false, targetGroupName: '' });
+    }
+
+    handleLeaveClick() {
+        console.log('leave group', this.state.targetGroupName);
+        this.handleLeaveClose();
+    }
+
+    handleDeleteOpen() {
+        this.setState({ showDelete: true });
+    }
+
+    handleDeleteClose() {
+        this.setState({ showDelete: false, targetGroupName: '' });
+    }
+
+    handleDeleteClick() {
+        console.log('delete', this.state.targetGroupName);
+        this.handleDeleteClose();
     }
 
     render() {
@@ -116,18 +206,10 @@ export class UserGroupsPage extends Component {
                 overflowY: 'hidden',
             },
             bodyContent: {
-                // padding: '0px 34px 30px',
                 paddingBottom: '30px',
                 maxWidth: '1000px',
                 margin: 'auto',
                 position: 'relative',
-            },
-            drawer: {
-                backgroundColor: '#fff',
-                top: '130px',
-                height: window.innerHeight - 130,
-                overflowY: 'hidden',
-                overflowX: 'hidden',
             },
             drawerButton: {
                 fill: 'white',
@@ -174,50 +256,51 @@ export class UserGroupsPage extends Component {
             tableRow: {
                 height: '56px',
             },
-            tableRowColumn: {
-                color: '#707274',
-                fontSize: '14px',
-            },
         };
 
         this.context.muiTheme.checkbox.boxColor = '#4598bf';
         this.context.muiTheme.checkbox.checkedColor = '#4598bf';
         this.context.muiTheme.tableRow.selectedColor = 'initial';
 
+        const groups = [];
+        for (let i = 0; i < 20; i++) {
+            groups.push({
+                name: `Group ${i}`,
+                memberCount: 10,
+            });
+        }
+
+        const sharedGroups = [];
+        for (let i = 0; i < 5; i++) {
+            sharedGroups.push({
+                name: `Shared Group ${i}`,
+            });
+        }
+
+        const users = [
+            { name: 'Jane Doe', email: 'jane.doe@email.com' },
+            { name: 'John Doe', email: 'john.doe@email.com' },
+        ];
+
         const rows = [];
         for (let i = 0; i < 20; i++) {
-            rows.push(
-                <TableRow key={`key-number-${i}`} style={styles.tableRow} selected={this.state.selected.includes(i)}>
-                    <TableRowColumn style={styles.tableRowColumn}>
-                        <div>
-                            <div style={{ display: 'inline-block' }}>
-                                <div>
-                                    <strong>{i} Luke Rees</strong>
-                                </div>
-                                <div>
-                                    luke.rees@rgi-corp.com
-                                </div>
-                            </div>
-                            <IconMenu
-                                style={{ width: 24, height: '40px', margin: '0px 12px', float: 'right' }}
-                                iconButtonElement={
-                                    <IconButton
-                                        style={{ padding: '0px', height: '40px', width: 24 }}
-                                        iconStyle={{ color: '#4598bf' }}
-                                    >
-                                        <MoreVertIcon />
-                                    </IconButton>
-                                }
-                                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            >
-                                <MenuItem primaryText="Do this" style={{ fontSize: '14px' }} />
-                                <MenuItem primaryText="Do that" style={{ fontSize: '14px' }} />
-                                <MenuItem primaryText="Do something else" style={{ fontSize: '14px' }} />
-                            </IconMenu>
-                        </div>
-                    </TableRowColumn>
-                </TableRow>);
+            const user = i % 2 === 0 ? users[0] : users[1];
+            rows.push((
+                <TableRow
+                    key={i}
+                    style={styles.tableRow}
+                    selected={this.state.selected.includes(i)}
+                >
+                    <UserTableRowColumn
+                        user={user}
+                        groups={groups}
+                        groupsLoading={this.state.usersUpdating.includes(user.email)}
+                        menuValues={this.state.menuValues}
+                        handleItemClick={this.handleItemClick}
+                        handleNewGroupClick={this.handleNewGroupClick}
+                    />
+                </TableRow>
+            ));
         }
 
         return (
@@ -230,39 +313,49 @@ export class UserGroupsPage extends Component {
                     showMenuIconButton={false}
                 >
                     <RaisedButton
-                        className={'qa-UserGroupsPage-RaisedButton-create'}
-                        label={"Create Group"}
-                        primary={true}
+                        className="qa-UserGroupsPage-RaisedButton-create"
+                        label="Create Group"
+                        primary
                         labelStyle={styles.label}
                         style={styles.button}
                         buttonStyle={{ borderRadius: '0px', backgroundColor: '#4598bf' }}
                         overlayStyle={{ borderRadius: '0px' }}
-                    />
+                        onClick={this.handleCreateOpen}
+                    >
+                        <CreateGroupDialog
+                            show={this.state.showCreate}
+                            onClose={this.handleCreateClose}
+                            onInputChange={this.handleCreateInput}
+                            onSave={this.handleCreateSave}
+                        />
+                    </RaisedButton>
                     <NavigationMenu
                         style={styles.drawerButton}
                         onClick={this.toggleDrawer}
+                        className="qa-UserGroupsPage-drawerButton"
                     />
                 </AppBar>
                 <div style={styles.body}>
                     <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
                         <div style={styles.bodyContent} className="qa-UserGroupsPage-bodyContent">
-                            <div style={styles.fixedHeader}>
+                            <div style={styles.fixedHeader} className="qa-UserGroupsPage-fixedHeader">
                                 <TextField
-                                    className={'qa-UserGroupsPage-TextField'}
                                     style={styles.container}
-                                    hintText={'Search Users'}
+                                    hintText="Search Users"
                                     hintStyle={styles.hint}
                                     inputStyle={styles.input}
                                     onChange={this.handleSearchChange}
                                     underlineStyle={styles.underline}
                                     underlineFocusStyle={styles.underlineFocus}
                                     onKeyDown={this.handleSearchKeyDown}
+                                    className="qa-UserGroupsPage-search"
                                 />
                                 <Table
                                     selectable
                                     multiSelectable
                                     onRowSelection={this.handleSelectAll}
-                                    allRowsSelected={this.state.selected.length === this.state.values.length}
+                                    allRowsSelected={this.state.selected.length === this.state.users.length}
+                                    className="qa-UserGroups-headerTable"
                                 >
                                     <TableHeader
                                         style={{ zIndex: 2 }}
@@ -271,45 +364,16 @@ export class UserGroupsPage extends Component {
                                         enableSelectAll
                                     >
                                         <TableRow>
-                                            <TableHeaderColumn colSpan="1" style={{ color: '#707274', fontSize: '14px' }}>
-                                                <div>
-                                                    <strong>{this.state.selected.length} Selected</strong>
-                                                    <IconMenu
-                                                        style={{ width: 24, height: '100%', margin: '0px 12px' }}
-                                                        iconButtonElement={
-                                                            <IconButton
-                                                                style={{ padding: '0px', height: 24, width: 24, verticalAlign: 'middle' }}
-                                                                iconStyle={{ color: '#4598bf' }}
-                                                            >
-                                                                <MoreHorizIcon />
-                                                            </IconButton>
-                                                        }
-                                                        anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                                                        targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-                                                    >
-                                                        <MenuItem primaryText="Do this" style={{ fontSize: '14px' }} />
-                                                        <MenuItem primaryText="Do that" style={{ fontSize: '14px' }} />
-                                                        <MenuItem primaryText="Do something else" style={{ fontSize: '14px' }} />
-                                                    </IconMenu>
-                                                    <DropDownMenu
-                                                        value={this.state.sort}
-                                                        onChange={this.handleSortChange}
-                                                        style={{ height: '24px', fontSize: '14px', margin: '0px 12px', float: 'right' }}
-                                                        labelStyle={{ height: '24px', lineHeight: '24px', padding: '0px', display: 'inline-block', color: '#4598bf' }}
-                                                        iconStyle={{ padding: '0px', height: '24px', width: '24px', position: 'relative', right: '0', top: '0px', border: 'none', fill: '#4598bf' }}
-                                                        underlineStyle={{ display: 'none' }}
-                                                        menuItemStyle={{ color: '#707274' }}
-                                                        selectedMenuItemStyle={{ color: '#4598bf' }}
-                                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                                    >
-                                                        <MenuItem value={1} primaryText="Sort By" />
-                                                        <MenuItem value={2} primaryText="Or This One" />
-                                                        <MenuItem value={3} primaryText="Another" />
-                                                        <MenuItem value={4} primaryText="Last One" />
-                                                    </DropDownMenu>
-                                                </div>
-                                            </TableHeaderColumn>
+                                            <UserTableHeaderColum
+                                                selectedCount={this.state.selected.length}
+                                                sortValue={this.state.sort}
+                                                handleSortChange={this.handleSortChange}
+                                                groups={groups}
+                                                groupsLoading={!!this.state.usersUpdating.length}
+                                                menuValues={this.state.menuValues}
+                                                handleItemClick={this.handleItemClick}
+                                                handleNewGroupClick={this.handleNewGroupClick}
+                                            />
                                         </TableRow>
                                     </TableHeader>
                                 </Table>
@@ -319,6 +383,7 @@ export class UserGroupsPage extends Component {
                                 multiSelectable
                                 onRowSelection={this.handleIndividualSelect}
                                 style={{ borderBottom: '1px solid rgb(224, 224, 224)' }}
+                                className="qa-UserGroups-bodyTable"
                             >
                                 <TableBody
                                     displayRowCheckbox
@@ -331,39 +396,27 @@ export class UserGroupsPage extends Component {
                         </div>
                     </CustomScrollbar>
                 </div>
-                <Drawer
-                    width={250}
-                    openSecondary
+                <GroupsDrawer
                     open={this.state.drawerOpen}
-                    containerStyle={styles.drawer}
-                >
-                    <CustomScrollbar >
-                        <Menu desktop>
-                            <MenuItem primaryText="All Members (200)" style={{ color: '#4598bf' }} />
-                            <MenuItem primaryText="New" style={{ color: '#4598bf' }} />
-                            <MenuItem primaryText="Not Grouped" style={{ color: '#4598bf' }} />
-                            <MenuItem primaryText="Most Shared" style={{ color: '#4598bf' }} />
-                            <span style={{ padding: '20px 24px 5px', color: '#707274', display: 'block' }}>
-                                <strong>MY GROUPS</strong>
-                            </span>
-                            <MenuItem primaryText="Group 1 (10)" style={{ color: '#4598bf' }} />
-                            <MenuItem primaryText="Group 2 (20)" style={{ color: '#4598bf' }} />
-                            <MenuItem primaryText="Group 3 (10)" style={{ color: '#4598bf' }} />
-                            <Divider style={{ marginTop: '20px' }} />
-                            <span style={{ padding: '10px 24px 5px', color: '#707274', display: 'block' }}>
-                                <strong>SHARED WITH ME</strong>
-                            </span>
-                            <MenuItem
-                                primaryText="Group 1"
-                                style={{ color: '#707274', opacity: '0.7' }}
-                                disabled
-                                rightIcon={<IndeterminateIcon style={{ fill: 'ce4427', width: '17px' }} />}
-                            />
-                            <MenuItem primaryText="Group 2" style={{ color: '#707274' }} disabled />
-                            <MenuItem primaryText="EVENTKIT" style={{ color: '#707274' }} disabled />
-                        </Menu>
-                    </CustomScrollbar>
-                </Drawer>
+                    groups={groups}
+                    sharedGroups={sharedGroups}
+                    className="qa-UserGroups-drawer"
+                    onNewGroupClick={this.handleNewGroupClick}
+                    onLeaveGroupClick={this.handleLeaveGroupClick}
+                    onDeleteGroupClick={this.handleDeleteGroupClick}
+                />
+                <LeaveGroupDialog
+                    show={this.state.showLeave}
+                    onClose={this.handleLeaveClose}
+                    onLeave={this.handleLeaveClick}
+                    groupName={this.state.targetGroupName}
+                />
+                <DeleteGroupDialog
+                    show={this.state.showDelete}
+                    onClose={this.handleDeleteClose}
+                    onDelete={this.handleDeleteClick}
+                    groupName={this.state.targetGroupName}
+                />
             </div>
         );
     }

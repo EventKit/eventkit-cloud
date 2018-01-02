@@ -28,9 +28,9 @@ export class CustomTextField extends Component {
         }
     }
 
-    onChange = (e) => {
+    onChange = (e, val) => {
         if (this.props.onChange) {
-            this.props.onChange(e);
+            this.props.onChange(e, val);
         }
 
         this.setState({charsRemaining: this.props.maxLength - e.target.value.length});
@@ -88,10 +88,12 @@ export class CustomTextField extends Component {
 
 CustomTextField.propTypes = {
     showRemaining: React.PropTypes.bool,
+    maxLength: React.PropTypes.number,
 };
 
 CustomTextField.defaultProps = {
-    showRemaining: true
-}
+    showRemaining: true,
+    maxLength: 100,
+};
 
 export default CustomTextField

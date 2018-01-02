@@ -396,6 +396,19 @@ export class Application extends Component {
                                 Create DataPack
                             </Link>
                         </MenuItem>
+                        <MenuItem className={"qa-Application-MenuItem-groups"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <Link 
+                                className={"qa-Application-Link-groups"} 
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'groups' ? '#161e2e': ''}} 
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('groups')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/groups" 
+                            >
+                                <SocialGroup style={styles.icon} />
+                                Members and Groups
+                            </Link>
+                        </MenuItem>
                         <MenuItem className={"qa-Application-MenuItem-about"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <Link 
                                 className={"qa-Application-Link-about"} 
@@ -422,19 +435,6 @@ export class Application extends Component {
                                 Account Settings
                             </Link>
                         </MenuItem>
-                        <MenuItem className={"qa-Application-MenuItem-groups"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
-                        <Link 
-                            className={"qa-Application-Link-groups"} 
-                            style={{...styles.link, backgroundColor: this.state.hovered == 'groups' ? '#161e2e': ''}} 
-                            activeStyle={styles.activeLink}
-                            onMouseEnter={() => this.handleMouseOver('groups')}
-                            onMouseLeave={this.handleMouseOut}
-                            to="/groups" 
-                        >
-                            <SocialGroup style={styles.icon} />
-                            Members and Groups
-                        </Link>
-                    </MenuItem>
                         <MenuItem className={"qa-Application-MenuItem-logout"} onClick={this.handleClose} innerDivStyle={styles.menuItem}>
                             <Link 
                                 className={"qa-Application-Link-logout"} 
