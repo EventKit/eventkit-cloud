@@ -16,7 +16,7 @@ from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -288,6 +288,23 @@ class ExportRunSerializer(serializers.ModelSerializer):
         uri[5] = None  # query
         return urlunparse(uri)
 
+class GroupSerializer(serializers.ModelSerializer):
+
+    logger.info("SERIALIZER")
+    name = serializers.CharField()
+    id = serializers.SerializerMethodField()
+    logger.info("SERIALIZER 2")
+
+    class Meta:
+        model = Group
+        fields = ( 'id', 'name' )
+
+    @staticmethod
+    def get_identification(instance):
+        if hasattr(instance, 'oauth'):
+            return instance.oauth.identification
+        else:
+            return None
 
 class UserSerializer(serializers.ModelSerializer):
 
