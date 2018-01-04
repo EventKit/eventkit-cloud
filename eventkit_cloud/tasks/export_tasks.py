@@ -298,7 +298,6 @@ class ExportTask(LockingTask):
         exception = cPickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
-        super(ExportTask, self).on_failure(exc, task_id, args, kwargs, einfo)
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
             task.save()
@@ -1346,7 +1345,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def cancel_concurrent_task_chain(export_provider_task_uid=None):
+def cancel_synchronous_task_chain(export_provider_task_uid=None):
     from ..tasks.models import DataProviderTaskRecord
     export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
     for export_task in export_provider_task.tasks.all():
@@ -1358,7 +1357,6 @@ def cancel_concurrent_task_chain(export_provider_task_uid=None):
                 queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker))
-
 
 
 @app.task(name='Cancel Export Provider Task', base=LockingTask)
