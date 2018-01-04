@@ -225,6 +225,9 @@ class ExportTask(LockingTask):
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info('Task reported on success but was previously canceled ', format(task_uid))
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+
+            self.update_task_state(result=kwargs.get('result'), task_uid=task_uid)
+
             task.finished_at = finished
             task.progress = 100
             task.pid = -1
@@ -420,8 +423,6 @@ def osm_data_collection_task(
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
 
-    self.update_task_state(result=result, task_uid=task_uid)
-
     if user_details is None:
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
@@ -490,7 +491,6 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     Class defining SHP export function.
     """
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
@@ -513,7 +513,6 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     """
     result = result or {}
 
-    self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
@@ -535,7 +534,6 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     """
     result = result or {}
 
-    self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
     try:
@@ -556,8 +554,6 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     Class defining geopackage export function.
     """
     result = result or {}
-
-    self.update_task_state(result=result, task_uid=task_uid)
 
     geojson_file = os.path.join(stage_dir,
                                 "{0}_selection.geojson".format(provider_slug))
@@ -587,8 +583,6 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
     run = ExportRun.objects.get(uid=run_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
 
-    self.update_task_state(result=result, task_uid=task_uid)
-
     selection = parse_result(result, 'selection')
     if selection:
         gpkg = parse_result(result, 'result')
@@ -611,8 +605,6 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     from .models import ExportRun
     result = result or {}
-
-    self.update_task_state(result=result, task_uid=task_uid)
 
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
@@ -660,7 +652,6 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     Class defining geopackage export for WFS service.
     """
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
 
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
@@ -683,7 +674,6 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     Class defining export for WCS services
     """
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
     try:
         wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
@@ -707,7 +697,6 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
     Class defining sqlite export for ArcFeatureService service.
     """
     result = result or {}
-    self.update_task_state(result=result, task_uid=task_uid)
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
         w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url,
@@ -731,8 +720,6 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     from .task_runners import normalize_name
 
     result = result or {}
-
-    self.update_task_state(result=result, task_uid=task_uid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
@@ -787,7 +774,6 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
 
     from .models import ExportRun
 
-    self.update_task_state(result=result, task_uid=task_uid)
     run = ExportRun.objects.get(uid=run_uid)
 
     result_gpkg = parse_result(result, 'geopackage')
@@ -816,8 +802,6 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
     task = ExportTaskRecord.objects.get(uid=task_uid)
-
-    self.update_task_state(result=result, task_uid=task_uid)
 
     selection = parse_result(result, 'selection')
 
