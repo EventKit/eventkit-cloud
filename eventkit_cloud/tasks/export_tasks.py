@@ -198,10 +198,11 @@ class ExportTask(LockingTask):
             from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord)
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
-            if task.status == TaskStates.CANCELED.value:
-                # the task was cancelled because an error occurred earlier on in the (presumably synchronous) task chain,
-                # and therefore nothing needs to be done
-                return {'state': TaskStates.CANCELED.value}
+            ## @TODO: remove this as it should be handled in update_task_state
+            #if task.status == TaskStates.CANCELED.value:
+            #    # the task was cancelled because an error occurred earlier on in the (presumably synchronous) task chain,
+            #    # and therefore nothing needs to be done
+            #    return {'state': TaskStates.CANCELED.value}
 
             self.update_task_state(result=kwargs.get('result'), task_uid=task_uid)
 
@@ -307,7 +308,7 @@ class ExportTask(LockingTask):
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                cancel_concurrent_task_chain(export_provider_task_uid=export_provider_task.uid)
+                cancel_synchronous_task_chain(export_provider_task_uid=export_provider_task.uid)
                 run = export_provider_task.run
                 stage_dir = kwargs['stage_dir']
                 export_task_error_handler(
