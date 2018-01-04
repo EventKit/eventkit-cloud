@@ -143,20 +143,20 @@ class TaskFactory:
                             user_details=user_details
                         )
 
-                        clean_up_task_chain = chain(
-                            finalize_export_provider_task.si(
-                                export_provider_task_uid=provider_task_uid,
-                                status=TaskStates.INCOMPLETE.value,
-                                locking_task_key=run_uid).set(**finalize_task_settings),
-                            wait_for_providers_signature
-                        )
+                        #clean_up_task_chain = chain(
+                        #    finalize_export_provider_task.si(
+                        #        export_provider_task_uid=provider_task_uid,
+                        #        status=TaskStates.INCOMPLETE.value,
+                        #        locking_task_key=run_uid).set(**finalize_task_settings),
+                        #    wait_for_providers_signature
+                        #)
 
                         # add clean up to subtask(s)
-                        if hasattr(provider_subtask_chain, "tasks"):
-                            for task in provider_subtask_chain.tasks:
-                                task.on_error(clean_up_task_chain)
-                        else:
-                            provider_subtask_chain.on_error(clean_up_task_chain)
+                        #if hasattr(provider_subtask_chain, "tasks"):
+                        #    for task in provider_subtask_chain.tasks:
+                        #        task.on_error(clean_up_task_chain)
+                        #else:
+                        #    provider_subtask_chain.on_error(clean_up_task_chain)
 
                         # create signature to close out the provider tasks
                         finalize_export_provider_signature = finalize_export_provider_task.s(

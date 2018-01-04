@@ -203,6 +203,8 @@ class ExportTask(LockingTask):
                 # and therefore nothing needs to be done
                 return {'state': TaskStates.CANCELED.value}
 
+            self.update_task_state(result=kwargs.get('result'), task_uid=task_uid)
+
             retval = super(ExportTask, self).__call__(*args, **kwargs)
 
             """
@@ -225,8 +227,6 @@ class ExportTask(LockingTask):
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info('Task reported on success but was previously canceled ', format(task_uid))
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
-
-            self.update_task_state(result=kwargs.get('result'), task_uid=task_uid)
 
             task.finished_at = finished
             task.progress = 100
