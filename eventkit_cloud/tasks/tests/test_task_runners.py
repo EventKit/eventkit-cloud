@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class TestExportTaskRunner(TestCase):
+
     fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
 
     def setUp(self,):
@@ -40,6 +41,17 @@ class TestExportTaskRunner(TestCase):
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     def test_run_osm_task(self, mock_chain):
+        tasks = ExportFormat.objects.all()
+        logger.error("PRINTING EXPORTFORMATS IN THE DATABASE!!!")
+        import sys
+        print("PRINTING EXPORTFORMATS IN THE DATABASE!!!")
+        sys.stdout.flush()
+        for task in tasks:
+            logger.error("EXPORT FORMAT: {0}".format(task))
+
+            print("EXPORT FORMAT: {0}".format(task))
+            sys.stdout.flush()
+        print("FINISHED PRINTING!!!")
         shp_task = ExportFormat.objects.get(slug='shp')
 
         provider = DataProvider.objects.get(slug='osm')
