@@ -290,14 +290,16 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
 class GroupSerializer(serializers.ModelSerializer):
 
-    logger.info("SERIALIZER")
-    name = serializers.CharField()
-    id = serializers.SerializerMethodField()
-    logger.info("SERIALIZER 2")
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ( 'id', 'name' )
+        fields = ( 'id', 'name', 'members' )
+
+
+    @staticmethod
+    def get_members(instance):
+        return [u.id for u in Group.objects.get(name=instance.name).user_set.all()]
 
     @staticmethod
     def get_identification(instance):

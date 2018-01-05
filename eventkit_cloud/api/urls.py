@@ -22,7 +22,7 @@ router.register(r'tasks', ExportTaskViewSet, base_name='tasks')
 router.register(r'regions', RegionViewSet, base_name='regions')
 router.register(r'maskregions', RegionMaskViewSet, base_name='mask')
 router.register(r'user', UserDataViewSet, base_name='user')
-router.register(r'group', GroupViewSet, base_name='group')
+router.register(r'groups', GroupViewSet, base_name='groups')
 
 schema_view = SwaggerSchemaView.as_view()
 

@@ -1008,42 +1008,37 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
-    This endpoint is used to retrieve information about a groups
+    Api components for viewing, creating, and editing groups
 
     """
-    logger.info("VIEWSET 1")
     serializer_class = GroupSerializer
-    permission_classes = (permissions.IsAuthenticated )
-    parser_classes = (JSONParser)
+    permission_classes = (permissions.IsAuthenticated, )
+    parser_classes = (JSONParser,)
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     lookup_field = 'id'
-    search_fields = ('name')
-    logger.info("VIEWSET 2")
+    search_fields = ('name',)
 
     def get_queryset(self):
-        """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
-        """
-        logger.info("GO TO  Query")
         queryset = Group.objects.all()
-        logger.info("BACK FROM Query")
         return queryset
 
     def list(self, request, *args, **kwargs):
         """
-             * GET all groups
-
+            * get all the groups
         """
 
-        logger.info("2 GO TO  Query")
         queryset = self.get_queryset()
-        logger.info("2 BACK FROM Query")
-
         serializer = GroupSerializer(queryset, many=True)
-        logger.info("GOT HERE ")
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def retrieve(self, request, id=None):
+        """
+            * get a group with a specific ID.  Return its data, including users in the group
+        """
+        group  = Group.objects.filter(id=id)[0]
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 def get_models(model_list, model_object, model_index):
     models = []
