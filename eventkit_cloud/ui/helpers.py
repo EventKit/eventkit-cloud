@@ -6,6 +6,7 @@ import subprocess
 import zipfile
 import shutil
 import json
+import re
 
 from django.conf import settings
 from django.utils import timezone
@@ -112,9 +113,15 @@ def file_to_geojson(in_memory_file):
     try:
         os.mkdir(dir)
         file_name = in_memory_file.name
+
         file_name, file_extension = os.path.splitext(file_name)
         if not file_name or not file_extension:
             raise Exception('No file type detected')
+
+        # Remove all non-word characters
+        file_name = re.sub(r"[^\w\s]", '', file_name)
+        # Replace all whitespace with a single underscore
+        file_name = re.sub(r"\s+", '_', file_name).lower()
 
         in_path = os.path.join(dir, 'in_{0}{1}'.format(file_name, file_extension))
         out_path = os.path.join(dir, 'out_{0}.geojson'.format(file_name))
