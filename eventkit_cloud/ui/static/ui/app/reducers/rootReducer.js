@@ -1,13 +1,28 @@
-import {combineReducers} from 'redux'
-import userReducer from './userReducer'
-import { routerReducer } from 'react-router-redux'
-import {exportJobsReducer, exportBboxReducer, exportAoiInfoReducer, exportInfoReducer, getProvidersReducer, drawerMenuReducer, stepperReducer, startExportPackageReducer, submitJobReducer, getFormatsReducer} from './exportsReducer';
-import {getGeocodeReducer} from './searchToolbarReducer.js';
-import {DataPackPageReducer, DeleteRunsReducer} from './DataPackPageReducer';
-import {importGeomReducer} from './mapToolReducer';
-import {licenseReducer} from './licenseReducer';
-import authReducer from './authReducer'
-import {getDatacartDetailsReducer, setDatacartDetailsReducer, deleteRunReducer, rerunExportReducer, updateExpirationReducer, updatePermissionReducer} from './statusDownloadReducer'
+import { combineReducers } from 'redux';
+import { routerReducer } from 'react-router-redux';
+import { userReducer, usersReducer } from './userReducer';
+import {
+    exportAoiInfoReducer,
+    exportInfoReducer,
+    getProvidersReducer,
+    drawerMenuReducer,
+    stepperReducer,
+    submitJobReducer,
+    getFormatsReducer,
+} from './exportsReducer';
+import { getGeocodeReducer } from './searchToolbarReducer';
+import { DataPackPageReducer, DeleteRunsReducer } from './DataPackPageReducer';
+import { importGeomReducer } from './mapToolReducer';
+import { licenseReducer } from './licenseReducer';
+import authReducer from './authReducer';
+import {
+    getDatacartDetailsReducer,
+    deleteRunReducer,
+    rerunExportReducer,
+    updateExpirationReducer,
+    updatePermissionReducer,
+} from './statusDownloadReducer';
+import { userGroupsReducer } from './userGroupsReducer';
 
 
 const rootReducer = combineReducers({
@@ -32,6 +47,8 @@ const rootReducer = combineReducers({
     updateExpiration: updateExpirationReducer,
     updatePermission: updatePermissionReducer,
     formats: getFormatsReducer,
+    groups: userGroupsReducer,
+    users: usersReducer,
 });
 
 export default rootReducer;

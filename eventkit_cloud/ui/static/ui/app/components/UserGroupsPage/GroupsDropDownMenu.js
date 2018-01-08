@@ -26,6 +26,21 @@ export class GroupsDropDownMenu extends Component {
                 textOverflow: 'ellipsis',
                 display: 'inline-block',
             },
+            loadingBackground: {
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(0,0,0,0.05)',
+                zIndex: 1001,
+            },
+            loading: {
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+            },
         };
 
         const { groups } = this.props;
@@ -40,8 +55,8 @@ export class GroupsDropDownMenu extends Component {
                 onRequestClose={this.props.onClose}
             >
                 {this.props.groupsLoading ?
-                    <div style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.05)', zIndex: 1001 }}>
-                        <CircularProgress color="#4598bf" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }} />
+                    <div style={styles.loadingBackground}>
+                        <CircularProgress color="#4598bf" style={styles.loading} />
                     </div>
                     :
                     null
@@ -62,12 +77,12 @@ export class GroupsDropDownMenu extends Component {
                                     key={`${ix}-{${group.name}`}
                                     style={styles.menuItem}
                                     innerDivStyle={styles.menuItemInner}
-                                    onTouchTap={() => { this.props.onMenuItemClick(ix); }}
+                                    onTouchTap={() => { this.props.onMenuItemClick(group.uid); }}
                                 >
-                                    <div style={{ ...styles.menuItemText, maxWidth: this.props.values.includes(ix) ? '236px' : '284px' }}>
+                                    <div style={{ ...styles.menuItemText, maxWidth: this.props.selectedGroups.includes(group.uid) ? '236px' : '284px' }}>
                                         {group.name}
                                     </div>
-                                    { this.props.values.includes(ix) ?
+                                    { this.props.selectedGroups.includes(group.uid) ?
                                         <CheckIcon style={{ margin: 12, fill: '#707274' }} />
                                         :
                                         null
@@ -102,7 +117,7 @@ GroupsDropDownMenu.propTypes = {
     onClose: PropTypes.func.isRequired,
     onMenuItemClick: PropTypes.func.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
-    values: PropTypes.arrayOf(PropTypes.number).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
     anchorEl: PropTypes.object,
     anchorOrigin: PropTypes.shape({

@@ -11,11 +11,14 @@ export class CreateGroupDialog extends Component {
                 className="qa-UserGroups-CreateDialog-save"
                 style={{ margin: '0px' }}
                 labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ backgroundColor: '#4598bf', borderRadius: '0px' }}
+                buttonStyle={{ borderRadius: '0px' }}
+                backgroundColor="#4598bf"
                 disableTouchRipple
                 label="SAVE"
                 primary={false}
                 onClick={this.props.onSave}
+                disabled={!this.props.value}
+                // disabledBackgroundColor="#707274"
             />,
             <FlatButton
                 className="qa-UserGroups-CreateDialog-cancel"
@@ -40,6 +43,7 @@ export class CreateGroupDialog extends Component {
                     hintText="Name Group"
                     maxLength={50}
                     onChange={this.props.onInputChange}
+                    value={this.props.value}
                     style={{
                         width: '100%',
                     }}
@@ -62,6 +66,7 @@ CreateGroupDialog.propTypes = {
     onInputChange: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
+    value: PropTypes.string.isRequired,
 };
 
 export default CreateGroupDialog;

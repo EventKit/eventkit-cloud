@@ -9,19 +9,14 @@ import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-
 import CustomScrollbar from '../CustomScrollbar';
 
 export class GroupsDrawer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {};
-    }
-
     render() {
+        console.log(this.props.isMobile);
         const styles = {
             drawer: {
                 backgroundColor: '#fff',
                 top: '130px',
                 height: window.innerHeight - 130,
-                overflowY: 'hidden',
-                overflowX: 'hidden',
+                overflow: 'visible',
             },
             simpleMenuItem: {
                 color: '#4598bf',
@@ -64,6 +59,17 @@ export class GroupsDrawer extends Component {
             },
         };
 
+        const myGroups = [];
+        const sharedGroups = [];
+
+        this.props.groups.forEach((group) => {
+            if (group.owners.find(owner => owner.email === this.props.user.email)) {
+                myGroups.push(group);
+            } else {
+                sharedGroups.push(group);
+            }
+        });
+
         return (
             <Drawer
                 width={250}
@@ -74,34 +80,38 @@ export class GroupsDrawer extends Component {
             >
                 <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar">
                     <Menu
+                        disableAutoFocus
                         autoWidth={false}
                         desktop
                         width={250}
                         className="qa-GroupsDrawer-Menu"
+                        onChange={this.props.onSelectionChange}
+                        selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#0000001a' }}
+                        value={this.props.selectedValue}
                     >
                         <MenuItem
-                            primaryText="All Members (200)"
+                            primaryText={`All Members (${this.props.usersCount})`}
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-allMembers"
-                            onClick={() => { console.log('all members'); }}
+                            value="all"
                         />
                         <MenuItem
                             primaryText="New"
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-new"
-                            onClick={() => { console.log('new members'); }}
+                            value="new"
                         />
                         <MenuItem
                             primaryText="Not Grouped"
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-notGrouped"
-                            onClick={() => { console.log('not grouped members'); }}
+                            value="ungrouped"
                         />
                         <MenuItem
                             primaryText="Most Shared"
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-mostShared"
-                            onClick={() => { console.log('most shared members'); }}
+                            value="shared"
                         />
 
                         <span
@@ -115,9 +125,10 @@ export class GroupsDrawer extends Component {
                                 className="qa-GroupsDrawer-addGroupIcon"
                             />
                         </span>
-                        {this.props.groups.map(group => (
+                        {myGroups.map(group => (
                             <MenuItem
                                 key={group.name}
+                                value={`${group.uid}`}
                                 primaryText={
                                     <div style={styles.menuItemText}>
                                         {`${group.name} (${group.memberCount})`}
@@ -125,11 +136,10 @@ export class GroupsDrawer extends Component {
                                 }
                                 innerDivStyle={{ paddingRight: '48px' }}
                                 style={{ color: '#4598bf' }}
-                                onClick={() => { console.log('menuItem clicked'); }}
                                 rightIcon={
                                     <IndeterminateIcon
                                         style={{ ...styles.menuItemIcon, opacity: '0.7' }}
-                                        onClick={(e) => { this.props.onDeleteGroupClick(e, group.name); }}
+                                        onClick={() => { this.props.onDeleteGroupClick(group); }}
                                         className="qa-GroupsDrawer-groupItem-icon"
                                     />
                                 }
@@ -150,7 +160,7 @@ export class GroupsDrawer extends Component {
                                 className="qa-GroupsDrawer-sharedGroupsInfoIcon"
                             />
                         </span>
-                        {this.props.sharedGroups.map(group => (
+                        {sharedGroups.map(group => (
                             <MenuItem
                                 key={group.name}
                                 primaryText={
@@ -164,7 +174,7 @@ export class GroupsDrawer extends Component {
                                 rightIcon={
                                     <IndeterminateIcon
                                         style={styles.menuItemIcon}
-                                        onClick={() => { this.props.onLeaveGroupClick(group.name); }}
+                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
                                         className="qa-GroupsDrawer-sharedGroupItem-icon"
                                     />
                                 }
@@ -179,9 +189,16 @@ export class GroupsDrawer extends Component {
 }
 
 GroupsDrawer.propTypes = {
+    isMobile: PropTypes.bool.isRequired,
+    selectedValue: PropTypes.string.isRequired,
+    onSelectionChange: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    sharedGroups: PropTypes.arrayOf(PropTypes.object).isRequired,
+    user: PropTypes.shape({
+        name: PropTypes.string,
+        email: PropTypes.string,
+    }).isRequired,
+    usersCount: PropTypes.number.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
     onLeaveGroupClick: PropTypes.func.isRequired,
     onDeleteGroupClick: PropTypes.func.isRequired,

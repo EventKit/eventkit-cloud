@@ -29,19 +29,25 @@ const muiTheme = getMuiTheme({
     },
     flatButton: {
         textColor: '#253447',
-        primaryTextColor: '#253447'
+        primaryTextColor: '#253447',
+    },
+    checkbox: {
+        boxColor: '#4598bf',
+        checkedColor: '#4598bf',
+    },
+    tableRow: {
+        selectedColor: 'initial',
     },
 });
-
 
 export class Application extends Component {
     constructor(props) {
         super(props);
-        this.handleToggle = this.handleToggle.bind(this)
-        this.handleClose = this.handleClose.bind(this)
+        this.handleToggle = this.handleToggle.bind(this);
+        this.handleClose = this.handleClose.bind(this);
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.getConfig = this.getConfig.bind(this);
-        this.handleMouseOver =  this.handleMouseOver.bind(this);
+        this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleResize = this.handleResize.bind(this);
         this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);

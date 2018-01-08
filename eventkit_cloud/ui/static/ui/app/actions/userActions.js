@@ -1,6 +1,7 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import MockAdapter from 'axios-mock-adapter'; /// JUST FOR MOCKING ///
 import actions from './actionTypes';
 
 
@@ -100,3 +101,43 @@ export const userActive = () => (dispatch) => {
         console.error(error.message);
     });
 };
+
+export function getUsers(params) {
+    return (dispatch, getState) => {
+        // get the current user information
+        const loggedInUser = getState().user.data.user;
+        //////// JUST FOR MOCKING THE API /////////////
+        const fakeUsers = [
+            { name: 'admin', email: 'admin@eventkit.dev', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-5', 'uid-6', 'uid-9', 'uid-12', 'uid-15', 'uid-18'] },
+            { name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
+            { name: 'John Doe', email: 'john.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-7', 'uid-11', 'uid-13', 'uid-17', 'uid-19'] },
+            { name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['uid-0', 'uid-2', 'uid-1', 'uid-3', 'uid-2', 'uid-3', 'uid-5', 'uid-8', 'uid-9', 'uid-12', 'uid-13', 'uid-14', 'uid-18', 'uid-19', 'uid-20'] },
+            { name: 'User 1', email: 'user1@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
+            { name: 'User 2', email: 'user2@email.com', groups: ['uid-1', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-9', 'uid-14', 'uid-16', 'uid-20'] },
+            { name: 'User 3', email: 'user3@email.com', groups: ['uid-1', 'uid-2', 'uid-4', 'uid-7', 'uid-9', 'uid-11', 'uid-13', 'uid-17', 'uid-20'] },
+        ];
+
+        const mock = new MockAdapter(axios, { delayResponse: 3000 });
+        mock.onGet().reply(200, fakeUsers);
+        //////////////////////////////////////////////////////////////
+
+        dispatch({ type: actions.FETCHING_USERS });
+
+        const url = params ? `/api/user?${params}` : '/api/user';
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+
+        return axios({
+            url,
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            // filter out the current user from the list
+            const users = response.data.filter(user => (user.email !== loggedInUser.email));
+            dispatch({ type: actions.FETCHED_USERS, users });
+            mock.restore();
+        }).catch((error) => {
+            dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
+            mock.restore();
+        });
+    };
+}

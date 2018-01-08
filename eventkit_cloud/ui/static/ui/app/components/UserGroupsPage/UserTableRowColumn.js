@@ -10,6 +10,7 @@ export class UserTableRowColumn extends Component {
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
+        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
         this.state = {
             open: false,
             popoverAnchor: null,
@@ -28,7 +29,12 @@ export class UserTableRowColumn extends Component {
 
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick();
+        this.props.handleNewGroupClick(this.props.user.email);
+    }
+
+    handleGroupItemClick(groupUID) {
+        const userEmail = this.props.user.email;
+        this.props.handleGroupItemClick(groupUID, userEmail);
     }
 
     render() {
@@ -55,9 +61,8 @@ export class UserTableRowColumn extends Component {
         const {
             user,
             groups,
-            menuValues,
             groupsLoading,
-            handleItemClick,
+            handleGroupItemClick,
             handleNewGroupClick,
             ...rest
         } = this.props;
@@ -88,9 +93,9 @@ export class UserTableRowColumn extends Component {
                         open={this.state.open}
                         anchorEl={this.state.popoverAnchor}
                         onClose={this.handleClose}
-                        onMenuItemClick={handleItemClick}
+                        onMenuItemClick={this.handleGroupItemClick}
                         onNewGroupClick={this.handleNewGroupClick}
-                        values={menuValues}
+                        selectedGroups={user.groups}
                         groups={groups}
                         groupsLoading={groupsLoading}
                     />
@@ -108,11 +113,11 @@ UserTableRowColumn.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string,
         email: PropTypes.string,
+        groups: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
-    menuValues: PropTypes.arrayOf(PropTypes.number).isRequired,
-    handleItemClick: PropTypes.func.isRequired,
+    handleGroupItemClick: PropTypes.func.isRequired,
     handleNewGroupClick: PropTypes.func.isRequired,
     style: PropTypes.object,
 };

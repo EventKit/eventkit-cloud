@@ -29,7 +29,11 @@ export class UserTableHeaderColumn extends Component {
 
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick();
+        const selected = this.props.selectedUsers.map(ix => (
+            this.props.users[ix].email
+        ));
+        console.log(selected);
+        this.props.handleNewGroupClick(selected);
     }
 
     render() {
@@ -83,24 +87,28 @@ export class UserTableHeaderColumn extends Component {
             >
                 <div>
                     <strong className="qa-UserTableHeaderColumn-selectedCount">
-                        {this.props.selectedCount} Selected
+                        {this.props.selectedUsers.length} Selected
                     </strong>
-                    <IconButton
-                        style={styles.iconButton}
-                        iconStyle={{ color: '#4598bf' }}
-                        onClick={this.handleOpen}
-                    >
-                        <MoreHorizIcon />
-                    </IconButton>
+                    { this.props.selectedUsers.length ?
+                        <IconButton
+                            style={styles.iconButton}
+                            iconStyle={{ color: '#4598bf' }}
+                            onClick={this.handleOpen}
+                        >
+                            <MoreHorizIcon />
+                        </IconButton>
+                        :
+                        null
+                    }
                     <GroupsDropDownMenu
                         open={this.state.open}
                         anchorEl={this.state.popoverAnchor}
                         anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'left', vertical: 'top' }}
                         onClose={this.handleClose}
-                        onMenuItemClick={this.props.handleItemClick}
+                        onMenuItemClick={this.props.handleGroupItemClick}
                         onNewGroupClick={this.handleNewGroupClick}
-                        values={this.props.menuValues}
+                        selectedGroups={this.props.selectedGroups}
                         groups={this.props.groups}
                         groupsLoading={this.props.groupsLoading}
                     />
@@ -117,10 +125,10 @@ export class UserTableHeaderColumn extends Component {
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         className="qa-UserTableHeaderColumn-DropDownMenu-sort"
                     >
-                        <MenuItem value={1} primaryText="Sort By" />
-                        <MenuItem value={2} primaryText="Or This One" />
-                        <MenuItem value={3} primaryText="Another" />
-                        <MenuItem value={4} primaryText="Last One" />
+                        <MenuItem value="user__username" primaryText="Username A-Z" />
+                        <MenuItem value="-user__username" primaryText="Username Z-A" />
+                        <MenuItem value="user__date_joined" primaryText="Newest" />
+                        <MenuItem value="-user__date_joined" primaryText="Oldest" />
                     </DropDownMenu>
                 </div>
             </TableHeaderColumn>
@@ -129,13 +137,14 @@ export class UserTableHeaderColumn extends Component {
 }
 
 UserTableHeaderColumn.propTypes = {
-    selectedCount: PropTypes.number.isRequired,
-    sortValue: PropTypes.number.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    sortValue: PropTypes.string.isRequired,
     handleSortChange: PropTypes.func.isRequired,
+    selectedUsers: PropTypes.arrayOf(PropTypes.number).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
-    menuValues: PropTypes.arrayOf(PropTypes.number).isRequired,
-    handleItemClick: PropTypes.func.isRequired,
+    handleGroupItemClick: PropTypes.func.isRequired,
     handleNewGroupClick: PropTypes.func.isRequired,
 };
 

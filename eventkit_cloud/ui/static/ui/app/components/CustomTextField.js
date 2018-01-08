@@ -7,11 +7,6 @@ import * as ReactDOM from 'react-dom';
 export class CustomTextField extends Component {
     constructor(props) {
         super(props);
-
-        this.textFieldProps = clone(this.props);
-        delete this.textFieldProps.showRemaining;
-        delete this.textFieldProps.onChange;
-
         this.state = {
             charsRemaining: this.props.maxLength,
             focused: false,
@@ -53,6 +48,8 @@ export class CustomTextField extends Component {
     }
 
     render() {
+        const { showRemaining, onChange, ...rest } = this.props;
+        
         const charsRemainingColor = (this.state.charsRemaining > 10) ? '#B4B7B8' : '#CE4427';
 
         return (
@@ -72,7 +69,7 @@ export class CustomTextField extends Component {
                     onChange={this.onChange}
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
-                    {...this.textFieldProps}
+                    {...rest}
                 />
                 {(this.props.maxLength && this.props.showRemaining && this.state.focused) ?
                 <div
