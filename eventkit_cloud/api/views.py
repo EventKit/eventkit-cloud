@@ -657,6 +657,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         *Returns:
             the serialized run data.
         """
+
         from ..tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
         try:
@@ -939,10 +940,9 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def get_queryset(self):
         """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
+        This view now returns all users
         """
-        return User.objects.filter(username=self.request.user.username)
+        return User.objects.all()
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
@@ -975,8 +975,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-             * GET request
-
+             * GET  All users
                 Example:
 
                     [
@@ -1000,7 +999,11 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
     def retrieve(self, request, username=None):
+        """
+             * GET  a user by username
+        """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1031,6 +1034,19 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = GroupSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+    def create(self, request, *args, **kwargs):
+        """
+            * create a new group and put the current logged in user in the group
+        """
+        response = super(GroupViewSet, self).create(request, *args, **kwargs)
+        group_id = response.data["id"]
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        group = Group.objects.filter(id=group_id)[0]
+        group.user_set.add(user)
+
+        return response
+
     def retrieve(self, request, id=None):
         """
             * get a group with a specific ID.  Return its data, including users in the group
@@ -1039,6 +1055,19 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = GroupSerializer(group)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, id=None, *args, **kwargs):
+        super(GroupViewSet, self).partial_update(request, *args, **kwargs)
+        group = Group.objects.filter(id=id)[0]
+        currentmembers = [u.username for u in group.user_set.all()]
+        targetmembers = request.data["members"]
+        logger.info("target members ")
+        logger.info(targetmembers)
+        set = [ User.objects.filter(username=username)[0] for username in targetmembers]
+        group.user_set.set(set)
+
+        return Response("OK", status=status.HTTP_200_OK)
+
 
 def get_models(model_list, model_object, model_index):
     models = []

@@ -299,7 +299,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_members(instance):
-        return [u.id for u in Group.objects.get(name=instance.name).user_set.all()]
+        return [u.username for u in Group.objects.get(name=instance.name).user_set.all()]
 
     @staticmethod
     def get_identification(instance):
@@ -307,6 +307,7 @@ class GroupSerializer(serializers.ModelSerializer):
             return instance.oauth.identification
         else:
             return None
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -348,6 +349,7 @@ class UserDataSerializer(serializers.Serializer):
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
+    groups = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
@@ -372,6 +374,10 @@ class UserDataSerializer(serializers.Serializer):
             else:
                 licenses[license.slug] = False
         return licenses
+
+    @staticmethod
+    def get_groups(instance):
+        return  [g.id for g in instance.groups.all()]
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):

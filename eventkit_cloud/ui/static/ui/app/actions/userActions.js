@@ -67,7 +67,7 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     });
 
     return axios({
-        url: `/api/user/${username}`,
+        url: `/api/users/${username}`,
         method: 'PATCH',
         data: { accepted_licenses: acceptedLicenses },
         headers: { 'X-CSRFToken': csrftoken },
