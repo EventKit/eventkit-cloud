@@ -1063,13 +1063,20 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
 
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
         if TaskStates[result_status] != TaskStates.SUCCESS:
-            for export_task in export_provider_task.tasks.all():
-                if TaskStates[status] not in TaskStates.get_finished_states():
-                    export_task.status = TaskStates.CANCELED.value
-                    export_task.finished_at = timezone.now()
-                    export_task.save()
+            # @TODO: to make more detailed decisions on whether we are failed or incomplete, we would have to do more
+            # @TODO: database lookups, decide if that's worth the trouble or not
+            export_provider_task.status = TaskStates.INCOMPLETE.value
 
-        export_provider_task.status = status
+            # @TODO: figure out why we were doing this, and if it's ok to remove it
+            #for export_task in export_provider_task.tasks.all():
+            #    if TaskStates[status] not in TaskStates.get_finished_states():
+            #        export_task.status = TaskStates.CANCELED.value
+            #        export_task.finished_at = timezone.now()
+            #        export_task.save()
+        else:
+            export_provider_task.status = TaskStates.SUCCESS.value
+
+        #export_provider_task.status = status
         export_provider_task.finished_at = timezone.now()
         export_provider_task.save()
 
