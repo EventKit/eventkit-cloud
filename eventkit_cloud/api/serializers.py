@@ -17,6 +17,8 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User,Group
+from ..core.models import GroupAdministrator
+
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -291,15 +293,21 @@ class ExportRunSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
 
     members = serializers.SerializerMethodField()
+    administrators = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ( 'id', 'name', 'members' )
+        fields = ( 'id', 'name', 'members', 'administrators' )
 
 
     @staticmethod
     def get_members(instance):
         return [u.username for u in Group.objects.get(name=instance.name).user_set.all()]
+
+    @staticmethod
+    def get_administrators(instance):
+#        them = [user.username for user in GroupAdministrator.objects.filter(group=instance)
+        return [admin.user.username for admin in GroupAdministrator.objects.filter(group=instance)]
 
     @staticmethod
     def get_identification(instance):

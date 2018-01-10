@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import uuid
 from django.contrib.gis.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User,Group
+
 
 
 class TimeStampedModelMixin(models.Model):
@@ -65,3 +67,21 @@ class UIDMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+class GroupAdministrator(TimeStampedModelMixin):
+    """
+    Model associates administrative users with groups
+    """
+    user = models.ForeignKey(User)
+    group = models.ForeignKey(Group)
+    name  = models.CharField(max_length=100, db_index=True)
+
+    class Meta:
+        db_table = 'groupadministrators'
+
+    def __str__(self):
+        return '{0}: {1}'.format(self.user.username, self.group.name)
+
+    def __unicode__(self):
+        return '{0}: {1}'.format(self.user.username, self.group.name)

@@ -12,6 +12,7 @@ from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User,Group
+from ..core.models import GroupAdministrator
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
@@ -1037,13 +1038,16 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-            * create a new group and put the current logged in user in the group
+            * create a new group and make the current logged in user in the group
+
         """
         response = super(GroupViewSet, self).create(request, *args, **kwargs)
         group_id = response.data["id"]
         user  = User.objects.all().filter(username=request.user.username)[0]
         group = Group.objects.filter(id=group_id)[0]
         group.user_set.add(user)
+        groupadmin = GroupAdministrator.objects.create(user=user,group=group)
+        logger.info(groupadmin)
 
         return response
 
