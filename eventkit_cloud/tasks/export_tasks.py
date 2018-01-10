@@ -337,8 +337,6 @@ class ExportTask(LockingTask):
                 logging.info('canceling before run %s', celery_uid)
                 task.status = TaskStates.CANCELED.value
                 task.save()
-                # @TODO: removing cancel_user.username for now because it's not set up correctly and i'm not sure if
-                # @TODO: it's relevant, investigate if this needs to come back or not
                 raise CancelException(task_name=task.export_provider_task.name)
             task.pid = os.getpid()
             task.status = task_status
