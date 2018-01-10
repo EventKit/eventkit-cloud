@@ -551,7 +551,6 @@ def normalize_name(name):
 
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
-    logger.error('EJ CREATING AN EXPORT_TASK_RECORD FOR ' + task_name)
     try:
         export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                       status=TaskStates.PENDING.value,
