@@ -1050,8 +1050,6 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
 
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
         if TaskStates[result_status] != TaskStates.SUCCESS:
-            # @TODO: to make more detailed decisions on whether we are failed or incomplete, we would have to do more
-            # @TODO: database lookups, decide if that's worth the trouble or not
             export_provider_task.status = TaskStates.INCOMPLETE.value
         else:
             export_provider_task.status = TaskStates.SUCCESS.value
