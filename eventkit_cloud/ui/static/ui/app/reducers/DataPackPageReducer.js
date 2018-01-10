@@ -4,15 +4,15 @@ import initialState from './initialState';
 export function DataPackPageReducer(state = initialState.runsList, action) {
     switch(action.type) {
         case types.FETCHING_RUNS:
-            return {...state, fetching: true, fetched: false, error: null}
+            return { ...state, fetching: true, fetched: false, error: null, cancelSource: action.cancelSource };
         case types.RECEIVED_RUNS:
-            return {...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage, range: action.range}
+            return { ...state, fetching: false, fetched: true, runs: action.runs, error: null, nextPage: action.nextPage, range: action.range, cancelSource: null };
         case types.FETCH_RUNS_ERROR:
-            return {...state, fetching: false, fetched: false, runs: [], error: action.error};
+            return { ...state, fetching: false, fetched: false, runs: [], error: action.error, cancelSource: null };
         case types.SET_PAGE_ORDER:
-            return {...state, order: action.order}
+            return { ...state, order: action.order };
         case types.SET_PAGE_VIEW:
-            return {...state, view: action.view}
+            return { ...state, view: action.view };
         default:
             return state;
     }

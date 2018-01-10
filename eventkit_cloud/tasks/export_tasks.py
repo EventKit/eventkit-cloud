@@ -264,7 +264,6 @@ class ExportTask(LockingTask):
             einfo = ExceptionInfo()
             self.on_failure(e, task_uid, args, kwargs, einfo)
 
-
     @transaction.atomic
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         """
@@ -836,11 +835,15 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     from .models import ExportRun
     from .task_factory import TaskFactory
 
-    worker = socket.gethostname()
-    run = ExportRun.objects.get(uid=run_uid)
-    run.worker = worker
-    run.save()
-    TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+    try:
+        worker = socket.gethostname()
+        run = ExportRun.objects.get(uid=run_uid)
+        run.worker = worker
+        run.save()
+        TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
+    except Exception:
+        run.status = TaskStates.FAILED.value
+        run.save()
 
 
 #This could be improved by using Redis or Memcached to help manage state.

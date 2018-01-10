@@ -473,7 +473,9 @@ export class DataCartDetails extends Component {
                         <RaisedButton
                             className="qa-DataCartDetails-RaistedButton-rerunExport"
                             style={{ margin: '10px' }}
-                            disabled={this.state.status === 'SUBMITTED'}
+                            disabled={
+                                this.state.status === 'SUBMITTED' || this.props.user.data.user.username !== this.props.cartDetails.user
+                            }
                             backgroundColor="rgba(226,226,226,0.5)"
                             disableTouchRipple
                             labelColor="#4598bf"
@@ -674,6 +676,7 @@ DataCartDetails.propTypes = {
     maxResetExpirationDays: PropTypes.string.isRequired,
     providers: PropTypes.array.isRequired,
     zipFileProp: PropTypes.string,
+    user: PropTypes.object.isRequired,
 };
 
 export default DataCartDetails;

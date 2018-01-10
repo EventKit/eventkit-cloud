@@ -288,6 +288,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
+    'VERSION': os.environ.get('VERSION', ''),
     'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),

@@ -35,6 +35,7 @@ describe('DataCartDetails component', () => {
             onRunRerun: () => {},
             onClone: () => {},
             onProviderCancel: () => {},
+            user: { data: { user: { username: 'admin' } } },
         }
     );
 
