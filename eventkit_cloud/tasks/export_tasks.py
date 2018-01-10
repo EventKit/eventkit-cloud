@@ -192,20 +192,11 @@ class ExportTask(LockingTask):
     abort_on_error = False
 
     def __call__(self, *args, **kwargs):
-        logger.error('EJ ARGS: ' + str(args))
-        logger.error('EJ KWARGS: ' + str(kwargs))
         task_uid = kwargs.get('task_uid')
 
         try:
             from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord)
             task = ExportTaskRecord.objects.get(uid=task_uid)
-            logger.error('EJ EXPORTTASKRECORD NAME: ' + task.name)
-
-            ## @TODO: remove this as it should be handled in update_task_state
-            #if task.status == TaskStates.CANCELED.value:
-            #    # the task was cancelled because an error occurred earlier on in the (presumably synchronous) task chain,
-            #    # and therefore nothing needs to be done
-            #    return {'state': TaskStates.CANCELED.value}
 
             try:
                 task_state_result = args[0]
@@ -226,8 +217,8 @@ class ExportTask(LockingTask):
                 6. create the export task result
                 7. update the export task status and save it
             """
-            # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks should
-            # just return.
+            # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
+            # should just return.
             if not retval:
                 return
             # update the task
@@ -283,7 +274,6 @@ class ExportTask(LockingTask):
             from billiard.einfo import ExceptionInfo
             einfo = ExceptionInfo()
             result = self.task_failure(e, task_uid, args, kwargs, einfo)
-            logger.error('EJ RESULT RETURNED FROM TASK_FAILURE: ' + str(result))
             return result
 
     @transaction.atomic
@@ -326,6 +316,7 @@ class ExportTask(LockingTask):
                     task_id=task_id,
                     stage_dir=stage_dir
                 )
+            return {'status': TaskStates.FAILED.value}
         return {'status': TaskStates.CANCELED.value}
 
     def update_task_state(self, result=None, task_status=TaskStates.RUNNING.value, task_uid=None):
@@ -333,7 +324,6 @@ class ExportTask(LockingTask):
         Update the task state and celery task uid.
         Can use the celery uid for diagnostics.
         """
-        logger.error('EJ VALUE OF RESULT: ' + str(result))
         result = result or {}
         started = timezone.now()
         from ..tasks.models import ExportTaskRecord
@@ -345,7 +335,6 @@ class ExportTask(LockingTask):
             result = parse_result(result, 'status') or []
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status, result]:
                 logging.info('canceling before run %s', celery_uid)
-                logger.error('EJ RAISING CANCEL EXCEPTION')
                 task.status = TaskStates.CANCELED.value
                 task.save()
                 # @TODO: removing cancel_user.username for now because it's not set up correctly and i'm not sure if
