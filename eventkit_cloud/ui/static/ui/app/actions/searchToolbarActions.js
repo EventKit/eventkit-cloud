@@ -62,6 +62,7 @@ export function getGeocode(query) {
         return (dispatch) => {
             let geocodeData = [];
             dispatch({type: "FETCHING_GEOCODE"});
+            
             return axios.get('/reverse_geocode', {
                 params: {
                     "lat": validLatLon[0],
@@ -81,6 +82,7 @@ export function getGeocode(query) {
                         }
                     }
                 )
+                console.log(geocodeData);
                 dispatch({type: "RECEIVED_GEOCODE", data: geocodeData});
             }).catch(error => {
                 dispatch({type: "GEOCODE_ERROR", error: error});
