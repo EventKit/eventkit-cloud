@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active
+from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active, reverse_geocode, convert
 from django.views.decorators.cache import never_cache
 
 urlpatterns = [
