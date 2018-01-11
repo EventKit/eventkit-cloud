@@ -46,7 +46,7 @@ export class LoginPage extends React.Component {
             },
             footerText: {
                 color: 'grey',
-                padding: '5px',
+                padding: '5px 10px 5px',
                 opacity: 0.5,
                 fontSize: '9px',
                 textAlign: 'right',
