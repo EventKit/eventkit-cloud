@@ -7,25 +7,21 @@ export function getGroups(params) {
     return (dispatch, getState) => {
         //////// JUST FOR MOCKING THE API /////////////
         const fakeUsers = [
-            { name: 'admin', email: 'admin@eventkit.dev', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-5', 'uid-6', 'uid-9', 'uid-12', 'uid-15', 'uid-18'] },
-            { name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'John Doe', email: 'john.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-7', 'uid-11', 'uid-13', 'uid-17', 'uid-19'] },
-            { name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['uid-0', 'uid-2', 'uid-1', 'uid-3', 'uid-2', 'uid-3', 'uid-5', 'uid-8', 'uid-9', 'uid-12', 'uid-13', 'uid-14', 'uid-18', 'uid-19', 'uid-20'] },
-            { name: 'User 1', email: 'user1@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'User 2', email: 'user2@email.com', groups: ['uid-1', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-9', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'User 3', email: 'user3@email.com', groups: ['uid-1', 'uid-2', 'uid-4', 'uid-7', 'uid-9', 'uid-11', 'uid-13', 'uid-17', 'uid-20'] },
+            { username: 'admin', name: 'admin', email: 'admin@eventkit.dev', groups: ['id-0', 'id-2', 'id-3', 'id-5', 'id-6', 'id-9', 'id-12', 'id-15', 'id-18'] },
+            { username: 'JaneD', name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'JohnD', name: 'John Doe', email: 'john.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-7', 'id-11', 'id-13', 'id-17', 'id-19'] },
+            { username: 'JoeS', name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['id-0', 'id-2', 'id-1', 'id-3', 'id-2', 'id-3', 'id-5', 'id-8', 'id-9', 'id-12', 'id-13', 'id-14', 'id-18', 'id-19', 'id-20'] },
+            { username: 'U1', name: 'User 1', email: 'user1@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U2', name: 'User 2', email: 'user2@email.com', groups: ['id-1', 'id-2', 'id-3', 'id-6', 'id-8', 'id-9', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U3', name: 'User 3', email: 'user3@email.com', groups: ['id-1', 'id-2', 'id-4', 'id-7', 'id-9', 'id-11', 'id-13', 'id-17', 'id-20'] },
         ];
         const fakeGroups = [];
         for (let i = 0; i < 21; i++) {
-            let count = 0;
-            count = fakeUsers.reduce((ac, cv) => (
-                ac + (cv.groups.includes(`uid-${i}`) ? 1 : 0)
-            ), count);
             fakeGroups.push({
                 name: `Group ${i}`,
-                memberCount: count,
-                owners: i === 18 ? [fakeUsers[1]] : [fakeUsers[0]],
-                uid: `uid-${i}`,
+                owners: i === 18 ? [fakeUsers[1].username] : [fakeUsers[0].username],
+                id: `id-${i}`,
+                members: fakeUsers.filter(user => user.groups.includes(`id-${i}`)).map(user => (user.username)),
             });
         }
 
@@ -67,18 +63,18 @@ export function getGroups(params) {
     };
 }
 
-export function deleteGroup(groupUID) {
+export function deleteGroup(groupId) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-        mock.onDelete(`/api/groups/${groupUID}`).reply(400, 'The requested group could could not be found and deleted, if problems persist please contact an administrator');
+        mock.onDelete(`/api/groups/${groupId}`).reply(200);
         //////////////////////////////////////////////////////////////
         dispatch({ type: types.DELETING_GROUP });
 
         const csrftoken = cookie.load('csrftoken');
 
         return axios({
-            url: `/api/groups/${groupUID}`,
+            url: `/api/groups/${groupId}`,
             method: 'DELETE',
             headers: { 'X-CSRFToken': csrftoken },
         }).then(() => {
@@ -117,21 +113,23 @@ export function createGroup(groupName, members) {
     };
 }
 
-export function addGroupUsers(groupUID, users) {
+export function addGroupUsers(group, users) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-        mock.onPost(`/api/groups/${groupUID}`).reply(200);
+        mock.onPost(`/api/groups/${group.id}`).reply(200);
         //////////////////////////////////////////////////////////////
         dispatch({ type: types.ADDING_GROUP_USERS });
 
         const csrftoken = cookie.load('csrftoken');
 
+        const members = [...group.members, ...users];
+
         return axios({
-            url: `/api/groups/${groupUID}`,
+            url: `/api/groups/${group.id}`,
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ add: users }),
+            data: JSON.stringify({ members }),
         }).then(() => {
             mock.restore(); ///// JUST FOR MOCKING
             dispatch({ type: types.ADDED_GROUP_USERS });
@@ -142,21 +140,23 @@ export function addGroupUsers(groupUID, users) {
     };
 }
 
-export function removeGroupUsers(groupUID, users) {
+export function removeGroupUsers(group, users) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-        mock.onPost(`/api/groups/${groupUID}`).reply(200);
+        mock.onPost(`/api/groups/${group.id}`).reply(200);
         //////////////////////////////////////////////////////////////
         dispatch({ type: types.REMOVING_GROUP_USERS });
 
         const csrftoken = cookie.load('csrftoken');
 
+        const members = group.members.filter(member => (!users.includes(member)));
+
         return axios({
-            url: `/api/groups/${groupUID}`,
+            url: `/api/groups/${group.id}`,
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ remove: users }),
+            data: JSON.stringify({ members }),
         }).then(() => {
             mock.restore(); ///// JUST FOR MOCKING
             dispatch({ type: types.REMOVED_GROUP_USERS });

@@ -39,16 +39,34 @@ export const usersState = {
     fetching: false,
     fetched: false,
     error: null,
+    total: 0,
 };
 
 export function usersReducer(state = usersState, action) {
     switch (action.type) {
     case types.FETCHING_USERS:
-        return { ...state, error: null, fetching: true, fetched: false };
+        return {
+            ...state,
+            error: null,
+            fetching: true,
+            fetched: false,
+        };
     case types.FETCHED_USERS:
-        return { ...state, fetching: false, fetched: true, users: action.users };
+        return {
+            ...state,
+            fetching: false,
+            fetched: true,
+            users: action.users,
+            total: state.total || action.users.length,
+        };
     case types.FETCH_USERS_ERROR:
-        return { ...state, fetching: false, fetched: false, error: action.error };
+        return {
+            ...state,
+            fetching: false,
+            fetched: false,
+            error: action.error,
+            total: 0,
+        };
     default:
         return state;
     }

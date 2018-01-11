@@ -29,12 +29,12 @@ export class UserTableRowColumn extends Component {
 
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick(this.props.user.email);
+        this.props.handleNewGroupClick(this.props.user.username);
     }
 
-    handleGroupItemClick(groupUID) {
-        const userEmail = this.props.user.email;
-        this.props.handleGroupItemClick(groupUID, userEmail);
+    handleGroupItemClick(group) {
+        const { username } = this.props.user;
+        this.props.handleGroupItemClick(group, username);
     }
 
     render() {
@@ -86,6 +86,7 @@ export class UserTableRowColumn extends Component {
                         style={styles.iconButton}
                         iconStyle={{ color: '#4598bf' }}
                         onClick={this.handleOpen}
+                        className="qa-UserTableRowColumn-IconButton-options"
                     >
                         <MoreVertIcon />
                     </IconButton>
@@ -98,6 +99,7 @@ export class UserTableRowColumn extends Component {
                         selectedGroups={user.groups}
                         groups={groups}
                         groupsLoading={groupsLoading}
+                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
                     />
                 </div>
             </TableRowColumn>
@@ -112,7 +114,7 @@ UserTableRowColumn.defaultProps = {
 UserTableRowColumn.propTypes = {
     user: PropTypes.shape({
         name: PropTypes.string,
-        email: PropTypes.string,
+        username: PropTypes.string,
         groups: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,

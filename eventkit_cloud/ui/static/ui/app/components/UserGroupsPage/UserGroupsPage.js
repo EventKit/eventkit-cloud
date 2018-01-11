@@ -9,10 +9,11 @@ import {
     TableHeader,
     TableRow,
 } from 'material-ui/Table';
-import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
+import MenuIcon from 'material-ui/svg-icons/navigation/menu';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import ArrowLeft from 'material-ui/svg-icons/hardware/keyboard-arrow-left';
+import ArrowRight from 'material-ui/svg-icons/hardware/keyboard-arrow-right';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
 import UserTableRowColumn from './UserTableRowColumn';
@@ -59,6 +60,12 @@ export class UserGroupsPage extends Component {
         this.handleDrawerSelectionChange = this.handleDrawerSelectionChange.bind(this);
         this.showErrorDialog = this.showErrorDialog.bind(this);
         this.hideErrorDialog = this.hideErrorDialog.bind(this);
+        this.showPageInfoDialog = this.showPageInfoDialog.bind(this);
+        this.hidePageInfoDialog = this.hidePageInfoDialog.bind(this);
+        this.showSharedInfoDialog = this.showSharedInfoDialog.bind(this);
+        this.hideSharedInfoDialog = this.hideSharedInfoDialog.bind(this);
+        this.onDrawerIconMouseOver = this.onDrawerIconMouseOver.bind(this);
+        this.onDrawerIconMouseOut = this.onDrawerIconMouseOut.bind(this);
         this.state = {
             drawerOpen: !(window.innerWidth < 768),
             selectedUsers: [],
@@ -73,6 +80,9 @@ export class UserGroupsPage extends Component {
             createUsers: [],
             drawerSelection: 'all',
             errorMessage: '',
+            showSharedInfo: false,
+            showPageInfo: false,
+            drawerIconHover: false,
         };
     }
 
@@ -103,11 +113,9 @@ export class UserGroupsPage extends Component {
             this.setState({ drawerSelection: 'all' }, this.makeUserRequest());
         }
         if (nextProps.groups.error && !this.props.groups.error) {
-            console.log('there is a groups error');
             this.showErrorDialog(nextProps.groups.error);
         }
         if (nextProps.users.error && !this.props.users.error) {
-            console.log('there is a users error');
             this.showErrorDialog(nextProps.users.error);
         }
     }
@@ -149,7 +157,7 @@ export class UserGroupsPage extends Component {
     }
 
     toggleDrawer() {
-        this.setState({ drawerOpen: !this.state.drawerOpen });
+        this.setState({ drawerOpen: !this.state.drawerOpen, drawerIconHover: false });
     }
 
     handleSelectAll(selected) {
@@ -214,40 +222,44 @@ export class UserGroupsPage extends Component {
         this.handleCreateOpen();
     }
 
-    handleSingleUserChange(groupUID, userEmail) {
+    handleSingleUserChange(group, username) {
+        // if user is not in group, add them. Otherwise remove them
         const adding = this.props.users.users.find((user) => {
-            if (user.email === userEmail) {
-                return !user.groups.includes(groupUID);
+            if (user.username === username) {
+                return !user.groups.includes(group.id);
             }
             return false;
         });
 
         if (!adding) {
-            this.props.removeUsers(groupUID, [userEmail]);
+            this.props.removeUsers(group, [username]);
         } else {
-            this.props.addUsers(groupUID, [userEmail]);
+            this.props.addUsers(group, [username]);
         }
     }
 
-    handleMultiUserChange(groupUID) {
+    handleMultiUserChange(group) {
+        // assume we are removing all the selected users
         let adding = false;
         const users = [];
         this.state.selectedUsers.forEach((ix) => {
             const user = this.props.users.users[ix];
-            if (!adding && !user.groups.includes(groupUID)) {
+            if (!adding && !user.groups.includes(group.id)) {
+                // if at least one user is not already a member we want to add all the users
                 adding = true;
             }
-            users.push(user.email);
+            users.push(user.username);
         });
 
+        // if no users quit
         if (!users.length) {
             return;
         }
 
         if (!adding) {
-            this.props.removeUsers(groupUID, users);
+            this.props.removeUsers(group, users);
         } else {
-            this.props.addUsers(groupUID, users);
+            this.props.addUsers(group, users);
         }
     }
 
@@ -270,7 +282,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        this.props.removeUsers(this.state.targetGroup.uid, [this.props.user.data.user.email]);
+        this.props.removeUsers(this.state.targetGroup, [this.props.user.data.user.username]);
         this.handleLeaveClose();
     }
 
@@ -283,7 +295,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleDeleteClick() {
-        this.props.deleteGroup(this.state.targetGroup.uid);
+        this.props.deleteGroup(this.state.targetGroup.id);
         this.handleDeleteClose();
     }
 
@@ -304,9 +316,34 @@ export class UserGroupsPage extends Component {
         this.setState({ errorMessage: '' });
     }
 
+    showSharedInfoDialog() {
+        this.setState({ showSharedInfo: true });
+    }
+
+    hideSharedInfoDialog() {
+        this.setState({ showSharedInfo: false });
+    }
+
+    showPageInfoDialog() {
+        this.setState({ showPageInfo: true });
+    }
+
+    hidePageInfoDialog() {
+        this.setState({ showPageInfo: false });
+    }
+
+    onDrawerIconMouseOver() {
+        this.setState({ drawerIconHover: true });
+    }
+
+    onDrawerIconMouseOut() {
+        this.setState({ drawerIconHover: false });
+    }
+
     render() {
         const mobile = window.innerWidth < 768;
-        const bodyWidth = this.state.drawerOpen && !mobile ? 'calc(100% - 250px)' : '100%';
+        const bodyWidth = !mobile ? 'calc(100% - 250px)' : '100%';
+        const bodyHeight = window.innerHeight - 130;
         const styles = {
             pageInfoIcon: {
                 fill: '#4598bf',
@@ -318,12 +355,10 @@ export class UserGroupsPage extends Component {
             },
             header: {
                 backgroundColor: '#161e2e',
-                // height: '35px',
                 color: 'white',
                 fontSize: '14px',
                 padding: '0px 24px',
                 flexWrap: 'wrap-reverse',
-                // flexDirection: 'row-reverse',
             },
             headerTitle: {
                 fontSize: '18px',
@@ -337,18 +372,18 @@ export class UserGroupsPage extends Component {
                 height: '35px',
                 borderRadius: '0px',
                 display: 'flex',
-                float: mobile ? 'left' : 'right',
+                float: 'right',
             },
             label: {
                 fontSize: '12px',
-                paddingLeft: '20px',
-                paddingRight: '20px',
+                paddingLeft: mobile ? '10px' : '20px',
+                paddingRight: mobile ? '10px' : '20px',
                 lineHeight: '35px',
             },
             body: {
                 position: 'relative',
                 left: 0,
-                height: window.innerHeight - 130,
+                height: bodyHeight,
                 width: bodyWidth,
                 overflowY: 'hidden',
             },
@@ -370,16 +405,16 @@ export class UserGroupsPage extends Component {
                 top: 0,
                 left: 0,
                 zIndex: 3,
-                paddingTop: 20,
+                paddingTop: 15,
                 backgroundColor: '#fff',
             },
             container: {
                 color: 'white',
                 height: '36px',
-                width: 'calc(100% - 48px)',
-                backgroundColor: '#eee',
+                width: mobile ? 'calc(100% - 72px)' : 'calc(100% - 48px)',
+                backgroundColor: '#F8F8F8',
                 lineHeight: '36px',
-                margin: '0px 24px 10px',
+                margin: '0px auto 10px 24px',
             },
             hint: {
                 color: '#5a5a5a',
@@ -436,7 +471,7 @@ export class UserGroupsPage extends Component {
         const rows = this.props.users.users.map((user, ix) => (
             // we should be filtering out the logged in user here
             <TableRow
-                key={user.email}
+                key={user.username}
                 style={styles.tableRow}
                 selected={this.state.selectedUsers.includes(ix)}
                 rowNumber={ix}
@@ -444,7 +479,7 @@ export class UserGroupsPage extends Component {
                 <UserTableRowColumn
                     user={user}
                     groups={this.props.groups.groups}
-                    groupsLoading={this.state.usersUpdating.includes(user.email)}
+                    groupsLoading={this.state.usersUpdating.includes(user.username)}
                     handleGroupItemClick={this.handleSingleUserChange}
                     handleNewGroupClick={this.handleNewGroupClick}
                 />
@@ -452,22 +487,28 @@ export class UserGroupsPage extends Component {
         ));
 
         // if multiple users are selected, find any groups they have in common
+        // so that the table header can know if a selection of users should be
+        // added to or removed from a group
         const commonGroups = [];
         if (this.state.selectedUsers.length) {
             this.props.groups.groups.forEach((group) => {
-                if (group.owners.find(owner => owner.email === this.props.user.data.user.email)) {
+                if (group.owners.find(owner => owner === this.props.user.data.user.username)) {
                     const allSelectedIncluded = this.state.selectedUsers.every((ix) => {
-                        if (this.props.users.users[ix].groups.includes(group.uid)) {
+                        if (this.props.users.users[ix].groups.includes(group.id)) {
                             return true;
                         }
                         return false;
                     });
                     if (allSelectedIncluded) {
-                        commonGroups.push(group.uid);
+                        commonGroups.push(group.id);
                     }
                 }
             });
         }
+
+        const drawerIconProps = {
+            style: { fill: '#4598bf', height: '35px', width: '30px' },
+        };
 
         return (
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
@@ -477,17 +518,13 @@ export class UserGroupsPage extends Component {
                         title={
                             <span>
                                 Members and Groups
-                                <InfoIcon style={styles.pageInfoIcon} onClick={() => console.log('members and group info')} />
+                                <InfoIcon style={styles.pageInfoIcon} onClick={this.showPageInfoDialog} />
                             </span>
                         }
                         style={styles.header}
                         titleStyle={styles.headerTitle}
                         showMenuIconButton={false}
                     >
-                        <span style={{ flex: 'auto', lineHeight: '35px', textAlign: 'right' }}>
-                            <ArrowLeft style={{ height: '35px', width: '20px', verticalAlign: 'bottom', fill: '#fff' }} onClick={this.toggleDrawer} />Show Drawer
-                        </span>
-                        <div style={{ flex: 'auto', width: mobile ? '100%' : 'initial' }}>
                         <RaisedButton
                             className="qa-UserGroupsPage-RaisedButton-create"
                             label="Create Group"
@@ -498,19 +535,11 @@ export class UserGroupsPage extends Component {
                             overlayStyle={{ borderRadius: '0px' }}
                             onClick={this.handleCreateOpen}
                         />
-                        </div>
-                        {// <NavigationMenu
-                        //     style={styles.drawerButton}
-                        //     onClick={this.toggleDrawer}
-                        //     className="qa-UserGroupsPage-drawerButton"
-                        // />
-                        }
                     </AppBar>
                 }
                 <div style={styles.body}>
                     <CustomScrollbar
-                        style={{ height: window.innerHeight - 130, width: '100%' }}
-                        onScrollFrame={(v) => { console.log(v.top); }}
+                        style={{ height: bodyHeight, width: '100%' }}
                     >
                         <div style={styles.bodyContent} className="qa-UserGroupsPage-bodyContent">
                             <div style={styles.fixedHeader} className="qa-UserGroupsPage-fixedHeader">
@@ -525,12 +554,42 @@ export class UserGroupsPage extends Component {
                                     onKeyDown={this.handleSearchKeyDown}
                                     className="qa-UserGroupsPage-search"
                                 />
+                                {mobile ?
+                                    <div style={{
+                                        width: '35px',
+                                        height: '35px',
+                                        lineHeight: '35px',
+                                        position: 'absolute',
+                                        right: this.state.drawerOpen ? '250px' : '0px',
+                                        top: '15px',
+                                        textAlign: 'center',
+                                        backgroundColor: '#e8eef5',
+                                        transitionProperty: 'right',
+                                        transitionDuration: '450ms',
+                                        transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',                                        
+                                    }}
+                                    onClick={this.toggleDrawer}
+                                    onMouseEnter={this.onDrawerIconMouseOver}
+                                    onMouseLeave={this.onDrawerIconMouseOut}
+                                    >
+                                        {this.state.drawerIconHover ?
+                                            this.state.drawerOpen ?
+                                                <ArrowRight {...drawerIconProps} />
+                                                :
+                                                <ArrowLeft {...drawerIconProps} />
+                                            :
+                                            <MenuIcon {...drawerIconProps} />
+                                        }
+                                    </div>
+                                    :
+                                    null
+                                }
                                 <Table
                                     selectable
                                     multiSelectable
                                     onRowSelection={this.handleSelectAll}
                                     allRowsSelected={this.state.selectedUsers.length === this.props.users.users.length}
-                                    className="qa-UserGroups-headerTable"
+                                    className="qa-UserGroupsPage-headerTable"
                                 >
                                     <TableHeader
                                         style={{ zIndex: 2 }}
@@ -559,7 +618,7 @@ export class UserGroupsPage extends Component {
                                 multiSelectable
                                 onRowSelection={this.handleIndividualSelect}
                                 style={{ borderBottom: '1px solid rgb(224, 224, 224)' }}
-                                className="qa-UserGroups-bodyTable"
+                                className="qa-UserGroupsPage-bodyTable"
                             >
                                 <TableBody
                                     displayRowCheckbox
@@ -573,15 +632,15 @@ export class UserGroupsPage extends Component {
                     </CustomScrollbar>
                 </div>
                 <GroupsDrawer
-                    isMobile={mobile}
                     selectedValue={this.state.drawerSelection}
                     onSelectionChange={this.handleDrawerSelectionChange}
-                    open={this.state.drawerOpen}
+                    open={this.state.drawerOpen || !mobile}
                     groups={this.props.groups.groups}
                     user={this.props.user.data.user}
-                    usersCount={this.props.users.users.length}
-                    className="qa-UserGroups-drawer"
+                    usersCount={this.props.users.total}
+                    className="qa-UserGroupsPage-drawer"
                     onNewGroupClick={this.handleCreateOpen}
+                    onSharedInfoClick={this.showSharedInfoDialog}
                     onLeaveGroupClick={this.handleLeaveGroupClick}
                     onDeleteGroupClick={this.handleDeleteGroupClick}
                 />
@@ -591,23 +650,28 @@ export class UserGroupsPage extends Component {
                     onInputChange={this.handleCreateInput}
                     onSave={this.handleCreateSave}
                     value={this.state.createInput}
+                    className="qa-UserGroupsPage-createGroupDialog"
                 />
                 <LeaveGroupDialog
                     show={this.state.showLeave}
                     onClose={this.handleLeaveClose}
                     onLeave={this.handleLeaveClick}
                     groupName={this.state.targetGroup.name || ''}
+                    className="qa-UserGroupsPage-leaveGroupDialog"
                 />
                 <DeleteGroupDialog
                     show={this.state.showDelete}
                     onClose={this.handleDeleteClose}
                     onDelete={this.handleDeleteClick}
                     groupName={this.state.targetGroup.name || ''}
+                    className="qa-UserGroupsPage-deleteGroupDialog"
                 />
-                { this.props.groups.fetching || this.props.users.fetching || this.props.groups.creating || this.props.groups.adding || this.props.groups.removing || this.props.groups.deleting ?
+                { this.props.groups.fetching || this.props.users.fetching
+                || this.props.groups.creating || this.props.groups.adding
+                || this.props.groups.removing || this.props.groups.deleting ?
                     <div style={styles.loadingBackground}>
                         <div style={styles.loadingContainer}>
-                            <CircularProgress color="#4598bf" style={styles.loading} />
+                            <CircularProgress color="#4598bf" style={styles.loading} className="qa-UserGroupsPage-loading" />
                         </div>
                     </div>
                     :
@@ -617,9 +681,28 @@ export class UserGroupsPage extends Component {
                     show={!!this.state.errorMessage}
                     onClose={this.hideErrorDialog}
                     title="ERROR"
+                    className="qa-UserGroupsPage-errorDialog"
                 >
                     <Warning className="" style={styles.errorIcon} />
                     {this.state.errorMessage}
+                </BaseDialog>
+
+                <BaseDialog
+                    show={!!this.state.showSharedInfo}
+                    onClose={this.hideSharedInfoDialog}
+                    title="SHARED GROUPS"
+                    className="qa-UserGroupsPage-sharedInfo"
+                >
+                    This is info about shared groups
+                </BaseDialog>
+
+                <BaseDialog
+                    show={!!this.state.showPageInfo}
+                    onClose={this.hidePageInfoDialog}
+                    title="MEMBERS & GROUPS"
+                    className="qa-UserGroupsPage-pageInfo"
+                >
+                    This is info about the members and groups page
                 </BaseDialog>
             </div>
         );
@@ -648,6 +731,7 @@ UserGroupsPage.propTypes = {
         fetching: PropTypes.bool,
         fetched: PropTypes.bool,
         error: PropTypes.string,
+        total: PropTypes.number,
     }).isRequired,
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,
@@ -670,17 +754,17 @@ function mapDispatchToProps(dispatch) {
         getGroups: params => (
             dispatch(getGroups(params))
         ),
-        deleteGroup: uid => (
-            dispatch(deleteGroup(uid))
+        deleteGroup: id => (
+            dispatch(deleteGroup(id))
         ),
         createGroup: (name, users) => (
             dispatch(createGroup(name, users))
         ),
-        addUsers: (groupId, users) => (
-            dispatch(addGroupUsers(groupId, users))
+        addUsers: (group, users) => (
+            dispatch(addGroupUsers(group, users))
         ),
-        removeUsers: (groupId, users) => (
-            dispatch(removeGroupUsers(groupId, users))
+        removeUsers: (group, users) => (
+            dispatch(removeGroupUsers(group, users))
         ),
         getUsers: params => (
             dispatch(getUsers(params))

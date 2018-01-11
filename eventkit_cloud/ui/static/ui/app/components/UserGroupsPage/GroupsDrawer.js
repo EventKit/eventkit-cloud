@@ -10,7 +10,6 @@ import CustomScrollbar from '../CustomScrollbar';
 
 export class GroupsDrawer extends Component {
     render() {
-        console.log(this.props.isMobile);
         const styles = {
             drawer: {
                 backgroundColor: '#fff',
@@ -63,7 +62,7 @@ export class GroupsDrawer extends Component {
         const sharedGroups = [];
 
         this.props.groups.forEach((group) => {
-            if (group.owners.find(owner => owner.email === this.props.user.email)) {
+            if (group.owners.find(owner => owner === this.props.user.username)) {
                 myGroups.push(group);
             } else {
                 sharedGroups.push(group);
@@ -86,7 +85,7 @@ export class GroupsDrawer extends Component {
                         width={250}
                         className="qa-GroupsDrawer-Menu"
                         onChange={this.props.onSelectionChange}
-                        selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#0000001a' }}
+                        selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#e8eef5' }}
                         value={this.props.selectedValue}
                     >
                         <MenuItem
@@ -128,10 +127,10 @@ export class GroupsDrawer extends Component {
                         {myGroups.map(group => (
                             <MenuItem
                                 key={group.name}
-                                value={`${group.uid}`}
+                                value={`${group.id}`}
                                 primaryText={
                                     <div style={styles.menuItemText}>
-                                        {`${group.name} (${group.memberCount})`}
+                                        {`${group.name} (${group.members.length})`}
                                     </div>
                                 }
                                 innerDivStyle={{ paddingRight: '48px' }}
@@ -156,7 +155,7 @@ export class GroupsDrawer extends Component {
                             <strong>SHARED WITH ME</strong>
                             <InfoIcon
                                 style={styles.sharedGroupsInfoIcon}
-                                onClick={() => { console.log('shared info'); }}
+                                onClick={this.props.onSharedInfoClick}
                                 className="qa-GroupsDrawer-sharedGroupsInfoIcon"
                             />
                         </span>
@@ -189,17 +188,22 @@ export class GroupsDrawer extends Component {
 }
 
 GroupsDrawer.propTypes = {
-    isMobile: PropTypes.bool.isRequired,
     selectedValue: PropTypes.string.isRequired,
     onSelectionChange: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        owners: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
     user: PropTypes.shape({
         name: PropTypes.string,
-        email: PropTypes.string,
+        username: PropTypes.string,
     }).isRequired,
     usersCount: PropTypes.number.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
+    onSharedInfoClick: PropTypes.func.isRequired,
     onLeaveGroupClick: PropTypes.func.isRequired,
     onDeleteGroupClick: PropTypes.func.isRequired,
 };

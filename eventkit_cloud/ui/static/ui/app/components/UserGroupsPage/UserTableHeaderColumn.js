@@ -30,9 +30,8 @@ export class UserTableHeaderColumn extends Component {
     handleNewGroupClick() {
         this.handleClose();
         const selected = this.props.selectedUsers.map(ix => (
-            this.props.users[ix].email
+            this.props.users[ix].username
         ));
-        console.log(selected);
         this.props.handleNewGroupClick(selected);
     }
 
@@ -94,6 +93,7 @@ export class UserTableHeaderColumn extends Component {
                             style={styles.iconButton}
                             iconStyle={{ color: '#4598bf' }}
                             onClick={this.handleOpen}
+                            className="qa-UserTableHeaderColumn-IconButton-options"
                         >
                             <MoreHorizIcon />
                         </IconButton>
@@ -111,6 +111,7 @@ export class UserTableHeaderColumn extends Component {
                         selectedGroups={this.props.selectedGroups}
                         groups={this.props.groups}
                         groupsLoading={this.props.groupsLoading}
+                        className="qa-UserTableHeaderColumn-GroupsDropDownMenu"
                     />
                     <DropDownMenu
                         value={this.props.sortValue}
@@ -125,10 +126,26 @@ export class UserTableHeaderColumn extends Component {
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         className="qa-UserTableHeaderColumn-DropDownMenu-sort"
                     >
-                        <MenuItem value="user__username" primaryText="Username A-Z" />
-                        <MenuItem value="-user__username" primaryText="Username Z-A" />
-                        <MenuItem value="user__date_joined" primaryText="Newest" />
-                        <MenuItem value="-user__date_joined" primaryText="Oldest" />
+                        <MenuItem
+                            value="user__username"
+                            primaryText="Username A-Z"
+                            className="qa-UserTableHeaderColumn-MenuItem-sortAZ"
+                        />
+                        <MenuItem
+                            value="-user__username"
+                            primaryText="Username Z-A"
+                            className="qa-UserTableHeaderColumn-MenuItem-sortZA"
+                        />
+                        <MenuItem
+                            value="user__date_joined"
+                            primaryText="Newest"
+                            className="qa-UserTableHeaderColumn-MenuItem-sortNewest"
+                        />
+                        <MenuItem
+                            value="-user__date_joined"
+                            primaryText="Oldest"
+                            className="qa-UserTableHeaderColumn-MenuItem-sortOldest"
+                        />
                     </DropDownMenu>
                 </div>
             </TableHeaderColumn>

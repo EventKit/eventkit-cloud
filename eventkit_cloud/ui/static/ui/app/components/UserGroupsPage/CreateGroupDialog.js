@@ -8,7 +8,7 @@ export class CreateGroupDialog extends Component {
     render() {
         const createActions = [
             <RaisedButton
-                className="qa-UserGroups-CreateDialog-save"
+                className="qa-CreateGroupDialog-save"
                 style={{ margin: '0px' }}
                 labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
                 buttonStyle={{ borderRadius: '0px' }}
@@ -18,10 +18,9 @@ export class CreateGroupDialog extends Component {
                 primary={false}
                 onClick={this.props.onSave}
                 disabled={!this.props.value}
-                // disabledBackgroundColor="#707274"
             />,
             <FlatButton
-                className="qa-UserGroups-CreateDialog-cancel"
+                className="qa-CreateGroupDialog-cancel"
                 style={{ margin: '0px', float: 'left' }}
                 labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
                 backgroundColor="#fff"
@@ -55,6 +54,7 @@ export class CreateGroupDialog extends Component {
                         borderBottom: '2px solid #4498c0',
                         bottom: '0px',
                     }}
+                    className="qa-CreateGroupDialog-textField"
                 />
             </BaseDialog>
         );

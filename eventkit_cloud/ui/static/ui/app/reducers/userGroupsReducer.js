@@ -74,7 +74,7 @@ export function userGroupsReducer(state = initialState.groups, action) {
         return {
             ...state,
             removing: false,
-            removed: true,
+            removed: false,
             error: action.error,
         };
 

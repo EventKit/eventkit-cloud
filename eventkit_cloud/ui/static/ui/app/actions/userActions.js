@@ -68,7 +68,7 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     });
 
     return axios({
-        url: `/api/user/${username}`,
+        url: `/api/users/${username}`,
         method: 'PATCH',
         data: { accepted_licenses: acceptedLicenses },
         headers: { 'X-CSRFToken': csrftoken },
@@ -107,15 +107,36 @@ export function getUsers(params) {
         // get the current user information
         const loggedInUser = getState().user.data.user;
         //////// JUST FOR MOCKING THE API /////////////
-        const fakeUsers = [
-            { name: 'admin', email: 'admin@eventkit.dev', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-5', 'uid-6', 'uid-9', 'uid-12', 'uid-15', 'uid-18'] },
-            { name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'John Doe', email: 'john.doe@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-7', 'uid-11', 'uid-13', 'uid-17', 'uid-19'] },
-            { name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['uid-0', 'uid-2', 'uid-1', 'uid-3', 'uid-2', 'uid-3', 'uid-5', 'uid-8', 'uid-9', 'uid-12', 'uid-13', 'uid-14', 'uid-18', 'uid-19', 'uid-20'] },
-            { name: 'User 1', email: 'user1@email.com', groups: ['uid-0', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-10', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'User 2', email: 'user2@email.com', groups: ['uid-1', 'uid-2', 'uid-3', 'uid-6', 'uid-8', 'uid-9', 'uid-14', 'uid-16', 'uid-20'] },
-            { name: 'User 3', email: 'user3@email.com', groups: ['uid-1', 'uid-2', 'uid-4', 'uid-7', 'uid-9', 'uid-11', 'uid-13', 'uid-17', 'uid-20'] },
+        let fakeUsers = [
+            { username: 'admin', name: 'admin', email: 'admin@eventkit.dev', groups: ['id-0', 'id-2', 'id-3', 'id-5', 'id-6', 'id-9', 'id-12', 'id-15', 'id-18'] },
+            { username: 'JaneD', name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'JohnD', name: 'John Doe', email: 'john.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-7', 'id-11', 'id-13', 'id-17', 'id-19'] },
+            { username: 'JoeS', name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['id-0', 'id-2', 'id-1', 'id-3', 'id-2', 'id-3', 'id-5', 'id-8', 'id-9', 'id-12', 'id-13', 'id-14', 'id-18', 'id-19', 'id-20'] },
+            { username: 'U1', name: 'User 1', email: 'user1@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U2', name: 'User 2', email: 'user2@email.com', groups: ['id-1', 'id-2', 'id-3', 'id-6', 'id-8', 'id-9', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U3', name: 'User 3', email: 'user3@email.com', groups: ['id-1', 'id-2', 'id-4', 'id-7', 'id-9', 'id-11', 'id-13', 'id-17', 'id-20'] },
         ];
+
+        console.log(params.split('&'));
+        
+        const split = params.split('&');
+        split.forEach((value) => {
+            if (value.includes('search=')) {
+                const search = value.substring(7);
+                fakeUsers = fakeUsers.filter(user => (
+                    user.username.includes(search)
+                    || user.name.includes(search)
+                    || user.email.includes(search)
+                ));
+            }
+            if (value.includes('group=')) {
+                const group = value.substring(6);
+                fakeUsers = fakeUsers.filter(user => (
+                    user.groups.includes(group)
+                ));
+            }
+        });
+        
 
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
         mock.onGet().reply(200, fakeUsers);
@@ -123,7 +144,7 @@ export function getUsers(params) {
 
         dispatch({ type: actions.FETCHING_USERS });
 
-        const url = params ? `/api/user?${params}` : '/api/user';
+        const url = params ? `/api/users?${params}` : '/api/users';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
 
         return axios({
