@@ -976,7 +976,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-             * GET  All users
+             * GET all users
                 Example:
 
                     [
@@ -991,6 +991,9 @@ class UserDataViewSet(viewsets.GenericViewSet):
                         },
                         "accepted_licenses": {
                           "odbl": true,
+                        },
+                        "groups": {
+                            1,34,56
                         }
                       }
                     ]
@@ -1003,7 +1006,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, username=None):
         """
-             * GET  a user by username
+             GET a user by username
         """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
@@ -1028,7 +1031,24 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-            * get all the groups
+            GET all groups
+
+            Sample result:
+
+                 [
+                    {
+                        "id": 54,
+                        "name": "Omaha 319",
+                        "members": [
+                          "user2",
+                          "admin"
+                        ],
+                        "administrators": [
+                          "admin"
+                        ]
+                      }
+                ]
+
         """
 
         queryset = self.get_queryset()
@@ -1038,7 +1058,14 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-            * create a new group and make the current logged in user in the group
+            create a new group and place  the current logged in user in the group and its administrators.
+
+
+            Sample input:
+
+                {
+                    "name": "Omaha 319"
+                }
 
         """
         response = super(GroupViewSet, self).create(request, *args, **kwargs)
@@ -1061,12 +1088,60 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, id=None, *args, **kwargs):
+        """
+             Change the group's name, members, and admnistrators
+
+
+             Sample input:
+
+                 {
+                    "name": "Omaha 319"
+                    "members": [ "user2", "user3", "admin"],
+                    "administrators": [ "admin" ]
+                 }
+
+         """
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
         group = Group.objects.filter(id=id)[0]
-        currentmembers = [u.username for u in group.user_set.all()]
+
+        # examine list of supplied administrators and adjust data as needed.
+        # Insure that the original  administrator ( as defined by timestamp ) is ALWAYS
+        # included in the administrators list
+
+        groupadministrators = GroupAdministrator.objects.filter(group=group).order_by("created_at")
+        currentadminusers = [ga.user for ga in groupadministrators]
+        logger.info("CURRENT ADMINS %s" % currentadminusers)
+        owneradmin = currentadminusers[0]
+        logger.info("OWNER ADMIN %s" % owneradmin.username)
+
+
+        targetadminusernames   = request.data["administrators"]
+        if not owneradmin.username in targetadminusernames: targetadminusernames.append(owneradmin.username)
+
+        targetadmins  = []
+        for username in targetadminusernames:
+            user = User.objects.filter(username=username)
+            targetadmins.append(user[0])
+
+        logger.info("TARGET ADMINS %s" % targetadmins)
+
+        # Add new users:
+        for user in targetadmins:
+            if not user in currentadminusers:
+                logger.info("*** ADD Admin %s" % user)
+                groupadmin = GroupAdministrator.objects.create(user=user, group=group)
+
+        # Remove users
+        for user in currentadminusers:
+            if not user in targetadmins:
+                for groupadmin in groupadministrators:
+                    if user == groupadmin.user:
+                        logger.info("*** REMOVE  Admin %s" % user)
+                        groupadmin.delete()
+
+        # member sets are easier and atomic
+
         targetmembers = request.data["members"]
-        logger.info("target members ")
-        logger.info(targetmembers)
         set = [ User.objects.filter(username=username)[0] for username in targetmembers]
         group.user_set.set(set)
 
