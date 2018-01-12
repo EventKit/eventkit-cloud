@@ -26,17 +26,17 @@ export class LoginPage extends React.Component {
                 width: '100%',
             },
             container: {
-                margin: mobile && this.context.config.LOGIN_DISCLAIMER ? '0px auto' : `${(window.innerHeight - 95 - 420) / 2}px auto`,
-                maxWidth: 1200,
+                position: 'relative',
+                display: 'flex',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                minHeight: '100%',
             },
             paperContainer: {
-                width: '50%',
-                margin: '0px auto',
+                flex: '1 1 50%',
                 maxWidth: '600px',
-                verticalAlign: 'middle',
-                display: mobile || !this.context.config.LOGIN_DISCLAIMER ? 'block' : 'inline-block',
                 padding: '15px',
-                minWidth: '360px',
+                alignSelf: 'center',
             },
             disclaimerHeading: {
                 color: '#fff',
@@ -44,15 +44,21 @@ export class LoginPage extends React.Component {
                 marginBottom: '5px',
                 textAlign: 'center',
             },
-            browserText: {
+            footerText: {
+                color: 'grey',
+                padding: '5px 10px 5px',
+                opacity: 0.5,
+                fontSize: '9px',
+                textAlign: 'right',
+            },
+            desktopFooter: {
                 position: 'absolute',
                 bottom: '0px',
                 right: '0px',
-                display: 'inline-block',
-                color: 'grey',
-                padding: '5px',
-                opacity: 0.5,
-                fontSize: '9px',
+            },
+            mobileFooter: {
+                flex: '1 1 100%',
+                alignSelf: 'flex-end',
             },
         };
 
@@ -90,22 +96,25 @@ export class LoginPage extends React.Component {
                                     </CustomScrollbar>
                                 </Paper>
                             </div>
-                            : null}
+                            : null
+                        }
+                        <div style={mobile && this.context.config.LOGIN_DISCLAIMER ? styles.mobileFooter : styles.desktopFooter}>
+                            { version ?
+                                <div
+                                    style={styles.footerText}
+                                    className="qa-LoginPage-version"
+                                >
+                                    EventKit Version {version}
+                                </div>
+                                :
+                                null
+                            }
+                            <div style={styles.footerText} className="qa-LoginPage-browser-text">
+                                Supported Browsers: Chrome, Firefox, Opera, Edge, and IE versions 10 or newer
+                            </div>
+                        </div>
                     </div>
                 </CustomScrollbar>
-                { version ?
-                    <div
-                        style={{ ...styles.browserText, bottom: '17px' }}
-                        className="qa-LoginPage-version"
-                    >
-                        EventKit Version {version}
-                    </div>
-                    :
-                    null
-                }
-                <div style={styles.browserText} className="qa-LoginPage-browser-text">
-                    Supported Browsers: Chrome, Firefox, Opera, Edge, and IE versions 10 or newer
-                </div>
             </div>
         );
     }
