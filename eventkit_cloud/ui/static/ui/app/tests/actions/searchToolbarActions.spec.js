@@ -148,4 +148,24 @@ describe('async searchToolbar actions', () => {
             })
         
     });
+    it('should fail and return an empty string if it cant connect', () => {
+      store = mockStore({ geocode: [] })
+      let fail = new MockAdapter(axios, {delayResponse: 1000});
+      fail.onGet('/convert').reply(400, 'ERROR: Invalid MGRS String');
+      
+
+      const expectedActions = [
+          {type: 'FETCHING_GEOCODE'},
+          {type: 'GEOCODE_ERROR', error: new Error('Request failed with status code 400') },
+          {type: 'RECEIVED_GEOCODE', data: []},
+          
+      ]
+
+      return store.dispatch(actions.getGeocode('18SJT9710003009'))
+          .then(() => {
+              expect(store.getActions()).toEqual(expectedActions)
+          })
+      
+  });
+    
 });
