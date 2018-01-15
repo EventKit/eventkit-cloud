@@ -1,6 +1,7 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import MockAdapter from 'axios-mock-adapter'; /// JUST FOR MOCKING ///
 import actions from './actionTypes';
 
 
@@ -79,10 +80,10 @@ export const patchUser = (acceptedLicenses, username) => (dispatch) => {
     }).catch((error) => {
         dispatch({
             type: actions.PATCHING_USER_ERROR,
-            error: error.response.data,
+            error,
         });
     });
-};
+}
 
 export const userActive = () => (dispatch) => {
     return axios('/user_active', {method: 'GET'}).then((response) => {
@@ -105,6 +106,40 @@ export function getUsers(params) {
     return (dispatch, getState) => {
         // get the current user information
         const loggedInUser = getState().user.data.user;
+        //////// JUST FOR MOCKING THE API /////////////
+        let fakeUsers = [
+            { username: 'admin', name: 'admin', email: 'admin@eventkit.dev', groups: ['id-0', 'id-2', 'id-3', 'id-5', 'id-6', 'id-9', 'id-12', 'id-15', 'id-18'] },
+            { username: 'JaneD', name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'JohnD', name: 'John Doe', email: 'john.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-7', 'id-11', 'id-13', 'id-17', 'id-19'] },
+            { username: 'JoeS', name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['id-0', 'id-2', 'id-1', 'id-3', 'id-2', 'id-3', 'id-5', 'id-8', 'id-9', 'id-12', 'id-13', 'id-14', 'id-18', 'id-19', 'id-20'] },
+            { username: 'U1', name: 'User 1', email: 'user1@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U2', name: 'User 2', email: 'user2@email.com', groups: ['id-1', 'id-2', 'id-3', 'id-6', 'id-8', 'id-9', 'id-14', 'id-16', 'id-20'] },
+            { username: 'U3', name: 'User 3', email: 'user3@email.com', groups: ['id-1', 'id-2', 'id-4', 'id-7', 'id-9', 'id-11', 'id-13', 'id-17', 'id-20'] },
+        ];
+
+        console.log(params);
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (key === 'search') {
+                const search = value;
+                fakeUsers = fakeUsers.filter(user => (
+                    user.username.includes(search)
+                    || user.name.includes(search)
+                    || user.email.includes(search)
+                ));
+            }
+            if (key === 'group') {
+                const group = value;
+                fakeUsers = fakeUsers.filter(user => (
+                    user.groups.includes(group)
+                ));
+            }
+        });
+        
+
+        const mock = new MockAdapter(axios, { delayResponse: 3000 });
+        mock.onGet().reply(200, fakeUsers);
+        //////////////////////////////////////////////////////////////
 
         dispatch({ type: actions.FETCHING_USERS });
 
@@ -117,10 +152,12 @@ export function getUsers(params) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
             // filter out the current user from the list
-            const users = response.data.filter(user => (user.username !== loggedInUser.username));
+            const users = response.data.filter(user => (user.email !== loggedInUser.email));
             dispatch({ type: actions.FETCHED_USERS, users });
+            mock.restore();
         }).catch((error) => {
             dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
+            mock.restore();
         });
     };
 }

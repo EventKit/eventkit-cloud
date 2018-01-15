@@ -29,12 +29,14 @@ import {
     createGroup,
     addGroupUsers,
     removeGroupUsers,
-} from '../../actions/userGroupsActions';
-import { getUsers } from '../../actions/userActions';
+} from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
+import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 
 export class UserGroupsPage extends Component {
     constructor(props) {
         super(props);
+        this.onDrawerIconMouseOver = this.onDrawerIconMouseOver.bind(this);
+        this.onDrawerIconMouseOut = this.onDrawerIconMouseOut.bind(this);
         this.makeUserRequest = this.makeUserRequest.bind(this);
         this.toggleDrawer = this.toggleDrawer.bind(this);
         this.handleSelectAll = this.handleSelectAll.bind(this);
@@ -64,8 +66,6 @@ export class UserGroupsPage extends Component {
         this.hidePageInfoDialog = this.hidePageInfoDialog.bind(this);
         this.showSharedInfoDialog = this.showSharedInfoDialog.bind(this);
         this.hideSharedInfoDialog = this.hideSharedInfoDialog.bind(this);
-        this.onDrawerIconMouseOver = this.onDrawerIconMouseOver.bind(this);
-        this.onDrawerIconMouseOut = this.onDrawerIconMouseOut.bind(this);
         this.state = {
             drawerOpen: !(window.innerWidth < 768),
             selectedUsers: [],
@@ -110,7 +110,7 @@ export class UserGroupsPage extends Component {
         }
         if (nextProps.groups.deleted && !this.props.groups.deleted) {
             this.props.getGroups();
-            this.setState({ drawerSelection: 'all' }, this.makeUserRequest());
+            this.setState({ drawerSelection: 'all' }, this.makeUserRequest);
         }
         if (nextProps.groups.error && !this.props.groups.error) {
             this.showErrorDialog(nextProps.groups.error);
@@ -120,37 +120,49 @@ export class UserGroupsPage extends Component {
         }
     }
 
+    onDrawerIconMouseOver() {
+        this.setState({ drawerIconHover: true });
+    }
+
+    onDrawerIconMouseOut() {
+        this.setState({ drawerIconHover: false });
+    }
+
     makeUserRequest() {
-        let params = `ordering=${this.state.sort}`;
-        params += this.state.search ? `&search=${this.state.search}` : '';
+        const params = {};
+        
+        params.ordering = this.state.sort;
+        
+        if (this.state.search) { params.search = this.state.search; }
+
         switch (this.state.drawerSelection) {
-        case 'all': {
-            // just get all users
-            break;
-        }
-        case 'new': {
-            // get users newer than 2 weeks
-            const date = new Date();
-            date.setDate(date.getDate() - 14);
-            const dateString = date.toISOString().substring(0, 10);
-            params += `&newer_than=${dateString}`;
-            break;
-        }
-        case 'ungrouped': {
-            // get users not in a group
-            params += '&ungrouped';
-            break;
-        }
-        case 'shared': {
-            // not sure what 'most shared' is
-            params += '&shared';
-            break;
-        }
-        default: {
-            // get users in a specific group
-            params += `&group=${this.state.drawerSelection}`;
-            break;
-        }
+            case 'all': {
+                // just get all users
+                break;
+            }
+            case 'new': {
+                // get users newer than 2 weeks
+                const date = new Date();
+                date.setDate(date.getDate() - 14);
+                const dateString = date.toISOString().substring(0, 10);
+                params.newer_than = dateString;
+                break;
+            }
+            case 'ungrouped': {
+                // get users not in a group
+                params.ungrouped = true;
+                break;
+            }
+            case 'shared': {
+                // not sure what 'most shared' is
+                params.most_shared = true;
+                break;
+            }
+            default: {
+                // get users in a specific group
+                params.group = this.state.drawerSelection;
+                break;
+            }
         }
         console.log(params);
         this.props.getUsers(params);
@@ -302,7 +314,9 @@ export class UserGroupsPage extends Component {
     handleDrawerSelectionChange(e, v) {
         const target = e.target.tagName.toLowerCase();
         if (target === 'path' || target === 'svg') {
-            // if the clicked element is path or svg we need to ignore and just handle delete group
+            // if the clicked element is path or svg we need to ignore
+            // and just handle delete group.
+            // YES this is a weird way to do it, but MUI was putting up a fight
             return;
         }
         this.setState({ drawerSelection: v }, this.makeUserRequest);
@@ -330,14 +344,6 @@ export class UserGroupsPage extends Component {
 
     hidePageInfoDialog() {
         this.setState({ showPageInfo: false });
-    }
-
-    onDrawerIconMouseOver() {
-        this.setState({ drawerIconHover: true });
-    }
-
-    onDrawerIconMouseOut() {
-        this.setState({ drawerIconHover: false });
     }
 
     render() {
@@ -540,6 +546,7 @@ export class UserGroupsPage extends Component {
                 <div style={styles.body}>
                     <CustomScrollbar
                         style={{ height: bodyHeight, width: '100%' }}
+                        className="qa-UserGroupsPage-CustomScrollbar"
                     >
                         <div style={styles.bodyContent} className="qa-UserGroupsPage-bodyContent">
                             <div style={styles.fixedHeader} className="qa-UserGroupsPage-fixedHeader">
@@ -751,8 +758,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getGroups: params => (
-            dispatch(getGroups(params))
+        getGroups: () => (
+            dispatch(getGroups())
         ),
         deleteGroup: id => (
             dispatch(deleteGroup(id))
