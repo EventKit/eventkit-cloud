@@ -29,10 +29,7 @@ export class UserTableHeaderColumn extends Component {
 
     handleNewGroupClick() {
         this.handleClose();
-        const selected = this.props.selectedUsers.map(ix => (
-            this.props.users[ix].username
-        ));
-        this.props.handleNewGroupClick(selected);
+        this.props.handleNewGroupClick(this.props.selectedUsers);
     }
 
     render() {
@@ -154,10 +151,9 @@ export class UserTableHeaderColumn extends Component {
 }
 
 UserTableHeaderColumn.propTypes = {
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     sortValue: PropTypes.string.isRequired,
     handleSortChange: PropTypes.func.isRequired,
-    selectedUsers: PropTypes.arrayOf(PropTypes.number).isRequired,
+    selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
     selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupsLoading: PropTypes.bool.isRequired,

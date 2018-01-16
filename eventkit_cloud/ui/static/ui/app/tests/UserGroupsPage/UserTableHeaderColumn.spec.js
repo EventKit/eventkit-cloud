@@ -20,7 +20,7 @@ describe('UserTableHeaderColumn component', () => {
             ],
             sortValue: 'user__username',
             handleSortChange: () => {},
-            selectedUsers: [0],
+            selectedUsers: [{ name: 'user2', username: 'user2' }],
             selectedGroups: ['group1'],
             groups: [
                 { name: 'group1', id: 'group1' },
@@ -56,7 +56,7 @@ describe('UserTableHeaderColumn component', () => {
         expect(wrapper.find('.qa-UserTableHeaderColumn-IconButton-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: [0] });
         expect(wrapper.find('.qa-UserTableHeaderColumn-IconButton-options')).toHaveLength(1);
-    })
+    });
 
     it('handleOpen should prevent default and set state', () => {
         const fakeEvent = { preventDefault: sinon.spy(), currentTarget: null };
@@ -88,7 +88,7 @@ describe('UserTableHeaderColumn component', () => {
         wrapper.instance().handleNewGroupClick();
         expect(closeSpy.calledOnce).toBe(true);
         expect(props.handleNewGroupClick.calledOnce).toBe(true);
-        expect(props.handleNewGroupClick.calledWith([props.users[0].username])).toBe(true);
+        expect(props.handleNewGroupClick.calledWith(props.selectedUsers)).toBe(true);
         closeSpy.restore();
     });
 });

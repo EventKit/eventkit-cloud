@@ -93,6 +93,21 @@ export class UserGroupsPage extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.users.fetched && !this.props.users.fetched) {
+            // if we have new props.user array and there are selectedUsers
+            // we need to create a new selectedUsers array, removing any users
+            // not in the new props.users array
+            if (this.state.selectedUsers.length) {
+                const fixedSelection = [];
+                this.state.selectedUsers.forEach((user) => {
+                    const newUser = nextProps.users.users.find(nextUser => nextUser.username === user.username);
+                    if (newUser) {
+                        fixedSelection.push(newUser);
+                    }
+                });
+                this.setState({ selectedUsers: fixedSelection });
+            }
+        }
         if (nextProps.groups.added && !this.props.groups.added) {
             this.makeUserRequest();
             this.props.getGroups();
@@ -174,10 +189,8 @@ export class UserGroupsPage extends Component {
 
     handleSelectAll(selected) {
         if (selected === 'all') {
-            // if all are selected we need to set selected state
-            // to an array containing all table indices
-            const allUsers = Array.from(new Array(this.props.users.users.length), (val, ix) => ix);
-            this.setState({ selectedUsers: allUsers });
+            // if all are selected we need to set selected state with all
+            this.setState({ selectedUsers: [...this.props.users.users] });
         } else {
             // if all are deselected we need to set selected to an empty array
             this.setState({ selectedUsers: [] });
@@ -185,8 +198,12 @@ export class UserGroupsPage extends Component {
     }
 
     handleIndividualSelect(selected) {
-        // update the state with all selected indices
-        this.setState({ selectedUsers: selected });
+        // update the state with all selected users
+        const users = [];
+        selected.forEach((ix) => {
+            users.push(this.props.users.users[ix]);
+        });
+        this.setState({ selectedUsers: users });
     }
 
     handleSearchKeyDown(event) {
@@ -223,30 +240,26 @@ export class UserGroupsPage extends Component {
     }
 
     handleCreateSave() {
-        this.props.createGroup(this.state.createInput, this.state.createUsers);
+        const users = this.state.createUsers.map(user => user.username);
+        this.props.createGroup(this.state.createInput, users);
         this.handleCreateClose();
     }
 
-    handleNewGroupClick(rows) {
-        if (rows) {
-            this.setState({ createUsers: rows instanceof Array ? rows : [rows] });
+    handleNewGroupClick(users) {
+        if (users.length) {
+            this.setState({ createUsers: users });
         }
         this.handleCreateOpen();
     }
 
-    handleSingleUserChange(group, username) {
+    handleSingleUserChange(group, user) {
         // if user is not in group, add them. Otherwise remove them
-        const adding = this.props.users.users.find((user) => {
-            if (user.username === username) {
-                return !user.groups.includes(group.id);
-            }
-            return false;
-        });
+        const adding = !user.groups.includes(group.id);
 
         if (!adding) {
-            this.props.removeUsers(group, [username]);
+            this.props.removeUsers(group, [user.username]);
         } else {
-            this.props.addUsers(group, [username]);
+            this.props.addUsers(group, [user.username]);
         }
     }
 
@@ -254,8 +267,7 @@ export class UserGroupsPage extends Component {
         // assume we are removing all the selected users
         let adding = false;
         const users = [];
-        this.state.selectedUsers.forEach((ix) => {
-            const user = this.props.users.users[ix];
+        this.state.selectedUsers.forEach((user) => {
             if (!adding && !user.groups.includes(group.id)) {
                 // if at least one user is not already a member we want to add all the users
                 adding = true;
@@ -294,7 +306,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        this.props.removeUsers(this.state.targetGroup, [this.props.user.data.user.username]);
+        this.props.removeUsers(this.state.targetGroup, [this.props.user.username]);
         this.handleLeaveClose();
     }
 
@@ -399,12 +411,6 @@ export class UserGroupsPage extends Component {
                 margin: 'auto',
                 position: 'relative',
             },
-            drawerButton: {
-                fill: 'white',
-                height: '35px',
-                marginLeft: '15px',
-                cursor: 'pointer',
-            },
             fixedHeader: {
                 width: 'inherit',
                 position: 'sticky',
@@ -472,49 +478,78 @@ export class UserGroupsPage extends Component {
                 fill: '#CE4427',
                 verticalAlign: 'bottom',
             },
+            drawerButton: {
+                width: '35px',
+                height: '35px',
+                lineHeight: '35px',
+                position: 'absolute',
+                right: this.state.drawerOpen ? '250px' : '0px',
+                top: '15px',
+                textAlign: 'center',
+                backgroundColor: '#e8eef5',
+                transitionProperty: 'right',
+                transitionDuration: '450ms',
+                transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',                                        
+            },
+            drawerIcon: {
+                fill: '#4598bf',
+                height: '35px',
+                width: '30px',
+            },
         };
 
-        const rows = this.props.users.users.map((user, ix) => (
-            // we should be filtering out the logged in user here
-            <TableRow
-                key={user.username}
-                style={styles.tableRow}
-                selected={this.state.selectedUsers.includes(ix)}
-                rowNumber={ix}
-            >
-                <UserTableRowColumn
-                    user={user}
-                    groups={this.props.groups.groups}
-                    groupsLoading={this.state.usersUpdating.includes(user.username)}
-                    handleGroupItemClick={this.handleSingleUserChange}
-                    handleNewGroupClick={this.handleNewGroupClick}
-                />
-            </TableRow>
+        // split the user group into groups owned by the logged in user,
+        // and groups shared with logged in user
+        const ownedGroups = this.props.groups.groups.filter(group => (
+            group.administrators.includes(this.props.user.username)
         ));
+        const sharedGroups = this.props.groups.groups.filter(group => (
+            !group.administrators.includes(this.props.user.username)
+        ));
+
+        // for groups owned by the logged in user, remove their name from the list of members
+        ownedGroups.forEach((group) => {
+            const ix = group.members.indexOf(this.props.user.username);
+            if (ix > -1) {
+                group.members.splice(ix, 1);
+            }
+        });
 
         // if multiple users are selected, find any groups they have in common
         // so that the table header can know if a selection of users should be
         // added to or removed from a group
         const commonGroups = [];
         if (this.state.selectedUsers.length) {
-            this.props.groups.groups.forEach((group) => {
-                if (group.owners.find(owner => owner === this.props.user.data.user.username)) {
-                    const allSelectedIncluded = this.state.selectedUsers.every((ix) => {
-                        if (this.props.users.users[ix].groups.includes(group.id)) {
-                            return true;
-                        }
-                        return false;
-                    });
-                    if (allSelectedIncluded) {
-                        commonGroups.push(group.id);
+            ownedGroups.forEach((group) => {
+                const allSelectedIncluded = this.state.selectedUsers.every((user) => {
+                    if (user.groups.includes(group.id)) {
+                        return true;
                     }
+                    return false;
+                });
+                if (allSelectedIncluded) {
+                    commonGroups.push(group.id);
                 }
             });
         }
 
-        const drawerIconProps = {
-            style: { fill: '#4598bf', height: '35px', width: '30px' },
-        };
+        const rows = this.props.users.users.map((user, ix) => (
+            // we should be filtering out the logged in user here
+            <TableRow
+                key={user.username}
+                style={styles.tableRow}
+                selected={this.state.selectedUsers.includes(user)}
+                rowNumber={ix}
+            >
+                <UserTableRowColumn
+                    user={user}
+                    groups={ownedGroups}
+                    groupsLoading={this.state.usersUpdating.includes(user.username)}
+                    handleGroupItemClick={this.handleSingleUserChange}
+                    handleNewGroupClick={this.handleNewGroupClick}
+                />
+            </TableRow>
+        ));
 
         return (
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
@@ -562,30 +597,21 @@ export class UserGroupsPage extends Component {
                                     className="qa-UserGroupsPage-search"
                                 />
                                 {mobile ?
-                                    <div style={{
-                                        width: '35px',
-                                        height: '35px',
-                                        lineHeight: '35px',
-                                        position: 'absolute',
-                                        right: this.state.drawerOpen ? '250px' : '0px',
-                                        top: '15px',
-                                        textAlign: 'center',
-                                        backgroundColor: '#e8eef5',
-                                        transitionProperty: 'right',
-                                        transitionDuration: '450ms',
-                                        transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',                                        
-                                    }}
-                                    onClick={this.toggleDrawer}
-                                    onMouseEnter={this.onDrawerIconMouseOver}
-                                    onMouseLeave={this.onDrawerIconMouseOut}
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        style={styles.drawerButton}
+                                        onClick={this.toggleDrawer}
+                                        onMouseEnter={this.onDrawerIconMouseOver}
+                                        onMouseLeave={this.onDrawerIconMouseOut}
                                     >
                                         {this.state.drawerIconHover ?
                                             this.state.drawerOpen ?
-                                                <ArrowRight {...drawerIconProps} />
+                                                <ArrowRight style={styles.drawerIcon} />
                                                 :
-                                                <ArrowLeft {...drawerIconProps} />
+                                                <ArrowLeft style={styles.drawerIcon} />
                                             :
-                                            <MenuIcon {...drawerIconProps} />
+                                            <MenuIcon style={styles.drawerIcon} />
                                         }
                                     </div>
                                     :
@@ -606,12 +632,11 @@ export class UserGroupsPage extends Component {
                                     >
                                         <TableRow>
                                             <UserTableHeaderColum
-                                                users={this.props.users.users}
                                                 selectedUsers={this.state.selectedUsers}
                                                 selectedGroups={commonGroups}
                                                 sortValue={this.state.sort}
                                                 handleSortChange={this.handleSortChange}
-                                                groups={this.props.groups.groups}
+                                                groups={ownedGroups}
                                                 groupsLoading={!!this.state.usersUpdating.length}
                                                 handleGroupItemClick={this.handleMultiUserChange}
                                                 handleNewGroupClick={this.handleNewGroupClick}
@@ -642,8 +667,8 @@ export class UserGroupsPage extends Component {
                     selectedValue={this.state.drawerSelection}
                     onSelectionChange={this.handleDrawerSelectionChange}
                     open={this.state.drawerOpen || !mobile}
-                    groups={this.props.groups.groups}
-                    user={this.props.user.data.user}
+                    ownedGroups={ownedGroups}
+                    sharedGroups={sharedGroups}
                     usersCount={this.props.users.total}
                     className="qa-UserGroupsPage-drawer"
                     onNewGroupClick={this.handleCreateOpen}
@@ -719,7 +744,12 @@ export class UserGroupsPage extends Component {
 UserGroupsPage.propTypes = {
     user: PropTypes.object.isRequired,
     groups: PropTypes.shape({
-        groups: PropTypes.arrayOf(PropTypes.object),
+        groups: PropTypes.arrayOf(PropTypes.shape({
+            id: PropTypes.string,
+            name: PropTypes.string,
+            members: PropTypes.arrayOf(PropTypes.string),
+            administrators: PropTypes.arrayOf(PropTypes.string),
+        })),
         cancelSource: PropTypes.object,
         fetching: PropTypes.bool,
         fetched: PropTypes.bool,
@@ -750,7 +780,7 @@ UserGroupsPage.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        user: state.user,
+        user: state.user.data.user,
         groups: state.groups,
         users: state.users,
     };

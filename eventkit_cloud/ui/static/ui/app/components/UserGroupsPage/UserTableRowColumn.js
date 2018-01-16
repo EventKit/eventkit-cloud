@@ -29,12 +29,11 @@ export class UserTableRowColumn extends Component {
 
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick(this.props.user.username);
+        this.props.handleNewGroupClick([this.props.user]);
     }
 
     handleGroupItemClick(group) {
-        const { username } = this.props.user;
-        this.props.handleGroupItemClick(group, username);
+        this.props.handleGroupItemClick(group, this.props.user);
     }
 
     render() {

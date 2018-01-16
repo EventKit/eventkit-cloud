@@ -81,7 +81,7 @@ describe('UserTableRowColumn component', () => {
         wrapper.instance().handleNewGroupClick();
         expect(closeSpy.calledOnce).toBe(true);
         expect(props.handleNewGroupClick.calledOnce).toBe(true);
-        expect(props.handleNewGroupClick.calledWith(props.user.username)).toBe(true);
+        expect(props.handleNewGroupClick.calledWith([props.user])).toBe(true);
         closeSpy.restore();
     });
 
@@ -92,6 +92,6 @@ describe('UserTableRowColumn component', () => {
         const fakeGroup = { name: 'group1', id: 'group1' };
         wrapper.instance().handleGroupItemClick(fakeGroup);
         expect(props.handleGroupItemClick.calledOnce).toBe(true);
-        expect(props.handleGroupItemClick.calledWith(fakeGroup, props.user.username)).toBe(true);
+        expect(props.handleGroupItemClick.calledWith(fakeGroup, props.user)).toBe(true);
     });
 });

@@ -134,6 +134,40 @@ export function getUsers(params) {
                     user.groups.includes(group)
                 ));
             }
+
+            if (key === 'ordering') {
+                if (value === 'user__username') {
+                    fakeUsers = fakeUsers.sort((a, b) => {
+                        const nameA = a.name.toUpperCase();
+                        const nameB = b.name.toUpperCase();
+
+                        if (nameA < nameB) {
+                            return -1;
+                        }
+
+                        if (nameA > nameB) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                }
+
+                if (value === '-user__username') {
+                    fakeUsers = fakeUsers.sort((a, b) => {
+                        const nameA = a.name.toUpperCase();
+                        const nameB = b.name.toUpperCase();
+
+                        if (nameA > nameB) {
+                            return -1;
+                        }
+
+                        if (nameA < nameB) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                }
+            }
         });
         
 

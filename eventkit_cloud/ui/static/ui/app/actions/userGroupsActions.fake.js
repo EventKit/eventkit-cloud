@@ -19,7 +19,7 @@ export function getGroups(params) {
         for (let i = 0; i < 21; i++) {
             fakeGroups.push({
                 name: `Group ${i}`,
-                owners: i === 18 ? [fakeUsers[1].username] : [fakeUsers[0].username],
+                administrators: i === 18 ? [fakeUsers[1].username] : [fakeUsers[0].username],
                 id: `id-${i}`,
                 members: fakeUsers.filter(user => user.groups.includes(`id-${i}`)).map(user => (user.username)),
             });

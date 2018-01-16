@@ -10,28 +10,23 @@ import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 describe('GroupsDrawer component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
-    const fakeGroups = [
-        {
-            id: '1',
-            name: 'group1',
-            members: ['user1', 'user2'],
-            owners: ['user1'],
-        },
-        {
-            id: '2',
-            name: 'group2',
-            members: ['user1', 'user2'],
-            owners: ['user2'],
-        },
-    ];
-
     const getProps = () => (
         {
             selectedValue: '',
             onSelectionChange: () => {},
             open: true,
-            groups: [...fakeGroups],
-            user: { name: 'user1', username: 'user1' },
+            ownedGroups: [{
+                id: '1',
+                name: 'group1',
+                members: ['user1', 'user2'],
+                administrators: ['user1'],
+            }],
+            sharedGroups: [{
+                id: '2',
+                name: 'group2',
+                members: ['user1', 'user2'],
+                administrators: ['user2'],
+            }],
             usersCount: 2,
             onNewGroupClick: () => {},
             onSharedInfoClick: () => {},
@@ -69,7 +64,7 @@ describe('GroupsDrawer component', () => {
         expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
         wrapper.find('.qa-GroupsDrawer-groupItem').find(IndeterminateIcon).simulate('click');
         expect(props.onDeleteGroupClick.calledOnce).toBe(true);
-        expect(props.onDeleteGroupClick.calledWith(props.groups[0])).toBe(true);
+        expect(props.onDeleteGroupClick.calledWith(props.ownedGroups[0])).toBe(true);
     });
 
     it('clicking on indeterminate icon should call leave group', () => {
@@ -80,6 +75,6 @@ describe('GroupsDrawer component', () => {
         expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
         wrapper.find('.qa-GroupsDrawer-sharedGroupItem').find(IndeterminateIcon).simulate('click');
         expect(props.onLeaveGroupClick.calledOnce).toBe(true);
-        expect(props.onLeaveGroupClick.calledWith(props.groups[1])).toBe(true);
+        expect(props.onLeaveGroupClick.calledWith(props.sharedGroups[0])).toBe(true);
     });
 });

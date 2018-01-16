@@ -58,17 +58,6 @@ export class GroupsDrawer extends Component {
             },
         };
 
-        const myGroups = [];
-        const sharedGroups = [];
-
-        this.props.groups.forEach((group) => {
-            if (group.owners.find(owner => owner === this.props.user.username)) {
-                myGroups.push(group);
-            } else {
-                sharedGroups.push(group);
-            }
-        });
-
         return (
             <Drawer
                 width={250}
@@ -124,7 +113,7 @@ export class GroupsDrawer extends Component {
                                 className="qa-GroupsDrawer-addGroupIcon"
                             />
                         </span>
-                        {myGroups.map(group => (
+                        {this.props.ownedGroups.map(group => (
                             <MenuItem
                                 key={group.name}
                                 value={`${group.id}`}
@@ -159,7 +148,7 @@ export class GroupsDrawer extends Component {
                                 className="qa-GroupsDrawer-sharedGroupsInfoIcon"
                             />
                         </span>
-                        {sharedGroups.map(group => (
+                        {this.props.sharedGroups.map(group => (
                             <MenuItem
                                 key={group.name}
                                 primaryText={
@@ -191,16 +180,18 @@ GroupsDrawer.propTypes = {
     selectedValue: PropTypes.string.isRequired,
     onSelectionChange: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
+    ownedGroups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
-        owners: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
-    user: PropTypes.shape({
+    sharedGroups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
         name: PropTypes.string,
-        username: PropTypes.string,
-    }).isRequired,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
     usersCount: PropTypes.number.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
     onSharedInfoClick: PropTypes.func.isRequired,
