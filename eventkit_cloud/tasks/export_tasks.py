@@ -1052,7 +1052,7 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
         if TaskStates[result_status] != TaskStates.SUCCESS:
             export_provider_task.status = TaskStates.INCOMPLETE.value
         else:
-            export_provider_task.status = TaskStates.SUCCESS.value
+            export_provider_task.status = TaskStates.COMPLETED.value
 
         export_provider_task.finished_at = timezone.now()
         export_provider_task.save()
@@ -1409,16 +1409,16 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
             export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
 
-    if error:
-        finalize_export_provider_task(
-            export_provider_task_uid=export_provider_task_uid,
-            status=TaskStates.INCOMPLETE.value
-        )
-    else:
-        finalize_export_provider_task(
-            export_provider_task_uid=export_provider_task_uid,
-            status=TaskStates.CANCELED.value
-        )
+    #if error:
+    #    finalize_export_provider_task(
+    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
+    #        status=TaskStates.INCOMPLETE.value
+    #    )
+    #else:
+    #    finalize_export_provider_task(
+    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
+    #        status=TaskStates.CANCELED.value
+    #    )
 
     return result
 

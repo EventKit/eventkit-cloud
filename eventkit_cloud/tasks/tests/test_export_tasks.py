@@ -367,16 +367,18 @@ class TestExportTasks(ExportTaskBase):
         celery_uid = str(uuid.uuid4())
         # assume task is running
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export')
-        ExportTaskRecord.objects.create(export_provider_task=export_provider_task, celery_uid=celery_uid,
-                                        status=TaskStates.RUNNING.value, name=shp_export_task.name)
+        test_export_task_record = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
+                                                                  celery_uid=celery_uid,
+                                                                  status=TaskStates.RUNNING.value,
+                                                                  name=shp_export_task.name)
         try:
             raise ValueError('some unexpected error')
         except ValueError as e:
             exc = e
             exc_info = sys.exc_info()
         einfo = ExceptionInfo(exc_info=exc_info)
-        shp_export_task.on_failure(exc, task_id=celery_uid, einfo=einfo,
-                                   args={}, kwargs={'run_uid': str(self.run.uid)})
+        shp_export_task.task_failure(exc, task_id=test_export_task_record.uid, einfo=einfo,
+                                     args={}, kwargs={'run_uid': str(self.run.uid)})
         task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         exception = task.exceptions.all()[0]
@@ -636,8 +638,9 @@ class TestExportTasks(ExportTaskBase):
 
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
-        finalize_export_provider_task.run(run_uid=self.run.uid, export_provider_task_uid=export_provider_task.uid,
-                                                run_dir=run_dir, status=TaskStates.COMPLETED.value)
+        finalize_export_provider_task.run(result={'status': TaskStates.SUCCESS.value}, run_uid=self.run.uid,
+                                          export_provider_task_uid=export_provider_task.uid,
+                                          run_dir=run_dir, status=TaskStates.COMPLETED.value)
         export_provider_task.refresh_from_db()
         self.assertEqual(export_provider_task.status, TaskStates.COMPLETED.value)
 
