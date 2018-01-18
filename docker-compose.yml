@@ -160,6 +160,10 @@ services:
         - "${SITE_NAME}:${SITE_IP}"
       #if wishing to use the dev server uncomment this or run it via the command line
       # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
+  redis:
+    image: redis:3.2.11
+    expose:
+      - "6379"
 volumes:
     postgis_database:
 
