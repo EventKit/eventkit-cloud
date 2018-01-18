@@ -260,7 +260,7 @@ if os.environ.get("MEMCACHED"):
             'LOCATION': os.environ.get("MEMCACHED"),
         }
     }
-elif os.environ.get("REDIS"):
+elif os.environ.get("REDIS_URL"):
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",

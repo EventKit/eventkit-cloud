@@ -168,7 +168,7 @@ services:
     expose:
       - "6379"
     environment:
-      - REDIS="redis_url: https://redis:6379"
+      - REDIS_URL=https://redis:6379
 volumes:
     postgis_database:
 
