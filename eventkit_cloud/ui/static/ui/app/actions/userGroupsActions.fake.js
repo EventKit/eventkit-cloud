@@ -7,7 +7,7 @@ export function getGroups(params) {
     return (dispatch, getState) => {
         //////// JUST FOR MOCKING THE API /////////////
         const fakeUsers = [
-            { username: 'admin', name: 'admin', email: 'admin@eventkit.dev', groups: ['id-0', 'id-2', 'id-3', 'id-5', 'id-6', 'id-9', 'id-12', 'id-15', 'id-18'] },
+            { username: 'admin', name: 'admin', email: 'admin@eventkit.dev', groups: ['id-18'] },
             { username: 'JaneD', name: 'Jane Doe', email: 'jane.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-8', 'id-10', 'id-14', 'id-16', 'id-20'] },
             { username: 'JohnD', name: 'John Doe', email: 'john.doe@email.com', groups: ['id-0', 'id-2', 'id-3', 'id-6', 'id-7', 'id-11', 'id-13', 'id-17', 'id-19'] },
             { username: 'JoeS', name: 'Joe Shmo', email: 'joe.shmo@email.com', groups: ['id-0', 'id-2', 'id-1', 'id-3', 'id-2', 'id-3', 'id-5', 'id-8', 'id-9', 'id-12', 'id-13', 'id-14', 'id-18', 'id-19', 'id-20'] },
@@ -18,14 +18,15 @@ export function getGroups(params) {
         const fakeGroups = [];
         for (let i = 0; i < 21; i++) {
             fakeGroups.push({
-                name: `Group ${i}`,
+                name: i == 1 ? `Group ${i} with a really long name that you will need to truncate ya fool` : `Group ${i}`,
                 administrators: i === 18 ? [fakeUsers[1].username] : [fakeUsers[0].username],
                 id: `id-${i}`,
                 members: fakeUsers.filter(user => user.groups.includes(`id-${i}`)).map(user => (user.username)),
             });
         }
 
-        const mock = new MockAdapter(axios, { delayResponse: 3000 });
+        const fakeAxios = axios.create();
+        const mock = new MockAdapter(fakeAxios, { delayResponse: 3000 });
         mock.onGet('/api/groups').reply(200, fakeGroups);
         //////////////////////////////////////////////////////////////
 
@@ -44,7 +45,7 @@ export function getGroups(params) {
         const url = params ? `/api/groups?${params}` : '/api/groups';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
 
-        return axios({
+        return fakeAxios({
             url,
             method: 'GET',
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },

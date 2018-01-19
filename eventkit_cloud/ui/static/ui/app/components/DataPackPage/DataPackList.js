@@ -133,7 +133,9 @@ export class DataPackList extends Component {
                                 user={this.props.user}
                                 key={run.uid}
                                 onRunDelete={this.props.onRunDelete}
-                                providers={this.props.providers}/>
+                                providers={this.props.providers}
+                                openShare={this.props.openShare}
+                            />
                         ))}
                         </GridList>
                     </div>
@@ -207,6 +209,7 @@ export class DataPackList extends Component {
                                             key={run.uid}
                                             onRunDelete={this.props.onRunDelete}
                                             providers={this.props.providers}
+                                            openShare={this.props.openShare}
                                         />
                                     ))}
 
@@ -234,7 +237,8 @@ DataPackList.propTypes = {
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
-    loadMoreDisabled: PropTypes.bool.isRequired
+    loadMoreDisabled: PropTypes.bool.isRequired,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackList;

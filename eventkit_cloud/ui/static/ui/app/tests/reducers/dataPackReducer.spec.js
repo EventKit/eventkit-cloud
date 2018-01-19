@@ -1,8 +1,8 @@
-import * as reducers from '../../reducers/DataPackPageReducer';
+import * as reducers from '../../reducers/dataPackReducer';
 
 describe('DataPackList reducer', () => {
     it('it should return the initial state', () => {
-        expect(reducers.DataPackPageReducer(undefined, {})).toEqual(
+        expect(reducers.dataPackReducer(undefined, {})).toEqual(
             {
                 fetching: false,
                 fetched: false,
@@ -18,7 +18,7 @@ describe('DataPackList reducer', () => {
     });
 
     it('should handle FETCHING RUNS', () => {
-        expect(reducers.DataPackPageReducer(
+        expect(reducers.dataPackReducer(
             {
                 fetching: false,
                 fetched: false,
@@ -50,7 +50,7 @@ describe('DataPackList reducer', () => {
     });
 
     it('should handle RECEIVED_RUNS', () => {
-        expect(reducers.DataPackPageReducer(
+        expect(reducers.dataPackReducer(
             {
                 fetching: true,
                 fetched: false,
@@ -81,7 +81,7 @@ describe('DataPackList reducer', () => {
     });
 
     it('should handle FETCH_RUNS_ERROR', () => {
-        expect(reducers.DataPackPageReducer(
+        expect(reducers.dataPackReducer(
             {
                 fetching: true,
                 fetched: false,
@@ -112,7 +112,7 @@ describe('DataPackList reducer', () => {
     });
 
     it('should handle SET_PAGE_ORDER', () => {
-        expect(reducers.DataPackPageReducer(
+        expect(reducers.dataPackReducer(
             {
                 fetching: false,
                 fetched: false,
@@ -141,7 +141,7 @@ describe('DataPackList reducer', () => {
     });
 
     it('should handle SET_PAGE_VIEW', () => {
-        expect(reducers.DataPackPageReducer(
+        expect(reducers.dataPackReducer(
             {
                 fetching: false,
                 fetched: false,

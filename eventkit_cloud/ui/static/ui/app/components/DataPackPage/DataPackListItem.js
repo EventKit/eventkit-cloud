@@ -219,13 +219,26 @@ export class DataPackListItem extends Component {
                                     onClick={this.handleProviderOpen.bind(this, runProviders)}
                                 />
 
-                                {this.props.run.user == this.props.user.data.user.username ?
-                                <MenuItem
-                                    className={'qa-DataPackListItem-MenuItem-deleteExport'}
-                                    style={{fontSize: subtitleFontSize}}
-                                    primaryText={'Delete Export'}
-                                    onClick={this.showDeleteDialog}/>
-                                : null}
+                                {this.props.run.user === this.props.user.data.user.username ?
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackListItem-MenuItem-deleteExport"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackListItem-MenuItem-share"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                        />,
+                                    ]
+                                    :
+                                    null
+                                }
                             </IconMenu>
                             <BaseDialog
                                 className={'qa-DataPackListItem-BaseDialog'}
@@ -288,7 +301,8 @@ DataPackListItem.propTypes = {
     onHoverStart: PropTypes.func,
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
-    backgroundColor: PropTypes.string
+    backgroundColor: PropTypes.string,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackListItem;

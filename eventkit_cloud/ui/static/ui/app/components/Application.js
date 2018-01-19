@@ -22,6 +22,8 @@ import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import BaseDialog from "./BaseDialog";
+import { getGroups } from '../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
+import { getUsers } from '../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 
 const muiTheme = getMuiTheme({
     datePicker: {
@@ -37,6 +39,12 @@ const muiTheme = getMuiTheme({
     },
     tableRow: {
         selectedColor: 'initial',
+    },
+    svgIcon: {
+        color: '#4598bf',
+    },
+    palette: {
+        accent1Color: '#4598bf',
     },
 });
 
@@ -73,6 +81,8 @@ export class Application extends Component {
                 if (window.innerWidth >= 1200) {
                     this.props.openDrawer();
                 }
+                this.props.getGroups();
+                this.props.getUsers();
 
                 this.startCheckingForAutoLogout();
                 this.startSendingUserActivePings();
@@ -90,11 +100,11 @@ export class Application extends Component {
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
-    };
+    }
 
     handleResize() {
         this.forceUpdate();
-    };
+    }
 
     startCheckingForAutoLogout() {
         if (this.checkAutoLogoutIntervalId) {
@@ -483,6 +493,8 @@ Application.propTypes = {
     userDate: PropTypes.object,
     drawer: PropTypes.string,
     router: PropTypes.object,
+    getGroups: PropTypes.func.isRequired,
+    getUsers: PropTypes.func.isRequired,
 };
 
 Application.childContextTypes = {
@@ -508,7 +520,13 @@ function mapDispatchToProps(dispatch) {
         },
         userActive: () => {
             dispatch(userActive());
-        }
+        },
+        getGroups: () => {
+            dispatch(getGroups());
+        },
+        getUsers: () => {
+            dispatch(getUsers());
+        },
     }
 }
 

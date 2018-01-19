@@ -318,12 +318,25 @@ export class DataPackGridItem extends Component {
                                 />
 
                                 {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        style={{ fontSize: cardTextFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
-                                    : null}
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackGridItem-MenuItem-delete"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackGridItem-MenuItem-share"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                        />,
+                                    ]
+                                    :
+                                    null
+                                }
                             </IconMenu>
                             <BaseDialog
                                 show={this.state.providerDialogOpen}
@@ -401,6 +414,7 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackGridItem;

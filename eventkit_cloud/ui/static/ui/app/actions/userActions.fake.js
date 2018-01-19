@@ -102,7 +102,7 @@ export const userActive = () => (dispatch) => {
     });
 };
 
-export function getUsers(params) {
+export function getUsers(params = {}) {
     return (dispatch, getState) => {
         // get the current user information
         const loggedInUser = getState().user.data.user;
@@ -116,8 +116,6 @@ export function getUsers(params) {
             { username: 'U2', name: 'User 2', email: 'user2@email.com', groups: ['id-1', 'id-2', 'id-3', 'id-6', 'id-8', 'id-9', 'id-14', 'id-16', 'id-20'] },
             { username: 'U3', name: 'User 3', email: 'user3@email.com', groups: ['id-1', 'id-2', 'id-4', 'id-7', 'id-9', 'id-11', 'id-13', 'id-17', 'id-20'] },
         ];
-
-        console.log(params);
 
         Object.entries(params).forEach(([key, value]) => {
             if (key === 'search') {
@@ -170,8 +168,8 @@ export function getUsers(params) {
             }
         });
         
-
-        const mock = new MockAdapter(axios, { delayResponse: 3000 });
+        const fakeAxios = axios.create();
+        const mock = new MockAdapter(fakeAxios, { delayResponse: 3000 });
         mock.onGet().reply(200, fakeUsers);
         //////////////////////////////////////////////////////////////
 
@@ -179,19 +177,19 @@ export function getUsers(params) {
 
         const csrfmiddlewaretoken = cookie.load('csrftoken');
 
-        return axios({
+        return fakeAxios({
             url: '/api/users',
             params,
             method: 'GET',
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
             // filter out the current user from the list
-            const users = response.data.filter(user => (user.email !== loggedInUser.email));
+            const users = response.data.filter(user => (user.username !== loggedInUser.username));
+            mock.restore();
             dispatch({ type: actions.FETCHED_USERS, users });
-            mock.restore();
         }).catch((error) => {
-            dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
             mock.restore();
+            dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
         });
     };
 }

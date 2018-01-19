@@ -1,11 +1,8 @@
-import React, {PropTypes} from 'react';
-import {connect} from 'react-redux';
-import {getRuns, deleteRuns, setPageOrder, setPageView} from '../../actions/DataPackPageActions';
-import {getProviders} from '../../actions/exportsActions'
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
-import {Toolbar, ToolbarGroup} from 'material-ui/Toolbar';
-import Drawer from 'material-ui/Drawer';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
@@ -16,6 +13,9 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
+import DataPackShareDialog from './DataPackShareDialog';
+import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
+import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
@@ -35,8 +35,10 @@ export class DataPackPage extends React.Component {
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
         this.state = {
-            open: window.innerWidth < 1200 ? false: true,
+            open: window.innerWidth >= 1200,
             search: '',
             published: null,
             minDate: null,
@@ -54,25 +56,9 @@ export class DataPackPage extends React.Component {
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
-        }
-    }
-
-    componentWillReceiveProps(nextProps) { 
-        if(nextProps.runsList.fetched != this.props.runsList.fetched) { 
-            if (nextProps.runsList.fetched == true) {
-                if (this.state.pageLoading) {
-                    this.setState({pageLoading: false});
-                }
-                if (this.state.loading) {
-                    this.setState({loading: false});
-                }
-            }
-        }
-        if (nextProps.runsDeletion.deleted != this.props.runsDeletion.deleted) {
-            if(nextProps.runsDeletion.deleted) {
-                this.setState({loading: true}, this.makeRunRequest);
-            }
-        }
+            shareOpen: false,
+            targetJob: '',
+        };
     }
 
     componentDidMount() {
@@ -81,6 +67,24 @@ export class DataPackPage extends React.Component {
         this.fetch = setInterval(this.makeRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.runsList.fetched !== this.props.runsList.fetched) {
+            if (nextProps.runsList.fetched === true) {
+                if (this.state.pageLoading) {
+                    this.setState({ pageLoading: false });
+                }
+                if (this.state.loading) {
+                    this.setState({ loading: false });
+                }
+            }
+        }
+        if (nextProps.runsDeletion.deleted !== this.props.runsDeletion.deleted) {
+            if (nextProps.runsDeletion.deleted) {
+                this.setState({ loading: true }, this.makeRunRequest);
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -206,60 +210,65 @@ export class DataPackPage extends React.Component {
     }
 
     getView(view) {
-        switch(view) {
-            case 'list':
-                return <DataPackList
-                    runs={this.props.runsList.runs}
-                    user={this.props.user}
-                    onRunDelete={this.props.deleteRuns}
+        const commonProps = {
+            runs: this.props.runsList.runs,
+            user: this.props.user,
+            onRunDelete: this.props.deleteRuns,
+            range: this.props.runsList.range,
+            handleLoadLess: this.loadLess,
+            handleLoadMore: this.loadMore,
+            loadLessDisabled: this.props.runsList.runs.length <= 12,
+            loadMoreDisabled: !this.props.runsList.nextPage,
+            providers: this.props.providers,
+            openShare: this.handleShareOpen,
+        };
+        switch (view) {
+        case 'list':
+            return (
+                <DataPackList
+                    {...commonProps}
                     onSort={this.handleSortChange}
                     order={this.state.order}
-                    range={this.props.runsList.range}
-                    handleLoadLess={this.loadLess}
-                    handleLoadMore={this.loadMore}
-                    loadLessDisabled={this.props.runsList.runs.length <= 12}
-                    loadMoreDisabled={!this.props.runsList.nextPage}
-                    providers={this.props.providers}
-                />;
-            case 'grid':
-                return <DataPackGrid
-                    runs={this.props.runsList.runs}
-                    user={this.props.user}
-                    onRunDelete={this.props.deleteRuns}
-                    range={this.props.runsList.range}
-                    handleLoadLess={this.loadLess}
-                    handleLoadMore={this.loadMore}
-                    loadLessDisabled={this.props.runsList.runs.length <= 12}
-                    loadMoreDisabled={!this.props.runsList.nextPage}
-                    providers={this.props.providers}
                 />
-            case 'map':
-                return <MapView
-                    runs={this.props.runsList.runs}
-                    user={this.props.user}
-                    onRunDelete={this.props.deleteRuns}
-                    range={this.props.runsList.range}
-                    handleLoadLess={this.loadLess}
-                    handleLoadMore={this.loadMore}
-                    loadLessDisabled={this.props.runsList.runs.length <= 12}
-                    loadMoreDisabled={!this.props.runsList.nextPage}
-                    providers={this.props.providers}
+            );
+        case 'grid':
+            return (
+                <DataPackGrid
+                    {...commonProps}
+                />
+            );
+        case 'map':
+            return (
+                <MapView
+                    {...commonProps}
                     geocode={this.props.geocode}
                     getGeocode={this.props.getGeocode}
                     importGeom={this.props.importGeom}
                     processGeoJSONFile={this.props.processGeoJSONFile}
                     resetGeoJSONFile={this.props.resetGeoJSONFile}
                     onMapFilter={this.handleSpatialFilter}
-                />;
-            default: return null;
+                />
+            );
+        default: return null;
         }
     }
 
+    handleShareOpen(jobUid) {
+        this.setState({ shareOpen: true, targetJob: jobUid });
+    }
+
+    handleShareClose() {
+        this.setState({ shareOpen: false, targetJob: '' });
+    }
+
     render() {
-        const pageTitle = "DataPack Library"
+        const pageTitle = 'DataPack Library';
         const styles = {
             wholeDiv: {
-                height: window.innerWidth > 575 ? window.innerHeight - 231 : window.innerHeight - 223,
+                height: window.innerWidth > 575 ?
+                    window.innerHeight - 231
+                    :
+                    window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
@@ -274,7 +283,7 @@ export class DataPackPage extends React.Component {
                 fontSize: '18px',
                 lineHeight: '35px',
                 paddingLeft: '10px',
-                height: '35px'
+                height: '35px',
             },
             toolbarSearch: {
                 backgroundColor: '#253447',
@@ -283,22 +292,29 @@ export class DataPackPage extends React.Component {
                 backgroundColor: '#253447',
                 height: '35px',
                 display: 'inline-block',
-                width: '100%'
+                width: '100%',
             },
             containerStyle: {
                 backgroundColor: '#fff',
                 top: '221px',
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
             },
             backgroundStyle: {
-                backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')'
+                backgroundImage: `url(${require('../../../images/ek_topo_pattern.png')})`,
             },
             range: window.innerWidth < 768 ?
-                {color: '#a59c9c', lineHeight: '36px', fontSize: '12px'}
+                { color: '#a59c9c', lineHeight: '36px', fontSize: '12px' }
                 :
-                {display: 'inline-block', position: 'absolute', color: '#a59c9c', lineHeight: '36px', right: '10px', fontSize: '12px'}
+                {
+                    display: 'inline-block',
+                    position: 'absolute',
+                    color: '#a59c9c',
+                    lineHeight: '36px',
+                    right: '10px',
+                    fontSize: '12px',
+                },
         };
 
         return (
@@ -371,14 +387,36 @@ export class DataPackPage extends React.Component {
                         </div>
                     }
                 </div>
-                
+                {this.state.shareOpen && this.state.targetJob ?
+                    <DataPackShareDialog
+                        show
+                        onClose={this.handleShareClose}
+                        onSave={this.handleShareClose}
+                        groups={this.props.groups}
+                        users={this.props.users}
+                        user={this.props.user.data.user}
+                        run={this.props.runsList.runs.find(run => run.job.uid === this.state.targetJob)}
+                    />
+                    :
+                    null
+                }
             </div>
         );
     }
 }
 
 DataPackPage.propTypes = {
-    runsList: PropTypes.object.isRequired,
+    runsList: PropTypes.shape({
+        cancelSource: PropTypes.object,
+        error: PropTypes.string,
+        fetched: PropTypes.bool,
+        fetching: PropTypes.bool,
+        nextPage: PropTypes.bool,
+        order: PropTypes.string,
+        range: PropTypes.string,
+        runs: PropTypes.arrayOf(PropTypes.object),
+        view: PropTypes.string,
+    }).isRequired,
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
@@ -392,6 +430,14 @@ DataPackPage.propTypes = {
     resetGeoJSONFile: PropTypes.func.isRequired,
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -403,6 +449,8 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
+        groups: state.groups.groups,
+        users: state.users.users,
     };
 }
 
