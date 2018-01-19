@@ -928,21 +928,21 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
 
 class UserDataViewSet(viewsets.GenericViewSet):
     """
-    This endpoint is used to retrieve information about a user. Post is  
+    User Data
 
     """
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,filters.OrderingFilter)
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
-    search_fields = ('user__username', 'accepted_licenses')
+    old_search_fields = ('user__username', 'accepted_licenses')
+    search_fields = ('username','accepted_licenses' )
+    ordering_fields = ('username', 'last_name')
+
 
     def get_queryset(self):
-        """
-        This view now returns all users
-        """
         return User.objects.all()
 
     def partial_update(self, request, username=None, *args, **kwargs):
@@ -964,6 +964,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
                         }
                   }
         """
+
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset, data=request.data, context={'request': request})
 
@@ -974,32 +975,8 @@ class UserDataViewSet(viewsets.GenericViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
-        """
-             * GET all users
-                Example:
-
-                    [
-                      {
-                        "user": {
-                          "username": "admin",
-                          "first_name": "",
-                          "last_name": "",
-                          "email": "admin@eventkit.dev",
-                          "last_login": "2017-05-01T17:33:33.845698Z",
-                          "date_joined": "2016-06-15T14:25:19Z"
-                        },
-                        "accepted_licenses": {
-                          "odbl": true,
-                        },
-                        "groups": {
-                            1,34,56
-                        }
-                      }
-                    ]
-        """
-
-        queryset = self.get_queryset()
+    def list(self, request,  *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
