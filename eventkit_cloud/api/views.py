@@ -937,7 +937,6 @@ class UserDataViewSet(viewsets.GenericViewSet):
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,filters.OrderingFilter)
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
-    old_search_fields = ('user__username', 'accepted_licenses')
     search_fields = ('username','accepted_licenses' )
     ordering_fields = ('username', 'last_name')
 
@@ -1051,7 +1050,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = Group.objects.filter(id=group_id)[0]
         group.user_set.add(user)
         groupadmin = GroupAdministrator.objects.create(user=user,group=group)
-        logger.info(groupadmin)
 
         return response
 
@@ -1087,9 +1085,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         groupadministrators = GroupAdministrator.objects.filter(group=group).order_by("created_at")
         currentadminusers = [ga.user for ga in groupadministrators]
-        logger.info("CURRENT ADMINS %s" % currentadminusers)
         owneradmin = currentadminusers[0]
-        logger.info("OWNER ADMIN %s" % owneradmin.username)
 
 
         targetadminusernames   = request.data["administrators"]
@@ -1100,12 +1096,9 @@ class GroupViewSet(viewsets.ModelViewSet):
             user = User.objects.filter(username=username)
             targetadmins.append(user[0])
 
-        logger.info("TARGET ADMINS %s" % targetadmins)
-
         # Add new users:
         for user in targetadmins:
             if not user in currentadminusers:
-                logger.info("*** ADD Admin %s" % user)
                 groupadmin = GroupAdministrator.objects.create(user=user, group=group)
 
         # Remove users
@@ -1113,7 +1106,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             if not user in targetadmins:
                 for groupadmin in groupadministrators:
                     if user == groupadmin.user:
-                        logger.info("*** REMOVE  Admin %s" % user)
                         groupadmin.delete()
 
         # member sets are easier and atomic

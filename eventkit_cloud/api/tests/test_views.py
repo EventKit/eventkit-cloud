@@ -23,6 +23,7 @@ from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from ...core.models import GroupAdministrator
 from mock import patch, Mock
 
 
@@ -1127,8 +1128,8 @@ class TestUserDataViewSet(APITestCase):
                                 HTTP_HOST='testserver')
 
     def test_get_userdata_list(self):
-        expected = '/api/user'
-        url = reverse('api:user-list')
+        expected = '/api/users'
+        url = reverse('api:users-list')
         self.assertEquals(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1138,8 +1139,8 @@ class TestUserDataViewSet(APITestCase):
         self.assertIsNotNone(data[0].get('accepted_licenses').get(self.licenses[0].slug))
 
     def test_get_userdata(self):
-        expected = '/api/user/{0}'.format(self.user)
-        url = reverse('api:user-detail', args=[self.user])
+        expected = '/api/users/{0}'.format(self.user)
+        url = reverse('api:users-detail', args=[self.user])
         self.assertEquals(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1149,7 +1150,7 @@ class TestUserDataViewSet(APITestCase):
         self.assertIsNotNone(data.get('accepted_licenses').get(self.licenses[0].slug))
 
     def test_set_licenses(self):
-        url = reverse('api:user-detail', args=[self.user])
+        url = reverse('api:users-detail', args=[self.user])
         response = self.client.get(url)
         data = json.loads(response.content)
         # check both licenses are NOT accepted.
@@ -1178,6 +1179,91 @@ class TestUserDataViewSet(APITestCase):
         data = json.loads(patch_response.content)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
+
+
+class TestGroupDataViewSet(APITestCase):
+
+    def setUp(self,):
+        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.user1 = User.objects.create_user(
+            username='user_1', email='groupuser@demo.com', password='demo'
+        )
+        self.user2 = User.objects.create_user(
+            username='user_2', email='groupuser@demo.com', password='demo'
+        )
+
+
+        self.token = Token.objects.create(user=self.user1)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        self.testName = "Omaha 319"
+
+    def insert_test_group(self):
+        expected = '/api/groups'
+        url = reverse('api:groups-list')
+        self.assertEquals(expected, url)
+        payload = {'name' : self.testName}
+        response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_201_CREATED, response.status_code)
+        self.groupid = response.data["id"]
+
+
+    def test_insert_group(self):
+        self.insert_test_group()
+
+    def test_get_list(self):
+        self.insert_test_group()
+        url = reverse('api:groups-list')
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        self.assertEquals(200, response.status_code)
+        data = json.loads(response.content)
+        self.assertEquals(len(data),2)
+
+
+    def test_get_group(self):
+        self.insert_test_group()
+        url = reverse('api:groups-detail', args=[self.groupid])
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        data= json.loads(response.content)
+        self.groupid = data["id"]
+        self.assertEquals(data["name"], self.testName)
+        self.assertEquals(len(data["members"]),1)
+        self.assertEquals(len(data["administrators"]), 1)
+
+    def test_set_membership(self):
+        self.insert_test_group()
+        url = reverse('api:groups-detail', args=[self.groupid])
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code,200)
+        groupdata = json.loads(response.content)
+
+        # add a user to group members and to group administrators
+
+        groupdata['members'].append( 'user_2')
+        groupdata['administrators'].append( 'user_2')
+        response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code,200)
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        groupdata = json.loads(response.content)
+        self.assertEquals(len(groupdata["members"]),2)
+        self.assertEquals(len(groupdata["administrators"]), 2)
+
+        # remove user_2 from members and remove all users from administrators
+        # admnistrators should still come back with user_1 as a member
+
+        groupdata['members'] = ['user_1']
+        groupdata['administrators'] = []
+        response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code,200)
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        groupdata = json.loads(response.content)
+        self.assertEquals(len(groupdata["members"]),1)
+        self.assertEquals(len(groupdata["administrators"]), 1)
+        self.assertEquals(groupdata["members"][0],"user_1")
 
 
 def date_handler(obj):
