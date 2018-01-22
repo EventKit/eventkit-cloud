@@ -1,4 +1,4 @@
-from rest_framework.views import exception_handler
+from rest_framework.views import exception_handler, Response
 from rest_framework.exceptions import ValidationError
 import logging
 
@@ -22,7 +22,9 @@ def eventkit_exception_handler(exc, context):
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
     response = exception_handler(exc, context)
-    error = response.data
+    if not response:
+        response = Response()
+    error = response.data or exc.message
     status = response.status_code
     error_class = exc.__class__.__name__
 
@@ -32,7 +34,7 @@ def eventkit_exception_handler(exc, context):
         'detail': error
     }
 
-    if (error.get('id')) and (error.get('message')):
+    if isinstance(error, dict) and ((error.get('id')) and (error.get('message'))):
         # if both id and message are present we can assume that this error was generated from validators.py
         # and use them as the title and detail
         error_response['title'] = stringify(error.get('id'))
@@ -56,6 +58,8 @@ def eventkit_exception_handler(exc, context):
 
         error_response['detail'] = detail
 
+    if not error_response.get('detail'):
+        error_response[detail] = exc.message
     response.data = {'errors':[error_response]}
     return response
 
