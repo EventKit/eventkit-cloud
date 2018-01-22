@@ -27,8 +27,6 @@ export class BaseTooltip extends Component {
             tooltip: {
                 position: 'absolute',
                 fontSize: '12px',
-                bottom: '36px',
-                left: '-157px',
                 background: 'white',
                 boxShadow: 'rgba(0, 0, 0, 0.106) -2px 2px 2px 0px',
                 padding: '20px',
@@ -36,6 +34,8 @@ export class BaseTooltip extends Component {
                 transition: '0.25s',
                 opacity: '0',
                 pointerEvents: 'none',
+                cursor: 'default',
+                whiteSpace: 'normal',
                 ...this.props.tooltipStyle,
             },
             arrow: {
@@ -64,6 +64,8 @@ export class BaseTooltip extends Component {
                 marginLeft: '-10px',
                 marginTop: '-3px',
                 opacity: '0',
+                cursor: 'pointer',
+                pointerEvents: 'all',
                 ...this.props.arrowStyle,
             },
             title: {

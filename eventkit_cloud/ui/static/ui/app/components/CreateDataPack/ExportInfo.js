@@ -30,6 +30,8 @@ import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../..
 import BaseDialog from '../BaseDialog';
 import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
+import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh'
+import BaseTooltip from '../BaseTooltip';
 
 
 export class ExportInfo extends React.Component {
@@ -41,6 +43,7 @@ export class ExportInfo extends React.Component {
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
             providers: props.providers,
+            refreshTooltipOpen: false,
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -207,11 +210,15 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    onRefresh(providerSlug) {
-        let provider = this.state.providers.filter(p => p.slug === providerSlug)[0];
-        provider.availability = {};
+    onRefresh() {
+        this.state.providers.forEach((provider, ix) => {
+            provider.availability = {};
+        });
         this.setState({ providers: [...this.state.providers] });
-        this.checkAvailability(provider);
+
+        this.state.providers.forEach((provider, ix) => {
+            this.checkAvailability(provider);
+        });
     }
 
     setArea() {
@@ -252,6 +259,16 @@ export class ExportInfo extends React.Component {
 
     handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
+    }
+
+    handleRefreshTooltipOpen(e) {
+        this.setState({ refreshTooltipOpen: true });
+        return false;
+    }
+
+    handleRefreshTooltipClose(e) {
+        this.setState({ refreshTooltipOpen: false });
+        return false;
     }
 
     toggleCheckbox(event, checked) {
@@ -328,6 +345,7 @@ export class ExportInfo extends React.Component {
     }
 
     render() {
+        const formWidth = window.innerWidth < 800 ? '90%' : '60%';
         const style = {
             underlineStyle: {
                 width: 'calc(100% - 10px)',
@@ -347,7 +365,7 @@ export class ExportInfo extends React.Component {
             },
             form: {
                 margin: '0 auto',
-                width: window.innerWidth < 800 ? '90%' : '60%',
+                width: formWidth,
                 height: window.innerHeight - 180,
             },
             heading: {
@@ -356,11 +374,29 @@ export class ExportInfo extends React.Component {
                 color: 'black',
                 alignContent: 'flex-start',
                 paddingBottom: '10px',
+                display: 'inline-block',
             },
             subHeading: {
                 fontSize: '16px',
                 color: 'black',
                 alignContent: 'flex-start',
+                display: 'inline-block',
+                marginLeft: '20px',
+            },
+            listHeading: {
+                height: '20px',
+                fontSize: '13px',
+            },
+            providerListHeading: {
+                position: 'absolute',
+                left: 'calc(20% + ('+formWidth+' - 700px) / 2 + 65px)',
+            },
+            refreshIcon: {
+                marginBottom: '-4px',
+                height: '18px',
+                marginLeft: '5px',
+                color: '#4999BD',
+                cursor: 'pointer',
             },
             sectionBottom: {
                 paddingBottom: '50px',
@@ -448,6 +484,38 @@ export class ExportInfo extends React.Component {
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
+                                <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
+                                    <span className="qa-ExportInfo-ListHeaderItem"
+                                    style={style.providerListHeading}>
+                                        DATA PROVIDERS
+                                    </span>
+                                    <span className="qa-ExportInfo-ListHeaderItem"
+                                    style={{ position: 'absolute', left: '60%' }}
+                                    >
+                                        AVAILABILITY
+                                        <NavigationRefresh
+                                            style={style.refreshIcon}
+                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
+                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
+                                            onTouchStart={this.handleRefreshTooltipOpen.bind(this)}
+                                            onTouchEnd={this.handleRefreshTooltipClose.bind(this)}
+                                            onTouchTap={this.onRefresh.bind(this)}
+                                        />
+                                        <BaseTooltip
+                                            show={this.state.refreshTooltipOpen}
+                                            title="RUN AVAILABILITY CHECK AGAIN"
+                                            tooltipStyle={{
+                                                left: '-69px',
+                                                bottom: '33px',
+                                            }}
+                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
+                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
+                                            onTouchTap={this.onRefresh.bind(this)}
+                                        >
+                                    <div>You may try to resolve errors by running the availability check again.</div>
+                                </BaseTooltip>
+                                    </span>
+                                </div>
                                 <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
                                     {providers.map((provider, ix) => {
                                         // Show license if one exists.
@@ -497,9 +565,10 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
+                                                        baseStyle={{ 'left': '80%' }}
+                                                        tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
                                                         onTouchTap={this.onAvailabilityClick.bind(this)}
-                                                        onRefresh={this.onRefresh.bind(this)}
                                                     />
                                                 </div>
                                             }

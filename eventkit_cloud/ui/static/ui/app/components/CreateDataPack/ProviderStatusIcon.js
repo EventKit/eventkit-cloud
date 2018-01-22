@@ -19,9 +19,6 @@ export class ProviderStatusIcon extends Component {
         if (typeof this.props.onTouchTap === 'function') {
             this.props.onTouchTap(e);
         }
-        if (this.props.availability.status === 'TIMEOUT' && typeof this.props.onRefresh === 'function') {
-            this.props.onRefresh(this.props.availability.slug);
-        }
         this.handleTooltipOpen(e);
     }
 
@@ -38,10 +35,16 @@ export class ProviderStatusIcon extends Component {
     render() {
 
         var style = {
+            base: {
+                display: 'inline-block',
+                position: 'absolute',
+                ...this.props.baseStyle,
+            },
             icon: {
                 verticalAlign: 'top',
                 marginTop: '-5px',
-                pointerEvents: 'all'
+                pointerEvents: 'all',
+                ...this.props.iconStyle,
             },
         };
 
@@ -91,7 +94,7 @@ export class ProviderStatusIcon extends Component {
         let message = messagePrefix + avail.message;
 
         return (
-            <div style={{ display: 'inline-block', position: 'absolute' }} className='qa-ProviderStatusIcon' >
+            <div style={style.base} className='qa-ProviderStatusIcon' >
                 <StatusIcon
                     style={style.icon}
                     title={this.props.availability.message}
@@ -105,6 +108,11 @@ export class ProviderStatusIcon extends Component {
                 <BaseTooltip
                     show={this.state.tooltipOpen}
                     title={title}
+                    tooltipStyle={{
+                        bottom: '36px',
+                        left: '-157px',
+                        ...this.props.tooltipStyle,
+                    }}
                     onMouseOver={this.handleTooltipOpen.bind(this)}
                     onMouseOut={this.handleTooltipClose.bind(this)}
                     onTouchTap={this.onTouchTap.bind(this)}
