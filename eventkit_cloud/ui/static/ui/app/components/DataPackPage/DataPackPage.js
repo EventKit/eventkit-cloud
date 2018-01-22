@@ -40,7 +40,7 @@ export class DataPackPage extends React.Component {
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
-            published: null,
+            permissions: null,
             minDate: null,
             maxDate: null,
             status: {
@@ -130,7 +130,7 @@ export class DataPackPage extends React.Component {
         params += `page_size=${this.state.pageSize}`;
         params += order ? `&ordering=${order}`: '';
         params += this.state.ownerFilter ? `&user=${this.state.ownerFilter}`: '';
-        params += this.state.published ? `&published=${this.state.published}` : '';
+        params += this.state.permissions ? `&published=${this.state.permissions}` : '';
         params += status.length ? `&status=${status.join(',')}` : '';
         params += minDate;
         params += maxDate;
@@ -144,15 +144,15 @@ export class DataPackPage extends React.Component {
     }
 
     handleFilterApply(state) {
-        this.setState({...this.state, ...state, loading: true}, this.makeRunRequest);
-        if(window.innerWidth < 1200) {
-            this.setState({open: false});
+        this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
+        if (window.innerWidth < 1200) {
+            this.setState({ open: false });
         }
     }
 
     handleFilterClear() {
         this.setState({
-            published: null,
+            permissions: null,
             minDate: null,
             maxDate: null,
             status: {
@@ -270,7 +270,7 @@ export class DataPackPage extends React.Component {
                     :
                     window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && window.innerWidth >= 1200 ? '200px' : '0px',
+                marginRight: this.state.open && window.innerWidth >= 1200 ? '250px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
             },
             appBar: {
