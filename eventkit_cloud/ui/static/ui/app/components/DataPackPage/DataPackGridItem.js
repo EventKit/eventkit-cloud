@@ -23,6 +23,7 @@ import VectorLayer from 'ol/layer/vector';
 import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
+import ScaleLine from 'ol/control/scaleline';
 
 import BaseDialog from '../BaseDialog';
 import DeleteDialog from '../DeleteDialog';
@@ -87,6 +88,9 @@ export class DataPackGridItem extends Component {
                 }),
                 new Zoom({
                     className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
+                }),
+                new ScaleLine({
+                    className: ol3mapCss.olScaleLine,
                 }),
             ],
         });

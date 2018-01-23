@@ -25,6 +25,7 @@ import GeoJSON from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
 import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
+import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
 import ZoomToExtent from 'ol/control/zoomtoextent';
 import OverviewMap from 'ol/control/overviewmap';
@@ -235,6 +236,9 @@ export class MapView extends Component {
         icon.className = 'fa fa-globe';
         return new Map({
             controls: [
+                new ScaleLine({
+                    className: css.olScaleLine,
+                }),
                 new Attribution({
                     className: ['ol-attribution', css['ol-attribution']].join(' '),
                     collapsible: false,
@@ -257,8 +261,7 @@ export class MapView extends Component {
                     className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
                     collapsed: window.innerWidth < 768,
-                    collapseLabel: '\u00BB',
-                    label: '\u00AB',
+                    tipLabel: '',
                 }),
             ],
             interactions: interaction.defaults({
