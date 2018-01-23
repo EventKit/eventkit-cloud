@@ -27,8 +27,8 @@ class CheckResults(Enum):
         (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
-    TIMEOUT = {"status": "TIMEOUT",
-               "message": _("Your connection has timed out. Refresh to try again.")},
+    TIMEOUT = {"status": "ERR_TIMEOUT",
+               "message": _("Your connection has timed out; the provider may be offline. Refresh to try again.")},
 
     CONNECTION = {"status": "ERR_CONNECTION",
                   "message": _("A connection to this data provider could not be established.")},
@@ -82,7 +82,9 @@ class ProviderCheck(object):
         self.timeout = 10
 
         if aoi_geojson is not None and aoi_geojson is not "":
-            # TODO: Improve this parsing, it is not robust at all
+            if isinstance(aoi_geojson, str):
+                aoi_geojson = json.loads(aoi_geojson)
+
             aoi_geom = aoi_geojson['features'][0]['geometry']
             logger.debug("AOI Geometry: {}".format(json.dumps(aoi_geom)))
             self.aoi = ogr.CreateGeometryFromJson(json.dumps(aoi_geom))

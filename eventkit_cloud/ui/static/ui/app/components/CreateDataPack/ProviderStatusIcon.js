@@ -76,12 +76,6 @@ export class ProviderStatusIcon extends Component {
                 title = "Possible Failure";
                 messagePrefix = "Availability compromised: ";
                 break;
-            case 'TIMEOUT':
-                style.icon['color'] = 'rgba(73, 153, 189, 0.87)';
-                StatusIcon = NotificationSyncProblem;
-                title = "Timeout: Refresh";
-                messagePrefix = "";
-                break;
             case 'PENDING':
                 style.icon['color'] = 'rgba(0, 0, 0, 0.87)';
                 StatusIcon = CircularProgress;
