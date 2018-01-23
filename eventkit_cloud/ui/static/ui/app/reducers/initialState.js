@@ -9,6 +9,7 @@ export default {
         title: null,
         description: null,
         selectionType: null,
+        buffer: 0,
     },
     geocode: {
         fetching: false,
@@ -22,6 +23,7 @@ export default {
         processed: false,
         featureCollection: {},
         error: null,
+        filename: '',
     },
     drawer: 'closed',
     runsList: {

@@ -371,7 +371,7 @@ BreadcrumbStepper.propTypes = {
     clearExportInfo: React.PropTypes.func.isRequired,
     clearJobInfo: React.PropTypes.func.isRequired,
     jobFetched: React.PropTypes.bool.isRequired,
-    jobError: React.PropTypes.object.isRequired,
+    jobError: React.PropTypes.object,
     jobuid: React.PropTypes.string.isRequired,
     formats: React.PropTypes.array.isRequired,
     getFormats: React.PropTypes.func.isRequired,

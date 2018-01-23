@@ -44,6 +44,9 @@ export class BaseDialog extends Component {
                 borderRadius: '0px',
                 ...this.props.buttonStyle,
             },
+            overlay: {
+                ...this.props.overlayStyle,
+            },
         };
 
         // the default is just a close button
@@ -83,6 +86,7 @@ export class BaseDialog extends Component {
                 title={title}
                 titleStyle={styles.title}
                 actionsContainerStyle={styles.actions}
+                overlayStyle={styles.overlay}
             >
                 <CustomScrollbar
                     autoHeight
@@ -105,7 +109,8 @@ BaseDialog.propTypes = {
     bodyStyle: PropTypes.object,
     actionsStyle: PropTypes.object,
     labelStyle: PropTypes.object,
-    buttonStyle: PropTypes.object
+    buttonStyle: PropTypes.object,
+    overlayStyle: PropTypes.object,
 };
 
 export default BaseDialog;
