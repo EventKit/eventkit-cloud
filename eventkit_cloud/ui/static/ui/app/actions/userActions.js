@@ -3,14 +3,17 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import actions from './actionTypes';
 
+
 export const logout = query => (dispatch) => {
-    return axios('/logout', { method: 'GET' }).then(() => {
+    return axios('/logout', { method: 'GET' }).then((response) => {
         dispatch({
             type: actions.USER_LOGGED_OUT,
         });
-        if (typeof query === 'undefined') {
+        if(response.data.OAUTH_LOGOUT_URL) {
+            window.location.href = response.data.OAUTH_LOGOUT_URL;
+        }else{
             dispatch(push({ pathname: '/login' }));
-        }
+        };
     }).catch((error) => {
         console.log(error);
     });
@@ -44,11 +47,16 @@ export const login = (data, query) => (dispatch) => {
                 type: actions.USER_LOGGED_IN,
                 payload: response.data,
             });
-        } else {
-            dispatch(logout(query));
+        }
+        else {
+            dispatch({
+                type: actions.USER_LOGGED_OUT,
+            });
         }
     }).catch(() => {
-        dispatch(logout(query));
+        dispatch({
+            type: actions.USER_LOGGED_OUT,
+        });
     });
 };
 

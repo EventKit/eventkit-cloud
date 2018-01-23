@@ -19,7 +19,6 @@ export class BaseDialog extends Component {
                 padding: '25px',
                 fontWeight: 'none',
                 fontSize: '18px',
-                color: 'grey',
                 ...this.props.titleStyle,
             },
             body: {
