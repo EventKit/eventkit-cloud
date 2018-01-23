@@ -22,8 +22,8 @@ class TestProviderCheck(TransactionTestCase):
 
     def setUp(self, ):
         self.path = settings.ABS_PATH()
-        self.aoi_geojson = '{"type": "Polygon",' \
-                           '"coordinates": [[ [0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0] ]]}'
+        self.aoi_geojson = '{"features": [{"geometry": {"type": "Polygon", "coordinates": ' \
+                           '[[ [0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0] ]]}}]}'
 
     def check_ows(self, get, pc, invalid_content, empty_content, no_intersect_content, valid_content):
         """
