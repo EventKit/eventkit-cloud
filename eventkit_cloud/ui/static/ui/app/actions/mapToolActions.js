@@ -9,7 +9,7 @@ export function resetGeoJSONFile() {
 }
 
 export const processGeoJSONFile = file => (dispatch) => {
-    dispatch({ type: types.FILE_PROCESSING });
+    dispatch({ type: types.FILE_PROCESSING, filename: file.name });
 
     const csrftoken = cookie.load('csrftoken');
 

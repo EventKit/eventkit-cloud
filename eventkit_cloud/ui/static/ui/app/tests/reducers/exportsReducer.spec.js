@@ -77,6 +77,7 @@ describe('exportAoiInfo reducer', () => {
             title: null,
             description: null,
             selectionType: null,
+            buffer: 0,
         });
     });
 
@@ -90,6 +91,7 @@ describe('exportAoiInfo reducer', () => {
                 title: 'title',
                 description: 'description',
                 selectionType: 'type',
+                buffer: 12,
             },
         )).toEqual({
             geojson,
@@ -97,6 +99,7 @@ describe('exportAoiInfo reducer', () => {
             title: 'title',
             description: 'description',
             selectionType: 'type',
+            buffer: 12,
         });
     });
 
@@ -116,6 +119,7 @@ describe('exportAoiInfo reducer', () => {
             title: null,
             description: null,
             selectionType: null,
+            buffer: 0,
         });
     });
 });
