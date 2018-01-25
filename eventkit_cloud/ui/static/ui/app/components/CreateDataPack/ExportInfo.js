@@ -158,15 +158,7 @@ export class ExportInfo extends React.Component {
         this.projectHandler(e);
     }
 
-    onAvailabilityClick(e) {
-        this.skipChangeCheck = true;
-    }
-
     onChangeCheck(e) {
-        if (this.skipChangeCheck === true) {
-            this.skipChangeCheck = false;
-            return;
-        }
         // current array of providers
         const providers = [...this.props.exportInfo.providers];
         const propsProviders = this.props.providers;
@@ -176,7 +168,6 @@ export class ExportInfo extends React.Component {
             // add the provider to the array
             for (let i = 0; i < propsProviders.length; i += 1) {
                 if (propsProviders[i].name === e.target.name) {
-                    propsProviders[i].checked = true;
                     providers.push(propsProviders[i]);
                     break;
                 }
@@ -595,7 +586,6 @@ export class ExportInfo extends React.Component {
                                                         baseStyle={{ 'left': '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
-                                                        onTouchTap={this.onAvailabilityClick.bind(this)}
                                                     />
                                                 </div>
                                             }
