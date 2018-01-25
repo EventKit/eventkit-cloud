@@ -546,9 +546,9 @@ class TestExportTasks(ExportTaskBase):
         export_task_instance = Mock(progress=0, estimated_finish=None)
         export_task.objects.get.return_value = export_task_instance
         update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
-        mock_close.assert_called_once()
-        self.assertEquals(export_task_instance.progress, 50)
-        self.assertEquals(export_task_instance.estimated_finish, estimated)
+        from django.core.cache import cache
+        self.assertEquals(cache.get("{0}.progress".format(saved_export_task_uid)), 50)
+        self.assertEquals(cache.get("{0}.estimated_finish".format(saved_export_task_uid)), estimated)
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, mock_kill_task):

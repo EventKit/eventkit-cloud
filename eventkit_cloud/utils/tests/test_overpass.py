@@ -88,8 +88,8 @@ class TestOverpass(TestCase):
                                           data=q,
                                           stream=True,
                                           verify=verify_ssl)
-        self.assertEqual(export_task_instance.progress, 50)
-        mock_close.assert_called()
+        from django.core.cache import cache
+        self.assertEquals(cache.get('{0}.progress'.format(mock_export_task_instance_id)), 50)
         f = open(out)
         data = f.read()
         self.assertEqual(data, expected[0])
