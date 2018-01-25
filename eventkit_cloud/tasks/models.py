@@ -49,6 +49,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     class Meta:
         managed = True
         db_table = 'export_runs'
+        verbose_name = 'ExportRun (DataPack)'
+        verbose_name_plural = 'ExportRuns (DataPacks)'
 
     def __str__(self):
         return '{0}'.format(self.uid)
