@@ -49,17 +49,16 @@ export class DateFilter extends Component {
     }
 }
 
+DateFilter.defaultProps = {
+    minDate: null,
+    maxDate: null,
+};
+
 DateFilter.propTypes = {
     onMinChange: PropTypes.func.isRequired,
     onMaxChange: PropTypes.func.isRequired,
-    minDate: PropTypes.oneOfType([
-        PropTypes.instanceOf(Date),
-        null,
-    ]).isRequired,
-    maxDate: PropTypes.oneOfType([
-        PropTypes.instanceOf(Date),
-        null,
-    ]).isRequired,
+    minDate: PropTypes.instanceOf(Date),
+    maxDate: PropTypes.instanceOf(Date),
 };
 
 export default DateFilter;

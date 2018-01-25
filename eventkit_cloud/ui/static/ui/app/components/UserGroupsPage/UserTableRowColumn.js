@@ -1,8 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import IconButton from 'material-ui/IconButton';
 import { TableRowColumn } from 'material-ui/Table';
+import MenuItem from 'material-ui/MenuItem';
+import Divider from 'material-ui/Divider';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
+import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
 export class UserTableRowColumn extends Component {
     constructor(props) {
@@ -55,6 +58,17 @@ export class UserTableRowColumn extends Component {
                 width: '24px',
                 float: 'right',
             },
+            menuItem: {
+                fontSize: '14px',
+                overflow: 'hidden',
+                color: '#707274',
+            },
+            menuItemInner: {
+                padding: '0px',
+                margin: '0px 22px 0px 16px',
+                height: '48px',
+                display: 'flex',
+            },
         };
 
         const {
@@ -93,13 +107,28 @@ export class UserTableRowColumn extends Component {
                         open={this.state.open}
                         anchorEl={this.state.popoverAnchor}
                         onClose={this.handleClose}
-                        onMenuItemClick={this.handleGroupItemClick}
-                        onNewGroupClick={this.handleNewGroupClick}
-                        selectedGroups={user.groups}
-                        groups={groups}
-                        groupsLoading={groupsLoading}
+                        loading={groupsLoading}
+                        width={200}
                         className="qa-UserTableRowColumn-GroupsDropDownMenu"
-                    />
+                    >
+                        {this.props.groups.map(group => (
+                            <GroupsDropDownMenuItem
+                                key={group.id}
+                                group={group}
+                                onClick={this.handleGroupItemClick}
+                                selected={user.groups.includes(group.id)}
+                            />
+                        ))}
+                        <Divider className="qa-UserTableRowColumn-Divider" />
+                        <MenuItem
+                            style={styles.menuItem}
+                            innerDivStyle={styles.menuItemInner}
+                            onTouchTap={this.handleNewGroupClick}
+                            className="qa-UserTableRowColumn-MenuItem-newGroup"
+                        >
+                            <span>Share with New Group</span>
+                        </MenuItem>
+                    </GroupsDropDownMenu>
                 </div>
             </TableRowColumn>
         );

@@ -26,6 +26,7 @@ export class DataPackShareDialog extends Component {
     }
 
     handleSave() {
+        // TODO update with actual saving functionality
         const selectionsAreEqual = this.state.originalSelection.every(user => (
             this.state.currentSelection.includes(user)
         )) && this.state.originalSelection.length === this.state.currentSelection.length;
@@ -106,7 +107,7 @@ export class DataPackShareDialog extends Component {
 
         if (this.state.dropDownValue !== 'all') {
             rowHeader = (
-                <div style={styles.rowHeader} >
+                <div style={styles.rowHeader} className="qa-DataPackShareDialog-rowHeader">
                     <span>GROUP</span>
                     <span style={{ float: 'right' }}>SHARED</span>
                 </div>
@@ -120,6 +121,7 @@ export class DataPackShareDialog extends Component {
                         users={this.props.users}
                         selection={this.state.currentSelection}
                         updateSelection={this.updateSelection}
+                        className="qa-DataPackShareDialog-ShareDialogGroup"
                     />
                 ))
             );
@@ -135,8 +137,9 @@ export class DataPackShareDialog extends Component {
                 title="SHARE"
                 actions={createActions}
                 dialogStyle={{ maxWidth: '500px' }}
+                className="qa-DataPackShareDialog"
             >
-                <div style={styles.fixedHeader}>
+                <div style={styles.fixedHeader} className="qa-DataPackShareDialog-dropDownContainer">
                     <DropDownMenu
                         value={this.state.dropDownValue}
                         onChange={this.handleDropDownChange}
@@ -145,9 +148,17 @@ export class DataPackShareDialog extends Component {
                         labelStyle={{ padding: '0px', color: '#4598bf', textOverflow: 'customoverflow' }}
                         iconStyle={styles.dropDownIcon}
                         underlineStyle={{ margin: '-1px 0px', borderTop: '1px solid #4598bf' }}
+                        className="qa-DataPackShareDialog-DropDownMenu-share"
                     >
-                        <MenuItem value="all" primaryText={allText} />
-                        <MenuItem value="custom" primaryText={customText} />
+                        <MenuItem
+                            value="all"
+                            primaryText={allText}
+                            className="qa-DataPackShareDialog-MenuItem-all"
+                        />
+                        <MenuItem
+                            value="custom"
+                            primaryText={customText}
+                        />
                     </DropDownMenu>
                     {rowHeader}
                 </div>

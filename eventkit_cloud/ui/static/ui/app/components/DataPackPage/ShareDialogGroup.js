@@ -123,11 +123,12 @@ export class ShareDialogGroup extends Component {
                 expanded={this.state.expanded}
                 style={styles.card}
                 containerStyle={{ paddingBottom: '0px' }}
+                className="qa-ShareDialogGroup-Card"
             >
                 <CardHeader
                     title={
                         <div style={{ display: 'flex' }}>
-                            <div style={styles.groupText}>
+                            <div style={styles.groupText} className="qa-ShareDialogGroup-CardHeader-text">
                                 <span style={styles.groupName}>
                                     {this.props.group.name}
                                 </span>
@@ -135,7 +136,7 @@ export class ShareDialogGroup extends Component {
                                     Shared with {selectedInGroupTotal} of {inGroupTotal}
                                 </span>
                             </div>
-                            <div style={styles.groupIcons}>
+                            <div style={styles.groupIcons} className="qa-ShareDialogGroup-CardHeader-icons">
                                 {this.state.expanded ?
                                     <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} />
                                     :
@@ -152,8 +153,15 @@ export class ShareDialogGroup extends Component {
                     {this.props.group.members.map((member) => {
                         const user = this.props.users.find(propUser => propUser.username === member);
                         return (
-                            <div key={user.username} style={{ padding: '6px 34px 0px 0px' }}>
-                                <div style={{ display: 'inline-block' }}>
+                            <div
+                                key={user.username}
+                                style={{ padding: '6px 34px 0px 0px' }}
+                                className="qa-ShareDialogGroup-userContainer"
+                            >
+                                <div
+                                    style={{ display: 'inline-block' }}
+                                    className="qa-ShareDialogGroup-userInfo"
+                                >
                                     <div><strong>{user.name}</strong></div>
                                     <div>{user.email}</div>
                                 </div>

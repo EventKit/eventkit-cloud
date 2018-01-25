@@ -18,7 +18,14 @@ export class FilterDrawer extends Component {
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
+        this.handleGroupSelect = this.handleGroupSelect.bind(this);
         this.state = this.getDefaultState();
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.groups.length !== 0 && this.props.groups.length === 0) {
+            this.setState({ selectedGroups: nextProps.groups.map(group => group.id) });
+        }
     }
 
     getDefaultState() {
@@ -32,6 +39,7 @@ export class FilterDrawer extends Component {
                 submitted: false,
             },
             providers: {},
+            selectedGroups: this.props.groups.map(group => group.id),
         };
     }
 
@@ -73,6 +81,20 @@ export class FilterDrawer extends Component {
         this.setState({ maxDate: date });
     }
 
+    handleGroupSelect(group) {
+        if (this.state.selectedGroups.includes(group.id)) {
+            const newGroups = [...this.state.selectedGroups];
+            newGroups.splice(
+                this.state.selectedGroups.indexOf(group.id),
+                1,
+            );
+            this.setState({ selectedGroups: newGroups });
+        } else {
+            const newGroups = [...this.state.selectedGroups, group.id];
+            this.setState({ selectedGroups: newGroups });
+        }
+    }
+
     render() {
         const styles = {
             containerStyle: {
@@ -100,6 +122,9 @@ export class FilterDrawer extends Component {
                     <PermissionFilter
                         onChange={this.handlePermissionsChange}
                         valueSelected={this.state.permissions}
+                        selectedGroups={this.state.selectedGroups}
+                        onGroupSelect={this.handleGroupSelect}
+                        groups={this.props.groups}
                     />
                     <StatusFilter
                         onChange={this.handleStatusChange}
@@ -129,6 +154,12 @@ FilterDrawer.propTypes = {
     onFilterClear: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default FilterDrawer;

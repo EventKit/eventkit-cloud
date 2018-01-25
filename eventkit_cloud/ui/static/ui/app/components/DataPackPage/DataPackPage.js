@@ -18,6 +18,8 @@ import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/da
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
+import { getGroups } from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
+import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
@@ -40,7 +42,7 @@ export class DataPackPage extends React.Component {
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
-            permissions: null,
+            permissions: 'public',
             minDate: null,
             maxDate: null,
             status: {
@@ -49,6 +51,7 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
+            selectedGroups: [],
             view: props.runsList.view || 'map',
             pageLoading: true,
             order: props.runsList.order || '-job__featured',
@@ -62,6 +65,8 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
+        this.props.getGroups();
+        this.props.getUsers();
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -105,42 +110,47 @@ export class DataPackPage extends React.Component {
     }
 
     handleSortChange(value) {
-        this.setState({order: value, loading: true}, this.makeRunRequest);
+        this.setState({ order: value, loading: true }, this.makeRunRequest);
     }
 
     makeRunRequest() {
-        let status = []
-        Object.keys(this.state.status).forEach((key, ix) => {
-            if(this.state.status[key]) {status.push(key.toUpperCase())};
+        const status = [];
+        Object.keys(this.state.status).forEach((key) => {
+            if (this.state.status[key]) {
+                status.push(key.toUpperCase());
+            }
         });
-
-        const order = this.state.order.includes('featured') ? this.state.order + ',-started_at' : this.state.order;
-
-        const minDate = this.state.minDate ? `&min_date=${this.state.minDate.toISOString().substring(0, 10)}` : '';
-        let maxDate = ''
-        if(this.state.maxDate) {
-            maxDate = new Date(this.state.maxDate.getTime());
-            maxDate.setDate(maxDate.getDate() + 1);
-            maxDate = `&max_date=${maxDate.toISOString().substring(0, 10)}`;
-        }
 
         const providers = Object.keys(this.state.providers);
 
-        let params = '';
-        params += `page_size=${this.state.pageSize}`;
-        params += order ? `&ordering=${order}`: '';
-        params += this.state.ownerFilter ? `&user=${this.state.ownerFilter}`: '';
-        params += this.state.permissions ? `&published=${this.state.permissions}` : '';
-        params += status.length ? `&status=${status.join(',')}` : '';
-        params += minDate;
-        params += maxDate;
-        params += this.state.search ? `&search_term=${this.state.search.slice(0, 1000)}` : '';
-        params += providers.length ? `&providers=${providers.join(',')}` : '';
+        const params = {};
+        params.page_size = this.state.pageSize;
+        params.ordering = this.state.order.includes('featured') ?
+            `${this.state.order},-started_at`
+            :
+            this.state.order;
+        if (this.state.ownerFilter) params.user = this.state.ownerFilter;
+        if (this.state.permissions) params.published = this.state.permissions;
+        if (this.state.selectedGroups.length && this.state.permissions === 'group') {
+            params.groups = this.state.selectedGroups.join(',');
+        }
+        if (status.length) params.status = status.join(',');
+        if (this.state.minDate) {
+            params.min_date = this.state.minDate.toISOString().substring(0, 10);
+        }
+        if (this.state.maxDate) {
+            const maxDate = new Date(this.state.maxDate.getTime());
+            maxDate.setDate(maxDate.getDate() + 1);
+            params.max_date = maxDate.toISOString().substring(0, 10);
+        }
+        if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
+        if (providers.length) params.providers = providers.join(',');
+
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
 
     handleOwnerFilter(event, index, value) {
-        this.setState({ownerFilter: value, loading: true}, this.makeRunRequest);
+        this.setState({ ownerFilter: value, loading: true }, this.makeRunRequest);
     }
 
     handleFilterApply(state) {
@@ -152,7 +162,7 @@ export class DataPackPage extends React.Component {
 
     handleFilterClear() {
         this.setState({
-            permissions: null,
+            permissions: 'public',
             minDate: null,
             maxDate: null,
             status: {
@@ -160,10 +170,12 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
                 submitted: false,
             },
-            loading: true
+            providers: {},
+            selectedGroups: [],
+            loading: true,
         }, this.makeRunRequest);
-        if(window.innerWidth < 1200) {
-            this.setState({open: false});
+        if (window.innerWidth < 1200) {
+            this.setState({ open: false });
         }
     }
 
@@ -356,11 +368,13 @@ export class DataPackPage extends React.Component {
                 </Toolbar>
                 
                 <div style={styles.wholeDiv}>
-                    <FilterDrawer 
-                        onFilterApply={this.handleFilterApply} 
+                    <FilterDrawer
+                        onFilterApply={this.handleFilterApply}
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
-                        providers={this.props.providers}/>
+                        providers={this.props.providers}
+                        groups={this.props.groups}
+                    />
 
                     {this.state.pageLoading ? 
                         <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
@@ -438,6 +452,8 @@ DataPackPage.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    getGroups: PropTypes.func.isRequired,
+    getUsers: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -456,14 +472,14 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params, geojson) => {
-            return dispatch(getRuns(params, geojson));
-        },
+        getRuns: (params, geojson) => (
+            dispatch(getRuns(params, geojson))
+        ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
         getProviders: () => {
-            dispatch(getProviders())
+            dispatch(getProviders());
         },
         getGeocode: (query) => {
             dispatch(getGeocode(query));
@@ -471,7 +487,7 @@ function mapDispatchToProps(dispatch) {
         processGeoJSONFile: (file) => {
             dispatch(processGeoJSONFile(file));
         },
-        resetGeoJSONFile: (file) => {
+        resetGeoJSONFile: () => {
             dispatch(resetGeoJSONFile());
         },
         setOrder: (order) => {
@@ -479,11 +495,17 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
-        }
-    }
+        },
+        getGroups: () => {
+            dispatch(getGroups());
+        },
+        getUsers: () => {
+            dispatch(getUsers());
+        },
+    };
 }
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
 )(DataPackPage);
