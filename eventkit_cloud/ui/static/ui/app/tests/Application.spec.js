@@ -1,27 +1,23 @@
 import React from 'react';
 import axios from 'axios';
 import sinon from 'sinon';
-import {mount} from 'enzyme';
+import { mount } from 'enzyme';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
-import Subheader from 'material-ui/Subheader';
 import MenuItem from 'material-ui/MenuItem';
 import { Link, IndexLink } from 'react-router';
-import Banner from '../components/Banner';
-import {Application} from '../components/Application';
 import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
-import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import NavigationClose from 'material-ui/svg-icons/navigation/close';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MockAdapter from 'axios-mock-adapter';
-import BaseDialog from "../components/BaseDialog";
+import BaseDialog from '../components/BaseDialog';
+import Banner from '../components/Banner';
+import { Application } from '../components/Application';
 
 describe('Application component', () => {
     injectTapEventPlugin();

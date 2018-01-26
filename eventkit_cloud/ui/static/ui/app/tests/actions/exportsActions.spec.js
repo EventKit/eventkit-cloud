@@ -6,7 +6,7 @@ import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
 import types from '../../actions/actionTypes';
 import * as actions from '../../actions/exportsActions';
-import { setCloseDrawerTimeout, getOpenDrawerTimeout } from '../../actions/exportsActions';
+import { setCloseDrawerTimeout, getOpenDrawerTimeout, DrawerTimeout } from '../../actions/exportsActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -208,78 +208,65 @@ describe('export actions', () => {
         });
     });
 
-    it('closeDrawer should close drawer', () => {
+    it('DrawerTimeout closeDrawer should close drawer', () => {
+        const timeout = new actions.DrawerTimeout();
         const expectedActions = [
             { type: types.CLOSING_DRAWER },
             { type: types.CLOSED_DRAWER },
         ];
 
         const store = mockStore({ drawer: 'open' });
-        return store.dispatch(actions.closeDrawer())
+        return store.dispatch(timeout.closeDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
 
-    it('closeDrawer should clear open timeout', () => {
-        actions.setOpenDrawerTimeout('yo');
-        const setOpenSpy = sinon.spy(actions, 'setOpenDrawerTimeout');
-        const getOpenSpy = sinon.spy(actions, 'getOpenDrawerTimeout');
-        const setCloseSpy = sinon.spy(actions, 'setCloseDrawerTimeout');
+    it('DrawerTimeout closeDrawer should close drawer and clear open timeout', () => {
+        const clearStub = sinon.stub(global, 'clearTimeout');
+        const timeout = new actions.DrawerTimeout(null, 'yo');
         const expectedActions = [
             { type: types.CLOSING_DRAWER },
             { type: types.CLOSED_DRAWER },
         ];
 
         const store = mockStore({ drawer: 'open' });
-        return store.dispatch(actions.closeDrawer())
+        return store.dispatch(timeout.closeDrawer())
             .then(() => {
-                expect(getOpenSpy.calledTwice).toBe(true);
-                expect(setOpenSpy.calledOnce).toBe(true);
-                expect(setOpenSpy.calledWith(null)).toBe(true);
-                expect(setCloseSpy.calledTwice).toBe(true);
                 expect(store.getActions()).toEqual(expectedActions);
-                setOpenSpy.restore();
-                getOpenSpy.restore();
-                setCloseSpy.restore();
+                expect(clearStub.calledOnce).toBe(true);
+                clearStub.restore();
             });
     });
 
-    it('openDrawer should open drawer', () => {
-        actions.setCloseDrawerTimeout('yo');
-        const setOpenSpy = sinon.spy(actions, 'setOpenDrawerTimeout');
-        const setCloseSpy = sinon.spy(actions, 'setCloseDrawerTimeout');
-        const getCloseSpy = sinon.spy(actions, 'getCloseDrawerTimeout');
+    it('DrawerTimeout openDrawer should open drawer', () => {
+        const timeout = new actions.DrawerTimeout();
         const expectedActions = [
             { type: types.OPENING_DRAWER },
             { type: types.OPENED_DRAWER },
         ];
 
         const store = mockStore({ drawer: 'closed' });
-        return store.dispatch(actions.openDrawer())
+        return store.dispatch(timeout.openDrawer())
             .then(() => {
-                expect(getCloseSpy.calledTwice).toBe(true);
-                expect(setCloseSpy.calledOnce).toBe(true);
-                expect(setCloseSpy.calledWith(null)).toBe(true);
-                expect(setOpenSpy.calledTwice).toBe(true);
                 expect(store.getActions()).toEqual(expectedActions);
-                getCloseSpy.restore();
-                setCloseSpy.restore();
-                setOpenSpy.restore();
             });
     });
 
-    it('openDrawer should open drawer and clear close timeout', () => {
+    it('DrawerTimeout openDrawer should open drawer and clear open timeout', () => {
+        const clearStub = sinon.stub(global, 'clearTimeout');
+        const timeout = new actions.DrawerTimeout('yo', null);
         const expectedActions = [
             { type: types.OPENING_DRAWER },
             { type: types.OPENED_DRAWER },
         ];
 
         const store = mockStore({ drawer: 'closed' });
-        return store.dispatch(actions.openDrawer())
+        return store.dispatch(timeout.openDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
+                expect(clearStub.calledOnce).toBe(true);
+                clearStub.restore();
             });
     });
 });
-

@@ -120,64 +120,56 @@ export function clearJobInfo() {
 }
 
 // This is probably not the correct way to cancel async actions... but it works.
-let closeDrawerTimeout = null;
-let openDrawerTimeout = null;
+// We are using a class so that this works in the running application and is test-able
+export class DrawerTimeout {
+    constructor(closeDrawerTimeout, openDrawerTimeout) {
+        this.closeDrawerTimeout = closeDrawerTimeout || null;
+        this.openDrawerTimeout = openDrawerTimeout || null;
+    }
 
-export function getCloseDrawerTimeout() {
-    return closeDrawerTimeout;
-}
-export function setCloseDrawerTimeout(v) {
-    closeDrawerTimeout = v;
-}
-export function getOpenDrawerTimeout() {
-    return openDrawerTimeout;
-}
-export function setOpenDrawerTimeout(v) {
-    openDrawerTimeout = v;
-}
+    closeDrawer() {
+        return (dispatch) => {
+            if (this.openDrawerTimeout !== null) {
+                clearTimeout(this.openDrawerTimeout);
+                this.openDrawerTimeout = null;
+            }
 
-export function closeDrawer() {
-    return (dispatch) => {
-        if (this.getOpenDrawerTimeout() !== null) {
-            clearTimeout(this.getOpenDrawerTimeout());
-            this.setOpenDrawerTimeout(null);
-        }
+            dispatch({
+                type: types.CLOSING_DRAWER,
+            });
 
-        dispatch({
-            type: types.CLOSING_DRAWER,
-        });
+            return new Promise((resolve) => {
+                this.closeDrawerTimeout = setTimeout(() => {
+                    this.closeDrawerTimeout = null;
+                    dispatch({
+                        type: types.CLOSED_DRAWER,
+                    });
+                    resolve();
+                }, 450);
+            });
+        };
+    }
 
-        return new Promise((resolve) => {
-            this.setCloseDrawerTimeout(setTimeout(() => {
-                this.setCloseDrawerTimeout(null);
-                dispatch({
-                    type: types.CLOSED_DRAWER,
-                });
-                resolve();
-            }, 450));
-        });
-    };
-}
+    openDrawer() {
+        return (dispatch) => {
+            if (this.closeDrawerTimeout !== null) {
+                clearTimeout(this.closeDrawerTimeout);
+                this.closeDrawerTimeout = null;
+            }
 
-export function openDrawer() {
-    return (dispatch) => {
-        if (this.getCloseDrawerTimeout() !== null) {
-            clearTimeout(this.getCloseDrawerTimeout());
-            this.setCloseDrawerTimeout(null);
-        }
+            dispatch({
+                type: types.OPENING_DRAWER,
+            });
 
-        dispatch({
-            type: types.OPENING_DRAWER,
-        });
-
-        return new Promise((resolve) => {
-            this.setOpenDrawerTimeout(setTimeout(() => {
-                this.setOpenDrawerTimeout(null);
-                dispatch({
-                    type: types.OPENED_DRAWER,
-                });
-                resolve();
-            }, 450));
-        });
-    };
+            return new Promise((resolve) => {
+                this.openDrawerTimeout = setTimeout(() => {
+                    this.openDrawerTimeout = null;
+                    dispatch({
+                        type: types.OPENED_DRAWER,
+                    });
+                    resolve();
+                }, 450);
+            });
+        };
+    }
 }
