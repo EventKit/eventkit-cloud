@@ -168,11 +168,6 @@ export class UserGroupsPage extends Component {
                 params.ungrouped = true;
                 break;
             }
-            case 'shared': {
-                // not sure what 'most shared' is
-                params.most_shared = true;
-                break;
-            }
             default: {
                 // get users in a specific group
                 params.group = this.state.drawerSelection;
@@ -725,7 +720,16 @@ export class UserGroupsPage extends Component {
                     title="SHARED GROUPS"
                     className="qa-UserGroupsPage-sharedInfo"
                 >
-                    This is info about shared groups
+                    <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
+                        <div>
+                            <span>For groups that have been shared with you:</span>
+                            <ul style={{ paddingLeft: '20px' }}>
+                                <li>You'll receive all notifications</li>
+                                <li>You have limited administrative rights for all data shared with each group</li>
+                            </ul>
+                            <span>You may leave any group. By doing so, you opt out of notifications and your admin rights.</span>
+                        </div>
+                    </div>
                 </BaseDialog>
 
                 <BaseDialog
@@ -734,7 +738,16 @@ export class UserGroupsPage extends Component {
                     title="MEMBERS & GROUPS"
                     className="qa-UserGroupsPage-pageInfo"
                 >
-                    This is info about the members and groups page
+                    <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
+                        <div>
+                            <span>On this page you can:</span>
+                            <ul style={{ paddingLeft: '20px' }}>
+                                <li>View all EventKit members</li>
+                                <li>Create and manage user groups for data sharing</li>
+                                <li>View groups that have been shared with you</li>
+                            </ul>
+                        </div>
+                    </div>
                 </BaseDialog>
             </div>
         );

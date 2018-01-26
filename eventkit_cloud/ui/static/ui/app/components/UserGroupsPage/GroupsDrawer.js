@@ -95,12 +95,6 @@ export class GroupsDrawer extends Component {
                             className="qa-GroupsDrawer-notGrouped"
                             value="ungrouped"
                         />
-                        <MenuItem
-                            primaryText="Most Shared"
-                            style={styles.simpleMenuItem}
-                            className="qa-GroupsDrawer-mostShared"
-                            value="shared"
-                        />
 
                         <span
                             style={styles.groupsHeading}
