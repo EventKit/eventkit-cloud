@@ -1154,7 +1154,7 @@ describe('MapView component', () => {
         const getSpy = sinon.spy(VectorSource.prototype, 'getFeatures');
         expect(wrapper.instance().handleSearch(result)).toBe(true);
         expect(props.onMapFilter.calledOnce).toBe(true);
-        expect(getSpy.calledTwice).toBe(true);
+        expect(getSpy.calledOnce).toBe(true);
         expect(zoomStub.calledOnce).toBe(true);
         getSpy.restore();
         zoomStub.restore();
@@ -1516,64 +1516,7 @@ describe('MapView component', () => {
         addSpy.restore();
         readSpy.restore();
     });
-
-    it('bufferMapFeature should create a new buffered feature and add it to the map', () => {
-        const coords = [[
-            [17.9296875, 41.244772343082076],
-            [22.5, 41.244772343082076],
-            [22.5, 44.59046718130883],
-            [17.9296875, 44.59046718130883],
-            [17.9296875, 41.244772343082076],
-        ]];
-        const geojson = {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                geometry: {
-                    type: 'Polygon',
-                    coordinate: coords,
-                },
-            }],
-        };
-        const geom = new Polygon(coords);
-        const feature = new Feature({
-            geometry: geom,
-        });
-        
-        const props = getProps();
-        props.onMapFilter = sinon.spy();
-        const wrapper = getWrapper(props);
-        const getFeatureStub = sinon.stub(VectorSource.prototype, 'getFeatures')
-            .returns([feature]);
-        const writeFeaturesStub = sinon.stub(GeoJSON.prototype, 'writeFeaturesObject')
-            .returns(geojson);
-        const bufferStub = sinon.stub(utils, 'bufferGeojson')
-            .returns(geojson);
-        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures')
-            .returns([feature]);
-        const clearStub = sinon.stub(utils, 'clearDraw');
-        const addStub = sinon.stub(VectorSource.prototype, 'addFeatures');
-        expect(wrapper.instance().bufferMapFeature(11)).toBe(true);
-        expect(getFeatureStub.calledOnce).toBe(true);
-        expect(writeFeaturesStub.calledOnce).toBe(true);
-        expect(writeFeaturesStub.calledWith([feature])).toBe(true);
-        expect(bufferStub.calledOnce).toBe(true);
-        expect(bufferStub.calledWith(geojson, 11, true)).toBe(true);
-        expect(readStub.calledOnce).toBe(true);
-        expect(readStub.calledWith(geojson)).toBe(true);
-        expect(clearStub.calledOnce).toBe(true);
-        expect(addStub.calledOnce).toBe(true);
-        expect(props.onMapFilter.calledOnce).toBe(true);
-        expect(props.onMapFilter.calledWith(geojson)).toBe(true);
-
-        getFeatureStub.restore();
-        writeFeaturesStub.restore();
-        bufferStub.restore();
-        readStub.restore();
-        clearStub.restore();
-        addStub.restore();
-    });
-
+    
     it('handleUp should return false if there is no feature', () => {
         const props = getProps();
         const wrapper = getWrapper(props);

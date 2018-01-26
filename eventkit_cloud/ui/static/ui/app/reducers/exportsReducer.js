@@ -38,6 +38,7 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
             title: action.title,
             description: action.description,
             selectionType: action.selectionType,
+            buffer: action.buffer,
         };
     case types.CLEAR_AOI_INFO:
         return {
@@ -47,6 +48,7 @@ export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
             title: null,
             description: null,
             selectionType: null,
+            buffer: 0,
         };
     default:
         return state;

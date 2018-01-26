@@ -122,9 +122,8 @@ class Overpass(object):
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
-        if self.debug:
-            logger.debug('Query finished at %s'.format(datetime.now()))
-            logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
+        logger.debug('Query finished at %s'.format(datetime.now()))
+        logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
 
     def _build_overpass_query(self,):  # pragma: no cover

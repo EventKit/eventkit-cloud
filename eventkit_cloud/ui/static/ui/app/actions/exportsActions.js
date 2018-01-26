@@ -18,8 +18,10 @@ export function updateAoiInfo(aoiInfo) {
         title: aoiInfo.title,
         description: aoiInfo.description,
         selectionType: aoiInfo.selectionType,
+        buffer: aoiInfo.buffer,
     };
 }
+
 export function updateExportInfo(exportInfo) {
     return {
         type: types.UPDATE_EXPORT_INFO,
