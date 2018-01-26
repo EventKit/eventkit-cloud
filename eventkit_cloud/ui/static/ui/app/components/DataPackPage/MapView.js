@@ -944,6 +944,7 @@ export class MapView extends Component {
                             setImportModalState={this.toggleImportModal}
                             showBufferButton={showBuffer}
                             onBufferClick={this.bufferMapFeature}
+                            title="FILTERS"
                         />
                         <InvalidDrawWarning
                             show={this.state.showInvalidDrawWarning}

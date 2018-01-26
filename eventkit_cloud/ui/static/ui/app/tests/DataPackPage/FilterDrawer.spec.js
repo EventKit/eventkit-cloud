@@ -202,28 +202,65 @@ describe('FilterDrawer component', () => {
         stateStub.restore();
     });
 
-    it('handleGroupSelect should remove a groups from the state', () => {
+    it('handleGroupSelect should remove a group from the state', () => {
         const props = getProps();
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(wrapper.state().selectedGroups).toEqual(props.groups.map(group => group.id));
+        wrapper.setState({ selectedGroups: [props.groups[0].id] });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleGroupSelect(props.groups[0]);
         expect(stateStub.calledOnce).toBe(true);
-        const expectedGroups = props.groups.slice(1).map(group => group.id);
+        const expectedGroups = [];
         expect(stateStub.calledWith({ selectedGroups: expectedGroups })).toBe(true);
         stateStub.restore();
     });
 
     it('handleGroupSelect should add a group to the state', () => {
         const props = getProps();
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         const wrapper = getWrapper(props);
         expect(wrapper.state().selectedGroups).toEqual(props.groups.map(group => group.id));
+        wrapper.setState({ selectedGroups: [props.groups[0].id] });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const newGroup = { id: 'groupX', name: 'groupX' };
         wrapper.instance().handleGroupSelect(newGroup);
         expect(stateStub.calledOnce).toBe(true);
-        const expectedGroups = [...props.groups.map(group => group.id), newGroup.id];
+        const expectedGroups = [props.groups[0].id, newGroup.id];
         expect(stateStub.calledWith({ selectedGroups: expectedGroups })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleGroupSelect should clear groups and add only one if all are selected', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().selectedGroups).toEqual(props.groups.map(group => group.id));
+        wrapper.instance().handleGroupSelect(props.groups[0]);
+        expect(stateStub.calledOnce).toBe(true);
+        const expectedGroups = [props.groups[0].id];
+        expect(stateStub.calledWith({ selectedGroups: expectedGroups })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleAllGroupSelect should set state to empty array', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleAllGroupSelect();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ selectedGroups: [] })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleAllGroupSelect should set state to all groups', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ selectedGroups: [] });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleAllGroupSelect();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({
+            selectedGroups: props.groups.map(group => group.id),
+        })).toBe(true);
         stateStub.restore();
     });
 });

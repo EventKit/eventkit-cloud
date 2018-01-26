@@ -5,6 +5,17 @@ import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class GroupsDropDownMenu extends Component {
+    constructor(props) {
+        super(props);
+        this.scrollToTop = this.scrollToTop.bind(this);
+    }
+
+    scrollToTop() {
+        if (this.props.open && this.scrollbar) {
+            this.scrollbar.scrollToTop();
+        }
+    }
+
     render() {
         const styles = {
             loadingBackground: {
@@ -55,6 +66,7 @@ export class GroupsDropDownMenu extends Component {
                         autoHeight
                         autoHeightMax={300}
                         style={{ maxWidth: this.props.width }}
+                        ref={(instance) => { this.scrollbar = instance; }}
                         className="qa-GroupsDropDownMenu-CustomScrollbar"
                     >
                         <div>

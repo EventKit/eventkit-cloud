@@ -1,5 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
+import Divider from 'material-ui/Divider';
 import Lock from 'material-ui/svg-icons/action/lock';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import SocialPublic from 'material-ui/svg-icons/social/public';
@@ -62,16 +63,24 @@ export class PermissionsFilter extends Component {
             },
         };
 
-        const selectedCount = this.props.selectedGroups.length ?
-            this.props.selectedGroups.length === this.props.groups.length ?
-                'All'
-                :
-                this.props.selectedGroups.length
-            :
-            'No';
+        let selectedCount = null;
+        if (this.props.selectedGroups.length) {
+            if (this.props.selectedGroups.length === this.props.groups.length) {
+                selectedCount = 'All';
+            } else {
+                selectedCount = this.props.selectedGroups.length;
+            }
+        } else {
+            selectedCount = 'No';
+        }
+
         let selectionText = `${selectedCount} Groups`;
         if (selectedCount === 1) {
             selectionText = selectionText.slice(0, -1);
+        }
+
+        if (selectedCount === 'All' && this.dropdown) {
+            this.dropdown.scrollToTop();
         }
 
         const checkIcon = (<CheckCircle style={{ fill: '#4598bf' }} />);
@@ -141,7 +150,6 @@ export class PermissionsFilter extends Component {
                     />
                 </RadioButtonGroup>
                 {this.props.valueSelected === 'group' ?
-                    
                     <div style={{ position: 'relative', margin: '0px 5px' }}>
                         <div
                             tabIndex={0}
@@ -167,18 +175,26 @@ export class PermissionsFilter extends Component {
                     null
                 }
                 <GroupsDropDownMenu
+                    ref={(instance) => { this.dropdown = instance; }}
                     open={this.state.open}
                     anchorEl={this.state.popoverAnchor}
                     onClose={this.handleGroupsClose}
                     width={220}
                     className="qa-UserTableRowColumn-GroupsDropDownMenu"
                 >
+                    <GroupsDropDownMenuItem
+                        key="all"
+                        group={{ id: 'all', name: 'All Groups' }}
+                        onClick={this.props.onAllGroupSelect}
+                        selected={selectedCount === 'All'}
+                    />
+                    <Divider className="qa-PermissionsFilter-Divider" />
                     {this.props.groups.map(group => (
                         <GroupsDropDownMenuItem
                             key={group.id}
                             group={group}
                             onClick={this.props.onGroupSelect}
-                            selected={this.props.selectedGroups.includes(group.id)}
+                            selected={selectedCount !== 'All' && this.props.selectedGroups.includes(group.id)}
                         />
                     ))}
                 </GroupsDropDownMenu>
@@ -191,6 +207,7 @@ PermissionsFilter.propTypes = {
     valueSelected: PropTypes.oneOf(['public', 'private', 'group']).isRequired,
     selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
     onGroupSelect: PropTypes.func.isRequired,
+    onAllGroupSelect: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,

@@ -34,7 +34,7 @@ export class DrawAOIToolbar extends Component {
         return (
             <div id="container" style={styles.container}>
                 <div className="qa-DrawAOIToolbar-div-title" style={styles.title}>
-                    <strong>TOOLS</strong>
+                    <strong>{this.props.title}</strong>
                 </div>
                 <DrawBoxButton
                     handleCancel={this.props.handleCancel}
@@ -78,10 +78,17 @@ DrawAOIToolbar.defaultProps = {
     containerStyle: {},
     showBufferButton: false,
     onBufferClick: null,
+    title: 'TOOLS',
 };
 
 DrawAOIToolbar.propTypes = {
-    toolbarIcons: PropTypes.object.isRequired,
+    toolbarIcons: PropTypes.shape({
+        box: PropTypes.string,
+        free: PropTypes.string,
+        mapView: PropTypes.string,
+        import: PropTypes.string,
+        search: PropTypes.string,
+    }).isRequired,
     updateMode: PropTypes.func.isRequired,
     setMapView: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
@@ -94,6 +101,7 @@ DrawAOIToolbar.propTypes = {
     containerStyle: PropTypes.object,
     showBufferButton: PropTypes.bool,
     onBufferClick: PropTypes.func,
+    title: PropTypes.string,
 };
 
 export default DrawAOIToolbar;

@@ -19,6 +19,7 @@ export class FilterDrawer extends Component {
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
         this.handleGroupSelect = this.handleGroupSelect.bind(this);
+        this.handleAllGroupSelect = this.handleAllGroupSelect.bind(this);
         this.state = this.getDefaultState();
     }
 
@@ -82,7 +83,11 @@ export class FilterDrawer extends Component {
     }
 
     handleGroupSelect(group) {
-        if (this.state.selectedGroups.includes(group.id)) {
+        // if all are already selected, remove everything except for the target group
+        if (this.state.selectedGroups.length === this.props.groups.length) {
+            const newGroups = [group.id];
+            this.setState({ selectedGroups: newGroups });
+        } else if (this.state.selectedGroups.includes(group.id)) {
             const newGroups = [...this.state.selectedGroups];
             newGroups.splice(
                 this.state.selectedGroups.indexOf(group.id),
@@ -91,6 +96,15 @@ export class FilterDrawer extends Component {
             this.setState({ selectedGroups: newGroups });
         } else {
             const newGroups = [...this.state.selectedGroups, group.id];
+            this.setState({ selectedGroups: newGroups });
+        }
+    }
+
+    handleAllGroupSelect() {
+        if (this.props.groups.length === this.state.selectedGroups.length) {
+            this.setState({ selectedGroups: [] });
+        } else {
+            const newGroups = this.props.groups.map(group => group.id);
             this.setState({ selectedGroups: newGroups });
         }
     }
@@ -124,6 +138,7 @@ export class FilterDrawer extends Component {
                         valueSelected={this.state.permissions}
                         selectedGroups={this.state.selectedGroups}
                         onGroupSelect={this.handleGroupSelect}
+                        onAllGroupSelect={this.handleAllGroupSelect}
                         groups={this.props.groups}
                     />
                     <StatusFilter

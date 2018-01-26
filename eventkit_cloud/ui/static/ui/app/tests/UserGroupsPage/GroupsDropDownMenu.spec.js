@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { shallow } from 'enzyme';
+import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import Popover from 'material-ui/Popover';
@@ -60,5 +61,16 @@ describe('GroupsDropDownMenu component', () => {
         props.loading = true;
         const wrapper = getWrapper(props);
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
+    });
+
+    it('scrollToTop should call scrollToTop on the custom scrollbar', () => {
+        const props = getProps();
+        props.open = true;
+        const wrapper = getWrapper(props);
+        const scrollSpy = sinon.spy();
+        const scrollbar = { scrollToTop: scrollSpy };
+        wrapper.instance().scrollbar = scrollbar;
+        wrapper.instance().scrollToTop();
+        expect(scrollSpy.calledOnce).toBe(true);
     });
 });
