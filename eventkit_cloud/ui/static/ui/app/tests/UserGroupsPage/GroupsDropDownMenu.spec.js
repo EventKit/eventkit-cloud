@@ -1,49 +1,30 @@
 import React, { PropTypes } from 'react';
-import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
-import MenuItem from 'material-ui/MenuItem';
 import CircularProgress from 'material-ui/CircularProgress';
-import CheckIcon from 'material-ui/svg-icons/navigation/check';
 import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
 import { CustomScrollbar } from '../../components/CustomScrollbar';
 
 describe('GroupsDropDownMenu component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
-
-    const fakeGroups = [
-        {
-            id: '1',
-            name: 'group1',
-            members: ['user1', 'user2'],
-            owners: ['user1'],
-        },
-        {
-            id: '2',
-            name: 'group2',
-            members: ['user1', 'user2'],
-            owners: ['user2'],
-        },
-    ];
     const getProps = () => (
         {
-            groups: [...fakeGroups],
             open: true,
             onClose: () => {},
-            onMenuItemClick: () => {},
-            onNewGroupClick: () => {},
-            selectedGroups: ['1'],
-            groupsLoading: false,
+            loading: false,
         }
     );
 
     const getWrapper = props => (
         // using shallow because the MUI components inside are super weird to test
-        shallow(<GroupsDropDownMenu {...props} />, {
+        shallow((
+            <GroupsDropDownMenu {...props}>
+                <div className="childElement" >hello im a child element</div>
+            </GroupsDropDownMenu>), {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
@@ -60,31 +41,23 @@ describe('GroupsDropDownMenu component', () => {
     it('should render a popover', () => {
         const props = getProps();
         props.open = false;
-        props.onMenuItemClick = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setProps({ open: true });
         expect(wrapper.find(Menu)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(3);
-        wrapper.find('.qa-GroupsDropDownMenu-MenuItem-group').first().props().onTouchTap();
-        expect(props.onMenuItemClick.calledOnce).toBe(true);
-        expect(props.onMenuItemClick.calledWith(props.groups[0])).toBe(true);
     });
 
-    it('menu items should display check mark if user is in the respective group', () => {
+    it('should render any children passed to it', () => {
         const props = getProps();
-        props.open = false;
         const wrapper = getWrapper(props);
-        wrapper.setProps({ open: true });
-        expect(wrapper.find('.qa-GroupsDropDownMenu-MenuItem-group')).toHaveLength(2);
-        expect(wrapper.find('.qa-GroupsDropDownMenu-MenuItem-group').first().find(CheckIcon)).toHaveLength(1);
-        expect(wrapper.find('.qa-GroupsDropDownMenu-MenuItem-group').last().find(CheckIcon)).toHaveLength(0);
+        expect(wrapper.find('.childElement'));
+        expect(wrapper.find('.childElement').text()).toEqual('hello im a child element');
     });
 
     it('should display a loading icon', () => {
         const props = getProps();
         props.open = true;
-        props.groupsLoading = true;
+        props.loading = true;
         const wrapper = getWrapper(props);
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });

@@ -2,13 +2,6 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function createExportRequest(exportData) {
-    return {
-        type: types.CREATE_EXPORT_SUCCESS,
-        exportInfo: exportData,
-    };
-}
-
 export function updateAoiInfo(aoiInfo) {
     return {
         type: types.UPDATE_AOI_INFO,
@@ -30,7 +23,7 @@ export function updateExportInfo(exportInfo) {
 export function clearExportInfo() {
     return {
         type: types.CLEAR_EXPORT_INFO,
-    }
+    };
 }
 
 export function stepperNextDisabled() {
@@ -47,71 +40,72 @@ export function stepperNextEnabled() {
     };
 }
 
-export const submitJob = data => (dispatch) => {
-    dispatch({
-        type: types.SUBMITTING_JOB,
-    });
-
-    const csrfmiddlewaretoken = cookie.load('csrftoken');
-    return axios({
-        url: '/api/jobs',
-        method: 'POST',
-        contentType: 'application/json; version=1.0',
-        data,
-        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-    }).then((response) => {
+export function submitJob(data) {
+    return (dispatch) => {
         dispatch({
-            type: types.JOB_SUBMITTED_SUCCESS,
-            jobuid: response.data.uid,
-
+            type: types.SUBMITTING_JOB,
         });
-    }).catch((error) => {
-        console.log(error);
+
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        return axios({
+            url: '/api/jobs',
+            method: 'POST',
+            contentType: 'application/json; version=1.0',
+            data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            dispatch({
+                type: types.JOB_SUBMITTED_SUCCESS,
+                jobuid: response.data.uid,
+
+            });
+        }).catch((error) => {
+            dispatch({
+                type: types.JOB_SUBMITTED_ERROR, error: error.response.data,
+            });
+        });
+    };
+}
+
+export function getProviders() {
+    return (dispatch) => {
         dispatch({
-            type: types.JOB_SUBMITTED_ERROR, error,
+            type: types.GETTING_PROVIDERS,
         });
-    });
-};
 
-export const getProviders = () => (dispatch) => {
-    dispatch({
-        type: types.GETTING_PROVIDERS,
-    });
+        return axios({
+            url: '/api/providers',
+            method: 'GET',
+        }).then((response) => {
+            dispatch({
+                type: types.PROVIDERS_RECEIVED,
+                providers: response.data,
+            });
+        }).catch((error) => {
+            console.log(error);
+        });
+    };
+}
 
-    axios.get('/api/providers').catch((error) => {
-        console.log(error);
-    });
-
-    return axios({
-        url: '/api/providers',
-        method: 'GET',
-    }).then((response) => {
+export function getFormats() {
+    return (dispatch) => {
         dispatch({
-            type: types.PROVIDERS_RECEIVED,
-            providers: response.data,
+            type: types.GETTING_FORMATS,
         });
-    }).catch((error) => {
-        console.log(error);
-    });
-};
 
-export const getFormats = () => (dispatch) => {
-    dispatch({
-        type: types.GETTING_FORMATS,
-    });
-
-    return axios({
-        url: '/api/formats',
-        method: 'GET',
-    }).then((response) => {
-        dispatch({
-            type: types.FORMATS_RECEIVED,
-            formats: response.data,
+        return axios({
+            url: '/api/formats',
+            method: 'GET',
+        }).then((response) => {
+            dispatch({
+                type: types.FORMATS_RECEIVED,
+                formats: response.data,
+            });
+        }).catch((error) => {
+            console.log(error);
         });
-    }).catch((error) => {
-        console.log(error);
-    });
-};
+    };
+}
 
 export function clearAoiInfo() {
     return {
@@ -129,44 +123,61 @@ export function clearJobInfo() {
 let closeDrawerTimeout = null;
 let openDrawerTimeout = null;
 
-export const closeDrawer = () => (dispatch) => {
-    if (openDrawerTimeout !== null) {
-        clearTimeout(openDrawerTimeout);
-        openDrawerTimeout = null;
-    }
+export function getCloseDrawerTimeout() {
+    return closeDrawerTimeout;
+}
+export function setCloseDrawerTimeout(v) {
+    closeDrawerTimeout = v;
+}
+export function getOpenDrawerTimeout() {
+    return openDrawerTimeout;
+}
+export function setOpenDrawerTimeout(v) {
+    openDrawerTimeout = v;
+}
 
-    dispatch({
-        type: types.CLOSING_DRAWER,
-    });
+export function closeDrawer() {
+    return (dispatch) => {
+        if (this.getOpenDrawerTimeout() !== null) {
+            clearTimeout(this.getOpenDrawerTimeout());
+            this.setOpenDrawerTimeout(null);
+        }
 
-    return new Promise((resolve) => {
-        closeDrawerTimeout = setTimeout(() => {
-            closeDrawerTimeout = null;
-            dispatch({
-                type: types.CLOSED_DRAWER,
-            });
-            resolve();
-        }, 450);
-    });
-};
+        dispatch({
+            type: types.CLOSING_DRAWER,
+        });
 
-export const openDrawer = () => (dispatch) => {
-    if (closeDrawerTimeout !== null) {
-        clearTimeout(closeDrawerTimeout);
-        closeDrawerTimeout = null;
-    }
+        return new Promise((resolve) => {
+            this.setCloseDrawerTimeout(setTimeout(() => {
+                this.setCloseDrawerTimeout(null);
+                dispatch({
+                    type: types.CLOSED_DRAWER,
+                });
+                resolve();
+            }, 450));
+        });
+    };
+}
 
-    dispatch({
-        type: types.OPENING_DRAWER,
-    });
+export function openDrawer() {
+    return (dispatch) => {
+        if (this.getCloseDrawerTimeout() !== null) {
+            clearTimeout(this.getCloseDrawerTimeout());
+            this.setCloseDrawerTimeout(null);
+        }
 
-    return new Promise((resolve) => {
-        openDrawerTimeout = setTimeout(() => {
-            openDrawerTimeout = null;
-            dispatch({
-                type: types.OPENED_DRAWER,
-            });
-            resolve();
-        }, 450);
-    });
-};
+        dispatch({
+            type: types.OPENING_DRAWER,
+        });
+
+        return new Promise((resolve) => {
+            this.setOpenDrawerTimeout(setTimeout(() => {
+                this.setOpenDrawerTimeout(null);
+                dispatch({
+                    type: types.OPENED_DRAWER,
+                });
+                resolve();
+            }, 450));
+        });
+    };
+}

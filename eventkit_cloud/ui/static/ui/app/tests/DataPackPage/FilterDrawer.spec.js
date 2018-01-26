@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import { mount } from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
@@ -10,7 +10,7 @@ import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import ProvidersFilter from "../../components/DataPackPage/ProvidersFilter";
+import ProvidersFilter from '../../components/DataPackPage/ProvidersFilter';
 
 describe('FilterDrawer component', () => {
     injectTapEventPlugin();
@@ -37,21 +37,26 @@ describe('FilterDrawer component', () => {
             "export_provider_type": 2
         },
     ];
-    const getProps = () => {
-        return {
+    const getProps = () => (
+        {
             onFilterApply: () => {},
             onFilterClear: () => {},
             open: true,
-            providers: providers,
+            providers,
+            groups: [
+                { id: 'group1', name: 'group1', members: ['user1', 'user2', 'user3'] },
+                { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
+                { id: 'group3', name: 'group3', members: ['user1'] },
+            ],
         }
-    };
+    );
 
-    const getWrapper = (props) => {
-        return mount(<FilterDrawer {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-    }
+    const getWrapper = props => (
+        mount(<FilterDrawer {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
+        })
+    );
 
     it('should render all the basic components', () => {
         const props = getProps();
@@ -65,9 +70,25 @@ describe('FilterDrawer component', () => {
         expect(wrapper.find(ProvidersFilter)).toHaveLength(1);
     });
 
+    it('componentWillReceiveProps should the first groups into state', () => {
+        const props = getProps();
+        const groups = [...props.groups];
+        props.groups = [];
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.groups = groups;
+        wrapper.setProps(nextProps);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({
+            selectedGroups: nextProps.groups.map(group => group.id),
+        })).toBe(true);
+        stateStub.restore();
+    });
+
     it('handleFilterApply should just call props.onFilterApply with current state', () => {
-        let props = getProps();
-        props.onFilterApply = new sinon.spy();
+        const props = getProps();
+        props.onFilterApply = sinon.spy();
         const wrapper = getWrapper(props);
         const state = wrapper.state();
         wrapper.instance().handleFilterApply();
@@ -76,14 +97,25 @@ describe('FilterDrawer component', () => {
     });
 
     it('handleFilterClear should reset the state and call props.onFilterClear', () => {
-        let props = getProps();
-        props.onFilterClear = new sinon.spy();
-        const initialState = {published: 'True', minDate: new Date(), maxDate: new Date(), status: {completed: true, incomplete: true, submitted: false}, providers: {osm: true}};
+        const props = getProps();
+        props.onFilterClear = sinon.spy();
+        const initialState = {
+            permissions: 'group',
+            minDate: new Date(),
+            maxDate: new Date(),
+            status: {
+                completed: true,
+                incomplete: true,
+                submitted: false,
+            },
+            providers: { osm: true },
+            selectedGroups: props.groups.map(group => group.id),
+        };
         const wrapper = getWrapper(props);
         wrapper.setState(initialState);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         const expectedState = {
-            published: null,
+            permissions: 'public',
             minDate: null,
             maxDate: null,
             status: {
@@ -92,65 +124,107 @@ describe('FilterDrawer component', () => {
                 submitted: false,
             },
             providers: {},
-        }
+            selectedGroups: props.groups.map(group => group.id),
+        };
         expect(wrapper.state()).toEqual(initialState);
         wrapper.instance().handleFilterClear();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith(expectedState)).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith(expectedState)).toBe(true);
         expect(props.onFilterClear.calledOnce).toBe(true);
-        stateSpy.restore();
-    })
+        stateStub.restore();
+    });
 
     it('handlePermissionsChange should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         wrapper.instance().handlePermissionsChange(null, 'value');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({published: 'value'}));
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ published: 'value' }));
+        stateStub.restore();
     });
 
     it('handleStatusChange should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
-        wrapper.instance().handleStatusChange({completed: true});
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({status: {completed: true, incomplete: false, submitted: false}})).toBe(true);
-        stateSpy.restore();
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        wrapper.instance().handleStatusChange({ completed: true });
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({
+            status: { completed: true, incomplete: false, submitted: false },
+        })).toBe(true);
+        stateStub.restore();
     });
 
-    it('handleProvidersChange should set state', () => {
+    it('handleProvidersChange should add the provider to state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         wrapper.instance().handleProvidersChange(providers[0].slug, true);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({providers: {[providers[0].slug]: true}})).toBe(true);
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ providers: { [providers[0].slug]: true } })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleProvidersChange should remove the provider from state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const initialValue = {};
+        initialValue[providers[0].slug] = true;
+        wrapper.setState({ providers: initialValue });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const expectedValue = {};
+        expect(wrapper.state().providers).toEqual(initialValue);
+        wrapper.instance().handleProvidersChange(providers[0].slug, false);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ providers: expectedValue })).toBe(true);
     });
 
     it('handleMinDate should set state', () => {
         const props = getProps();
-        const date = new Date(2017,2,30);
+        const date = new Date(2017, 2, 30);
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         wrapper.instance().handleMinDate(null, date);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({minDate: date}));
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ minDate: date }));
+        stateStub.restore();
     });
 
     it('handleMaxDate should set state', () => {
         const props = getProps();
-        const date = new Date(2017,2,30);
+        const date = new Date(2017, 2, 30);
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         wrapper.instance().handleMaxDate(null, date);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({maxDate: date}));
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ maxDate: date }));
+        stateStub.restore();
+    });
+
+    it('handleGroupSelect should remove a groups from the state', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().selectedGroups).toEqual(props.groups.map(group => group.id));
+        wrapper.instance().handleGroupSelect(props.groups[0]);
+        expect(stateStub.calledOnce).toBe(true);
+        const expectedGroups = props.groups.slice(1).map(group => group.id);
+        expect(stateStub.calledWith({ selectedGroups: expectedGroups })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleGroupSelect should add a group to the state', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().selectedGroups).toEqual(props.groups.map(group => group.id));
+        const newGroup = { id: 'groupX', name: 'groupX' };
+        wrapper.instance().handleGroupSelect(newGroup);
+        expect(stateStub.calledOnce).toBe(true);
+        const expectedGroups = [...props.groups.map(group => group.id), newGroup.id];
+        expect(stateStub.calledWith({ selectedGroups: expectedGroups })).toBe(true);
+        stateStub.restore();
     });
 });
 
