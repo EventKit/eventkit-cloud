@@ -304,17 +304,6 @@ describe('UserGroupsPage component', () => {
         expect(props.getUsers.calledWith(expectedParams)).toBe(true);
     });
 
-    it('makeUserRequest should request \'most shared\' users', () => {
-        const props = getProps();
-        props.getUsers = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ drawerSelection: 'shared' });
-        const expectedParams = { ordering: 'user__username', most_shared: true };
-        wrapper.instance().makeUserRequest();
-        expect(props.getUsers.calledOnce).toBe(true);
-        expect(props.getUsers.calledWith(expectedParams)).toBe(true);
-    });
-
     it('makeUserRequest should request users in a specific group', () => {
         const props = getProps();
         props.getUsers = sinon.spy();
