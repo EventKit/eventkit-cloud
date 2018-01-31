@@ -35,7 +35,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -934,15 +934,16 @@ class UserDataViewSet(viewsets.GenericViewSet):
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
+    filter_class = UserFilter
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,filters.OrderingFilter)
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
-    search_fields = ('username','accepted_licenses' )
-    ordering_fields = ('username', 'last_name')
+    search_fields = ('username', 'last_name', 'first_name', 'email')
+    ordering_fields = ('username', 'last_name', 'first_name', 'email', 'date_joined')
 
 
     def get_queryset(self):
-        return User.objects.all()
+        return User.objects.filter()
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
@@ -1031,10 +1032,11 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = GroupSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
             create a new group and place  the current logged in user in the group and its administrators.
+            optionally, provide additional group members
 
 
             Sample input:
@@ -1051,7 +1053,22 @@ class GroupViewSet(viewsets.ModelViewSet):
         group.user_set.add(user)
         groupadmin = GroupAdministrator.objects.create(user=user,group=group)
 
-        return response
+        if "members" in request.data:
+            for member  in request.data["members"]:
+                if member  != user.username:
+                    user  = User.objects.all().filter(username=member)[0]
+                    group.user_set.add(user)
+
+        if "administrators" in request.data:
+            for admin  in request.data["administrators"]:
+                if admin  != user.username:
+                    user  = User.objects.all().filter(username=admin)[0]
+                    GroupAdministrator.objects.create(user=user, group=group)
+
+        group  = Group.objects.filter(id=group_id)[0]
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, id=None):
         """
@@ -1062,6 +1079,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
              Change the group's name, members, and admnistrators

@@ -1207,7 +1207,7 @@ class TestGroupDataViewSet(APITestCase):
         self.assertEquals(expected, url)
         payload = {'name' : self.testName}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_201_CREATED, response.status_code)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.groupid = response.data["id"]
 
 
@@ -1219,7 +1219,7 @@ class TestGroupDataViewSet(APITestCase):
         url = reverse('api:groups-list')
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
         data = json.loads(response.content)
         self.assertEquals(len(data),2)
 
@@ -1238,7 +1238,7 @@ class TestGroupDataViewSet(APITestCase):
         self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,200)
+        self.assertEquals(response.status_code,status.HTTP_200_OK)
         groupdata = json.loads(response.content)
 
         # add a user to group members and to group administrators
@@ -1246,7 +1246,7 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['members'].append( 'user_2')
         groupdata['administrators'].append( 'user_2')
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,200)
+        self.assertEquals(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
         self.assertEquals(len(groupdata["members"]),2)
@@ -1258,7 +1258,7 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['members'] = ['user_1']
         groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,200)
+        self.assertEquals(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
         self.assertEquals(len(groupdata["members"]),1)

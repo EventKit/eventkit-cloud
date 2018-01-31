@@ -9,6 +9,8 @@ from django.db.models import Q
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 
+from django.contrib.auth.models import User
+
 from rest_framework.filters import BaseFilterBackend
 
 logger = logging.getLogger(__name__)
@@ -67,3 +69,13 @@ class ExportRunFilter(django_filters.FilterSet):
         fields = ('user', 'status', 'job_uid', 'min_date', 'max_date',
                   'started_at', 'published', 'providers')
 
+
+class UserFilter(django_filters.FilterSet):
+#    date = django_filters.DateTimeFromToRangeFilter(name="date_joined_range")
+    min_date = django_filters.DateFilter(name="date_joined", lookup_expr="gte")
+    max_date = django_filters.DateFilter(name="date_joined", lookup_expr="lte")
+    started_at = django_filters.DateTimeFilter(name="date_joined", lookup_expr="exact")
+
+    class Meta:
+        model = User
+        fields = ['date_joined']
