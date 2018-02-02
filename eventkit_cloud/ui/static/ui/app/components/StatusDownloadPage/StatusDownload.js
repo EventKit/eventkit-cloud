@@ -8,7 +8,10 @@ import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
+import {
+    getDatacartDetails, deleteRun, rerunExport, clearReRunInfo,
+    cancelProviderTask, updateExpiration, updatePermission,
+} from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/BaseDialog';
@@ -21,10 +24,7 @@ export class StatusDownload extends React.Component {
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
-            datacartDetails: [],
             isLoading: true,
-            maxDays: null,
-            zipFileProp: null,
             error: null,
         };
     }
@@ -33,8 +33,6 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
-        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
-        this.setState({ maxDays });
     }
 
     componentWillReceiveProps(nextProps) {
@@ -48,9 +46,7 @@ export class StatusDownload extends React.Component {
         }
         if (nextProps.exportReRun.fetched !== this.props.exportReRun.fetched) {
             if (nextProps.exportReRun.fetched === true) {
-                let datacartDetails = [];
-                datacartDetails[0] = nextProps.exportReRun.data;
-                this.setState({ datacartDetails });
+                this.props.getDatacartDetails(this.props.params.jobuid);
                 this.startTimer();
             }
         }
@@ -67,13 +63,10 @@ export class StatusDownload extends React.Component {
         if (nextProps.datacartDetails.fetched !== this.props.datacartDetails.fetched) {
             if (nextProps.datacartDetails.fetched === true) {
                 const datacartDetails = nextProps.datacartDetails.data;
-                this.setState({ datacartDetails, zipFileProp: nextProps.datacartDetails.data[0].zipfile_url });
-
                 let clearTimer = 0;
                 if (nextProps.datacartDetails.data[0].zipfile_url == null) {
                     clearTimer += 1;
                 }
-
 
                 // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
                 // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
@@ -146,7 +139,7 @@ export class StatusDownload extends React.Component {
     startTimer() {
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
-        }, 3000);
+        }, 5000);
     }
 
     clearError() {
@@ -219,7 +212,7 @@ export class StatusDownload extends React.Component {
                                     :
                                     null
                                 }
-                                {this.state.datacartDetails.map(cartDetails => (
+                                {this.props.datacartDetails.data.map(cartDetails => (
                                     <DataCartDetails
                                         key={cartDetails.uid}
                                         cartDetails={cartDetails}
@@ -230,8 +223,7 @@ export class StatusDownload extends React.Component {
                                         onClone={this.props.cloneExport}
                                         onProviderCancel={this.props.cancelProviderTask}
                                         providers={this.props.providers}
-                                        maxResetExpirationDays={this.state.maxDays}
-                                        zipFileProp={this.state.zipFileProp}
+                                        maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
                                     />
                                 ))}
@@ -252,6 +244,26 @@ export class StatusDownload extends React.Component {
     }
 }
 
+StatusDownload.contextTypes = {
+    config: PropTypes.object,
+};
+
+StatusDownload.propTypes = {
+    datacartDetails: PropTypes.object.isRequired,
+    getDatacartDetails: PropTypes.func.isRequired,
+    deleteRun: PropTypes.func.isRequired,
+    runDeletion: PropTypes.object.isRequired,
+    rerunExport: PropTypes.func.isRequired,
+    exportReRun: PropTypes.object.isRequired,
+    updateExpirationDate: PropTypes.func.isRequired,
+    updatePermission: PropTypes.func.isRequired,
+    cloneExport: PropTypes.func.isRequired,
+    cancelProviderTask: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    user: PropTypes.object.isRequired,
+
+};
 
 function mapStateToProps(state) {
     return {
@@ -318,25 +330,6 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
-
-StatusDownload.contextTypes = {
-    config: PropTypes.object,
-};
-
-StatusDownload.propTypes = {
-    datacartDetails: PropTypes.object.isRequired,
-    getDatacartDetails: PropTypes.func.isRequired,
-    runDeletion: PropTypes.object.isRequired,
-    rerunExport: PropTypes.func.isRequired,
-    exportReRun: PropTypes.object.isRequired,
-    updateExpirationDate: PropTypes.func.isRequired,
-    updatePermission: PropTypes.func.isRequired,
-    cloneExport: PropTypes.func.isRequired,
-    cancelProviderTask: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    user: PropTypes.object.isRequired,
-
-};
 
 reactMixin(StatusDownload.prototype, TimerMixin);
 

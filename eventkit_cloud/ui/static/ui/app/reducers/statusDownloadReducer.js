@@ -4,11 +4,11 @@ import initialState from './initialState';
 export function getDatacartDetailsReducer(state = initialState.datacartDetails, action) {
     switch(action.type) {
         case types.GETTING_DATACART_DETAILS:
-            return {fetching: true, fetched: false, data: [], error: null};
+            return { ...state, fetching: true, fetched: false, error: null };
         case types.DATACART_DETAILS_RECEIVED:
-            return {fetching: false, fetched: true, data: action.datacartDetails.data, error: null};
+            return { fetching: false, fetched: true, data: action.datacartDetails.data, error: null };
         case types.DATACART_DETAILS_ERROR:
-            return {fetching: false, fetched: false, data: [], error: action.error};
+            return { fetching: false, fetched: false, data: [], error: action.error };
         default:
             return state;
     }

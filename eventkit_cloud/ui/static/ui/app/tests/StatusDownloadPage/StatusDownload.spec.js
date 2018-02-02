@@ -21,7 +21,7 @@ describe('StatusDownload component', () => {
     });
     const muiTheme = getMuiTheme();
 
-    const config = {MAX_EXPORTRUN_EXPIRATION_DAYS: '30'};
+    const config = { MAX_DATAPACK_EXPIRATION_DAYS: '30' };
     const providers = [
         {
             "id": 2,

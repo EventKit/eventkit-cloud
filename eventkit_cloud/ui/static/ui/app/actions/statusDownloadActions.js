@@ -11,12 +11,15 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         url: `/api/runs?job_uid=${jobuid}`,
         method: 'GET',
     }).then((response) => {
-        const data = { ...response.data[0] };
+        // get the list of runs (DataPacks) that are associated with the job UID.
+        // We take only the first one for now since multiples are currently disabled.
+        // However we leave it in an array for future proofing.
+        const data = [{ ...response.data[0] }];
 
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,
             datacartDetails: {
-                data: [data],
+                data,
             },
         });
     }).catch((error) => {
