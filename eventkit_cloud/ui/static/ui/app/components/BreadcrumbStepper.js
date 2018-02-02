@@ -55,7 +55,6 @@ export class BreadcrumbStepper extends React.Component {
             }
         }
         if (nextProps.jobError) {
-            console.log('oh no we have an error');
             this.hideLoading();
             this.showError(nextProps.jobError);
         }
