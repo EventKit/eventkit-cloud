@@ -7,10 +7,31 @@ import Check from 'material-ui/svg-icons/navigation/check';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
 import Public from 'material-ui/svg-icons/social/public';
+import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import moment from 'moment';
 import DataPackTableRow from './DataPackTableRow';
+import GroupsDropDownMenu from '../UserGroupsPage/GroupsDropDownMenu';
+import GroupsDropDownMenuItem from '../UserGroupsPage/GroupsDropDownMenuItem';
 
 export class DataPackStatusTable extends Component {
+    constructor(props) {
+        super(props);
+        this.handleGroupsOpen = this.handleGroupsOpen.bind(this);
+        this.handleGroupsClose = this.handleGroupsClose.bind(this);
+        this.state = {
+            groupsOpen: false,
+            anchor: null,
+        };
+    }
+
+    handleGroupsOpen(e) {
+        this.setState({ groupsOpen: true, anchor: e.currentTarget });
+    }
+
+    handleGroupsClose() {
+        this.setState({ groupsOpen: false });
+    }
+
     render() {
         const styles = {
             textField: {
@@ -20,23 +41,24 @@ export class DataPackStatusTable extends Component {
                 display: 'inlineBlock',
             },
             dropDown: {
-                height: '30px',
+                height: '24px',
                 marginLeft: '5px',
-                lineHeight: '35px',
+                lineHeight: '24px',
+                flex: '0 0 auto',
             },
             icon: {
-                height: '30px',
-                width: '30px',
+                height: '24px',
+                width: '24px',
                 padding: '0px',
                 fill: '#4498c0',
                 position: 'relative',
                 top: '0px',
                 right: '0px',
-                verticalAlign: 'text-bottom',
+                verticalAlign: 'top',
             },
             label: {
-                lineHeight: '30px',
-                height: '30px',
+                lineHeight: '24px',
+                height: '24px',
                 color: '#8b9396',
                 paddingLeft: '0px',
                 fontSize: '14px',
@@ -64,8 +86,14 @@ export class DataPackStatusTable extends Component {
             },
             permissionsIcon: {
                 fill: '#8b9396',
-                height: '26px',
+                height: '24px',
                 verticalAlign: 'middle',
+            },
+            groups: {
+                borderBottom: '1px solid #B4B7B8',
+                display: 'flex',
+                cursor: 'pointer',
+                outline: 'none',
             },
         };
 
@@ -78,6 +106,50 @@ export class DataPackStatusTable extends Component {
             publicCheck: this.props.permission === 'public' ? checkIcon : null,
             groupCheck: this.props.permission === 'group' ? checkIcon : null,
         };
+
+        let groupsDropdown = null;
+        let groupsDropdownButton = null;
+        if (this.props.permission === 'group') {
+            console.log('groups time');
+            groupsDropdown = (
+                <GroupsDropDownMenu
+                    key="groupsMenu"
+                    open={this.state.groupsOpen}
+                    anchorEl={this.state.anchor}
+                    onClose={this.handleGroupsClose}
+                    width={200}
+                >
+                    <GroupsDropDownMenuItem
+                        group={{ id: '1', name: 'janedoe' }}
+                        onClick={() => { console.log('click'); }}
+                        selected
+                    />
+                </GroupsDropDownMenu>
+            );
+            groupsDropdownButton = (
+                <div style={{ position: 'relative', margin: '0px 5px' }} key="groupsButton">
+                    <div
+                        tabIndex={0}
+                        role="button"
+                        onKeyPress={this.handleGroupsOpen}
+                        style={styles.groups}
+                        onClick={this.handleGroupsOpen}
+                        className="qa-PermissionsFilter-groups-button"
+                    >
+                        <div
+                            style={{ flex: '1 1 auto', fontWeight: 700, color: 'grey' }}
+                            className="qa-PermissionsFilter-groups-selection"
+                        >
+                            text
+                        </div>
+                        <ArrowDown
+                            style={{ fill: '#4598bf', flex: '0 0 auto', height: '24px' }}
+                            className="qa-PermissionsFilter-groups-ArrowDown"
+                        />
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div style={{ marginLeft: '-5px', marginTop: '-5px' }}>
@@ -115,8 +187,9 @@ export class DataPackStatusTable extends Component {
                 />
                 <DataPackTableRow
                     title="Permissions"
-                    data={
+                    data={[
                         <DropDownMenu
+                            key="permissionsMenu"
                             className="qa-DataPackStatusTable-DropDownMenu-published"
                             value={this.props.permission}
                             onChange={this.props.handlePermissionsChange}
@@ -166,8 +239,10 @@ export class DataPackStatusTable extends Component {
                                 }
                                 style={{ color: '#8b9396' }}
                             />
-                        </DropDownMenu>
-                    }
+                        </DropDownMenu>,
+                        groupsDropdownButton,
+                        groupsDropdown,
+                    ]}
                 />
             </div>
         );
