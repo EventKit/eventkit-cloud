@@ -8,6 +8,7 @@ export const initialState = {
   error: null,
   autoLogoutAt: null,
   autoLogoutWarningAt: null,
+  viewedJobs: [],
 }
 
 export default (state = initialState, { type, payload, error }) => {
@@ -30,6 +31,13 @@ export default (state = initialState, { type, payload, error }) => {
       return { ...state, patching: false, error: error}
     case types.USER_ACTIVE:
       return { ...state, ...payload }
+    case types.VIEWED_JOB:
+      return Object.assign({}, state, {
+        viewedJobs: [
+          ...state.viewedJobs,
+          payload.job.uid,
+        ]
+      });
     default:
       return state
   }

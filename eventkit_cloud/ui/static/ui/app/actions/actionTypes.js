@@ -61,6 +61,7 @@ const types = {
     SET_PAGE_ORDER: 'SET_PAGE_ORDER',
     SET_PAGE_VIEW: 'SET_PAGE_VIEW',
     USER_ACTIVE: 'USER_ACTIVE',
+    VIEWED_JOB: 'VIEWED_JOB',
 }
 
 export default types

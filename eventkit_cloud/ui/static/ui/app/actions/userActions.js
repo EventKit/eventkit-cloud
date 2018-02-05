@@ -100,3 +100,24 @@ export const userActive = () => (dispatch) => {
         console.error(error.message);
     });
 };
+
+export const viewedJob = (job) => (dispatch) => {
+    // Add viewed datapack to history locally.
+    dispatch({
+        type: actions.VIEWED_JOB,
+        payload: {
+            job: job
+        }
+    });
+
+    return axios({
+        url: '/viewed_job',
+        method: 'POST',
+        data: {job_uid: job.uid},
+        headers: {'X-CSRFToken': cookie.load('csrftoken')}
+    }).then((response) => {
+        console.log('response', response);
+    }).catch((error) => {
+        console.error(error.message);
+    });
+};

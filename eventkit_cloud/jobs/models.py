@@ -94,6 +94,7 @@ class UserLicense(TimeStampedModelMixin):
     def __unicode__(self):
         return '{0}: {1}'.format(self.user.username, self.license.slug)
 
+
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
     Model for a ExportFormat.
@@ -315,6 +316,14 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return serialize('geojson', [self],
                          geometry_field='the_geom',
                          fields=('name', 'the_geom'))
+
+
+class ViewedJob(TimeStampedModelMixin):
+    """
+    Model to record users' history of viewed jobs.
+    """
+    user = models.ForeignKey(User)
+    job = models.ForeignKey(Job)
 
 
 class RegionMask(models.Model):

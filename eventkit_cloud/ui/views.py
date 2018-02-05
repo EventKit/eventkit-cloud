@@ -9,6 +9,8 @@ from django.shortcuts import redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
+
+from eventkit_cloud.jobs.models import ViewedJob, Job
 from .data_estimator import get_size_estimate
 from django.contrib.auth import authenticate, login
 from ..api.serializers import UserDataSerializer
@@ -243,6 +245,19 @@ def user_active(request):
         'auto_logout_at': auto_logout_at.isoformat(),
         'auto_logout_warning_at': auto_logout_warning_at.isoformat(),
     }), content_type='application/json', status=200)
+
+
+@require_http_methods(['POST'])
+def viewed_job(request):
+    """Adds the job to the user's viewed history."""
+    request_data = json.loads(request.body)
+
+    ViewedJob.objects.create(
+        user=request.user,
+        job=Job.objects.get(uid=request_data['job_uid'])
+    )
+
+    return HttpResponse(status=200)
 
 
 # error views

@@ -10,6 +10,7 @@ import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
 import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+import { viewedJob } from '../../actions/userActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/BaseDialog';
 
@@ -95,6 +96,8 @@ export class StatusDownload extends React.Component {
                         }, 270000);
                     }
                 }
+
+                this.props.viewedJob(nextProps.datacartDetails.data[0].job);
 
                 if (this.state.isLoading) {
                     this.setState({ isLoading: false });
@@ -316,6 +319,9 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => {
             dispatch(getProviders());
         },
+        viewedJob: (job) => {
+            dispatch(viewedJob(job));
+        },
     };
 }
 
@@ -334,6 +340,7 @@ StatusDownload.propTypes = {
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
+    viewedJob: PropTypes.func.isRequired,
     user: PropTypes.object.isRequired,
 
 };
