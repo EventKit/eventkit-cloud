@@ -20,7 +20,6 @@ router.register(r'runs', ExportRunViewSet, base_name='runs')
 router.register(r'provider_tasks', ExportProviderTaskViewSet, base_name='provider_tasks')
 router.register(r'tasks', ExportTaskViewSet, base_name='tasks')
 router.register(r'regions', RegionViewSet, base_name='regions')
-router.register(r'maskregions', RegionMaskViewSet, base_name='mask')
 router.register(r'users', UserDataViewSet, base_name='users')
 router.register(r'groups', GroupViewSet, base_name='groups')
 

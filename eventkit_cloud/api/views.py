@@ -4,7 +4,7 @@ from collections import OrderedDict
 from datetime import datetime,timedelta
 from dateutil import parser
 import logging
-
+import json
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
@@ -1101,38 +1101,63 @@ class GroupViewSet(viewsets.ModelViewSet):
         # Insure that the original  administrator ( as defined by timestamp ) is ALWAYS
         # included in the administrators list
 
-        groupadministrators = GroupAdministrator.objects.filter(group=group).order_by("created_at")
-        currentadminusers = [ga.user for ga in groupadministrators]
-        owneradmin = currentadminusers[0]
+        if "administrators" in request.data:
+            groupadministrators = GroupAdministrator.objects.filter(group=group).order_by("created_at")
+            currentadminusers = [ga.user for ga in groupadministrators]
+            owneradmin = currentadminusers[0]
 
 
-        targetadminusernames   = request.data["administrators"]
-        if not owneradmin.username in targetadminusernames: targetadminusernames.append(owneradmin.username)
+            targetadminusernames   = request.data["administrators"]
+            if not owneradmin.username in targetadminusernames: targetadminusernames.append(owneradmin.username)
 
-        targetadmins  = []
-        for username in targetadminusernames:
-            user = User.objects.filter(username=username)
-            targetadmins.append(user[0])
+            targetadmins  = []
+            for username in targetadminusernames:
+                user = User.objects.filter(username=username)
+                targetadmins.append(user[0])
 
-        # Add new users:
-        for user in targetadmins:
-            if not user in currentadminusers:
-                groupadmin = GroupAdministrator.objects.create(user=user, group=group)
+            # Add new users:
+            for user in targetadmins:
+                if not user in currentadminusers:
+                    groupadmin = GroupAdministrator.objects.create(user=user, group=group)
 
-        # Remove users
-        for user in currentadminusers:
-            if not user in targetadmins:
-                for groupadmin in groupadministrators:
-                    if user == groupadmin.user:
-                        groupadmin.delete()
+            # Remove users
+            for user in currentadminusers:
+                if not user in targetadmins:
+                    for groupadmin in groupadministrators:
+                        if user == groupadmin.user:
+                            groupadmin.delete()
 
         # member sets are easier and atomic
 
-        targetmembers = request.data["members"]
-        set = [ User.objects.filter(username=username)[0] for username in targetmembers]
-        group.user_set.set(set)
+        if "members" in request.data:
+            targetmembers = request.data["members"]
+            set = [ User.objects.filter(username=username)[0] for username in targetmembers]
+            group.user_set.set(set)
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+    @list_route(methods=['post'])
+    def members(self, request, *args, **kwargs):
+        '''
+        Get  a de-duplicated list of all members in a list of groups
+
+        Sample input:
+
+                 {
+                    "groups" : [52,57]
+                 }
+
+
+        '''
+        allmembers = []
+
+        groups = Group.objects.filter(id__in=request.data["groups"])
+        for group in groups:
+            for member in group.user_set.all():
+                if  not member.username in allmembers: allmembers.append(member.username)
+
+        return Response( allmembers, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
