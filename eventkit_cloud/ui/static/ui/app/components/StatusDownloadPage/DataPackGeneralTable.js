@@ -77,9 +77,10 @@ export class DataCartGeneralTable extends Component {
                 />
                 <DataPackTableRow
                     title="Data Sources"
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
                     data={
                         providers.map(provider => (
-                            <div key={provider.name}>
+                            <div key={provider.name} style={{ margin: '5px 0px' }}>
                                 {provider.name}
                                 <Info
                                     onTouchTap={() => this.handleProviderOpen(provider)}

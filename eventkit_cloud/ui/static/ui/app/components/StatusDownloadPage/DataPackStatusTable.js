@@ -16,20 +16,20 @@ import GroupsDropDownMenuItem from '../UserGroupsPage/GroupsDropDownMenuItem';
 export class DataPackStatusTable extends Component {
     constructor(props) {
         super(props);
-        this.handleGroupsOpen = this.handleGroupsOpen.bind(this);
-        this.handleGroupsClose = this.handleGroupsClose.bind(this);
+        this.handleMembersOpen = this.handleMembersOpen.bind(this);
+        this.handleMembersClose = this.handleMembersClose.bind(this);
         this.state = {
-            groupsOpen: false,
+            membersOpen: false,
             anchor: null,
         };
     }
 
-    handleGroupsOpen(e) {
-        this.setState({ groupsOpen: true, anchor: e.currentTarget });
+    handleMembersOpen(e) {
+        this.setState({ membersOpen: true, anchor: e.currentTarget });
     }
 
-    handleGroupsClose() {
-        this.setState({ groupsOpen: false });
+    handleMembersClose() {
+        this.setState({ membersOpen: false });
     }
 
     render() {
@@ -42,7 +42,7 @@ export class DataPackStatusTable extends Component {
             },
             dropDown: {
                 height: '24px',
-                marginLeft: '5px',
+                margin: '0px 5px',
                 lineHeight: '24px',
                 flex: '0 0 auto',
             },
@@ -62,7 +62,7 @@ export class DataPackStatusTable extends Component {
                 color: '#8b9396',
                 paddingLeft: '0px',
                 fontSize: '14px',
-                fontWeight: 'normal',
+                fontWeight: 600,
                 paddingRight: '0px',
                 display: 'inline-block',
             },
@@ -89,8 +89,7 @@ export class DataPackStatusTable extends Component {
                 height: '24px',
                 verticalAlign: 'middle',
             },
-            groups: {
-                borderBottom: '1px solid #B4B7B8',
+            members: {
                 display: 'flex',
                 cursor: 'pointer',
                 outline: 'none',
@@ -101,50 +100,55 @@ export class DataPackStatusTable extends Component {
         const permissionsIcons = {
             private: <Lock style={styles.permissionsIcon} />,
             public: <Public style={styles.permissionsIcon} />,
-            group: <SocialGroup style={styles.permissionsIcon} />,
+            members: <SocialGroup style={styles.permissionsIcon} />,
             privateCheck: this.props.permission === 'private' ? checkIcon : null,
             publicCheck: this.props.permission === 'public' ? checkIcon : null,
-            groupCheck: this.props.permission === 'group' ? checkIcon : null,
+            membersCheck: this.props.permission === 'members' ? checkIcon : null,
         };
 
-        let groupsDropdown = null;
-        let groupsDropdownButton = null;
-        if (this.props.permission === 'group') {
-            console.log('groups time');
-            groupsDropdown = (
+        let membersDropdown = null;
+        let membersDropdownButton = null;
+        if (this.props.permission === 'members') {
+            membersDropdown = (
                 <GroupsDropDownMenu
-                    key="groupsMenu"
-                    open={this.state.groupsOpen}
+                    key="membersMenu"
+                    open={this.state.membersOpen}
                     anchorEl={this.state.anchor}
-                    onClose={this.handleGroupsClose}
+                    onClose={this.handleMembersClose}
                     width={200}
+                    loading={this.props.updatingPermission}
                 >
-                    <GroupsDropDownMenuItem
-                        group={{ id: '1', name: 'janedoe' }}
-                        onClick={() => { console.log('click'); }}
-                        selected
-                    />
+                    {this.props.users.map(user => (
+                        <GroupsDropDownMenuItem
+                            key={user.username}
+                            group={{ id: user.username, name: user.username }}
+                            onClick={this.props.handleSharedMembersChange}
+                            selected={this.props.sharedUsers.includes(user.username)}
+                        />
+                    ))}
                 </GroupsDropDownMenu>
             );
-            groupsDropdownButton = (
-                <div style={{ position: 'relative', margin: '0px 5px' }} key="groupsButton">
+            const selectedString = `${this.props.sharedUsers.length || 'No'} Member${this.props.sharedUsers.length === 1 ? '' : 's'}`;
+            membersDropdownButton = (
+                <div style={{ position: 'relative', margin: '0px 5px', display: 'flex' }} key="membersButton">
+                    <span style={{ marginRight: '12px', lineHeight: '24px', fontStyle: 'italic' }}>with</span>
                     <div
                         tabIndex={0}
                         role="button"
-                        onKeyPress={this.handleGroupsOpen}
-                        style={styles.groups}
-                        onClick={this.handleGroupsOpen}
-                        className="qa-PermissionsFilter-groups-button"
+                        onKeyPress={this.handleMembersOpen}
+                        style={styles.members}
+                        onClick={this.handleMembersOpen}
+                        className="qa-PermissionsFilter-members-button"
                     >
                         <div
-                            style={{ flex: '1 1 auto', fontWeight: 700, color: 'grey' }}
-                            className="qa-PermissionsFilter-groups-selection"
+                            style={{ flex: '1 1 auto', fontWeight: 600, color: '#8b9396', lineHeight: '24px' }}
+                            className="qa-PermissionsFilter-members-selection"
                         >
-                            text
+                            {selectedString}
                         </div>
                         <ArrowDown
                             style={{ fill: '#4598bf', flex: '0 0 auto', height: '24px' }}
-                            className="qa-PermissionsFilter-groups-ArrowDown"
+                            className="qa-PermissionsFilter-members-ArrowDown"
                         />
                     </div>
                 </div>
@@ -187,6 +191,7 @@ export class DataPackStatusTable extends Component {
                 />
                 <DataPackTableRow
                     title="Permissions"
+                    dataStyle={{ flexWrap: 'wrap' }}
                     data={[
                         <DropDownMenu
                             key="permissionsMenu"
@@ -227,21 +232,21 @@ export class DataPackStatusTable extends Component {
                                 style={{ color: '#8b9396' }}
                             />
                             <MenuItem
-                                value="group"
-                                className="qa-DataPackStatusTable-MenuItem-permissionGroup"
-                                rightIcon={permissionsIcons.groupCheck}
+                                value="members"
+                                className="qa-DataPackStatusTable-MenuItem-permissionMembers"
+                                rightIcon={permissionsIcons.membersCheck}
                                 primaryText={
                                     <div>
-                                        {permissionsIcons.group}
+                                        {permissionsIcons.members}
                                         &nbsp;&nbsp;
-                                        Group Share
+                                        Member Share
                                     </div>
                                 }
                                 style={{ color: '#8b9396' }}
                             />
                         </DropDownMenu>,
-                        groupsDropdownButton,
-                        groupsDropdown,
+                        membersDropdownButton,
+                        membersDropdown,
                     ]}
                 />
             </div>
@@ -255,6 +260,7 @@ DataPackStatusTable.defaultProps = {
     maxDate: null,
     statusColor: null,
     statusFontColor: null,
+    updatingPermissions: false,
 };
 
 DataPackStatusTable.propTypes = {
@@ -265,8 +271,18 @@ DataPackStatusTable.propTypes = {
     maxDate: PropTypes.instanceOf(Date),
     handleExpirationChange: PropTypes.func.isRequired,
     handlePermissionsChange: PropTypes.func.isRequired,
+    handleSharedMembersChange: PropTypes.func.isRequired,
     statusColor: PropTypes.string,
     statusFontColor: PropTypes.string,
+    users: PropTypes.arrayOf(PropTypes.shape({
+        username: PropTypes.string,
+        name: PropTypes.string,
+        groups: PropTypes.arrayOf(PropTypes.string),
+        email: PropTypes.string,
+    })).isRequired,
+    sharedUsers: PropTypes.arrayOf(PropTypes.string).isRequired,
+    // updatingExpiration: PropTypes.bool,
+    updatingPermission: PropTypes.bool,
 };
 
 export default DataPackStatusTable;

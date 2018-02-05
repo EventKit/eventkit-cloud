@@ -13,6 +13,7 @@ import {
     cancelProviderTask, updateExpiration, updatePermission,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+import { getUsers } from '../../actions/userActions.fake.js'; // TODO change this to the real one
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/BaseDialog';
 
@@ -32,66 +33,57 @@ export class StatusDownload extends React.Component {
     componentDidMount() {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
+        this.props.getUsers();
         this.startTimer();
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runDeletion.deleted !== this.props.runDeletion.deleted) {
-            if (nextProps.runDeletion.deleted) {
-                browserHistory.push('/exports');
-            }
+        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
+            browserHistory.push('/exports');
         }
         if (nextProps.exportReRun.error && !this.props.exportReRun.error) {
             this.setState({ error: nextProps.exportReRun.error });
         }
-        if (nextProps.exportReRun.fetched !== this.props.exportReRun.fetched) {
-            if (nextProps.exportReRun.fetched === true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-                this.startTimer();
-            }
+        if (nextProps.exportReRun.fetched && !this.props.exportReRun.fetched) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.startTimer();
         }
-        if (nextProps.updateExpiration.updated !== this.props.updateExpiration.updated) {
-            if (nextProps.updateExpiration.updated === true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
+        if (nextProps.expirationState.updated && !this.props.expirationState.updated) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
         }
-        if (nextProps.updatePermission.updated !== this.props.updatePermission.updated) {
-            if (nextProps.updatePermission.updated === true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
+        if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
         }
-        if (nextProps.datacartDetails.fetched !== this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched === true) {
-                const datacartDetails = nextProps.datacartDetails.data;
-                let clearTimer = 0;
-                if (nextProps.datacartDetails.data[0].zipfile_url == null) {
-                    clearTimer += 1;
-                }
+        if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
+            const datacartDetails = nextProps.datacartDetails.data;
+            let clearTimer = 0;
+            if (nextProps.datacartDetails.data[0].zipfile_url == null) {
+                clearTimer += 1;
+            }
 
-                // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
-                // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
-                // means that at least one task is not completed, so do not stop the timer
-                if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
-                    const providerTasks = datacartDetails[0].provider_tasks;
-                    providerTasks.forEach((tasks) => {
-                        tasks.tasks.forEach((task) => {
-                            if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
-                                clearTimer += 1;
-                            }
-                        });
+            // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
+            // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+            // means that at least one task is not completed, so do not stop the timer
+            if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
+                const providerTasks = datacartDetails[0].provider_tasks;
+                providerTasks.forEach((tasks) => {
+                    tasks.tasks.forEach((task) => {
+                        if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
+                            clearTimer += 1;
+                        }
                     });
+                });
 
-                    if (clearTimer === 0) {
-                        TimerMixin.clearInterval(this.timer);
-                        this.timeout = setTimeout(() => {
-                            this.props.getDatacartDetails(this.props.params.jobuid);
-                        }, 270000);
-                    }
+                if (clearTimer === 0) {
+                    TimerMixin.clearInterval(this.timer);
+                    this.timeout = setTimeout(() => {
+                        this.props.getDatacartDetails(this.props.params.jobuid);
+                    }, 270000);
                 }
+            }
 
-                if (this.state.isLoading) {
-                    this.setState({ isLoading: false });
-                }
+            if (this.state.isLoading) {
+                this.setState({ isLoading: false });
             }
         }
     }
@@ -219,12 +211,16 @@ export class StatusDownload extends React.Component {
                                         onRunDelete={this.props.deleteRun}
                                         onUpdateExpiration={this.props.updateExpirationDate}
                                         onUpdatePermission={this.props.updatePermission}
+                                        updatingExpiration={this.props.expirationState.updating}
+                                        updatingPermission={this.props.permissionState.updating}
+                                        permissionState={this.props.permissionState}
                                         onRunRerun={this.props.rerunExport}
                                         onClone={this.props.cloneExport}
                                         onProviderCancel={this.props.cancelProviderTask}
                                         providers={this.props.providers}
                                         maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
+                                        users={this.props.users.users}
                                     />
                                 ))}
                                 <BaseDialog
@@ -257,11 +253,28 @@ StatusDownload.propTypes = {
     exportReRun: PropTypes.object.isRequired,
     updateExpirationDate: PropTypes.func.isRequired,
     updatePermission: PropTypes.func.isRequired,
+    permissionState: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.string,
+    }).isRequired,
+    expirationState: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.string,
+    }).isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
+    users: PropTypes.shape({
+        error: PropTypes.string,
+        fetched: PropTypes.bool,
+        fetching: PropTypes.bool,
+        users: PropTypes.arrayOf(PropTypes.object),
+    }).isRequired,
+    getUsers: PropTypes.func.isRequired,
 
 };
 
@@ -270,12 +283,13 @@ function mapStateToProps(state) {
         jobuid: state.submitJob.jobuid,
         datacartDetails: state.datacartDetails,
         runDeletion: state.runDeletion,
-        updateExpiration: state.updateExpiration,
-        updatePermission: state.updatePermission,
+        expirationState: state.updateExpiration,
+        permissionState: state.updatePermission,
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
+        users: state.users,
     };
 }
 
@@ -327,6 +341,9 @@ function mapDispatchToProps(dispatch) {
         },
         getProviders: () => {
             dispatch(getProviders());
+        },
+        getUsers: () => {
+            dispatch(getUsers());
         },
     };
 }
