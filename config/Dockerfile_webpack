@@ -7,7 +7,7 @@ COPY ./config/setupFile.js /var/lib/eventkit/
 COPY ./nightwatch.json /var/lib/eventkit/
 RUN apt-get update && apt-get install -y ruby git libcairo2-dev libjpeg62-turbo-dev libpango1.0-dev libgif-dev build-essential g++
 RUN npm install npm@4.0.2 --quiet
-RUN npm install --quiet
+RUN npm install --no-optional --quiet
 #RUN npm install webpack webpack-dev-server -g --quiet
 RUN gem install coveralls-lcov
 
