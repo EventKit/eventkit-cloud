@@ -1155,9 +1155,16 @@ class GroupViewSet(viewsets.ModelViewSet):
         groups = Group.objects.filter(id__in=request.data["groups"])
         for group in groups:
             for member in group.user_set.all():
-                if  not member.username in allmembers: allmembers.append(member.username)
+                if  not member.id in allmembers: allmembers.append(member.id)
 
-        return Response( allmembers, status=status.HTTP_200_OK)
+
+        payload = []
+        users = User.objects.filter(id__in=allmembers).all()
+        for u in users:
+            serializer = UserDataSerializer(u)
+            logger.info(serializer.data)
+            payload.append(serializer.data)
+        return Response( payload , status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):

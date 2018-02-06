@@ -9,7 +9,7 @@ from django.db.models import Q
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
 
 from rest_framework.filters import BaseFilterBackend
 
@@ -71,11 +71,23 @@ class ExportRunFilter(django_filters.FilterSet):
 
 
 class UserFilter(django_filters.FilterSet):
-#    date = django_filters.DateTimeFromToRangeFilter(name="date_joined_range")
     min_date = django_filters.DateFilter(name="date_joined", lookup_expr="gte")
     max_date = django_filters.DateFilter(name="date_joined", lookup_expr="lte")
     started_at = django_filters.DateTimeFilter(name="date_joined", lookup_expr="exact")
+    groups = django_filters.CharFilter(method='group_filter')
 
     class Meta:
-        model = User
-        fields = ['date_joined']
+            model = User
+            fields = []
+
+    @staticmethod
+    def group_filter( queryset, fieldname, value):
+
+        targetusers = []
+
+        groups = Group.objects.filter(id__in=value.split(","))
+        for group in groups:
+            for member in group.user_set.all():
+                if not member.id in targetusers: targetusers.append(member.id)
+
+        return queryset.filter(id__in=targetusers)
