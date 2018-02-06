@@ -103,8 +103,7 @@ By default, the Eventkit webpack is configured for development, if you need to c
 To use ESLint while working on the EventKit front-end, first make sure you have Node.js and NPM installed in your local dev environment.
 You can find the instructions for installing them here https://docs.npmjs.com/getting-started/installing-node
 Then in the EventKit root directory (on your local machine, not in the docker container) simply run:
-<pre>npm run-script install-linter</pre> if you only want the linting packages installed.
-Or <pre>npm install</pre> if you want all EventKit npm packages installed along with the linting packages (*Please note installing all packages will take some time and if you are running windows some packages may fail to install*).
+<pre>npm run-script install-linter</pre>
 
 Next you will need to follow instructions to add ESLint into your IDE of choice.
 For most IDEs that should mean finding and installing (if not already installed) the relevant ESLint plugin, and if needed, adjusting the settings to point to your specific package install location.
