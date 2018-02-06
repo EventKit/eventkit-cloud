@@ -1,23 +1,24 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import { mount } from 'enzyme';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Paper from 'material-ui/Paper'
+import TimerMixin from 'react-timer-mixin';
+import { browserHistory } from 'react-router';
+import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
-import  DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
+import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import TimerMixin from 'react-timer-mixin';
-import {browserHistory} from 'react-router';
+
 
 describe('StatusDownload component', () => {
     beforeAll(() => {
-        DataCartDetails.prototype._initializeOpenLayers = new sinon.spy();
+        DataCartDetails.prototype.initializeOpenLayers = sinon.stub();
     });
 
     afterAll(() => {
-        DataCartDetails.prototype._initializeOpenLayers.restore();
+        DataCartDetails.prototype.initializeOpenLayers.restore();
     });
     const muiTheme = getMuiTheme();
 
@@ -252,6 +253,16 @@ describe('StatusDownload component', () => {
                 updated: false,
                 error: null,
             },
+            permissionState: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            expirationState: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
             providers:providers,
             user: {
                 data: {
@@ -295,27 +306,6 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
     });
 
-    it('getMarginPadding should return the pixel string for div padding based on window width', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getMarginPadding()).toEqual('0px');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
-        expect(wrapper.instance().getMarginPadding()).toEqual('30px');
-    });
-
     it('should render a loading icon if data has not been received yet', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -326,9 +316,9 @@ describe('StatusDownload component', () => {
     it('should call browserHistory push if a run has been deleted', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
-        // const pushSpy = new sinon.spy(browserHistory, 'push');
-        browserHistory.push = new sinon.spy();
+        const updateSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        // const pushSpy = sinon.spy(browserHistory, 'push');
+        browserHistory.push = sinon.spy();
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
         wrapper.setProps(nextProps);
@@ -352,29 +342,25 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, getProviders, startTimer, and setMaxDays state when mounted', () => {
+    it('should call getDatacartDetails, getProviders, and startTimer when mounted', () => {
         let props = getProps();
-        props.getDatacartDetails = new sinon.spy();
-        props.getProviders = new sinon.spy();
-        let startTimerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
-        const mountSpy = new sinon.spy(StatusDownload.prototype, 'componentDidMount');
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        props.getDatacartDetails = sinon.spy();
+        props.getProviders = sinon.spy();
+        let startTimerSpy = sinon.spy(StatusDownload.prototype, 'startTimer');
+        const mountSpy = sinon.spy(StatusDownload.prototype, 'componentDidMount');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(startTimerSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({maxDays: '30'})).toBe(true);
         startTimerSpy.restore();
         mountSpy.restore();
-        stateSpy.restore();
     });
 
     it('should remove timer before unmounting', () => {
         const props = getProps();
-        const timerSpy = new sinon.spy(TimerMixin, 'clearInterval');
+        const timerSpy = sinon.spy(TimerMixin, 'clearInterval');
         const wrapper = getWrapper(props);
         const timer = wrapper.instance().timer;
         wrapper.unmount();
@@ -386,7 +372,7 @@ describe('StatusDownload component', () => {
     it('startTimer should create a timer interval', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const intervalSpy = new sinon.spy(TimerMixin, 'setInterval');
+        const intervalSpy = sinon.spy(TimerMixin, 'setInterval');
         expect(intervalSpy.called).toBe(false);
         wrapper.instance().startTimer();
         expect(intervalSpy.calledOnce).toBe(true);
@@ -399,20 +385,19 @@ describe('StatusDownload component', () => {
         let nextProps = getProps();
         nextProps.datacartDetails.fetched = true;
         nextProps.datacartDetails.data = exampleRun;
-        const propsSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
-        const clearSpy = new sinon.spy(TimerMixin, 'clearInterval');
+        const propsSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const stateSpy = sinon.spy(StatusDownload.prototype, 'setState');
+        const clearSpy = sinon.spy(TimerMixin, 'clearInterval');
         const wrapper = getWrapper(props);
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({datacartDetails: exampleRun, zipFileProp: "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
-        expect(stateSpy.calledThrice).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({isLoading: false})).toBe(true);
         expect(clearSpy.calledOnce).toBe(true);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(true);
-        expect(setTimeout.mock.calls.length).toBe(13);
+        expect(setTimeout.mock.calls.length).toBe(12);
         expect(setTimeout.mock.calls[4][1]).toBe(270000);
         stateSpy.restore();
         propsSpy.restore();
@@ -426,19 +411,15 @@ describe('StatusDownload component', () => {
         let nextProps = getProps();
         nextProps.datacartDetails.fetched = true;
         nextProps.datacartDetails.data = exampleRunTaskRunning;
-        const propsSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
-        const clearSpy = new sinon.spy(TimerMixin, 'clearInterval');
+        const propsSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const clearSpy = sinon.spy(TimerMixin, 'clearInterval');
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledThrice).toBe(true);
-        expect(stateSpy.calledWith({datacartDetails: exampleRunTaskRunning, zipFileProp:"http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip"})).toBe(true);
         expect(clearSpy.calledOnce).toBe(false);
         expect(clearSpy.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(12);
+        expect(setTimeout.mock.calls.length).toBe(11);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
-        StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
         clearSpy.restore();
         propsSpy.restore();
@@ -449,16 +430,12 @@ describe('StatusDownload component', () => {
         let nextProps = getProps();
         nextProps.exportReRun.fetched = true;
         nextProps.exportReRun.data = exampleRun[0];
-        const propsSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        const propsSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
         const wrapper = getWrapper(props);
-        const timerSpy = new sinon.spy(StatusDownload.prototype, 'startTimer');
+        const timerSpy = sinon.spy(StatusDownload.prototype, 'startTimer');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({datacartDetails: exampleRun})).toBe(true);
         expect(timerSpy.calledOnce).toBe(true);
-        StatusDownload.prototype.setState.restore();
         StatusDownload.prototype.componentWillReceiveProps.restore();
         timerSpy.restore();
         propsSpy.restore();
@@ -466,8 +443,8 @@ describe('StatusDownload component', () => {
 
     it('should handle Clone of datacartDetails', () => {
         let props = getProps();
-        props.cloneExport = new sinon.spy();
-        const cloneSpy = new sinon.spy(StatusDownload.prototype, 'handleClone');
+        props.cloneExport = sinon.spy();
+        const cloneSpy = sinon.spy(StatusDownload.prototype, 'handleClone');
         const wrapper = getWrapper(props);
         wrapper.instance().handleClone();
         expect(cloneSpy.calledOnce).toBe(true);
@@ -479,8 +456,8 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const nextProps = getProps();
         nextProps.updateExpiration.updated = true;
-        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
-        props.getDatacartDetails = new sinon.spy();
+        const updateSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        props.getDatacartDetails = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
         expect(updateSpy.calledOnce).toBe(true);
@@ -490,7 +467,7 @@ describe('StatusDownload component', () => {
     it('should call componentWillReceiveProps when Permission is updated', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const updateSpy = new sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
+        const updateSpy = sinon.spy(StatusDownload.prototype, 'componentWillReceiveProps');
         const nextProps = getProps();
         nextProps.updatePermission.updated = true;
         wrapper.setProps(nextProps);

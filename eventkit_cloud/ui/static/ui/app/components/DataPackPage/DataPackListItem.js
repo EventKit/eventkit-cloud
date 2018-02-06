@@ -220,22 +220,13 @@ export class DataPackListItem extends Component {
                                 />
 
                                 {this.props.run.user === this.props.user.data.user.username ?
-                                    [
-                                        <MenuItem
-                                            key="delete"
-                                            className="qa-DataPackListItem-MenuItem-deleteExport"
-                                            style={{ fontSize: subtitleFontSize }}
-                                            primaryText="Delete Export"
-                                            onClick={this.showDeleteDialog}
-                                        />,
-                                        <MenuItem
-                                            key="share"
-                                            className="qa-DataPackListItem-MenuItem-share"
-                                            style={{ fontSize: subtitleFontSize }}
-                                            primaryText="Share"
-                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
-                                        />,
-                                    ]
+                                    <MenuItem
+                                        key="delete"
+                                        className="qa-DataPackListItem-MenuItem-deleteExport"
+                                        style={{ fontSize: subtitleFontSize }}
+                                        primaryText="Delete Export"
+                                        onClick={this.showDeleteDialog}
+                                    />
                                     :
                                     null
                                 }
@@ -302,7 +293,6 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
-    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackListItem;

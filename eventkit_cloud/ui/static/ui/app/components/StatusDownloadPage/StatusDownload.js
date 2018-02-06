@@ -13,7 +13,6 @@ import {
     cancelProviderTask, updateExpiration, updatePermission,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
-import { getUsers } from '../../actions/userActions.fake.js'; // TODO change this to the real one
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/BaseDialog';
 
@@ -33,7 +32,6 @@ export class StatusDownload extends React.Component {
     componentDidMount() {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
-        this.props.getUsers();
         this.startTimer();
     }
 
@@ -211,8 +209,6 @@ export class StatusDownload extends React.Component {
                                         onRunDelete={this.props.deleteRun}
                                         onUpdateExpiration={this.props.updateExpirationDate}
                                         onUpdatePermission={this.props.updatePermission}
-                                        updatingExpiration={this.props.expirationState.updating}
-                                        updatingPermission={this.props.permissionState.updating}
                                         permissionState={this.props.permissionState}
                                         onRunRerun={this.props.rerunExport}
                                         onClone={this.props.cloneExport}
@@ -220,7 +216,6 @@ export class StatusDownload extends React.Component {
                                         providers={this.props.providers}
                                         maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
-                                        users={this.props.users.users}
                                     />
                                 ))}
                                 <BaseDialog
@@ -245,6 +240,7 @@ StatusDownload.contextTypes = {
 };
 
 StatusDownload.propTypes = {
+    params: PropTypes.shape({ jobuid: PropTypes.string }).isRequired,
     datacartDetails: PropTypes.object.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
     deleteRun: PropTypes.func.isRequired,
@@ -268,14 +264,6 @@ StatusDownload.propTypes = {
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    users: PropTypes.shape({
-        error: PropTypes.string,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        users: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
-    getUsers: PropTypes.func.isRequired,
-
 };
 
 function mapStateToProps(state) {
@@ -289,7 +277,6 @@ function mapStateToProps(state) {
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
-        users: state.users,
     };
 }
 
@@ -341,9 +328,6 @@ function mapDispatchToProps(dispatch) {
         },
         getProviders: () => {
             dispatch(getProviders());
-        },
-        getUsers: () => {
-            dispatch(getUsers());
         },
     };
 }

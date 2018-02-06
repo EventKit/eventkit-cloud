@@ -49,8 +49,8 @@ export class DataCartGeneralTable extends Component {
     }
 
     render() {
-        const providers = this.props.dataPack.provider_tasks.filter(provider => (
-            provider.display
+        const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
+            task.display
         ));
 
         const styles = {
@@ -79,12 +79,12 @@ export class DataCartGeneralTable extends Component {
                     title="Data Sources"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
                     data={
-                        providers.map(provider => (
-                            <div key={provider.name} style={{ margin: '5px 0px' }}>
-                                {provider.name}
+                        providerTasks.map(providerTask => (
+                            <div key={providerTask.name} style={{ margin: '5px 0px' }}>
+                                {providerTask.name}
                                 <Info
-                                    onTouchTap={() => this.handleProviderOpen(provider)}
-                                    key={provider.description}
+                                    onTouchTap={() => this.handleProviderOpen(providerTask)}
+                                    key={providerTask.description}
                                     style={styles.tableRowInfoIcon}
                                 />
                                 <BaseDialog

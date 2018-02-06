@@ -13,13 +13,10 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import DataPackShareDialog from './DataPackShareDialog';
 import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
-import { getGroups } from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
-import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
@@ -37,12 +34,10 @@ export class DataPackPage extends React.Component {
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
-        this.handleShareOpen = this.handleShareOpen.bind(this);
-        this.handleShareClose = this.handleShareClose.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
-            permissions: 'public',
+            published: null,
             minDate: null,
             maxDate: null,
             status: {
@@ -51,7 +46,6 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            selectedGroups: [],
             view: props.runsList.view || 'map',
             pageLoading: true,
             order: props.runsList.order || '-job__featured',
@@ -59,14 +53,11 @@ export class DataPackPage extends React.Component {
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
-            shareOpen: false,
             targetJob: '',
         };
     }
 
     componentDidMount() {
-        this.props.getGroups();
-        this.props.getUsers();
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -75,150 +66,32 @@ export class DataPackPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runsList.fetched !== this.props.runsList.fetched) {
-            if (nextProps.runsList.fetched === true) {
-                if (this.state.pageLoading) {
-                    this.setState({ pageLoading: false });
-                }
-                if (this.state.loading) {
-                    this.setState({ loading: false });
-                }
+        if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
+            if (this.state.pageLoading) {
+                this.setState({ pageLoading: false });
+            }
+            if (this.state.loading) {
+                this.setState({ loading: false });
             }
         }
-        if (nextProps.runsDeletion.deleted !== this.props.runsDeletion.deleted) {
-            if (nextProps.runsDeletion.deleted) {
-                this.setState({ loading: true }, this.makeRunRequest);
-            }
+        if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.setState({ loading: true }, this.makeRunRequest);
         }
     }
 
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsList.order != this.state.order) {this.props.setOrder(this.state.order)};
-        if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
-    }
-
-    onSearch(searchText) { 
-        this.setState({search: searchText, loading: true}, this.makeRunRequest);
-    }
-
-    checkForEmptySearch(searchText) {
-        if(searchText == '' && this.state.search) {
-            this.setState({search: '', loading: true}, this.makeRunRequest);
+        if (this.props.runsList.order !== this.state.order) {
+            this.props.setOrder(this.state.order);
+        }
+        if (this.props.runsList.view !== this.state.view) {
+            this.props.setView(this.state.view);
         }
     }
 
-    handleSortChange(value) {
-        this.setState({ order: value, loading: true }, this.makeRunRequest);
-    }
-
-    makeRunRequest() {
-        const status = [];
-        Object.keys(this.state.status).forEach((key) => {
-            if (this.state.status[key]) {
-                status.push(key.toUpperCase());
-            }
-        });
-
-        const providers = Object.keys(this.state.providers);
-
-        const params = {};
-        params.page_size = this.state.pageSize;
-        params.ordering = this.state.order.includes('featured') ?
-            `${this.state.order},-started_at`
-            :
-            this.state.order;
-        if (this.state.ownerFilter) params.user = this.state.ownerFilter;
-        if (this.state.permissions) params.published = this.state.permissions;
-        if (this.state.selectedGroups.length && this.state.permissions === 'group') {
-            params.groups = this.state.selectedGroups.join(',');
-        }
-        if (status.length) params.status = status.join(',');
-        if (this.state.minDate) {
-            params.min_date = this.state.minDate.toISOString().substring(0, 10);
-        }
-        if (this.state.maxDate) {
-            const maxDate = new Date(this.state.maxDate.getTime());
-            maxDate.setDate(maxDate.getDate() + 1);
-            params.max_date = maxDate.toISOString().substring(0, 10);
-        }
-        if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
-        if (providers.length) params.providers = providers.join(',');
-
-        return this.props.getRuns(params, this.state.geojson_geometry);
-    }
-
-    handleOwnerFilter(event, index, value) {
-        this.setState({ ownerFilter: value, loading: true }, this.makeRunRequest);
-    }
-
-    handleFilterApply(state) {
-        this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
-            this.setState({ open: false });
-        }
-    }
-
-    handleFilterClear() {
-        this.setState({
-            permissions: 'public',
-            minDate: null,
-            maxDate: null,
-            status: {
-                completed: false,
-                incomplete: false,
-                submitted: false,
-            },
-            providers: {},
-            selectedGroups: [],
-            loading: true,
-        }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
-            this.setState({ open: false });
-        }
-    }
-
-    handleSpatialFilter(geojson) {
-        let geom = null;
-        if (geojson) {
-            geom = flattenFeatureCollection(geojson).features[0].geometry;
-        }
-        this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
-    }
-
-    changeView(view) {
-        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
-            this.setState({order: '-started_at', loading: true}, () => {
-                let promise = this.makeRunRequest();
-                promise.then(() => this.setState({view: view}));
-            });
-        }
-        else {
-            this.setState({view: view});
-        }
-    }
-
-    handleToggle() {
-        this.setState({open: !this.state.open});
-    }
-
-    loadMore() {
-        if (this.props.runsList.nextPage) {
-            this.setState(
-                {pageSize: this.state.pageSize + 12, loading: true}, 
-                this.makeRunRequest
-            );
-        }
-    }
-
-    loadLess() {
-        if (this.state.pageSize > 12) {
-            this.setState(
-                {pageSize: this.state.pageSize - 12, loading: true},
-                this.makeRunRequest
-            );
-        }
+    onSearch(searchText) {
+        this.setState({ search: searchText, loading: true }, this.makeRunRequest);
     }
 
     getView(view) {
@@ -232,7 +105,6 @@ export class DataPackPage extends React.Component {
             loadLessDisabled: this.props.runsList.runs.length <= 12,
             loadMoreDisabled: !this.props.runsList.nextPage,
             providers: this.props.providers,
-            openShare: this.handleShareOpen,
         };
         switch (view) {
         case 'list':
@@ -265,12 +137,117 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleShareOpen(jobUid) {
-        this.setState({ shareOpen: true, targetJob: jobUid });
+    checkForEmptySearch(searchText) {
+        if (searchText === '' && this.state.search) {
+            this.setState({ search: '', loading: true }, this.makeRunRequest);
+        }
     }
 
-    handleShareClose() {
-        this.setState({ shareOpen: false, targetJob: '' });
+    handleSortChange(value) {
+        this.setState({ order: value, loading: true }, this.makeRunRequest);
+    }
+
+    makeRunRequest() {
+        const status = [];
+        Object.keys(this.state.status).forEach((key) => {
+            if (this.state.status[key]) {
+                status.push(key.toUpperCase());
+            }
+        });
+
+        const providers = Object.keys(this.state.providers);
+
+        const params = {};
+        params.page_size = this.state.pageSize;
+        params.ordering = this.state.order.includes('featured') ?
+            `${this.state.order},-started_at`
+            :
+            this.state.order;
+        if (this.state.ownerFilter) params.user = this.state.ownerFilter;
+        if (this.state.published) params.published = this.state.published;
+        if (status.length) params.status = status.join(',');
+        if (this.state.minDate) {
+            params.min_date = this.state.minDate.toISOString().substring(0, 10);
+        }
+        if (this.state.maxDate) {
+            const maxDate = new Date(this.state.maxDate.getTime());
+            maxDate.setDate(maxDate.getDate() + 1);
+            params.max_date = maxDate.toISOString().substring(0, 10);
+        }
+        if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
+        if (providers.length) params.providers = providers.join(',');
+
+        return this.props.getRuns(params, this.state.geojson_geometry);
+    }
+
+    handleOwnerFilter(event, index, value) {
+        this.setState({ ownerFilter: value, loading: true }, this.makeRunRequest);
+    }
+
+    handleFilterApply(state) {
+        this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
+        if (window.innerWidth < 1200) {
+            this.setState({ open: false });
+        }
+    }
+
+    handleFilterClear() {
+        this.setState({
+            published: null,
+            minDate: null,
+            maxDate: null,
+            status: {
+                completed: false,
+                incomplete: false,
+                submitted: false,
+            },
+            providers: {},
+            loading: true,
+        }, this.makeRunRequest);
+        if (window.innerWidth < 1200) {
+            this.setState({ open: false });
+        }
+    }
+
+    handleSpatialFilter(geojson) {
+        let geom = null;
+        if (geojson) {
+            geom = flattenFeatureCollection(geojson).features[0].geometry;
+        }
+        this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
+    }
+
+    changeView(view) {
+        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
+            this.setState({ order: '-started_at', loading: true }, () => {
+                const promise = this.makeRunRequest();
+                promise.then(() => this.setState({ view }));
+            });
+        } else {
+            this.setState({ view });
+        }
+    }
+
+    handleToggle() {
+        this.setState({ open: !this.state.open });
+    }
+
+    loadMore() {
+        if (this.props.runsList.nextPage) {
+            this.setState(
+                { pageSize: this.state.pageSize + 12, loading: true },
+                this.makeRunRequest,
+            );
+        }
+    }
+
+    loadLess() {
+        if (this.state.pageSize > 12) {
+            this.setState(
+                { pageSize: this.state.pageSize - 12, loading: true },
+                this.makeRunRequest,
+            );
+        }
     }
 
     render() {
@@ -332,17 +309,17 @@ export class DataPackPage extends React.Component {
         return (
             <div style={styles.backgroundStyle}>
                 <AppBar
-                    className={'qa-DataPackPage-AppBar'}
+                    className="qa-DataPackPage-AppBar"
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
-                    iconElementLeft={<p></p>}
+                    iconElementLeft={<p />}
                 >
                     <DataPackLinkButton />
                 </AppBar>
-                
-                <Toolbar className={'qa-DataPackPage-Toolbar-search'} style={styles.toolbarSearch}>
-                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{width: '100%'}}>
+
+                <Toolbar className="qa-DataPackPage-Toolbar-search" style={styles.toolbarSearch}>
+                    <ToolbarGroup className="qa-DataPackPage-ToolbarGroup-search" style={{ width: '100%' }}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
@@ -350,70 +327,64 @@ export class DataPackPage extends React.Component {
                     </ToolbarGroup>
                 </Toolbar>
 
-                <Toolbar className={'qa-DataPackPage-Toolbar-sort'} style={styles.toolbarSort}>
-                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton 
-                            handleToggle={this.handleToggle}
-                            active={this.state.open}
+                <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
+                    <DataPackOwnerSort
+                        handleChange={this.handleOwnerFilter}
+                        value={this.state.ownerFilter}
+                        owner={this.props.user.data.user.username}
+                    />
+                    <DataPackFilterButton
+                        handleToggle={this.handleToggle}
+                        active={this.state.open}
+                    />
+                    {this.state.view === 'list' && window.innerWidth >= 768 ?
+                        null
+                        :
+                        <DataPackSortDropDown
+                            handleChange={(e, i, v) => { this.handleSortChange(v); }}
+                            value={this.state.order}
                         />
-                        {this.state.view == 'list' && window.innerWidth >= 768 ?
-                            null
-                            : 
-                            <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
-                        }
-                        <DataPackViewButtons 
-                            handleViewChange={this.changeView}
-                            view={this.state.view}
-                        />
+                    }
+                    <DataPackViewButtons
+                        handleViewChange={this.changeView}
+                        view={this.state.view}
+                    />
                 </Toolbar>
-                
+
                 <div style={styles.wholeDiv}>
                     <FilterDrawer
                         onFilterApply={this.handleFilterApply}
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
                         providers={this.props.providers}
-                        groups={this.props.groups}
                     />
 
-                    {this.state.pageLoading ? 
-                        <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
-                            <CircularProgress 
-                                style={{margin: 'auto', display: 'block'}} 
-                                color={'#4598bf'}
+                    {this.state.pageLoading ?
+                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                            <CircularProgress
+                                style={{ margin: 'auto', display: 'block' }}
+                                color="#4598bf"
                                 size={50}
                             />
                         </div>
                         :
-                        <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
-                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ? 
-                            <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
-                                <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
-                                    <CircularProgress 
-                                        style={{margin: 'auto', display: 'block'}} 
-                                        color={'#4598bf'}
-                                        size={50}
-                                    />
+                        <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
+                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ?
+                                <div style={{ zIndex: 10, position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                                    <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                                        <CircularProgress
+                                            style={{ margin: 'auto', display: 'block' }} 
+                                            color="#4598bf"
+                                            size={50}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            : null}
+                                : null
+                            }
                             {this.getView(this.state.view)}
                         </div>
                     }
                 </div>
-                {this.state.shareOpen && this.state.targetJob ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareClose}
-                        groups={this.props.groups}
-                        users={this.props.users}
-                        user={this.props.user.data.user}
-                        run={this.props.runsList.runs.find(run => run.job.uid === this.state.targetJob)}
-                    />
-                    :
-                    null
-                }
             </div>
         );
     }
@@ -445,15 +416,6 @@ DataPackPage.propTypes = {
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    getGroups: PropTypes.func.isRequired,
-    getUsers: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -465,8 +427,6 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        groups: state.groups.groups,
-        users: state.users.users,
     };
 }
 
@@ -495,12 +455,6 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
-        },
-        getGroups: () => {
-            dispatch(getGroups());
-        },
-        getUsers: () => {
-            dispatch(getUsers());
         },
     };
 }

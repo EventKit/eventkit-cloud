@@ -19,7 +19,6 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
-import { DataPackShareDialog } from '../../components/DataPackPage/DataPackShareDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -81,17 +80,6 @@ describe('DataPackPage component', () => {
             resetGeoJSONFile: () => {},
             setOrder: () => {},
             setView: () => {},
-            groups: [
-                { id: 'group1', name: 'group1', members: ['user1'], administrators: ['user3'] },
-                { id: 'group2', name: 'group2', members: ['user2'], administrators: ['user3'] },
-                { id: 'group3', name: 'group3', members: ['user1', 'user2'], administrators: ['user1'] },
-            ],
-            users: [
-                { name: 'user1', username: 'user1', email: 'user1@email.com' },
-                { name: 'user2', username: 'user2', email: 'user2@email.com' },
-            ],
-            getGroups: () => {},
-            getUsers: () => {},
         };
     };
 
@@ -132,19 +120,6 @@ describe('DataPackPage component', () => {
         expect(changeStub.calledOnce).toBe(true);
         expect(changeStub.calledWith('value')).toBe(true);
         changeStub.restore();
-    });
-
-    it('should show the DataPackShareDialog  and give it the corrent run', () => {
-        const runs = [
-            { job: { uid: '123' } },
-            { job: { uid: '456' } },
-        ];
-        const props = getProps();
-        props.runsList.runs = runs;
-        const wrapper = getWrapper(props);
-        wrapper.setState({ shareOpen: true, targetJob: '456' });
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-        expect(wrapper.find(DataPackShareDialog).props().run).toEqual(runs[1]);
     });
 
     it('should use order and view from props or just default to map and featured', () => {
@@ -198,8 +173,6 @@ describe('DataPackPage component', () => {
 
     it('componentDidMount should make data requests and setInterval', () => {
         const props = getProps();
-        props.getGroups = sinon.spy();
-        props.getUsers = sinon.spy();
         props.getProviders = sinon.spy();
         props.resetGeoJSONFile = sinon.spy();
         const mountSpy = sinon.spy(DataPackPage.prototype, 'componentDidMount');
@@ -207,8 +180,6 @@ describe('DataPackPage component', () => {
         const intervalStub = sinon.stub(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(props.getGroups.calledOnce).toBe(true);
-        expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(requestStub.calledOnce).toBe(true);
         expect(intervalStub.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
@@ -342,15 +313,13 @@ describe('DataPackPage component', () => {
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const owner = 'test_user';
-        const permissions = 'group';
-        const groups = ['group1', 'group2'];
+        const published = 'True';
         const search = 'search_text';
         const expectedParams = {
             page_size: 12,
             ordering: '-job__featured,-started_at',
             user: 'test_user',
-            published: 'group',
-            groups: 'group1,group2',
+            published: 'True',
             status: 'COMPLETED,INCOMPLETE',
             min_date: '2017-07-30',
             max_date: '2017-08-02',
@@ -361,8 +330,7 @@ describe('DataPackPage component', () => {
             minDate,
             maxDate,
             ownerFilter: owner,
-            permissions,
-            selectedGroups: groups,
+            published,
             search,
         });
         wrapper.instance().makeRunRequest();
@@ -414,7 +382,7 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
-            permissions: 'public',
+            published: null,
             status: {
                 completed: false,
                 incomplete: false,
@@ -423,7 +391,6 @@ describe('DataPackPage component', () => {
             minDate: null,
             maxDate: null,
             providers: {},
-            selectedGroups: [],
             loading: true,
         }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);
@@ -523,7 +490,6 @@ describe('DataPackPage component', () => {
             loadLessDisabled: props.runsList.runs.length <= 12,
             loadMoreDisabled: !props.runsList.nextPage,
             providers,
-            openShare: wrapper.instance().handleShareOpen,
         };
 
         expect(wrapper.instance().getView('list')).toEqual((
@@ -552,26 +518,6 @@ describe('DataPackPage component', () => {
             />
         ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
-    });
-
-    it('handleShareOpen should set open true and the target job uid', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleShareOpen('12345');
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: true, targetJob: '12345' })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleShareClose should set open false and clear the target job uid', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleShareClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: false, targetJob: '' })).toBe(true);
-        stateStub.restore();
     });
 });
 

@@ -41,25 +41,24 @@ export class DataPackGrid extends Component {
             },
         };
 
-        return ( 
-            <CustomScrollbar style={{height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%'}}>
+        return (
+            <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
                 <div style={styles.root}>
                     <GridList
-                        className={'qa-DataPackGrid-GridList'}
-                        cellHeight={'auto'}
+                        className="qa-DataPackGrid-GridList"
+                        cellHeight="auto"
                         style={styles.gridList}
-                        padding={window.innerWidth >= 768 ? 7: 2}
+                        padding={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map((run) => (
+                        {this.props.runs.map(run => (
                             <DataPackGridItem
-                                className={'qa-DataPackGrid-GridListItem'}
+                                className="qa-DataPackGrid-GridListItem"
                                 run={run}
                                 user={this.props.user}
                                 key={run.uid}
                                 onRunDelete={this.props.onRunDelete}
                                 providers={this.props.providers}
-                                openShare={this.props.openShare}
                             />
                         ))}
                     </GridList>
@@ -72,7 +71,7 @@ export class DataPackGrid extends Component {
                     loadMoreDisabled={this.props.loadMoreDisabled}
                 />
             </CustomScrollbar>
-        )
+        );
     }
 }
 
@@ -86,7 +85,6 @@ DataPackGrid.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackGrid;

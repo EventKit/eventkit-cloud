@@ -91,7 +91,7 @@ describe('userActions actions', () => {
     it('patchUser should handle patch request success', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const user = { username: 'user1', name: 'user1' };
-        mock.onPatch(`/api/users/${user.username}`).reply(200, user);
+        mock.onPatch(`/api/user/${user.username}`).reply(200, user);
         const expectedActions = [
             { type: types.PATCHING_USER },
             { type: types.PATCHED_USER, payload: user },
@@ -107,7 +107,7 @@ describe('userActions actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const user = { username: 'user1' };
         const error = 'oh no an error';
-        mock.onPatch(`/api/users/${user.username}`).reply(400, error);
+        mock.onPatch(`/api/user/${user.username}`).reply(400, error);
         const expectedActions = [
             { type: types.PATCHING_USER },
             { type: types.PATCHING_USER_ERROR, error },
@@ -160,57 +160,6 @@ describe('userActions actions', () => {
         const store = mockStore({});
 
         return store.dispatch(userActions.userActive())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('getUsers should fetch users from the api', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const users = [
-            { name: 'user1', username: 'user1' },
-            { name: 'user2', username: 'user2' },
-            { name: 'user3', username: 'user3' },
-        ];
-        mock.onGet('/api/users').reply(200, users);
-
-        const expectedUsers = [
-            users[1],
-            users[2],
-        ];
-
-        const expectedActions = [
-            { type: types.FETCHING_USERS },
-            { type: types.FETCHED_USERS, users: expectedUsers },
-        ];
-
-        const store = mockStore({
-            user: {
-                data: {
-                    user: { username: 'user1' },
-                },
-            },
-        });
-
-        return store.dispatch(userActions.getUsers())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('getUsers should handle fetching error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const error = 'Oh no an error';
-        mock.onGet('/api/users').reply(400, error);
-        const expectedActions = [
-            { type: types.FETCHING_USERS },
-            { type: types.FETCH_USERS_ERROR, error },
-        ];
-        const store = mockStore({
-            user: { data: { user: {} } },
-        });
-
-        return store.dispatch(userActions.getUsers())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });

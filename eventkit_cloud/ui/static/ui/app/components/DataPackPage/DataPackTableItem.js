@@ -161,26 +161,15 @@ export class DataPackTableItem extends Component {
                             primaryText="View Data Sources"
                             onClick={this.handleProviderOpen.bind(this, runProviders)}
                         />
+
                         { this.props.run.user === this.props.user.data.user.username ?
-                            [
-                                <MenuItem
-                                    key="delete"
-                                    className="qa-DataPackTableItem-MenuItem-deleteExport"
-                                    style={{ fontSize: '12px' }}
-                                    primaryText="Delete Export"
-                                    onClick={this.showDeleteDialog}
-                                />,
-                                <MenuItem
-                                    key="share"
-                                    className="qa-DataPackTableItem-MenuItem-share"
-                                    style={{ fontSize: '12px' }}
-                                    primaryText="Share"
-                                    onClick={() => this.props.openShare(this.props.run.job.uid)}
-                                />,
-                            ]
-                            :
-                            null
-                        }
+                            <MenuItem
+                                className="qa-DataPackTableItem-MenuItem-deleteExport"
+                                style={{ fontSize: '12px' }}
+                                primaryText="Delete Export"
+                                onClick={this.showDeleteDialog}
+                            />
+                            : null}
                     </IconMenu>
                     <BaseDialog
                         className={'qa-DataPackTableItem-BaseDialog'}
@@ -207,7 +196,6 @@ DataPackTableItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
-    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackTableItem;

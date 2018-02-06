@@ -1,5 +1,5 @@
 import {
-    userReducer, usersReducer, userState, usersState,
+    userReducer, userState,
 } from '../../reducers/userReducer';
 import types from '../../actions/actionTypes';
 
@@ -91,65 +91,6 @@ describe('userReducer', () => {
             ...userState,
             autoLogoutAt: 111,
             autoLogoutWarningAt: 11,
-        });
-    });
-});
-
-describe('usersReducer', () => {
-    it('should return initial state', () => {
-        expect(usersReducer(undefined, {})).toEqual(usersState);
-    });
-
-    it('FETCHING_USERS should return fetching true and fetched false', () => {
-        expect(usersReducer(
-            {
-                ...usersState,
-                fetched: true,
-            },
-            {
-                type: types.FETCHING_USERS,
-            },
-        )).toEqual({
-            ...usersState,
-            fetching: true,
-        });
-    });
-
-    it('FETCHED_USER should return fetched true, the users, and user total', () => {
-        const users = [{ name: 'one' }, { name: 'two' }];
-        const total = 2;
-        expect(usersReducer(
-            {
-                ...usersState,
-                fetching: true,
-            },
-            {
-                type: types.FETCHED_USERS,
-                users,
-                total,
-            },
-        )).toEqual({
-            ...usersState,
-            fetched: true,
-            users,
-            total,
-        });
-    });
-
-    it('FETCH_USERS_ERROR should return the error', () => {
-        const error = 'oh no, its an error';
-        expect(usersReducer(
-            {
-                ...usersState,
-                fetching: true,
-            },
-            {
-                type: types.FETCH_USERS_ERROR,
-                error,
-            },
-        )).toEqual({
-            ...usersState,
-            error,
         });
     });
 });

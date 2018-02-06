@@ -18,20 +18,12 @@ export class FilterDrawer extends Component {
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
-        this.handleGroupSelect = this.handleGroupSelect.bind(this);
-        this.handleAllGroupSelect = this.handleAllGroupSelect.bind(this);
         this.state = this.getDefaultState();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.groups.length !== 0 && this.props.groups.length === 0) {
-            this.setState({ selectedGroups: nextProps.groups.map(group => group.id) });
-        }
     }
 
     getDefaultState() {
         return {
-            permissions: 'public',
+            published: null,
             minDate: null,
             maxDate: null,
             status: {
@@ -40,7 +32,6 @@ export class FilterDrawer extends Component {
                 submitted: false,
             },
             providers: {},
-            selectedGroups: this.props.groups.map(group => group.id),
         };
     }
 
@@ -54,7 +45,7 @@ export class FilterDrawer extends Component {
     }
 
     handlePermissionsChange(event, value) {
-        this.setState({ permissions: value });
+        this.setState({ published: value });
     }
 
     handleStatusChange(stateChange) {
@@ -80,33 +71,6 @@ export class FilterDrawer extends Component {
 
     handleMaxDate(e, date) {
         this.setState({ maxDate: date });
-    }
-
-    handleGroupSelect(group) {
-        // if all are already selected, remove everything except for the target group
-        if (this.state.selectedGroups.length === this.props.groups.length) {
-            const newGroups = [group.id];
-            this.setState({ selectedGroups: newGroups });
-        } else if (this.state.selectedGroups.includes(group.id)) {
-            const newGroups = [...this.state.selectedGroups];
-            newGroups.splice(
-                this.state.selectedGroups.indexOf(group.id),
-                1,
-            );
-            this.setState({ selectedGroups: newGroups });
-        } else {
-            const newGroups = [...this.state.selectedGroups, group.id];
-            this.setState({ selectedGroups: newGroups });
-        }
-    }
-
-    handleAllGroupSelect() {
-        if (this.props.groups.length === this.state.selectedGroups.length) {
-            this.setState({ selectedGroups: [] });
-        } else {
-            const newGroups = this.props.groups.map(group => group.id);
-            this.setState({ selectedGroups: newGroups });
-        }
     }
 
     render() {
@@ -135,11 +99,7 @@ export class FilterDrawer extends Component {
                     />
                     <PermissionFilter
                         onChange={this.handlePermissionsChange}
-                        valueSelected={this.state.permissions}
-                        selectedGroups={this.state.selectedGroups}
-                        onGroupSelect={this.handleGroupSelect}
-                        onAllGroupSelect={this.handleAllGroupSelect}
-                        groups={this.props.groups}
+                        valueSelected={this.state.published}
                     />
                     <StatusFilter
                         onChange={this.handleStatusChange}
@@ -169,12 +129,6 @@ FilterDrawer.propTypes = {
     onFilterClear: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
 };
 
 export default FilterDrawer;

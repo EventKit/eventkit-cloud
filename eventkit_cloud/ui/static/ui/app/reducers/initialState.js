@@ -1,4 +1,4 @@
-import { userState as authInitialState, usersState } from './userReducer';
+import { userState as authInitialState } from './userReducer';
 
 export default {
     auth: authInitialState,
@@ -98,20 +98,4 @@ export default {
         error: null,
     },
     formats: [],
-    groups: {
-        groups: [],
-        cancelSource: null,
-        fetching: false,
-        fetched: false,
-        creating: false,
-        created: false,
-        deleting: false,
-        deleted: false,
-        adding: false,
-        added: false,
-        removing: false,
-        removed: false,
-        error: null,
-    },
-    users: usersState,
 };

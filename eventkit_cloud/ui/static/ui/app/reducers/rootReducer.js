@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import { userReducer, usersReducer } from './userReducer';
+import { userReducer } from './userReducer';
 import {
     exportAoiInfoReducer,
     exportInfoReducer,
@@ -22,8 +22,6 @@ import {
     updateExpirationReducer,
     updatePermissionReducer,
 } from './statusDownloadReducer';
-import { userGroupsReducer } from './userGroupsReducer';
-
 
 const rootReducer = combineReducers({
     // short hand property names
@@ -47,8 +45,6 @@ const rootReducer = combineReducers({
     updateExpiration: updateExpirationReducer,
     updatePermission: updatePermissionReducer,
     formats: getFormatsReducer,
-    groups: userGroupsReducer,
-    users: usersReducer,
 });
 
 export default rootReducer;
