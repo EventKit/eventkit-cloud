@@ -44,7 +44,8 @@ class TaskRunner(object):
 
 
 class ExportOSMTaskRunner(TaskRunner):
-    """ Run OSM Export Tasks; Essentially, collect data and convert to thematic gpkg, then run output formats.
+    """
+    Run OSM Export Tasks; Essentially, collect data and convert to thematic gpkg, then run output formats.
     """
 
     def run_task(self, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None, **kwargs):

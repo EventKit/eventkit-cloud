@@ -241,7 +241,7 @@ describe('mapUtils', () => {
         expect(ret.features[2].properties.name).toEqual('feature3');
     });
 
-    it('bufferGeojson should return original feature if buffer would reduce area to 0', () => {
+    it('bufferGeojson should not return features with no area', () => {
         const featureCollection = {
             type: 'FeatureCollection',
             features: [
@@ -262,7 +262,11 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.bufferGeojson(featureCollection, -10, true)).toEqual(featureCollection);
+        const expectedCollection = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        expect(utils.bufferGeojson(featureCollection, -10, true)).toEqual(expectedCollection);
     });
 
     it('generateDrawBoxInteraction should setup a new interaction', () => {
@@ -630,35 +634,184 @@ describe('mapUtils', () => {
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
     });
 
-    it('hasPointOrLine should return true if any of the geometry types are point or lines, false if not', () => {
-        const featureCollectionTrue = {
+    it('hasArea should return false if there are no features', () => {
+        const collection = {
             type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                geometry: { type: 'MultiPoint' },
-            }, {
-                type: 'Feature',
-                geometry: { type: 'LineString' },
-            }, {
-                type: 'Feature',
-                geometry: { type: 'Polygon' },
-            }],
+            features: [],
         };
-        expect(utils.hasPointOrLine(featureCollectionTrue)).toBe(true);
+        expect(utils.hasArea(collection)).toBe(false);
+    });
 
-        const featureCollectionFalse = {
+    it('hasArea should return false if polygon has no area', () => {
+        const collection = {
             type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                geometry: { type: 'MultiPolygon' },
-            }, {
-                type: 'Feature',
-                geometry: { type: 'Polygon' },
-            }, {
-                type: 'Feature',
-                geometry: { type: 'Polygon' },
-            }],
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                        ]],
+                    },
+                },
+            ],
         };
-        expect(utils.hasPointOrLine(featureCollectionFalse)).toBe(false);
+        expect(utils.hasArea(collection)).toBe(false);
+    });
+
+    it('hasArea should return false for points (no getArea func in ol)', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [
+                            20.3,
+                            24.9,
+                        ],
+                    },
+                },
+            ],
+        };
+        expect(utils.hasArea(collection)).toBe(false);
+    });
+
+    it('hasArea should retunr true', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [1, 1],
+                            [2, 1],
+                            [2, 2],
+                            [1, 2],
+                            [1, 1],
+                        ]],
+                    },
+                },
+            ],
+        };
+        expect(utils.hasArea(collection)).toBe(true);
+    });
+
+    it('getDominantGeometry should return Point', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Point');
+    });
+
+    it('getDominantGeometry should return Line', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'PolyLine',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'PolyLine',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Line');
+    });
+
+    it('getDominantGeometry should return Polygon', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'MultiPolygon',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Polygon');
+    });
+
+    it('getDominantGeometry should return Collection', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'MultiPolygon',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Collection');
+    });
+
+    it('getDominantGeometry should return null', () => {
+        const collection1 = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'blah',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'blah',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection1)).toEqual(null);
+        const collection2 = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        expect(utils.getDominantGeometry(collection2)).toEqual(null);
     });
 });

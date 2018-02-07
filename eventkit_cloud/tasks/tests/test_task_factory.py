@@ -99,8 +99,6 @@ class TestExportTaskFactory(TestCase):
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
-        finalize_task.si.assert_called()
-        task.on_error.assert_called()
 
     def test_get_invalid_licenses(self):
         # The license should not be returned if the user has agreed to it.
