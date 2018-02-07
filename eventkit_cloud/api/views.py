@@ -1060,8 +1060,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                     group.user_set.add(user)
 
         if "administrators" in request.data:
-            for admin  in request.data["administrators"]:
-                if admin  != user.username:
+            for admin in request.data["administrators"]:
+                if admin  != request.user.username:
                     user  = User.objects.all().filter(username=admin)[0]
                     GroupAdministrator.objects.create(user=user, group=group)
 
