@@ -494,6 +494,7 @@ Application.defaultProps = {
     children: null,
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
+    userData: {},
 };
 
 Application.propTypes = {
@@ -517,7 +518,7 @@ Application.propTypes = {
             last_login: PropTypes.string,
             identification: PropTypes.string,
         }),
-    }).isRequired,
+    }),
     autoLogoutAt: PropTypes.instanceOf(Date),
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
 };

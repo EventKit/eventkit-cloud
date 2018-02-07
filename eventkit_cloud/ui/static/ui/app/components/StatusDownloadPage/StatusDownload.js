@@ -312,6 +312,7 @@ function mapDispatchToProps(dispatch) {
                 title: 'Custom Polygon',
                 description: 'Box',
                 selectionType: 'box',
+                buffer: 0,
             }));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name,

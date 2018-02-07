@@ -159,6 +159,7 @@ export class DataCartDetails extends Component {
                         title="Name"
                         data={this.props.cartDetails.job.name}
                         dataStyle={{ wordBreak: 'break-all' }}
+                        className="qa-DataCartDetails-name"
                     />
                 </div>
                 <div style={styles.container}>

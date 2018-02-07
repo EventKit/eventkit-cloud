@@ -7,6 +7,7 @@ import Info from 'material-ui/svg-icons/action/info';
 import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
 import BaseDialog from '../../components/BaseDialog';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
+import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 
 describe('DataPackGeneralTable component', () => {
     injectTapEventPlugin();
@@ -64,6 +65,15 @@ describe('DataPackGeneralTable component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(DataPackTableRow)).toHaveLength(5);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
+    });
+
+    it('Source Info icon should call handleProviderOpen on click', () => {
+        const props = getProps();
+        const openStub = sinon.stub(DataPackGeneralTable.prototype, 'handleProviderOpen');
+        const wrapper = getWrapper(props);
+        wrapper.find('.qa-DataPackGeneralTable-Info-source').first().simulate('click');
+        expect(openStub.calledOnce).toBe(true);
+        openStub.restore();
     });
 
     it('handleProviderOpen should set provider dialog to open', () => {
