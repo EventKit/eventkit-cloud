@@ -32,6 +32,9 @@ class TestExportTaskRunner(TestCase):
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
+        self.shp_task = ExportFormat.objects.get_or_create(name='ESRI Shapefile Format',
+                                                           description='Esri Shapefile (OSM Schema)',
+                                                           slug='shp')
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
@@ -41,25 +44,12 @@ class TestExportTaskRunner(TestCase):
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     def test_run_osm_task(self, mock_chain):
-        tasks = ExportFormat.objects.all()
-        logger.error("PRINTING EXPORTFORMATS IN THE DATABASE!!!")
-        import sys
-        print("PRINTING EXPORTFORMATS IN THE DATABASE!!!")
-        sys.stdout.flush()
-        for task in tasks:
-            logger.error("EXPORT FORMAT: {0}".format(task))
-
-            print("EXPORT FORMAT: {0}".format(task))
-            sys.stdout.flush()
-        print("FINISHED PRINTING!!!")
-        shp_task = ExportFormat.objects.get(slug='shp')
-
         provider = DataProvider.objects.get(slug='osm')
         provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
 
         # celery chain mock
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.provider_tasks.first().formats.add(self.shp_task)
         runner = ExportOSMTaskRunner()
 
         # Even though code using pipes seems to be supported here it is throwing an error.
@@ -78,7 +68,7 @@ class TestExportTaskRunner(TestCase):
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
     def test_run_wms_task(self, mock_shp, mock_chain):
-        shp_task = ExportFormat.objects.get(slug='shp')
+
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
@@ -88,7 +78,7 @@ class TestExportTaskRunner(TestCase):
         type(mock_shp).name = PropertyMock(return_value='Geopackage Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.provider_tasks.first().formats.add(self.shp_task)
         runner = ExportExternalRasterServiceTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
