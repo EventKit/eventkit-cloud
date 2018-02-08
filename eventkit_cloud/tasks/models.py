@@ -5,6 +5,7 @@ import logging
 import shutil
 import os
 
+from django.core.cache import cache
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
@@ -15,6 +16,7 @@ from django.utils import timezone
 from ..jobs.models import Job, LowerCaseCharField
 from ..utils.s3 import delete_from_s3
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from export_tasks import TaskStates
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -92,14 +94,22 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
     export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks')
-    status = models.CharField(blank=True, max_length=20, db_index=True)
-    progress = models.IntegerField(default=0, editable=False, null=True)
+    status = models.CharField(default=TaskStates.PENDING.value, max_length=20, db_index=True)
+    # progress = models.IntegerField(default=0, editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
     display = models.BooleanField(default=False)
     result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='export_task')
+
+    @property
+    def progress(self):
+        return cache.get_or_set("{0}.progress".format(self.uid), 0)
+
+    @progress.setter
+    def progress(self, value):
+        cache.set("{0}.progress".format(self.uid), value)
 
     class Meta:
         ordering = ['created_at']

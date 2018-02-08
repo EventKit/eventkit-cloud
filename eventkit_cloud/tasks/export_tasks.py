@@ -14,7 +14,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
 
-from django.core.cache import caches
+from django.core.cache import caches, cache
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
@@ -228,7 +228,6 @@ class ExportTask(LockingTask):
                 raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
 
             task.finished_at = finished
-            task.progress = 100
             task.pid = -1
             # get the output
             output_url = retval['result']
@@ -1467,7 +1466,7 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     return result
 
 
-def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
+def update_progress(task_uid, progress=0, subtask_percentage=100.0, estimated_finish=None):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.
     :param task_uid: A uid to reference the ExportTaskRecord.
@@ -1477,9 +1476,6 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if task_uid is None:
         return
 
-    from ..tasks.models import ExportTaskRecord
-    from django.db import connection
-
     if not estimated_finish and not progress:
         return
 
@@ -1487,16 +1483,9 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if absolute_progress > 100:
         absolute_progress = 100
 
-    # We need to close the existing connection because the logger could be using a forked process which,
-    # will be invalid and throw an error.
-    connection.close()
-
-    export_task = ExportTaskRecord.objects.get(uid=task_uid)
-    if absolute_progress:
-        export_task.progress = absolute_progress
+    cache.set("{0}.progress".format(task_uid), absolute_progress)
     if estimated_finish:
-        export_task.estimated_finish = estimated_finish
-    export_task.save()
+        cache.set("{0}.estimated_finish".format(task_uid), estimated_finish)
 
 
 def parse_result(task_result, key=''):

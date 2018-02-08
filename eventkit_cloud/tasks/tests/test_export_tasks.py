@@ -559,9 +559,9 @@ class TestExportTasks(ExportTaskBase):
         export_task_instance = Mock(progress=0, estimated_finish=None)
         export_task.objects.get.return_value = export_task_instance
         update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
-        mock_close.assert_called_once()
-        self.assertEquals(export_task_instance.progress, 50)
-        self.assertEquals(export_task_instance.estimated_finish, estimated)
+        from django.core.cache import cache
+        self.assertEquals(cache.get("{0}.progress".format(saved_export_task_uid)), 50)
+        self.assertEquals(cache.get("{0}.estimated_finish".format(saved_export_task_uid)), estimated)
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, mock_kill_task):
@@ -901,13 +901,15 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         self.assertEqual(frhtr_instance.finished_at, finished_at)
         frhtr_instance.save.assert_called_once_with()
 
-    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
+    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.save_files_produced')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_example_finalize_run_hook_task(self, ExportRun, record_task_state, frhtr_get):
+    def test_example_finalize_run_hook_task(self, ExportRun, record_task_state, mock_save_files):
         mock_run_uid = str(uuid.uuid4())
-        example_finalize_run_hook_task(run_uid=mock_run_uid)
-        frhtr_get.assert_called_once_with(celery_uid=None)
+        mock_stage_dir = '/test'
+        with settings(EXPORT_STAGING_ROOT=mock_stage_dir):
+            example_finalize_run_hook_task(run_uid=mock_run_uid)
+            mock_save_files.assert_called_once_with([os.path.join(mock_stage_dir, mock_run_uid, 'downloadable_file_to_be_included_in_zip')], mock_run_uid)
 
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')

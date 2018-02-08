@@ -11,7 +11,8 @@ services:
      environment:
         - TERM=xterm
         - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-        - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+        - REDIS_URL=redis://@redis:6379/1
+        - BROKER_URL=redis://redis:6379/0
         - DEBUG=True
         - PRODUCTION=True
         - DJANGO_LOG_LEVEL=ERROR
@@ -55,10 +56,10 @@ services:
         service: base
       depends_on:
         - postgis
-        - rabbitmq
+        - redis
       links:
         - postgis
-        - rabbitmq
+        - redis
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
@@ -67,11 +68,11 @@ services:
         service: base
       depends_on:
         - postgis
-        - rabbitmq
         - eventkit
+        - redis
       links:
         - postgis
-        - rabbitmq
+        - redis
       environment:
         - CONCURRENCY=4
         - MAPPROXY_CONCURRENCY=4
@@ -81,12 +82,12 @@ services:
         service: base
       depends_on:
         - postgis
-        - rabbitmq
         - celery
         - eventkit
+        - redis
       links:
         - postgis
-        - rabbitmq
+        - redis
       environment:
         - CONCURRENCY=1
       command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
@@ -101,10 +102,6 @@ services:
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
             - "postgis_database:/var/lib/postgresql/data"
-  rabbitmq:
-       image: rabbitmq:3.6.6-management
-       expose:
-        - "5672"
   httpd:
      build:
        context: .
@@ -122,25 +119,21 @@ services:
      environment:
        - SITE_NAME=${SITE_NAME}
        - LOG_LEVEL=warn
-#  memcached:
-#       image: memcached:1.4.34
-#       expose:
-#        - "11211"
   flower:
        extends:
           service: base
        depends_on:
-          - rabbitmq
+          - redis
        links:
-          - rabbitmq
+          - redis
        ports:
          - "49555:5555"
        command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
        extra_hosts:
          - "${SITE_NAME}:${SITE_IP}"
        environment:
-         - BROKER_API=http://guest:guest@rabbitmq:15672/api/
-         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+#         - BROKER_API=http://guest:guest@rabbitmq:15672/api/
+         - BROKER_URL=redis://redis:6379/0
   webpack:
      build:
        context: .
@@ -160,6 +153,10 @@ services:
         - "${SITE_NAME}:${SITE_IP}"
       #if wishing to use the dev server uncomment this or run it via the command line
       # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
+  redis:
+      image: redis:3.2.11
+      expose:
+        - "6379"
 volumes:
     postgis_database:
 
