@@ -32,9 +32,12 @@ class TestExportTaskRunner(TestCase):
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        self.shp_task = ExportFormat.objects.get_or_create(name='ESRI Shapefile Format',
+        
+        # This should be loaded by migrations, but fails when using pytest.
+        self.shp_task, _ = ExportFormat.objects.get_or_create(name='ESRI Shapefile Format',
                                                            description='Esri Shapefile (OSM Schema)',
                                                            slug='shp')
+
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
         self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
