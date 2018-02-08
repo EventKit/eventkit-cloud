@@ -906,8 +906,10 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_example_finalize_run_hook_task(self, ExportRun, record_task_state, mock_save_files):
         mock_run_uid = str(uuid.uuid4())
-        example_finalize_run_hook_task(run_uid=mock_run_uid)
-        mock_save_files.assert_called_once_with([], mock_run_uid)
+        mock_stage_dir = '/test'
+        with settings(EXPORT_STAGING_ROOT=mock_stage_dir):
+            example_finalize_run_hook_task(run_uid=mock_run_uid)
+            mock_save_files.assert_called_once_with([os.path.join(mock_stage_dir, mock_run_uid, 'downloadable_file_to_be_included_in_zip')], mock_run_uid)
 
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
