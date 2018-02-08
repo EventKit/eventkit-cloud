@@ -40,10 +40,10 @@ services:
         service: base
       depends_on:
         - postgis
-        - rabbitmq
+        - redis
       links:
         - postgis
-        - rabbitmq
+        - redis
       expose:
         - "6080"
       volumes:
@@ -60,7 +60,7 @@ services:
         - eventkit
       links:
         - postgis
-        - rabbitmq
+        - redis
       environment:
         - CONCURRENCY=1
         - MAPPROXY_CONCURRENCY=4
